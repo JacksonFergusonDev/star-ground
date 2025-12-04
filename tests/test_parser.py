@@ -2,16 +2,14 @@ import pytest
 from hypothesis import given, strategies as st
 from src.bom_lib import parse_with_verification, get_buy_details
 
-# ==========================================
-# 1. STANDARD UNIT TESTS (The "Sanity Check")
-# ==========================================
+# Standard Unit Tests
 
 def test_basic_resistor_parsing():
     """Does it handle a perfect input?"""
     raw_text = "R1 10k"
     inventory, stats = parse_with_verification([raw_text])
     
-    assert inventory["Resistors | 10K"] == 1
+    assert inventory["Resistors | 10k"] == 1
     assert stats["parts_found"] == 1
     assert len(stats["residuals"]) == 0
 
@@ -32,9 +30,7 @@ def test_smd_injection():
     # Check for the injected adapter
     assert inventory["Hardware/Misc | SMD_ADAPTER_BOARD"] == 1
 
-# ==========================================
-# 2. STRESS TESTING (The "Fuzzing")
-# ==========================================
+# 2. Stress Testing
 
 @given(st.text())
 def test_parser_never_crashes(garbage_string):
@@ -45,7 +41,6 @@ def test_parser_never_crashes(garbage_string):
     try:
         inventory, stats = parse_with_verification([garbage_string])
         
-        # We don't care WHAT the result is, only that it returned valid data structures
         assert isinstance(inventory, dict)
         assert isinstance(stats, dict)
         
@@ -64,5 +59,5 @@ def test_buy_logic_scaling(qty):
     
     buy_qty, note = get_buy_details(category, val, qty)
     
-    # Nerd Logic Check: We should never buy FEWER than we need
+    # We should never buy FEWER than we need
     assert buy_qty >= qty
