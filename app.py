@@ -3,8 +3,30 @@ import csv
 import io
 import os
 import tempfile
+import datetime
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
 from collections import defaultdict
 from src.bom_lib import parse_with_verification, parse_csv_bom, get_buy_details, get_residual_report, get_injection_warnings, sort_inventory
+
+def save_feedback(rating, text):
+    """Authenticates with Secrets and appends row to Google Sheets."""
+    scope = [
+        "https://spreadsheets.google.com/feeds",
+        "https://www.googleapis.com/auth/drive"
+    ]
+    
+    # Load credentials from Streamlit secrets
+    creds_dict = st.secrets["gcp_service_account"]
+    creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
+    client = gspread.authorize(creds)
+    
+    # Open the Sheet
+    sheet = client.open("Pedal BOM Feedback").sheet1  
+    
+    # Append timestamp, rating, and comment
+    row = [str(datetime.datetime.now()), rating, text]
+    sheet.append_row(row)
 
 st.set_page_config(page_title="Pedal BOM Manager", page_icon="🎸")
 
@@ -146,3 +168,35 @@ if ready and inventory and stats:
     
     d1.download_button("Download CSV", data=csv_out, file_name="pedal_parts.csv", mime="text/csv")
     d2.download_button("Download Markdown", data=md_out, file_name="pedal_checklist.md", mime="text/markdown")
+
+st.divider()
+
+if "feedback_submitted" not in st.session_state:
+    st.session_state.feedback_submitted = False
+
+with st.expander("🐞 Found a bug? / 📢 Feedback"):
+    # Check if they have already submitted
+    if st.session_state.feedback_submitted:
+        st.success("Thanks for your feedback! Message received.")
+    else:
+        st.caption("Let me know if I missed a component or if the app exploded.")
+        
+        with st.form("feedback_form"):
+            col1, col2 = st.columns([1, 4])
+            with col1:
+                rating = st.select_slider("Rating", options=["😡", "😕", "😐", "🙂", "🤩"], value="🤩")
+            with col2:
+                comment = st.text_area("Details", height=80, placeholder="Details...")
+                
+            submitted = st.form_submit_button("Send Feedback")
+            
+            if submitted:
+                if not comment:
+                    st.warning("Please enter a comment.")
+                else:
+                    try:
+                        save_feedback(rating, comment)
+                        st.session_state.feedback_submitted = True
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Error: {e}")
