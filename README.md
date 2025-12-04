@@ -109,7 +109,7 @@ In hardware prototyping, the cost of downtime exceeds the cost of inventory.
 
 ## 🔬 Tech Stack
 
-- **Python 3.11+** - Core language
+- **Python 3.10+** - Core language
 - **Regex** - Pattern matching engine for component extraction
 - **Streamlit** - Interactive web interface
 - **CSV/Markdown** - Structured output formats
@@ -168,8 +168,8 @@ pedal-bom-manager/
 - **[app.py](app.py)** - Streamlit web interface
 - **[cli.py](cli.py)** - Command-line batch processor
 - **[src/bom_lib.py](src/bom_lib.py)** - Core parsing and verification logic
-- **[examples/master_shopping_list.csv](examples/shopping_list.csv)** - Sample output (CSV)
-- **[examples/shopping_checklist.md](examples/checklist.md)** - Sample output (Markdown)
+- **[examples/shopping_list.csv](examples/shopping_list.csv)** - Sample output (CSV)
+- **[examples/checklist.md](examples/checklist.md)** - Sample output (Markdown)
 
 ---
 
@@ -274,11 +274,11 @@ Reliability is critical when ordering hardware components. This project uses a c
 
 ---
 
-# 🔭 Future Trajectory: Roadmap
+## 🔭 Future Trajectory: Roadmap
 
 This project is evolving from a static text parser into a dynamic procurement optimization engine. Development is divided into three main areas: infrastructure hardening, signal extraction, and quantitative financial logic.
 
-## 1. Infrastructure & Reliability
+### 1. Infrastructure & Reliability
 
 **Goal:** Eliminate environment drift and ensure deterministic execution.
 
@@ -288,7 +288,7 @@ This project is evolving from a static text parser into a dynamic procurement op
   * **Unit Tests:** Automated `pytest` execution on every commit.
   * **Type Checking:** Static analysis via `mypy`.
 
-## 2. Advanced Data Analysis
+### 2. Advanced Data Analysis
 
 **Goal:** Quantify parsing efficacy using techniques inspired by observational data reduction.
 
@@ -298,7 +298,7 @@ This project is evolving from a static text parser into a dynamic procurement op
   * **Low Confidence ($C < 0.5$):** Heuristic Value Matches (e.g., inferring Potentiometer solely from value "B100k").
 * **Ingest Spectrogram:** Visualization of ingest efficiency per source file, allowing users to identify "noisy" input data formats at a glance.
 
-## 3. Topology Inference
+### 3. Topology Inference
 
 **Goal:** Expand the domain expert system to analyze BOM composition and infer circuit topology.
 
@@ -306,7 +306,7 @@ This project is evolving from a static text parser into a dynamic procurement op
   * **Example:** Germanium Diode + PNP Transistor implies "Vintage Fuzz Topology" (triggers Positive Ground warning).
   * **Example:** PT2399 + Voltage Regulator implies "Digital Delay" (triggers noise filtering recommendation).
 
-## 4. Financial Optimization
+### 4. Financial Optimization
 
 **Goal:** Transition from static buffers to probabilistic risk modeling.
 
@@ -314,13 +314,25 @@ This project is evolving from a static text parser into a dynamic procurement op
 * **Volume Arbitrage:** Algorithm to calculate break-even points on price breaks. (e.g., Is it cheaper to buy 100 resistors at $0.008 than 40 at $0.05?)
 * **Probabilistic Inventory Modeling:** Refactoring "Nerd Economics" into a risk-adjusted model that calculates optimal order quantities based on component volatility. High-loss probability items (small SMD parts) trigger larger buffer coefficients than mechanically robust components.
 
-## 5. Automated Documentation Pipeline
+### 5. Automated Documentation Pipeline
 
 **Goal:** Upgrade the human-readable output to "Publication Quality" while retaining the CSV as the accessible data standard.
 
 * **LaTeX Integration:** Human-readable output transitions from simple Markdown to compiled LaTeX PDF. This acts as a "Field Manual" for the build process, replacing the basic checklist.
 * **Persistent CSV:** The CSV output remains the lightweight, machine-readable standard for quick imports into vendor carts or Excel.
 * **The Last Mile:** Formatted PDF grids for Avery stickers (Designator + Value) to streamline the physical binning process.
+
+---
+
+## 📡 Feedback & Data Collection
+
+The real world is messy, and forum formatting is unpredictable.
+
+If you encounter a BOM that breaks the parser, **please submit it.** The live app includes a dedicated feedback module in the sidebar.
+
+*   **Report Bugs:** If the parser crashes.
+*   **Request Logic:** If the "Silicon Sommelier" misses a common audio substitution.
+*   **Submit Edge Cases:** If a specific forum format isn't being detected.
 
 ---
 
