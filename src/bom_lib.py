@@ -17,8 +17,9 @@ def categorize_part(ref, val):
     """
     Decides what a part is based on its Ref (Name) and Value.
     """
-    ref = ref.upper().strip()
-    val = val.upper().strip()
+    ref_up = ref.upper().strip() # Designators (R1) are always upper
+    val_clean = val.strip()      # Keep original case for display
+    val_up = val_clean.upper()   # Use this for internal logic
 
     # 1. Known Potentiometer Labels
     # If the ref matches these, it's definitely a knob.
@@ -37,14 +38,14 @@ def categorize_part(ref, val):
     # 3. Taper Check (The "Smart" Check)
     # Looks for "B100k", "10k-A" to identify pots by value.
     is_pot_value = False
-    if re.search(r'[0-9]+.*[ABCWG]$', val) or re.search(r'^[ABCWG][0-9]+', val):
+    if re.search(r'[0-9]+.*[ABCWG]$', val_up) or re.search(r'^[ABCWG][0-9]+', val_up):
         is_pot_value = True
 
     # Validity Check
     is_valid = (
-        any(ref.startswith(p) for p in valid_prefixes) or 
-        ref in pot_labels or 
-        any(ref.startswith(l) for l in pot_labels) or
+        any(ref_up.startswith(p) for p in valid_prefixes) or 
+        ref_up in pot_labels or 
+        any(ref_up.startswith(l) for l in pot_labels) or
         is_pot_value
     )
 
@@ -56,28 +57,28 @@ def categorize_part(ref, val):
     injection = None
     
     # Check Pots first (avoids collisions like 'RANGE' starting with 'R')
-    if ref in pot_labels or any(ref.startswith(l) for l in pot_labels) or is_pot_value:
+    if ref_up in pot_labels or any(ref_up.startswith(l) for l in pot_labels) or is_pot_value:
         category = "Potentiometers"
         
-    elif ref.startswith('R') and not ref.startswith('RANGE'): category = "Resistors"
-    elif ref.startswith('C'): category = "Capacitors"
-    elif ref.startswith('D'): category = "Diodes"
-    elif ref.startswith('Q'): category = "Transistors"
-    elif ref.startswith('SW'): category = "Switches"
+    elif ref_up.startswith('R') and not ref_up.startswith('RANGE'): category = "Resistors"
+    elif ref_up.startswith('C'): category = "Capacitors"
+    elif ref_up.startswith('D'): category = "Diodes"
+    elif ref_up.startswith('Q'): category = "Transistors"
+    elif ref_up.startswith('SW'): category = "Switches"
     
     # ICs -> Inject Socket
-    elif ref.startswith(('U', 'IC', 'OP', 'TL')): 
+    elif ref_up.startswith(('U', 'IC', 'OP', 'TL')): 
         category = "ICs"
         injection = "Hardware/Misc | 8_PIN_DIP_SOCKET"
 
     # SMD Substitution Logic (J201/2N5457 -> SMD Adapter)
-    if "2N5457" in val:
-        val = "MMBF5457"
+    if "2N5457" in val_up:
+        val_clean = "MMBF5457"
         injection = "Hardware/Misc | SMD_ADAPTER_BOARD"
-    elif "MMBF5457" in val:
+    elif "MMBF5457" in val_up:
         injection = "Hardware/Misc | SMD_ADAPTER_BOARD"
         
-    return category, val, injection
+    return category, val_clean, injection
 
 def parse_with_verification(bom_list):
     """
@@ -115,7 +116,7 @@ def parse_with_verification(bom_list):
             
             if match:
                 ref_raw = match.group(1).upper()
-                val_raw = match.group(2).upper()
+                val_raw = match.group(2)
                 
                 refs = []
 
