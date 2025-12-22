@@ -1,32 +1,43 @@
-import streamlit as st
 import csv
+import datetime
 import io
 import os
 import tempfile
-import datetime
-import gspread
-from oauth2client.service_account import ServiceAccountCredentials
 from collections import defaultdict
-from src.bom_lib import parse_with_verification, parse_csv_bom, get_buy_details, get_residual_report, get_injection_warnings, sort_inventory
+
+import gspread
+import streamlit as st
+from oauth2client.service_account import ServiceAccountCredentials
+
+from src.bom_lib import (
+    get_buy_details,
+    get_injection_warnings,
+    get_residual_report,
+    parse_csv_bom,
+    parse_with_verification,
+    sort_inventory,
+)
+
 
 def save_feedback(rating, text):
     """Authenticates with Secrets and appends row to Google Sheets."""
     scope = [
         "https://spreadsheets.google.com/feeds",
-        "https://www.googleapis.com/auth/drive"
+        "https://www.googleapis.com/auth/drive",
     ]
-    
+
     # Load credentials from Streamlit secrets
     creds_dict = st.secrets["gcp_service_account"]
     creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
     client = gspread.authorize(creds)
-    
+
     # Open the Sheet
-    sheet = client.open("Pedal BOM Feedback").sheet1  
-    
+    sheet = client.open("Pedal BOM Feedback").sheet1
+
     # Append timestamp, rating, and comment
     row = [str(datetime.datetime.now()), rating, text]
     sheet.append_row(row)
+
 
 st.set_page_config(page_title="Pedal BOM Manager", page_icon="🎸")
 
@@ -41,9 +52,10 @@ This tool cleans the data, handles ranges like `R1-R5`, and adds "Nerd Economics
 # Setup Tabs
 text_tab, csv_tab = st.tabs(["📋 Paste Text", "📂 Upload CSV"])
 
-inventory = None
-stats = None
-ready = False
+if "inventory" not in st.session_state:
+    st.session_state.inventory = None
+if "stats" not in st.session_state:
+    st.session_state.stats = None
 
 # Tab 1: Text Paste
 with text_tab:
@@ -52,64 +64,73 @@ with text_tab:
         if not raw_text:
             st.error("You gotta paste something first.")
         else:
-            inventory, stats = parse_with_verification([raw_text])
-            ready = True
+            st.session_state.inventory, st.session_state.stats = (
+                parse_with_verification([raw_text])
+            )
 
 # Tab 2: CSV Upload
 with csv_tab:
     st.caption("Expects columns like 'Ref' and 'Value'.")
-    uploaded_files = st.file_uploader("Upload CSVs", type=["csv"], accept_multiple_files=True)
-    
+    uploaded_files = st.file_uploader(
+        "Upload CSVs", type=["csv"], accept_multiple_files=True
+    )
+
     if st.button("Generate Shopping List", type="primary", key="csv_submit"):
         if not uploaded_files:
             st.error("Upload at least one file.")
         else:
             inventory = defaultdict(int)
             stats = {"lines_read": 0, "parts_found": 0, "residuals": []}
-            
+
             try:
                 for uploaded_file in uploaded_files:
-                    with tempfile.NamedTemporaryFile(delete=False, suffix=".csv") as tmp:
+                    with tempfile.NamedTemporaryFile(
+                        delete=False, suffix=".csv"
+                    ) as tmp:
                         tmp.write(uploaded_file.getvalue())
                         tmp_path = tmp.name
-                    
+
                     try:
                         # Process single file
                         file_inv, file_stats = parse_csv_bom(tmp_path)
-                        
+
                         # Merge Logic: Add this file's signal to the master stack
                         for part, count in file_inv.items():
                             inventory[part] += count
-                        
-                        stats['lines_read'] += file_stats['lines_read']
-                        stats['parts_found'] += file_stats['parts_found']
-                        stats['residuals'].extend(file_stats['residuals'])
-                        
+
+                        stats["lines_read"] += file_stats["lines_read"]
+                        stats["parts_found"] += file_stats["parts_found"]
+                        stats["residuals"].extend(file_stats["residuals"])
+
                     finally:
                         # Clean up the temp file immediately
                         if os.path.exists(tmp_path):
                             os.remove(tmp_path)
-                
-                ready = True
-                
+
+                st.session_state.inventory = inventory
+                st.session_state.stats = stats
+
             except Exception as e:
                 st.error(f"CSV explosion: {e}")
 
 # Main Process
-if ready and inventory and stats:
-    
-    st.toast(f"Parsed {stats['lines_read']} lines successfully.", icon='✅')
+# Main Process
+if st.session_state.inventory and st.session_state.stats:
+    inventory = st.session_state.inventory
+    stats = st.session_state.stats
+
+    st.toast(f"Parsed {stats['lines_read']} lines successfully.", icon="✅")
 
     # 1. Show Stats
     with st.container():
         c1, c2, c3 = st.columns(3)
-        c1.metric("Lines Scanned", stats['lines_read'])
-        c2.metric("Parts Found", stats['parts_found'])
+        c1.metric("Lines Scanned", stats["lines_read"])
+        c2.metric("Parts Found", stats["parts_found"])
         unique_parts = len(sort_inventory(inventory))
         c3.metric("Unique SKUs", unique_parts)
-    
+
     st.divider()
-    
+
     # Check for junk
     suspicious = get_residual_report(stats)
     if suspicious:
@@ -119,7 +140,7 @@ if ready and inventory and stats:
                 st.code(line)
     else:
         st.success("✅ Clean parse. No weird leftovers.")
-        
+
     # Check for auto-injections
     warnings = get_injection_warnings(inventory)
     if warnings:
@@ -129,45 +150,57 @@ if ready and inventory and stats:
 
     # 2. Build the Shopping List
     final_data = []
-    
+
     # Sort by 'Nerd Priority'
     sorted_parts = sort_inventory(inventory)
-    
+
     for part_key, count in sorted_parts:
-        if " | " not in part_key: continue
+        if " | " not in part_key:
+            continue
         category, value = part_key.split(" | ", 1)
-        
+
         buy_qty, note = get_buy_details(category, value, count)
-        
-        final_data.append({
-            "Category": category, 
-            "Part": value, 
-            "BOM Qty": count, 
-            "Buy Qty": buy_qty, 
-            "Notes": note
-        })
-        
+
+        final_data.append(
+            {
+                "Category": category,
+                "Part": value,
+                "BOM Qty": count,
+                "Buy Qty": buy_qty,
+                "Notes": note,
+            }
+        )
+
     # 3. Render
     st.subheader("🛒 Master List")
     st.dataframe(final_data, use_container_width=True)
-    
+
     # 4. Downloads
     # CSV
     csv_buf = io.StringIO()
-    writer = csv.DictWriter(csv_buf, fieldnames=["Category", "Part", "BOM Qty", "Buy Qty", "Notes"])
+    writer = csv.DictWriter(
+        csv_buf, fieldnames=["Category", "Part", "BOM Qty", "Buy Qty", "Notes"]
+    )
     writer.writeheader()
     writer.writerows(final_data)
     csv_out = csv_buf.getvalue()
-    
+
     # Markdown
     md_out = "# Shopping List\n\n| Category | Part | Buy | Notes |\n|---|---|---|---|\n"
     for row in final_data:
         md_out += f"| {row['Category']} | **{row['Part']}** | **{row['Buy Qty']}** | *{row['Notes']}* |\n"
 
     d1, d2 = st.columns(2)
-    
-    d1.download_button("Download CSV", data=csv_out, file_name="pedal_parts.csv", mime="text/csv")
-    d2.download_button("Download Markdown", data=md_out, file_name="pedal_checklist.md", mime="text/markdown")
+
+    d1.download_button(
+        "Download CSV", data=csv_out, file_name="pedal_parts.csv", mime="text/csv"
+    )
+    d2.download_button(
+        "Download Markdown",
+        data=md_out,
+        file_name="pedal_checklist.md",
+        mime="text/markdown",
+    )
 
 st.divider()
 
@@ -180,16 +213,18 @@ with st.expander("🐞 Found a bug? / 📢 Feedback"):
         st.success("Thanks for your feedback! Message received.")
     else:
         st.caption("Let me know if I missed a component or if the app exploded.")
-        
+
         with st.form("feedback_form"):
             col1, col2 = st.columns([1, 4])
             with col1:
-                rating = st.select_slider("Rating", options=["😡", "😕", "😐", "🙂", "🤩"], value="🤩")
+                rating = st.select_slider(
+                    "Rating", options=["😡", "😕", "😐", "🙂", "🤩"], value="🤩"
+                )
             with col2:
                 comment = st.text_area("Details", height=80, placeholder="Details...")
-                
+
             submitted = st.form_submit_button("Send Feedback")
-            
+
             if submitted:
                 if not comment:
                     st.warning("Please enter a comment.")
