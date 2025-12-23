@@ -4,10 +4,12 @@ import io
 import os
 import tempfile
 from collections import defaultdict
+from typing import cast
+from src.bom_lib import StatsDict, InventoryType
 
 import gspread
 import streamlit as st
-from oauth2client.service_account import ServiceAccountCredentials
+from google.oauth2.service_account import Credentials
 
 from src.bom_lib import (
     get_buy_details,
@@ -28,7 +30,7 @@ def save_feedback(rating, text):
 
     # Load credentials from Streamlit secrets
     creds_dict = st.secrets["gcp_service_account"]
-    creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
+    creds = Credentials.from_service_account_info(creds_dict, scopes=scope)
     client = gspread.authorize(creds)
 
     # Open the Sheet
@@ -121,8 +123,8 @@ with csv_tab:
 # Main Process
 # Main Process
 if st.session_state.inventory and st.session_state.stats:
-    inventory = st.session_state.inventory
-    stats = st.session_state.stats
+    inventory = cast(InventoryType, st.session_state.inventory)
+    stats = cast(StatsDict, st.session_state.stats)
 
     # 1. Show Stats
     with st.container():
