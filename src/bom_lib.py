@@ -1,6 +1,18 @@
 import re
 import csv
 from collections import defaultdict
+from typing import Dict, List, Tuple, Optional, TypedDict
+
+
+# --- Type Definitions ---
+class StatsDict(TypedDict):
+    lines_read: int
+    parts_found: int
+    residuals: List[str]
+
+
+InventoryType = Dict[str, int]
+
 
 # Chip substitution recommendations
 # Keys are the chips found in BOM, values are fun alternatives to try.
@@ -17,7 +29,9 @@ IC_ALTS = {
 }
 
 
-def categorize_part(ref, val):
+def categorize_part(
+    ref: str, val: str
+) -> Tuple[Optional[str], Optional[str], Optional[str]]:
     """
     Decides what a part is based on its Ref (Name) and Value.
     """
@@ -96,7 +110,7 @@ def categorize_part(ref, val):
 
     # Classification
     category = "Unknown"
-    injection = None
+    injection: Optional[str] = None
 
     # Check Pots first (avoids collisions like 'RANGE' starting with 'R')
     if (
@@ -132,12 +146,12 @@ def categorize_part(ref, val):
     return category, val_clean, injection
 
 
-def parse_with_verification(bom_list):
+def parse_with_verification(bom_list: List[str]) -> Tuple[InventoryType, StatsDict]:
     """
     Parses raw text BOMs. Handles commas and ranges (R1-R4).
     """
-    inventory = defaultdict(int)
-    stats = {"lines_read": 0, "parts_found": 0, "residuals": []}
+    inventory: InventoryType = defaultdict(int)
+    stats: StatsDict = {"lines_read": 0, "parts_found": 0, "residuals": []}
 
     # Regex: Matches Ref + Separator + Value.
     # Separator can be whitespace or comma.
@@ -171,7 +185,7 @@ def parse_with_verification(bom_list):
                 ref_raw = match.group(1).upper()
                 val_raw = match.group(2)
 
-                refs = []
+                refs: List[str] = []
 
                 # Handle Ranges (R1-R5)
                 if "-" in ref_raw:
@@ -216,12 +230,12 @@ def parse_with_verification(bom_list):
     return inventory, stats
 
 
-def parse_csv_bom(filepath):
+def parse_csv_bom(filepath: str) -> Tuple[InventoryType, StatsDict]:
     """
     Parses a CSV file. Expects columns vaguely named 'Ref' and 'Value'.
     """
-    inventory = defaultdict(int)
-    stats = {"lines_read": 0, "parts_found": 0, "residuals": []}
+    inventory: InventoryType = defaultdict(int)
+    stats: StatsDict = {"lines_read": 0, "parts_found": 0, "residuals": []}
 
     with open(filepath, "r", encoding="utf-8-sig") as f:
         reader = csv.DictReader(f)
@@ -257,7 +271,7 @@ def parse_csv_bom(filepath):
     return inventory, stats
 
 
-def get_residual_report(stats):
+def get_residual_report(stats: StatsDict) -> List[str]:
     """Returns lines that look like parts but were skipped."""
     safe_words = [
         "RESISTORS",
@@ -269,7 +283,7 @@ def get_residual_report(stats):
         "COMPONENT LIST",
         "SOCKET",
     ]
-    suspicious = []
+    suspicious: List[str] = []
 
     for line in stats["residuals"]:
         upper = line.upper()
@@ -282,7 +296,7 @@ def get_residual_report(stats):
     return suspicious
 
 
-def get_injection_warnings(inventory):
+def get_injection_warnings(inventory: InventoryType) -> List[str]:
     """Warns user if we made assumptions (SMD adapters, Sockets)."""
     warnings = []
     if inventory.get("Hardware/Misc | SMD_ADAPTER_BOARD", 0) > 0:
@@ -296,7 +310,7 @@ def get_injection_warnings(inventory):
     return warnings
 
 
-def get_buy_details(category, val, count):
+def get_buy_details(category: str, val: str, count: int) -> Tuple[int, str]:
     """Applies 'Nerd Economics' to calculate buy quantity."""
     buy = count
     note = ""
@@ -344,7 +358,7 @@ def get_buy_details(category, val, count):
     return buy, note
 
 
-def sort_inventory(inventory):
+def sort_inventory(inventory: InventoryType) -> List[Tuple[str, int]]:
     """Sorts parts in logical build order."""
     order = [
         "PCB",
@@ -360,7 +374,7 @@ def sort_inventory(inventory):
     # Map name to index for sorting
     pmap = {name: i for i, name in enumerate(order)}
 
-    def sort_key(item):
+    def sort_key(item: Tuple[str, int]) -> Tuple[int, str]:
         key = item[0]
         if " | " not in key:
             return (999, key)
