@@ -4,6 +4,20 @@ from collections import defaultdict
 from typing import Dict, List, Tuple, Optional, TypedDict
 
 
+# SI Prefix Multipliers
+MULTIPLIERS = {
+    "p": 1e-12,  # pico
+    "n": 1e-9,  # nano
+    "u": 1e-6,  # micro (standard)
+    "µ": 1e-6,  # micro (alt)
+    "m": 1e-3,  # milli
+    "k": 1e3,  # kilo
+    "K": 1e3,  # kilo (uppercase tolerance)
+    "M": 1e6,  # Mega
+    "G": 1e9,  # Giga
+}
+
+
 # --- Type Definitions ---
 class StatsDict(TypedDict):
     lines_read: int
@@ -135,6 +149,13 @@ def categorize_part(
     elif ref_up.startswith(("U", "IC", "OP", "TL")):
         category = "ICs"
         injection = "Hardware/Misc | 8_PIN_DIP_SOCKET"
+
+    # We attempt to parse the value. If successful, we replace the
+    # raw string with the canonical "Search String".
+    fval = parse_value_to_float(val_clean)
+    if fval is not None:
+        val_clean = float_to_search_string(fval)
+        val_up = val_clean.upper()  # Update upper for subs checks below
 
     # SMD Substitution Logic (J201/2N5457 -> SMD Adapter)
     if "2N5457" in val_up:
@@ -318,7 +339,7 @@ def get_buy_details(category: str, val: str, count: int) -> Tuple[int, str]:
     if category == "Resistors":
         buy = max(10, count + 5)
     elif category == "Capacitors":
-        if "100N" in val or "0.1U" in val:
+        if "100n" in val.lower() or "0.1u" in val.lower():
             buy = count + 10
             note = "Power filtering (buy bulk)."
         else:
@@ -359,7 +380,7 @@ def get_buy_details(category: str, val: str, count: int) -> Tuple[int, str]:
 
 
 def sort_inventory(inventory: InventoryType) -> List[Tuple[str, int]]:
-    """Sorts parts in logical build order."""
+    """Sorts parts by Category Rank, THEN by Physical Value (Ohms/Farads)."""
     order = [
         "PCB",
         "ICs",
@@ -374,12 +395,116 @@ def sort_inventory(inventory: InventoryType) -> List[Tuple[str, int]]:
     # Map name to index for sorting
     pmap = {name: i for i, name in enumerate(order)}
 
-    def sort_key(item: Tuple[str, int]) -> Tuple[int, str]:
+    def sort_key(item: Tuple[str, int]) -> Tuple[int, float, str]:
         key = item[0]
         if " | " not in key:
-            return (999, key)
+            return (999, 0.0, key)
+
         cat, val = key.split(" | ", 1)
         rank = pmap.get(cat, 100)
-        return (rank, val)
+
+        # Parse value for sorting
+        fval = parse_value_to_float(val)
+        if fval is None:
+            fval = 0.0
+
+        return (rank, fval, val)
 
     return sorted(inventory.items(), key=sort_key)
+
+
+def parse_value_to_float(val_str: str) -> Optional[float]:
+    """
+    Reduces component values to their base SI unit (Ohms/Farads).
+    Handles: '10k', '4.7u', '100', '1M'
+    Returns: float or None if parsing fails.
+    """
+    if not val_str:
+        return None
+
+    # normalization: remove whitespace, common units like 'F', 'H', 'R', 'Ω'
+    # We want to strip trailing 'F' only if it's not 'nF', 'uF' etc, but
+    # usually stripping the last char if it's 'F' or 'R' or 'Ohm' is safe
+    # IF we extracted the multiplier first.
+
+    # Simple regex strategy:
+    # 1. Look for the number (int or float)
+    # 2. Look for the immediate next letter (the multiplier)
+
+    # Match: (Start)(Number)(Multiplier?)(Everything Else)
+    match = re.search(r"^([\d\.]+)\s*([pnuµmkKMG])?", val_str.strip())
+
+    if match:
+        num_str = match.group(1)
+        suffix = match.group(2)
+
+        try:
+            base_val = float(num_str)
+        except ValueError:
+            return None
+
+        if suffix and suffix in MULTIPLIERS:
+            return base_val * MULTIPLIERS[suffix]
+
+        return base_val
+
+    return None
+
+
+def float_to_search_string(val: float) -> str:
+    """
+    Machine-readable format (e.g., 1500.0 -> '1.5k').
+    Used for: Searching Tayda, sorting keys.
+    """
+    if val is None:
+        return ""
+
+    # Determine the best prefix
+    # iterate high to low to find the first one that fits
+    # (p, n, u, m, k, M, G)
+    # We use a reduced subset for display to keep it clean
+    for suffix, multiplier in [("M", 1e6), ("k", 1e3)]:
+        if val >= multiplier:
+            # Check if it's a whole number after division
+            reduced = val / multiplier
+            if reduced.is_integer():
+                return f"{int(reduced)}{suffix}"
+            return f"{reduced:.1f}{suffix}"  # 4.7k
+
+    # Cap/Inductor logic (u, n, p)
+    # This logic is a bit purely mathematical,
+    # but works for standard E12 series values.
+    if val < 1.0:
+        for suffix, multiplier in [("u", 1e-6), ("n", 1e-9), ("p", 1e-12)]:
+            if val >= multiplier:
+                reduced = val / multiplier
+                if reduced.is_integer():
+                    return f"{int(reduced)}{suffix}"
+                return f"{reduced:.1f}{suffix}"
+
+    # Fallback for plain ohms (100R)
+    if val.is_integer():
+        return str(int(val))
+    return str(val)
+
+
+def float_to_display_string(val: float) -> str:
+    """
+    Human-readable BS 1852 format (e.g., 1500.0 -> '1k5').
+    Used for: The printed checklist.
+    """
+    base = float_to_search_string(val)
+
+    # Transform 4.7k -> 4k7
+    if "." in base and any(c.isalpha() for c in base):
+        # Split by the decimal
+        num, rest = base.split(".")
+        # Rest contains '7k'
+        # We want to find the letter and sandwich it
+        match = re.search(r"(\d+)([a-zA-Z]+)", rest)
+        if match:
+            decimal_part = match.group(1)
+            suffix = match.group(2)
+            return f"{num}{suffix}{decimal_part}"
+
+    return base

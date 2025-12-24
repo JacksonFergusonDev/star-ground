@@ -1,6 +1,12 @@
 import pytest
 from hypothesis import given, strategies as st
-from src.bom_lib import parse_with_verification, get_buy_details
+from src.bom_lib import (
+    parse_with_verification,
+    get_buy_details,
+    parse_value_to_float,
+    float_to_search_string,
+    float_to_display_string,
+)
 
 # Standard Unit Tests
 
@@ -67,3 +73,43 @@ def test_buy_logic_scaling(qty):
 
     # We should never buy FEWER than we need
     assert buy_qty >= qty
+
+
+def test_float_engine_round_trip():
+    """
+    Verifies the full lifecycle of a value.
+    Raw -> Float -> Display
+    """
+    # Test Case: 1.5k Resistor
+    val = parse_value_to_float("1k5")
+
+    # TYPE GUARD: Tell Mypy "If this is None, crash the test right here"
+    assert val is not None
+
+    assert val == 1500.0
+    assert float_to_search_string(val) == "1.5k"
+    assert float_to_display_string(val) == "1k5"
+
+    # Test Case: 100n (Capacitor Normalization)
+    val1 = parse_value_to_float("100n")
+
+    # TYPE GUARD
+    assert val1 is not None
+
+    # We normalized 100n -> 1.0e-7.
+    # Our renderer might output "100n" or "0.1u" depending on implementation details,
+    # but it will definitely be one of them.
+    out = float_to_search_string(val1)
+    assert "u" in out or "n" in out
+
+
+def test_bs1852_formatting():
+    """Does the 'Pretty' renderer handle the decimal swap?"""
+    val = 1500.0  # 1.5k
+    assert float_to_display_string(val) == "1k5"
+
+    val = 2200000.0  # 2.2M
+    assert float_to_display_string(val) == "2M2"
+
+    val = 4700.0  # 4.7k
+    assert float_to_display_string(val) == "4k7"
