@@ -1,0 +1,22 @@
+# Inherit from base requirements
+-r requirements.txt
+
+# Testing & Linting
+mypy==1.19.1
+pytest==9.0.1
+hypothesis==6.148.5
+
+# Type Stubs
+pandas-stubs
+types-requests
+types-toml
+types-Pygments
+types-cachetools
+types-cffi
+types-colorama
+types-defusedxml
+types-jsonschema
+types-pexpect
+types-protobuf
+types-pyasn1
+types-pycurl
