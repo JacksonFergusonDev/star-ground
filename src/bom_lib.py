@@ -150,12 +150,13 @@ def categorize_part(
         category = "ICs"
         injection = "Hardware/Misc | 8_PIN_DIP_SOCKET"
 
-    # We attempt to parse the value. If successful, we replace the
-    # raw string with the canonical "Search String".
-    fval = parse_value_to_float(val_clean)
-    if fval is not None:
-        val_clean = float_to_search_string(fval)
-        val_up = val_clean.upper()  # Update upper for subs checks below
+    # Only normalize Passives (Resistors/Caps) to avoid mangling Transistors
+    # (e.g., preventing "2N5457" from becoming "2")
+    if category in ("Resistors", "Capacitors"):
+        fval = parse_value_to_float(val_clean)
+        if fval is not None:
+            val_clean = float_to_search_string(fval)
+            val_up = val_clean.upper()
 
     # SMD Substitution Logic (J201/2N5457 -> SMD Adapter)
     if "2N5457" in val_up:
@@ -422,15 +423,22 @@ def parse_value_to_float(val_str: str) -> Optional[float]:
     if not val_str:
         return None
 
-    # normalization: remove whitespace, common units like 'F', 'H', 'R', 'Ω'
-    # We want to strip trailing 'F' only if it's not 'nF', 'uF' etc, but
-    # usually stripping the last char if it's 'F' or 'R' or 'Ohm' is safe
-    # IF we extracted the multiplier first.
+    val_str = val_str.strip()
 
-    # Simple regex strategy:
-    # 1. Look for the number (int or float)
-    # 2. Look for the immediate next letter (the multiplier)
+    # 1. Handle "Sandwich" notation (BS 1852): 1k5 -> 1500.0
+    # Match: (Digits)(Multiplier)(Digits)
+    sandwich = re.match(r"^(\d+)([pnuµmkKMG])(\d+)", val_str)
 
+    if sandwich:
+        whole = sandwich.group(1)
+        suffix = sandwich.group(2)
+        fraction = sandwich.group(3)
+
+        # Reassemble as float: 1k5 -> 1.5 * 1000
+        base = float(f"{whole}.{fraction}")
+        return base * MULTIPLIERS[suffix]
+
+    # 2. Standard "Number + Suffix"
     # Match: (Start)(Number)(Multiplier?)(Everything Else)
     match = re.search(r"^([\d\.]+)\s*([pnuµmkKMG])?", val_str.strip())
 
