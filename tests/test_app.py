@@ -71,4 +71,4 @@ def test_csv_processing_via_state_injection(app):
     assert "10k" in df["Part"].values
 
     # Check that download buttons appeared (Integration check)
-    assert len(app.get("download_button")) >= 2
+    assert len(app.get("download_button")) == 1
