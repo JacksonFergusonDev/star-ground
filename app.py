@@ -85,8 +85,8 @@ with csv_tab:
         if not uploaded_files:
             st.error("Upload at least one file.")
         else:
-            inventory = defaultdict(int)
-            stats = {"lines_read": 0, "parts_found": 0, "residuals": []}
+            inventory: InventoryType = defaultdict(int)
+            stats: StatsDict = {"lines_read": 0, "parts_found": 0, "residuals": []}
 
             try:
                 for uploaded_file in uploaded_files:
