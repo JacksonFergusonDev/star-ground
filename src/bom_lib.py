@@ -1,5 +1,6 @@
 import re
 import csv
+import math
 from collections import defaultdict
 from typing import Dict, List, Tuple, Optional, TypedDict
 
@@ -335,9 +336,15 @@ def get_buy_details(category: str, val: str, count: int) -> Tuple[int, str]:
     fval = parse_value_to_float(val)
 
     if category == "Resistors":
-        buy = max(10, count + 5)
-        # Warn if < 1 Ohm (unless it's literally 0 for a jumper)
-        if fval is not None and 0.0 < fval < 1.0:
+        # Nerd Economics: Buffer +5, then round up to nearest 10 (Tayda pack size)
+        buffered_qty = count + 5
+        buy = math.ceil(buffered_qty / 10) * 10
+
+        # Default Material Recommendation
+        note = "Use 1/4W Metal Film (1%)"
+
+        # Warn if < 1 Ohm
+        if fval is not None and fval < 1.0:
             note = "⚠️ Suspicious Value (< 1Ω). Verify BOM."
 
     elif category == "Capacitors":

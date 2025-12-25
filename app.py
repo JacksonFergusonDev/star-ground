@@ -167,16 +167,12 @@ if st.session_state.inventory and st.session_state.stats:
     # 2. Build the Shopping List
     final_data = []
 
-    # ---------------------------------------------------------------------
     # STEP A: Inject Hardware & Smart Merge
     # We do this FIRST so that merged items (like 3.3k resistors)
     # get their counts updated in the inventory before we sort/loop.
-    # ---------------------------------------------------------------------
     hardware_list = get_standard_hardware(inventory, pedal_count)
 
-    # ---------------------------------------------------------------------
     # STEP B: Process the (now updated) Inventory
-    # ---------------------------------------------------------------------
     sorted_parts = sort_inventory(inventory)
 
     for part_key, count in sorted_parts:
@@ -203,10 +199,13 @@ if st.session_state.inventory and st.session_state.stats:
             }
         )
 
-    # ---------------------------------------------------------------------
     # STEP C: Append the Missing Hardware List
-    # ---------------------------------------------------------------------
     final_data.extend(hardware_list)
+
+    # STEP D: Group by Section
+    section_map = {"Parsed BOM": 0, "Recommended Extras": 1, "Missing/Critical": 2}
+
+    final_data.sort(key=lambda row: section_map.get(row["Section"], 99))
 
     # 3. Render
     st.subheader("🛒 Master List")
