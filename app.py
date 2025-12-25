@@ -13,7 +13,6 @@ from google.oauth2.service_account import Credentials
 
 from src.bom_lib import (
     get_buy_details,
-    get_injection_warnings,
     get_residual_report,
     parse_csv_bom,
     parse_with_verification,
@@ -157,12 +156,13 @@ if st.session_state.inventory and st.session_state.stats:
     else:
         st.success("✅ Clean parse. No weird leftovers.")
 
-    # Check for auto-injections
-    warnings = get_injection_warnings(inventory)
-    if warnings:
-        # Join the list into one block of text
-        warning_msg = "\n\n".join(warnings)
-        st.info(f"**💡 Assumptions Made:**\n\n{warning_msg}")
+    # Explain the sections
+    st.info("""
+    **📋 List Key:**
+    * **Parsed BOM:** Components found directly in your text/CSV.
+    * **Recommended Extras:** IC Sockets, SMD adapters, and optional build aids.
+    * **Missing/Critical:** Essential hardware (Enclosures, Jacks, Switches) auto-injected based on your Pedal Count.
+    """)
 
     # 2. Build the Shopping List
     final_data = []
