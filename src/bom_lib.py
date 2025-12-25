@@ -567,85 +567,78 @@ def get_standard_hardware(inventory: InventoryType, pedal_count: int = 1) -> Lis
     """
     hardware = []
 
-    # Calculate Total Pots for Knobs/Seals
-    total_pots = 0
-    for key, count in inventory.items():
-        if key.startswith("Potentiometers"):
-            total_pots += count
+    # Helper: Check inventory. If exists -> Merge. If not -> Add to Missing List.
+    def smart_merge(category, val, part_display, note, section="Missing/Critical"):
+        # Construct the key exactly as the parser would (Category | Value)
+        # Note: 'val' must match the normalized output (e.g. "3.3k" not "3300")
+        key = f"{category} | {val}"
 
-    # Helper to add items cleanly
-    def add_item(part, qty, note="", section="Missing/Critical"):
+        if key in inventory:
+            # IT EXISTS: Just bump the count.
+            # The main loop will pick this up later as a "Parsed BOM" item
+            inventory[key] += 1 * pedal_count
+        else:
+            # MISSING: Add to the hardware list
+            hardware.append(
+                {
+                    "Section": section,
+                    "Category": category,  # e.g. "Resistors"
+                    "Part": part_display,  # e.g. "Resistor 3.3k (Metal Film)"
+                    "BOM Qty": 1 * pedal_count,
+                    "Buy Qty": 1 * pedal_count,
+                    "Notes": note,
+                }
+            )
+
+    # --- 1. SMART MERGE ITEMS ---
+    # These are parts that MIGHT be in the BOM already.
+
+    # Resistor 3.3k (For LED CLR)
+    # The parser normalizes 3300/3k3 -> "3.3k", so we match that.
+    smart_merge("Resistors", "3.3k", "Resistor 3.3k (Metal Film)", "For LED CLR")
+
+    # LED
+    # Most BOMs just say "LED". Parser keeps "LED" as value.
+    smart_merge("Diodes", "LED", "LED (Diffuse)", "Status Light")
+
+    # --- 2. ALWAYS MISSING ITEMS ---
+    # These rarely appear in text BOMs with valid prefixes, so we force inject them.
+
+    def add_forced(part, qty, note="", section="Missing/Critical"):
         hardware.append(
             {
                 "Section": section,
                 "Category": "Hardware",
                 "Part": part,
-                "BOM Qty": qty,  # Virtual BOM qty
-                "Buy Qty": qty,  # No buffer needed for big hardware usually
+                "BOM Qty": qty,
+                "Buy Qty": qty,
                 "Notes": note,
             }
         )
 
-    # --- PER PEDAL ITEMS ---
-    # We multiply these by the number of pedals the user says they are building
+    p = pedal_count
 
-    add_item("1590B Enclosure", 1 * pedal_count, "Standard size. Verify PCB fit!")
-    add_item("3PDT FOOTSWITCH PCB", 1 * pedal_count, "Tayda Specific Wiring Board")
-    add_item(
-        "3PDT STOMP SWITCH",
-        1 * pedal_count,
-        "Pick 'Soft Click' for a more premium feel",
+    add_forced("1590B Enclosure", 1 * p, "Standard size. Verify PCB fit!")
+    add_forced("3PDT FOOTSWITCH PCB", 1 * p, "Tayda Wiring Board")
+    add_forced("3PDT STOMP SWITCH", 1 * p, "Blue/Standard")
+
+    add_forced("6.35MM JACK (STEREO)", 1 * p, "Input (Stereo handles battery)")
+    add_forced("6.35MM JACK (MONO)", 1 * p, "Output")
+    add_forced("DC POWER JACK 2.1MM", 1 * p, "Standard Center Negative")
+
+    add_forced("Bezel LED Holder", 1 * p, "Match LED size (3mm/5mm)")
+    add_forced("Rubber Feet (Black)", 4 * p, "Enclosure Feet")
+    add_forced("AWG 24 Hook-Up Wire", 1 * p, "Approx 1ft (30cm) per pedal")
+
+    add_forced("9V BATTERY CLIP", 1 * p, "Optional", "Recommended Extras")
+    add_forced(
+        "Heat Shrink Tubing", 1, "Essential for insulation", "Recommended Extras"
     )
 
-    # Jacks
-    add_item(
-        "6.35MM JACK (STEREO)",
-        1 * pedal_count,
-        "Input (Stereo handles battery switching)",
-    )
-    add_item("6.35MM JACK (MONO)", 1 * pedal_count, "Output")
-    add_item("DC POWER JACK 2.1MM", 1 * pedal_count, "Standard Center Negative")
-
-    # Power/LED Cluster
-    add_item(
-        "9V BATTERY CLIP",
-        1 * pedal_count,
-        "Optional (omit if pedalboard only)",
-        "Recommended Extras",
-    )
-    add_item("LED (Diffuse)", 1 * pedal_count, "Status Light")
-    add_item("Bezel LED Holder", 1 * pedal_count, "3mm or 5mm to match LED")
-    add_item(
-        "Resistor 3.3k (Metal Film)",
-        1 * pedal_count,
-        "For LED Current Limiting (Standard Brightness)",
-    )
-
-    # Misc
-    add_item("Rubber Feet (Black)", 4 * pedal_count, "For Enclosure")
-
-    # Wire Calculation
-    add_item(
-        "AWG 24 Hook-Up Wire (Stranded)",
-        2 * pedal_count,
-        "Approx 2ft (60cm) per pedal, get a variety of colors",
-    )
-
-    add_item(
-        "Heat Shrink Tubing",
-        1,
-        "Essential for LED/DC Jack insulation",
-        "Recommended Extras",
-    )
-
-    # --- PER POT ITEMS ---
+    # Knobs (Dynamic Count)
+    total_pots = sum(c for k, c in inventory.items() if k.startswith("Potentiometers"))
     if total_pots > 0:
-        add_item("Knob", total_pots, "1 per Potentiometer")
-        add_item(
-            "Dust Seal Cover",
-            total_pots,
-            "Protects pots from dust/debris",
-            "Recommended Extras",
-        )
+        add_forced("Knob", total_pots, "1 per Pot")
+        add_forced("Dust Seal Cover", total_pots, "Protects pots", "Recommended Extras")
 
     return hardware

@@ -167,7 +167,16 @@ if st.session_state.inventory and st.session_state.stats:
     # 2. Build the Shopping List
     final_data = []
 
-    # A. Parsed Parts (From BOM)
+    # ---------------------------------------------------------------------
+    # STEP A: Inject Hardware & Smart Merge
+    # We do this FIRST so that merged items (like 3.3k resistors)
+    # get their counts updated in the inventory before we sort/loop.
+    # ---------------------------------------------------------------------
+    hardware_list = get_standard_hardware(inventory, pedal_count)
+
+    # ---------------------------------------------------------------------
+    # STEP B: Process the (now updated) Inventory
+    # ---------------------------------------------------------------------
     sorted_parts = sort_inventory(inventory)
 
     for part_key, count in sorted_parts:
@@ -194,11 +203,9 @@ if st.session_state.inventory and st.session_state.stats:
             }
         )
 
-    # B. Inject Missing Hardware
-    hardware_list = get_standard_hardware(inventory, pedal_count)
-
-    # Remap keys to match our CSV format if needed, but get_standard_hardware
-    # already returns the correct dict structure.
+    # ---------------------------------------------------------------------
+    # STEP C: Append the Missing Hardware List
+    # ---------------------------------------------------------------------
     final_data.extend(hardware_list)
 
     # 3. Render
