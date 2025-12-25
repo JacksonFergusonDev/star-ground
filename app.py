@@ -18,6 +18,7 @@ from src.bom_lib import (
     parse_csv_bom,
     parse_with_verification,
     sort_inventory,
+    get_standard_hardware,
 )
 
 
@@ -50,6 +51,16 @@ st.markdown("""
 Paste your raw component lists (or upload a CSV). 
 This tool cleans the data, handles ranges like `R1-R5`, and adds "Nerd Economics" (bulk buying buffers) to your final list.
 """)
+
+st.markdown("### 1. Project Config")
+col1, col2 = st.columns([1, 2])
+with col1:
+    pedal_count = st.number_input(
+        "How many pedals are you building?",
+        min_value=1,
+        value=1,
+        help="Multiplies enclosures, jacks, and switches automatically.",
+    )
 
 # Setup Tabs
 text_tab, csv_tab = st.tabs(["📋 Paste Text", "📂 Upload CSV"])
@@ -156,7 +167,7 @@ if st.session_state.inventory and st.session_state.stats:
     # 2. Build the Shopping List
     final_data = []
 
-    # Sort by 'Nerd Priority'
+    # A. Parsed Parts (From BOM)
     sorted_parts = sort_inventory(inventory)
 
     for part_key, count in sorted_parts:
@@ -164,10 +175,17 @@ if st.session_state.inventory and st.session_state.stats:
             continue
         category, value = part_key.split(" | ", 1)
 
+        # Determine Section
+        section = "Parsed BOM"
+        # Move auto-injected sockets/adapters to Extras
+        if "SOCKET" in value or "ADAPTER" in value:
+            section = "Recommended Extras"
+
         buy_qty, note = get_buy_details(category, value, count)
 
         final_data.append(
             {
+                "Section": section,
                 "Category": category,
                 "Part": value,
                 "BOM Qty": count,
@@ -176,15 +194,29 @@ if st.session_state.inventory and st.session_state.stats:
             }
         )
 
+    # B. Inject Missing Hardware
+    hardware_list = get_standard_hardware(inventory, pedal_count)
+
+    # Remap keys to match our CSV format if needed, but get_standard_hardware
+    # already returns the correct dict structure.
+    final_data.extend(hardware_list)
+
     # 3. Render
     st.subheader("🛒 Master List")
-    st.dataframe(final_data, use_container_width=True)
+
+    # Configure the dataframe to show Section first
+    st.dataframe(
+        final_data,
+        column_order=["Section", "Category", "Part", "BOM Qty", "Buy Qty", "Notes"],
+        use_container_width=True,
+    )
 
     # 4. Downloads
     # CSV
     csv_buf = io.StringIO()
     writer = csv.DictWriter(
-        csv_buf, fieldnames=["Category", "Part", "BOM Qty", "Buy Qty", "Notes"]
+        csv_buf,
+        fieldnames=["Section", "Category", "Part", "BOM Qty", "Buy Qty", "Notes"],
     )
     writer.writeheader()
     writer.writerows(final_data)

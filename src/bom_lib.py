@@ -357,6 +357,25 @@ def get_buy_details(category: str, val: str, count: int) -> Tuple[int, str]:
         if fval is not None and fval > 0.01:
             note = "⚠️ Suspicious Value (> 10mF). Verify BOM."
 
+        # MATERIAL RECOMMENDATIONS
+        if fval is not None:
+            # 1. The Pico/Nano Range (<= 1nF)
+            if fval <= 1.0e-9:
+                note += " | Rec: Monolithic Ceramic (MLCC)"
+
+            # 2. The Film Range (1nF < val < 1uF)
+            elif 1.0e-9 < fval < 1.0e-6:
+                note += " | Rec: Box Film"
+
+            # 3. The Ambiguous 1uF Crossover (== 1uF)
+            # Use small epsilon for float comparison safety
+            elif abs(fval - 1.0e-6) < 1.0e-9:
+                note += " | Rec: Box Film (Check BOM: Could be Electrolytic)"
+
+            # 4. The Power Range (> 1uF)
+            else:
+                note += " | Rec: Electrolytic"
+
     elif category == "Diodes":
         buy = max(10, count + 5)
 
@@ -540,3 +559,93 @@ def float_to_display_string(val: float) -> str:
             return f"{num}{suffix}{decimal_part}"
 
     return base
+
+
+def get_standard_hardware(inventory: InventoryType, pedal_count: int = 1) -> List[dict]:
+    """
+    Generates the 'Missing/Critical' section based on pedal count and pot count.
+    """
+    hardware = []
+
+    # Calculate Total Pots for Knobs/Seals
+    total_pots = 0
+    for key, count in inventory.items():
+        if key.startswith("Potentiometers"):
+            total_pots += count
+
+    # Helper to add items cleanly
+    def add_item(part, qty, note="", section="Missing/Critical"):
+        hardware.append(
+            {
+                "Section": section,
+                "Category": "Hardware",
+                "Part": part,
+                "BOM Qty": qty,  # Virtual BOM qty
+                "Buy Qty": qty,  # No buffer needed for big hardware usually
+                "Notes": note,
+            }
+        )
+
+    # --- PER PEDAL ITEMS ---
+    # We multiply these by the number of pedals the user says they are building
+
+    add_item("1590B Enclosure", 1 * pedal_count, "Standard size. Verify PCB fit!")
+    add_item("3PDT FOOTSWITCH PCB", 1 * pedal_count, "Tayda Specific Wiring Board")
+    add_item(
+        "3PDT STOMP SWITCH",
+        1 * pedal_count,
+        "Pick 'Soft Click' for a more premium feel",
+    )
+
+    # Jacks
+    add_item(
+        "6.35MM JACK (STEREO)",
+        1 * pedal_count,
+        "Input (Stereo handles battery switching)",
+    )
+    add_item("6.35MM JACK (MONO)", 1 * pedal_count, "Output")
+    add_item("DC POWER JACK 2.1MM", 1 * pedal_count, "Standard Center Negative")
+
+    # Power/LED Cluster
+    add_item(
+        "9V BATTERY CLIP",
+        1 * pedal_count,
+        "Optional (omit if pedalboard only)",
+        "Recommended Extras",
+    )
+    add_item("LED (Diffuse)", 1 * pedal_count, "Status Light")
+    add_item("Bezel LED Holder", 1 * pedal_count, "3mm or 5mm to match LED")
+    add_item(
+        "Resistor 3.3k (Metal Film)",
+        1 * pedal_count,
+        "For LED Current Limiting (Standard Brightness)",
+    )
+
+    # Misc
+    add_item("Rubber Feet (Black)", 4 * pedal_count, "For Enclosure")
+
+    # Wire Calculation
+    add_item(
+        "AWG 24 Hook-Up Wire (Stranded)",
+        2 * pedal_count,
+        "Approx 2ft (60cm) per pedal, get a variety of colors",
+    )
+
+    add_item(
+        "Heat Shrink Tubing",
+        1,
+        "Essential for LED/DC Jack insulation",
+        "Recommended Extras",
+    )
+
+    # --- PER POT ITEMS ---
+    if total_pots > 0:
+        add_item("Knob", total_pots, "1 per Potentiometer")
+        add_item(
+            "Dust Seal Cover",
+            total_pots,
+            "Protects pots from dust/debris",
+            "Recommended Extras",
+        )
+
+    return hardware
