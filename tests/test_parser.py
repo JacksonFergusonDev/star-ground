@@ -277,7 +277,7 @@ def test_search_term_generation():
 
     # 3. Capacitors (Should include spec type)
     cap = generate_search_term("Capacitors", "100n", "Box Film")
-    assert cap == "100n Box Film"
+    assert cap == "100nF Box Film"
 
     # 4. Diodes (LED Handling)
     led = generate_search_term("Diodes", "LED")
