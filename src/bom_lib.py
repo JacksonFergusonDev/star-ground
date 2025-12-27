@@ -401,7 +401,7 @@ def generate_search_term(category: str, val: str, spec_type: str = "") -> str:
     elif category == "Diodes":
         # "LED" is too generic; default to a standard indicator
         if val.upper() == "LED":
-            return "LED 3mm red"
+            return "LED 3mm"
         return val
 
     # Default / Pass-through (ICs, Hardware, PCB, Switches)
@@ -713,9 +713,16 @@ def get_standard_hardware(inventory: InventoryType, pedal_count: int = 1) -> Lis
                 category, part_display, 1 * pedal_count, note, section, search_val=val
             )
 
-    def add_forced(part, qty, note="", section="Missing/Critical", category="Hardware"):
+    def add_forced(
+        part,
+        qty,
+        note="",
+        section="Missing/Critical",
+        category="Hardware",
+        search_val: Optional[str] = None,
+    ):
         """Always injects the item."""
-        _create_entry(category, part, qty, note, section)
+        _create_entry(category, part, qty, note, section, search_val=search_val)
 
     # --- 1. SMART MERGE ITEMS ---
     # Resistor 3.3k (For LED CLR)
@@ -729,20 +736,48 @@ def get_standard_hardware(inventory: InventoryType, pedal_count: int = 1) -> Lis
     p = pedal_count
 
     add_forced("1590B Enclosure", 1 * p, "Standard size. Verify PCB fit!")
-    add_forced("3PDT FOOTSWITCH PCB", 1 * p, "Tayda Wiring Board")
+
+    add_forced(
+        "3PDT FOOTSWITCH PCB",
+        1 * p,
+        "Tayda Wiring Board",
+        search_val="3PDT Footswitch DIY PCB Wiring Board",
+    )
+
     add_forced("3PDT STOMP SWITCH", 1 * p, "Blue/Standard")
 
-    add_forced("6.35MM JACK (STEREO)", 1 * p, "Input (Stereo handles battery)")
-    add_forced("6.35MM JACK (MONO)", 1 * p, "Output")
+    add_forced(
+        "6.35MM JACK (STEREO)",
+        1 * p,
+        "Input (Stereo handles battery)",
+        search_val="6.35MM JACK STEREO",
+    )
+
+    add_forced("6.35MM JACK (MONO)", 1 * p, "Output", search_val="6.35MM JACK MONO")
+
     add_forced("DC POWER JACK 2.1MM", 1 * p, "Standard Center Negative")
 
-    add_forced("Bezel LED Holder", 1 * p, "Match LED size (3mm/5mm)")
-    add_forced("Rubber Feet (Black)", 4 * p, "Enclosure Feet")
+    add_forced(
+        "Bezel LED Holder",
+        1 * p,
+        "Match LED size (3mm) | Rec: Metal",
+        search_val="3mm Bezel LED Holder Metal",
+    )
+
+    add_forced(
+        "Rubber Feet (Black)", 4 * p, "Enclosure Feet", search_val="Rubber Feet Black"
+    )
+
     add_forced("AWG 24 Hook-Up Wire", 1 * p, "Approx 1ft (30cm) per pedal")
 
     add_forced("9V BATTERY CLIP", 1 * p, "Optional", "Recommended Extras")
+
     add_forced(
-        "Heat Shrink Tubing", 1, "Essential for insulation", "Recommended Extras"
+        "Heat Shrink Tubing",
+        1,
+        "Essential for insulation",
+        "Recommended Extras",
+        search_val="Heat Shrink Tubing 3mm",
     )
 
     # Knobs (Dynamic Count)
