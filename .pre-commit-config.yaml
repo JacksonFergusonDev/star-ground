@@ -7,3 +7,10 @@ repos:
       # Then lint the already-formatted code.
       - id: ruff
         args: [--fix]
+  - repo: local
+    hooks:
+      - id: mypy
+        name: mypy
+        entry: mypy
+        language: system
+        types: [python]
