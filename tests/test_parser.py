@@ -7,6 +7,9 @@ from src.bom_lib import (
     float_to_search_string,
     float_to_display_string,
     get_standard_hardware,
+    get_spec_type,
+    generate_search_term,
+    generate_tayda_url,
 )
 
 # Standard Unit Tests
@@ -236,3 +239,75 @@ def test_hardware_injection_and_smart_merge():
     knobs = [x for x in hardware_list if x["Part"] == "Knob"]
     assert len(knobs) == 1
     assert knobs[0]["Buy Qty"] == 3
+
+
+# 3. Search Engine & Vendor Integration Tests
+
+
+def test_spec_type_logic():
+    """Verify we correctly identify capacitor types based on value."""
+    # Pico range -> MLCC
+    assert get_spec_type("Capacitors", "100p") == "MLCC"
+
+    # Nano range -> Box Film
+    assert get_spec_type("Capacitors", "10n") == "Box Film"
+
+    # The 1uF Crossover -> Box Film
+    assert get_spec_type("Capacitors", "1u") == "Box Film"
+
+    # Bulk range -> Electrolytic
+    assert get_spec_type("Capacitors", "100u") == "Electrolytic"
+
+
+def test_search_term_generation():
+    """Verify the string building logic for Tayda."""
+    # 1. Resistors (Must include keywords)
+    res = generate_search_term("Resistors", "10k")
+    assert res == "10k ohm 1/4w metal film"
+
+    # 2. Potentiometers (Taper Mapping)
+    # Log Taper
+    pot_log = generate_search_term("Potentiometers", "100k-A")
+    assert "Logarithmic" in pot_log
+    assert "100k" in pot_log
+
+    # Linear Taper
+    pot_lin = generate_search_term("Potentiometers", "10k-B")
+    assert "Linear" in pot_lin
+
+    # 3. Capacitors (Should include spec type)
+    cap = generate_search_term("Capacitors", "100n", "Box Film")
+    assert cap == "100nF Box Film"
+
+    # 4. Diodes (LED Handling)
+    led = generate_search_term("Diodes", "LED")
+    assert "3mm" in led
+
+
+def test_tayda_url_encoding():
+    """Does it properly encode spaces and special chars?"""
+    term = "10k ohm 1/4w"
+    url = generate_tayda_url(term)
+
+    assert "https://www.taydaelectronics.com" in url
+    assert "10k+ohm+1%2F4w" in url
+
+
+def test_hardware_links_integration():
+    """
+    Ensure get_standard_hardware populates the new Link fields.
+    This verifies the _create_entry helper logic.
+    """
+    inventory = {}
+    hardware_list = get_standard_hardware(inventory, pedal_count=1)
+
+    # Grab the Enclosure (usually first or second item)
+    enclosure = next(item for item in hardware_list if "Enclosure" in item["Part"])
+
+    # Check keys exist
+    assert "Search Term" in enclosure
+    assert "Tayda_Link" in enclosure
+
+    # Check content
+    assert enclosure["Search Term"] == "1590B Enclosure"
+    assert "1590B+Enclosure" in enclosure["Tayda_Link"]

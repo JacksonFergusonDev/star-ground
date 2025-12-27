@@ -3,6 +3,7 @@ import csv
 import math
 from collections import defaultdict
 from typing import Dict, List, Tuple, Optional, TypedDict
+from urllib.parse import quote_plus
 
 
 # SI Prefix Multipliers
@@ -149,7 +150,7 @@ def categorize_part(
     # ICs -> Inject Socket
     elif ref_up.startswith(("U", "IC", "OP", "TL")):
         category = "ICs"
-        injection = "Hardware/Misc | 8_PIN_DIP_SOCKET"
+        injection = "Hardware/Misc | 8 PIN DIP SOCKET"
 
     # Only normalize Passives (Resistors/Caps) to avoid mangling Transistors
     # (e.g., preventing "2N5457" from becoming "2")
@@ -319,11 +320,107 @@ def get_injection_warnings(inventory: InventoryType) -> List[str]:
         warnings.append(
             "⚠️  SMD ADAPTERS: Added for MMBF5457. Check if your PCB has SOT-23 pads first."
         )
-    if inventory.get("Hardware/Misc | 8_PIN_DIP_SOCKET", 0) > 0:
+    if inventory.get("Hardware/Misc | 8 PIN DIP SOCKET", 0) > 0:
         warnings.append(
             "ℹ️  IC SOCKETS: Added sockets for chips. Optional but recommended."
         )
     return warnings
+
+
+def get_spec_type(category: str, val: str) -> str:
+    """
+    Determines the specific material or type based on category and value.
+    Used for Search Generation and Recommendation Notes.
+    """
+    if category == "Capacitors":
+        fval = parse_value_to_float(val)
+        if fval is None:
+            return ""
+
+        # Pico/Nano Range (<= 1nF)
+        if fval < 1.0e-9:
+            return "MLCC"
+
+        # Film Range (1nF < val < 1uF)
+        elif 1.0e-9 <= fval < 1.0e-6:
+            return "Box Film"
+
+        # The Ambiguous 1uF Crossover (== 1uF)
+        elif abs(fval - 1.0e-6) < 1.0e-9:
+            return "Box Film"
+
+        # The Power Range (> 1uF)
+        else:
+            return "Electrolytic"
+
+    return ""
+
+
+def generate_search_term(category: str, val: str, spec_type: str = "") -> str:
+    """
+    Generates a Tayda-optimized search string.
+    """
+    if category == "Resistors":
+        return f"{val} ohm 1/4w metal film"
+
+    elif category == "Capacitors":
+        # Check if it ends in a shorthand unit (p, n, u) and append 'F'
+        if val and val[-1] in "pnu":
+            val += "F"
+
+        if spec_type:
+            return f"{val} {spec_type}"
+        return val
+
+    elif category == "Potentiometers":
+        # 1. Determine Taper
+        taper = "Linear"  # Default
+        val_upper = val.upper()
+
+        if "A" in val_upper:
+            taper = "Logarithmic"
+        elif "B" in val_upper:
+            taper = "Linear"
+        elif "C" in val_upper:
+            taper = "Reverse Log"
+        elif "W" in val_upper:
+            taper = "W Taper"
+
+        # 2. Clean Value (e.g. "B100k" -> "100k")
+        # Strip taper letters so the float parser can find the number
+        clean_raw = re.sub(r"[ABCW\-\s]", "", val_upper)
+        fval = parse_value_to_float(clean_raw)
+
+        if fval is not None:
+            clean_val = float_to_search_string(fval)
+        else:
+            clean_val = clean_raw if clean_raw else val
+
+        return f"{clean_val} ohm {taper} potentiometer"
+
+    elif category == "Diodes":
+        # "LED" is too generic; default to a standard indicator
+        if val.upper() == "LED":
+            return "LED 3mm"
+        return val
+
+    # Specific override for Sockets to get the solder type
+    if val == "8 PIN DIP SOCKET":
+        return "8 pin DIP IC Socket Adaptor Solder Type"
+
+    # Default / Pass-through (ICs, Hardware, PCB, Switches)
+    return val
+
+
+def generate_tayda_url(search_term: str) -> str:
+    """
+    Creates a clickable search link for Tayda Electronics.
+    """
+    if not search_term:
+        return ""
+
+    encoded = quote_plus(search_term)
+    return f"https://www.taydaelectronics.com/catalogsearch/result/?q={encoded}"
 
 
 def get_buy_details(category: str, val: str, count: int) -> Tuple[int, str]:
@@ -369,23 +466,19 @@ def get_buy_details(category: str, val: str, count: int) -> Tuple[int, str]:
             note_parts.append("⚠️ Suspicious Value (> 10mF).")
 
         # MATERIAL RECOMMENDATIONS
-        if fval is not None:
-            # 1. The Pico/Nano Range (<= 1nF)
-            if fval <= 1.0e-9:
-                note_parts.append("Rec: Monolithic Ceramic (MLCC)")
-
-            # 2. The Film Range (1nF < val < 1uF)
-            elif 1.0e-9 < fval < 1.0e-6:
-                note_parts.append("Rec: Box Film")
-
-            # 3. The Ambiguous 1uF Crossover (== 1uF)
-            # Use small epsilon for float comparison safety
-            elif abs(fval - 1.0e-6) < 1.0e-9:
+        spec_type = get_spec_type(category, val)
+        if spec_type:
+            # Preserve the specific 1uF warning logic while using the shared type
+            if (
+                spec_type == "Box Film"
+                and fval is not None
+                and abs(fval - 1.0e-6) < 1.0e-9
+            ):
                 note_parts.append("Rec: Box Film (Check BOM: Could be Electrolytic)")
-
-            # 4. The Power Range (> 1uF)
+            elif spec_type == "MLCC":
+                note_parts.append("Rec: Monolithic Ceramic (MLCC)")
             else:
-                note_parts.append("Rec: Electrolytic")
+                note_parts.append(f"Rec: {spec_type}")
 
             # Join properly
             note = " | ".join(note_parts)
@@ -581,78 +674,149 @@ def get_standard_hardware(inventory: InventoryType, pedal_count: int = 1) -> Lis
     """
     hardware = []
 
-    # Helper: Check inventory. If exists -> Merge. If not -> Add to Missing List.
+    # --- INTERNAL HELPERS ---
+    def _create_entry(
+        category: str,
+        part_name: str,
+        qty: int,
+        note: str,
+        section: str,
+        search_val: Optional[str] = None,
+        buy_qty: Optional[int] = None,
+    ):
+        """Helper to build consistent hardware rows with search links."""
+        # Use the specific search value (e.g. "3.3k") if provided, otherwise use the part name
+        if search_val is None:
+            search_val = part_name
+
+        # Default buy_qty to BOM qty if not specified
+        if buy_qty is None:
+            buy_qty = qty
+
+        search_term = generate_search_term(category, search_val)
+        url = generate_tayda_url(search_term)
+
+        hardware.append(
+            {
+                "Section": section,
+                "Category": category,
+                "Part": part_name,
+                "BOM Qty": qty,
+                "Buy Qty": buy_qty,
+                "Notes": note,
+                "Search Term": search_term,
+                "Tayda_Link": url,
+            }
+        )
+
     def smart_merge(category, val, part_display, note, section="Missing/Critical"):
-        # Construct the key exactly as the parser would (Category | Value)
-        # Note: 'val' must match the normalized output (e.g. "3.3k" not "3300")
+        """Checks inventory state before injecting."""
         key = f"{category} | {val}"
 
         if key in inventory:
             # IT EXISTS: Just bump the count.
-            # The main loop will pick this up later as a "Parsed BOM" item
             inventory[key] += 1 * pedal_count
         else:
-            # MISSING: Add to the hardware list
-            hardware.append(
-                {
-                    "Section": section,
-                    "Category": category,  # e.g. "Resistors"
-                    "Part": part_display,  # e.g. "Resistor 3.3k (Metal Film)"
-                    "BOM Qty": 1 * pedal_count,
-                    "Buy Qty": 1 * pedal_count,
-                    "Notes": note,
-                }
+            # MISSING: Add to list.
+            bom_qty = 1 * pedal_count
+            calc_buy_qty = bom_qty
+
+            if category == "Resistors":
+                # Buffer +5, Round to nearest 10
+                calc_buy_qty = math.ceil((bom_qty + 5) / 10) * 10
+            elif category == "Diodes":  # LED
+                calc_buy_qty = bom_qty + 2
+
+            _create_entry(
+                category,
+                part_display,
+                bom_qty,
+                note,
+                section,
+                search_val=val,
+                buy_qty=calc_buy_qty,
             )
 
-    # --- 1. SMART MERGE ITEMS ---
-    # These are parts that MIGHT be in the BOM already.
+    def add_forced(
+        part,
+        qty,
+        note="",
+        section="Missing/Critical",
+        category="Hardware",
+        search_val: Optional[str] = None,
+        buy_qty: Optional[int] = None,
+    ):
+        """Always injects the item."""
+        _create_entry(
+            category, part, qty, note, section, search_val=search_val, buy_qty=buy_qty
+        )
 
+    # --- 1. SMART MERGE ITEMS ---
     # Resistor 3.3k (For LED CLR)
-    # The parser normalizes 3300/3k3 -> "3.3k", so we match that.
-    smart_merge("Resistors", "3.3k", "Resistor 3.3k (Metal Film)", "For LED CLR")
+    smart_merge("Resistors", "3.3k", "3.3k", "For LED CLR")
 
     # LED
-    # Most BOMs just say "LED". Parser keeps "LED" as value.
     smart_merge("Diodes", "LED", "LED (Diffuse)", "Status Light")
 
     # --- 2. ALWAYS MISSING ITEMS ---
-    # These rarely appear in text BOMs with valid prefixes, so we force inject them.
-
-    def add_forced(part, qty, note="", section="Missing/Critical"):
-        hardware.append(
-            {
-                "Section": section,
-                "Category": "Hardware",
-                "Part": part,
-                "BOM Qty": qty,
-                "Buy Qty": qty,
-                "Notes": note,
-            }
-        )
 
     p = pedal_count
 
     add_forced("1590B Enclosure", 1 * p, "Standard size. Verify PCB fit!")
-    add_forced("3PDT FOOTSWITCH PCB", 1 * p, "Tayda Wiring Board")
+
+    add_forced(
+        "3PDT FOOTSWITCH PCB",
+        1 * p,
+        "Tayda Wiring Board",
+        search_val="3PDT Footswitch DIY PCB Wiring Board",
+    )
+
     add_forced("3PDT STOMP SWITCH", 1 * p, "Blue/Standard")
 
-    add_forced("6.35MM JACK (STEREO)", 1 * p, "Input (Stereo handles battery)")
-    add_forced("6.35MM JACK (MONO)", 1 * p, "Output")
+    add_forced(
+        "6.35MM JACK (STEREO)",
+        1 * p,
+        "Input (Stereo handles battery)",
+        search_val="6.35MM JACK STEREO",
+    )
+
+    add_forced("6.35MM JACK (MONO)", 1 * p, "Output", search_val="6.35MM JACK MONO")
+
     add_forced("DC POWER JACK 2.1MM", 1 * p, "Standard Center Negative")
 
-    add_forced("Bezel LED Holder", 1 * p, "Match LED size (3mm/5mm)")
-    add_forced("Rubber Feet (Black)", 4 * p, "Enclosure Feet")
-    add_forced("AWG 24 Hook-Up Wire", 1 * p, "Approx 1ft (30cm) per pedal")
+    add_forced(
+        "Bezel LED Holder",
+        1 * p,
+        "Match LED size (3mm) | Rec: Metal",
+        search_val="3mm Bezel LED Holder Metal",
+    )
+
+    add_forced(
+        "Rubber Feet (Black)", 4 * p, "Enclosure Feet", search_val="Rubber Feet Black"
+    )
+
+    add_forced("AWG 24 Hook-Up Wire", 3 * p, "Approx 1ft (30cm) per pedal")
 
     add_forced("9V BATTERY CLIP", 1 * p, "Optional", "Recommended Extras")
+
     add_forced(
-        "Heat Shrink Tubing", 1, "Essential for insulation", "Recommended Extras"
+        "Heat Shrink Tubing",
+        1 * p,
+        "Essential for insulation",
+        "Recommended Extras",
+        search_val="Heat Shrink Tubing 2.5mm",
     )
 
     # Knobs (Dynamic Count)
     total_pots = sum(c for k, c in inventory.items() if k.startswith("Potentiometers"))
     if total_pots > 0:
         add_forced("Knob", total_pots, "1 per Pot")
-        add_forced("Dust Seal Cover", total_pots, "Protects pots", "Recommended Extras")
+        add_forced(
+            "Dust Seal Cover",
+            total_pots,
+            "Protects pots",
+            "Recommended Extras",
+            buy_qty=total_pots + 2,
+        )
 
     return hardware

@@ -18,6 +18,9 @@ from src.bom_lib import (
     parse_with_verification,
     sort_inventory,
     get_standard_hardware,
+    get_spec_type,
+    generate_search_term,
+    generate_tayda_url,
 )
 
 
@@ -188,6 +191,10 @@ if st.session_state.inventory and st.session_state.stats:
 
         buy_qty, note = get_buy_details(category, value, count)
 
+        spec_type = get_spec_type(category, value)
+        search_term = generate_search_term(category, value, spec_type)
+        url = generate_tayda_url(search_term)
+
         final_data.append(
             {
                 "Section": section,
@@ -196,6 +203,8 @@ if st.session_state.inventory and st.session_state.stats:
                 "BOM Qty": count,
                 "Buy Qty": buy_qty,
                 "Notes": note,
+                "Search Term": search_term,
+                "Tayda_Link": url,
             }
         )
 
@@ -213,23 +222,74 @@ if st.session_state.inventory and st.session_state.stats:
     # Configure the dataframe to show Section first
     st.dataframe(
         final_data,
-        column_order=["Section", "Category", "Part", "BOM Qty", "Buy Qty", "Notes"],
+        column_order=[
+            "Section",
+            "Category",
+            "Part",
+            "BOM Qty",
+            "Buy Qty",
+            "Notes",
+            "Tayda_Link",
+        ],
+        column_config={
+            "Tayda_Link": st.column_config.LinkColumn(
+                "Buy Link",  # Column Header
+                display_text="🔍 Buy",  # Cell Text (Hides the URL)
+                help="Search on Tayda Electronics",
+            ),
+        },
         use_container_width=True,
     )
 
     # 4. Downloads
-    # CSV
-    csv_buf = io.StringIO()
-    writer = csv.DictWriter(
-        csv_buf,
-        fieldnames=["Section", "Category", "Part", "BOM Qty", "Buy Qty", "Notes"],
+    st.subheader("💾 Export")
+
+    # Toggle for Link Formatting
+    link_format = st.radio(
+        "CSV Link Format:",
+        ["Excel / Google Sheets (Formula)", "Standard (Raw URL)"],
+        horizontal=True,
+        help="Excel mode creates clickable 'Buy' links. Standard mode saves the full https:// URL.",
     )
+
+    # CSV Generation
+    csv_buf = io.StringIO()
+    fields = [
+        "Section",
+        "Category",
+        "Part",
+        "BOM Qty",
+        "Buy Qty",
+        "Notes",
+        "Search Term",
+        "Tayda_Link",
+    ]
+    writer = csv.DictWriter(csv_buf, fieldnames=fields)
     writer.writeheader()
-    writer.writerows(final_data)
+
+    # LOGIC: Conditional Formatting
+    if "Excel" in link_format:
+        # Transform for Excel
+        csv_export_data = []
+        for row in final_data:
+            export_row = row.copy()
+            row_link = export_row.get("Tayda_Link")
+            if row_link:
+                export_row["Tayda_Link"] = f'=HYPERLINK("{row_link}", "Buy")'
+            csv_export_data.append(export_row)
+        writer.writerows(csv_export_data)
+    else:
+        # Standard: Just write the raw data
+        writer.writerows(final_data)
+
     csv_out = csv_buf.getvalue().encode("utf-8-sig")
 
     st.download_button(
-        "Download CSV", data=csv_out, file_name="pedal_parts.csv", mime="text/csv"
+        "Download CSV",
+        data=csv_out,
+        file_name="pedal_parts.csv",
+        mime="text/csv",
+        type="primary",
     )
 
 st.divider()
