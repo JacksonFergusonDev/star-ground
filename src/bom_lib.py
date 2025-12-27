@@ -326,6 +326,35 @@ def get_injection_warnings(inventory: InventoryType) -> List[str]:
     return warnings
 
 
+def get_spec_type(category: str, val: str) -> str:
+    """
+    Determines the specific material or type based on category and value.
+    Used for Search Generation and Recommendation Notes.
+    """
+    if category == "Capacitors":
+        fval = parse_value_to_float(val)
+        if fval is None:
+            return ""
+
+        # Pico/Nano Range (<= 1nF)
+        if fval <= 1.0e-9:
+            return "MLCC"
+
+        # Film Range (1nF < val < 1uF)
+        elif 1.0e-9 < fval < 1.0e-6:
+            return "Box Film"
+
+        # The Ambiguous 1uF Crossover (== 1uF)
+        elif abs(fval - 1.0e-6) < 1.0e-9:
+            return "Box Film"
+
+        # The Power Range (> 1uF)
+        else:
+            return "Electrolytic"
+
+    return ""
+
+
 def get_buy_details(category: str, val: str, count: int) -> Tuple[int, str]:
     """Applies 'Nerd Economics' to calculate buy quantity."""
     buy = count
@@ -369,23 +398,19 @@ def get_buy_details(category: str, val: str, count: int) -> Tuple[int, str]:
             note_parts.append("⚠️ Suspicious Value (> 10mF).")
 
         # MATERIAL RECOMMENDATIONS
-        if fval is not None:
-            # 1. The Pico/Nano Range (<= 1nF)
-            if fval <= 1.0e-9:
-                note_parts.append("Rec: Monolithic Ceramic (MLCC)")
-
-            # 2. The Film Range (1nF < val < 1uF)
-            elif 1.0e-9 < fval < 1.0e-6:
-                note_parts.append("Rec: Box Film")
-
-            # 3. The Ambiguous 1uF Crossover (== 1uF)
-            # Use small epsilon for float comparison safety
-            elif abs(fval - 1.0e-6) < 1.0e-9:
+        spec_type = get_spec_type(category, val)
+        if spec_type:
+            # Preserve the specific 1uF warning logic while using the shared type
+            if (
+                spec_type == "Box Film"
+                and fval is not None
+                and abs(fval - 1.0e-6) < 1.0e-9
+            ):
                 note_parts.append("Rec: Box Film (Check BOM: Could be Electrolytic)")
-
-            # 4. The Power Range (> 1uF)
+            elif spec_type == "MLCC":
+                note_parts.append("Rec: Monolithic Ceramic (MLCC)")
             else:
-                note_parts.append("Rec: Electrolytic")
+                note_parts.append(f"Rec: {spec_type}")
 
             # Join properly
             note = " | ".join(note_parts)
