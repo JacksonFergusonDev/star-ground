@@ -667,54 +667,61 @@ def get_standard_hardware(inventory: InventoryType, pedal_count: int = 1) -> Lis
     """
     hardware = []
 
-    # Helper: Check inventory. If exists -> Merge. If not -> Add to Missing List.
+    # --- INTERNAL HELPERS ---
+    def _create_entry(
+        category: str,
+        part_name: str,
+        qty: int,
+        note: str,
+        section: str,
+        search_val: Optional[str] = None,
+    ):
+        """Helper to build consistent hardware rows with search links."""
+        # Use the specific search value (e.g. "3.3k") if provided, otherwise use the part name
+        if search_val is None:
+            search_val = part_name
+
+        search_term = generate_search_term(category, search_val)
+        url = generate_tayda_url(search_term)
+
+        hardware.append(
+            {
+                "Section": section,
+                "Category": category,
+                "Part": part_name,
+                "BOM Qty": qty,
+                "Buy Qty": qty,
+                "Notes": note,
+                "Search Term": search_term,
+                "Tayda_Link": url,
+            }
+        )
+
     def smart_merge(category, val, part_display, note, section="Missing/Critical"):
-        # Construct the key exactly as the parser would (Category | Value)
-        # Note: 'val' must match the normalized output (e.g. "3.3k" not "3300")
+        """Checks inventory state before injecting."""
         key = f"{category} | {val}"
 
         if key in inventory:
             # IT EXISTS: Just bump the count.
-            # The main loop will pick this up later as a "Parsed BOM" item
             inventory[key] += 1 * pedal_count
         else:
-            # MISSING: Add to the hardware list
-            hardware.append(
-                {
-                    "Section": section,
-                    "Category": category,  # e.g. "Resistors"
-                    "Part": part_display,  # e.g. "Resistor 3.3k (Metal Film)"
-                    "BOM Qty": 1 * pedal_count,
-                    "Buy Qty": 1 * pedal_count,
-                    "Notes": note,
-                }
+            # MISSING: Add to list. Note we pass 'val' ("3.3k") for search generation.
+            _create_entry(
+                category, part_display, 1 * pedal_count, note, section, search_val=val
             )
 
-    # --- 1. SMART MERGE ITEMS ---
-    # These are parts that MIGHT be in the BOM already.
+    def add_forced(part, qty, note="", section="Missing/Critical", category="Hardware"):
+        """Always injects the item."""
+        _create_entry(category, part, qty, note, section)
 
+    # --- 1. SMART MERGE ITEMS ---
     # Resistor 3.3k (For LED CLR)
-    # The parser normalizes 3300/3k3 -> "3.3k", so we match that.
     smart_merge("Resistors", "3.3k", "Resistor 3.3k (Metal Film)", "For LED CLR")
 
     # LED
-    # Most BOMs just say "LED". Parser keeps "LED" as value.
     smart_merge("Diodes", "LED", "LED (Diffuse)", "Status Light")
 
     # --- 2. ALWAYS MISSING ITEMS ---
-    # These rarely appear in text BOMs with valid prefixes, so we force inject them.
-
-    def add_forced(part, qty, note="", section="Missing/Critical"):
-        hardware.append(
-            {
-                "Section": section,
-                "Category": "Hardware",
-                "Part": part,
-                "BOM Qty": qty,
-                "Buy Qty": qty,
-                "Notes": note,
-            }
-        )
 
     p = pedal_count
 
