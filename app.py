@@ -22,6 +22,7 @@ from src.bom_lib import (
     parse_csv_bom,
     parse_with_verification,
     sort_inventory,
+    parse_pedalpcb_pdf,
 )
 
 
@@ -66,7 +67,7 @@ with col1:
     )
 
 # Setup Tabs
-text_tab, csv_tab = st.tabs(["📋 Paste Text", "📂 Upload CSV"])
+text_tab, files_tab = st.tabs(["📋 Paste Text", "📂 Upload Files"])
 
 if "inventory" not in st.session_state:
     st.session_state.inventory = None
@@ -88,11 +89,11 @@ with text_tab:
                 icon="✅",
             )
 
-# Tab 2: CSV Upload
-with csv_tab:
-    st.caption("Expects columns like 'Ref' and 'Value'.")
+# Tab 2: File Upload
+with files_tab:
+    st.caption("Supports CSV (Ref/Value columns) and PedalPCB Build Docs (PDF).")
     uploaded_files = st.file_uploader(
-        "Upload CSVs", type=["csv"], accept_multiple_files=True
+        "Upload Files", type=["csv", "pdf"], accept_multiple_files=True
     )
 
     if st.button("Generate Shopping List", type="primary", key="csv_submit"):
@@ -104,15 +105,19 @@ with csv_tab:
 
             try:
                 for uploaded_file in uploaded_files:
-                    with tempfile.NamedTemporaryFile(
-                        delete=False, suffix=".csv"
-                    ) as tmp:
+                    # Determine extension to route to the correct parser
+                    ext = os.path.splitext(uploaded_file.name)[1].lower()
+
+                    with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp:
                         tmp.write(uploaded_file.getvalue())
                         tmp_path = tmp.name
 
                     try:
                         # Process single file
-                        file_inv, file_stats = parse_csv_bom(tmp_path)
+                        if ext == ".pdf":
+                            file_inv, file_stats = parse_pedalpcb_pdf(tmp_path)
+                        else:
+                            file_inv, file_stats = parse_csv_bom(tmp_path)
 
                         # Merge Logic: Add this file's signal to the master stack
                         for part, count in file_inv.items():
