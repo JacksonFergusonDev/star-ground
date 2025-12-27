@@ -369,6 +369,9 @@ def generate_search_term(category: str, val: str, spec_type: str = "") -> str:
         if val and val[-1] in "pnu":
             val += "F"
 
+        if spec_type == "MLCC":
+            return f"{val} multilayer"
+
         if spec_type:
             return f"{val} {spec_type}"
         return val
