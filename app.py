@@ -233,7 +233,9 @@ if st.session_state.inventory and st.session_state.stats:
         ],
         column_config={
             "Tayda_Link": st.column_config.LinkColumn(
-                "🔍 Buy", help="Search on Tayda Electronics"
+                "Buy Link",  # Column Header
+                display_text="🔍 Buy",  # Cell Text (Hides the URL)
+                help="Search on Tayda Electronics",
             ),
         },
         use_container_width=True,

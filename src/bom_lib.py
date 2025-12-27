@@ -150,7 +150,7 @@ def categorize_part(
     # ICs -> Inject Socket
     elif ref_up.startswith(("U", "IC", "OP", "TL")):
         category = "ICs"
-        injection = "Hardware/Misc | 8_PIN_DIP_SOCKET"
+        injection = "Hardware/Misc | 8 PIN DIP SOCKET"
 
     # Only normalize Passives (Resistors/Caps) to avoid mangling Transistors
     # (e.g., preventing "2N5457" from becoming "2")
@@ -320,7 +320,7 @@ def get_injection_warnings(inventory: InventoryType) -> List[str]:
         warnings.append(
             "⚠️  SMD ADAPTERS: Added for MMBF5457. Check if your PCB has SOT-23 pads first."
         )
-    if inventory.get("Hardware/Misc | 8_PIN_DIP_SOCKET", 0) > 0:
+    if inventory.get("Hardware/Misc | 8 PIN DIP SOCKET", 0) > 0:
         warnings.append(
             "ℹ️  IC SOCKETS: Added sockets for chips. Optional but recommended."
         )
@@ -338,11 +338,11 @@ def get_spec_type(category: str, val: str) -> str:
             return ""
 
         # Pico/Nano Range (<= 1nF)
-        if fval <= 1.0e-9:
+        if fval < 1.0e-9:
             return "MLCC"
 
         # Film Range (1nF < val < 1uF)
-        elif 1.0e-9 < fval < 1.0e-6:
+        elif 1.0e-9 <= fval < 1.0e-6:
             return "Box Film"
 
         # The Ambiguous 1uF Crossover (== 1uF)
@@ -364,7 +364,10 @@ def generate_search_term(category: str, val: str, spec_type: str = "") -> str:
         return f"{val} ohm 1/4w metal film"
 
     elif category == "Capacitors":
-        # Combine value with the material type we extracted (e.g., "100n Box Film")
+        # Check if it ends in a shorthand unit (p, n, u) and append 'F'
+        if val and val[-1] in "pnu":
+            val += "F"
+
         if spec_type:
             return f"{val} {spec_type}"
         return val
