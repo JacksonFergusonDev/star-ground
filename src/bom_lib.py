@@ -355,6 +355,55 @@ def get_spec_type(category: str, val: str) -> str:
     return ""
 
 
+def generate_search_term(category: str, val: str, spec_type: str = "") -> str:
+    """
+    Generates a Tayda-optimized search string.
+    """
+    if category == "Resistors":
+        return f"{val} 1/4w metal film"
+
+    elif category == "Capacitors":
+        # Combine value with the material type we extracted (e.g., "100n Box Film")
+        if spec_type:
+            return f"{val} {spec_type}"
+        return val
+
+    elif category == "Potentiometers":
+        # 1. Determine Taper
+        taper = "Linear"  # Default
+        val_upper = val.upper()
+
+        if "A" in val_upper:
+            taper = "Logarithmic"
+        elif "B" in val_upper:
+            taper = "Linear"
+        elif "C" in val_upper:
+            taper = "Reverse Log"
+        elif "W" in val_upper:
+            taper = "W Taper"
+
+        # 2. Clean Value (e.g. "B100k" -> "100k")
+        # Strip taper letters so the float parser can find the number
+        clean_raw = re.sub(r"[ABCW\-\s]", "", val_upper)
+        fval = parse_value_to_float(clean_raw)
+
+        if fval is not None:
+            clean_val = float_to_search_string(fval)
+        else:
+            clean_val = clean_raw if clean_raw else val
+
+        return f"{clean_val} ohm {taper} potentiometer"
+
+    elif category == "Diodes":
+        # "LED" is too generic; default to a standard indicator
+        if val.upper() == "LED":
+            return "LED 3mm red"
+        return val
+
+    # Default / Pass-through (ICs, Hardware, PCB, Switches)
+    return val
+
+
 def get_buy_details(category: str, val: str, count: int) -> Tuple[int, str]:
     """Applies 'Nerd Economics' to calculate buy quantity."""
     buy = count
