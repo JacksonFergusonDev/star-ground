@@ -1,6 +1,7 @@
 import re
 import csv
 import math
+import pdfplumber
 from collections import defaultdict
 from typing import Dict, List, Tuple, Optional, TypedDict
 from urllib.parse import quote_plus
@@ -820,3 +821,72 @@ def get_standard_hardware(inventory: InventoryType, pedal_count: int = 1) -> Lis
         )
 
     return hardware
+
+
+def parse_pedalpcb_pdf(filepath: str) -> Tuple[InventoryType, StatsDict]:
+    """
+    Parses a PedalPCB Build Document (PDF).
+    Extracts the BOM table using visual line detection.
+    """
+    inventory: InventoryType = defaultdict(int)
+    stats: StatsDict = {"lines_read": 0, "parts_found": 0, "residuals": []}
+
+    try:
+        with pdfplumber.open(filepath) as pdf:
+            for page in pdf.pages:
+                tables = page.extract_tables()
+
+                for table in tables:
+                    # Header Check
+                    # Row 0 usually contains ["LOCATION", "VALUE", "TYPE", "NOTES"]
+                    if not table:
+                        continue
+
+                    # Normalized headers to find columns
+                    # Handle cases where headers might be None or empty strings
+                    headers = [str(h).upper().strip() for h in table[0] if h]
+
+                    # Heuristic: Must have LOCATION and VALUE columns to be a BOM
+                    if "LOCATION" not in headers or "VALUE" not in headers:
+                        continue
+
+                    # Map headers to list indices
+                    try:
+                        loc_idx = headers.index("LOCATION")
+                        val_idx = headers.index("VALUE")
+                    except ValueError:
+                        continue
+
+                    # Process Rows (Skip header)
+                    for row in table[1:]:
+                        stats["lines_read"] += 1
+
+                        # Handle potential None cells or short rows
+                        row_safe = [str(cell) if cell else "" for cell in row]
+
+                        # Skip if row is too short to contain the data
+                        if len(row_safe) <= max(loc_idx, val_idx):
+                            continue
+
+                        # Clean up newlines inside cells (e.g. "Resistor\n1/4W")
+                        ref_raw = row_safe[loc_idx].replace("\n", " ").strip()
+                        val_raw = row_safe[val_idx].replace("\n", " ").strip()
+
+                        if not ref_raw or not val_raw:
+                            continue
+
+                        # Categorize
+                        cat, clean_val, inj = categorize_part(ref_raw, val_raw)
+                        if cat:
+                            inventory[f"{cat} | {clean_val}"] += 1
+                            if inj:
+                                inventory[inj] += 1
+                            stats["parts_found"] += 1
+                        else:
+                            # Log failed rows from the table as residuals for debugging
+                            stats["residuals"].append(f"| {ref_raw} | {val_raw} |")
+
+    except Exception as e:
+        stats["residuals"].append(f"PDF Parse Error: {e}")
+
+    return inventory, stats
