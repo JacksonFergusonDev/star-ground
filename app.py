@@ -18,6 +18,9 @@ from src.bom_lib import (
     parse_with_verification,
     sort_inventory,
     get_standard_hardware,
+    get_spec_type,
+    generate_search_term,
+    generate_tayda_url,
 )
 
 
@@ -188,6 +191,10 @@ if st.session_state.inventory and st.session_state.stats:
 
         buy_qty, note = get_buy_details(category, value, count)
 
+        spec_type = get_spec_type(category, value)
+        search_term = generate_search_term(category, value, spec_type)
+        url = generate_tayda_url(search_term)
+
         final_data.append(
             {
                 "Section": section,
@@ -196,6 +203,8 @@ if st.session_state.inventory and st.session_state.stats:
                 "BOM Qty": count,
                 "Buy Qty": buy_qty,
                 "Notes": note,
+                "Search Term": search_term,
+                "Tayda_Link": url,
             }
         )
 
@@ -213,17 +222,33 @@ if st.session_state.inventory and st.session_state.stats:
     # Configure the dataframe to show Section first
     st.dataframe(
         final_data,
-        column_order=["Section", "Category", "Part", "BOM Qty", "Buy Qty", "Notes"],
+        column_order=[
+            "Section",
+            "Category",
+            "Part",
+            "BOM Qty",
+            "Buy Qty",
+            "Notes",
+            "Tayda_Link",
+        ],
         use_container_width=True,
     )
 
     # 4. Downloads
     # CSV
     csv_buf = io.StringIO()
-    writer = csv.DictWriter(
-        csv_buf,
-        fieldnames=["Section", "Category", "Part", "BOM Qty", "Buy Qty", "Notes"],
-    )
+    # Define all fields including the new ones
+    fields = [
+        "Section",
+        "Category",
+        "Part",
+        "BOM Qty",
+        "Buy Qty",
+        "Notes",
+        "Search Term",
+        "Tayda_Link",
+    ]
+    writer = csv.DictWriter(csv_buf, fieldnames=fields)
     writer.writeheader()
     writer.writerows(final_data)
     csv_out = csv_buf.getvalue().encode("utf-8-sig")
