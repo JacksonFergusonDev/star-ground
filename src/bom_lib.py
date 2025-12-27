@@ -3,6 +3,7 @@ import csv
 import math
 from collections import defaultdict
 from typing import Dict, List, Tuple, Optional, TypedDict
+from urllib.parse import quote_plus
 
 
 # SI Prefix Multipliers
@@ -402,6 +403,17 @@ def generate_search_term(category: str, val: str, spec_type: str = "") -> str:
 
     # Default / Pass-through (ICs, Hardware, PCB, Switches)
     return val
+
+
+def generate_tayda_url(search_term: str) -> str:
+    """
+    Creates a clickable search link for Tayda Electronics.
+    """
+    if not search_term:
+        return ""
+
+    encoded = quote_plus(search_term)
+    return f"https://www.taydaelectronics.com/catalogsearch/result/?q={encoded}"
 
 
 def get_buy_details(category: str, val: str, count: int) -> Tuple[int, str]:
