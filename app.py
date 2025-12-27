@@ -231,6 +231,11 @@ if st.session_state.inventory and st.session_state.stats:
             "Notes",
             "Tayda_Link",
         ],
+        column_config={
+            "Tayda_Link": st.column_config.LinkColumn(
+                "🔍 Buy", help="Search on Tayda Electronics"
+            ),
+        },
         use_container_width=True,
     )
 
