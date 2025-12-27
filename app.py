@@ -257,7 +257,19 @@ if st.session_state.inventory and st.session_state.stats:
     ]
     writer = csv.DictWriter(csv_buf, fieldnames=fields)
     writer.writeheader()
-    writer.writerows(final_data)
+
+    csv_export_data = []
+    for row in final_data:
+        # Shallow copy is fine here since we are just modifying strings
+        export_row = row.copy()
+
+        url = export_row.get("Tayda_Link")
+        if url:
+            export_row["Tayda_Link"] = f'=HYPERLINK("{url}", "Buy")'
+
+        csv_export_data.append(export_row)
+
+    writer.writerows(csv_export_data)
     csv_out = csv_buf.getvalue().encode("utf-8-sig")
 
     st.download_button(
