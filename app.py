@@ -273,9 +273,9 @@ if st.session_state.inventory and st.session_state.stats:
         csv_export_data = []
         for row in final_data:
             export_row = row.copy()
-            url = export_row.get("Tayda_Link")
-            if url:
-                export_row["Tayda_Link"] = f'=HYPERLINK("{url}", "Buy")'
+            row_link = export_row.get("Tayda_Link")
+            if row_link:
+                export_row["Tayda_Link"] = f'=HYPERLINK("{row_link}", "Buy")'
             csv_export_data.append(export_row)
         writer.writerows(csv_export_data)
     else:
