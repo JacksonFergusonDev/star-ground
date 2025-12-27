@@ -242,9 +242,18 @@ if st.session_state.inventory and st.session_state.stats:
     )
 
     # 4. Downloads
-    # CSV
+    st.subheader("💾 Export")
+
+    # Toggle for Link Formatting
+    link_format = st.radio(
+        "CSV Link Format:",
+        ["Excel / Google Sheets (Formula)", "Standard (Raw URL)"],
+        horizontal=True,
+        help="Excel mode creates clickable 'Buy' links. Standard mode saves the full https:// URL.",
+    )
+
+    # CSV Generation
     csv_buf = io.StringIO()
-    # Define all fields including the new ones
     fields = [
         "Section",
         "Category",
@@ -258,22 +267,29 @@ if st.session_state.inventory and st.session_state.stats:
     writer = csv.DictWriter(csv_buf, fieldnames=fields)
     writer.writeheader()
 
-    csv_export_data = []
-    for row in final_data:
-        # Shallow copy is fine here since we are just modifying strings
-        export_row = row.copy()
+    # LOGIC: Conditional Formatting
+    if "Excel" in link_format:
+        # Transform for Excel
+        csv_export_data = []
+        for row in final_data:
+            export_row = row.copy()
+            url = export_row.get("Tayda_Link")
+            if url:
+                export_row["Tayda_Link"] = f'=HYPERLINK("{url}", "Buy")'
+            csv_export_data.append(export_row)
+        writer.writerows(csv_export_data)
+    else:
+        # Standard: Just write the raw data
+        writer.writerows(final_data)
 
-        url = export_row.get("Tayda_Link")
-        if url:
-            export_row["Tayda_Link"] = f'=HYPERLINK("{url}", "Buy")'
-
-        csv_export_data.append(export_row)
-
-    writer.writerows(csv_export_data)
     csv_out = csv_buf.getvalue().encode("utf-8-sig")
 
     st.download_button(
-        "Download CSV", data=csv_out, file_name="pedal_parts.csv", mime="text/csv"
+        "Download CSV",
+        data=csv_out,
+        file_name="pedal_parts.csv",
+        mime="text/csv",
+        type="primary",
     )
 
 st.divider()
