@@ -5,22 +5,23 @@ import os
 import tempfile
 from collections import defaultdict
 from typing import cast
-from src.bom_lib import StatsDict, InventoryType
 
 import gspread
 import streamlit as st
 from google.oauth2.service_account import Credentials
 
 from src.bom_lib import (
+    InventoryType,
+    StatsDict,
+    generate_search_term,
+    generate_tayda_url,
     get_buy_details,
     get_residual_report,
+    get_spec_type,
+    get_standard_hardware,
     parse_csv_bom,
     parse_with_verification,
     sort_inventory,
-    get_standard_hardware,
-    get_spec_type,
-    generate_search_term,
-    generate_tayda_url,
 )
 
 
