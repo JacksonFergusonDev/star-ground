@@ -361,7 +361,7 @@ def generate_search_term(category: str, val: str, spec_type: str = "") -> str:
     Generates a Tayda-optimized search string.
     """
     if category == "Resistors":
-        return f"{val} 1/4w metal film"
+        return f"{val} ohm 1/4w metal film"
 
     elif category == "Capacitors":
         # Combine value with the material type we extracted (e.g., "100n Box Film")
