@@ -69,6 +69,8 @@ def test_csv_processing_via_state_injection(app):
     df = app.dataframe[0].value
     assert "Resistors" in df["Category"].values
     assert "10k" in df["Part"].values
+    assert "Section" in df.columns
+    assert "Parsed BOM" in df["Section"].values
 
     # Check that download buttons appeared (Integration check)
     assert len(app.get("download_button")) == 1

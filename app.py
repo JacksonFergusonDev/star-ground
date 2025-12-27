@@ -13,11 +13,11 @@ from google.oauth2.service_account import Credentials
 
 from src.bom_lib import (
     get_buy_details,
-    get_injection_warnings,
     get_residual_report,
     parse_csv_bom,
     parse_with_verification,
     sort_inventory,
+    get_standard_hardware,
 )
 
 
@@ -50,6 +50,16 @@ st.markdown("""
 Paste your raw component lists (or upload a CSV). 
 This tool cleans the data, handles ranges like `R1-R5`, and adds "Nerd Economics" (bulk buying buffers) to your final list.
 """)
+
+st.markdown("### 1. Project Config")
+col1, col2 = st.columns([1, 2])
+with col1:
+    pedal_count = st.number_input(
+        "How many pedals are you building?",
+        min_value=1,
+        value=1,
+        help="Multiplies enclosures, jacks, and switches automatically.",
+    )
 
 # Setup Tabs
 text_tab, csv_tab = st.tabs(["📋 Paste Text", "📂 Upload CSV"])
@@ -146,17 +156,23 @@ if st.session_state.inventory and st.session_state.stats:
     else:
         st.success("✅ Clean parse. No weird leftovers.")
 
-    # Check for auto-injections
-    warnings = get_injection_warnings(inventory)
-    if warnings:
-        # Join the list into one block of text
-        warning_msg = "\n\n".join(warnings)
-        st.info(f"**💡 Assumptions Made:**\n\n{warning_msg}")
+    # Explain the sections
+    st.info("""
+    **📋 List Key:**
+    * **Parsed BOM:** Components found directly in your text/CSV.
+    * **Recommended Extras:** IC Sockets, SMD adapters, and optional build aids.
+    * **Missing/Critical:** Essential hardware (Enclosures, Jacks, Switches) auto-injected based on your Pedal Count.
+    """)
 
     # 2. Build the Shopping List
     final_data = []
 
-    # Sort by 'Nerd Priority'
+    # STEP A: Inject Hardware & Smart Merge
+    # We do this FIRST so that merged items (like 3.3k resistors)
+    # get their counts updated in the inventory before we sort/loop.
+    hardware_list = get_standard_hardware(inventory, pedal_count)
+
+    # STEP B: Process the (now updated) Inventory
     sorted_parts = sort_inventory(inventory)
 
     for part_key, count in sorted_parts:
@@ -164,10 +180,17 @@ if st.session_state.inventory and st.session_state.stats:
             continue
         category, value = part_key.split(" | ", 1)
 
+        # Determine Section
+        section = "Parsed BOM"
+        # Move auto-injected sockets/adapters to Extras
+        if "SOCKET" in value or "ADAPTER" in value:
+            section = "Recommended Extras"
+
         buy_qty, note = get_buy_details(category, value, count)
 
         final_data.append(
             {
+                "Section": section,
                 "Category": category,
                 "Part": value,
                 "BOM Qty": count,
@@ -176,15 +199,30 @@ if st.session_state.inventory and st.session_state.stats:
             }
         )
 
+    # STEP C: Append the Missing Hardware List
+    final_data.extend(hardware_list)
+
+    # STEP D: Group by Section
+    section_map = {"Parsed BOM": 0, "Recommended Extras": 1, "Missing/Critical": 2}
+
+    final_data.sort(key=lambda row: section_map.get(str(row["Section"]), 99))
+
     # 3. Render
     st.subheader("🛒 Master List")
-    st.dataframe(final_data, use_container_width=True)
+
+    # Configure the dataframe to show Section first
+    st.dataframe(
+        final_data,
+        column_order=["Section", "Category", "Part", "BOM Qty", "Buy Qty", "Notes"],
+        use_container_width=True,
+    )
 
     # 4. Downloads
     # CSV
     csv_buf = io.StringIO()
     writer = csv.DictWriter(
-        csv_buf, fieldnames=["Category", "Part", "BOM Qty", "Buy Qty", "Notes"]
+        csv_buf,
+        fieldnames=["Section", "Category", "Part", "BOM Qty", "Buy Qty", "Notes"],
     )
     writer.writeheader()
     writer.writerows(final_data)

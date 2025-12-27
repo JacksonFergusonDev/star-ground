@@ -6,6 +6,7 @@ from src.bom_lib import (
     parse_value_to_float,
     float_to_search_string,
     float_to_display_string,
+    get_standard_hardware,
 )
 
 # Standard Unit Tests
@@ -161,3 +162,77 @@ def test_suspicious_physics_warnings():
     # 3. Normal values should be fine
     _, note_ok = get_buy_details("Resistors", "10k", 1)
     assert "Suspicious" not in note_ok
+
+
+def test_resistor_rounding_logic():
+    """
+    Verify 'Nerd Economics' for Resistors:
+    Buffer +5, then Round UP to nearest 10.
+    """
+    # Case 1: Need 1. Buffer = 6. Round up -> 10.
+    qty, _ = get_buy_details("Resistors", "10k", 1)
+    assert qty == 10
+
+    # Case 2: Need 6. Buffer = 11. Round up -> 20.
+    qty, _ = get_buy_details("Resistors", "10k", 6)
+    assert qty == 20
+
+    # Case 3: Need 15. Buffer = 20. Round up -> 20 (Exact match).
+    qty, _ = get_buy_details("Resistors", "10k", 15)
+    assert qty == 20
+
+
+def test_capacitor_material_recommendations():
+    """
+    Verify MLCC vs Box Film vs Electrolytic logic.
+    """
+    # Case 1: Pico range (<= 1nF) -> MLCC
+    _, note_p = get_buy_details("Capacitors", "100p", 1)
+    assert "MLCC" in note_p
+
+    # Case 2: Nano range (> 1nF, < 1uF) -> Box Film
+    _, note_n = get_buy_details("Capacitors", "100n", 1)
+    assert "Box Film" in note_n
+    assert "Electrolytic" not in note_n
+
+    # Case 3: 1uF Crossover -> Box Film + Warning
+    _, note_1u = get_buy_details("Capacitors", "1u", 1)
+    assert "Box Film" in note_1u
+    assert "Check BOM" in note_1u
+
+    # Case 4: Bulk range (> 1uF) -> Electrolytic
+    _, note_bulk = get_buy_details("Capacitors", "100u", 1)
+    assert "Electrolytic" in note_bulk
+
+
+def test_hardware_injection_and_smart_merge():
+    """
+    Verify get_standard_hardware calculates standard items
+    AND merges them into inventory if they already exist.
+    """
+    # Setup: Inventory has 2 existing 3.3k resistors (for the circuit)
+    # and 3 Pots (which implies we need 3 Knobs)
+    inventory = {"Resistors | 3.3k": 2, "Potentiometers | 100k-B": 3}
+
+    # Run injection for 1 pedal
+    hardware_list = get_standard_hardware(inventory, pedal_count=1)
+
+    # CHECK 1: Smart Merge
+    # The function should have found "Resistors | 3.3k" and incremented it by 1 (for the LED).
+    # It should NOT be in the hardware_list returned.
+    assert inventory["Resistors | 3.3k"] == 3  # 2 original + 1 injected
+    assert not any(
+        item["Part"] == "Resistor 3.3k (Metal Film)" for item in hardware_list
+    )
+
+    # CHECK 2: Forced Injection
+    # Enclosures should always be there
+    enclosures = [x for x in hardware_list if "Enclosure" in x["Part"]]
+    assert len(enclosures) == 1
+    assert enclosures[0]["Buy Qty"] == 1
+
+    # CHECK 3: Dynamic Knob Count
+    # 3 Pots -> 3 Knobs
+    knobs = [x for x in hardware_list if x["Part"] == "Knob"]
+    assert len(knobs) == 1
+    assert knobs[0]["Buy Qty"] == 3

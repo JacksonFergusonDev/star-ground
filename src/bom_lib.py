@@ -1,5 +1,6 @@
 import re
 import csv
+import math
 from collections import defaultdict
 from typing import Dict, List, Tuple, Optional, TypedDict
 
@@ -335,9 +336,15 @@ def get_buy_details(category: str, val: str, count: int) -> Tuple[int, str]:
     fval = parse_value_to_float(val)
 
     if category == "Resistors":
-        buy = max(10, count + 5)
-        # Warn if < 1 Ohm (unless it's literally 0 for a jumper)
-        if fval is not None and 0.0 < fval < 1.0:
+        # Nerd Economics: Buffer +5, then round up to nearest 10 (Tayda pack size)
+        buffered_qty = count + 5
+        buy = math.ceil(buffered_qty / 10) * 10
+
+        # Default Material Recommendation
+        note = "Use 1/4W Metal Film (1%)"
+
+        # Warn if < 1 Ohm
+        if fval is not None and fval < 1.0:
             note = "⚠️ Suspicious Value (< 1Ω). Verify BOM."
 
     elif category == "Capacitors":
@@ -347,15 +354,41 @@ def get_buy_details(category: str, val: str, count: int) -> Tuple[int, str]:
             if abs(fval - 1.0e-7) < 1.0e-9:
                 is_bypass_cap = True
 
+        # Explicitly type hint the list to keep mypy happy
+        note_parts: List[str] = []
+
         if is_bypass_cap:
             buy = count + 10
-            note = "Power filtering (buy bulk)."
+            note_parts = ["Power filtering (buy bulk)."]
         else:
             buy = count + 3
+            note_parts = []
 
         # Warn if > 10,000uF (0.01F) - Likely a parsing error (e.g. "1F")
         if fval is not None and fval > 0.01:
-            note = "⚠️ Suspicious Value (> 10mF). Verify BOM."
+            note_parts.append("⚠️ Suspicious Value (> 10mF).")
+
+        # MATERIAL RECOMMENDATIONS
+        if fval is not None:
+            # 1. The Pico/Nano Range (<= 1nF)
+            if fval <= 1.0e-9:
+                note_parts.append("Rec: Monolithic Ceramic (MLCC)")
+
+            # 2. The Film Range (1nF < val < 1uF)
+            elif 1.0e-9 < fval < 1.0e-6:
+                note_parts.append("Rec: Box Film")
+
+            # 3. The Ambiguous 1uF Crossover (== 1uF)
+            # Use small epsilon for float comparison safety
+            elif abs(fval - 1.0e-6) < 1.0e-9:
+                note_parts.append("Rec: Box Film (Check BOM: Could be Electrolytic)")
+
+            # 4. The Power Range (> 1uF)
+            else:
+                note_parts.append("Rec: Electrolytic")
+
+            # Join properly
+            note = " | ".join(note_parts)
 
     elif category == "Diodes":
         buy = max(10, count + 5)
@@ -540,3 +573,86 @@ def float_to_display_string(val: float) -> str:
             return f"{num}{suffix}{decimal_part}"
 
     return base
+
+
+def get_standard_hardware(inventory: InventoryType, pedal_count: int = 1) -> List[dict]:
+    """
+    Generates the 'Missing/Critical' section based on pedal count and pot count.
+    """
+    hardware = []
+
+    # Helper: Check inventory. If exists -> Merge. If not -> Add to Missing List.
+    def smart_merge(category, val, part_display, note, section="Missing/Critical"):
+        # Construct the key exactly as the parser would (Category | Value)
+        # Note: 'val' must match the normalized output (e.g. "3.3k" not "3300")
+        key = f"{category} | {val}"
+
+        if key in inventory:
+            # IT EXISTS: Just bump the count.
+            # The main loop will pick this up later as a "Parsed BOM" item
+            inventory[key] += 1 * pedal_count
+        else:
+            # MISSING: Add to the hardware list
+            hardware.append(
+                {
+                    "Section": section,
+                    "Category": category,  # e.g. "Resistors"
+                    "Part": part_display,  # e.g. "Resistor 3.3k (Metal Film)"
+                    "BOM Qty": 1 * pedal_count,
+                    "Buy Qty": 1 * pedal_count,
+                    "Notes": note,
+                }
+            )
+
+    # --- 1. SMART MERGE ITEMS ---
+    # These are parts that MIGHT be in the BOM already.
+
+    # Resistor 3.3k (For LED CLR)
+    # The parser normalizes 3300/3k3 -> "3.3k", so we match that.
+    smart_merge("Resistors", "3.3k", "Resistor 3.3k (Metal Film)", "For LED CLR")
+
+    # LED
+    # Most BOMs just say "LED". Parser keeps "LED" as value.
+    smart_merge("Diodes", "LED", "LED (Diffuse)", "Status Light")
+
+    # --- 2. ALWAYS MISSING ITEMS ---
+    # These rarely appear in text BOMs with valid prefixes, so we force inject them.
+
+    def add_forced(part, qty, note="", section="Missing/Critical"):
+        hardware.append(
+            {
+                "Section": section,
+                "Category": "Hardware",
+                "Part": part,
+                "BOM Qty": qty,
+                "Buy Qty": qty,
+                "Notes": note,
+            }
+        )
+
+    p = pedal_count
+
+    add_forced("1590B Enclosure", 1 * p, "Standard size. Verify PCB fit!")
+    add_forced("3PDT FOOTSWITCH PCB", 1 * p, "Tayda Wiring Board")
+    add_forced("3PDT STOMP SWITCH", 1 * p, "Blue/Standard")
+
+    add_forced("6.35MM JACK (STEREO)", 1 * p, "Input (Stereo handles battery)")
+    add_forced("6.35MM JACK (MONO)", 1 * p, "Output")
+    add_forced("DC POWER JACK 2.1MM", 1 * p, "Standard Center Negative")
+
+    add_forced("Bezel LED Holder", 1 * p, "Match LED size (3mm/5mm)")
+    add_forced("Rubber Feet (Black)", 4 * p, "Enclosure Feet")
+    add_forced("AWG 24 Hook-Up Wire", 1 * p, "Approx 1ft (30cm) per pedal")
+
+    add_forced("9V BATTERY CLIP", 1 * p, "Optional", "Recommended Extras")
+    add_forced(
+        "Heat Shrink Tubing", 1, "Essential for insulation", "Recommended Extras"
+    )
+
+    # Knobs (Dynamic Count)
+    total_pots = sum(c for k, c in inventory.items() if k.startswith("Potentiometers"))
+    if total_pots > 0:
+        add_forced("Knob", total_pots, "1 per Pot")
+        add_forced("Dust Seal Cover", total_pots, "Protects pots", "Recommended Extras")
+
+    return hardware
