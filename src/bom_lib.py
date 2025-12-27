@@ -404,6 +404,10 @@ def generate_search_term(category: str, val: str, spec_type: str = "") -> str:
             return "LED 3mm"
         return val
 
+    # Specific override for Sockets to get the solder type
+    if val == "8 PIN DIP SOCKET":
+        return "8 pin DIP IC Socket Adaptor Solder Type"
+
     # Default / Pass-through (ICs, Hardware, PCB, Switches)
     return val
 
@@ -678,11 +682,16 @@ def get_standard_hardware(inventory: InventoryType, pedal_count: int = 1) -> Lis
         note: str,
         section: str,
         search_val: Optional[str] = None,
+        buy_qty: Optional[int] = None,
     ):
         """Helper to build consistent hardware rows with search links."""
         # Use the specific search value (e.g. "3.3k") if provided, otherwise use the part name
         if search_val is None:
             search_val = part_name
+
+        # Default buy_qty to BOM qty if not specified
+        if buy_qty is None:
+            buy_qty = qty
 
         search_term = generate_search_term(category, search_val)
         url = generate_tayda_url(search_term)
@@ -693,7 +702,7 @@ def get_standard_hardware(inventory: InventoryType, pedal_count: int = 1) -> Lis
                 "Category": category,
                 "Part": part_name,
                 "BOM Qty": qty,
-                "Buy Qty": qty,
+                "Buy Qty": buy_qty,
                 "Notes": note,
                 "Search Term": search_term,
                 "Tayda_Link": url,
@@ -708,9 +717,24 @@ def get_standard_hardware(inventory: InventoryType, pedal_count: int = 1) -> Lis
             # IT EXISTS: Just bump the count.
             inventory[key] += 1 * pedal_count
         else:
-            # MISSING: Add to list. Note we pass 'val' ("3.3k") for search generation.
+            # MISSING: Add to list.
+            bom_qty = 1 * pedal_count
+            calc_buy_qty = bom_qty
+
+            if category == "Resistors":
+                # Buffer +5, Round to nearest 10
+                calc_buy_qty = math.ceil((bom_qty + 5) / 10) * 10
+            elif category == "Diodes":  # LED
+                calc_buy_qty = bom_qty + 2
+
             _create_entry(
-                category, part_display, 1 * pedal_count, note, section, search_val=val
+                category,
+                part_display,
+                bom_qty,
+                note,
+                section,
+                search_val=val,
+                buy_qty=calc_buy_qty,
             )
 
     def add_forced(
@@ -720,13 +744,16 @@ def get_standard_hardware(inventory: InventoryType, pedal_count: int = 1) -> Lis
         section="Missing/Critical",
         category="Hardware",
         search_val: Optional[str] = None,
+        buy_qty: Optional[int] = None,
     ):
         """Always injects the item."""
-        _create_entry(category, part, qty, note, section, search_val=search_val)
+        _create_entry(
+            category, part, qty, note, section, search_val=search_val, buy_qty=buy_qty
+        )
 
     # --- 1. SMART MERGE ITEMS ---
     # Resistor 3.3k (For LED CLR)
-    smart_merge("Resistors", "3.3k", "Resistor 3.3k (Metal Film)", "For LED CLR")
+    smart_merge("Resistors", "3.3k", "3.3k", "For LED CLR")
 
     # LED
     smart_merge("Diodes", "LED", "LED (Diffuse)", "Status Light")
@@ -768,22 +795,28 @@ def get_standard_hardware(inventory: InventoryType, pedal_count: int = 1) -> Lis
         "Rubber Feet (Black)", 4 * p, "Enclosure Feet", search_val="Rubber Feet Black"
     )
 
-    add_forced("AWG 24 Hook-Up Wire", 1 * p, "Approx 1ft (30cm) per pedal")
+    add_forced("AWG 24 Hook-Up Wire", 3 * p, "Approx 1ft (30cm) per pedal")
 
     add_forced("9V BATTERY CLIP", 1 * p, "Optional", "Recommended Extras")
 
     add_forced(
         "Heat Shrink Tubing",
-        1,
+        1 * p,
         "Essential for insulation",
         "Recommended Extras",
-        search_val="Heat Shrink Tubing 3mm",
+        search_val="Heat Shrink Tubing 2.5mm",
     )
 
     # Knobs (Dynamic Count)
     total_pots = sum(c for k, c in inventory.items() if k.startswith("Potentiometers"))
     if total_pots > 0:
         add_forced("Knob", total_pots, "1 per Pot")
-        add_forced("Dust Seal Cover", total_pots, "Protects pots", "Recommended Extras")
+        add_forced(
+            "Dust Seal Cover",
+            total_pots,
+            "Protects pots",
+            "Recommended Extras",
+            buy_qty=total_pots + 2,
+        )
 
     return hardware
