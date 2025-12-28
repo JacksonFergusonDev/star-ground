@@ -35,7 +35,11 @@ InventoryType = Dict[str, int]
 # Keys are the chips found in BOM, values are fun alternatives to try.
 IC_ALTS = {
     # Dual Op-Amps
-    "TL072": [("NJM4558", "Vintage warmth"), ("NE5532", "Low noise/Hi-Fi")],
+    "TL072": [
+        ("NJM4558", "Vintage warmth"),
+        ("NE5532", "Low noise/Hi-Fi"),
+        ("OPA2134", "Audiophile/Hi-Fi"),
+    ],
     "JRC4558": [("TL072", "Modern/Clear"), ("NJM4558", "Modern equivalent")],
     # Single Op-Amps (RAT style)
     "LM308": [
@@ -43,6 +47,7 @@ IC_ALTS = {
         ("TL071", "High fidelity (changes tone)"),
     ],
     "OP07": [("LM308", "Vintage original"), ("TL071", "Bright mod")],
+    "TL071": [("OP07", "Slew-limited (Rat Style)")],
 }
 
 
