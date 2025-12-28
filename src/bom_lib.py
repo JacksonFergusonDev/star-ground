@@ -489,7 +489,7 @@ def get_buy_details(category: str, val: str, count: int) -> Tuple[int, str]:
             ):
                 note_parts.append("Rec: Box Film (Check BOM: Could be Electrolytic)")
             elif spec_type == "MLCC":
-                note_parts.append("Rec: Monolithic Ceramic (MLCC)")
+                note_parts.append("Rec: Class 1 Ceramic (C0G / NP0)")
             else:
                 note_parts.append(f"Rec: {spec_type}")
 
