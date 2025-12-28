@@ -33,16 +33,94 @@ InventoryType = Dict[str, int]
 
 # Chip substitution recommendations
 # Keys are the chips found in BOM, values are fun alternatives to try.
+# Structure: (Part Name, Sonic Profile, Technical Why)
 IC_ALTS = {
     # Dual Op-Amps
-    "TL072": [("JRC4558", "Vintage warmth"), ("NE5532", "Low noise/Hi-Fi")],
-    "JRC4558": [("TL072", "Modern/Clear"), ("NE5532", "Hi-Fi")],
+    "TL072": [
+        (
+            "OPA2134",
+            "Hi-Fi / Studio Clean",
+            "Low distortion (0.00008%), High Slew Rate (20V/us)",
+        ),
+        (
+            "TLC2272",
+            "High Headroom Clean",
+            "Rail-to-Rail output (+6Vpp headroom on 9V)",
+        ),
+    ],
+    "JRC4558": [
+        (
+            "NJM4558D",
+            "Vintage Correct",
+            "Authentic 1980s BJT bandwidth limiting",
+        ),
+        (
+            "OPA2134",
+            "Modern/Clinical",
+            "High impedance input, removes 'warm' blur",
+        ),
+    ],
     # Single Op-Amps (RAT style)
     "LM308": [
-        ("OP07", "Modern stable equiv"),
-        ("TL071", "High fidelity (changes tone)"),
+        (
+            "LM308N",
+            "Vintage RAT",
+            "Required for 0.3V/us slew-induced distortion",
+        ),
+        (
+            "OP07",
+            "Modern Tight",
+            "Faster slew rate, sounds harsher/tighter than vintage",
+        ),
     ],
-    "OP07": [("LM308", "Vintage original"), ("TL071", "Bright mod")],
+    "NE5532": [
+        (
+            "OPA2134",
+            "Lower Noise",
+            "JFET input reduces current noise with high-Z guitars",
+        ),
+    ],
+}
+
+# Diode substitution recommendations
+# Keys are the standard BOM parts, values are (Part, Sonic Profile, Technical Why)
+DIODE_ALTS = {
+    "1N4148": [
+        (
+            "1N4001",
+            "Smooth / Tube-like",
+            "Slow reverse recovery (30µs) smears highs",
+        ),
+        (
+            "IR LED",
+            "The 'Goldilocks' Drive",
+            "1.2V drop: More crunch than LED, more headroom than Si",
+        ),
+        (
+            "Red LED",
+            "Amp-like / Open",
+            "1.8V drop: Huge headroom, loud output",
+        ),
+    ],
+    "1N914": [
+        (
+            "1N4001",
+            "Smooth / Tube-like",
+            "Slow reverse recovery (30µs) smears highs",
+        ),
+    ],
+    "1N34A": [
+        (
+            "BAT41",
+            "Modern Schottky",
+            "Stable alternative, slightly harder knee",
+        ),
+        (
+            "1N60",
+            "Alt Germanium",
+            "Different Vf variance",
+        ),
+    ],
 }
 
 
@@ -412,6 +490,10 @@ def generate_search_term(category: str, val: str, spec_type: str = "") -> str:
     if val == "8 PIN DIP SOCKET":
         return "8 pin DIP IC Socket Adaptor Solder Type"
 
+    # Specific override for JRC4558 (Vintage/Obsolete Name) -> NJM4558 (Modern Name)
+    if "JRC4558" in val.upper():
+        return "NJM4558D"
+
     # Default / Pass-through (ICs, Hardware, PCB, Switches)
     return val
 
@@ -480,7 +562,7 @@ def get_buy_details(category: str, val: str, count: int) -> Tuple[int, str]:
             ):
                 note_parts.append("Rec: Box Film (Check BOM: Could be Electrolytic)")
             elif spec_type == "MLCC":
-                note_parts.append("Rec: Monolithic Ceramic (MLCC)")
+                note_parts.append("Rec: Class 1 Ceramic (C0G / NP0)")
             else:
                 note_parts.append(f"Rec: {spec_type}")
 
@@ -489,6 +571,22 @@ def get_buy_details(category: str, val: str, count: int) -> Tuple[int, str]:
 
     elif category == "Diodes":
         buy = max(10, count + 5)
+        # Check for Texture Upgrades
+        if val in DIODE_ALTS:
+            alts = DIODE_ALTS[val]
+            txt_parts = []
+            for item in alts:
+                # Robust unpacking for 2-tuple (Legacy) or 3-tuple (Expert)
+                c, d = item[0], item[1]
+                t = item[2] if len(item) > 2 else None
+
+                if t:
+                    txt_parts.append(f"{c} ({d}: {t})")
+                else:
+                    txt_parts.append(f"{c} ({d})")
+
+            note_txt = ", ".join(txt_parts)
+            note = f"💡 TRY: {note_txt}"
 
     elif category == "Transistors":
         # User asked for the obsolete THT part
@@ -510,7 +608,18 @@ def get_buy_details(category: str, val: str, count: int) -> Tuple[int, str]:
         clean = re.sub(r"(CP|CN|P|N)$", "", val)
         if clean in IC_ALTS:
             alts = IC_ALTS[clean]
-            txt = ", ".join([f"{c} ({d})" for c, d in alts])
+            txt_parts = []
+            for item in alts:
+                # Robust unpacking for 2-tuple (Legacy) or 3-tuple (Expert)
+                c, d = item[0], item[1]
+                t = item[2] if len(item) > 2 else None
+
+                if t:
+                    txt_parts.append(f"{c} ({d}: {t})")
+                else:
+                    txt_parts.append(f"{c} ({d})")
+
+            txt = ", ".join(txt_parts)
             note += f" | 💡 TRY: {txt}"
 
     elif category == "Hardware/Misc":
@@ -765,6 +874,17 @@ def get_standard_hardware(inventory: InventoryType, pedal_count: int = 1) -> Lis
     # --- 2. ALWAYS MISSING ITEMS ---
 
     p = pedal_count
+
+    # Germanium Logic: Fuzz pedals often need Ge transistors not listed on Tayda
+    if any("FUZZ" in k.upper() for k in inventory if k.startswith("PCB")):
+        add_forced(
+            "Germanium Transistors",
+            0,  # 0 Buy Qty (Just a suggestion)
+            "Vintage Tone option (Pos Ground!)",
+            "Recommended Extras",
+            category="Transistors",
+            search_val="Germanium Transistor PNP",
+        )
 
     add_forced("1590B Enclosure", 1 * p, "Standard size. Verify PCB fit!")
 
