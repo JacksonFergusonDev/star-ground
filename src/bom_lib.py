@@ -576,12 +576,13 @@ def get_buy_details(category: str, val: str, count: int) -> Tuple[int, str]:
             alts = DIODE_ALTS[val]
             txt_parts = []
             for item in alts:
-                # Handle 3-tuple (Name, Desc, Tech)
-                if len(item) == 3:
-                    c, d, t = item
+                # Robust unpacking for 2-tuple (Legacy) or 3-tuple (Expert)
+                c, d = item[0], item[1]
+                t = item[2] if len(item) > 2 else None
+
+                if t:
                     txt_parts.append(f"{c} ({d}: {t})")
-                elif len(item) == 2:
-                    c, d = item
+                else:
                     txt_parts.append(f"{c} ({d})")
 
             note_txt = ", ".join(txt_parts)
@@ -609,13 +610,13 @@ def get_buy_details(category: str, val: str, count: int) -> Tuple[int, str]:
             alts = IC_ALTS[clean]
             txt_parts = []
             for item in alts:
-                # Handle 3-tuple (Name, Desc, Tech)
-                if len(item) == 3:
-                    c, d, t = item
+                # Robust unpacking for 2-tuple (Legacy) or 3-tuple (Expert)
+                c, d = item[0], item[1]
+                t = item[2] if len(item) > 2 else None
+
+                if t:
                     txt_parts.append(f"{c} ({d}: {t})")
-                # Fallback for 2-tuple legacy data
-                elif len(item) == 2:
-                    c, d = item
+                else:
                     txt_parts.append(f"{c} ({d})")
 
             txt = ", ".join(txt_parts)
