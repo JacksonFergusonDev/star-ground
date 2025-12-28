@@ -82,6 +82,47 @@ IC_ALTS = {
     ],
 }
 
+# Diode substitution recommendations
+# Keys are the standard BOM parts, values are (Part, Sonic Profile, Technical Why)
+DIODE_ALTS = {
+    "1N4148": [
+        (
+            "1N4001",
+            "Smooth / Tube-like",
+            "Slow reverse recovery (30µs) smears highs",
+        ),
+        (
+            "IR LED",
+            "The 'Goldilocks' Drive",
+            "1.2V drop: More crunch than LED, more headroom than Si",
+        ),
+        (
+            "Red LED",
+            "Amp-like / Open",
+            "1.8V drop: Huge headroom, loud output",
+        ),
+    ],
+    "1N914": [
+        (
+            "1N4001",
+            "Smooth / Tube-like",
+            "Slow reverse recovery (30µs) smears highs",
+        ),
+    ],
+    "1N34A": [
+        (
+            "BAT41",
+            "Modern Schottky",
+            "Stable alternative, slightly harder knee",
+        ),
+        (
+            "1N60",
+            "Alt Germanium",
+            "Different Vf variance",
+        ),
+    ],
+}
+
 
 def categorize_part(
     ref: str, val: str
@@ -530,6 +571,21 @@ def get_buy_details(category: str, val: str, count: int) -> Tuple[int, str]:
 
     elif category == "Diodes":
         buy = max(10, count + 5)
+        # Check for Texture Upgrades
+        if val in DIODE_ALTS:
+            alts = DIODE_ALTS[val]
+            txt_parts = []
+            for item in alts:
+                # Handle 3-tuple (Name, Desc, Tech)
+                if len(item) == 3:
+                    c, d, t = item
+                    txt_parts.append(f"{c} ({d}: {t})")
+                elif len(item) == 2:
+                    c, d = item
+                    txt_parts.append(f"{c} ({d})")
+
+            note_txt = ", ".join(txt_parts)
+            note = f"💡 TRY: {note_txt}"
 
     elif category == "Transistors":
         # User asked for the obsolete THT part
