@@ -261,6 +261,38 @@ def test_spec_type_logic():
     assert get_spec_type("Capacitors", "100u") == "Electrolytic"
 
 
+def test_vintage_search_mapping():
+    """Verify JRC4558 maps to NJM4558."""
+    res = generate_search_term("ICs", "JRC4558")
+    assert res == "NJM4558D"
+
+
+def test_expert_system_recommendations():
+    """Verify Silicon Sommelier logic for ICs and Diodes."""
+    # 1. IC Mojo (TL072 -> OPA2134)
+    _, note_ic = get_buy_details("ICs", "TL072", 1)
+    assert "OPA2134" in note_ic
+    assert "Hi-Fi" in note_ic
+
+    # 2. Diode Textures (1N4148 -> Tube-like)
+    _, note_d = get_buy_details("Diodes", "1N4148", 1)
+    assert "1N4001" in note_d
+    assert "Tube-like" in note_d
+
+
+def test_fuzz_germanium_trigger():
+    """Verify Fuzz PCBs trigger Germanium Transistor injection."""
+    # Setup inventory with a Fuzz PCB
+    inventory = {"PCB | Fuzz Face": 1}
+
+    hardware_list = get_standard_hardware(inventory, pedal_count=1)
+
+    # Check for Ge Transistors
+    ge_parts = [x for x in hardware_list if "Germanium" in x["Part"]]
+    assert len(ge_parts) > 0
+    assert "Pos Ground" in ge_parts[0]["Notes"]
+
+
 def test_search_term_generation():
     """Verify the string building logic for Tayda."""
     # 1. Resistors (Must include keywords)
