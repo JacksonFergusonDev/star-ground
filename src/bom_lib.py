@@ -775,6 +775,17 @@ def get_standard_hardware(inventory: InventoryType, pedal_count: int = 1) -> Lis
 
     p = pedal_count
 
+    # Germanium Logic: Fuzz pedals often need Ge transistors not listed on Tayda
+    if any("FUZZ" in k.upper() for k in inventory if k.startswith("PCB")):
+        add_forced(
+            "Germanium Transistors",
+            0,  # 0 Buy Qty (Just a suggestion)
+            "Vintage Tone option (Pos Ground!)",
+            "Recommended Extras",
+            category="Transistors",
+            search_val="Germanium Transistor PNP",
+        )
+
     add_forced("1590B Enclosure", 1 * p, "Standard size. Verify PCB fit!")
 
     add_forced(
