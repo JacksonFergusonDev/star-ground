@@ -191,9 +191,9 @@ def test_capacitor_material_recommendations():
     """
     Verify MLCC vs Box Film vs Electrolytic logic.
     """
-    # Case 1: Pico range (<= 1nF) -> MLCC
+    # Case 1: Pico range (<= 1nF) -> Class 1 Ceramic (C0G)
     _, note_p = get_buy_details("Capacitors", "100p", 1)
-    assert "MLCC" in note_p
+    assert "Class 1 Ceramic" in note_p
 
     # Case 2: Nano range (> 1nF, < 1uF) -> Box Film
     _, note_n = get_buy_details("Capacitors", "100n", 1)
