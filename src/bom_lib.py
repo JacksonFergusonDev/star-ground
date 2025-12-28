@@ -35,8 +35,8 @@ InventoryType = Dict[str, int]
 # Keys are the chips found in BOM, values are fun alternatives to try.
 IC_ALTS = {
     # Dual Op-Amps
-    "TL072": [("JRC4558", "Vintage warmth"), ("NE5532", "Low noise/Hi-Fi")],
-    "JRC4558": [("TL072", "Modern/Clear"), ("NE5532", "Hi-Fi")],
+    "TL072": [("NJM4558", "Vintage warmth"), ("NE5532", "Low noise/Hi-Fi")],
+    "JRC4558": [("TL072", "Modern/Clear"), ("NJM4558", "Modern equivalent")],
     # Single Op-Amps (RAT style)
     "LM308": [
         ("OP07", "Modern stable equiv"),
@@ -411,6 +411,10 @@ def generate_search_term(category: str, val: str, spec_type: str = "") -> str:
     # Specific override for Sockets to get the solder type
     if val == "8 PIN DIP SOCKET":
         return "8 pin DIP IC Socket Adaptor Solder Type"
+
+    # Specific override for JRC4558 (Vintage/Obsolete Name) -> NJM4558 (Modern Name)
+    if "JRC4558" in val.upper():
+        return "NJM4558D"
 
     # Default / Pass-through (ICs, Hardware, PCB, Switches)
     return val
