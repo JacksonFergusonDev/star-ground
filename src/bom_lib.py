@@ -33,21 +33,53 @@ InventoryType = Dict[str, int]
 
 # Chip substitution recommendations
 # Keys are the chips found in BOM, values are fun alternatives to try.
+# Structure: (Part Name, Sonic Profile, Technical Why)
 IC_ALTS = {
     # Dual Op-Amps
     "TL072": [
-        ("NJM4558", "Vintage warmth"),
-        ("NE5532", "Low noise/Hi-Fi"),
-        ("OPA2134", "Audiophile/Hi-Fi"),
+        (
+            "OPA2134",
+            "Hi-Fi / Studio Clean",
+            "Low distortion (0.00008%), High Slew Rate (20V/us)",
+        ),
+        (
+            "TLC2272",
+            "High Headroom Clean",
+            "Rail-to-Rail output (+6Vpp headroom on 9V)",
+        ),
     ],
-    "JRC4558": [("TL072", "Modern/Clear"), ("NJM4558", "Modern equivalent")],
+    "JRC4558": [
+        (
+            "NJM4558D",
+            "Vintage Correct",
+            "Authentic 1980s BJT bandwidth limiting",
+        ),
+        (
+            "OPA2134",
+            "Modern/Clinical",
+            "High impedance input, removes 'warm' blur",
+        ),
+    ],
     # Single Op-Amps (RAT style)
     "LM308": [
-        ("OP07", "Modern stable equiv"),
-        ("TL071", "High fidelity (changes tone)"),
+        (
+            "LM308N",
+            "Vintage RAT",
+            "Required for 0.3V/us slew-induced distortion",
+        ),
+        (
+            "OP07",
+            "Modern Tight",
+            "Faster slew rate, sounds harsher/tighter than vintage",
+        ),
     ],
-    "OP07": [("LM308", "Vintage original"), ("TL071", "Bright mod")],
-    "TL071": [("OP07", "Slew-limited (Rat Style)")],
+    "NE5532": [
+        (
+            "OPA2134",
+            "Lower Noise",
+            "JFET input reduces current noise with high-Z guitars",
+        ),
+    ],
 }
 
 
@@ -519,7 +551,18 @@ def get_buy_details(category: str, val: str, count: int) -> Tuple[int, str]:
         clean = re.sub(r"(CP|CN|P|N)$", "", val)
         if clean in IC_ALTS:
             alts = IC_ALTS[clean]
-            txt = ", ".join([f"{c} ({d})" for c, d in alts])
+            txt_parts = []
+            for item in alts:
+                # Handle 3-tuple (Name, Desc, Tech)
+                if len(item) == 3:
+                    c, d, t = item
+                    txt_parts.append(f"{c} ({d}: {t})")
+                # Fallback for 2-tuple legacy data
+                elif len(item) == 2:
+                    c, d = item
+                    txt_parts.append(f"{c} ({d})")
+
+            txt = ", ".join(txt_parts)
             note += f" | 💡 TRY: {txt}"
 
     elif category == "Hardware/Misc":
