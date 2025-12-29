@@ -164,7 +164,8 @@ if st.button("Generate Master List", type="primary", use_container_width=True):
                     inventory[key]["qty"] += data["qty"] * qty_multiplier
                     inventory[key]["refs"].extend(data["refs"])
                     for src, refs in data["sources"].items():
-                        inventory[key]["sources"][src].extend(refs)
+                        # Multiply the list of refs by the count (e.g. ['R1'] * 2 = ['R1', 'R1'])
+                        inventory[key]["sources"][src].extend(refs * qty_multiplier)
 
                 stats["lines_read"] += p_stats["lines_read"]
                 stats["parts_found"] += p_stats["parts_found"]
@@ -194,7 +195,8 @@ if st.button("Generate Master List", type="primary", use_container_width=True):
                         inventory[key]["qty"] += data["qty"] * qty_multiplier
                         inventory[key]["refs"].extend(data["refs"])
                         for src, refs in data["sources"].items():
-                            inventory[key]["sources"][src].extend(refs)
+                            # Multiply the list of refs by the count (e.g. ['R1'] * 2 = ['R1', 'R1'])
+                            inventory[key]["sources"][src].extend(refs * qty_multiplier)
 
                     stats["lines_read"] += p_stats["lines_read"]
                     stats["parts_found"] += p_stats["parts_found"]
