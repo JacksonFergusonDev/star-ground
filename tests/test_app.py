@@ -35,7 +35,9 @@ def test_happy_path_text_paste(app):
     bom_input = app.text_area[0]
     raw_bom = "R1 10k\nC1 100n\nU1 TL072"
     bom_input.set_value(raw_bom).run()
-    app.button(key="text_submit").click().run()
+
+    # Click "Generate Master List" (Index 1 in the button list)
+    app.button[1].click().run()
 
     assert not app.exception
     assert app.metric[1].value == "3"
