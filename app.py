@@ -5,8 +5,8 @@ import os
 import uuid
 import tempfile
 from collections import defaultdict
-from typing import cast
-
+from typing import cast, List, Dict, Any
+from streamlit.runtime.uploaded_file_manager import UploadedFile
 import gspread
 import streamlit as st
 from google.oauth2.service_account import Credentials
@@ -74,9 +74,10 @@ if "stats" not in st.session_state:
 
 # Initialize Slots
 if "pedal_slots" not in st.session_state:
-    st.session_state.pedal_slots = [
+    init_slots: List[Dict[str, Any]] = [
         {"id": str(uuid.uuid4()), "name": "My Pedal Project", "method": "Paste Text"}
     ]
+    st.session_state.pedal_slots = init_slots
 
 
 def add_slot():
@@ -170,7 +171,8 @@ if st.button("Generate Master List", type="primary", use_container_width=True):
 
         # B. File Upload Mode
         elif slot["method"] == "Upload File":
-            f = slot.get("data")
+            # Cast to UploadedFile so Pylance knows it has .name and .getvalue()
+            f = cast(UploadedFile, slot.get("data"))
             if f:
                 ext = os.path.splitext(f.name)[1].lower()
                 with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp:
