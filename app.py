@@ -57,16 +57,6 @@ Paste your raw component lists (or upload a CSV).
 This tool cleans the data, handles ranges like `R1-R5`, and adds "Nerd Economics" (bulk buying buffers) to your final list.
 """)
 
-st.markdown("### 1. Project Config")
-col1, col2 = st.columns([1, 2])
-with col1:
-    pedal_count = st.number_input(
-        "How many pedals are you building?",
-        min_value=1,
-        value=1,
-        help="Multiplies enclosures, jacks, and switches automatically.",
-    )
-
 if "inventory" not in st.session_state:
     st.session_state.inventory = None
 if "stats" not in st.session_state:
@@ -96,7 +86,7 @@ st.subheader("1. Project Config")
 # Dynamic Slot UI
 for i, slot in enumerate(st.session_state.pedal_slots):
     with st.container():
-        c1, c2, c3, c4 = st.columns([3, 2, 4, 1])
+        c1, c2, c3, c4, c5 = st.columns([3, 1, 2, 4, 1])
 
         # Project Name
         slot["name"] = c1.text_input(
@@ -106,8 +96,17 @@ for i, slot in enumerate(st.session_state.pedal_slots):
             placeholder="e.g. Big Muff",
         )
 
+        # Quantity
+        slot["count"] = c2.number_input(
+            "Qty",
+            min_value=1,
+            value=slot.get("count", 1),
+            key=f"qty_{slot['id']}",
+            label_visibility="visible",
+        )
+
         # Input Method
-        slot["method"] = c2.radio(
+        slot["method"] = c3.radio(
             "Input Method",
             ["Paste Text", "Upload File"],
             key=f"method_{slot['id']}",
@@ -117,7 +116,7 @@ for i, slot in enumerate(st.session_state.pedal_slots):
 
         # Data Input
         if slot["method"] == "Paste Text":
-            slot["data"] = c3.text_area(
+            slot["data"] = c4.text_area(
                 "BOM Text",
                 height=100,
                 key=f"text_{slot['id']}",
@@ -125,7 +124,7 @@ for i, slot in enumerate(st.session_state.pedal_slots):
                 placeholder="Paste your BOM here...",
             )
         else:
-            slot["data"] = c3.file_uploader(
+            slot["data"] = c4.file_uploader(
                 "Upload BOM",
                 type=["csv", "pdf"],
                 key=f"file_{slot['id']}",
@@ -134,7 +133,7 @@ for i, slot in enumerate(st.session_state.pedal_slots):
 
         # Remove Button
         if len(st.session_state.pedal_slots) > 1:
-            if c4.button("🗑️", key=f"del_{slot['id']}"):
+            if c5.button("🗑️", key=f"del_{slot['id']}"):
                 remove_slot(i)
                 st.rerun()
 
