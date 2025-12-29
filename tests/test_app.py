@@ -48,15 +48,25 @@ def test_csv_processing_via_state_injection(app):
     logic works, even if the test runner is blind to the uploader.
     """
     # 1. Mock the inventory that the CSV parser WOULD have produced
-    mock_inventory = defaultdict(int)
-    mock_inventory["Resistors | 10k"] = 5
-    mock_inventory["Capacitors | 22n"] = 2
+    mock_inventory = defaultdict(
+        lambda: {"qty": 0, "refs": [], "sources": defaultdict(list)}
+    )
+    mock_inventory["Resistors | 10k"]["qty"] = 5
+    mock_inventory["Resistors | 10k"]["sources"]["Mock Project"] = ["R1-R5"]
+
+    mock_inventory["Capacitors | 22n"]["qty"] = 2
+    mock_inventory["Capacitors | 22n"]["sources"]["Mock Project"] = ["C1", "C2"]
 
     mock_stats = {"lines_read": 7, "parts_found": 7, "residuals": []}
 
     # 2. Inject into session state
     app.session_state["inventory"] = mock_inventory
     app.session_state["stats"] = mock_stats
+
+    if "pedal_slots" not in app.session_state:
+        app.session_state["pedal_slots"] = [
+            {"id": "test", "name": "test", "method": "Paste Text"}
+        ]
 
     # 3. Rerun the app to trigger the "Main Process" block
     app.run()
