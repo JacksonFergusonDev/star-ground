@@ -150,6 +150,7 @@ if st.button("Generate Master List", type="primary", use_container_width=True):
     # Process Each Slot
     for slot in st.session_state.pedal_slots:
         source = slot["name"] if slot["name"].strip() else "Untitled Project"
+        qty_multiplier = slot.get("count", 1)
 
         # A. Paste Text Mode
         if slot["method"] == "Paste Text":
@@ -159,7 +160,8 @@ if st.button("Generate Master List", type="primary", use_container_width=True):
 
                 # Merge
                 for key, data in p_inv.items():
-                    inventory[key]["qty"] += data["qty"]
+                    # Multiply quantity by the slot's pedal count
+                    inventory[key]["qty"] += data["qty"] * qty_multiplier
                     inventory[key]["refs"].extend(data["refs"])
                     for src, refs in data["sources"].items():
                         inventory[key]["sources"][src].extend(refs)
@@ -188,7 +190,8 @@ if st.button("Generate Master List", type="primary", use_container_width=True):
 
                     # Merge
                     for key, data in p_inv.items():
-                        inventory[key]["qty"] += data["qty"]
+                        # Multiply quantity by the slot's pedal count
+                        inventory[key]["qty"] += data["qty"] * qty_multiplier
                         inventory[key]["refs"].extend(data["refs"])
                         for src, refs in data["sources"].items():
                             inventory[key]["sources"][src].extend(refs)
@@ -241,9 +244,10 @@ if st.session_state.inventory:
     final_data = []
 
     # STEP A: Inject Hardware & Smart Merge
-    # Calculate pedal count based on number of filled slots
-    # (Or default to 1 if user just pasted text without adding slots)
-    calc_pedal_count = len(st.session_state.pedal_slots)
+    # Calculate total pedal count by summing the Qty of all slots
+    calc_pedal_count = sum(
+        slot.get("count", 1) for slot in st.session_state.pedal_slots
+    )
     hardware_list = get_standard_hardware(inventory, calc_pedal_count)
 
     # STEP B: Process the (now updated) Inventory
