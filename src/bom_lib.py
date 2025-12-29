@@ -421,11 +421,11 @@ def get_residual_report(stats: StatsDict) -> List[str]:
 def get_injection_warnings(inventory: InventoryType) -> List[str]:
     """Warns user if we made assumptions (SMD adapters, Sockets)."""
     warnings = []
-    if inventory.get("Hardware/Misc | SMD_ADAPTER_BOARD", 0) > 0:
+    if inventory["Hardware/Misc | SMD_ADAPTER_BOARD"]["qty"] > 0:
         warnings.append(
             "⚠️  SMD ADAPTERS: Added for MMBF5457. Check if your PCB has SOT-23 pads first."
         )
-    if inventory.get("Hardware/Misc | 8 PIN DIP SOCKET", 0) > 0:
+    if inventory["Hardware/Misc | 8 PIN DIP SOCKET"]["qty"] > 0:
         warnings.append(
             "ℹ️  IC SOCKETS: Added sockets for chips. Optional but recommended."
         )
@@ -664,7 +664,7 @@ def get_buy_details(category: str, val: str, count: int) -> Tuple[int, str]:
     return buy, note
 
 
-def sort_inventory(inventory: InventoryType) -> List[Tuple[str, int]]:
+def sort_inventory(inventory: InventoryType) -> List[Tuple[str, PartData]]:
     """Sorts parts by Category Rank, THEN by Physical Value (Ohms/Farads)."""
     order = [
         "PCB",
@@ -680,7 +680,7 @@ def sort_inventory(inventory: InventoryType) -> List[Tuple[str, int]]:
     # Map name to index for sorting
     pmap = {name: i for i, name in enumerate(order)}
 
-    def sort_key(item: Tuple[str, int]) -> Tuple[int, float, str]:
+    def sort_key(item: Tuple[str, PartData]) -> Tuple[int, float, str]:
         key = item[0]
         if " | " not in key:
             return (999, 0.0, key)
@@ -854,7 +854,8 @@ def get_standard_hardware(inventory: InventoryType, pedal_count: int = 1) -> Lis
 
         if key in inventory:
             # IT EXISTS: Just bump the count.
-            inventory[key] += 1 * pedal_count
+            inventory[key]["qty"] += 1 * pedal_count
+            inventory[key]["sources"]["Auto-Inject"].append(f"Hardware ({pedal_count})")
         else:
             # MISSING: Add to list.
             bom_qty = 1 * pedal_count
@@ -958,7 +959,9 @@ def get_standard_hardware(inventory: InventoryType, pedal_count: int = 1) -> Lis
     )
 
     # Knobs (Dynamic Count)
-    total_pots = sum(c for k, c in inventory.items() if k.startswith("Potentiometers"))
+    total_pots = sum(
+        d["qty"] for k, d in inventory.items() if k.startswith("Potentiometers")
+    )
     if total_pots > 0:
         add_forced("Knob", total_pots, "1 per Pot")
         add_forced(
