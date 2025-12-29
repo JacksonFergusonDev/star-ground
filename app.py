@@ -5,7 +5,7 @@ import os
 import uuid
 import tempfile
 from collections import defaultdict
-from typing import cast, List, Dict, Any
+from typing import cast
 
 import gspread
 import streamlit as st
@@ -139,9 +139,72 @@ for i, slot in enumerate(st.session_state.pedal_slots):
 
 st.button("➕ Add Another Pedal", on_click=add_slot)
 
+st.divider()
+
+if st.button("Generate Master List", type="primary", use_container_width=True):
+    inventory: InventoryType = defaultdict(
+        lambda: {"qty": 0, "refs": [], "sources": defaultdict(list)}
+    )
+    stats: StatsDict = {"lines_read": 0, "parts_found": 0, "residuals": []}
+
+    # Process Each Slot
+    for slot in st.session_state.pedal_slots:
+        source = slot["name"] if slot["name"].strip() else "Untitled Project"
+
+        # A. Paste Text Mode
+        if slot["method"] == "Paste Text":
+            raw = slot.get("data", "")
+            if raw:
+                p_inv, p_stats = parse_with_verification([raw], source_name=source)
+
+                # Merge
+                for key, data in p_inv.items():
+                    inventory[key]["qty"] += data["qty"]
+                    inventory[key]["refs"].extend(data["refs"])
+                    for src, refs in data["sources"].items():
+                        inventory[key]["sources"][src].extend(refs)
+
+                stats["lines_read"] += p_stats["lines_read"]
+                stats["parts_found"] += p_stats["parts_found"]
+                stats["residuals"].extend(p_stats["residuals"])
+
+        # B. File Upload Mode
+        elif slot["method"] == "Upload File":
+            f = slot.get("data")
+            if f:
+                ext = os.path.splitext(f.name)[1].lower()
+                with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp:
+                    tmp.write(f.getvalue())
+                    tmp_path = tmp.name
+
+                try:
+                    if ext == ".pdf":
+                        p_inv, p_stats = parse_pedalpcb_pdf(
+                            tmp_path, source_name=source
+                        )
+                    else:
+                        p_inv, p_stats = parse_csv_bom(tmp_path, source_name=source)
+
+                    # Merge
+                    for key, data in p_inv.items():
+                        inventory[key]["qty"] += data["qty"]
+                        inventory[key]["refs"].extend(data["refs"])
+                        for src, refs in data["sources"].items():
+                            inventory[key]["sources"][src].extend(refs)
+
+                    stats["lines_read"] += p_stats["lines_read"]
+                    stats["parts_found"] += p_stats["parts_found"]
+                    stats["residuals"].extend(p_stats["residuals"])
+                finally:
+                    if os.path.exists(tmp_path):
+                        os.remove(tmp_path)
+
+    st.session_state.inventory = inventory
+    st.session_state.stats = stats
+    st.toast("Generated Master List!", icon="🎸")
+
 # Main Process
-# Main Process
-if st.session_state.inventory and st.session_state.stats:
+if st.session_state.inventory:
     inventory = cast(InventoryType, st.session_state.inventory)
     stats = cast(StatsDict, st.session_state.stats)
 
@@ -177,17 +240,19 @@ if st.session_state.inventory and st.session_state.stats:
     final_data = []
 
     # STEP A: Inject Hardware & Smart Merge
-    # We do this FIRST so that merged items (like 3.3k resistors)
-    # get their counts updated in the inventory before we sort/loop.
-    hardware_list = get_standard_hardware(inventory, pedal_count)
+    # Calculate pedal count based on number of filled slots
+    # (Or default to 1 if user just pasted text without adding slots)
+    calc_pedal_count = len(st.session_state.pedal_slots)
+    hardware_list = get_standard_hardware(inventory, calc_pedal_count)
 
     # STEP B: Process the (now updated) Inventory
     sorted_parts = sort_inventory(inventory)
 
-    for part_key, count in sorted_parts:
+    for part_key, item in sorted_parts:
         if " | " not in part_key:
             continue
         category, value = part_key.split(" | ", 1)
+        count = item["qty"]
 
         # Determine Section
         section = "Parsed BOM"
