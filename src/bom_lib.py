@@ -130,6 +130,35 @@ DIODE_ALTS = {
 }
 
 
+def expand_refs(ref_raw: str) -> List[str]:
+    """Explodes ranges like 'R1-R4' or 'R1-4' into ['R1', 'R2', 'R3', 'R4']."""
+    refs = []
+    ref_raw = ref_raw.strip()
+
+    if "-" in ref_raw:
+        try:
+            # Matches R1-R4 or R1-4
+            m = re.match(r"([A-Z]+)(\d+)-([A-Z]+)?(\d+)", ref_raw)
+            if m:
+                prefix = m.group(1)
+                start = int(m.group(2))
+                end = int(m.group(4))
+
+                if (end - start) < 50:  # Sanity check
+                    for i in range(start, end + 1):
+                        refs.append(f"{prefix}{i}")
+                else:
+                    refs.append(ref_raw)
+            else:
+                refs.append(ref_raw)
+        except Exception:
+            refs.append(ref_raw)
+    else:
+        refs.append(ref_raw)
+
+    return refs
+
+
 def categorize_part(
     ref: str, val: str
 ) -> Tuple[Optional[str], Optional[str], Optional[str]]:
@@ -293,29 +322,7 @@ def parse_with_verification(
                 ref_raw = match.group(1).upper()
                 val_raw = match.group(2)
 
-                refs: List[str] = []
-
-                # Handle Ranges (R1-R5)
-                if "-" in ref_raw:
-                    try:
-                        # Matches R1-R4 or R1-4
-                        m = re.match(r"([A-Z]+)(\d+)-([A-Z]+)?(\d+)", ref_raw)
-                        if m:
-                            prefix = m.group(1)
-                            start = int(m.group(2))
-                            end = int(m.group(4))
-
-                            if (end - start) < 50:  # Sanity check
-                                for i in range(start, end + 1):
-                                    refs.append(f"{prefix}{i}")
-                            else:
-                                refs.append(ref_raw)
-                        else:
-                            refs.append(ref_raw)
-                    except Exception:
-                        refs.append(ref_raw)
-                else:
-                    refs.append(ref_raw)
+                refs = expand_refs(ref_raw)
 
                 # Process all refs found on this line
                 line_has_part = False
@@ -373,19 +380,22 @@ def parse_csv_bom(filepath: str, source_name: str) -> Tuple[InventoryType, Stats
 
             success = False
             if ref and val:
-                cat, clean_val, inj = categorize_part(ref, val)
-                if cat:
-                    key = f"{cat} | {clean_val}"
-                    inventory[key]["qty"] += 1
-                    inventory[key]["refs"].append(ref)
-                    inventory[key]["sources"][source_name].append(ref)
+                expanded_refs = expand_refs(ref)
 
-                    if inj:
-                        inventory[inj]["qty"] += 1
-                        inventory[inj]["sources"][source_name].append(f"{ref} (Inj)")
+                for r in expanded_refs:
+                    cat, clean_val, inj = categorize_part(r, val)
+                    if cat:
+                        key = f"{cat} | {clean_val}"
+                        inventory[key]["qty"] += 1
+                        inventory[key]["refs"].append(r)
+                        inventory[key]["sources"][source_name].append(r)
 
-                    stats["parts_found"] += 1
-                    success = True
+                        if inj:
+                            inventory[inj]["qty"] += 1
+                            inventory[inj]["sources"][source_name].append(f"{r} (Inj)")
+
+                        stats["parts_found"] += 1
+                        success = True
 
             if not success:
                 stats["residuals"].append(str(row))
@@ -1032,21 +1042,28 @@ def parse_pedalpcb_pdf(
                             continue
 
                         # Categorize
-                        cat, clean_val, inj = categorize_part(ref_raw, val_raw)
-                        if cat:
-                            key = f"{cat} | {clean_val}"
-                            inventory[key]["qty"] += 1
-                            inventory[key]["refs"].append(ref_raw)
-                            inventory[key]["sources"][source_name].append(ref_raw)
+                        expanded_refs = expand_refs(ref_raw)
+                        row_parsed = False  # Reset flag for this row
 
-                            if inj:
-                                inventory[inj]["qty"] += 1
-                                inventory[inj]["sources"][source_name].append(
-                                    f"{ref_raw} (Inj)"
-                                )
-                            stats["parts_found"] += 1
-                        else:
-                            # Log failed rows from the table as residuals for debugging
+                        for r in expanded_refs:
+                            cat, clean_val, inj = categorize_part(r, val_raw)
+                            if cat:
+                                row_parsed = True  # We found at least one valid part!
+
+                                key = f"{cat} | {clean_val}"
+                                inventory[key]["qty"] += 1
+                                inventory[key]["refs"].append(r)
+                                inventory[key]["sources"][source_name].append(r)
+
+                                if inj:
+                                    inventory[inj]["qty"] += 1
+                                    inventory[inj]["sources"][source_name].append(
+                                        f"{r} (Inj)"
+                                    )
+                                stats["parts_found"] += 1
+
+                        # If the loop finishes and we never found a valid part category:
+                        if not row_parsed:
                             stats["residuals"].append(f"| {ref_raw} | {val_raw} |")
 
     except Exception as e:
