@@ -1,4 +1,5 @@
 import pytest
+from collections import defaultdict
 from unittest.mock import patch, MagicMock
 from hypothesis import given, strategies as st
 from src.bom_lib import (
@@ -397,7 +398,7 @@ def test_pedalpcb_pdf_parsing_happy_path():
 
     # 3. Patch the library so we don't need a real file
     with patch("src.bom_lib.pdfplumber.open", return_value=mock_pdf):
-        inventory, stats = parse_pedalpcb_pdf("dummy.pdf", source_name="PDF Test")
+        inventory, stats = parse_pedalpcb_pdf("dummy.pdf", source_name="Dirty PDF")
 
     # 4. Assertions
     assert inventory["Resistors | 10k"]["qty"] == 1
