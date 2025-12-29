@@ -1,8 +1,9 @@
-import pytest
 from collections import defaultdict
+from typing import cast
 from unittest.mock import patch, MagicMock
 from hypothesis import given, strategies as st
 from src.bom_lib import (
+    InventoryType,
     parse_with_verification,
     get_buy_details,
     parse_value_to_float,
@@ -236,8 +237,9 @@ def test_hardware_injection_and_smart_merge():
     """
     # Setup: Inventory has 2 existing 3.3k resistors (for the circuit)
     # and 3 Pots (which implies we need 3 Knobs)
-    inventory = defaultdict(
-        lambda: {"qty": 0, "refs": [], "sources": defaultdict(list)}
+    inventory = cast(
+        InventoryType,
+        defaultdict(lambda: {"qty": 0, "refs": [], "sources": defaultdict(list)}),
     )
     inventory["Resistors | 3.3k"]["qty"] = 2
     inventory["Potentiometers | 100k-B"]["qty"] = 3
@@ -306,7 +308,12 @@ def test_expert_system_recommendations():
 def test_fuzz_germanium_trigger():
     """Verify Fuzz PCBs trigger Germanium Transistor injection."""
     # Setup inventory with a Fuzz PCB
-    inventory = {"PCB | Fuzz Face": 1}
+    # Explicitly cast to InventoryType so Pylance accepts the partial dict
+    inventory = cast(
+        InventoryType,
+        defaultdict(lambda: {"qty": 0, "refs": [], "sources": defaultdict(list)}),
+    )
+    inventory["PCB | Fuzz Face"]["qty"] = 1
 
     hardware_list = get_standard_hardware(inventory, pedal_count=1)
 
@@ -449,7 +456,7 @@ def test_pedalpcb_pdf_ignores_bad_tables():
     mock_page.extract_tables.return_value = [mock_table]
 
     with patch("src.bom_lib.pdfplumber.open", return_value=mock_pdf):
-        inventory, stats = parse_pedalpcb_pdf("dummy.pdf")
+        inventory, stats = parse_pedalpcb_pdf("dummy.pdf", source_name="Bad Table")
 
     # Should find nothing
     assert len(inventory) == 0
