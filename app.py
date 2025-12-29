@@ -2,9 +2,10 @@ import csv
 import datetime
 import io
 import os
+import uuid
 import tempfile
 from collections import defaultdict
-from typing import cast
+from typing import cast, List, Dict, Any
 
 import gspread
 import streamlit as st
@@ -66,78 +67,77 @@ with col1:
         help="Multiplies enclosures, jacks, and switches automatically.",
     )
 
-# Setup Tabs
-text_tab, files_tab = st.tabs(["📋 Paste Text", "📂 Upload Files"])
-
 if "inventory" not in st.session_state:
     st.session_state.inventory = None
 if "stats" not in st.session_state:
     st.session_state.stats = None
 
-# Tab 1: Text Paste
-with text_tab:
-    raw_text = st.text_area("Paste BOM Text Here:", height=300)
-    if st.button("Generate Shopping List", type="primary", key="text_submit"):
-        if not raw_text:
-            st.error("You gotta paste something first.")
-        else:
-            st.session_state.inventory, st.session_state.stats = (
-                parse_with_verification([raw_text])
-            )
-            st.toast(
-                f"Parsed {st.session_state.stats['lines_read']} lines successfully.",
-                icon="✅",
-            )
+# Initialize Slots
+if "pedal_slots" not in st.session_state:
+    st.session_state.pedal_slots = [
+        {"id": str(uuid.uuid4()), "name": "My Pedal Project", "method": "Paste Text"}
+    ]
 
-# Tab 2: File Upload
-with files_tab:
-    st.caption("Supports CSV (Ref/Value columns) and PedalPCB Build Docs (PDF).")
-    uploaded_files = st.file_uploader(
-        "Upload Files", type=["csv", "pdf"], accept_multiple_files=True
+
+def add_slot():
+    st.session_state.pedal_slots.append(
+        {"id": str(uuid.uuid4()), "name": "", "method": "Paste Text"}
     )
 
-    if st.button("Generate Shopping List", type="primary", key="csv_submit"):
-        if not uploaded_files:
-            st.error("Upload at least one file.")
+
+def remove_slot(idx):
+    st.session_state.pedal_slots.pop(idx)
+
+
+st.divider()
+st.subheader("1. Project Config")
+
+# Dynamic Slot UI
+for i, slot in enumerate(st.session_state.pedal_slots):
+    with st.container():
+        c1, c2, c3, c4 = st.columns([3, 2, 4, 1])
+
+        # Project Name
+        slot["name"] = c1.text_input(
+            f"Project Name #{i + 1}",
+            value=slot["name"],
+            key=f"name_{slot['id']}",
+            placeholder="e.g. Big Muff",
+        )
+
+        # Input Method
+        slot["method"] = c2.radio(
+            "Input Method",
+            ["Paste Text", "Upload File"],
+            key=f"method_{slot['id']}",
+            horizontal=True,
+            label_visibility="collapsed",
+        )
+
+        # Data Input
+        if slot["method"] == "Paste Text":
+            slot["data"] = c3.text_area(
+                "BOM Text",
+                height=100,
+                key=f"text_{slot['id']}",
+                label_visibility="collapsed",
+                placeholder="Paste your BOM here...",
+            )
         else:
-            inventory: InventoryType = defaultdict(int)
-            stats: StatsDict = {"lines_read": 0, "parts_found": 0, "residuals": []}
+            slot["data"] = c3.file_uploader(
+                "Upload BOM",
+                type=["csv", "pdf"],
+                key=f"file_{slot['id']}",
+                label_visibility="collapsed",
+            )
 
-            try:
-                for uploaded_file in uploaded_files:
-                    # Determine extension to route to the correct parser
-                    ext = os.path.splitext(uploaded_file.name)[1].lower()
+        # Remove Button
+        if len(st.session_state.pedal_slots) > 1:
+            if c4.button("🗑️", key=f"del_{slot['id']}"):
+                remove_slot(i)
+                st.rerun()
 
-                    with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp:
-                        tmp.write(uploaded_file.getvalue())
-                        tmp_path = tmp.name
-
-                    try:
-                        # Process single file
-                        if ext == ".pdf":
-                            file_inv, file_stats = parse_pedalpcb_pdf(tmp_path)
-                        else:
-                            file_inv, file_stats = parse_csv_bom(tmp_path)
-
-                        # Merge Logic: Add this file's signal to the master stack
-                        for part, count in file_inv.items():
-                            inventory[part] += count
-
-                        stats["lines_read"] += file_stats["lines_read"]
-                        stats["parts_found"] += file_stats["parts_found"]
-                        stats["residuals"].extend(file_stats["residuals"])
-
-                    finally:
-                        # Clean up the temp file immediately
-                        if os.path.exists(tmp_path):
-                            os.remove(tmp_path)
-
-                st.session_state.inventory = inventory
-                st.session_state.stats = stats
-                st.toast(f"Parsed {stats['lines_read']} lines successfully.", icon="✅")
-
-            except Exception as e:
-                st.error(f"CSV explosion: {e}")
+st.button("➕ Add Another Pedal", on_click=add_slot)
 
 # Main Process
 # Main Process
