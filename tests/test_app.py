@@ -1,6 +1,8 @@
 import pytest
+from typing import cast
 from streamlit.testing.v1 import AppTest
 from collections import defaultdict
+from src.bom_lib import InventoryType
 
 
 # --- Helpers ---
@@ -48,8 +50,9 @@ def test_csv_processing_via_state_injection(app):
     logic works, even if the test runner is blind to the uploader.
     """
     # 1. Mock the inventory that the CSV parser WOULD have produced
-    mock_inventory = defaultdict(
-        lambda: {"qty": 0, "refs": [], "sources": defaultdict(list)}
+    mock_inventory = cast(
+        InventoryType,
+        defaultdict(lambda: {"qty": 0, "refs": [], "sources": defaultdict(list)}),
     )
     mock_inventory["Resistors | 10k"]["qty"] = 5
     mock_inventory["Resistors | 10k"]["sources"]["Mock Project"] = ["R1-R5"]
