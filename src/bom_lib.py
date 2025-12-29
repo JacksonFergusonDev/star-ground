@@ -344,11 +344,13 @@ def parse_with_verification(
     return inventory, stats
 
 
-def parse_csv_bom(filepath: str) -> Tuple[InventoryType, StatsDict]:
+def parse_csv_bom(filepath: str, source_name: str) -> Tuple[InventoryType, StatsDict]:
     """
     Parses a CSV file. Expects columns vaguely named 'Ref' and 'Value'.
     """
-    inventory: InventoryType = defaultdict(int)
+    inventory: InventoryType = defaultdict(
+        lambda: {"qty": 0, "refs": [], "sources": defaultdict(list)}
+    )
     stats: StatsDict = {"lines_read": 0, "parts_found": 0, "residuals": []}
 
     with open(filepath, "r", encoding="utf-8-sig") as f:
@@ -373,9 +375,15 @@ def parse_csv_bom(filepath: str) -> Tuple[InventoryType, StatsDict]:
             if ref and val:
                 cat, clean_val, inj = categorize_part(ref, val)
                 if cat:
-                    inventory[f"{cat} | {clean_val}"] += 1
+                    key = f"{cat} | {clean_val}"
+                    inventory[key]["qty"] += 1
+                    inventory[key]["refs"].append(ref)
+                    inventory[key]["sources"][source_name].append(ref)
+
                     if inj:
-                        inventory[inj] += 1
+                        inventory[inj]["qty"] += 1
+                        inventory[inj]["sources"][source_name].append(f"{ref} (Inj)")
+
                     stats["parts_found"] += 1
                     success = True
 
@@ -964,12 +972,16 @@ def get_standard_hardware(inventory: InventoryType, pedal_count: int = 1) -> Lis
     return hardware
 
 
-def parse_pedalpcb_pdf(filepath: str) -> Tuple[InventoryType, StatsDict]:
+def parse_pedalpcb_pdf(
+    filepath: str, source_name: str
+) -> Tuple[InventoryType, StatsDict]:
     """
     Parses a PedalPCB Build Document (PDF).
     Extracts the BOM table using visual line detection.
     """
-    inventory: InventoryType = defaultdict(int)
+    inventory: InventoryType = defaultdict(
+        lambda: {"qty": 0, "refs": [], "sources": defaultdict(list)}
+    )
     stats: StatsDict = {"lines_read": 0, "parts_found": 0, "residuals": []}
 
     try:
@@ -1019,9 +1031,16 @@ def parse_pedalpcb_pdf(filepath: str) -> Tuple[InventoryType, StatsDict]:
                         # Categorize
                         cat, clean_val, inj = categorize_part(ref_raw, val_raw)
                         if cat:
-                            inventory[f"{cat} | {clean_val}"] += 1
+                            key = f"{cat} | {clean_val}"
+                            inventory[key]["qty"] += 1
+                            inventory[key]["refs"].append(ref_raw)
+                            inventory[key]["sources"][source_name].append(ref_raw)
+
                             if inj:
-                                inventory[inj] += 1
+                                inventory[inj]["qty"] += 1
+                                inventory[inj]["sources"][source_name].append(
+                                    f"{ref_raw} (Inj)"
+                                )
                             stats["parts_found"] += 1
                         else:
                             # Log failed rows from the table as residuals for debugging
