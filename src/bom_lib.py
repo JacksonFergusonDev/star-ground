@@ -28,7 +28,13 @@ class StatsDict(TypedDict):
     residuals: List[str]
 
 
-InventoryType = Dict[str, int]
+class PartData(TypedDict):
+    qty: int
+    refs: List[str]
+    sources: Dict[str, List[str]]
+
+
+InventoryType = Dict[str, PartData]
 
 
 # Chip substitution recommendations
@@ -242,11 +248,15 @@ def categorize_part(
     return category, val_clean, injection
 
 
-def parse_with_verification(bom_list: List[str]) -> Tuple[InventoryType, StatsDict]:
+def parse_with_verification(
+    bom_list: List[str], source_name: str = "Manual Input"
+) -> Tuple[InventoryType, StatsDict]:
     """
     Parses raw text BOMs. Handles commas and ranges (R1-R4).
     """
-    inventory: InventoryType = defaultdict(int)
+    inventory: InventoryType = defaultdict(
+        lambda: {"qty": 0, "refs": [], "sources": defaultdict(list)}
+    )
     stats: StatsDict = {"lines_read": 0, "parts_found": 0, "residuals": []}
 
     # Regex: Matches Ref + Separator + Value.
@@ -269,7 +279,9 @@ def parse_with_verification(bom_list: List[str]) -> Tuple[InventoryType, StatsDi
                 continue
             if pcb_mode:
                 clean_name = re.sub(r"^PCB\s+", "", line, flags=re.IGNORECASE).strip()
-                inventory[f"PCB | {clean_name}"] += 1
+                key = f"PCB | {clean_name}"
+                inventory[key]["qty"] += 1
+                inventory[key]["sources"][source_name].append("PCB")
                 stats["parts_found"] += 1
                 pcb_mode = False
                 continue
@@ -311,9 +323,15 @@ def parse_with_verification(bom_list: List[str]) -> Tuple[InventoryType, StatsDi
                     cat, val, inj = categorize_part(r, val_raw)
 
                     if cat:
-                        inventory[f"{cat} | {val}"] += 1
+                        key = f"{cat} | {val}"
+                        inventory[key]["qty"] += 1
+                        inventory[key]["refs"].append(r)
+                        inventory[key]["sources"][source_name].append(r)
+
                         if inj:
-                            inventory[inj] += 1
+                            inventory[inj]["qty"] += 1
+                            inventory[inj]["sources"][source_name].append(f"{r} (Inj)")
+
                         stats["parts_found"] += 1
                         line_has_part = True
 
