@@ -89,3 +89,36 @@ def test_csv_processing_via_state_injection(app):
 
     # Check that download buttons appeared (Integration check)
     assert len(app.get("download_button")) == 1
+
+
+def test_source_ref_duplication_on_merge(app):
+    """
+    Verify that if a slot has Qty=2, the component refs are duplicated
+    in the source list (Commit 2).
+    """
+    # 1. Inject State directly
+    app.session_state["pedal_slots"] = [
+        # Slot 1: 2x Pedal
+        {
+            "id": "A",
+            "name": "DupeTest",
+            "count": 2,
+            "method": "Paste Text",
+            "data": "R1 10k",
+        },
+    ]
+
+    # 2. Click Generate
+    app.button[1].click().run()
+
+    assert not app.exception
+
+    # 3. Inspect the BACKEND inventory directly
+    # (The dataframe shows the math, but we want to check the hidden source list)
+    inventory = app.session_state["inventory"]
+
+    # We expect the source list to be ['R1', 'R1'] because count was 2
+    refs = inventory["Resistors | 10k"]["sources"]["DupeTest"]
+
+    assert len(refs) == 2
+    assert refs == ["R1", "R1"]

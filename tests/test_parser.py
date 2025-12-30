@@ -15,6 +15,7 @@ from src.bom_lib import (
     generate_search_term,
     generate_tayda_url,
     parse_pedalpcb_pdf,
+    expand_refs,
 )
 
 # Standard Unit Tests
@@ -462,3 +463,39 @@ def test_pedalpcb_pdf_ignores_bad_tables():
     # Should find nothing
     assert len(inventory) == 0
     assert stats["parts_found"] == 0
+
+
+def test_range_expansion_logic():
+    """
+    Verify the regex logic for expanding R1-R4 (Commit 1).
+    """
+    # 1. Standard Range
+    assert expand_refs("R1-R4") == ["R1", "R2", "R3", "R4"]
+
+    # 2. Mixed Case / No Space
+    assert expand_refs("C1-3") == ["C1", "C2", "C3"]
+
+    # 3. Single Item (Pass-through)
+    assert expand_refs("U1") == ["U1"]
+
+    # 4. Broken/Weird input (Safety check)
+    assert expand_refs("R1-") == ["R1-"]
+
+
+def test_ref_expansion_integrity():
+    """
+    Integration Test: Ensure parsers actually USE the expansion (Commit 1).
+    """
+    raw_text = "R1-R3 10k"
+    inventory, _ = parse_with_verification([raw_text], source_name="Range Test")
+
+    item = inventory["Resistors | 10k"]
+
+    # Qty check
+    assert item["qty"] == 3
+
+    # Source Integrity Check
+    # We want ['R1', 'R2', 'R3'], NOT ['R1-R3']
+    assert "R1" in item["sources"]["Range Test"]
+    assert "R2" in item["sources"]["Range Test"]
+    assert "R3" in item["sources"]["Range Test"]
