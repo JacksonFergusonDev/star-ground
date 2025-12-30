@@ -2,10 +2,11 @@ import csv
 import datetime
 import io
 import os
+import uuid
 import tempfile
 from collections import defaultdict
-from typing import cast
-
+from typing import cast, List, Dict, Any
+from streamlit.runtime.uploaded_file_manager import UploadedFile
 import gspread
 import streamlit as st
 from google.oauth2.service_account import Credentials
@@ -56,92 +57,161 @@ Paste your raw component lists (or upload a CSV).
 This tool cleans the data, handles ranges like `R1-R5`, and adds "Nerd Economics" (bulk buying buffers) to your final list.
 """)
 
-st.markdown("### 1. Project Config")
-col1, col2 = st.columns([1, 2])
-with col1:
-    pedal_count = st.number_input(
-        "How many pedals are you building?",
-        min_value=1,
-        value=1,
-        help="Multiplies enclosures, jacks, and switches automatically.",
-    )
-
-# Setup Tabs
-text_tab, files_tab = st.tabs(["📋 Paste Text", "📂 Upload Files"])
-
 if "inventory" not in st.session_state:
     st.session_state.inventory = None
 if "stats" not in st.session_state:
     st.session_state.stats = None
 
-# Tab 1: Text Paste
-with text_tab:
-    raw_text = st.text_area("Paste BOM Text Here:", height=300)
-    if st.button("Generate Shopping List", type="primary", key="text_submit"):
-        if not raw_text:
-            st.error("You gotta paste something first.")
-        else:
-            st.session_state.inventory, st.session_state.stats = (
-                parse_with_verification([raw_text])
-            )
-            st.toast(
-                f"Parsed {st.session_state.stats['lines_read']} lines successfully.",
-                icon="✅",
-            )
+# Initialize Slots
+if "pedal_slots" not in st.session_state:
+    init_slots: List[Dict[str, Any]] = [
+        {"id": str(uuid.uuid4()), "name": "My Pedal Project", "method": "Paste Text"}
+    ]
+    st.session_state.pedal_slots = init_slots
 
-# Tab 2: File Upload
-with files_tab:
-    st.caption("Supports CSV (Ref/Value columns) and PedalPCB Build Docs (PDF).")
-    uploaded_files = st.file_uploader(
-        "Upload Files", type=["csv", "pdf"], accept_multiple_files=True
+
+def add_slot():
+    st.session_state.pedal_slots.append(
+        {"id": str(uuid.uuid4()), "name": "", "method": "Paste Text"}
     )
 
-    if st.button("Generate Shopping List", type="primary", key="csv_submit"):
-        if not uploaded_files:
-            st.error("Upload at least one file.")
+
+def remove_slot(idx):
+    st.session_state.pedal_slots.pop(idx)
+
+
+st.divider()
+st.subheader("1. Project Config")
+
+# Dynamic Slot UI
+for i, slot in enumerate(st.session_state.pedal_slots):
+    with st.container():
+        c1, c2, c3, c4, c5 = st.columns([3, 1, 2, 4, 1])
+
+        # Project Name
+        slot["name"] = c1.text_input(
+            f"Project Name #{i + 1}",
+            value=slot["name"],
+            key=f"name_{slot['id']}",
+            placeholder="e.g. Big Muff",
+        )
+
+        # Quantity
+        slot["count"] = c2.number_input(
+            "Qty",
+            min_value=1,
+            value=slot.get("count", 1),
+            key=f"qty_{slot['id']}",
+            label_visibility="visible",
+        )
+
+        # Input Method
+        slot["method"] = c3.radio(
+            "Input Method",
+            ["Paste Text", "Upload File"],
+            key=f"method_{slot['id']}",
+            horizontal=True,
+            label_visibility="collapsed",
+        )
+
+        # Data Input
+        if slot["method"] == "Paste Text":
+            slot["data"] = c4.text_area(
+                "BOM Text",
+                height=100,
+                key=f"text_{slot['id']}",
+                label_visibility="collapsed",
+                placeholder="Paste your BOM here...",
+                value=slot.get("data", ""),
+            )
         else:
-            inventory: InventoryType = defaultdict(int)
-            stats: StatsDict = {"lines_read": 0, "parts_found": 0, "residuals": []}
+            slot["data"] = c4.file_uploader(
+                "Upload BOM",
+                type=["csv", "pdf"],
+                key=f"file_{slot['id']}",
+                label_visibility="collapsed",
+            )
 
-            try:
-                for uploaded_file in uploaded_files:
-                    # Determine extension to route to the correct parser
-                    ext = os.path.splitext(uploaded_file.name)[1].lower()
+        # Remove Button
+        if len(st.session_state.pedal_slots) > 1:
+            if c5.button("🗑️", key=f"del_{slot['id']}"):
+                remove_slot(i)
+                st.rerun()
 
-                    with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp:
-                        tmp.write(uploaded_file.getvalue())
-                        tmp_path = tmp.name
+st.button("➕ Add Another Pedal", on_click=add_slot)
 
-                    try:
-                        # Process single file
-                        if ext == ".pdf":
-                            file_inv, file_stats = parse_pedalpcb_pdf(tmp_path)
-                        else:
-                            file_inv, file_stats = parse_csv_bom(tmp_path)
+st.divider()
 
-                        # Merge Logic: Add this file's signal to the master stack
-                        for part, count in file_inv.items():
-                            inventory[part] += count
+if st.button("Generate Master List", type="primary", use_container_width=True):
+    inventory: InventoryType = defaultdict(
+        lambda: {"qty": 0, "refs": [], "sources": defaultdict(list)}
+    )
+    stats: StatsDict = {"lines_read": 0, "parts_found": 0, "residuals": []}
 
-                        stats["lines_read"] += file_stats["lines_read"]
-                        stats["parts_found"] += file_stats["parts_found"]
-                        stats["residuals"].extend(file_stats["residuals"])
+    # Process Each Slot
+    for slot in st.session_state.pedal_slots:
+        source = slot["name"] if slot["name"].strip() else "Untitled Project"
+        qty_multiplier = slot.get("count", 1)
 
-                    finally:
-                        # Clean up the temp file immediately
-                        if os.path.exists(tmp_path):
-                            os.remove(tmp_path)
+        # A. Paste Text Mode
+        if slot["method"] == "Paste Text":
+            raw = slot.get("data", "")
+            if raw:
+                p_inv, p_stats = parse_with_verification([raw], source_name=source)
 
-                st.session_state.inventory = inventory
-                st.session_state.stats = stats
-                st.toast(f"Parsed {stats['lines_read']} lines successfully.", icon="✅")
+                # Merge
+                for key, data in p_inv.items():
+                    # Multiply quantity by the slot's pedal count
+                    inventory[key]["qty"] += data["qty"] * qty_multiplier
+                    inventory[key]["refs"].extend(data["refs"])
+                    for src, refs in data["sources"].items():
+                        # Multiply the list of refs by the count (e.g. ['R1'] * 2 = ['R1', 'R1'])
+                        inventory[key]["sources"][src].extend(refs * qty_multiplier)
 
-            except Exception as e:
-                st.error(f"CSV explosion: {e}")
+                stats["lines_read"] += p_stats["lines_read"]
+                stats["parts_found"] += p_stats["parts_found"]
+                stats["residuals"].extend(p_stats["residuals"])
+
+        # B. File Upload Mode
+        elif slot["method"] == "Upload File":
+            # Cast to UploadedFile so Pylance knows it has .name and .getvalue()
+            f = cast(UploadedFile, slot.get("data"))
+            if f:
+                ext = os.path.splitext(f.name)[1].lower()
+                with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp:
+                    tmp.write(f.getvalue())
+                    tmp_path = tmp.name
+
+                try:
+                    if ext == ".pdf":
+                        p_inv, p_stats = parse_pedalpcb_pdf(
+                            tmp_path, source_name=source
+                        )
+                    else:
+                        p_inv, p_stats = parse_csv_bom(tmp_path, source_name=source)
+
+                    # Merge
+                    for key, data in p_inv.items():
+                        # Multiply quantity by the slot's pedal count
+                        inventory[key]["qty"] += data["qty"] * qty_multiplier
+                        inventory[key]["refs"].extend(data["refs"])
+                        for src, refs in data["sources"].items():
+                            # Multiply the list of refs by the count (e.g. ['R1'] * 2 = ['R1', 'R1'])
+                            inventory[key]["sources"][src].extend(refs * qty_multiplier)
+
+                    stats["lines_read"] += p_stats["lines_read"]
+                    stats["parts_found"] += p_stats["parts_found"]
+                    stats["residuals"].extend(p_stats["residuals"])
+                finally:
+                    if os.path.exists(tmp_path):
+                        os.remove(tmp_path)
+
+    st.session_state.inventory = inventory
+    st.session_state.stats = stats
+    st.toast("Generated Master List!", icon="🎸")
 
 # Main Process
-# Main Process
-if st.session_state.inventory and st.session_state.stats:
+if st.session_state.inventory:
     inventory = cast(InventoryType, st.session_state.inventory)
     stats = cast(StatsDict, st.session_state.stats)
 
@@ -177,17 +247,20 @@ if st.session_state.inventory and st.session_state.stats:
     final_data = []
 
     # STEP A: Inject Hardware & Smart Merge
-    # We do this FIRST so that merged items (like 3.3k resistors)
-    # get their counts updated in the inventory before we sort/loop.
-    hardware_list = get_standard_hardware(inventory, pedal_count)
+    # Calculate total pedal count by summing the Qty of all slots
+    calc_pedal_count = sum(
+        slot.get("count", 1) for slot in st.session_state.pedal_slots
+    )
+    hardware_list = get_standard_hardware(inventory, calc_pedal_count)
 
     # STEP B: Process the (now updated) Inventory
     sorted_parts = sort_inventory(inventory)
 
-    for part_key, count in sorted_parts:
+    for part_key, item in sorted_parts:
         if " | " not in part_key:
             continue
         category, value = part_key.split(" | ", 1)
+        count = item["qty"]
 
         # Determine Section
         section = "Parsed BOM"

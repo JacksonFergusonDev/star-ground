@@ -28,7 +28,13 @@ class StatsDict(TypedDict):
     residuals: List[str]
 
 
-InventoryType = Dict[str, int]
+class PartData(TypedDict):
+    qty: int
+    refs: List[str]
+    sources: Dict[str, List[str]]
+
+
+InventoryType = Dict[str, PartData]
 
 
 # Chip substitution recommendations
@@ -122,6 +128,35 @@ DIODE_ALTS = {
         ),
     ],
 }
+
+
+def expand_refs(ref_raw: str) -> List[str]:
+    """Explodes ranges like 'R1-R4' or 'R1-4' into ['R1', 'R2', 'R3', 'R4']."""
+    refs = []
+    ref_raw = ref_raw.strip()
+
+    if "-" in ref_raw:
+        try:
+            # Matches R1-R4 or R1-4
+            m = re.match(r"([A-Z]+)(\d+)-([A-Z]+)?(\d+)", ref_raw)
+            if m:
+                prefix = m.group(1)
+                start = int(m.group(2))
+                end = int(m.group(4))
+
+                if (end - start) < 50:  # Sanity check
+                    for i in range(start, end + 1):
+                        refs.append(f"{prefix}{i}")
+                else:
+                    refs.append(ref_raw)
+            else:
+                refs.append(ref_raw)
+        except Exception:
+            refs.append(ref_raw)
+    else:
+        refs.append(ref_raw)
+
+    return refs
 
 
 def categorize_part(
@@ -242,11 +277,15 @@ def categorize_part(
     return category, val_clean, injection
 
 
-def parse_with_verification(bom_list: List[str]) -> Tuple[InventoryType, StatsDict]:
+def parse_with_verification(
+    bom_list: List[str], source_name: str = "Manual Input"
+) -> Tuple[InventoryType, StatsDict]:
     """
     Parses raw text BOMs. Handles commas and ranges (R1-R4).
     """
-    inventory: InventoryType = defaultdict(int)
+    inventory: InventoryType = defaultdict(
+        lambda: {"qty": 0, "refs": [], "sources": defaultdict(list)}
+    )
     stats: StatsDict = {"lines_read": 0, "parts_found": 0, "residuals": []}
 
     # Regex: Matches Ref + Separator + Value.
@@ -269,7 +308,9 @@ def parse_with_verification(bom_list: List[str]) -> Tuple[InventoryType, StatsDi
                 continue
             if pcb_mode:
                 clean_name = re.sub(r"^PCB\s+", "", line, flags=re.IGNORECASE).strip()
-                inventory[f"PCB | {clean_name}"] += 1
+                key = f"PCB | {clean_name}"
+                inventory[key]["qty"] += 1
+                inventory[key]["sources"][source_name].append("PCB")
                 stats["parts_found"] += 1
                 pcb_mode = False
                 continue
@@ -281,29 +322,7 @@ def parse_with_verification(bom_list: List[str]) -> Tuple[InventoryType, StatsDi
                 ref_raw = match.group(1).upper()
                 val_raw = match.group(2)
 
-                refs: List[str] = []
-
-                # Handle Ranges (R1-R5)
-                if "-" in ref_raw:
-                    try:
-                        # Matches R1-R4 or R1-4
-                        m = re.match(r"([A-Z]+)(\d+)-([A-Z]+)?(\d+)", ref_raw)
-                        if m:
-                            prefix = m.group(1)
-                            start = int(m.group(2))
-                            end = int(m.group(4))
-
-                            if (end - start) < 50:  # Sanity check
-                                for i in range(start, end + 1):
-                                    refs.append(f"{prefix}{i}")
-                            else:
-                                refs.append(ref_raw)
-                        else:
-                            refs.append(ref_raw)
-                    except Exception:
-                        refs.append(ref_raw)
-                else:
-                    refs.append(ref_raw)
+                refs = expand_refs(ref_raw)
 
                 # Process all refs found on this line
                 line_has_part = False
@@ -311,9 +330,15 @@ def parse_with_verification(bom_list: List[str]) -> Tuple[InventoryType, StatsDi
                     cat, val, inj = categorize_part(r, val_raw)
 
                     if cat:
-                        inventory[f"{cat} | {val}"] += 1
+                        key = f"{cat} | {val}"
+                        inventory[key]["qty"] += 1
+                        inventory[key]["refs"].append(r)
+                        inventory[key]["sources"][source_name].append(r)
+
                         if inj:
-                            inventory[inj] += 1
+                            inventory[inj]["qty"] += 1
+                            inventory[inj]["sources"][source_name].append(f"{r} (Inj)")
+
                         stats["parts_found"] += 1
                         line_has_part = True
 
@@ -326,11 +351,13 @@ def parse_with_verification(bom_list: List[str]) -> Tuple[InventoryType, StatsDi
     return inventory, stats
 
 
-def parse_csv_bom(filepath: str) -> Tuple[InventoryType, StatsDict]:
+def parse_csv_bom(filepath: str, source_name: str) -> Tuple[InventoryType, StatsDict]:
     """
     Parses a CSV file. Expects columns vaguely named 'Ref' and 'Value'.
     """
-    inventory: InventoryType = defaultdict(int)
+    inventory: InventoryType = defaultdict(
+        lambda: {"qty": 0, "refs": [], "sources": defaultdict(list)}
+    )
     stats: StatsDict = {"lines_read": 0, "parts_found": 0, "residuals": []}
 
     with open(filepath, "r", encoding="utf-8-sig") as f:
@@ -353,13 +380,22 @@ def parse_csv_bom(filepath: str) -> Tuple[InventoryType, StatsDict]:
 
             success = False
             if ref and val:
-                cat, clean_val, inj = categorize_part(ref, val)
-                if cat:
-                    inventory[f"{cat} | {clean_val}"] += 1
-                    if inj:
-                        inventory[inj] += 1
-                    stats["parts_found"] += 1
-                    success = True
+                expanded_refs = expand_refs(ref)
+
+                for r in expanded_refs:
+                    cat, clean_val, inj = categorize_part(r, val)
+                    if cat:
+                        key = f"{cat} | {clean_val}"
+                        inventory[key]["qty"] += 1
+                        inventory[key]["refs"].append(r)
+                        inventory[key]["sources"][source_name].append(r)
+
+                        if inj:
+                            inventory[inj]["qty"] += 1
+                            inventory[inj]["sources"][source_name].append(f"{r} (Inj)")
+
+                        stats["parts_found"] += 1
+                        success = True
 
             if not success:
                 stats["residuals"].append(str(row))
@@ -395,11 +431,11 @@ def get_residual_report(stats: StatsDict) -> List[str]:
 def get_injection_warnings(inventory: InventoryType) -> List[str]:
     """Warns user if we made assumptions (SMD adapters, Sockets)."""
     warnings = []
-    if inventory.get("Hardware/Misc | SMD_ADAPTER_BOARD", 0) > 0:
+    if inventory["Hardware/Misc | SMD_ADAPTER_BOARD"]["qty"] > 0:
         warnings.append(
             "⚠️  SMD ADAPTERS: Added for MMBF5457. Check if your PCB has SOT-23 pads first."
         )
-    if inventory.get("Hardware/Misc | 8 PIN DIP SOCKET", 0) > 0:
+    if inventory["Hardware/Misc | 8 PIN DIP SOCKET"]["qty"] > 0:
         warnings.append(
             "ℹ️  IC SOCKETS: Added sockets for chips. Optional but recommended."
         )
@@ -638,7 +674,7 @@ def get_buy_details(category: str, val: str, count: int) -> Tuple[int, str]:
     return buy, note
 
 
-def sort_inventory(inventory: InventoryType) -> List[Tuple[str, int]]:
+def sort_inventory(inventory: InventoryType) -> List[Tuple[str, PartData]]:
     """Sorts parts by Category Rank, THEN by Physical Value (Ohms/Farads)."""
     order = [
         "PCB",
@@ -654,7 +690,7 @@ def sort_inventory(inventory: InventoryType) -> List[Tuple[str, int]]:
     # Map name to index for sorting
     pmap = {name: i for i, name in enumerate(order)}
 
-    def sort_key(item: Tuple[str, int]) -> Tuple[int, float, str]:
+    def sort_key(item: Tuple[str, PartData]) -> Tuple[int, float, str]:
         key = item[0]
         if " | " not in key:
             return (999, 0.0, key)
@@ -828,7 +864,8 @@ def get_standard_hardware(inventory: InventoryType, pedal_count: int = 1) -> Lis
 
         if key in inventory:
             # IT EXISTS: Just bump the count.
-            inventory[key] += 1 * pedal_count
+            inventory[key]["qty"] += 1 * pedal_count
+            inventory[key]["sources"]["Auto-Inject"].append(f"Hardware ({pedal_count})")
         else:
             # MISSING: Add to list.
             bom_qty = 1 * pedal_count
@@ -932,7 +969,9 @@ def get_standard_hardware(inventory: InventoryType, pedal_count: int = 1) -> Lis
     )
 
     # Knobs (Dynamic Count)
-    total_pots = sum(c for k, c in inventory.items() if k.startswith("Potentiometers"))
+    total_pots = sum(
+        d["qty"] for k, d in inventory.items() if k.startswith("Potentiometers")
+    )
     if total_pots > 0:
         add_forced("Knob", total_pots, "1 per Pot")
         add_forced(
@@ -946,12 +985,16 @@ def get_standard_hardware(inventory: InventoryType, pedal_count: int = 1) -> Lis
     return hardware
 
 
-def parse_pedalpcb_pdf(filepath: str) -> Tuple[InventoryType, StatsDict]:
+def parse_pedalpcb_pdf(
+    filepath: str, source_name: str
+) -> Tuple[InventoryType, StatsDict]:
     """
     Parses a PedalPCB Build Document (PDF).
     Extracts the BOM table using visual line detection.
     """
-    inventory: InventoryType = defaultdict(int)
+    inventory: InventoryType = defaultdict(
+        lambda: {"qty": 0, "refs": [], "sources": defaultdict(list)}
+    )
     stats: StatsDict = {"lines_read": 0, "parts_found": 0, "residuals": []}
 
     try:
@@ -999,14 +1042,28 @@ def parse_pedalpcb_pdf(filepath: str) -> Tuple[InventoryType, StatsDict]:
                             continue
 
                         # Categorize
-                        cat, clean_val, inj = categorize_part(ref_raw, val_raw)
-                        if cat:
-                            inventory[f"{cat} | {clean_val}"] += 1
-                            if inj:
-                                inventory[inj] += 1
-                            stats["parts_found"] += 1
-                        else:
-                            # Log failed rows from the table as residuals for debugging
+                        expanded_refs = expand_refs(ref_raw)
+                        row_parsed = False  # Reset flag for this row
+
+                        for r in expanded_refs:
+                            cat, clean_val, inj = categorize_part(r, val_raw)
+                            if cat:
+                                row_parsed = True  # We found at least one valid part!
+
+                                key = f"{cat} | {clean_val}"
+                                inventory[key]["qty"] += 1
+                                inventory[key]["refs"].append(r)
+                                inventory[key]["sources"][source_name].append(r)
+
+                                if inj:
+                                    inventory[inj]["qty"] += 1
+                                    inventory[inj]["sources"][source_name].append(
+                                        f"{r} (Inj)"
+                                    )
+                                stats["parts_found"] += 1
+
+                        # If the loop finishes and we never found a valid part category:
+                        if not row_parsed:
                             stats["residuals"].append(f"| {ref_raw} | {val_raw} |")
 
     except Exception as e:
