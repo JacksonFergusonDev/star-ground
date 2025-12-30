@@ -1,7 +1,10 @@
 import pytest
+from collections import defaultdict
+from typing import cast
 from unittest.mock import patch, MagicMock
 from hypothesis import given, strategies as st
 from src.bom_lib import (
+    InventoryType,
     parse_with_verification,
     get_buy_details,
     parse_value_to_float,
@@ -12,6 +15,7 @@ from src.bom_lib import (
     generate_search_term,
     generate_tayda_url,
     parse_pedalpcb_pdf,
+    expand_refs,
 )
 
 # Standard Unit Tests
@@ -20,22 +24,40 @@ from src.bom_lib import (
 def test_basic_resistor_parsing():
     """Does it handle a perfect input?"""
     raw_text = "R1 10k"
-    inventory, stats = parse_with_verification([raw_text])
+    inventory, stats = parse_with_verification([raw_text], source_name="Test Bench")
 
-    assert inventory["Resistors | 10k"] == 1
+    assert inventory["Resistors | 10k"]["qty"] == 1
+    assert "R1" in inventory["Resistors | 10k"]["refs"]
+    assert "R1" in inventory["Resistors | 10k"]["sources"]["Test Bench"]
+
     assert stats["parts_found"] == 1
     assert len(stats["residuals"]) == 0
+
+
+def test_source_tracking_logic():
+    """
+    Verify that we can distinguish WHERE a part came from.
+    """
+    raw_text = "R1 10k"
+    inventory, _ = parse_with_verification([raw_text], source_name="Big Muff")
+
+    # Simulate a merge (manually adding a second source)
+    inventory["Resistors | 10k"]["qty"] += 1
+    inventory["Resistors | 10k"]["sources"]["Tube Screamer"].append("R5")
+
+    item = inventory["Resistors | 10k"]
+    assert item["qty"] == 2
+    assert item["sources"]["Big Muff"] == ["R1"]
+    assert item["sources"]["Tube Screamer"] == ["R5"]
 
 
 def test_pcb_trap():
     """Does it handle the multi-line PCB header?"""
     raw_text = "PCB\nBig Muff Board"
-    inventory, stats = parse_with_verification([raw_text])
+    inventory, stats = parse_with_verification([raw_text], source_name="My Build")
 
-    assert inventory["PCB | Big Muff Board"] == 1
-
-
-# [tests/test_parser.py]
+    assert inventory["PCB | Big Muff Board"]["qty"] == 1
+    assert "PCB" in inventory["PCB | Big Muff Board"]["sources"]["My Build"]
 
 
 def test_2n5457_behavior():
@@ -48,18 +70,18 @@ def test_2n5457_behavior():
     inventory, _ = parse_with_verification([raw_text])
 
     # Should stay as 2N5457
-    assert inventory["Transistors | 2N5457"] == 1
+    assert inventory["Transistors | 2N5457"]["qty"] == 1
     # Should NOT inject adapter
-    assert inventory.get("Hardware/Misc | SMD_ADAPTER_BOARD", 0) == 0
+    assert inventory.get("Hardware/Misc | SMD_ADAPTER_BOARD", {}).get("qty", 0) == 0
 
     # Case 2: Modern SMD Part
     raw_text_2 = "Q2 MMBF5457"
     inventory_2, _ = parse_with_verification([raw_text_2])
 
     # Should stay as MMBF5457
-    assert inventory_2["Transistors | MMBF5457"] == 1
+    assert inventory_2["Transistors | MMBF5457"]["qty"] == 1
     # Should NOT inject adapter (User might have SOT-23 pads)
-    assert inventory_2.get("Hardware/Misc | SMD_ADAPTER_BOARD", 0) == 0
+    assert inventory_2.get("Hardware/Misc | SMD_ADAPTER_BOARD", {}).get("qty", 0) == 0
 
 
 def test_warning_flags():
@@ -217,7 +239,12 @@ def test_hardware_injection_and_smart_merge():
     """
     # Setup: Inventory has 2 existing 3.3k resistors (for the circuit)
     # and 3 Pots (which implies we need 3 Knobs)
-    inventory = {"Resistors | 3.3k": 2, "Potentiometers | 100k-B": 3}
+    inventory = cast(
+        InventoryType,
+        defaultdict(lambda: {"qty": 0, "refs": [], "sources": defaultdict(list)}),
+    )
+    inventory["Resistors | 3.3k"]["qty"] = 2
+    inventory["Potentiometers | 100k-B"]["qty"] = 3
 
     # Run injection for 1 pedal
     hardware_list = get_standard_hardware(inventory, pedal_count=1)
@@ -225,7 +252,7 @@ def test_hardware_injection_and_smart_merge():
     # CHECK 1: Smart Merge
     # The function should have found "Resistors | 3.3k" and incremented it by 1 (for the LED).
     # It should NOT be in the hardware_list returned.
-    assert inventory["Resistors | 3.3k"] == 3  # 2 original + 1 injected
+    assert inventory["Resistors | 3.3k"]["qty"] == 3  # 2 original + 1 injected
     assert not any(
         item["Part"] == "Resistor 3.3k (Metal Film)" for item in hardware_list
     )
@@ -283,7 +310,12 @@ def test_expert_system_recommendations():
 def test_fuzz_germanium_trigger():
     """Verify Fuzz PCBs trigger Germanium Transistor injection."""
     # Setup inventory with a Fuzz PCB
-    inventory = {"PCB | Fuzz Face": 1}
+    # Explicitly cast to InventoryType so Pylance accepts the partial dict
+    inventory = cast(
+        InventoryType,
+        defaultdict(lambda: {"qty": 0, "refs": [], "sources": defaultdict(list)}),
+    )
+    inventory["PCB | Fuzz Face"]["qty"] = 1
 
     hardware_list = get_standard_hardware(inventory, pedal_count=1)
 
@@ -375,12 +407,12 @@ def test_pedalpcb_pdf_parsing_happy_path():
 
     # 3. Patch the library so we don't need a real file
     with patch("src.bom_lib.pdfplumber.open", return_value=mock_pdf):
-        inventory, stats = parse_pedalpcb_pdf("dummy.pdf")
+        inventory, stats = parse_pedalpcb_pdf("dummy.pdf", source_name="Dirty PDF")
 
     # 4. Assertions
-    assert inventory["Resistors | 10k"] == 1
-    assert inventory["Capacitors | 100n"] == 1
-    assert inventory["ICs | TL072"] == 1
+    assert inventory["Resistors | 10k"]["qty"] == 1
+    assert inventory["Capacitors | 100n"]["qty"] == 1
+    assert inventory["ICs | TL072"]["qty"] == 1
     assert stats["parts_found"] == 3
 
 
@@ -405,11 +437,11 @@ def test_pedalpcb_pdf_dirty_input():
     mock_page.extract_tables.return_value = [mock_table]
 
     with patch("src.bom_lib.pdfplumber.open", return_value=mock_pdf):
-        inventory, stats = parse_pedalpcb_pdf("dummy.pdf")
+        inventory, stats = parse_pedalpcb_pdf("dummy.pdf", source_name="Dirty PDF")
 
     # The parser should clean "10k\nOhm" -> "10k Ohm" -> "10k"
-    assert inventory["Resistors | 10k"] == 1
-    assert inventory["Capacitors | 100n"] == 1
+    assert inventory["Resistors | 10k"]["qty"] == 1
+    assert inventory["Capacitors | 100n"]["qty"] == 1
     assert stats["parts_found"] == 2
 
 
@@ -426,8 +458,44 @@ def test_pedalpcb_pdf_ignores_bad_tables():
     mock_page.extract_tables.return_value = [mock_table]
 
     with patch("src.bom_lib.pdfplumber.open", return_value=mock_pdf):
-        inventory, stats = parse_pedalpcb_pdf("dummy.pdf")
+        inventory, stats = parse_pedalpcb_pdf("dummy.pdf", source_name="Bad Table")
 
     # Should find nothing
     assert len(inventory) == 0
     assert stats["parts_found"] == 0
+
+
+def test_range_expansion_logic():
+    """
+    Verify the regex logic for expanding R1-R4 (Commit 1).
+    """
+    # 1. Standard Range
+    assert expand_refs("R1-R4") == ["R1", "R2", "R3", "R4"]
+
+    # 2. Mixed Case / No Space
+    assert expand_refs("C1-3") == ["C1", "C2", "C3"]
+
+    # 3. Single Item (Pass-through)
+    assert expand_refs("U1") == ["U1"]
+
+    # 4. Broken/Weird input (Safety check)
+    assert expand_refs("R1-") == ["R1-"]
+
+
+def test_ref_expansion_integrity():
+    """
+    Integration Test: Ensure parsers actually USE the expansion (Commit 1).
+    """
+    raw_text = "R1-R3 10k"
+    inventory, _ = parse_with_verification([raw_text], source_name="Range Test")
+
+    item = inventory["Resistors | 10k"]
+
+    # Qty check
+    assert item["qty"] == 3
+
+    # Source Integrity Check
+    # We want ['R1', 'R2', 'R3'], NOT ['R1-R3']
+    assert "R1" in item["sources"]["Range Test"]
+    assert "R2" in item["sources"]["Range Test"]
+    assert "R3" in item["sources"]["Range Test"]
