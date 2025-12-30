@@ -122,6 +122,7 @@ for i, slot in enumerate(st.session_state.pedal_slots):
                 key=f"text_{slot['id']}",
                 label_visibility="collapsed",
                 placeholder="Paste your BOM here...",
+                value=slot.get("data", ""),
             )
         else:
             slot["data"] = c4.file_uploader(
