@@ -683,9 +683,9 @@ def sort_inventory(inventory: InventoryType) -> List[Tuple[str, PartData]]:
         "Diodes",
         "Potentiometers",
         "Switches",
-        "Hardware/Misc",
         "Capacitors",
         "Resistors",
+        "Hardware/Misc",
     ]
     # Map name to index for sorting
     pmap = {name: i for i, name in enumerate(order)}
@@ -817,172 +817,71 @@ def float_to_display_string(val: float) -> str:
     return base
 
 
-def get_standard_hardware(inventory: InventoryType, pedal_count: int = 1) -> List[dict]:
+def get_standard_hardware(inventory: InventoryType, pedal_count: int = 1) -> None:
     """
-    Generates the 'Missing/Critical' section based on pedal count and pot count.
+    Mutates the inventory in-place to add Missing/Critical hardware.
     """
-    hardware = []
 
-    # --- INTERNAL HELPERS ---
-    def _create_entry(
-        category: str,
-        part_name: str,
-        qty: int,
-        note: str,
-        section: str,
-        search_val: Optional[str] = None,
-        buy_qty: Optional[int] = None,
-    ):
-        """Helper to build consistent hardware rows with search links."""
-        # Use the specific search value (e.g. "3.3k") if provided, otherwise use the part name
-        if search_val is None:
-            search_val = part_name
-
-        # Default buy_qty to BOM qty if not specified
-        if buy_qty is None:
-            buy_qty = qty
-
-        search_term = generate_search_term(category, search_val)
-        url = generate_tayda_url(search_term)
-
-        hardware.append(
-            {
-                "Section": section,
-                "Category": category,
-                "Part": part_name,
-                "BOM Qty": qty,
-                "Buy Qty": buy_qty,
-                "Notes": note,
-                "Search Term": search_term,
-                "Tayda_Link": url,
-            }
-        )
-
-    def smart_merge(category, val, part_display, note, section="Missing/Critical"):
-        """Checks inventory state before injecting."""
+    def inject(category: str, val: str, qty_per_pedal: int, note: str):
+        """Standardizes the injection logic."""
+        # Ensure we match the formatting of the main parser
         key = f"{category} | {val}"
 
-        if key in inventory:
-            # IT EXISTS: Just bump the count.
-            inventory[key]["qty"] += 1 * pedal_count
-            inventory[key]["sources"]["Auto-Inject"].append(f"Hardware ({pedal_count})")
-        else:
-            # MISSING: Add to list.
-            bom_qty = 1 * pedal_count
-            calc_buy_qty = bom_qty
+        total_qty = qty_per_pedal * pedal_count
 
-            if category == "Resistors":
-                # Buffer +5, Round to nearest 10
-                calc_buy_qty = math.ceil((bom_qty + 5) / 10) * 10
-            elif category == "Diodes":  # LED
-                calc_buy_qty = bom_qty + 2
+        # In-place mutation
+        inventory[key]["qty"] += total_qty
+        inventory[key]["refs"].append("HW")  # Generic ref for hardware
 
-            _create_entry(
-                category,
-                part_display,
-                bom_qty,
-                note,
-                section,
-                search_val=val,
-                buy_qty=calc_buy_qty,
-            )
+        # Track source with the note for context
+        source_tag = f"Auto-Inject ({note})"
+        inventory[key]["sources"]["Auto-Inject"].append(source_tag)
 
-    def add_forced(
-        part,
-        qty,
-        note="",
-        section="Missing/Critical",
-        category="Hardware",
-        search_val: Optional[str] = None,
-        buy_qty: Optional[int] = None,
-    ):
-        """Always injects the item."""
-        _create_entry(
-            category, part, qty, note, section, search_val=search_val, buy_qty=buy_qty
-        )
+    # 1. SMART MERGE ITEMS (Check for existence or inject)
 
-    # --- 1. SMART MERGE ITEMS ---
     # Resistor 3.3k (For LED CLR)
-    smart_merge("Resistors", "3.3k", "3.3k", "For LED CLR")
+    # Note: We inject into the main Resistors category so it sorts correctly
+    inject("Resistors", "3.3k", 1, "LED CLR")
 
     # LED
-    smart_merge("Diodes", "LED", "LED (Diffuse)", "Status Light")
+    inject("Diodes", "LED", 1, "Status Light")
 
-    # --- 2. ALWAYS MISSING ITEMS ---
+    # 2. FORCED HARDWARE ITEMS
 
-    p = pedal_count
-
-    # Germanium Logic: Fuzz pedals often need Ge transistors not listed on Tayda
+    # Germanium Logic
     if any("FUZZ" in k.upper() for k in inventory if k.startswith("PCB")):
-        add_forced(
-            "Germanium Transistors",
-            0,  # 0 Buy Qty (Just a suggestion)
-            "Vintage Tone option (Pos Ground!)",
-            "Recommended Extras",
-            category="Transistors",
-            search_val="Germanium Transistor PNP",
-        )
+        inject("Transistors", "Germanium PNP", 0, "Vintage Option")
 
-    add_forced("1590B Enclosure", 1 * p, "Standard size. Verify PCB fit!")
-
-    add_forced(
-        "3PDT FOOTSWITCH PCB",
-        1 * p,
-        "Tayda Wiring Board",
-        search_val="3PDT Footswitch DIY PCB Wiring Board",
-    )
-
-    add_forced("3PDT STOMP SWITCH", 1 * p, "Blue/Standard")
-
-    add_forced(
-        "6.35MM JACK (STEREO)",
-        1 * p,
-        "Input (Stereo handles battery)",
-        search_val="6.35MM JACK STEREO",
-    )
-
-    add_forced("6.35MM JACK (MONO)", 1 * p, "Output", search_val="6.35MM JACK MONO")
-
-    add_forced("DC POWER JACK 2.1MM", 1 * p, "Standard Center Negative")
-
-    add_forced(
-        "Bezel LED Holder",
-        1 * p,
-        "Match LED size (3mm) | Rec: Metal",
-        search_val="3mm Bezel LED Holder Metal",
-    )
-
-    add_forced(
-        "Rubber Feet (Black)", 4 * p, "Enclosure Feet", search_val="Rubber Feet Black"
-    )
-
-    add_forced("AWG 24 Hook-Up Wire", 3 * p, "Approx 1ft (30cm) per pedal")
-
-    add_forced("9V BATTERY CLIP", 1 * p, "Optional", "Recommended Extras")
-
-    add_forced(
-        "Heat Shrink Tubing",
-        1 * p,
-        "Essential for insulation",
-        "Recommended Extras",
-        search_val="Heat Shrink Tubing 2.5mm",
-    )
+    inject("Hardware/Misc", "1590B Enclosure", 1, "Verify PCB fit")
+    inject("Hardware/Misc", "3PDT FOOTSWITCH PCB", 1, "Wiring Board")
+    inject("Hardware/Misc", "3PDT STOMP SWITCH", 1, "Blue/Standard")
+    inject("Hardware/Misc", "6.35MM JACK (STEREO)", 1, "Input")
+    inject("Hardware/Misc", "6.35MM JACK (MONO)", 1, "Output")
+    inject("Hardware/Misc", "DC POWER JACK 2.1MM", 1, "Center Negative")
+    inject("Hardware/Misc", "Bezel LED Holder", 1, "3mm Metal")
+    inject("Hardware/Misc", "Rubber Feet (Black)", 4, "Enclosure Feet")
+    inject("Hardware/Misc", "AWG 24 Hook-Up Wire", 3, "Approx 1ft/pedal")
+    inject("Hardware/Misc", "9V BATTERY CLIP", 1, "Optional")
+    inject("Hardware/Misc", "Heat Shrink Tubing", 1, "Insulation")
 
     # Knobs (Dynamic Count)
     total_pots = sum(
         d["qty"] for k, d in inventory.items() if k.startswith("Potentiometers")
     )
+    # We divide by pedal_count to get pots per pedal, then re-multiply inside inject.
+    # Alternatively, we just pass the raw total if we treat it as a bulk injection.
+    # Let's keep the logic consistent:
     if total_pots > 0:
-        add_forced("Knob", total_pots, "1 per Pot")
-        add_forced(
-            "Dust Seal Cover",
-            total_pots,
-            "Protects pots",
-            "Recommended Extras",
-            buy_qty=total_pots + 2,
-        )
+        # We inject the TOTAL quantity calculated from the inventory
+        key = "Hardware/Misc | Knob"
+        inventory[key]["qty"] += total_pots
+        inventory[key]["sources"]["Auto-Inject"].append(f"Knobs ({total_pots})")
 
-    return hardware
+        key_seal = "Hardware/Misc | Dust Seal Cover"
+        inventory[key_seal]["qty"] += total_pots
+        inventory[key_seal]["sources"]["Auto-Inject"].append(
+            f"Pot Seals ({total_pots})"
+        )
 
 
 def parse_pedalpcb_pdf(

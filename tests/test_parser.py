@@ -246,28 +246,26 @@ def test_hardware_injection_and_smart_merge():
     inventory["Resistors | 3.3k"]["qty"] = 2
     inventory["Potentiometers | 100k-B"]["qty"] = 3
 
-    # Run injection for 1 pedal
-    hardware_list = get_standard_hardware(inventory, pedal_count=1)
+    # Run injection for 1 pedal (Mutates in-place)
+    get_standard_hardware(inventory, pedal_count=1)
 
     # CHECK 1: Smart Merge
     # The function should have found "Resistors | 3.3k" and incremented it by 1 (for the LED).
-    # It should NOT be in the hardware_list returned.
     assert inventory["Resistors | 3.3k"]["qty"] == 3  # 2 original + 1 injected
-    assert not any(
-        item["Part"] == "Resistor 3.3k (Metal Film)" for item in hardware_list
-    )
+
+    # Verify the source tag was added
+    assert "Auto-Inject" in inventory["Resistors | 3.3k"]["sources"]
 
     # CHECK 2: Forced Injection
-    # Enclosures should always be there
-    enclosures = [x for x in hardware_list if "Enclosure" in x["Part"]]
-    assert len(enclosures) == 1
-    assert enclosures[0]["Buy Qty"] == 1
+    # Enclosures should be injected directly into inventory
+    enc_key = "Hardware/Misc | 1590B Enclosure"
+    assert inventory[enc_key]["qty"] == 1
+    assert "Auto-Inject" in inventory[enc_key]["sources"]
 
     # CHECK 3: Dynamic Knob Count
-    # 3 Pots -> 3 Knobs
-    knobs = [x for x in hardware_list if x["Part"] == "Knob"]
-    assert len(knobs) == 1
-    assert knobs[0]["Buy Qty"] == 3
+    # 3 Pots -> 3 Knobs injected
+    knob_key = "Hardware/Misc | Knob"
+    assert inventory[knob_key]["qty"] == 3
 
 
 # 3. Search Engine & Vendor Integration Tests
@@ -310,19 +308,22 @@ def test_expert_system_recommendations():
 def test_fuzz_germanium_trigger():
     """Verify Fuzz PCBs trigger Germanium Transistor injection."""
     # Setup inventory with a Fuzz PCB
-    # Explicitly cast to InventoryType so Pylance accepts the partial dict
     inventory = cast(
         InventoryType,
         defaultdict(lambda: {"qty": 0, "refs": [], "sources": defaultdict(list)}),
     )
     inventory["PCB | Fuzz Face"]["qty"] = 1
 
-    hardware_list = get_standard_hardware(inventory, pedal_count=1)
+    get_standard_hardware(inventory, pedal_count=1)
 
-    # Check for Ge Transistors
-    ge_parts = [x for x in hardware_list if "Germanium" in x["Part"]]
-    assert len(ge_parts) > 0
-    assert "Pos Ground" in ge_parts[0]["Notes"]
+    # Check for Ge Transistors in the dictionary
+    ge_key = "Transistors | Germanium PNP"
+    assert ge_key in inventory
+    assert inventory[ge_key]["qty"] == 0
+
+    # Check that the note made it into the source tag
+    sources = inventory[ge_key]["sources"]["Auto-Inject"]
+    assert any("Vintage Option" in s for s in sources)
 
 
 def test_search_term_generation():
@@ -359,24 +360,32 @@ def test_tayda_url_encoding():
     assert "10k+ohm+1%2F4w" in url
 
 
-def test_hardware_links_integration():
+def test_hardware_search_term_validity():
     """
-    Ensure get_standard_hardware populates the new Link fields.
-    This verifies the _create_entry helper logic.
+    Ensure injected hardware keys generate valid search terms/links.
+    (Logic moved from bom_lib to app.py, so we simulate the app's utilization).
     """
-    inventory = {}
-    hardware_list = get_standard_hardware(inventory, pedal_count=1)
+    # Fix: Must use defaultdict to prevent KeyError during injection
+    inventory = cast(
+        InventoryType,
+        defaultdict(lambda: {"qty": 0, "refs": [], "sources": defaultdict(list)}),
+    )
 
-    # Grab the Enclosure (usually first or second item)
-    enclosure = next(item for item in hardware_list if "Enclosure" in item["Part"])
+    get_standard_hardware(inventory, pedal_count=1)
 
-    # Check keys exist
-    assert "Search Term" in enclosure
-    assert "Tayda_Link" in enclosure
+    # Grab the Enclosure Key
+    target_key = "Hardware/Misc | 1590B Enclosure"
+    assert target_key in inventory
 
-    # Check content
-    assert enclosure["Search Term"] == "1590B Enclosure"
-    assert "1590B+Enclosure" in enclosure["Tayda_Link"]
+    # Simulate App Logic: specific -> generate -> url
+    category, val = target_key.split(" | ", 1)
+
+    term = generate_search_term(category, val)
+    url = generate_tayda_url(term)
+
+    # Verify content
+    assert "1590B Enclosure" in term
+    assert "1590B+Enclosure" in url
 
 
 # 4. PDF Parsing Tests
