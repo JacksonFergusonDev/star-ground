@@ -27,19 +27,22 @@ from src.bom_lib import (
 )
 
 
-def save_feedback(rating, text):
-    """Authenticates with Secrets and appends row to Google Sheets."""
+# ttl="1h" to prevent stale token issues
+@st.cache_resource(ttl="1h")
+def get_gsheet_client():
+    """Establishes a persistent connection to Google Sheets."""
     scope = [
         "https://spreadsheets.google.com/feeds",
         "https://www.googleapis.com/auth/drive",
     ]
-
-    # Load credentials from Streamlit secrets
     creds_dict = st.secrets["gcp_service_account"]
     creds = Credentials.from_service_account_info(creds_dict, scopes=scope)
-    client = gspread.authorize(creds)
+    return gspread.authorize(creds)
 
-    # Open the Sheet
+
+def save_feedback(rating, text):
+    """Appends feedback row using the cached client."""
+    client = get_gsheet_client()
     sheet = client.open("Pedal BOM Feedback").sheet1
 
     # Append timestamp, rating, and comment
