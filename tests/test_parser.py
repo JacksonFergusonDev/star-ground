@@ -317,13 +317,12 @@ def test_fuzz_germanium_trigger():
     get_standard_hardware(inventory, pedal_count=1)
 
     # Check for Ge Transistors in the dictionary
-    # The key is likely "Transistors | Germanium PNP"
     ge_key = "Transistors | Germanium PNP"
-    assert inventory[ge_key]["qty"] > 0
+    assert ge_key in inventory
+    assert inventory[ge_key]["qty"] == 0
 
     # Check that the note made it into the source tag
     sources = inventory[ge_key]["sources"]["Auto-Inject"]
-    # We look for a string like "Auto-Inject (Vintage Option)"
     assert any("Vintage Option" in s for s in sources)
 
 
