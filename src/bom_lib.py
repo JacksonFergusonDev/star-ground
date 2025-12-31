@@ -848,8 +848,6 @@ def get_standard_hardware(inventory: InventoryType, pedal_count: int = 1) -> Non
 
     # 2. FORCED HARDWARE ITEMS
 
-    p_qty = 1  # Multiplier is handled inside inject via pedal_count
-
     # Germanium Logic
     if any("FUZZ" in k.upper() for k in inventory if k.startswith("PCB")):
         inject("Transistors", "Germanium PNP", 0, "Vintage Option")
