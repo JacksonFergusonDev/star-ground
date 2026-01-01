@@ -159,6 +159,22 @@ def expand_refs(ref_raw: str) -> List[str]:
     return refs
 
 
+def normalize_value_by_category(category: str, val_raw: str) -> str:
+    """
+    Standardizes values so BOM and Stock keys match.
+    e.g. Resistors "10k" -> "10k", "10,000" -> "10k"
+    """
+    clean_val = val_raw.strip()
+
+    # Only normalize Passives (Resistors/Caps)
+    if category in ("Resistors", "Capacitors"):
+        fval = parse_value_to_float(clean_val)
+        if fval is not None:
+            clean_val = float_to_search_string(fval)
+
+    return clean_val
+
+
 def categorize_part(
     ref: str, val: str
 ) -> Tuple[Optional[str], Optional[str], Optional[str]]:
@@ -266,15 +282,50 @@ def categorize_part(
         category = "ICs"
         injection = "Hardware/Misc | 8 PIN DIP SOCKET"
 
-    # Only normalize Passives (Resistors/Caps) to avoid mangling Transistors
-    # (e.g., preventing "2N5457" from becoming "2")
-    if category in ("Resistors", "Capacitors"):
-        fval = parse_value_to_float(val_clean)
-        if fval is not None:
-            val_clean = float_to_search_string(fval)
-            val_up = val_clean.upper()
+    # Use centralized normalizer
+    val_clean = normalize_value_by_category(category, val_clean)
 
     return category, val_clean, injection
+
+
+def _record_part(
+    inventory: InventoryType, source: str, key: str, ref: str, qty: int = 1
+) -> None:
+    """Low-level dictionary update helper."""
+    inventory[key]["qty"] += qty
+    # Only track refs if provided (avoids empty strings for stock items)
+    if ref:
+        inventory[key]["refs"].append(ref)
+        inventory[key]["sources"][source].append(ref)
+
+
+def ingest_bom_line(
+    inventory: InventoryType, source: str, ref_raw: str, val_raw: str
+) -> int:
+    """
+    Central Logic Kernel:
+    Expands ranges (R1-R4) -> Categorizes -> Injects Hardware -> Updates Dict.
+    Returns: Number of parts found.
+    """
+    parts_found = 0
+    expanded_refs = expand_refs(ref_raw)
+
+    for r in expanded_refs:
+        cat, clean_val, inj = categorize_part(r, val_raw)
+
+        if cat:
+            parts_found += 1
+            main_key = f"{cat} | {clean_val}"
+
+            # 1. Record Main Part
+            _record_part(inventory, source, main_key, r)
+
+            # 2. Handle Auto-Injection (e.g. Sockets)
+            if inj:
+                # inj is pre-formatted as "Category | Value"
+                _record_part(inventory, source, inj, f"{r} (Inj)")
+
+    return parts_found
 
 
 def parse_with_verification(
@@ -322,27 +373,9 @@ def parse_with_verification(
                 ref_raw = match.group(1).upper()
                 val_raw = match.group(2)
 
-                refs = expand_refs(ref_raw)
-
-                # Process all refs found on this line
-                line_has_part = False
-                for r in refs:
-                    cat, val, inj = categorize_part(r, val_raw)
-
-                    if cat:
-                        key = f"{cat} | {val}"
-                        inventory[key]["qty"] += 1
-                        inventory[key]["refs"].append(r)
-                        inventory[key]["sources"][source_name].append(r)
-
-                        if inj:
-                            inventory[inj]["qty"] += 1
-                            inventory[inj]["sources"][source_name].append(f"{r} (Inj)")
-
-                        stats["parts_found"] += 1
-                        line_has_part = True
-
-                if line_has_part:
+                count = ingest_bom_line(inventory, source_name, ref_raw, val_raw)
+                if count > 0:
+                    stats["parts_found"] += count
                     success = True
 
             if not success:
@@ -380,22 +413,10 @@ def parse_csv_bom(filepath: str, source_name: str) -> Tuple[InventoryType, Stats
 
             success = False
             if ref and val:
-                expanded_refs = expand_refs(ref)
-
-                for r in expanded_refs:
-                    cat, clean_val, inj = categorize_part(r, val)
-                    if cat:
-                        key = f"{cat} | {clean_val}"
-                        inventory[key]["qty"] += 1
-                        inventory[key]["refs"].append(r)
-                        inventory[key]["sources"][source_name].append(r)
-
-                        if inj:
-                            inventory[inj]["qty"] += 1
-                            inventory[inj]["sources"][source_name].append(f"{r} (Inj)")
-
-                        stats["parts_found"] += 1
-                        success = True
+                count = ingest_bom_line(inventory, source_name, ref, val)
+                if count > 0:
+                    stats["parts_found"] += count
+                    success = True
 
             if not success:
                 stats["residuals"].append(str(row))
@@ -547,6 +568,10 @@ def generate_tayda_url(search_term: str) -> str:
 
 def get_buy_details(category: str, val: str, count: int) -> Tuple[int, str]:
     """Applies 'Nerd Economics' to calculate buy quantity."""
+    # If we don't need any (Net Need <= 0), don't buy any.
+    if count <= 0:
+        return 0, ""
+
     buy = count
     note = ""
 
@@ -941,25 +966,13 @@ def parse_pedalpcb_pdf(
                             continue
 
                         # Categorize
-                        expanded_refs = expand_refs(ref_raw)
-                        row_parsed = False  # Reset flag for this row
+                        count = ingest_bom_line(
+                            inventory, source_name, ref_raw, val_raw
+                        )
 
-                        for r in expanded_refs:
-                            cat, clean_val, inj = categorize_part(r, val_raw)
-                            if cat:
-                                row_parsed = True  # We found at least one valid part!
-
-                                key = f"{cat} | {clean_val}"
-                                inventory[key]["qty"] += 1
-                                inventory[key]["refs"].append(r)
-                                inventory[key]["sources"][source_name].append(r)
-
-                                if inj:
-                                    inventory[inj]["qty"] += 1
-                                    inventory[inj]["sources"][source_name].append(
-                                        f"{r} (Inj)"
-                                    )
-                                stats["parts_found"] += 1
+                        if count > 0:
+                            stats["parts_found"] += count
+                            row_parsed = True
 
                         # If the loop finishes and we never found a valid part category:
                         if not row_parsed:
@@ -969,3 +982,63 @@ def parse_pedalpcb_pdf(
         stats["residuals"].append(f"PDF Parse Error: {e}")
 
     return inventory, stats
+
+
+def parse_user_inventory(filepath: str) -> InventoryType:
+    """
+    Parses a user's stock CSV (Category, Part, Qty).
+    Uses strict value normalization to match BOM keys.
+    """
+    stock: InventoryType = defaultdict(
+        lambda: {"qty": 0, "refs": [], "sources": defaultdict(list)}
+    )
+
+    with open(filepath, "r", encoding="utf-8-sig") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            # Flexible column names
+            row_clean = {k.lower(): v for k, v in row.items() if k}
+
+            cat = row_clean.get("category", "").strip()
+            val = row_clean.get("part", "").strip()
+            qty_str = row_clean.get("qty", "0").strip()
+
+            if cat and val:
+                try:
+                    qty = int(qty_str)
+                except ValueError:
+                    continue
+
+                # IMPORTANT: Must use same normalizer as BOM parser
+                clean_val = normalize_value_by_category(cat, val)
+                key = f"{cat} | {clean_val}"
+
+                _record_part(stock, "User Stock", key, ref="", qty=qty)
+
+    return stock
+
+
+def calculate_net_needs(bom: InventoryType, stock: InventoryType) -> InventoryType:
+    """
+    Subtracts Stock from BOM to find what we actually need to buy.
+    Returns a new InventoryType containing only the deficits.
+    """
+    net_inv: InventoryType = defaultdict(
+        lambda: {"qty": 0, "refs": [], "sources": defaultdict(list)}
+    )
+
+    for key, data in bom.items():
+        gross_needed = data["qty"]
+
+        # Check stock
+        stock_data = stock.get(key)
+        in_stock = stock_data["qty"] if stock_data else 0
+
+        # The Math: (Need - Have), floored at 0
+        net_needed = max(0, gross_needed - in_stock)
+
+        # Preserve metadata, but update Qty to the Net Need
+        net_inv[key] = data.copy()
+        net_inv[key]["qty"] = net_needed
+
+    return net_inv

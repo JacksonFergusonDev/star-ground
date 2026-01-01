@@ -16,6 +16,8 @@ from src.bom_lib import (
     generate_tayda_url,
     parse_pedalpcb_pdf,
     expand_refs,
+    parse_user_inventory,
+    calculate_net_needs,
 )
 
 # Standard Unit Tests
@@ -95,7 +97,7 @@ def test_warning_flags():
     assert "SMD Part" in note
 
 
-# 2. Stress Testing
+# Stress Testing
 
 
 @given(st.text())
@@ -268,7 +270,7 @@ def test_hardware_injection_and_smart_merge():
     assert inventory[knob_key]["qty"] == 3
 
 
-# 3. Search Engine & Vendor Integration Tests
+# Search Engine & Vendor Integration Tests
 
 
 def test_spec_type_logic():
@@ -388,7 +390,7 @@ def test_hardware_search_term_validity():
     assert "1590B+Enclosure" in url
 
 
-# 4. PDF Parsing Tests
+# PDF Parsing Tests
 
 
 def test_pedalpcb_pdf_parsing_happy_path():
@@ -508,3 +510,85 @@ def test_ref_expansion_integrity():
     assert "R1" in item["sources"]["Range Test"]
     assert "R2" in item["sources"]["Range Test"]
     assert "R3" in item["sources"]["Range Test"]
+
+
+# Inventory & Logistics Tests
+
+
+def test_zero_buy_guard():
+    """
+    Ensure we don't buy parts if Net Need is 0, even if 'Nerd Economics'
+    would usually suggest a buffer.
+    """
+    # Standard logic: 10k -> Buffer +5 -> Round up -> Buy 10.
+    # BUT if input is 0, we must buy 0.
+    qty, note = get_buy_details("Resistors", "10k", 0)
+    assert qty == 0
+    assert note == ""
+
+    # Negative input safety check
+    qty_neg, _ = get_buy_details("Resistors", "10k", -5)
+    assert qty_neg == 0
+
+
+def test_user_inventory_parsing():
+    """
+    Verify that we can digest a User Stock CSV and that values
+    are normalized to match BOM keys.
+    """
+    # Mock CSV Content
+    csv_content = """Category,Part,Qty
+Resistors,10k,100
+Capacitors,100n,50
+Resistors,1k5,20
+"""
+    # Create temp file
+    import tempfile
+    import os
+
+    with tempfile.NamedTemporaryFile(mode="w+", delete=False, suffix=".csv") as tmp:
+        tmp.write(csv_content)
+        tmp_path = tmp.name
+
+    try:
+        stock = parse_user_inventory(tmp_path)
+
+        # 1. Check Normalization (1k5 -> 1.5k)
+        assert stock["Resistors | 1.5k"]["qty"] == 20
+
+        # 2. Check Basic Ingestion
+        assert stock["Resistors | 10k"]["qty"] == 100
+        assert stock["Capacitors | 100n"]["qty"] == 50
+
+    finally:
+        os.remove(tmp_path)
+
+
+def test_net_needs_calculation():
+    """
+    Verify the logic: Net = Max(0, BOM - Stock)
+    """
+    # 1. Setup BOM
+    bom = cast(
+        InventoryType,
+        defaultdict(lambda: {"qty": 0, "refs": [], "sources": defaultdict(list)}),
+    )
+    bom["Resistors | 10k"]["qty"] = 10  # Need 10
+    bom["Capacitors | 100n"]["qty"] = 5  # Need 5
+
+    # 2. Setup Stock
+    stock = cast(
+        InventoryType,
+        defaultdict(lambda: {"qty": 0, "refs": [], "sources": defaultdict(list)}),
+    )
+    stock["Resistors | 10k"]["qty"] = 4  # Have 4 (Deficit 6)
+    stock["Capacitors | 100n"]["qty"] = 10  # Have 10 (Surplus 5)
+
+    # 3. Calculate
+    net_inv = calculate_net_needs(bom, stock)
+
+    # 4. Verify Deficit (10 - 4 = 6)
+    assert net_inv["Resistors | 10k"]["qty"] == 6
+
+    # 5. Verify Surplus (5 - 10 = -5 -> Floor at 0)
+    assert net_inv["Capacitors | 100n"]["qty"] == 0
