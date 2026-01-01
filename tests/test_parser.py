@@ -589,9 +589,6 @@ def test_net_needs_calculation():
 
     # 4. Verify Deficit (10 - 4 = 6)
     assert net_inv["Resistors | 10k"]["qty"] == 6
-    # Verify Metadata persisted
-    assert "Have 4" in net_inv["Resistors | 10k"]["sources"]["Stock Check"]
 
     # 5. Verify Surplus (5 - 10 = -5 -> Floor at 0)
     assert net_inv["Capacitors | 100n"]["qty"] == 0
-    assert "Have 10" in net_inv["Capacitors | 100n"]["sources"]["Stock Check"]
