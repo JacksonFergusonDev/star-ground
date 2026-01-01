@@ -419,6 +419,8 @@ if st.session_state.inventory:
         "Category",
         "Part",
         "BOM Qty",
+        "In Stock",
+        "Net Need",
         "Buy Qty",
         "Notes",
         "Search Term",
