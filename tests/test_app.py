@@ -62,10 +62,18 @@ def test_csv_processing_via_state_injection(app):
     mock_inventory["Capacitors | 22n"]["qty"] = 2
     mock_inventory["Capacitors | 22n"]["sources"]["Mock Project"] = ["C1", "C2"]
 
+    # Mock Stock
+    mock_stock = cast(
+        InventoryType,
+        defaultdict(lambda: {"qty": 0, "refs": [], "sources": defaultdict(list)}),
+    )
+    mock_stock["Resistors | 10k"]["qty"] = 2  # Have 2
+
     mock_stats = {"lines_read": 7, "parts_found": 7, "residuals": []}
 
     # 2. Inject into session state
     app.session_state["inventory"] = mock_inventory
+    app.session_state["stock"] = mock_stock  # <--- Inject Stock
     app.session_state["stats"] = mock_stats
 
     if "pedal_slots" not in app.session_state:
@@ -77,18 +85,26 @@ def test_csv_processing_via_state_injection(app):
     app.run()
 
     # 4. Verify the App Reacts
-    # The dataframe should now be visible
     assert not app.exception
 
-    # Check that the table rendered
+    # Check that the table rendered with NEW columns
     df = app.dataframe[0].value
     assert "Resistors" in df["Category"].values
-    assert "10k" in df["Part"].values
+    assert "In Stock" in df.columns
+    assert "Net Need" in df.columns
+
+    # Verify the math in the displayed table
+    # We had 5 in BOM, Mocked 2 in Stock -> Net Need should be 3
+    # Note: Streamlit dataframes can be tricky to index by row in tests,
+    # but we can check if the value exists in the column.
+    assert 3 in df["Net Need"].values
+
     assert "Origin" in df.columns
     assert "Circuit Board" in df["Origin"].values
 
     # Check that download buttons appeared (Integration check)
-    assert len(app.get("download_button")) == 1
+    # Phase 2a added a second download button (Updated Inventory)
+    assert len(app.get("download_button")) == 2
 
 
 def test_source_ref_duplication_on_merge(app):
