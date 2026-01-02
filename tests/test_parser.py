@@ -3,6 +3,7 @@ from collections import defaultdict
 from typing import cast
 from unittest.mock import patch, MagicMock
 from hypothesis import given, strategies as st
+from src.presets import BOM_PRESETS
 from src.bom_lib import (
     InventoryType,
     parse_with_verification,
@@ -592,3 +593,20 @@ def test_net_needs_calculation():
 
     # 5. Verify Surplus (5 - 10 = -5 -> Floor at 0)
     assert net_inv["Capacitors | 100n"]["qty"] == 0
+
+
+def test_preset_integrity():
+    """
+    Verify that every defined preset is valid, parseable BOM text.
+    This catches typos or empty strings in the presets file.
+    """
+    for name, raw_text in BOM_PRESETS.items():
+        # Sanity check: Text should exist
+        assert raw_text.strip(), f"Preset '{name}' is empty!"
+
+        # Parse check
+        inventory, stats = parse_with_verification([raw_text], source_name=name)
+
+        # Must find parts
+        assert stats["parts_found"] > 0, f"Preset '{name}' yielded 0 parts!"
+        assert stats["lines_read"] > 0
