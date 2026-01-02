@@ -151,7 +151,7 @@ for i, slot in enumerate(st.session_state.pedal_slots):
             # 1. The Selector
             selected_preset = c4.selectbox(
                 "Select a Build",
-                options=list(BOM_PRESETS.keys()),
+                options=sorted(list(BOM_PRESETS.keys())),
                 key=f"preset_select_{slot['id']}",
                 label_visibility="collapsed",
             )
