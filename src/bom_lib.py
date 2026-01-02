@@ -237,6 +237,10 @@ def categorize_part(
     # Note: 'P' or 'POT' are handled above.
     valid_prefixes = ("R", "C", "D", "Q", "U", "IC", "SW", "OP", "TL")
 
+    # STRICT CHECK: Standard components MUST have a number (e.g. "R1", not "Resistors")
+    # Exceptions: POT names are handled in step 1.
+    has_digit = any(char.isdigit() for char in ref_up)
+
     # 3. Taper Check (The "Smart" Check)
     # Looks for "B100k", "10k-A" to identify pots by value.
     is_pot_value = False
@@ -245,7 +249,7 @@ def categorize_part(
 
     # Validity Check
     is_valid = (
-        any(ref_up.startswith(p) for p in valid_prefixes)
+        (any(ref_up.startswith(p) for p in valid_prefixes) and has_digit)
         or ref_up in pot_labels
         or any(ref_up.startswith(label) for label in pot_labels)
         or is_pot_value
@@ -944,17 +948,10 @@ def parse_pedalpcb_pdf(
             # --- STRATEGY 1 & 2: TABLES ---
             for page in pdf.pages:
                 # A. Try Standard Extraction (Grid Lines)
+                # We ONLY want high-confidence tables.
+                # If this returns [], we skip straight to Strategy 3 (Regex),
+                # because pdfplumber's text-strategy often finds garbage tables (e.g. paragraphs of text).
                 tables = page.extract_tables()
-
-                # B. Fallback: Text-Based Extraction (Whitespace Gutters)
-                if not tables:
-                    tables = page.extract_tables(
-                        table_settings={
-                            "vertical_strategy": "text",
-                            "horizontal_strategy": "text",
-                            "intersection_x_tolerance": 15,
-                        }
-                    )
 
                 if not tables:
                     stats["residuals"].append(
