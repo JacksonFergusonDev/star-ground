@@ -1019,11 +1019,11 @@ def parse_pedalpcb_pdf(
                     "Tables yielded 0 parts. Attempting Raw Text Scan..."
                 )
 
-                # Pattern: Starts with Ref (R1, C10), space, Value.
-                # Regex looks for: Start of line, (R/C/D/Q/IC/SW + digits), space, (Value)
-                regex = re.compile(
-                    r"^\s*(?P<ref>[RCDQ]|IC|SW|Q)\d+\s+(?P<val>.+)$", re.MULTILINE
-                )
+                # Robust Pattern: Looks for "Ref Value" pairs anywhere in the line.
+                # Ref: 1-4 uppercase letters followed by digits (R1, IC1, SW100).
+                # Val: Any non-whitespace characters (10k, 100n, TL072).
+                # This handles lines like "R1 10k" AND "R1 10k C1 100n"
+                regex = re.compile(r"(?P<ref>[A-Z]{1,4}\d+)\s+(?P<val>[^\s]+)")
 
                 for page in pdf.pages:
                     text = page.extract_text()
@@ -1031,18 +1031,39 @@ def parse_pedalpcb_pdf(
                         continue
 
                     for line in text.splitlines():
-                        match = regex.match(line)
-                        if match:
+                        # Use finditer to catch MULTIPLE parts on a single line
+                        # e.g. "R1 1M   C1 100n" -> Matches both pairs
+                        for match in regex.finditer(line):
                             ref_str = match.group("ref")
                             val_str = match.group("val")
 
-                            # Sanity check: Value shouldn't be a sentence
-                            if len(val_str) < 30:
-                                c = ingest_bom_line(
-                                    inventory, source_name, ref_str, val_str
+                            # Filter out obvious false positives
+                            # Ref must start with standard prefix to be safe
+                            if not any(
+                                ref_str.startswith(p)
+                                for p in (
+                                    "R",
+                                    "C",
+                                    "D",
+                                    "Q",
+                                    "IC",
+                                    "U",
+                                    "SW",
+                                    "POT",
+                                    "VR",
                                 )
-                                if c > 0:
-                                    stats["parts_found"] += c
+                            ):
+                                continue
+
+                            # Value sanity check (ignore if extremely long)
+                            if len(val_str) > 20:
+                                continue
+
+                            c = ingest_bom_line(
+                                inventory, source_name, ref_str, val_str
+                            )
+                            if c > 0:
+                                stats["parts_found"] += c
 
     except Exception as e:
         stats["residuals"].append(f"PDF Parse Error: {e}")
