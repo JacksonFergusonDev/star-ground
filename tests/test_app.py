@@ -165,3 +165,26 @@ def test_preset_selection_flow(app):
     assert not app.exception
     df = app.dataframe[0].value
     assert "TC1044SCPA" in df["Part"].values
+
+
+def test_input_method_state_clearing(app):
+    """
+    Verify that switching methods clears the data (Regression test for the 'Flush' fix).
+    """
+    # 1. Start in Preset Mode
+    app.radio[0].set_value("Preset").run()
+
+    # Ensure data is there (Auto-load first preset logic)
+    assert app.text_area[0].value != ""
+
+    # 2. Switch to Paste Text
+    app.radio[0].set_value("Paste Text").run()
+
+    # 3. Verify Empty (The 'Flush' worked)
+    assert app.text_area[0].value == ""
+
+    # 4. Switch back to Preset
+    app.radio[0].set_value("Preset").run()
+
+    # 5. Verify data re-loaded (Auto-load logic worked)
+    assert app.text_area[0].value != ""
