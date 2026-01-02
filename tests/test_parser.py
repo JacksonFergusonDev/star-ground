@@ -418,7 +418,8 @@ def test_pedalpcb_pdf_parsing_happy_path():
     mock_page.extract_tables.return_value = [mock_table]
 
     # 3. Patch the library so we don't need a real file
-    with patch("src.bom_lib.pdfplumber.open", return_value=mock_pdf):
+    # Note: We patch 'pdfplumber.open' directly because the module is lazy-imported
+    with patch("pdfplumber.open", return_value=mock_pdf):
         inventory, stats = parse_pedalpcb_pdf("dummy.pdf", source_name="Dirty PDF")
 
     # 4. Assertions
@@ -448,7 +449,8 @@ def test_pedalpcb_pdf_dirty_input():
     ]
     mock_page.extract_tables.return_value = [mock_table]
 
-    with patch("src.bom_lib.pdfplumber.open", return_value=mock_pdf):
+    # Change the patch target to the global library
+    with patch("pdfplumber.open", return_value=mock_pdf):
         inventory, stats = parse_pedalpcb_pdf("dummy.pdf", source_name="Dirty PDF")
 
     # The parser should clean "10k\nOhm" -> "10k Ohm" -> "10k"
@@ -469,7 +471,8 @@ def test_pedalpcb_pdf_ignores_bad_tables():
     mock_table = [["Drill Size", "Location"], ["3mm", "LED"], ["1/4 inch", "Jacks"]]
     mock_page.extract_tables.return_value = [mock_table]
 
-    with patch("src.bom_lib.pdfplumber.open", return_value=mock_pdf):
+    # Change the patch target to the global library
+    with patch("pdfplumber.open", return_value=mock_pdf):
         inventory, stats = parse_pedalpcb_pdf("dummy.pdf", source_name="Bad Table")
 
     # Should find nothing
