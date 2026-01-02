@@ -120,6 +120,7 @@ def test_source_ref_duplication_on_merge(app):
             "name": "DupeTest",
             "count": 2,
             "method": "Paste Text",
+            "last_method": "Paste Text",
             "data": "R1 10k",
         },
     ]
