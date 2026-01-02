@@ -60,11 +60,21 @@ def generate_presets():
 
         try:
             # 1. Parse
+            stats_debug = {}  # Store stats to print later if needed
+
             if ext.lower() == ".pdf":
                 inventory, stats = parse_pedalpcb_pdf(filepath, "ingest")
+                stats_debug = stats
+
                 if stats["parts_found"] == 0:
                     status = "Skipped"
-                    details = "Parsed but 0 parts found (Check headers: LOCATION/VALUE)"
+                    # Capture the last few residuals to see what happened
+                    res_msg = (
+                        "; ".join(stats["residuals"][-3:])
+                        if stats["residuals"]
+                        else "No parts found"
+                    )
+                    details = f"{res_msg}"
                 else:
                     status = "Parsed"
 
@@ -82,13 +92,12 @@ def generate_presets():
 
                 if not clean_text.strip():
                     status = "Skipped"
-                    details = "Inventory resulted in empty text (All parts filtered?)"
+                    details = "Inventory resulted in empty text"
                 else:
                     display_name = name.replace("_", " ").title()
-
                     if display_name in presets:
                         status = "Warning"
-                        details = "Overwrote existing preset with same name"
+                        details = "Overwrote existing preset"
                     else:
                         status = "Success"
                         details = f"{len(clean_text.splitlines())} lines"
