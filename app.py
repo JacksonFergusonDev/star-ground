@@ -7,9 +7,7 @@ import tempfile
 from collections import defaultdict
 from typing import cast, List, Dict, Any
 from streamlit.runtime.uploaded_file_manager import UploadedFile
-import gspread
 import streamlit as st
-from google.oauth2.service_account import Credentials
 from src.presets import BOM_PRESETS
 
 from src.bom_lib import (
@@ -34,6 +32,10 @@ from src.bom_lib import (
 @st.cache_resource(ttl="1h")
 def get_gsheet_client():
     """Establishes a persistent connection to Google Sheets."""
+    # Lazy import to prevent 3-5s startup delay
+    import gspread
+    from google.oauth2.service_account import Credentials
+
     scope = [
         "https://spreadsheets.google.com/feeds",
         "https://www.googleapis.com/auth/drive",
