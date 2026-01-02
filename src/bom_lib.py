@@ -956,7 +956,7 @@ def parse_pedalpcb_pdf(
 
                     loc_idx = -1
                     val_idx = -1
-                    start_row_idx = 1  # Default: skip header row
+                    start_row_idx = 1
 
                     # 1. Try to find explicit headers
                     for i, h in enumerate(headers):
@@ -965,32 +965,40 @@ def parse_pedalpcb_pdf(
                         elif h in ("VALUE", "VAL", "DESCRIPTION"):
                             val_idx = i
 
-                    # 2. Fallback: If no headers found, assume Headless Mode (Col 0=Ref, Col 1=Val)
-                    # This handles docs like SpiritBox.pdf where the table is just data.
+                    # 2. Fallback: Headless Mode
+                    # If headers are missing, default to Cols 0 and 1.
+                    # We do NOT check len(table[0]) because the first row might be
+                    # a single-column section header (e.g. "RESISTORS").
                     if loc_idx == -1 or val_idx == -1:
-                        # Sanity check: Table must have at least 2 columns
-                        if len(table[0]) >= 2:
-                            loc_idx = 0
-                            val_idx = 1
-                            start_row_idx = 0  # CRITICAL: Don't skip the first row!
-                        else:
-                            continue
+                        loc_idx = 0
+                        val_idx = 1
+                        start_row_idx = 0
 
                     # Process Rows
                     for row in table[start_row_idx:]:
                         stats["lines_read"] += 1
 
-                        # Handle potential None cells or short rows
+                        # Handle potential None cells
                         row_safe = [str(cell) if cell else "" for cell in row]
 
-                        # Skip if row is too short to contain the data
-                        if len(row_safe) <= max(loc_idx, val_idx):
-                            continue
+                        ref_raw = ""
+                        val_raw = ""
 
-                        # Clean up newlines inside cells (e.g. "Resistor\n1/4W")
-                        ref_raw = row_safe[loc_idx].replace("\n", " ").strip()
-                        val_raw = row_safe[val_idx].replace("\n", " ").strip()
+                        # Strategy A: Standard Columns (We have enough columns)
+                        if len(row_safe) > max(loc_idx, val_idx):
+                            ref_raw = row_safe[loc_idx].replace("\n", " ").strip()
+                            val_raw = row_safe[val_idx].replace("\n", " ").strip()
 
+                        # Strategy B: Merged Column (1 column found, but we expected 2)
+                        # This happens if pdfplumber misses the separator in older docs.
+                        elif len(row_safe) == 1 and row_safe[0]:
+                            # Try splitting "R1 1M" into ["R1", "1M"]
+                            parts = row_safe[0].strip().split(None, 1)
+                            if len(parts) == 2:
+                                ref_raw = parts[0].strip()
+                                val_raw = parts[1].strip()
+
+                        # If neither strategy worked, skip row
                         if not ref_raw or not val_raw:
                             continue
 
