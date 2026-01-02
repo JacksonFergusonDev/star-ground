@@ -8,3 +8,4 @@ output/
 .vscode/
 *.code-workspace
 .streamlit/
+raw_boms/
