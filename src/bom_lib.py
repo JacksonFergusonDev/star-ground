@@ -605,21 +605,23 @@ def get_buy_details(category: str, val: str, count: int) -> Tuple[int, str]:
             note = "⚠️ Suspicious Value (< 1Ω). Verify BOM."
 
     elif category == "Capacitors":
-        is_bypass_cap = False
-        if fval is not None:
-            # Check if value is approx 1.0e-7 (allow small float drift)
-            if abs(fval - 1.0e-7) < 1.0e-9:
-                is_bypass_cap = True
-
         # Explicitly type hint the list to keep mypy happy
         note_parts: List[str] = []
 
-        if is_bypass_cap:
-            buy = count + 10
-            note_parts = ["Power filtering (buy bulk)."]
-        else:
-            buy = count + 3
-            note_parts = []
+        # Default Safety Factor: Moderate (Ceramics/Films are small and cheap)
+        buffer = 5
+
+        # 1. Bypass Cap Detection (100nF) -> High volume
+        if fval is not None and abs(fval - 1.0e-7) < 1.0e-9:
+            buffer = 10
+            note_parts.append("Power filtering (buy bulk).")
+
+        # 2. Electrolytic/Large Film Detection (> 1uF) -> Low volume
+        # These are physically large, expensive, and harder to lose.
+        elif fval is not None and fval >= 1.0e-6:
+            buffer = 1
+
+        buy = count + buffer
 
         # Warn if > 10,000uF (0.01F) - Likely a parsing error (e.g. "1F")
         if fval is not None and fval > 0.01:
@@ -663,21 +665,19 @@ def get_buy_details(category: str, val: str, count: int) -> Tuple[int, str]:
             note = f"💡 TRY: {note_txt}"
 
     elif category == "Transistors":
-        # User asked for the obsolete THT part
-        if "2N5457" in val.upper():
-            buy = count + 3
-            note = "⚠️ Obsolete part! Check for speciality vendors or consider MMBF5457."
+        # Risk: Medium (Legs break, heat sensitivity). Buffer = 1.
+        buy = count + 1
 
-        # Case B: User asked for the SMD part
+        if "2N5457" in val.upper():
+            note = "⚠️ Obsolete part! Check for speciality vendors or consider MMBF5457."
         elif "MMBF" in val.upper():
-            buy = count + 5
             note = "SMD Part! Verify PCB pads or buy adapter."
-        else:
-            buy = count + 3
 
     elif category == "ICs":
-        buy = count + 1
+        # Risk: Low (Expensive, hard to lose). Exact Match.
+        buy = count
         note = "Socket Recommended"
+
         # Suggest mods
         clean = re.sub(r"(CP|CN|P|N)$", "", val)
         if clean in IC_ALTS:
@@ -697,14 +697,17 @@ def get_buy_details(category: str, val: str, count: int) -> Tuple[int, str]:
             note += f" | 💡 TRY: {txt}"
 
     elif category == "Hardware/Misc":
-        if "ADAPTER" in val:
-            buy = count + 4
-            note = "[AUTO] Verify PCB pads."
-        elif "SOCKET" in val:
-            buy = count + 2
-            note = "[AUTO] For chip safety."
-        else:
+        # Risk: Mixed.
+        if "ADAPTER" in val or "SOCKET" in val:
+            # Fragile plastics. Buffer = 1.
             buy = count + 1
+            if "ADAPTER" in val:
+                note = "[AUTO] Verify PCB pads."
+            else:
+                note = "[AUTO] For chip safety."
+        else:
+            # Enclosures, Jacks, Switches. Robust. Exact Match.
+            buy = count
 
     elif category == "PCB":
         note = "Main Board"
