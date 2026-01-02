@@ -237,6 +237,10 @@ def categorize_part(
     # Note: 'P' or 'POT' are handled above.
     valid_prefixes = ("R", "C", "D", "Q", "U", "IC", "SW", "OP", "TL")
 
+    # STRICT CHECK: Standard components MUST have a number (e.g. "R1", not "Resistors")
+    # Exceptions: POT names are handled in step 1.
+    has_digit = any(char.isdigit() for char in ref_up)
+
     # 3. Taper Check (The "Smart" Check)
     # Looks for "B100k", "10k-A" to identify pots by value.
     is_pot_value = False
@@ -245,7 +249,7 @@ def categorize_part(
 
     # Validity Check
     is_valid = (
-        any(ref_up.startswith(p) for p in valid_prefixes)
+        (any(ref_up.startswith(p) for p in valid_prefixes) and has_digit)
         or ref_up in pot_labels
         or any(ref_up.startswith(label) for label in pot_labels)
         or is_pot_value
@@ -930,7 +934,9 @@ def parse_pedalpcb_pdf(
 ) -> Tuple[InventoryType, StatsDict]:
     """
     Parses a PedalPCB Build Document (PDF).
-    Extracts the BOM table using visual line detection.
+    Strategy 1: Visual Table Extraction (Lines)
+    Strategy 2: Visual Table Extraction (Text/Whitespace)
+    Strategy 3: Raw Text Regex (Hail Mary)
     """
     inventory: InventoryType = defaultdict(
         lambda: {"qty": 0, "refs": [], "sources": defaultdict(list)}
@@ -939,66 +945,210 @@ def parse_pedalpcb_pdf(
 
     try:
         with pdfplumber.open(filepath) as pdf:
+            # --- STRATEGY 1 & 2: TABLES ---
             for page in pdf.pages:
+                # A. Try Standard Extraction (Grid Lines)
+                # We ONLY want high-confidence tables.
+                # If this returns [], we skip straight to Strategy 3 (Regex),
+                # because pdfplumber's text-strategy often finds garbage tables (e.g. paragraphs of text).
                 tables = page.extract_tables()
 
                 if not tables:
-                    stats["residuals"].append("PDF Warning: No tables found on page.")
+                    stats["residuals"].append(
+                        f"Page {page.page_number}: No tables found."
+                    )
 
                 for table in tables:
-                    # Header Check
-                    # Row 0 usually contains ["LOCATION", "VALUE", "TYPE", "NOTES"]
                     if not table:
                         continue
 
-                    # Normalized headers to find columns
-                    # Handle cases where headers might be None or empty strings
+                    # Header Detection & Column Mapping
                     headers = [str(h).upper().strip() for h in table[0] if h]
 
-                    # Heuristic: Flexible Header Matching
-                    # We need one "Ref-like" column and one "Value-like" column
                     loc_idx = -1
                     val_idx = -1
+                    start_row_idx = 1
 
+                    # explicit headers
                     for i, h in enumerate(headers):
                         if h in ("LOCATION", "REF", "DESIGNATOR", "PART"):
                             loc_idx = i
                         elif h in ("VALUE", "VAL", "DESCRIPTION"):
                             val_idx = i
 
+                    # headless fallback (Col 0=Ref, Col 1=Val)
                     if loc_idx == -1 or val_idx == -1:
-                        continue
+                        loc_idx = 0
+                        val_idx = 1
+                        start_row_idx = 0
 
-                    # Process Rows (Skip header)
-                    for row in table[1:]:
+                    # Process Rows
+                    for row in table[start_row_idx:]:
                         stats["lines_read"] += 1
-
-                        # Handle potential None cells or short rows
                         row_safe = [str(cell) if cell else "" for cell in row]
 
-                        # Skip if row is too short to contain the data
-                        if len(row_safe) <= max(loc_idx, val_idx):
+                        ref_raw = ""
+                        val_raw = ""
+
+                        # Normal Row
+                        if len(row_safe) > max(loc_idx, val_idx):
+                            ref_raw = row_safe[loc_idx].replace("\n", " ").strip()
+                            val_raw = row_safe[val_idx].replace("\n", " ").strip()
+
+                        # Merged Row (Single column "R1 10k")
+                        elif len(row_safe) == 1 and row_safe[0]:
+                            parts = row_safe[0].strip().split(None, 1)
+                            if len(parts) == 2:
+                                ref_raw = parts[0].strip()
+                                val_raw = parts[1].strip()
+
+                        if ref_raw and val_raw:
+                            count = ingest_bom_line(
+                                inventory, source_name, ref_raw, val_raw
+                            )
+                            if count > 0:
+                                stats["parts_found"] += count
+
+            # --- STRATEGY 3: HAIL MARY (RAW TEXT) ---
+            if stats["parts_found"] == 0:
+                stats["residuals"].append(
+                    "Tables yielded 0 parts. Attempting Raw Text Scan..."
+                )
+
+                # Keywords: Added word boundaries (\b) to prevent partial matches
+                # e.g. "COMP" should not match "COMPONENTS"
+                keywords = [
+                    "VOLUME",
+                    "MASTER",
+                    "LEVEL",
+                    "GAIN",
+                    "DRIVE",
+                    "DIST",
+                    "FUZZ",
+                    "DIRT",
+                    "TONE",
+                    "TREBLE",
+                    "BASS",
+                    "MID",
+                    "MIDS",
+                    "PRESENCE",
+                    "CONTOUR",
+                    "WIDTH",
+                    "DEPTH",
+                    "RATE",
+                    "SPEED",
+                    "COLOR",
+                    "TEXTURE",
+                    "BIAS",
+                    "ATTACK",
+                    "DECAY",
+                    "SUSTAIN",
+                    "RELEASE",
+                    "THRESH",
+                    "COMP",
+                    "MIX",
+                    "BLEND",
+                    "DRY",
+                    "WET",
+                    "REPEATS",
+                    "TIME",
+                    "FEEDBACK",
+                    "FILTER",
+                    "CUT",
+                    "BOOST",
+                    "RANGE",
+                    "VOICE",
+                    "NATURE",
+                ]
+                # Join with \b wrapper
+                kw_regex = "|".join([rf"\b{k}\b" for k in keywords])
+
+                # Regex Pattern:
+                # Group 1 (Ref): Standard Ref (R1) OR Keyword (GAIN)
+                # Group 2 (Val): The value
+                regex = re.compile(
+                    rf"(?P<ref>\b[A-Z]{{1,4}}\d+\b|{kw_regex})\s+(?P<val>[^\s]+)",
+                    re.IGNORECASE,
+                )
+
+                # Garbage Filter: Values to explicitly ignore
+                ignore_values = [
+                    "RESISTORS",
+                    "CAPACITORS",
+                    "DIODES",
+                    "ICS",
+                    "POTENTIOMETERS",
+                    "PARTS",
+                    "LIST",
+                    "VALUE",
+                    "LOCATION",
+                    "TYPE",
+                    "RATING",
+                    "COMPONENTS",
+                    "OFFBOARD",
+                    "ENCLOSURE",
+                    "FOOTSWITCH",
+                    "JACKS",
+                    "FEATURES",
+                    "CONTROLS",
+                    "AND",
+                    "THE",
+                    "OF",
+                ]
+
+                for page in pdf.pages:
+                    text = page.extract_text()
+                    if not text:
+                        continue
+
+                    for match in regex.finditer(text):
+                        ref_str = match.group("ref").upper()
+                        val_str = match.group("val")
+
+                        # 1. Clean Value (Strip parentheses, etc)
+                        # e.g. "(1/4W)" -> "1/4W"
+                        val_str = val_str.strip("()[]")
+
+                        # 2. Filter Garbage Matches
+                        if len(val_str) > 20 or len(val_str) < 1:
                             continue
 
-                        # Clean up newlines inside cells (e.g. "Resistor\n1/4W")
-                        ref_raw = row_safe[loc_idx].replace("\n", " ").strip()
-                        val_raw = row_safe[val_idx].replace("\n", " ").strip()
-
-                        if not ref_raw or not val_raw:
+                        # Check against blacklist
+                        if any(bad in val_str.upper() for bad in ignore_values):
                             continue
 
-                        # Categorize
-                        count = ingest_bom_line(
-                            inventory, source_name, ref_raw, val_raw
-                        )
+                        # 3. Prefix Safety Check
+                        is_keyword = ref_str in keywords
+                        if not is_keyword:
+                            # Must look like a real component (R1, C1, IC1, etc)
+                            valid_prefixes = (
+                                "R",
+                                "C",
+                                "D",
+                                "Q",
+                                "IC",
+                                "U",
+                                "SW",
+                                "POT",
+                                "VR",
+                                "J",
+                                "T",
+                                "L",
+                                "P",
+                            )
+                            if not any(ref_str.startswith(p) for p in valid_prefixes):
+                                continue
+                        else:
+                            # 4. Keyword Value Validation
+                            # If we matched a keyword (e.g. "VOLUME"), the value MUST contain a digit
+                            # to be valid (e.g. "B100k").
+                            # This filters out text like "Dry Signal", "Attack -", or "Comp •"
+                            if not any(char.isdigit() for char in val_str):
+                                continue
 
-                        if count > 0:
-                            stats["parts_found"] += count
-                            row_parsed = True
-
-                        # If the loop finishes and we never found a valid part category:
-                        if not row_parsed:
-                            stats["residuals"].append(f"| {ref_raw} | {val_raw} |")
+                        c = ingest_bom_line(inventory, source_name, ref_str, val_str)
+                        if c > 0:
+                            stats["parts_found"] += c
 
     except Exception as e:
         stats["residuals"].append(f"PDF Parse Error: {e}")

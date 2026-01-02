@@ -10,6 +10,7 @@ from streamlit.runtime.uploaded_file_manager import UploadedFile
 import gspread
 import streamlit as st
 from google.oauth2.service_account import Credentials
+from src.presets import BOM_PRESETS
 
 from src.bom_lib import (
     InventoryType,
@@ -122,7 +123,7 @@ for i, slot in enumerate(st.session_state.pedal_slots):
         # Input Method
         slot["method"] = c3.radio(
             "Input Method",
-            ["Paste Text", "Upload File"],
+            ["Paste Text", "Upload File", "Preset"],
             key=f"method_{slot['id']}",
             horizontal=True,
             label_visibility="collapsed",
@@ -138,12 +139,45 @@ for i, slot in enumerate(st.session_state.pedal_slots):
                 placeholder="Paste your BOM here...",
                 value=slot.get("data", ""),
             )
-        else:
+        elif slot["method"] == "Upload File":
             slot["data"] = c4.file_uploader(
                 "Upload BOM",
                 type=["csv", "pdf"],
                 key=f"file_{slot['id']}",
                 label_visibility="collapsed",
+            )
+
+        elif slot["method"] == "Preset":
+            # 1. The Selector
+            selected_preset = c4.selectbox(
+                "Select a Build",
+                options=sorted(list(BOM_PRESETS.keys())),
+                key=f"preset_select_{slot['id']}",
+                label_visibility="collapsed",
+            )
+
+            # 2. Change Detection Logic
+            # We track the last loaded preset to know when to overwrite the text
+            last_loaded = slot.get("last_loaded_preset")
+
+            if selected_preset != last_loaded:
+                # User just switched presets! Overwrite the data.
+                slot["data"] = BOM_PRESETS[selected_preset]
+                slot["last_loaded_preset"] = selected_preset
+
+                # Update name if it matches the old preset or is generic
+                if not slot["name"] or slot["name"] == last_loaded:
+                    slot["name"] = selected_preset
+                    st.rerun()
+
+            # 3. The Editable Text Area
+            # We display the data exactly like "Paste Text" mode so it can be modified
+            slot["data"] = c4.text_area(
+                "BOM Text",
+                height=100,
+                key=f"text_preset_{slot['id']}",
+                label_visibility="collapsed",
+                value=slot.get("data", ""),
             )
 
         # Remove Button
@@ -172,8 +206,8 @@ if st.button("Generate Master List", type="primary", use_container_width=True):
         source = slot["name"] if slot["name"].strip() else "Untitled Project"
         qty_multiplier = slot.get("count", 1)
 
-        # A. Paste Text Mode
-        if slot["method"] == "Paste Text":
+        # A. Paste Text Mode (and Presets)
+        if slot["method"] in ["Paste Text", "Preset"]:
             raw = slot.get("data", "")
             if raw:
                 p_inv, p_stats = parse_with_verification([raw], source_name=source)
