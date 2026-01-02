@@ -1121,7 +1121,6 @@ def parse_pedalpcb_pdf(
                         is_keyword = ref_str in keywords
                         if not is_keyword:
                             # Must look like a real component (R1, C1, IC1, etc)
-                            # Added 'SW' and 'P' to catch oddities
                             valid_prefixes = (
                                 "R",
                                 "C",
@@ -1138,6 +1137,13 @@ def parse_pedalpcb_pdf(
                                 "P",
                             )
                             if not any(ref_str.startswith(p) for p in valid_prefixes):
+                                continue
+                        else:
+                            # 4. Keyword Value Validation
+                            # If we matched a keyword (e.g. "VOLUME"), the value MUST contain a digit
+                            # to be valid (e.g. "B100k").
+                            # This filters out text like "Dry Signal", "Attack -", or "Comp •"
+                            if not any(char.isdigit() for char in val_str):
                                 continue
 
                         c = ingest_bom_line(inventory, source_name, ref_str, val_str)
