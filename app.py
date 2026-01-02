@@ -206,7 +206,7 @@ for i, slot in enumerate(st.session_state.pedal_slots):
             # Determine correct index to keep UI in sync
             options = sorted(list(BOM_PRESETS.keys()))
             try:
-                idx = options.index(slot.get("last_loaded_preset"))
+                idx = options.index(cast(str, slot.get("last_loaded_preset")))
             except (ValueError, TypeError):
                 idx = 0
 
