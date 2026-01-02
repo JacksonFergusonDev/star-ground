@@ -398,18 +398,26 @@ def parse_csv_bom(filepath: str, source_name: str) -> Tuple[InventoryType, Stats
         for row in reader:
             stats["lines_read"] += 1
             # Lowercase keys to find columns easier
-            row_clean = {k.lower(): v for k, v in row.items() if k}
+            row_clean = {str(k).lower().strip(): v for k, v in row.items() if k}
 
+            # Try strict keys first
             ref = (
                 row_clean.get("ref")
                 or row_clean.get("designator")
                 or row_clean.get("part")
+                or row_clean.get("location")
             )
             val = (
                 row_clean.get("value")
                 or row_clean.get("val")
                 or row_clean.get("description")
             )
+
+            # Fallback: If we have exactly 2 columns, assume Ref, Val
+            if not ref and not val and len(row_clean) == 2:
+                vals = list(row_clean.values())
+                ref = vals[0]
+                val = vals[1]
 
             success = False
             if ref and val:
@@ -439,6 +447,11 @@ def get_residual_report(stats: StatsDict) -> List[str]:
     suspicious: List[str] = []
 
     for line in stats["residuals"]:
+        # Always passthrough explicit errors
+        if "ERROR" in line.upper() or "EXCEPTION" in line.upper():
+            suspicious.append(line)
+            continue
+
         upper = line.upper()
         is_header = any(w in upper for w in safe_words)
 
@@ -664,7 +677,7 @@ def get_buy_details(category: str, val: str, count: int) -> Tuple[int, str]:
 
     elif category == "ICs":
         buy = count + 1
-        note = "Audio Chip (Socket added)"
+        note = "Socket Recommended"
         # Suggest mods
         clean = re.sub(r"(CP|CN|P|N)$", "", val)
         if clean in IC_ALTS:
@@ -926,6 +939,9 @@ def parse_pedalpcb_pdf(
             for page in pdf.pages:
                 tables = page.extract_tables()
 
+                if not tables:
+                    stats["residuals"].append("PDF Warning: No tables found on page.")
+
                 for table in tables:
                     # Header Check
                     # Row 0 usually contains ["LOCATION", "VALUE", "TYPE", "NOTES"]
@@ -936,15 +952,18 @@ def parse_pedalpcb_pdf(
                     # Handle cases where headers might be None or empty strings
                     headers = [str(h).upper().strip() for h in table[0] if h]
 
-                    # Heuristic: Must have LOCATION and VALUE columns to be a BOM
-                    if "LOCATION" not in headers or "VALUE" not in headers:
-                        continue
+                    # Heuristic: Flexible Header Matching
+                    # We need one "Ref-like" column and one "Value-like" column
+                    loc_idx = -1
+                    val_idx = -1
 
-                    # Map headers to list indices
-                    try:
-                        loc_idx = headers.index("LOCATION")
-                        val_idx = headers.index("VALUE")
-                    except ValueError:
+                    for i, h in enumerate(headers):
+                        if h in ("LOCATION", "REF", "DESIGNATOR", "PART"):
+                            loc_idx = i
+                        elif h in ("VALUE", "VAL", "DESCRIPTION"):
+                            val_idx = i
+
+                    if loc_idx == -1 or val_idx == -1:
                         continue
 
                     # Process Rows (Skip header)
