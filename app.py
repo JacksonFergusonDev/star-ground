@@ -267,6 +267,8 @@ for i, slot in enumerate(st.session_state.pedal_slots):
                 height=100,
                 key=text_key,
                 label_visibility="collapsed",
+                disabled=True,  # Make read-only
+                help="Presets cannot be edited directly. Switch to 'Paste Text' to customize.",
                 **area_kwargs,
             )
 
