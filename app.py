@@ -86,6 +86,34 @@ def remove_slot(idx):
     st.session_state.pedal_slots.pop(idx)
 
 
+# Callback to handle preset changes safely
+def update_from_preset(slot_id):
+    """Callback: Updates slot data and name when preset changes."""
+    # Find the specific slot by ID
+    slot = next((s for s in st.session_state.pedal_slots if s["id"] == slot_id), None)
+    if not slot:
+        return
+
+    # Get the new selection from session state
+    key = f"preset_select_{slot_id}"
+    new_preset = st.session_state.get(key)
+
+    if new_preset:
+        # 1. Update BOM Data
+        slot["data"] = BOM_PRESETS[new_preset]
+        # Force the text area to reflect this new data
+        st.session_state[f"text_preset_{slot_id}"] = slot["data"]
+
+        # 2. Update Name (Only if empty or matches previous preset)
+        last_loaded = slot.get("last_loaded_preset")
+        if not slot["name"] or slot["name"] == last_loaded:
+            slot["name"] = new_preset
+            st.session_state[f"name_{slot_id}"] = new_preset
+
+        # 3. Update Tracking
+        slot["last_loaded_preset"] = new_preset
+
+
 st.divider()
 st.subheader("1. Project Config")
 
@@ -159,32 +187,26 @@ for i, slot in enumerate(st.session_state.pedal_slots):
 
         elif slot["method"] == "Preset":
             # 1. The Selector
-            selected_preset = c4.selectbox(
+            # Determine correct index to keep UI in sync
+            options = sorted(list(BOM_PRESETS.keys()))
+            try:
+                idx = options.index(slot.get("last_loaded_preset"))
+            except (ValueError, TypeError):
+                idx = 0
+
+            # We use on_change to handle updates BEFORE the script re-runs
+            c4.selectbox(
                 "Select a Build",
-                options=sorted(list(BOM_PRESETS.keys())),
+                options=options,
+                index=idx,
                 key=f"preset_select_{slot['id']}",
                 label_visibility="collapsed",
+                on_change=update_from_preset,
+                args=(slot["id"],),
             )
 
-            # 2. Change Detection Logic
-            # We track the last loaded preset to know when to overwrite the text
-            last_loaded = slot.get("last_loaded_preset")
-
-            if selected_preset != last_loaded:
-                # User just switched presets! Overwrite the data.
-                slot["data"] = BOM_PRESETS[selected_preset]
-                slot["last_loaded_preset"] = selected_preset
-
-                # Force update the widget state so the text area reflects the change immediately
-                if f"text_preset_{slot['id']}" in st.session_state:
-                    st.session_state[f"text_preset_{slot['id']}"] = slot["data"]
-
-                # Update name if it matches the old preset or is generic
-                if not slot["name"] or slot["name"] == last_loaded:
-                    slot["name"] = selected_preset
-                    st.rerun()
-
-            # 3. The Editable Text Area
+            # 2. The Editable Text Area (Logic block removed, handled by callback)
+            text_key = f"text_preset_{slot['id']}"
             # We display the data exactly like "Paste Text" mode so it can be modified
             text_key = f"text_preset_{slot['id']}"
 
