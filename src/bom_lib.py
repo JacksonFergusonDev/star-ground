@@ -1,7 +1,6 @@
 import re
 import csv
 import math
-import pdfplumber
 from collections import defaultdict
 from typing import Dict, List, Tuple, Optional, TypedDict
 from urllib.parse import quote_plus
@@ -938,6 +937,9 @@ def parse_pedalpcb_pdf(
     Strategy 2: Visual Table Extraction (Text/Whitespace)
     Strategy 3: Raw Text Regex (Hail Mary)
     """
+    # Lazy import: pdfplumber is heavy (~2s load time), only load if user actually uploads a PDF
+    import pdfplumber
+
     inventory: InventoryType = defaultdict(
         lambda: {"qty": 0, "refs": [], "sources": defaultdict(list)}
     )

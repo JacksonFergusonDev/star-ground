@@ -120,6 +120,7 @@ def test_source_ref_duplication_on_merge(app):
             "name": "DupeTest",
             "count": 2,
             "method": "Paste Text",
+            "last_method": "Paste Text",
             "data": "R1 10k",
         },
     ]
@@ -138,3 +139,53 @@ def test_source_ref_duplication_on_merge(app):
 
     assert len(refs) == 2
     assert refs == ["R1", "R1"]
+
+
+def test_preset_selection_flow(app):
+    """
+    Test the full Preset workflow: Select Method -> Select Preset -> Generate.
+    """
+    # 1. Switch to Preset Mode
+    # The radio button is the 2nd widget in the columns (Name, Qty, Method...)
+    # AppTest organizes by type. app.radio[0] is the first slot's method selector.
+    app.radio[0].set_value("Preset").run()
+
+    # 2. Select a specific preset
+    # The selectbox appears dynamically. It should be index 0.
+    target_preset = "Kliche-Pedalpcb"
+    app.selectbox[0].set_value(target_preset).run()
+
+    # 3. Verify Text Area populated
+    # The Kliche preset contains the charge pump "TC1044SCPA"
+    assert "TC1044SCPA" in app.text_area[0].value
+
+    # 4. Generate Master List (Button index 1: [Add, Generate])
+    app.button[1].click().run()
+
+    # 5. Verify Output
+    assert not app.exception
+    df = app.dataframe[0].value
+    assert "TC1044SCPA" in df["Part"].values
+
+
+def test_input_method_state_clearing(app):
+    """
+    Verify that switching methods clears the data (Regression test for the 'Flush' fix).
+    """
+    # 1. Start in Preset Mode
+    app.radio[0].set_value("Preset").run()
+
+    # Ensure data is there (Auto-load first preset logic)
+    assert app.text_area[0].value != ""
+
+    # 2. Switch to Paste Text
+    app.radio[0].set_value("Paste Text").run()
+
+    # 3. Verify Empty (The 'Flush' worked)
+    assert app.text_area[0].value == ""
+
+    # 4. Switch back to Preset
+    app.radio[0].set_value("Preset").run()
+
+    # 5. Verify data re-loaded (Auto-load logic worked)
+    assert app.text_area[0].value != ""

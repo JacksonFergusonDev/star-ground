@@ -7,9 +7,7 @@ import tempfile
 from collections import defaultdict
 from typing import cast, List, Dict, Any
 from streamlit.runtime.uploaded_file_manager import UploadedFile
-import gspread
 import streamlit as st
-from google.oauth2.service_account import Credentials
 from src.presets import BOM_PRESETS
 
 from src.bom_lib import (
@@ -34,6 +32,10 @@ from src.bom_lib import (
 @st.cache_resource(ttl="1h")
 def get_gsheet_client():
     """Establishes a persistent connection to Google Sheets."""
+    # Lazy import to prevent 3-5s startup delay
+    import gspread
+    from google.oauth2.service_account import Credentials
+
     scope = [
         "https://spreadsheets.google.com/feeds",
         "https://www.googleapis.com/auth/drive",
@@ -86,6 +88,70 @@ def remove_slot(idx):
     st.session_state.pedal_slots.pop(idx)
 
 
+# Callback to handle preset changes safely
+def update_from_preset(slot_id):
+    """Callback: Updates slot data and name when preset changes."""
+    # Find the specific slot by ID
+    slot = next((s for s in st.session_state.pedal_slots if s["id"] == slot_id), None)
+    if not slot:
+        return
+
+    # Get the new selection from session state
+    key = f"preset_select_{slot_id}"
+    new_preset = st.session_state.get(key)
+
+    if new_preset:
+        # 1. Update BOM Data
+        slot["data"] = BOM_PRESETS[new_preset]
+        # Force the text area to reflect this new data
+        st.session_state[f"text_preset_{slot_id}"] = slot["data"]
+
+        # 2. Update Name (Only if empty or matches previous preset)
+        last_loaded = slot.get("last_loaded_preset")
+        if not slot["name"] or slot["name"] == last_loaded:
+            slot["name"] = new_preset
+            st.session_state[f"name_{slot_id}"] = new_preset
+
+        # 3. Update Tracking
+        slot["last_loaded_preset"] = new_preset
+
+
+def on_method_change(slot_id):
+    """Callback: Handle input method switches (Paste/Upload/Preset)."""
+    slot = next((s for s in st.session_state.pedal_slots if s["id"] == slot_id), None)
+    if not slot:
+        return
+
+    # Get the new method from the widget state
+    new_method = st.session_state.get(f"method_{slot_id}")
+
+    # Case: Switch to Paste Text -> Clear Data
+    if new_method == "Paste Text":
+        slot["data"] = ""
+        # Clear the text area widget state to ensure it shows empty
+        if f"text_{slot_id}" in st.session_state:
+            st.session_state[f"text_{slot_id}"] = ""
+
+    # Case: Switch to Preset -> Load Default
+    elif new_method == "Preset":
+        first_preset = sorted(list(BOM_PRESETS.keys()))[0]
+        slot["data"] = BOM_PRESETS[first_preset]
+        slot["last_loaded_preset"] = first_preset
+
+        # Auto-fill name if empty
+        if not slot["name"]:
+            slot["name"] = first_preset
+            # Update the widget key directly so it renders correctly immediately
+            st.session_state[f"name_{slot_id}"] = first_preset
+
+        # Ensure the preset text area is populated
+        st.session_state[f"text_preset_{slot_id}"] = slot["data"]
+
+    # Update slot tracking
+    slot["method"] = new_method
+    slot["last_method"] = new_method
+
+
 st.divider()
 st.subheader("1. Project Config")
 
@@ -104,11 +170,17 @@ for i, slot in enumerate(st.session_state.pedal_slots):
         c1, c2, c3, c4, c5 = st.columns([3, 1, 2, 4, 1])
 
         # Project Name
+        name_key = f"name_{slot['id']}"
+        # Only pass 'value' if the key isn't in session state to avoid the warning
+        name_kwargs = (
+            {"value": slot["name"]} if name_key not in st.session_state else {}
+        )
+
         slot["name"] = c1.text_input(
             f"Project Name #{i + 1}",
-            value=slot["name"],
-            key=f"name_{slot['id']}",
+            key=name_key,
             placeholder=f"e.g. {PLACEHOLDERS[i % len(PLACEHOLDERS)]}",
+            **name_kwargs,
         )
 
         # Quantity
@@ -127,18 +199,29 @@ for i, slot in enumerate(st.session_state.pedal_slots):
             key=f"method_{slot['id']}",
             horizontal=True,
             label_visibility="collapsed",
+            on_change=on_method_change,
+            args=(slot["id"],),
         )
 
         # Data Input
         if slot["method"] == "Paste Text":
+            # Apply the conditional value pattern to avoid state warnings
+            text_key = f"text_{slot['id']}"
+            area_kwargs = (
+                {"value": slot.get("data", "")}
+                if text_key not in st.session_state
+                else {}
+            )
+
             slot["data"] = c4.text_area(
                 "BOM Text",
                 height=100,
-                key=f"text_{slot['id']}",
+                key=text_key,
                 label_visibility="collapsed",
                 placeholder="Paste your BOM here...",
-                value=slot.get("data", ""),
+                **area_kwargs,
             )
+
         elif slot["method"] == "Upload File":
             slot["data"] = c4.file_uploader(
                 "Upload BOM",
@@ -149,35 +232,44 @@ for i, slot in enumerate(st.session_state.pedal_slots):
 
         elif slot["method"] == "Preset":
             # 1. The Selector
-            selected_preset = c4.selectbox(
+            # Determine correct index to keep UI in sync
+            options = sorted(list(BOM_PRESETS.keys()))
+            try:
+                idx = options.index(cast(str, slot.get("last_loaded_preset")))
+            except (ValueError, TypeError):
+                idx = 0
+
+            # We use on_change to handle updates BEFORE the script re-runs
+            c4.selectbox(
                 "Select a Build",
-                options=sorted(list(BOM_PRESETS.keys())),
+                options=options,
+                index=idx,
                 key=f"preset_select_{slot['id']}",
                 label_visibility="collapsed",
+                on_change=update_from_preset,
+                args=(slot["id"],),
             )
 
-            # 2. Change Detection Logic
-            # We track the last loaded preset to know when to overwrite the text
-            last_loaded = slot.get("last_loaded_preset")
-
-            if selected_preset != last_loaded:
-                # User just switched presets! Overwrite the data.
-                slot["data"] = BOM_PRESETS[selected_preset]
-                slot["last_loaded_preset"] = selected_preset
-
-                # Update name if it matches the old preset or is generic
-                if not slot["name"] or slot["name"] == last_loaded:
-                    slot["name"] = selected_preset
-                    st.rerun()
-
-            # 3. The Editable Text Area
+            # 2. The Editable Text Area (Logic block removed, handled by callback)
+            text_key = f"text_preset_{slot['id']}"
             # We display the data exactly like "Paste Text" mode so it can be modified
+            text_key = f"text_preset_{slot['id']}"
+
+            # Only pass 'value' if the key isn't in session state to avoid the warning
+            area_kwargs = (
+                {"value": slot.get("data", "")}
+                if text_key not in st.session_state
+                else {}
+            )
+
             slot["data"] = c4.text_area(
                 "BOM Text",
                 height=100,
-                key=f"text_preset_{slot['id']}",
+                key=text_key,
                 label_visibility="collapsed",
-                value=slot.get("data", ""),
+                disabled=True,  # Make read-only
+                help="Presets cannot be edited directly. Switch to 'Paste Text' to customize.",
+                **area_kwargs,
             )
 
         # Remove Button

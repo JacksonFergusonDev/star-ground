@@ -3,6 +3,7 @@ from collections import defaultdict
 from typing import cast
 from unittest.mock import patch, MagicMock
 from hypothesis import given, strategies as st
+from src.presets import BOM_PRESETS
 from src.bom_lib import (
     InventoryType,
     parse_with_verification,
@@ -417,7 +418,8 @@ def test_pedalpcb_pdf_parsing_happy_path():
     mock_page.extract_tables.return_value = [mock_table]
 
     # 3. Patch the library so we don't need a real file
-    with patch("src.bom_lib.pdfplumber.open", return_value=mock_pdf):
+    # Note: We patch 'pdfplumber.open' directly because the module is lazy-imported
+    with patch("pdfplumber.open", return_value=mock_pdf):
         inventory, stats = parse_pedalpcb_pdf("dummy.pdf", source_name="Dirty PDF")
 
     # 4. Assertions
@@ -447,7 +449,8 @@ def test_pedalpcb_pdf_dirty_input():
     ]
     mock_page.extract_tables.return_value = [mock_table]
 
-    with patch("src.bom_lib.pdfplumber.open", return_value=mock_pdf):
+    # Change the patch target to the global library
+    with patch("pdfplumber.open", return_value=mock_pdf):
         inventory, stats = parse_pedalpcb_pdf("dummy.pdf", source_name="Dirty PDF")
 
     # The parser should clean "10k\nOhm" -> "10k Ohm" -> "10k"
@@ -468,7 +471,8 @@ def test_pedalpcb_pdf_ignores_bad_tables():
     mock_table = [["Drill Size", "Location"], ["3mm", "LED"], ["1/4 inch", "Jacks"]]
     mock_page.extract_tables.return_value = [mock_table]
 
-    with patch("src.bom_lib.pdfplumber.open", return_value=mock_pdf):
+    # Change the patch target to the global library
+    with patch("pdfplumber.open", return_value=mock_pdf):
         inventory, stats = parse_pedalpcb_pdf("dummy.pdf", source_name="Bad Table")
 
     # Should find nothing
@@ -592,3 +596,20 @@ def test_net_needs_calculation():
 
     # 5. Verify Surplus (5 - 10 = -5 -> Floor at 0)
     assert net_inv["Capacitors | 100n"]["qty"] == 0
+
+
+def test_preset_integrity():
+    """
+    Verify that every defined preset is valid, parseable BOM text.
+    This catches typos or empty strings in the presets file.
+    """
+    for name, raw_text in BOM_PRESETS.items():
+        # Sanity check: Text should exist
+        assert raw_text.strip(), f"Preset '{name}' is empty!"
+
+        # Parse check
+        inventory, stats = parse_with_verification([raw_text], source_name=name)
+
+        # Must find parts
+        assert stats["parts_found"] > 0, f"Preset '{name}' yielded 0 parts!"
+        assert stats["lines_read"] > 0
