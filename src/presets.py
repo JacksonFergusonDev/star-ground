@@ -3,6 +3,7 @@
 
 BOM_PRESETS = {
     "[PedalPCB] [Dynamics] Amentum Boost": """
+        PCB Amentum Boost PCB
         Q1 1
         D100 1
         C1 1
@@ -15,6 +16,7 @@ BOM_PRESETS = {
         R3 1
     """,
     "[PedalPCB] [Dynamics] General Tso's Compressor": """
+        PCB General Tso's Compressor PCB
         IC1 OPA2134
         Q1 J113
         D1 1N4148
@@ -80,6 +82,7 @@ BOM_PRESETS = {
         IC1 (Inj) 8 PIN DIP SOCKET
     """,
     "[PedalPCB] [Dynamics] Triangulum Boost": """
+        PCB Triangulum Boost PCB
         IC1 TL071
         Q2 BC550C*
         D2 are
@@ -135,6 +138,7 @@ BOM_PRESETS = {
         IC1 (Inj) 8 PIN DIP SOCKET
     """,
     "[PedalPCB] [Fuzz] Muffin Factory": """
+        PCB Muffin Factory PCB
         Q3 MPSA18
         Q5 MPSA18
         Q1 2N5088
@@ -223,6 +227,7 @@ BOM_PRESETS = {
         R12 1.3M
     """,
     "[PedalPCB] [Fuzz] Muffin Fuzz": """
+        PCB Muffin Fuzz PCB
         Q1 BC549C*
         Q2 BC549C*
         Q3 BC549C*
@@ -626,6 +631,7 @@ BOM_PRESETS = {
         R23 1M
     """,
     "[PedalPCB] [Fuzz] Paper Scratcher Fuzz": """
+        PCB Paper Scratcher Fuzz PCB
         IC1 OPA1678
         Q1 2N3904
         Q2 2N3904
@@ -685,6 +691,7 @@ BOM_PRESETS = {
         IC1 (Inj) 8 PIN DIP SOCKET
     """,
     "[PedalPCB] [Fuzz] Parentheses Fuzz": """
+        PCB Parentheses Fuzz PCB
         IC1 LM308
         Q6 BS170
         Q1 PF5102
@@ -772,6 +779,7 @@ BOM_PRESETS = {
         IC1 (Inj) 8 PIN DIP SOCKET
     """,
     "[PedalPCB] [Fuzz] Sunflower Fuzz": """
+        PCB Sunflower Fuzz PCB
         Q1 NKT275
         Q2 NKT275
         D100 1N5817
@@ -791,6 +799,7 @@ BOM_PRESETS = {
         R1 100k
     """,
     "[PedalPCB] [Modulation] Caesar Chorus": """
+        PCB Caesar Chorus PCB
         IC2 RC4558
         IC1 TL022
         IC4 V3102D
@@ -887,6 +896,7 @@ BOM_PRESETS = {
         IC4 (Inj) 8 PIN DIP SOCKET
     """,
     "[PedalPCB] [Modulation] Circulator": """
+        PCB Circulator PCB
         IC1 LM13700
         IC2 LM13700
         IC3 LM13700
@@ -956,6 +966,7 @@ BOM_PRESETS = {
         IC5 (Inj) 8 PIN DIP SOCKET
     """,
     "[PedalPCB] [Modulation] Low Tide Modulator": """
+        PCB Low Tide Modulator PCB
         IC6 CD4046BE
         IC3 LM13700N
         IC4 LM258P
@@ -1102,6 +1113,7 @@ BOM_PRESETS = {
         IC7 (Inj) 8 PIN DIP SOCKET
     """,
     "[PedalPCB] [Modulation] Sea Horse": """
+        PCB Sea Horse PCB
         IC3 L78L05
         IC4 LM324
         IC2 PT2399
@@ -1175,6 +1187,7 @@ BOM_PRESETS = {
         IC4 (Inj) 8 PIN DIP SOCKET
     """,
     "[PedalPCB] [Modulation] The Abyss": """
+        PCB The Abyss PCB
         IC1 TL072
         IC2 TL074
         TL072 1
@@ -1234,6 +1247,7 @@ BOM_PRESETS = {
         TL074 (Inj) 8 PIN DIP SOCKET
     """,
     "[PedalPCB] [Overdrive] Kliche Overdrive": """
+        PCB Kliche Overdrive PCB
         IC1 TL072
         IC2 TL072
         D1 GE
@@ -1302,6 +1316,7 @@ BOM_PRESETS = {
         IC2 (Inj) 8 PIN DIP SOCKET
     """,
     "[PedalPCB] [Overdrive] Mach 1 Overdrive": """
+        PCB Mach 1 Overdrive PCB
         IC1 OPA2134
         D100 1N5817
         D2 1N914
@@ -1336,6 +1351,7 @@ BOM_PRESETS = {
         IC1 (Inj) 8 PIN DIP SOCKET
     """,
     "[PedalPCB] [Time] Arachnid v2": """
+        PCB Arachnid v2 PCB
         IC3 FV1
         IC6 L78L33
         IC1 TL074
@@ -1398,6 +1414,7 @@ BOM_PRESETS = {
         IC6 (Inj) 8 PIN DIP SOCKET
     """,
     "[PedalPCB] [Time] Cataclysm Delay": """
+        PCB Cataclysm Delay PCB
         IC1 PT2399
         IC2 TL072
         IC3 78L05
@@ -1462,6 +1479,7 @@ BOM_PRESETS = {
         IC3 (Inj) 8 PIN DIP SOCKET
     """,
     "[PedalPCB] [Time] Deflector Reverb": """
+        PCB Deflector Reverb PCB
         IC5 L78L33
         IC2 SPIN
         IC1 TL072
@@ -1510,6 +1528,7 @@ BOM_PRESETS = {
         IC5 (Inj) 8 PIN DIP SOCKET
     """,
     "[PedalPCB] [Time] Gravitation Reverb": """
+        PCB Gravitation Reverb PCB
         IC3 BTDR-3H
         IC4 L78L05
         IC1 TL072
@@ -1563,6 +1582,7 @@ BOM_PRESETS = {
         IC4 (Inj) 8 PIN DIP SOCKET
     """,
     "[PedalPCB] [Time] Spirit Box": """
+        PCB Spirit Box PCB
         IC2 BTDR-2H
         IC3 L78L05
         IC6 L78L05
@@ -1621,6 +1641,7 @@ BOM_PRESETS = {
         IC6 (Inj) 8 PIN DIP SOCKET
     """,
     "[PedalPCB] [Time] VHS": """
+        PCB VHS PCB
         IC3 FV1
         IC5 L78L33
         IC1 TL072

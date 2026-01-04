@@ -354,7 +354,6 @@ def parse_with_verification(
 
     for raw_text in bom_list:
         lines = raw_text.strip().split("\n")
-        pcb_mode = False
 
         for line in lines:
             line = line.strip()
@@ -362,17 +361,25 @@ def parse_with_verification(
                 continue
             stats["lines_read"] += 1
 
-            # Catch "PCB" header lines
-            if line.upper() == "PCB":
-                pcb_mode = True
-                continue
-            if pcb_mode:
-                clean_name = re.sub(r"^PCB\s+", "", line, flags=re.IGNORECASE).strip()
+            # Check for PCB Definition (Prefix "PCB" + Value)
+            # Supports: "PCB <tab> Name" (Tayda) and "PCB Name" (PedalPCB)
+            parts = line.split(None, 1)
+            if parts and parts[0].upper() == "PCB":
+                # Case A: Header Line "PCB" (Tayda style) -> Skip it
+                if len(parts) == 1:
+                    continue
+
+                # Case B: Data Line "PCB <Value>" -> Record it
+                clean_name = parts[1].strip()
                 key = f"PCB | {clean_name}"
+
+                # Manual Record (bypassing ingest_bom_line regex)
                 inventory[key]["qty"] += 1
-                inventory[key]["sources"][source_name].append("PCB")
+                # Track source
+                if "PCB" not in inventory[key]["sources"][source_name]:
+                    inventory[key]["sources"][source_name].append("PCB")
+
                 stats["parts_found"] += 1
-                pcb_mode = False
                 continue
 
             match = pattern.match(line)
@@ -389,6 +396,23 @@ def parse_with_verification(
 
             if not success:
                 stats["residuals"].append(line)
+
+            # If it wasn't a standard part, check if it's a PCB.
+            # We look for "PCB" anywhere in the line, but ignore pure headers.
+            if not success and "PCB" in line.upper():
+                # Ignore if the line is JUST "PCB" (common header)
+                if line.strip().upper() == "PCB":
+                    continue
+
+                clean_name = line.strip()
+                key = f"PCB | {clean_name}"
+
+                inventory[key]["qty"] += 1
+                if "PCB" not in inventory[key]["sources"][source_name]:
+                    inventory[key]["sources"][source_name].append("PCB")
+
+                stats["parts_found"] += 1
+                success = True
 
     return inventory, stats
 
@@ -590,6 +614,21 @@ def generate_tayda_url(search_term: str) -> str:
 
     encoded = quote_plus(search_term)
     return f"https://www.taydaelectronics.com/catalogsearch/result/?q={encoded}"
+
+
+def generate_pedalpcb_url(search_term: str) -> str:
+    """
+    Creates a clickable search link for PedalPCB.
+    Strips ' PCB' from the end to ensure better search results.
+    """
+    if not search_term:
+        return ""
+
+    # Clean the term: "Muffin Fuzz PCB" -> "Muffin Fuzz"
+    clean_term = search_term.replace(" PCB", "").strip()
+
+    encoded = quote_plus(clean_term)
+    return f"https://www.pedalpcb.com/?product_cat=&s={encoded}&post_type=product"
 
 
 def get_buy_details(category: str, val: str, count: int) -> Tuple[int, str]:

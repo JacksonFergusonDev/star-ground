@@ -104,6 +104,17 @@ def generate_presets():
                         if extracted:
                             project_name = extracted.strip()
                             print(f"      ↳ Found Title: {project_name}")
+
+                        # If this is a PedalPCB project, inject the PCB part into the inventory
+                        # BEFORE serialization so it becomes part of the text preset.
+                        if source == "PedalPCB":
+                            pcb_val = f"{project_name} PCB"
+                            # We manually inject the dictionary entry expected by serialize_inventory
+                            key = f"PCB | {pcb_val}"
+                            inv[key]["qty"] += 1
+                            inv[key]["refs"].append("PCB")
+
+                        final_text = serialize_inventory(inv)
                     else:
                         print(f"   ⚠️ Skipping {file}: No parts found.")
                         continue

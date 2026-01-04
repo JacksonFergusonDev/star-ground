@@ -27,6 +27,7 @@ from src.bom_lib import (
     parse_pedalpcb_pdf,
     parse_user_inventory,
     calculate_net_needs,
+    generate_pedalpcb_url,
 )
 
 st.set_page_config(page_title="Pedal BOM Manager", page_icon="🎸")
@@ -448,7 +449,7 @@ stock_file = st.file_uploader(
 )
 st.divider()
 
-if st.button("Generate Master List", type="primary", use_container_width=True):
+if st.button("Generate Master List", type="primary", width="stretch"):
     inventory: InventoryType = defaultdict(
         lambda: {"qty": 0, "refs": [], "sources": defaultdict(list)}
     )
@@ -658,7 +659,15 @@ if st.session_state.inventory and st.session_state.stats:
 
         spec_type = get_spec_type(category, value)
         search_term = generate_search_term(category, value, spec_type)
-        url = generate_tayda_url(search_term)
+
+        # Link Generation Logic
+        # Check if any source for this part contains "PedalPCB"
+        is_pedalpcb_source = any("PedalPCB" in s for s in sources.keys())
+
+        if category == "PCB" and is_pedalpcb_source:
+            url = generate_pedalpcb_url(search_term)
+        else:
+            url = generate_tayda_url(search_term)
 
         final_data.append(
             {
@@ -705,7 +714,7 @@ if st.session_state.inventory and st.session_state.stats:
                 help="Search on Tayda Electronics",
             ),
         },
-        use_container_width=True,
+        width="stretch",
         hide_index=True,  # Cleaner look
     )
 
