@@ -1048,11 +1048,6 @@ def parse_pedalpcb_pdf(
                 # because pdfplumber's text-strategy often finds garbage tables (e.g. paragraphs of text).
                 tables = page.extract_tables()
 
-                if not tables:
-                    stats["residuals"].append(
-                        f"Page {page.page_number}: No tables found."
-                    )
-
                 for table in tables:
                     if not table:
                         continue
