@@ -79,6 +79,18 @@ if "pedal_slots" not in st.session_state:
     st.session_state.pedal_slots = init_slots
 
 
+def get_clean_name(raw_key):
+    """Parses '[Source] [Category] Name' into 'Name - Source'."""
+    if not raw_key:
+        return ""
+    match = re.match(r"^\[(.*?)\] (?:\[(.*?)\] )?(.*)$", raw_key)
+    if match:
+        src = match.group(1)
+        name = match.group(3)
+        return f"{name} - {src}"
+    return raw_key
+
+
 def add_slot():
     st.session_state.pedal_slots.append(
         {"id": str(uuid.uuid4()), "name": "", "method": "Paste Text"}
@@ -253,17 +265,6 @@ def update_from_preset(slot_id):
         # Force the text area to reflect this new data
         st.session_state[f"text_preset_{slot_id}"] = slot["data"]
 
-        # Helper to format clean name: "Name - Source"
-        def get_clean_name(raw_key):
-            if not raw_key:
-                return ""
-            match = re.match(r"^\[(.*?)\] (?:\[(.*?)\] )?(.*)$", raw_key)
-            if match:
-                src = match.group(1)
-                name = match.group(3)
-                return f"{name} - {src}"
-            return raw_key
-
         # 2. Update Name (Only if empty or matches previous preset)
         last_loaded_key = slot.get("last_loaded_preset")
 
@@ -309,9 +310,10 @@ def on_method_change(slot_id):
 
         # Auto-fill name if empty
         if not slot["name"]:
-            slot["name"] = first_preset
+            clean = get_clean_name(first_preset)
+            slot["name"] = clean
             # Update the widget key directly so it renders correctly immediately
-            st.session_state[f"name_{slot_id}"] = first_preset
+            st.session_state[f"name_{slot_id}"] = clean
 
         # Ensure the preset text area is populated
         st.session_state[f"text_preset_{slot_id}"] = slot["data"]
