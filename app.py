@@ -449,7 +449,7 @@ stock_file = st.file_uploader(
 )
 st.divider()
 
-if st.button("Generate Master List", type="primary", use_container_width=True):
+if st.button("Generate Master List", type="primary", width="stretch"):
     inventory: InventoryType = defaultdict(
         lambda: {"qty": 0, "refs": [], "sources": defaultdict(list)}
     )
@@ -714,7 +714,7 @@ if st.session_state.inventory and st.session_state.stats:
                 help="Search on Tayda Electronics",
             ),
         },
-        use_container_width=True,
+        width="stretch",
         hide_index=True,  # Cleaner look
     )
 
