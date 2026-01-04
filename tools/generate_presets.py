@@ -78,7 +78,8 @@ def generate_presets():
 
             # 2. Process File & Determine Name
             final_text = ""
-            project_name = filename_no_ext  # Default fallback
+            # Clean up the filename: "big_muff" -> "Big Muff"
+            project_name = filename_no_ext.replace("_", " ").replace("-", " ").title()
 
             if file.lower().endswith(".txt"):
                 # CASE A: Tayda / Raw Text

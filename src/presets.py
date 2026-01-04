@@ -1666,7 +1666,7 @@ BOM_PRESETS = {
         IC3 (Inj) 8 PIN DIP SOCKET
         IC5 (Inj) 8 PIN DIP SOCKET
     """,
-    "[Tayda] [Dynamics] micro_amp_booster": """
+    "[Tayda] [Dynamics] Micro Amp Booster": """
         PCB
         PCB                  MICRO AMP BOOSTER PCB
         
@@ -1694,7 +1694,7 @@ BOM_PRESETS = {
         Potentiometer        
         GAIN    500k-C    500KC ANTI-LOG TAPER POTENTIOMETER
     """,
-    "[Tayda] [Dynamics] orange_squeezer": """
+    "[Tayda] [Dynamics] Orange Squeezer": """
         PCB
         PCB             ORANGE SQUEEZER PCB
         
@@ -1735,7 +1735,7 @@ BOM_PRESETS = {
         VOL     10k-A    10K OHM LOGARITHMIC TAPER POTENTIOMETER
         BIAS    10k       10K OHM TRIMMER POTENTIOMETER CERMET
     """,
-    "[Tayda] [Fuzz] bazz_fuzz": """
+    "[Tayda] [Fuzz] Bazz Fuzz": """
         PCB
         PCB                BAZZ FUZZ PCB
         
@@ -1757,7 +1757,7 @@ BOM_PRESETS = {
         Potentiometer
         VOL   100k-A    100K OHM LOGARITHMIC POTENTIOMETER
     """,
-    "[Tayda] [Fuzz] big_muff": """
+    "[Tayda] [Fuzz] Big Muff": """
         PCB
         BIG MUFF DIY PCB GUITAR EFFECT
         
@@ -1820,7 +1820,7 @@ BOM_PRESETS = {
         VOL           100K-A     100K OHM LOG POTENTIOMETER
         TONE         100K-B     100K OHM LINEAR POTENTIOMETER
     """,
-    "[Tayda] [Fuzz] muff_fuzz_overdrive": """
+    "[Tayda] [Fuzz] Muff Fuzz Overdrive": """
         PCB
         PCB               MUFF FUZZ PCB
         
@@ -1848,7 +1848,7 @@ BOM_PRESETS = {
         Potentiometers        
         VOL         100K-A     100K OHM LOG POTENTIOMETER
     """,
-    "[Tayda] [Fuzz] satisfaction_fuzz": """
+    "[Tayda] [Fuzz] Satisfaction Fuzz": """
         PCB
         PCB                    SATISFACTION FUZZ PCB
         
@@ -1879,7 +1879,7 @@ BOM_PRESETS = {
         ATTACK     100k-B     100K OHM LINEAR TAPER POTENTIOMETER
         VOL          100k-A     100K OHM LOG POTENTIOMETER
     """,
-    "[Tayda] [Modulation] colorsound_tremolo": """
+    "[Tayda] [Modulation] Colorsound Tremolo": """
         PCB
         PCB               COLORSOUND PCB
         
@@ -1920,7 +1920,7 @@ BOM_PRESETS = {
         DEPTH   100k-C    100K OHM REVERSE LOG POTENTIOMETER
         SPEED   100k-B    100K OHM LINEAR POTENTIOMETER
     """,
-    "[Tayda] [Modulation] dr_q": """
+    "[Tayda] [Modulation] Dr Q": """
         PCB
         PCB               DR Q AUTOWAH PCB
         
@@ -1975,7 +1975,7 @@ BOM_PRESETS = {
         SWITCH
         SW    SWITCH    MINI TOGGLE SWITCH DPDT ON-ON
     """,
-    "[Tayda] [Overdrive] bluesbreaker": """
+    "[Tayda] [Overdrive] Bluesbreaker": """
         PCB
         PCB       blues breaker DIY PCB
         
@@ -2021,7 +2021,7 @@ BOM_PRESETS = {
         TONE    25k-B        25K OHM LOG TAPER POTENTIOMETER
         VOL      100k-A      100K OHM LOG TAPER POTENTIOMETER
     """,
-    "[Tayda] [Overdrive] centaur_overdrive": """
+    "[Tayda] [Overdrive] Centaur Overdrive": """
         Resistors        
         R1     1M        1M OHM 1/4W 1% METAL FILM RESISTOR
         R2     10k       10K OHM 1/4W 1% METAL FILM RESISTOR
@@ -2090,7 +2090,7 @@ BOM_PRESETS = {
         TONE    10k-B       25K OHM LIN TAPER POTENTIOMETER
         VOL      10k-B       10K OHM LIN TAPER POTENTIOMETER
     """,
-    "[Tayda] [Overdrive] rat": """
+    "[Tayda] [Overdrive] Rat": """
         PCB
         PCB      RAT DIY PCB
         
