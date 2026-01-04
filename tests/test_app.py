@@ -151,9 +151,10 @@ def test_preset_selection_flow(app):
     app.radio[0].set_value("Preset").run()
 
     # 2. Select a specific preset
-    # The selectbox appears dynamically. It should be index 0.
-    target_preset = "Kliche-Pedalpcb"
-    app.selectbox[0].set_value(target_preset).run()
+    # New UI has 3 Selectboxes: [0]=Source, [1]=Category, [2]=Project
+    # We must select the Project. We also need the NEW key format.
+    target_preset = "[PedalPCB] [Overdrive] Kliche-PedalPCB"
+    app.selectbox[2].set_value(target_preset).run()
 
     # 3. Verify Text Area populated
     # The Kliche preset contains the charge pump "TC1044SCPA"
