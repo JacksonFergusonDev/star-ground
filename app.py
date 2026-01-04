@@ -418,8 +418,12 @@ if st.button("Generate Master List", type="primary", use_container_width=True):
     inventory: InventoryType = defaultdict(
         lambda: {"qty": 0, "refs": [], "sources": defaultdict(list)}
     )
-    stats: StatsDict = {"lines_read": 0, "parts_found": 0, "residuals": []}
-
+    stats: StatsDict = {
+        "lines_read": 0,
+        "parts_found": 0,
+        "residuals": [],
+        "extracted_title": None,
+    }
     # Process Each Slot
     for slot in st.session_state.pedal_slots:
         source = slot["name"] if slot["name"].strip() else "Untitled Project"

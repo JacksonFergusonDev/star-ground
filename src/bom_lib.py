@@ -341,7 +341,12 @@ def parse_with_verification(
     inventory: InventoryType = defaultdict(
         lambda: {"qty": 0, "refs": [], "sources": defaultdict(list)}
     )
-    stats: StatsDict = {"lines_read": 0, "parts_found": 0, "residuals": []}
+    stats: StatsDict = {
+        "lines_read": 0,
+        "parts_found": 0,
+        "residuals": [],
+        "extracted_title": None,
+    }
 
     # Regex: Matches Ref + Separator + Value.
     # Separator can be whitespace or comma.
@@ -395,8 +400,12 @@ def parse_csv_bom(filepath: str, source_name: str) -> Tuple[InventoryType, Stats
     inventory: InventoryType = defaultdict(
         lambda: {"qty": 0, "refs": [], "sources": defaultdict(list)}
     )
-    stats: StatsDict = {"lines_read": 0, "parts_found": 0, "residuals": []}
-
+    stats: StatsDict = {
+        "lines_read": 0,
+        "parts_found": 0,
+        "residuals": [],
+        "extracted_title": None,
+    }
     with open(filepath, "r", encoding="utf-8-sig") as f:
         reader = csv.DictReader(f)
         for row in reader:
