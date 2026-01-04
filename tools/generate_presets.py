@@ -118,8 +118,10 @@ def generate_presets():
 
         # Sort keys for stability
         for k in sorted(presets.keys()):
-            # Use repr() to safely escape newlines and quotes
-            f.write(f"    {repr(k)}: {repr(presets[k])},\n")
+            # Use triple quotes for readable multi-line strings
+            # Indent the content by 8 spaces to match the dict structure
+            content = presets[k].strip().replace("\n", "\n        ")
+            f.write(f'    {repr(k)}: """\n        {content}\n    """,\n')
 
         f.write("}\n")
 
