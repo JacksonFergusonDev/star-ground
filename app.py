@@ -4,6 +4,7 @@ import io
 import os
 import uuid
 import re
+import copy
 import tempfile
 from collections import defaultdict
 from typing import cast, List, Dict, Any
@@ -27,6 +28,8 @@ from src.bom_lib import (
     parse_user_inventory,
     calculate_net_needs,
 )
+
+st.set_page_config(page_title="Pedal BOM Manager", page_icon="🎸")
 
 
 # ttl="1h" to prevent stale token issues
@@ -55,8 +58,6 @@ def save_feedback(rating, text):
     row = [str(datetime.datetime.now()), rating, text]
     sheet.append_row(row)
 
-
-st.set_page_config(page_title="Pedal BOM Manager", page_icon="🎸")
 
 st.title("🎸 Guitar Pedal BOM Manager")
 st.markdown("""
@@ -99,6 +100,15 @@ def add_slot():
 
 def remove_slot(idx):
     st.session_state.pedal_slots.pop(idx)
+
+
+def merge_inventory(master_inv, new_inv, multiplier):
+    """Merges a parsed BOM into the master inventory with a quantity multiplier."""
+    for key, data in new_inv.items():
+        master_inv[key]["qty"] += data["qty"] * multiplier
+        master_inv[key]["refs"].extend(data["refs"])
+        for src, refs in data["sources"].items():
+            master_inv[key]["sources"][src].extend(refs * multiplier)
 
 
 @st.cache_data
@@ -460,13 +470,7 @@ if st.button("Generate Master List", type="primary", use_container_width=True):
                 p_inv, p_stats = parse_with_verification([raw], source_name=source)
 
                 # Merge
-                for key, data in p_inv.items():
-                    # Multiply quantity by the slot's pedal count
-                    inventory[key]["qty"] += data["qty"] * qty_multiplier
-                    inventory[key]["refs"].extend(data["refs"])
-                    for src, refs in data["sources"].items():
-                        # Multiply the list of refs by the count (e.g. ['R1'] * 2 = ['R1', 'R1'])
-                        inventory[key]["sources"][src].extend(refs * qty_multiplier)
+                merge_inventory(inventory, p_inv, qty_multiplier)
 
                 stats["lines_read"] += p_stats["lines_read"]
                 stats["parts_found"] += p_stats["parts_found"]
@@ -495,13 +499,7 @@ if st.button("Generate Master List", type="primary", use_container_width=True):
                         p_inv, p_stats = parse_csv_bom(tmp_path, source_name=source)
 
                     # Merge
-                    for key, data in p_inv.items():
-                        # Multiply quantity by the slot's pedal count
-                        inventory[key]["qty"] += data["qty"] * qty_multiplier
-                        inventory[key]["refs"].extend(data["refs"])
-                        for src, refs in data["sources"].items():
-                            # Multiply the list of refs by the count (e.g. ['R1'] * 2 = ['R1', 'R1'])
-                            inventory[key]["sources"][src].extend(refs * qty_multiplier)
+                    merge_inventory(inventory, p_inv, qty_multiplier)
 
                     stats["lines_read"] += p_stats["lines_read"]
                     stats["parts_found"] += p_stats["parts_found"]
@@ -536,7 +534,7 @@ if st.button("Generate Master List", type="primary", use_container_width=True):
 
 # Main Process
 if st.session_state.inventory and st.session_state.stats:
-    inventory = cast(InventoryType, st.session_state.inventory)
+    inventory = copy.deepcopy(st.session_state.inventory)
     stats = cast(StatsDict, st.session_state.stats)
 
     # 1. Show Stats (Always show to help debug)
