@@ -25,6 +25,7 @@ class StatsDict(TypedDict):
     lines_read: int
     parts_found: int
     residuals: List[str]
+    extracted_title: Optional[str]
 
 
 class PartData(TypedDict):
@@ -943,10 +944,54 @@ def parse_pedalpcb_pdf(
     inventory: InventoryType = defaultdict(
         lambda: {"qty": 0, "refs": [], "sources": defaultdict(list)}
     )
-    stats: StatsDict = {"lines_read": 0, "parts_found": 0, "residuals": []}
+    stats: StatsDict = {
+        "lines_read": 0,
+        "parts_found": 0,
+        "residuals": [],
+        "extracted_title": None,
+    }
 
     try:
         with pdfplumber.open(filepath) as pdf:
+            # --- TITLE EXTRACTION (Page 1) ---
+            try:
+                p1 = pdf.pages[0]
+                # Extract words with font size info
+                words = p1.extract_words(extra_attrs=["size"])
+
+                # Filter out generic headers/logos
+                ignore = {
+                    "PEDALPCB",
+                    "CONTROLS",
+                    "REVISION",
+                    "COPYRIGHT",
+                    "WWW.PEDALPCB.COM",
+                    "LEVEL",
+                    "VCC",
+                    "GND",
+                }
+
+                # Find candidates (ignore small text < 10pt to save time)
+                candidates = [
+                    w
+                    for w in words
+                    if w["text"].upper() not in ignore and w["size"] > 10
+                ]
+
+                if candidates:
+                    # Heuristic: Title is usually the largest text on Page 1
+                    max_size = max(c["size"] for c in candidates)
+
+                    # Get all words within 1pt of the max size (handles multi-word titles)
+                    title_words = [w for w in candidates if w["size"] >= max_size - 1]
+
+                    # Sort by vertical (top) then horizontal (x0) position
+                    title_words.sort(key=lambda x: (x["top"], x["x0"]))
+
+                    stats["extracted_title"] = " ".join(w["text"] for w in title_words)
+            except Exception:
+                pass  # Non-critical, just skip title extraction
+
             # --- STRATEGY 1 & 2: TABLES ---
             for page in pdf.pages:
                 # A. Try Standard Extraction (Grid Lines)
