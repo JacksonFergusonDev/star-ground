@@ -55,13 +55,14 @@ def test_source_tracking_logic():
 
 
 def test_pcb_trap():
-    """Does it handle the PCB prefix logic?"""
-    # Parser now expects "PCB <Name>" on the same line (or subsequent lines with prefix)
-    raw_text = "PCB Big Muff Board"
+    """Does it handle the permissive PCB logic (PCB anywhere in line)?"""
+    # Parser now expects "PCB" to appear anywhere in the line
+    raw_text = "BIG MUFF DIY PCB GUITAR EFFECT"
     inventory, stats = parse_with_verification([raw_text], source_name="My Build")
 
-    assert inventory["PCB | Big Muff Board"]["qty"] == 1
-    assert "PCB" in inventory["PCB | Big Muff Board"]["sources"]["My Build"]
+    key = "PCB | BIG MUFF DIY PCB GUITAR EFFECT"
+    assert inventory[key]["qty"] == 1
+    assert "PCB" in inventory[key]["sources"]["My Build"]
 
 
 def test_2n5457_behavior():
