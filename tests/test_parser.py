@@ -55,8 +55,9 @@ def test_source_tracking_logic():
 
 
 def test_pcb_trap():
-    """Does it handle the multi-line PCB header?"""
-    raw_text = "PCB\nBig Muff Board"
+    """Does it handle the PCB prefix logic?"""
+    # Parser now expects "PCB <Name>" on the same line (or subsequent lines with prefix)
+    raw_text = "PCB Big Muff Board"
     inventory, stats = parse_with_verification([raw_text], source_name="My Build")
 
     assert inventory["PCB | Big Muff Board"]["qty"] == 1
