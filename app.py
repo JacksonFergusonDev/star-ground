@@ -3,6 +3,7 @@ import datetime
 import io
 import os
 import uuid
+import re
 import tempfile
 from collections import defaultdict
 from typing import cast, List, Dict, Any
@@ -86,6 +87,152 @@ def add_slot():
 
 def remove_slot(idx):
     st.session_state.pedal_slots.pop(idx)
+
+
+@st.cache_data
+def get_preset_metadata():
+    """
+    Parses BOM_PRESETS keys into a queryable structure.
+    Returns:
+        sources (list): Unique sources (e.g., 'PedalPCB', 'Tayda')
+        categories (dict): Map of Source -> List of Categories
+        lookup (list): List of dicts {'key', 'source', 'category', 'name'}
+    """
+    lookup = []
+    sources = set()
+    categories = defaultdict(set)
+
+    # Regex to handle "[Source] [Category] Name" or "[Source] Name"
+    # Matches: [Group1] (optional [Group2]) Remainder
+    pattern = re.compile(r"^\[(.*?)\] (?:\[(.*?)\] )?(.*)$")
+
+    for key in BOM_PRESETS.keys():
+        match = pattern.match(key)
+        if match:
+            src = match.group(1)
+            cat = match.group(2) or "Misc"
+            name = match.group(3)
+
+            sources.add(src)
+            categories[src].add(cat)
+
+            lookup.append(
+                {
+                    "full_key": key,
+                    "source": src,
+                    "category": cat,
+                    "name": name,
+                }
+            )
+
+    # Sort for UI consistency
+    return (
+        sorted(list(sources)),
+        {k: sorted(list(v)) for k, v in categories.items()},
+        lookup,
+    )
+
+
+def render_preset_selector(slot, idx):
+    """
+    Renders a 3-stage smart selector for a specific slot.
+    """
+    # Load metadata (cached)
+    all_sources, cat_map, lookup = get_preset_metadata()
+
+    # Layout: 2 small filter columns, 1 main selector
+    c_filt1, c_filt2, c_main = st.columns([1, 1, 2])
+
+    # --- 1. Source Filter ---
+    # We use session state to remember the filter per slot
+    src_key = f"filter_src_{slot['id']}"
+    selected_src = c_filt1.selectbox(
+        "Source",
+        ["All"] + all_sources,
+        key=src_key,
+        label_visibility="collapsed",
+        help="Filter by Vendor",
+    )
+
+    # --- 2. Category Filter ---
+    # Dynamic options based on Source
+    if selected_src != "All":
+        cat_options = ["All"] + cat_map.get(selected_src, [])
+    else:
+        # If All sources, show all unique categories across everything
+        # Flatten the list of lists
+        flat_cats = sorted(
+            list(set(cat for sublist in cat_map.values() for cat in sublist))
+        )
+        cat_options = ["All"] + flat_cats
+
+    cat_key = f"filter_cat_{slot['id']}"
+    selected_cat = c_filt2.selectbox(
+        "Category",
+        cat_options,
+        key=cat_key,
+        label_visibility="collapsed",
+        help="Filter by Category",
+    )
+
+    # --- 3. Filter the Main List ---
+    # Filter the lookup list based on choices
+    filtered_items = lookup
+    if selected_src != "All":
+        filtered_items = [i for i in filtered_items if i["source"] == selected_src]
+    if selected_cat != "All":
+        filtered_items = [i for i in filtered_items if i["category"] == selected_cat]
+
+    # Extract just the full keys for the widget
+    option_keys = [i["full_key"] for i in filtered_items]
+
+    # Handle Edge Case: If filter results in empty list
+    if not option_keys:
+        st.warning("No presets match filters.")
+        return
+
+    # Find current index (maintain selection if still valid after filter)
+    current_val = slot.get("last_loaded_preset")
+    try:
+        current_idx = option_keys.index(current_val)
+    except (ValueError, TypeError):
+        current_idx = 0
+
+    # --- 4. The Smart Selectbox ---
+    def format_label(key):
+        # Find the metadata for this key
+        meta = next((i for i in filtered_items if i["full_key"] == key), None)
+        if not meta:
+            return key
+
+        # Smart Labeling:
+        # If Source is already filtered, don't show it in the label.
+        # If Category is already filtered, don't show it.
+        label = meta["name"]
+
+        extras = []
+        if selected_src == "All":
+            extras.append(meta["source"])
+        if selected_cat == "All" and meta["category"] != "Misc":
+            extras.append(meta["category"])
+
+        if extras:
+            return f"{label}  ({', '.join(extras)})"
+        return label
+
+    # The actual widget
+    selection = c_main.selectbox(
+        "Select Project",
+        options=option_keys,
+        index=current_idx,
+        format_func=format_label,
+        key=f"preset_select_{slot['id']}",
+        label_visibility="collapsed",
+        on_change=update_from_preset,
+        args=(slot["id"],),
+    )
+
+    return selection
 
 
 # Callback to handle preset changes safely
@@ -231,24 +378,9 @@ for i, slot in enumerate(st.session_state.pedal_slots):
             )
 
         elif slot["method"] == "Preset":
-            # 1. The Selector
-            # Determine correct index to keep UI in sync
-            options = sorted(list(BOM_PRESETS.keys()))
-            try:
-                idx = options.index(cast(str, slot.get("last_loaded_preset")))
-            except (ValueError, TypeError):
-                idx = 0
-
-            # We use on_change to handle updates BEFORE the script re-runs
-            c4.selectbox(
-                "Select a Build",
-                options=options,
-                index=idx,
-                key=f"preset_select_{slot['id']}",
-                label_visibility="collapsed",
-                on_change=update_from_preset,
-                args=(slot["id"],),
-            )
+            # 1. The Selector (Hierarchical)
+            with c4:
+                render_preset_selector(slot, i)
 
             # 2. The Editable Text Area (Logic block removed, handled by callback)
             text_key = f"text_preset_{slot['id']}"
