@@ -314,11 +314,12 @@ PLACEHOLDERS = [
 
 for i, slot in enumerate(st.session_state.pedal_slots):
     with st.container():
-        c1, c2, c3, c4, c5 = st.columns([3, 1, 2, 4, 1])
+        # Row 1: Metadata (Name, Qty, Method, Delete)
+        # We give more space to Name now that Input is on its own row
+        c1, c2, c3, c4 = st.columns([3, 1, 2, 0.5])
 
         # Project Name
         name_key = f"name_{slot['id']}"
-        # Only pass 'value' if the key isn't in session state to avoid the warning
         name_kwargs = (
             {"value": slot["name"]} if name_key not in st.session_state else {}
         )
@@ -350,9 +351,14 @@ for i, slot in enumerate(st.session_state.pedal_slots):
             args=(slot["id"],),
         )
 
-        # Data Input
+        # Remove Button (Top Right)
+        if len(st.session_state.pedal_slots) > 1:
+            if c4.button("🗑️", key=f"del_{slot['id']}"):
+                remove_slot(i)
+                st.rerun()
+
+        # Row 2: Data Input (Full Width)
         if slot["method"] == "Paste Text":
-            # Apply the conditional value pattern to avoid state warnings
             text_key = f"text_{slot['id']}"
             area_kwargs = (
                 {"value": slot.get("data", "")}
@@ -360,55 +366,44 @@ for i, slot in enumerate(st.session_state.pedal_slots):
                 else {}
             )
 
-            slot["data"] = c4.text_area(
+            slot["data"] = st.text_area(
                 "BOM Text",
-                height=100,
+                height=150,
                 key=text_key,
-                label_visibility="collapsed",
                 placeholder="Paste your BOM here...",
+                help="Paste raw text like 'R1 10k', 'C1 100n', etc.",
                 **area_kwargs,
             )
 
         elif slot["method"] == "Upload File":
-            slot["data"] = c4.file_uploader(
+            slot["data"] = st.file_uploader(
                 "Upload BOM",
                 type=["csv", "pdf"],
                 key=f"file_{slot['id']}",
-                label_visibility="collapsed",
             )
 
         elif slot["method"] == "Preset":
             # 1. The Selector (Hierarchical)
-            with c4:
-                render_preset_selector(slot, i)
+            render_preset_selector(slot, i)
 
-            # 2. The Editable Text Area (Logic block removed, handled by callback)
+            # 2. The Read-Only Preview
             text_key = f"text_preset_{slot['id']}"
-            # We display the data exactly like "Paste Text" mode so it can be modified
-            text_key = f"text_preset_{slot['id']}"
-
-            # Only pass 'value' if the key isn't in session state to avoid the warning
             area_kwargs = (
                 {"value": slot.get("data", "")}
                 if text_key not in st.session_state
                 else {}
             )
 
-            slot["data"] = c4.text_area(
-                "BOM Text",
-                height=100,
+            slot["data"] = st.text_area(
+                "Preview",
+                height=150,
                 key=text_key,
+                disabled=True,
                 label_visibility="collapsed",
-                disabled=True,  # Make read-only
-                help="Presets cannot be edited directly. Switch to 'Paste Text' to customize.",
                 **area_kwargs,
             )
 
-        # Remove Button
-        if len(st.session_state.pedal_slots) > 1:
-            if c5.button("🗑️", key=f"del_{slot['id']}"):
-                remove_slot(i)
-                st.rerun()
+        st.divider()
 
 st.button("➕ Add Another Pedal", on_click=add_slot)
 
