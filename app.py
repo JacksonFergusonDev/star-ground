@@ -4,6 +4,7 @@ import io
 import os
 import uuid
 import re
+import copy
 import tempfile
 from collections import defaultdict
 from typing import cast, List, Dict, Any
@@ -536,7 +537,7 @@ if st.button("Generate Master List", type="primary", use_container_width=True):
 
 # Main Process
 if st.session_state.inventory and st.session_state.stats:
-    inventory = cast(InventoryType, st.session_state.inventory)
+    inventory = copy.deepcopy(st.session_state.inventory)
     stats = cast(StatsDict, st.session_state.stats)
 
     # 1. Show Stats (Always show to help debug)
