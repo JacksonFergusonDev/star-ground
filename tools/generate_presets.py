@@ -1,131 +1,143 @@
 import os
 import sys
-import re
 
 # Add the parent directory to sys.path to access src.bom_lib
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.bom_lib import parse_pedalpcb_pdf, parse_csv_bom, InventoryType
+from src.bom_lib import parse_pedalpcb_pdf, sort_inventory
 
 INPUT_DIR = "raw_boms"
 OUTPUT_FILE = "src/presets.py"
 
 
-def natural_sort_key(ref_str):
-    match = re.match(r"([a-zA-Z]+)(\d+)", ref_str)
-    if match:
-        return match.group(1), int(match.group(2))
-    return ref_str, 0
-
-
-def flatten_inventory_to_text(inventory: InventoryType) -> str:
+def serialize_inventory(inventory):
+    """
+    Converts the parsed dictionary back into the string format app.py expects.
+    e.g. {'Resistors | 10k': refs=['R1', 'R2']} -> "R1 10k\nR2 10k"
+    """
     lines = []
-    for key, data in inventory.items():
+
+    # helper to clean the value (remove " | " prefix)
+    def get_val(key):
         if " | " in key:
-            _, val = key.split(" | ", 1)
+            return key.split(" | ", 1)[1]
+        return key
+
+    # Sort so the output text is tidy
+    sorted_items = sort_inventory(inventory)
+
+    for key, data in sorted_items:
+        clean_val = get_val(key)
+
+        # If we have specific refs (R1, C1), list them individually
+        if data["refs"]:
+            for ref in data["refs"]:
+                # Ignore generic hardware refs if they slipped in
+                if ref != "HW":
+                    lines.append(f"{ref} {clean_val}")
         else:
-            val = key
+            # Fallback for things without refs (rare in presets)
+            lines.append(f"{clean_val} (Qty: {data['qty']})")
 
-        if not data["refs"]:
-            continue
-
-        for ref in data["refs"]:
-            # Filter out hardware/injected parts
-            if ref in ["HW", "PCB", "(Inj)"] or "Inj" in ref:
-                continue
-            lines.append((ref, val))
-
-    lines.sort(key=lambda x: natural_sort_key(x[0]))
-    return "\n".join([f"{r} {v}" for r, v in lines])
+    return "\n".join(lines)
 
 
 def generate_presets():
     if not os.path.exists(INPUT_DIR):
         os.makedirs(INPUT_DIR)
-        print(f"Created directory '{INPUT_DIR}'. Drop files there.")
-        return
+        print(f"Created directory '{INPUT_DIR}'.")
+        # Don't return, user might have nested folders
 
     presets = {}
-    report = []  # List of (Filename, Status, Details)
 
-    files = sorted(os.listdir(INPUT_DIR))
-    print(f"🔍 Found {len(files)} files in {INPUT_DIR}...")
+    print(f"🔍 Scanning {INPUT_DIR}...")
 
-    for filename in files:
-        filepath = os.path.join(INPUT_DIR, filename)
-        name, ext = os.path.splitext(filename)
-        inventory = None
-        status = "Unknown"
-        details = ""
+    for root, dirs, files in os.walk(INPUT_DIR):
+        for file in files:
+            file_path = os.path.join(root, file)
+            filename_no_ext = os.path.splitext(file)[0]
 
-        try:
-            # 1. Parse
-            if ext.lower() == ".pdf":
-                inventory, stats = parse_pedalpcb_pdf(filepath, "ingest")
+            # 1. Determine Metadata from Folder Structure
+            # rel_path: "pedalpcb/fuzz"
+            rel_path = os.path.relpath(root, INPUT_DIR)
+            path_parts = rel_path.split(os.sep)
 
-                if stats["parts_found"] == 0:
-                    status = "Skipped"
-                    # Capture the last few residuals to see what happened
-                    res_msg = (
-                        "; ".join(stats["residuals"][-3:])
-                        if stats["residuals"]
-                        else "No parts found"
-                    )
-                    details = f"{res_msg}"
-                else:
-                    status = "Parsed"
+            # Handle root files safely
+            if rel_path == ".":
+                path_parts = ["Misc"]
 
-            elif ext.lower() == ".csv":
-                inventory, stats = parse_csv_bom(filepath, "ingest")
-                status = "Parsed"
-
+            # Construct a clean Key: "[Source] [Category] Name"
+            raw_source = path_parts[0] if path_parts else "Unsorted"
+            # Special case for branding
+            if raw_source.lower() == "pedalpcb":
+                source = "PedalPCB"
             else:
-                status = "Ignored"
-                details = f"Unsupported extension: {ext}"
+                source = raw_source.capitalize()
 
-            # 2. Process
-            if status == "Parsed" and inventory:
-                clean_text = flatten_inventory_to_text(inventory)
+            category = path_parts[1].capitalize() if len(path_parts) > 1 else ""
 
-                if not clean_text.strip():
-                    status = "Skipped"
-                    details = "Inventory resulted in empty text"
-                else:
-                    display_name = name.replace("_", " ").title()
-                    if display_name in presets:
-                        status = "Warning"
-                        details = "Overwrote existing preset"
+            # 2. Process File & Determine Name
+            final_text = ""
+            # Clean up the filename: "big_muff" -> "Big Muff"
+            project_name = filename_no_ext.replace("_", " ").replace("-", " ").title()
+
+            if file.lower().endswith(".txt"):
+                # CASE A: Tayda / Raw Text
+                # Trust the user's formatting (app.py verifies it anyway)
+                with open(file_path, "r", encoding="utf-8") as f:
+                    final_text = f.read()
+                    print(f"   📄 Read Text: {file}")
+
+            elif file.lower().endswith(".pdf"):
+                # CASE B: PedalPCB PDF
+                # Parse it, then serialize it back to text
+                print(f"   ⚙️ Parsing PDF: {file}")
+                try:
+                    # Pass a temporary source name, we will refine the key later
+                    inv, stats = parse_pedalpcb_pdf(file_path, source_name=project_name)
+
+                    if stats["parts_found"] > 0:
+                        final_text = serialize_inventory(inv)
+
+                        # Use extracted title if available
+                        extracted = stats.get("extracted_title")
+                        if extracted:
+                            project_name = extracted.strip()
+                            print(f"      ↳ Found Title: {project_name}")
                     else:
-                        status = "Success"
-                        details = f"{len(clean_text.splitlines())} lines"
+                        print(f"   ⚠️ Skipping {file}: No parts found.")
+                        continue
+                except Exception as e:
+                    print(f"   ❌ Error parsing {file}: {e}")
+                    continue
 
-                    presets[display_name] = clean_text
+            # 3. Build Final Key and Add to Dict
+            if final_text:
+                if category:
+                    key = f"[{source}] [{category}] {project_name}"
+                else:
+                    key = f"[{source}] {project_name}"
 
-        except Exception as e:
-            status = "Error"
-            details = str(e)
+                presets[key] = final_text
 
-        report.append((filename, status, details))
-        print(f"   [{status}] {filename}")
+    # 4. Write Output
+    print(f"💾 Writing {len(presets)} presets to {OUTPUT_FILE}...")
 
-    # --- WRITE TO FILE ---
     with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
         f.write("# Auto-generated by tools/generate_presets.py\n")
+        f.write("# DO NOT EDIT MANUALLY\n\n")
         f.write("BOM_PRESETS = {\n")
-        for name, text in presets.items():
-            indented = text.replace("\n", "\n        ")
-            f.write(f'    "{name}": """\n        {indented}\n    """,\n')
+
+        # Sort keys for stability
+        for k in sorted(presets.keys()):
+            # Use triple quotes for readable multi-line strings
+            # Indent the content by 8 spaces to match the dict structure
+            content = presets[k].strip().replace("\n", "\n        ")
+            f.write(f'    {repr(k)}: """\n        {content}\n    """,\n')
+
         f.write("}\n")
 
-    # --- FINAL REPORT ---
-    print("\n" + "=" * 60)
-    print(f"  GENERATION REPORT: {len(presets)} Presets Created")
-    print("=" * 60)
-    print(f"{'FILENAME':<30} | {'STATUS':<10} | {'DETAILS'}")
-    print("-" * 60)
-    for fname, stat, det in report:
-        print(f"{fname:<30} | {stat:<10} | {det}")
-    print("=" * 60)
+    print("✅ Done!")
 
 
 if __name__ == "__main__":

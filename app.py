@@ -3,6 +3,7 @@ import datetime
 import io
 import os
 import uuid
+import re
 import tempfile
 from collections import defaultdict
 from typing import cast, List, Dict, Any
@@ -78,6 +79,18 @@ if "pedal_slots" not in st.session_state:
     st.session_state.pedal_slots = init_slots
 
 
+def get_clean_name(raw_key):
+    """Parses '[Source] [Category] Name' into 'Name - Source'."""
+    if not raw_key:
+        return ""
+    match = re.match(r"^\[(.*?)\] (?:\[(.*?)\] )?(.*)$", raw_key)
+    if match:
+        src = match.group(1)
+        name = match.group(3)
+        return f"{name} - {src}"
+    return raw_key
+
+
 def add_slot():
     st.session_state.pedal_slots.append(
         {"id": str(uuid.uuid4()), "name": "", "method": "Paste Text"}
@@ -86,6 +99,152 @@ def add_slot():
 
 def remove_slot(idx):
     st.session_state.pedal_slots.pop(idx)
+
+
+@st.cache_data
+def get_preset_metadata():
+    """
+    Parses BOM_PRESETS keys into a queryable structure.
+    Returns:
+        sources (list): Unique sources (e.g., 'PedalPCB', 'Tayda')
+        categories (dict): Map of Source -> List of Categories
+        lookup (list): List of dicts {'key', 'source', 'category', 'name'}
+    """
+    lookup = []
+    sources = set()
+    categories = defaultdict(set)
+
+    # Regex to handle "[Source] [Category] Name" or "[Source] Name"
+    # Matches: [Group1] (optional [Group2]) Remainder
+    pattern = re.compile(r"^\[(.*?)\] (?:\[(.*?)\] )?(.*)$")
+
+    for key in BOM_PRESETS.keys():
+        match = pattern.match(key)
+        if match:
+            src = match.group(1)
+            cat = match.group(2) or "Misc"
+            name = match.group(3)
+
+            sources.add(src)
+            categories[src].add(cat)
+
+            lookup.append(
+                {
+                    "full_key": key,
+                    "source": src,
+                    "category": cat,
+                    "name": name,
+                }
+            )
+
+    # Sort for UI consistency
+    return (
+        sorted(list(sources)),
+        {k: sorted(list(v)) for k, v in categories.items()},
+        lookup,
+    )
+
+
+def render_preset_selector(slot, idx):
+    """
+    Renders a 3-stage smart selector for a specific slot.
+    """
+    # Load metadata (cached)
+    all_sources, cat_map, lookup = get_preset_metadata()
+
+    # Layout: 2 small filter columns, 1 main selector
+    c_filt1, c_filt2, c_main = st.columns([1, 1, 2])
+
+    # --- 1. Source Filter ---
+    # We use session state to remember the filter per slot
+    src_key = f"filter_src_{slot['id']}"
+    selected_src = c_filt1.selectbox(
+        "Source",
+        ["All"] + all_sources,
+        key=src_key,
+        label_visibility="collapsed",
+        help="Filter by Vendor",
+    )
+
+    # --- 2. Category Filter ---
+    # Dynamic options based on Source
+    if selected_src != "All":
+        cat_options = ["All"] + cat_map.get(selected_src, [])
+    else:
+        # If All sources, show all unique categories across everything
+        # Flatten the list of lists
+        flat_cats = sorted(
+            list(set(cat for sublist in cat_map.values() for cat in sublist))
+        )
+        cat_options = ["All"] + flat_cats
+
+    cat_key = f"filter_cat_{slot['id']}"
+    selected_cat = c_filt2.selectbox(
+        "Category",
+        cat_options,
+        key=cat_key,
+        label_visibility="collapsed",
+        help="Filter by Category",
+    )
+
+    # --- 3. Filter the Main List ---
+    # Filter the lookup list based on choices
+    filtered_items = lookup
+    if selected_src != "All":
+        filtered_items = [i for i in filtered_items if i["source"] == selected_src]
+    if selected_cat != "All":
+        filtered_items = [i for i in filtered_items if i["category"] == selected_cat]
+
+    # Extract just the full keys for the widget
+    option_keys = [i["full_key"] for i in filtered_items]
+
+    # Handle Edge Case: If filter results in empty list
+    if not option_keys:
+        st.warning("No presets match filters.")
+        return
+
+    # Find current index (maintain selection if still valid after filter)
+    current_val = slot.get("last_loaded_preset")
+    try:
+        current_idx = option_keys.index(current_val)
+    except (ValueError, TypeError):
+        current_idx = 0
+
+    # --- 4. The Smart Selectbox ---
+    def format_label(key):
+        # Find the metadata for this key
+        meta = next((i for i in filtered_items if i["full_key"] == key), None)
+        if not meta:
+            return key
+
+        # Smart Labeling:
+        # If Source is already filtered, don't show it in the label.
+        # If Category is already filtered, don't show it.
+        label = meta["name"]
+
+        extras = []
+        if selected_src == "All":
+            extras.append(meta["source"])
+        if selected_cat == "All" and meta["category"] != "Misc":
+            extras.append(meta["category"])
+
+        if extras:
+            return f"{label}  ({', '.join(extras)})"
+        return label
+
+    # The actual widget
+    selection = c_main.selectbox(
+        "Select Project",
+        options=option_keys,
+        index=current_idx,
+        format_func=format_label,
+        key=f"preset_select_{slot['id']}",
+        label_visibility="collapsed",
+        on_change=update_from_preset,
+        args=(slot["id"],),
+    )
+
+    return selection
 
 
 # Callback to handle preset changes safely
@@ -107,10 +266,21 @@ def update_from_preset(slot_id):
         st.session_state[f"text_preset_{slot_id}"] = slot["data"]
 
         # 2. Update Name (Only if empty or matches previous preset)
-        last_loaded = slot.get("last_loaded_preset")
-        if not slot["name"] or slot["name"] == last_loaded:
-            slot["name"] = new_preset
-            st.session_state[f"name_{slot_id}"] = new_preset
+        last_loaded_key = slot.get("last_loaded_preset")
+
+        # We compare against the formatted version of the LAST key to see if we should overwrite
+        # (i.e. if the user hasn't manually changed it from the last auto-generated name)
+        current_name = slot["name"]
+        should_update = (
+            not current_name
+            or current_name == get_clean_name(last_loaded_key)
+            or current_name == last_loaded_key
+        )
+
+        if should_update:
+            clean_name = get_clean_name(new_preset)
+            slot["name"] = clean_name
+            st.session_state[f"name_{slot_id}"] = clean_name
 
         # 3. Update Tracking
         slot["last_loaded_preset"] = new_preset
@@ -140,9 +310,10 @@ def on_method_change(slot_id):
 
         # Auto-fill name if empty
         if not slot["name"]:
-            slot["name"] = first_preset
+            clean = get_clean_name(first_preset)
+            slot["name"] = clean
             # Update the widget key directly so it renders correctly immediately
-            st.session_state[f"name_{slot_id}"] = first_preset
+            st.session_state[f"name_{slot_id}"] = clean
 
         # Ensure the preset text area is populated
         st.session_state[f"text_preset_{slot_id}"] = slot["data"]
@@ -167,11 +338,12 @@ PLACEHOLDERS = [
 
 for i, slot in enumerate(st.session_state.pedal_slots):
     with st.container():
-        c1, c2, c3, c4, c5 = st.columns([3, 1, 2, 4, 1])
+        # Row 1: Metadata (Name, Qty, Method, Delete)
+        # We give more space to Name now that Input is on its own row
+        c1, c2, c3, c4 = st.columns([3, 1, 2, 0.5])
 
         # Project Name
         name_key = f"name_{slot['id']}"
-        # Only pass 'value' if the key isn't in session state to avoid the warning
         name_kwargs = (
             {"value": slot["name"]} if name_key not in st.session_state else {}
         )
@@ -203,9 +375,14 @@ for i, slot in enumerate(st.session_state.pedal_slots):
             args=(slot["id"],),
         )
 
-        # Data Input
+        # Remove Button (Top Right)
+        if len(st.session_state.pedal_slots) > 1:
+            if c4.button("🗑️", key=f"del_{slot['id']}"):
+                remove_slot(i)
+                st.rerun()
+
+        # Row 2: Data Input (Full Width)
         if slot["method"] == "Paste Text":
-            # Apply the conditional value pattern to avoid state warnings
             text_key = f"text_{slot['id']}"
             area_kwargs = (
                 {"value": slot.get("data", "")}
@@ -213,70 +390,44 @@ for i, slot in enumerate(st.session_state.pedal_slots):
                 else {}
             )
 
-            slot["data"] = c4.text_area(
+            slot["data"] = st.text_area(
                 "BOM Text",
-                height=100,
+                height=150,
                 key=text_key,
-                label_visibility="collapsed",
                 placeholder="Paste your BOM here...",
+                help="Paste raw text like 'R1 10k', 'C1 100n', etc.",
                 **area_kwargs,
             )
 
         elif slot["method"] == "Upload File":
-            slot["data"] = c4.file_uploader(
+            slot["data"] = st.file_uploader(
                 "Upload BOM",
                 type=["csv", "pdf"],
                 key=f"file_{slot['id']}",
-                label_visibility="collapsed",
             )
 
         elif slot["method"] == "Preset":
-            # 1. The Selector
-            # Determine correct index to keep UI in sync
-            options = sorted(list(BOM_PRESETS.keys()))
-            try:
-                idx = options.index(cast(str, slot.get("last_loaded_preset")))
-            except (ValueError, TypeError):
-                idx = 0
+            # 1. The Selector (Hierarchical)
+            render_preset_selector(slot, i)
 
-            # We use on_change to handle updates BEFORE the script re-runs
-            c4.selectbox(
-                "Select a Build",
-                options=options,
-                index=idx,
-                key=f"preset_select_{slot['id']}",
-                label_visibility="collapsed",
-                on_change=update_from_preset,
-                args=(slot["id"],),
-            )
-
-            # 2. The Editable Text Area (Logic block removed, handled by callback)
+            # 2. The Read-Only Preview
             text_key = f"text_preset_{slot['id']}"
-            # We display the data exactly like "Paste Text" mode so it can be modified
-            text_key = f"text_preset_{slot['id']}"
-
-            # Only pass 'value' if the key isn't in session state to avoid the warning
             area_kwargs = (
                 {"value": slot.get("data", "")}
                 if text_key not in st.session_state
                 else {}
             )
 
-            slot["data"] = c4.text_area(
-                "BOM Text",
-                height=100,
+            slot["data"] = st.text_area(
+                "Preview",
+                height=150,
                 key=text_key,
+                disabled=True,
                 label_visibility="collapsed",
-                disabled=True,  # Make read-only
-                help="Presets cannot be edited directly. Switch to 'Paste Text' to customize.",
                 **area_kwargs,
             )
 
-        # Remove Button
-        if len(st.session_state.pedal_slots) > 1:
-            if c5.button("🗑️", key=f"del_{slot['id']}"):
-                remove_slot(i)
-                st.rerun()
+        st.divider()
 
 st.button("➕ Add Another Pedal", on_click=add_slot)
 
@@ -291,8 +442,12 @@ if st.button("Generate Master List", type="primary", use_container_width=True):
     inventory: InventoryType = defaultdict(
         lambda: {"qty": 0, "refs": [], "sources": defaultdict(list)}
     )
-    stats: StatsDict = {"lines_read": 0, "parts_found": 0, "residuals": []}
-
+    stats: StatsDict = {
+        "lines_read": 0,
+        "parts_found": 0,
+        "residuals": [],
+        "extracted_title": None,
+    }
     # Process Each Slot
     for slot in st.session_state.pedal_slots:
         source = slot["name"] if slot["name"].strip() else "Untitled Project"
