@@ -7,5 +7,6 @@ output/
 .hypothesis/
 .vscode/
 *.code-workspace
-.streamlit/
+.streamlit/*
+!.streamlit/config.toml
 raw_boms/
