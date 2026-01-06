@@ -29,6 +29,7 @@ class StatsDict(TypedDict):
     parts_found: int
     residuals: List[str]
     extracted_title: Optional[str]
+    seen_refs: set
 
 
 class PartData(TypedDict):
@@ -371,7 +372,11 @@ def _record_part(
 
 
 def ingest_bom_line(
-    inventory: InventoryType, source: str, ref_raw: str, val_raw: str
+    inventory: InventoryType,
+    source: str,
+    ref_raw: str,
+    val_raw: str,
+    stats: Optional[StatsDict] = None,
 ) -> int:
     """
     Central Logic Kernel:
@@ -382,6 +387,12 @@ def ingest_bom_line(
     expanded_refs = expand_refs(ref_raw)
 
     for r in expanded_refs:
+        # De-dupe Check
+        if stats is not None and "seen_refs" in stats:
+            if r in stats["seen_refs"]:
+                continue
+            stats["seen_refs"].add(r)
+
         cat, clean_val, inj = categorize_part(r, val_raw)
 
         if cat:
@@ -413,6 +424,7 @@ def parse_with_verification(
         "parts_found": 0,
         "residuals": [],
         "extracted_title": None,
+        "seen_refs": set(),
     }
 
     # Regex: Matches Ref + Separator + Value.
@@ -456,7 +468,7 @@ def parse_with_verification(
                 ref_raw = match.group(1).upper()
                 val_raw = match.group(2)
 
-                count = ingest_bom_line(inventory, source_name, ref_raw, val_raw)
+                count = ingest_bom_line(inventory, source_name, ref_raw, val_raw, stats)
                 if count > 0:
                     stats["parts_found"] += count
                     success = True
@@ -496,6 +508,7 @@ def parse_csv_bom(filepath: str, source_name: str) -> Tuple[InventoryType, Stats
         "parts_found": 0,
         "residuals": [],
         "extracted_title": None,
+        "seen_refs": set(),
     }
     with open(filepath, "r", encoding="utf-8-sig") as f:
         reader = csv.DictReader(f)
@@ -525,7 +538,7 @@ def parse_csv_bom(filepath: str, source_name: str) -> Tuple[InventoryType, Stats
 
             success = False
             if ref and val:
-                count = ingest_bom_line(inventory, source_name, ref, val)
+                count = ingest_bom_line(inventory, source_name, ref, val, stats)
                 if count > 0:
                     stats["parts_found"] += count
                     success = True
@@ -1085,6 +1098,7 @@ def parse_pedalpcb_pdf(
         "parts_found": 0,
         "residuals": [],
         "extracted_title": None,
+        "seen_refs": set(),
     }
 
     try:
@@ -1188,7 +1202,7 @@ def parse_pedalpcb_pdf(
 
                         if ref_raw and val_raw:
                             count = ingest_bom_line(
-                                inventory, source_name, ref_raw, val_raw
+                                inventory, source_name, ref_raw, val_raw, stats
                             )
                             if count > 0:
                                 stats["parts_found"] += count
@@ -1370,7 +1384,9 @@ def parse_pedalpcb_pdf(
                             if not any(char.isdigit() for char in val_str):
                                 continue
 
-                        c = ingest_bom_line(inventory, source_name, ref_str, val_str)
+                        c = ingest_bom_line(
+                            inventory, source_name, ref_str, val_str, stats
+                        )
                         if c > 0:
                             stats["parts_found"] += c
 
