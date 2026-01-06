@@ -1,9 +1,13 @@
 import re
 import csv
 import math
+import logging
 from collections import defaultdict
 from typing import Dict, List, Tuple, Optional, TypedDict
 from urllib.parse import quote_plus
+
+# Initialize Logger
+logger = logging.getLogger(__name__)
 
 
 # SI Prefix Multipliers
@@ -19,6 +23,9 @@ MULTIPLIERS = {
     "G": 1e9,  # Giga
 }
 
+# Core Component Designators (IPC Standard)
+CORE_PREFIXES = ("R", "C", "D", "Q", "U", "IC", "SW", "X", "Y", "J")
+
 
 # --- Type Definitions ---
 class StatsDict(TypedDict):
@@ -26,6 +33,7 @@ class StatsDict(TypedDict):
     parts_found: int
     residuals: List[str]
     extracted_title: Optional[str]
+    seen_refs: set
 
 
 class PartData(TypedDict):
@@ -168,9 +176,13 @@ def normalize_value_by_category(category: str, val_raw: str) -> str:
 
     # Only normalize Passives (Resistors/Caps)
     if category in ("Resistors", "Capacitors"):
-        fval = parse_value_to_float(clean_val)
-        if fval is not None:
-            clean_val = float_to_search_string(fval)
+        # Exception: Don't normalize physical dimensions (e.g. "5mm LDR")
+        if "mm" in clean_val.lower():
+            pass
+        else:
+            fval = parse_value_to_float(clean_val)
+            if fval is not None:
+                clean_val = float_to_search_string(fval)
 
     return clean_val
 
@@ -185,7 +197,22 @@ def categorize_part(
     val_clean = val.strip()  # Keep original case for display
     val_up = val_clean.upper()  # Use this for internal logic
 
-    # 1. Known Potentiometer Labels
+    # 1. Define Known Switch Labels
+    switch_labels = {
+        "LENGTH",
+        "MODE",
+        "CLIP",
+        "VOICE",
+        "BRIGHT",
+        "FAT",
+        "PV",
+        "RANGE",
+        "LO",
+        "HI",
+        "MID",
+    }
+
+    # 2. Known Potentiometer Labels
     # If the ref matches these, it's definitely a knob.
     pot_labels = {
         "POT",
@@ -229,28 +256,39 @@ def categorize_part(
         "PRE",
         "POST",
         "FILTER",
-        "RANGE",
         "SENS",
+        "SWEEP",
+        "RES",
+        "RESONANCE",
+        "AMT",
+        "AMOUNT",
     }
 
-    # 2. Standard Component Prefixes
+    # 3. Standard Component Prefixes
     # Note: 'P' or 'POT' are handled above.
-    valid_prefixes = ("R", "C", "D", "Q", "U", "IC", "SW", "OP", "TL")
+    valid_prefixes = CORE_PREFIXES + ("OP", "TL", "LDR", "LED")
 
     # STRICT CHECK: Standard components MUST have a number (e.g. "R1", not "Resistors")
     # Exceptions: POT names are handled in step 1.
     has_digit = any(char.isdigit() for char in ref_up)
 
-    # 3. Taper Check (The "Smart" Check)
+    # 4. Taper Check (The "Smart" Check)
     # Looks for "B100k", "10k-A" to identify pots by value.
     is_pot_value = False
-    if re.search(r"[0-9]+.*[ABCWG]$", val_up) or re.search(r"^[ABCWG][0-9]+", val_up):
-        is_pot_value = True
+
+    # Prevent ICs (e.g. TC1044SCPA) and Transistors (e.g. BC549C) from matching
+    # the 'Ends with A/C' regex.
+    if not ref_up.startswith(("IC", "U", "Q", "OP", "TL")):
+        if re.search(r"[0-9]+.*[ABCWG]$", val_up) or re.search(
+            r"^[ABCWG][0-9]+", val_up
+        ):
+            is_pot_value = True
 
     # Validity Check
     is_valid = (
         (any(ref_up.startswith(p) for p in valid_prefixes) and has_digit)
         or ref_up in pot_labels
+        or ref_up in switch_labels
         or any(ref_up.startswith(label) for label in pot_labels)
         or is_pot_value
     )
@@ -262,6 +300,12 @@ def categorize_part(
     category = "Unknown"
     injection: Optional[str] = None
 
+    # LDR Check (Priority Fix)
+    if ref_up.startswith("LDR"):
+        category = "Optoelectronics"
+        # CRITICAL: Return immediately to bypass normalization stripping
+        return category, val_clean, None
+
     # Check Pots first (avoids collisions like 'RANGE' starting with 'R')
     if (
         ref_up in pot_labels
@@ -269,6 +313,15 @@ def categorize_part(
         or is_pot_value
     ):
         category = "Potentiometers"
+
+    # Check for named switches BEFORE the generic startswith("SW")
+    elif ref_up in switch_labels:
+        # Heuristic: If it says "ON", it's a switch. If it's a resistance, it's a Pot.
+        if "ON" in val_up or "SW" in val_up or "SP" in val_up or "DP" in val_up:
+            category = "Switches"
+        else:
+            # Fallback to pot (e.g. a "LENGTH" control that is actually a B100K pot)
+            category = "Potentiometers"
 
     elif ref_up.startswith("R") and not ref_up.startswith("RANGE"):
         category = "Resistors"
@@ -280,11 +333,29 @@ def categorize_part(
         category = "Transistors"
     elif ref_up.startswith("SW"):
         category = "Switches"
+    elif ref_up.startswith("LDR"):
+        category = "Resistors"
+    elif ref_up.startswith("LED"):
+        category = "Diodes"
+    elif ref_up.startswith(("X", "Y")):
+        category = "Crystals/Oscillators"
+    elif ref_up.startswith("J"):
+        category = "Hardware/Misc"
 
     # ICs -> Inject Socket
     elif ref_up.startswith(("U", "IC", "OP", "TL")):
         category = "ICs"
-        injection = "Hardware/Misc | 8 PIN DIP SOCKET"
+
+        # Generic injection, but exclude parts that clearly aren't DIP chips
+        # 1. Regulators (usually TO-92 or TO-220)
+        # 2. Reverb Modules (BTDR Bricks)
+        val_upper = val.strip().upper()
+        if any(
+            x in val_upper for x in ["REGULATOR", "L78L", "MODULE", "BTDR", "REVERB"]
+        ):
+            injection = None
+        else:
+            injection = "Hardware/Misc | DIP SOCKET (Check Size)"
 
     # Use centralized normalizer
     val_clean = normalize_value_by_category(category, val_clean)
@@ -304,7 +375,11 @@ def _record_part(
 
 
 def ingest_bom_line(
-    inventory: InventoryType, source: str, ref_raw: str, val_raw: str
+    inventory: InventoryType,
+    source: str,
+    ref_raw: str,
+    val_raw: str,
+    stats: Optional[StatsDict] = None,
 ) -> int:
     """
     Central Logic Kernel:
@@ -315,6 +390,12 @@ def ingest_bom_line(
     expanded_refs = expand_refs(ref_raw)
 
     for r in expanded_refs:
+        # De-dupe Check
+        if stats is not None and "seen_refs" in stats:
+            if r in stats["seen_refs"]:
+                continue
+            stats["seen_refs"].add(r)
+
         cat, clean_val, inj = categorize_part(r, val_raw)
 
         if cat:
@@ -346,6 +427,7 @@ def parse_with_verification(
         "parts_found": 0,
         "residuals": [],
         "extracted_title": None,
+        "seen_refs": set(),
     }
 
     # Regex: Matches Ref + Separator + Value.
@@ -389,7 +471,7 @@ def parse_with_verification(
                 ref_raw = match.group(1).upper()
                 val_raw = match.group(2)
 
-                count = ingest_bom_line(inventory, source_name, ref_raw, val_raw)
+                count = ingest_bom_line(inventory, source_name, ref_raw, val_raw, stats)
                 if count > 0:
                     stats["parts_found"] += count
                     success = True
@@ -429,6 +511,7 @@ def parse_csv_bom(filepath: str, source_name: str) -> Tuple[InventoryType, Stats
         "parts_found": 0,
         "residuals": [],
         "extracted_title": None,
+        "seen_refs": set(),
     }
     with open(filepath, "r", encoding="utf-8-sig") as f:
         reader = csv.DictReader(f)
@@ -458,7 +541,7 @@ def parse_csv_bom(filepath: str, source_name: str) -> Tuple[InventoryType, Stats
 
             success = False
             if ref and val:
-                count = ingest_bom_line(inventory, source_name, ref, val)
+                count = ingest_bom_line(inventory, source_name, ref, val, stats)
                 if count > 0:
                     stats["parts_found"] += count
                     success = True
@@ -566,6 +649,9 @@ def generate_search_term(category: str, val: str, spec_type: str = "") -> str:
         taper = "Linear"  # Default
         val_upper = val.upper()
 
+        # Check for Gang type
+        is_dual = "DUAL" in val_upper or "STEREO" in val_upper
+
         if "A" in val_upper:
             taper = "Logarithmic"
         elif "B" in val_upper:
@@ -584,6 +670,12 @@ def generate_search_term(category: str, val: str, spec_type: str = "") -> str:
             clean_val = float_to_search_string(fval)
         else:
             clean_val = clean_raw if clean_raw else val
+
+        # 3. Construct Search Term
+        base_term = f"{clean_val} ohm {taper} potentiometer"
+
+        if is_dual:
+            return f"Dual Gang {base_term}"
 
         return f"{clean_val} ohm {taper} potentiometer"
 
@@ -655,6 +747,11 @@ def get_buy_details(category: str, val: str, count: int) -> Tuple[int, str]:
         # Warn if < 1 Ohm
         if fval is not None and fval < 1.0:
             note = "⚠️ Suspicious Value (< 1Ω). Verify BOM."
+
+    elif category == "Optoelectronics":
+        # Risk: Medium (Fragile legs, heat sensitive).
+        # Logic: Exact count + 1 spare.
+        buy = count + 1
 
     elif category == "Capacitors":
         # Explicitly type hint the list to keep mypy happy
@@ -748,6 +845,11 @@ def get_buy_details(category: str, val: str, count: int) -> Tuple[int, str]:
             txt = ", ".join(txt_parts)
             note += f" | 💡 TRY: {txt}"
 
+    elif category == "Crystals/Oscillators":
+        # Risk: High (Heat sensitive, fragile).
+        buy = count + 1
+        note = "Heat sensitive / Fragile"
+
     elif category == "Hardware/Misc":
         # Risk: Mixed.
         if "ADAPTER" in val or "SOCKET" in val:
@@ -772,6 +874,8 @@ def sort_inventory(inventory: InventoryType) -> List[Tuple[str, PartData]]:
     order = [
         "PCB",
         "ICs",
+        "Crystals/Oscillators",
+        "Optoelectronics",
         "Transistors",
         "Diodes",
         "Potentiometers",
@@ -997,6 +1101,7 @@ def parse_pedalpcb_pdf(
         "parts_found": 0,
         "residuals": [],
         "extracted_title": None,
+        "seen_refs": set(),
     }
 
     try:
@@ -1077,6 +1182,12 @@ def parse_pedalpcb_pdf(
                         stats["lines_read"] += 1
                         row_safe = [str(cell) if cell else "" for cell in row]
 
+                        # SAFEGUARD: Ignore Summary/BOM Quantity lines (e.g. "1 x 100k")
+                        # Check the first non-empty column
+                        first_content = next((c for c in row_safe if c), "")
+                        if re.match(r"^\d+\s*[xX]", first_content):
+                            continue
+
                         ref_raw = ""
                         val_raw = ""
 
@@ -1094,151 +1205,225 @@ def parse_pedalpcb_pdf(
 
                         if ref_raw and val_raw:
                             count = ingest_bom_line(
-                                inventory, source_name, ref_raw, val_raw
+                                inventory, source_name, ref_raw, val_raw, stats
                             )
                             if count > 0:
                                 stats["parts_found"] += count
 
-            # --- STRATEGY 3: HAIL MARY (RAW TEXT) ---
+            # --- STRATEGY 3: HYBRID CLEANUP ---
+            # 1. Define Keywords (Always safe to hunt for)
+            keywords = [
+                "VOLUME",
+                "MASTER",
+                "LEVEL",
+                "GAIN",
+                "DRIVE",
+                "DIST",
+                "FUZZ",
+                "DIRT",
+                "TONE",
+                "TREBLE",
+                "BASS",
+                "MID",
+                "MIDS",
+                "PRESENCE",
+                "CONTOUR",
+                "WIDTH",
+                "DEPTH",
+                "RATE",
+                "SPEED",
+                "COLOR",
+                "TEXTURE",
+                "BIAS",
+                "ATTACK",
+                "DECAY",
+                "SUSTAIN",
+                "RELEASE",
+                "THRESH",
+                "COMP",
+                "MIX",
+                "BLEND",
+                "DRY",
+                "WET",
+                "REPEATS",
+                "TIME",
+                "FEEDBACK",
+                "FILTER",
+                "CUT",
+                "BOOST",
+                "RANGE",
+                "VOICE",
+                "NATURE",
+                "INTENSITY",
+                "THROB",
+                "SWELL",
+                "PULSE",
+                "LENGTH",
+                "MODE",
+                "SWEEP",
+                "RES",
+                "RESONANCE",
+                "PV",
+                "AMT",
+                "AMOUNT",
+                "LO",
+                "HI",
+            ]
+            kw_regex_str = "|".join([rf"\b{k}\b" for k in keywords])
+
+            # 2. Determine Scope
+            # If we have NO parts, we go 'Full Hail Mary' (Standard Refs + Keywords).
+            # If we HAVE parts, we only hunt for missing Controls (Keywords Only) to avoid R/C false positives.
             if stats["parts_found"] == 0:
-                stats["residuals"].append(
-                    "Tables yielded 0 parts. Attempting Raw Text Scan..."
-                )
+                ref_pattern = rf"(?P<ref>\b[A-Z]{{1,4}}\d+\b|{kw_regex_str})"
+            else:
+                ref_pattern = rf"(?P<ref>{kw_regex_str})"
 
-                # Keywords: Added word boundaries (\b) to prevent partial matches
-                # e.g. "COMP" should not match "COMPONENTS"
-                keywords = [
-                    "VOLUME",
-                    "MASTER",
-                    "LEVEL",
-                    "GAIN",
-                    "DRIVE",
-                    "DIST",
-                    "FUZZ",
-                    "DIRT",
-                    "TONE",
-                    "TREBLE",
-                    "BASS",
-                    "MID",
-                    "MIDS",
-                    "PRESENCE",
-                    "CONTOUR",
-                    "WIDTH",
-                    "DEPTH",
-                    "RATE",
-                    "SPEED",
-                    "COLOR",
-                    "TEXTURE",
-                    "BIAS",
-                    "ATTACK",
-                    "DECAY",
-                    "SUSTAIN",
-                    "RELEASE",
-                    "THRESH",
-                    "COMP",
-                    "MIX",
-                    "BLEND",
-                    "DRY",
-                    "WET",
-                    "REPEATS",
-                    "TIME",
-                    "FEEDBACK",
-                    "FILTER",
-                    "CUT",
-                    "BOOST",
-                    "RANGE",
-                    "VOICE",
-                    "NATURE",
-                ]
-                # Join with \b wrapper
-                kw_regex = "|".join([rf"\b{k}\b" for k in keywords])
+            regex = re.compile(rf"{ref_pattern}\s+(?P<val>[^\s]+)", re.IGNORECASE)
 
-                # Regex Pattern:
-                # Group 1 (Ref): Standard Ref (R1) OR Keyword (GAIN)
-                # Group 2 (Val): The value
-                regex = re.compile(
-                    rf"(?P<ref>\b[A-Z]{{1,4}}\d+\b|{kw_regex})\s+(?P<val>[^\s]+)",
-                    re.IGNORECASE,
-                )
+            ignore_values = [
+                "RESISTORS",
+                "CAPACITORS",
+                "DIODES",
+                "ICS",
+                "POTENTIOMETERS",
+                "PARTS",
+                "LIST",
+                "VALUE",
+                "LOCATION",
+                "TYPE",
+                "RATING",
+                "COMPONENTS",
+                "OFFBOARD",
+                "ENCLOSURE",
+                "FOOTSWITCH",
+                "JACKS",
+                "FEATURES",
+                "CONTROLS",
+            ]
 
-                # Garbage Filter: Values to explicitly ignore
-                ignore_values = [
-                    "RESISTORS",
-                    "CAPACITORS",
-                    "DIODES",
-                    "ICS",
-                    "POTENTIOMETERS",
-                    "PARTS",
-                    "LIST",
-                    "VALUE",
-                    "LOCATION",
-                    "TYPE",
-                    "RATING",
-                    "COMPONENTS",
-                    "OFFBOARD",
-                    "ENCLOSURE",
-                    "FOOTSWITCH",
-                    "JACKS",
-                    "FEATURES",
-                    "CONTROLS",
-                    "AND",
-                    "THE",
-                    "OF",
-                ]
+            # 3. Execution
+            for page in pdf.pages:
+                text = page.extract_text()
+                if not text:
+                    continue
 
-                for page in pdf.pages:
-                    text = page.extract_text()
-                    if not text:
+                logger.debug(f"--- PAGE {page.page_number} ---")
+
+                # We need to know where the *next* match starts to prevent overlapping captures.
+                matches = list(regex.finditer(text))
+
+                for i, match in enumerate(matches):
+                    ref_str = match.group("ref").upper()
+                    val_str = match.group("val")
+                    val_start = match.start("val")
+
+                    # Determine the safety boundary (Start of next match or End of Text)
+                    next_match_start = (
+                        matches[i + 1].start() if i + 1 < len(matches) else len(text)
+                    )
+
+                    # Check if we need to grab the full line (LDRs, Pots, Keywords)
+                    needs_full_line = (
+                        ref_str.startswith("LDR")
+                        or ref_str in keywords
+                        or ref_str.startswith(("POT", "VR"))
+                    )
+
+                    if needs_full_line:
+                        # Find end of line
+                        line_end = text.find("\n", val_start)
+                        if line_end == -1:
+                            line_end = len(text)
+
+                        # Stop at the newline OR the next component match, whichever comes first.
+                        # This prevents "MODE ... " from eating "MIX ... " on the same line.
+                        cutoff = min(line_end, next_match_start)
+                        val_str = text[val_start:cutoff].strip()
+
+                    # [DEBUG] Trace the Raw Match
+                    logger.debug(f"MATCH: {ref_str.ljust(10)} | RAW: '{val_str}'")
+
+                    # 1. Clean Value (Strip parentheses, etc)
+                    # e.g. "(1/4W)" -> "1/4W"
+                    # Only remove brackets if they surround the whole string
+                    if val_str.startswith("(") and val_str.endswith(")"):
+                        val_str = val_str[1:-1].strip()
+                    elif val_str.startswith("[") and val_str.endswith("]"):
+                        val_str = val_str[1:-1].strip()
+
+                    # [DEBUG] Trace the Cleaned Value
+                    logger.debug(f"        -> CLEAN: '{val_str}'")
+
+                    # 2. Filter Garbage Matches
+                    if len(val_str) > 50 or len(val_str) < 1:
+                        logger.debug(f"        -> REJECT: Bad Length ({len(val_str)})")
                         continue
 
-                    for match in regex.finditer(text):
-                        ref_str = match.group("ref").upper()
-                        val_str = match.group("val")
+                    # Check against blacklist
+                    if any(bad in val_str.upper() for bad in ignore_values):
+                        logger.debug("        -> REJECT: Blacklisted Word")
+                        continue
 
-                        # 1. Clean Value (Strip parentheses, etc)
-                        # e.g. "(1/4W)" -> "1/4W"
-                        val_str = val_str.strip("()[]")
+                    # Ignore Sentences
+                    # Notes often look like "Rate is a..." or "See note..."
+                    if re.match(r"^(is|see|note)\s", val_str, re.IGNORECASE):
+                        logger.debug("        -> REJECT: Sentence Start")
+                        continue
 
-                        # 2. Filter Garbage Matches
-                        if len(val_str) > 20 or len(val_str) < 1:
+                    # 3. Prefix Safety Check
+                    is_keyword = ref_str in keywords
+                    if not is_keyword:
+                        # Must look like a real component (R1, C1, IC1, etc)
+                        valid_prefixes = CORE_PREFIXES + (
+                            "POT",
+                            "VR",
+                            "L",
+                            "LD",
+                        )
+
+                        # Check 1: Must start with valid prefix
+                        if not any(ref_str.startswith(p) for p in valid_prefixes):
+                            logger.debug("        -> REJECT: Invalid Prefix")
                             continue
 
-                        # Check against blacklist
-                        if any(bad in val_str.upper() for bad in ignore_values):
+                        # Check 2: "Ghost Data" Heuristic
+                        # If Ref is 3+ letters (e.g. "MPSA") and Val is a single digit ("2"),
+                        # it's almost certainly a "Qty Part" line read backwards.
+                        if len(ref_str) >= 3 and re.match(r"^\d+$", val_str):
+                            logger.debug("        -> REJECT: Ghost Data (Qty reversed)")
                             continue
 
-                        # 3. Prefix Safety Check
-                        is_keyword = ref_str in keywords
-                        if not is_keyword:
-                            # Must look like a real component (R1, C1, IC1, etc)
-                            valid_prefixes = (
-                                "R",
-                                "C",
-                                "D",
-                                "Q",
-                                "IC",
-                                "U",
-                                "SW",
-                                "POT",
-                                "VR",
-                                "J",
-                                "T",
-                                "L",
-                                "P",
+                    else:
+                        # 4. Keyword Value Validation
+                        # Standard Rule: Value MUST contain a digit (e.g. "B100k") to avoid text noise.
+                        # Exception: Switches (e.g. "SPDT (On/On)") often have no digits.
+                        has_digit = any(char.isdigit() for char in val_str)
+                        is_switch_type = any(
+                            x in val_str.upper()
+                            for x in [
+                                "SPDT",
+                                "DPDT",
+                                "3PDT",
+                                "ON/ON",
+                                "ON/OFF",
+                            ]
+                        )
+
+                        if not has_digit and not is_switch_type:
+                            logger.debug(
+                                "        -> REJECT: No Digit or Switch Keyword"
                             )
-                            if not any(ref_str.startswith(p) for p in valid_prefixes):
-                                continue
-                        else:
-                            # 4. Keyword Value Validation
-                            # If we matched a keyword (e.g. "VOLUME"), the value MUST contain a digit
-                            # to be valid (e.g. "B100k").
-                            # This filters out text like "Dry Signal", "Attack -", or "Comp •"
-                            if not any(char.isdigit() for char in val_str):
-                                continue
+                            continue
 
-                        c = ingest_bom_line(inventory, source_name, ref_str, val_str)
-                        if c > 0:
-                            stats["parts_found"] += c
+                    c = ingest_bom_line(inventory, source_name, ref_str, val_str, stats)
+                    if c > 0:
+                        stats["parts_found"] += c
+                        logger.debug("        -> ACCEPTED")
+                    else:
+                        logger.debug(
+                            "        -> IGNORED (Duplicate or Categorization Fail)"
+                        )
 
     except Exception as e:
         stats["residuals"].append(f"PDF Parse Error: {e}")

@@ -1,0 +1,401 @@
+{
+  "inventory": {
+    "Capacitors | 100n": {
+      "qty": 2,
+      "refs": [
+        "C101",
+        "C104"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C101",
+          "C104"
+        ]
+      }
+    },
+    "Capacitors | 100u": {
+      "qty": 3,
+      "refs": [
+        "C100",
+        "C102",
+        "C103"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C100",
+          "C102",
+          "C103"
+        ]
+      }
+    },
+    "Capacitors | 10u": {
+      "qty": 5,
+      "refs": [
+        "C11",
+        "C3",
+        "C4",
+        "C5",
+        "C6"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C11",
+          "C3",
+          "C4",
+          "C5",
+          "C6"
+        ]
+      }
+    },
+    "Capacitors | 150p": {
+      "qty": 1,
+      "refs": [
+        "C9"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C9"
+        ]
+      }
+    },
+    "Capacitors | 18n": {
+      "qty": 2,
+      "refs": [
+        "C10",
+        "C8"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C10",
+          "C8"
+        ]
+      }
+    },
+    "Capacitors | 1n": {
+      "qty": 1,
+      "refs": [
+        "C2"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C2"
+        ]
+      }
+    },
+    "Capacitors | 1u": {
+      "qty": 2,
+      "refs": [
+        "C1",
+        "C7"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C1",
+          "C7"
+        ]
+      }
+    },
+    "Diodes | 1N4148": {
+      "qty": 2,
+      "refs": [
+        "D1",
+        "D2"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "D1",
+          "D2"
+        ]
+      }
+    },
+    "Diodes | 1N5817": {
+      "qty": 1,
+      "refs": [
+        "D100"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "D100"
+        ]
+      }
+    },
+    "Hardware/Misc | DIP SOCKET (Check Size)": {
+      "qty": 1,
+      "refs": [
+        "IC1 (Inj)"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "IC1 (Inj)"
+        ]
+      }
+    },
+    "ICs | OPA1678": {
+      "qty": 1,
+      "refs": [
+        "IC1"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "IC1"
+        ]
+      }
+    },
+    "Potentiometers | A100K": {
+      "qty": 2,
+      "refs": [
+        "RIP",
+        "VOL"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "RIP",
+          "VOL"
+        ]
+      }
+    },
+    "Potentiometers | B10K": {
+      "qty": 1,
+      "refs": [
+        "FUZZ"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "FUZZ"
+        ]
+      }
+    },
+    "Potentiometers | B50K": {
+      "qty": 1,
+      "refs": [
+        "TONE"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "TONE"
+        ]
+      }
+    },
+    "Resistors | 100": {
+      "qty": 1,
+      "refs": [
+        "R23"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R23"
+        ]
+      }
+    },
+    "Resistors | 100k": {
+      "qty": 1,
+      "refs": [
+        "R22"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R22"
+        ]
+      }
+    },
+    "Resistors | 10k": {
+      "qty": 4,
+      "refs": [
+        "R104",
+        "R12",
+        "R16",
+        "R7"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R104",
+          "R12",
+          "R16",
+          "R7"
+        ]
+      }
+    },
+    "Resistors | 11k": {
+      "qty": 1,
+      "refs": [
+        "R14"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R14"
+        ]
+      }
+    },
+    "Resistors | 16k": {
+      "qty": 1,
+      "refs": [
+        "R102"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R102"
+        ]
+      }
+    },
+    "Resistors | 1k": {
+      "qty": 1,
+      "refs": [
+        "R3"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R3"
+        ]
+      }
+    },
+    "Resistors | 2.2M": {
+      "qty": 2,
+      "refs": [
+        "R1",
+        "R2"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R1",
+          "R2"
+        ]
+      }
+    },
+    "Resistors | 2.7k": {
+      "qty": 1,
+      "refs": [
+        "R15"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R15"
+        ]
+      }
+    },
+    "Resistors | 22k": {
+      "qty": 3,
+      "refs": [
+        "R103",
+        "R18",
+        "R21"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R103",
+          "R18",
+          "R21"
+        ]
+      }
+    },
+    "Resistors | 390": {
+      "qty": 4,
+      "refs": [
+        "R13",
+        "R17",
+        "R8",
+        "R9"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R13",
+          "R17",
+          "R8",
+          "R9"
+        ]
+      }
+    },
+    "Resistors | 4.7k": {
+      "qty": 3,
+      "refs": [
+        "R101",
+        "R19",
+        "R20"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R101",
+          "R19",
+          "R20"
+        ]
+      }
+    },
+    "Resistors | 430k": {
+      "qty": 2,
+      "refs": [
+        "R10",
+        "R5"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R10",
+          "R5"
+        ]
+      }
+    },
+    "Resistors | 43k": {
+      "qty": 2,
+      "refs": [
+        "R11",
+        "R6"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R11",
+          "R6"
+        ]
+      }
+    },
+    "Resistors | 47": {
+      "qty": 1,
+      "refs": [
+        "R100"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R100"
+        ]
+      }
+    },
+    "Resistors | 47k": {
+      "qty": 1,
+      "refs": [
+        "R4"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R4"
+        ]
+      }
+    },
+    "Transistors | 2N3904": {
+      "qty": 3,
+      "refs": [
+        "Q1",
+        "Q2",
+        "Q3"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "Q1",
+          "Q2",
+          "Q3"
+        ]
+      }
+    },
+    "Transistors | 2N5088": {
+      "qty": 1,
+      "refs": [
+        "Q4"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "Q4"
+        ]
+      }
+    }
+  },
+  "metadata": {
+    "extracted_title": "Paper Scratcher Fuzz",
+    "parts_found": 56
+  }
+}

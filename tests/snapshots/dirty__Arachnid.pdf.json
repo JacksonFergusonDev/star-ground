@@ -1,0 +1,384 @@
+{
+  "inventory": {
+    "Capacitors | 100n": {
+      "qty": 1,
+      "refs": [
+        "C1"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C1"
+        ]
+      }
+    },
+    "Capacitors | 100u": {
+      "qty": 1,
+      "refs": [
+        "C16"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C16"
+        ]
+      }
+    },
+    "Capacitors | 10u": {
+      "qty": 1,
+      "refs": [
+        "C5"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C5"
+        ]
+      }
+    },
+    "Capacitors | 15p": {
+      "qty": 1,
+      "refs": [
+        "C7"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C7"
+        ]
+      }
+    },
+    "Capacitors | 1n": {
+      "qty": 1,
+      "refs": [
+        "C4"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C4"
+        ]
+      }
+    },
+    "Capacitors | 1u": {
+      "qty": 6,
+      "refs": [
+        "C10",
+        "C11",
+        "C15",
+        "C3",
+        "C6",
+        "C8"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C10",
+          "C11",
+          "C15",
+          "C3",
+          "C6",
+          "C8"
+        ]
+      }
+    },
+    "Capacitors | 2.2n": {
+      "qty": 1,
+      "refs": [
+        "C12"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C12"
+        ]
+      }
+    },
+    "Capacitors | 220p": {
+      "qty": 1,
+      "refs": [
+        "C14"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C14"
+        ]
+      }
+    },
+    "Capacitors | 470p": {
+      "qty": 1,
+      "refs": [
+        "C2"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C2"
+        ]
+      }
+    },
+    "Capacitors | 47u": {
+      "qty": 2,
+      "refs": [
+        "C17",
+        "C18"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C17",
+          "C18"
+        ]
+      }
+    },
+    "Crystals/Oscillators | AB38T-32.768KHZ": {
+      "qty": 1,
+      "refs": [
+        "X1"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "X1"
+        ]
+      }
+    },
+    "Diodes | 1N5817": {
+      "qty": 1,
+      "refs": [
+        "D1"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "D1"
+        ]
+      }
+    },
+    "Diodes | 1N914": {
+      "qty": 9,
+      "refs": [
+        "D10",
+        "D2",
+        "D3",
+        "D4",
+        "D5",
+        "D6",
+        "D7",
+        "D8",
+        "D9"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "D10",
+          "D2",
+          "D3",
+          "D4",
+          "D5",
+          "D6",
+          "D7",
+          "D8",
+          "D9"
+        ]
+      }
+    },
+    "Hardware/Misc | DIP SOCKET (Check Size)": {
+      "qty": 3,
+      "refs": [
+        "IC1 (Inj)",
+        "IC2 (Inj)",
+        "IC3 (Inj)"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "IC1 (Inj)",
+          "IC2 (Inj)",
+          "IC3 (Inj)"
+        ]
+      }
+    },
+    "ICs | 24LC32A": {
+      "qty": 1,
+      "refs": [
+        "IC2"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "IC2"
+        ]
+      }
+    },
+    "ICs | FV1": {
+      "qty": 1,
+      "refs": [
+        "IC3"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "IC3"
+        ]
+      }
+    },
+    "ICs | L78L33": {
+      "qty": 1,
+      "refs": [
+        "IC6"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "IC6"
+        ]
+      }
+    },
+    "ICs | TL074": {
+      "qty": 1,
+      "refs": [
+        "IC1"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "IC1"
+        ]
+      }
+    },
+    "Potentiometers | 1P8T Mini Rotary": {
+      "qty": 1,
+      "refs": [
+        "MODE"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "MODE"
+        ]
+      }
+    },
+    "Potentiometers | B100K": {
+      "qty": 4,
+      "refs": [
+        "CTRL1",
+        "CTRL2",
+        "CTRL3",
+        "VOLUME"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "CTRL1",
+          "CTRL2",
+          "CTRL3",
+          "VOLUME"
+        ]
+      }
+    },
+    "Potentiometers | B10K": {
+      "qty": 1,
+      "refs": [
+        "MIX"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "MIX"
+        ]
+      }
+    },
+    "Resistors | 100": {
+      "qty": 2,
+      "refs": [
+        "R12",
+        "R8"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R12",
+          "R8"
+        ]
+      }
+    },
+    "Resistors | 100k": {
+      "qty": 5,
+      "refs": [
+        "R11",
+        "R16",
+        "R17",
+        "R6",
+        "R7"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R11",
+          "R16",
+          "R17",
+          "R6",
+          "R7"
+        ]
+      }
+    },
+    "Resistors | 10k": {
+      "qty": 3,
+      "refs": [
+        "R14",
+        "R15",
+        "R5"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R14",
+          "R15",
+          "R5"
+        ]
+      }
+    },
+    "Resistors | 15k": {
+      "qty": 6,
+      "refs": [
+        "R10",
+        "R19",
+        "R20",
+        "R21",
+        "R4",
+        "R9"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R10",
+          "R19",
+          "R20",
+          "R21",
+          "R4",
+          "R9"
+        ]
+      }
+    },
+    "Resistors | 1M": {
+      "qty": 2,
+      "refs": [
+        "R1",
+        "R2"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R1",
+          "R2"
+        ]
+      }
+    },
+    "Resistors | 1k": {
+      "qty": 3,
+      "refs": [
+        "R18",
+        "R22",
+        "R3"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R18",
+          "R22",
+          "R3"
+        ]
+      }
+    },
+    "Resistors | 4.7k": {
+      "qty": 1,
+      "refs": [
+        "R13"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R13"
+        ]
+      }
+    }
+  },
+  "metadata": {
+    "extracted_title": "Arachnid v2",
+    "parts_found": 59
+  }
+}

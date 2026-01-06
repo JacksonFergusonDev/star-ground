@@ -458,6 +458,7 @@ if st.button("Generate Master List", type="primary", width="stretch"):
         "parts_found": 0,
         "residuals": [],
         "extracted_title": None,
+        "seen_refs": set(),
     }
     # Process Each Slot
     for slot in st.session_state.pedal_slots:
