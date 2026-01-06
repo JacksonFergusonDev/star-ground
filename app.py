@@ -664,9 +664,14 @@ if st.session_state.inventory and st.session_state.stats:
         # Link Generation Logic
         # Check if any source for this part contains "PedalPCB"
         is_pedalpcb_source = any("PedalPCB" in s for s in sources.keys())
+        is_tayda_source = any("Tayda" in s for s in sources.keys())
 
-        if category == "PCB" and is_pedalpcb_source:
-            url = generate_pedalpcb_url(search_term)
+        if category == "PCB":
+            # Only link to PedalPCB if it is explicitly PedalPCB and NOT Tayda
+            if is_pedalpcb_source and not is_tayda_source:
+                url = generate_pedalpcb_url(search_term)
+            else:
+                url = generate_tayda_url(search_term)
         else:
             url = generate_tayda_url(search_term)
 
