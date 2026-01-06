@@ -1391,7 +1391,6 @@ def parse_pedalpcb_pdf(
                                 "SPDT",
                                 "DPDT",
                                 "3PDT",
-                                "TOGGLE",
                                 "ON/ON",
                                 "ON/OFF",
                             ]
