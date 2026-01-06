@@ -1383,10 +1383,22 @@ def parse_pedalpcb_pdf(
 
                     else:
                         # 4. Keyword Value Validation
-                        # If we matched a keyword (e.g. "VOLUME"), the value MUST contain a digit
-                        # to be valid (e.g. "B100k").
-                        # This filters out text like "Dry Signal", "Attack -", or "Comp •"
-                        if not any(char.isdigit() for char in val_str):
+                        # Standard Rule: Value MUST contain a digit (e.g. "B100k") to avoid text noise.
+                        # Exception: Switches (e.g. "SPDT (On/On)") often have no digits.
+                        has_digit = any(char.isdigit() for char in val_str)
+                        is_switch_type = any(
+                            x in val_str.upper()
+                            for x in [
+                                "SPDT",
+                                "DPDT",
+                                "3PDT",
+                                "TOGGLE",
+                                "ON/ON",
+                                "ON/OFF",
+                            ]
+                        )
+
+                        if not has_digit and not is_switch_type:
                             continue
 
                     c = ingest_bom_line(inventory, source_name, ref_str, val_str, stats)
