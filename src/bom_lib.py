@@ -252,7 +252,6 @@ def categorize_part(
         "PRE",
         "POST",
         "FILTER",
-        "RANGE",
         "SENS",
         "SWEEP",
         "RES",
