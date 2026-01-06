@@ -1282,7 +1282,7 @@ def parse_pedalpcb_pdf(
                         val_str = val_str.strip("()[]")
 
                         # 2. Filter Garbage Matches
-                        if len(val_str) > 20 or len(val_str) < 1:
+                        if len(val_str) > 50 or len(val_str) < 1:
                             continue
 
                         # Check against blacklist
