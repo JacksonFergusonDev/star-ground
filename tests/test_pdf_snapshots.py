@@ -1,7 +1,14 @@
 import pytest
 import os
 import json
+import logging
 from src.bom_lib import parse_pedalpcb_pdf
+
+# Logging Config
+# Silence noisy libraries so we can see our own debug logs
+logging.getLogger("pdfminer").setLevel(logging.WARNING)
+logging.getLogger("pdfplumber").setLevel(logging.WARNING)
+logging.getLogger("PIL").setLevel(logging.WARNING)
 
 # 📂 Config
 SAMPLES_DIR = os.path.join(os.path.dirname(__file__), "samples")
