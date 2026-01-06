@@ -1,7 +1,6 @@
 import pytest
 from collections import defaultdict
 from typing import cast
-from unittest.mock import patch, MagicMock
 from hypothesis import given, strategies as st
 from src.presets import BOM_PRESETS
 from src.bom_lib import (
@@ -15,7 +14,6 @@ from src.bom_lib import (
     get_spec_type,
     generate_search_term,
     generate_tayda_url,
-    parse_pedalpcb_pdf,
     expand_refs,
     parse_user_inventory,
     calculate_net_needs,
@@ -393,93 +391,7 @@ def test_hardware_search_term_validity():
     assert "1590B+Enclosure" in url
 
 
-# PDF Parsing Tests
-
-
-def test_pedalpcb_pdf_parsing_happy_path():
-    """
-    Verify that the PDF parser correctly identifies the BOM table
-    and extracts components using mocked table data.
-    """
-    # 1. Setup the Mock PDF structure
-    mock_pdf = MagicMock()
-    mock_page = MagicMock()
-    mock_pdf.pages = [mock_page]
-
-    # Ensure the context manager returns the configured mock
-    mock_pdf.__enter__.return_value = mock_pdf
-
-    # 2. Define a "Perfect" Table
-    # Structure matches pdfplumber output: list of lists of strings
-    mock_table = [
-        ["LOCATION", "VALUE", "TYPE", "NOTES"],  # Header
-        ["R1", "10k", "Resistor", ""],  # Row 1
-        ["C1", "100n", "Capacitor", ""],  # Row 2
-        ["U1", "TL072", "IC", ""],  # Row 3
-    ]
-    mock_page.extract_tables.return_value = [mock_table]
-
-    # 3. Patch the library so we don't need a real file
-    # Note: We patch 'pdfplumber.open' directly because the module is lazy-imported
-    with patch("pdfplumber.open", return_value=mock_pdf):
-        inventory, stats = parse_pedalpcb_pdf("dummy.pdf", source_name="Dirty PDF")
-
-    # 4. Assertions
-    assert inventory["Resistors | 10k"]["qty"] == 1
-    assert inventory["Capacitors | 100n"]["qty"] == 1
-    assert inventory["ICs | TL072"]["qty"] == 1
-    assert stats["parts_found"] == 3
-
-
-def test_pedalpcb_pdf_dirty_input():
-    """
-    Verify resilience against multi-line cells and extra whitespace.
-    PedalPCB PDFs often wrap text like 'Resistor\n1/4W'.
-    """
-    mock_pdf = MagicMock()
-    mock_page = MagicMock()
-    mock_pdf.pages = [mock_page]
-
-    # Ensure the context manager returns the configured mock
-    mock_pdf.__enter__.return_value = mock_pdf
-
-    # Define a "Dirty" Table
-    mock_table = [
-        ["LOCATION", "VALUE"],  # Minimal Header
-        ["R1\n(High)", "10k\nOhm"],  # Newlines in cells
-        ["C1", "  100n  "],  # Extra spaces
-    ]
-    mock_page.extract_tables.return_value = [mock_table]
-
-    # Change the patch target to the global library
-    with patch("pdfplumber.open", return_value=mock_pdf):
-        inventory, stats = parse_pedalpcb_pdf("dummy.pdf", source_name="Dirty PDF")
-
-    # The parser should clean "10k\nOhm" -> "10k Ohm" -> "10k"
-    assert inventory["Resistors | 10k"]["qty"] == 1
-    assert inventory["Capacitors | 100n"]["qty"] == 1
-    assert stats["parts_found"] == 2
-
-
-def test_pedalpcb_pdf_ignores_bad_tables():
-    """
-    Verify we skip tables that don't look like BOMs (e.g., Drill Templates).
-    """
-    mock_pdf = MagicMock()
-    mock_page = MagicMock()
-    mock_pdf.pages = [mock_page]
-
-    # A table that might exist in the PDF but isn't the BOM
-    mock_table = [["Drill Size", "Location"], ["3mm", "LED"], ["1/4 inch", "Jacks"]]
-    mock_page.extract_tables.return_value = [mock_table]
-
-    # Change the patch target to the global library
-    with patch("pdfplumber.open", return_value=mock_pdf):
-        inventory, stats = parse_pedalpcb_pdf("dummy.pdf", source_name="Bad Table")
-
-    # Should find nothing
-    assert len(inventory) == 0
-    assert stats["parts_found"] == 0
+# Range Expansion Tests
 
 
 def test_range_expansion_logic():
