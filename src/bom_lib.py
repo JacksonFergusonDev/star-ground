@@ -1300,9 +1300,6 @@ def parse_pedalpcb_pdf(
                 "JACKS",
                 "FEATURES",
                 "CONTROLS",
-                "AND",
-                "THE",
-                "OF",
             ]
 
             # 3. Execution
@@ -1370,14 +1367,14 @@ def parse_pedalpcb_pdf(
                     # Check against blacklist
                     if any(bad in val_str.upper() for bad in ignore_values):
                         if DEBUG_REGEX:
-                            print(f"        -> REJECT: Blacklisted Word")
+                            print("        -> REJECT: Blacklisted Word")
                         continue
 
                     # Ignore Sentences
                     # Notes often look like "Rate is a..." or "See note..."
                     if re.match(r"^(is|see|note)\s", val_str, re.IGNORECASE):
                         if DEBUG_REGEX:
-                            print(f"        -> REJECT: Sentence Start")
+                            print("        -> REJECT: Sentence Start")
                         continue
 
                     # 3. Prefix Safety Check
@@ -1394,7 +1391,7 @@ def parse_pedalpcb_pdf(
                         # Check 1: Must start with valid prefix
                         if not any(ref_str.startswith(p) for p in valid_prefixes):
                             if DEBUG_REGEX:
-                                print(f"        -> REJECT: Invalid Prefix")
+                                print("        -> REJECT: Invalid Prefix")
                             continue
 
                         # Check 2: "Ghost Data" Heuristic
@@ -1402,7 +1399,7 @@ def parse_pedalpcb_pdf(
                         # it's almost certainly a "Qty Part" line read backwards.
                         if len(ref_str) >= 3 and re.match(r"^\d+$", val_str):
                             if DEBUG_REGEX:
-                                print(f"        -> REJECT: Ghost Data (Qty reversed)")
+                                print("        -> REJECT: Ghost Data (Qty reversed)")
                             continue
 
                     else:
@@ -1423,18 +1420,18 @@ def parse_pedalpcb_pdf(
 
                         if not has_digit and not is_switch_type:
                             if DEBUG_REGEX:
-                                print(f"        -> REJECT: No Digit or Switch Keyword")
+                                print("        -> REJECT: No Digit or Switch Keyword")
                             continue
 
                     c = ingest_bom_line(inventory, source_name, ref_str, val_str, stats)
                     if c > 0:
                         stats["parts_found"] += c
                         if DEBUG_REGEX:
-                            print(f"        -> ACCEPTED")
+                            print("        -> ACCEPTED")
                     else:
                         if DEBUG_REGEX:
                             print(
-                                f"        -> IGNORED (Duplicate or Categorization Fail)"
+                                "        -> IGNORED (Duplicate or Categorization Fail)"
                             )
 
     except Exception as e:
