@@ -288,7 +288,8 @@ def categorize_part(
     # ICs -> Inject Socket
     elif ref_up.startswith(("U", "IC", "OP", "TL")):
         category = "ICs"
-        injection = "Hardware/Misc | 8 PIN DIP SOCKET"
+        # Generic injection to avoid 8-pin vs 14-pin mismatches
+        injection = "Hardware/Misc | DIP SOCKET (Check Size)"
 
     # Use centralized normalizer
     val_clean = normalize_value_by_category(category, val_clean)
