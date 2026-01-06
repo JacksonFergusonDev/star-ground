@@ -235,7 +235,7 @@ def categorize_part(
 
     # 2. Standard Component Prefixes
     # Note: 'P' or 'POT' are handled above.
-    valid_prefixes = ("R", "C", "D", "Q", "U", "IC", "SW", "OP", "TL")
+    valid_prefixes = ("R", "C", "D", "Q", "U", "IC", "SW", "OP", "TL", "LDR", "LED")
 
     # STRICT CHECK: Standard components MUST have a number (e.g. "R1", not "Resistors")
     # Exceptions: POT names are handled in step 1.
@@ -280,6 +280,10 @@ def categorize_part(
         category = "Transistors"
     elif ref_up.startswith("SW"):
         category = "Switches"
+    elif ref_up.startswith("LDR"):
+        category = "Resistors"
+    elif ref_up.startswith("LED"):
+        category = "Diodes"
 
     # ICs -> Inject Socket
     elif ref_up.startswith(("U", "IC", "OP", "TL")):
