@@ -1,9 +1,13 @@
 import re
 import csv
 import math
+import logging
 from collections import defaultdict
 from typing import Dict, List, Tuple, Optional, TypedDict
 from urllib.parse import quote_plus
+
+# Initialize Logger
+logger = logging.getLogger(__name__)
 
 
 # SI Prefix Multipliers
@@ -1277,10 +1281,6 @@ def parse_pedalpcb_pdf(
 
             regex = re.compile(rf"{ref_pattern}\s+(?P<val>[^\s]+)", re.IGNORECASE)
 
-            # --- DEBUG FLAG ---
-            DEBUG_REGEX = True
-            # ------------------
-
             ignore_values = [
                 "RESISTORS",
                 "CAPACITORS",
@@ -1308,8 +1308,7 @@ def parse_pedalpcb_pdf(
                 if not text:
                     continue
 
-                if DEBUG_REGEX:
-                    print(f"\n[DEBUG] --- PAGE {page.page_number} ---")
+                logger.debug(f"--- PAGE {page.page_number} ---")
 
                 # We need to know where the *next* match starts to prevent overlapping captures.
                 matches = list(regex.finditer(text))
@@ -1343,8 +1342,7 @@ def parse_pedalpcb_pdf(
                         val_str = text[val_start:cutoff].strip()
 
                     # [DEBUG] Trace the Raw Match
-                    if DEBUG_REGEX:
-                        print(f"[DEBUG] MATCH: {ref_str.ljust(10)} | RAW: '{val_str}'")
+                    logger.debug(f"MATCH: {ref_str.ljust(10)} | RAW: '{val_str}'")
 
                     # 1. Clean Value (Strip parentheses, etc)
                     # e.g. "(1/4W)" -> "1/4W"
@@ -1355,26 +1353,22 @@ def parse_pedalpcb_pdf(
                         val_str = val_str[1:-1].strip()
 
                     # [DEBUG] Trace the Cleaned Value
-                    if DEBUG_REGEX and val_str != match.group("val"):
-                        print(f"        -> CLEAN: '{val_str}'")
+                    logger.debug(f"        -> CLEAN: '{val_str}'")
 
                     # 2. Filter Garbage Matches
                     if len(val_str) > 50 or len(val_str) < 1:
-                        if DEBUG_REGEX:
-                            print(f"        -> REJECT: Bad Length ({len(val_str)})")
+                        logger.debug(f"        -> REJECT: Bad Length ({len(val_str)})")
                         continue
 
                     # Check against blacklist
                     if any(bad in val_str.upper() for bad in ignore_values):
-                        if DEBUG_REGEX:
-                            print("        -> REJECT: Blacklisted Word")
+                        logger.debug("        -> REJECT: Blacklisted Word")
                         continue
 
                     # Ignore Sentences
                     # Notes often look like "Rate is a..." or "See note..."
                     if re.match(r"^(is|see|note)\s", val_str, re.IGNORECASE):
-                        if DEBUG_REGEX:
-                            print("        -> REJECT: Sentence Start")
+                        logger.debug("        -> REJECT: Sentence Start")
                         continue
 
                     # 3. Prefix Safety Check
@@ -1390,16 +1384,14 @@ def parse_pedalpcb_pdf(
 
                         # Check 1: Must start with valid prefix
                         if not any(ref_str.startswith(p) for p in valid_prefixes):
-                            if DEBUG_REGEX:
-                                print("        -> REJECT: Invalid Prefix")
+                            logger.debug("        -> REJECT: Invalid Prefix")
                             continue
 
                         # Check 2: "Ghost Data" Heuristic
                         # If Ref is 3+ letters (e.g. "MPSA") and Val is a single digit ("2"),
                         # it's almost certainly a "Qty Part" line read backwards.
                         if len(ref_str) >= 3 and re.match(r"^\d+$", val_str):
-                            if DEBUG_REGEX:
-                                print("        -> REJECT: Ghost Data (Qty reversed)")
+                            logger.debug("        -> REJECT: Ghost Data (Qty reversed)")
                             continue
 
                     else:
@@ -1419,20 +1411,19 @@ def parse_pedalpcb_pdf(
                         )
 
                         if not has_digit and not is_switch_type:
-                            if DEBUG_REGEX:
-                                print("        -> REJECT: No Digit or Switch Keyword")
+                            logger.debug(
+                                "        -> REJECT: No Digit or Switch Keyword"
+                            )
                             continue
 
                     c = ingest_bom_line(inventory, source_name, ref_str, val_str, stats)
                     if c > 0:
                         stats["parts_found"] += c
-                        if DEBUG_REGEX:
-                            print("        -> ACCEPTED")
+                        logger.debug("        -> ACCEPTED")
                     else:
-                        if DEBUG_REGEX:
-                            print(
-                                "        -> IGNORED (Duplicate or Categorization Fail)"
-                            )
+                        logger.debug(
+                            "        -> IGNORED (Duplicate or Categorization Fail)"
+                        )
 
     except Exception as e:
         stats["residuals"].append(f"PDF Parse Error: {e}")
