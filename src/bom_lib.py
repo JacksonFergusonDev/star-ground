@@ -1165,10 +1165,6 @@ def parse_pedalpcb_pdf(
 
             # --- STRATEGY 3: HAIL MARY (RAW TEXT) ---
             if stats["parts_found"] == 0:
-                stats["residuals"].append(
-                    "Tables yielded 0 parts. Attempting Raw Text Scan..."
-                )
-
                 # Keywords: Added word boundaries (\b) to prevent partial matches
                 # e.g. "COMP" should not match "COMPONENTS"
                 keywords = [
@@ -1264,6 +1260,16 @@ def parse_pedalpcb_pdf(
                     for match in regex.finditer(text):
                         ref_str = match.group("ref").upper()
                         val_str = match.group("val")
+
+                        # The regex stops at the first space. For LDRs, we need the whole line.
+                        if ref_str.startswith("LDR"):
+                            # Find end of line from the start of the value match
+                            val_start = match.start("val")
+                            line_end = text.find("\n", val_start)
+                            if line_end != -1:
+                                val_str = text[val_start:line_end].strip()
+                            else:
+                                val_str = text[val_start:].strip()
 
                         # 1. Clean Value (Strip parentheses, etc)
                         # e.g. "(1/4W)" -> "1/4W"
