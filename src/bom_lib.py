@@ -1095,6 +1095,12 @@ def parse_pedalpcb_pdf(
                         stats["lines_read"] += 1
                         row_safe = [str(cell) if cell else "" for cell in row]
 
+                        # SAFEGUARD: Ignore Summary/BOM Quantity lines (e.g. "1 x 100k")
+                        # Check the first non-empty column
+                        first_content = next((c for c in row_safe if c), "")
+                        if re.match(r"^\d+\s*[xX]", first_content):
+                            continue
+
                         ref_raw = ""
                         val_raw = ""
 
