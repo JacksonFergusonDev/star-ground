@@ -812,6 +812,11 @@ def get_buy_details(category: str, val: str, count: int) -> Tuple[int, str]:
             txt = ", ".join(txt_parts)
             note += f" | 💡 TRY: {txt}"
 
+    elif category == "Crystals/Oscillators":
+        # Risk: High (Heat sensitive, fragile).
+        buy = count + 1
+        note = "Heat sensitive / Fragile"
+
     elif category == "Hardware/Misc":
         # Risk: Mixed.
         if "ADAPTER" in val or "SOCKET" in val:
@@ -836,6 +841,7 @@ def sort_inventory(inventory: InventoryType) -> List[Tuple[str, PartData]]:
     order = [
         "PCB",
         "ICs",
+        "Crystals/Oscillators",
         "Optoelectronics",
         "Transistors",
         "Diodes",
