@@ -1,0 +1,411 @@
+{
+  "inventory": {
+    "Capacitors | 100n": {
+      "qty": 2,
+      "refs": [
+        "C1",
+        "C102"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C1",
+          "C102"
+        ]
+      }
+    },
+    "Capacitors | 100p": {
+      "qty": 1,
+      "refs": [
+        "C8"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C8"
+        ]
+      }
+    },
+    "Capacitors | 100u": {
+      "qty": 1,
+      "refs": [
+        "C100"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C100"
+        ]
+      }
+    },
+    "Capacitors | 10u": {
+      "qty": 1,
+      "refs": [
+        "C101"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C101"
+        ]
+      }
+    },
+    "Capacitors | 1u": {
+      "qty": 6,
+      "refs": [
+        "C10",
+        "C11",
+        "C13",
+        "C2",
+        "C7",
+        "C9"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C10",
+          "C11",
+          "C13",
+          "C2",
+          "C7",
+          "C9"
+        ]
+      }
+    },
+    "Capacitors | 2.2n": {
+      "qty": 4,
+      "refs": [
+        "C3",
+        "C4",
+        "C5",
+        "C6"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C3",
+          "C4",
+          "C5",
+          "C6"
+        ]
+      }
+    },
+    "Capacitors | 4.7u": {
+      "qty": 1,
+      "refs": [
+        "C14"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C14"
+        ]
+      }
+    },
+    "Capacitors | 47n": {
+      "qty": 1,
+      "refs": [
+        "C12"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C12"
+        ]
+      }
+    },
+    "Diodes | 1N5817": {
+      "qty": 1,
+      "refs": [
+        "D100"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "D100"
+        ]
+      }
+    },
+    "Hardware/Misc | DIP SOCKET (Check Size)": {
+      "qty": 5,
+      "refs": [
+        "IC1 (Inj)",
+        "IC2 (Inj)",
+        "IC3 (Inj)",
+        "IC4 (Inj)",
+        "IC5 (Inj)"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "IC1 (Inj)",
+          "IC2 (Inj)",
+          "IC3 (Inj)",
+          "IC4 (Inj)",
+          "IC5 (Inj)"
+        ]
+      }
+    },
+    "ICs | LM13700": {
+      "qty": 3,
+      "refs": [
+        "IC1",
+        "IC2",
+        "IC3"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "IC1",
+          "IC2",
+          "IC3"
+        ]
+      }
+    },
+    "ICs | TL072": {
+      "qty": 2,
+      "refs": [
+        "IC4",
+        "IC5"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "IC4",
+          "IC5"
+        ]
+      }
+    },
+    "Potentiometers | B25K": {
+      "qty": 1,
+      "refs": [
+        "DEPTH"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "DEPTH"
+        ]
+      }
+    },
+    "Potentiometers | B50K": {
+      "qty": 1,
+      "refs": [
+        "SWEEP"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "SWEEP"
+        ]
+      }
+    },
+    "Potentiometers | C1M": {
+      "qty": 2,
+      "refs": [
+        "RATE",
+        "RES"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "RATE",
+          "RES"
+        ]
+      }
+    },
+    "Resistors | 1.2k": {
+      "qty": 4,
+      "refs": [
+        "R12",
+        "R16",
+        "R20",
+        "R8"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R12",
+          "R16",
+          "R20",
+          "R8"
+        ]
+      }
+    },
+    "Resistors | 100k": {
+      "qty": 2,
+      "refs": [
+        "R26",
+        "R29"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R26",
+          "R29"
+        ]
+      }
+    },
+    "Resistors | 10k": {
+      "qty": 9,
+      "refs": [
+        "R1",
+        "R13",
+        "R17",
+        "R21",
+        "R31",
+        "R4",
+        "R5",
+        "R6",
+        "R9"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R1",
+          "R13",
+          "R17",
+          "R21",
+          "R31",
+          "R4",
+          "R5",
+          "R6",
+          "R9"
+        ]
+      }
+    },
+    "Resistors | 150k": {
+      "qty": 1,
+      "refs": [
+        "R30"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R30"
+        ]
+      }
+    },
+    "Resistors | 1M": {
+      "qty": 2,
+      "refs": [
+        "R2",
+        "R3"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R2",
+          "R3"
+        ]
+      }
+    },
+    "Resistors | 220k": {
+      "qty": 1,
+      "refs": [
+        "R28"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R28"
+        ]
+      }
+    },
+    "Resistors | 27k": {
+      "qty": 10,
+      "refs": [
+        "R10",
+        "R11",
+        "R14",
+        "R15",
+        "R18",
+        "R19",
+        "R22",
+        "R23",
+        "R27",
+        "R7"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R10",
+          "R11",
+          "R14",
+          "R15",
+          "R18",
+          "R19",
+          "R22",
+          "R23",
+          "R27",
+          "R7"
+        ]
+      }
+    },
+    "Resistors | 4.7k": {
+      "qty": 3,
+      "refs": [
+        "R100",
+        "R32",
+        "R33"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R100",
+          "R32",
+          "R33"
+        ]
+      }
+    },
+    "Resistors | 470": {
+      "qty": 1,
+      "refs": [
+        "R25"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R25"
+        ]
+      }
+    },
+    "Resistors | 470k": {
+      "qty": 1,
+      "refs": [
+        "R34"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R34"
+        ]
+      }
+    },
+    "Resistors | 56k": {
+      "qty": 2,
+      "refs": [
+        "R101",
+        "R102"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R101",
+          "R102"
+        ]
+      }
+    },
+    "Resistors | 8.2k": {
+      "qty": 1,
+      "refs": [
+        "R24"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R24"
+        ]
+      }
+    },
+    "Switches | SPDT (On/Off/On)": {
+      "qty": 1,
+      "refs": [
+        "RANGE"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "RANGE"
+        ]
+      }
+    },
+    "Switches | SPDT (On/On)": {
+      "qty": 1,
+      "refs": [
+        "PV"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "PV"
+        ]
+      }
+    }
+  },
+  "metadata": {
+    "extracted_title": "Circulator",
+    "parts_found": 66
+  }
+}

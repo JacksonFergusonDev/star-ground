@@ -1,0 +1,423 @@
+{
+  "inventory": {
+    "Capacitors | 100n": {
+      "qty": 1,
+      "refs": [
+        "C1"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C1"
+        ]
+      }
+    },
+    "Capacitors | 100p": {
+      "qty": 1,
+      "refs": [
+        "C4"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C4"
+        ]
+      }
+    },
+    "Capacitors | 100u": {
+      "qty": 1,
+      "refs": [
+        "C9"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C9"
+        ]
+      }
+    },
+    "Capacitors | 10u": {
+      "qty": 1,
+      "refs": [
+        "C10"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C10"
+        ]
+      }
+    },
+    "Capacitors | 15n": {
+      "qty": 1,
+      "refs": [
+        "C2"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C2"
+        ]
+      }
+    },
+    "Capacitors | 1u": {
+      "qty": 5,
+      "refs": [
+        "C11",
+        "C12",
+        "C13",
+        "C7",
+        "C8"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C11",
+          "C12",
+          "C13",
+          "C7",
+          "C8"
+        ]
+      }
+    },
+    "Capacitors | 220n": {
+      "qty": 1,
+      "refs": [
+        "C3"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C3"
+        ]
+      }
+    },
+    "Capacitors | 4.7n": {
+      "qty": 1,
+      "refs": [
+        "C5"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C5"
+        ]
+      }
+    },
+    "Capacitors | 470p": {
+      "qty": 1,
+      "refs": [
+        "C6"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C6"
+        ]
+      }
+    },
+    "Capacitors | 47u": {
+      "qty": 2,
+      "refs": [
+        "C14",
+        "C15"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C14",
+          "C15"
+        ]
+      }
+    },
+    "Diodes | 1N5817": {
+      "qty": 1,
+      "refs": [
+        "D1"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "D1"
+        ]
+      }
+    },
+    "Diodes | 5mm": {
+      "qty": 1,
+      "refs": [
+        "D2"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "D2"
+        ]
+      }
+    },
+    "Hardware/Misc | DIP SOCKET (Check Size)": {
+      "qty": 2,
+      "refs": [
+        "IC1 (Inj)",
+        "IC2 (Inj)"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "IC1 (Inj)",
+          "IC2 (Inj)"
+        ]
+      }
+    },
+    "ICs | TL072": {
+      "qty": 1,
+      "refs": [
+        "IC1"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "IC1"
+        ]
+      }
+    },
+    "ICs | TL074": {
+      "qty": 1,
+      "refs": [
+        "IC2"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "IC2"
+        ]
+      }
+    },
+    "Optoelectronics | 5mm Radial LDR (KE-10720)": {
+      "qty": 4,
+      "refs": [
+        "LDR1",
+        "LDR2",
+        "LDR3",
+        "LDR4"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "LDR1",
+          "LDR2",
+          "LDR3",
+          "LDR4"
+        ]
+      }
+    },
+    "Potentiometers | A100K": {
+      "qty": 1,
+      "refs": [
+        "LEVEL"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "LEVEL"
+        ]
+      }
+    },
+    "Potentiometers | B100K (Dual)": {
+      "qty": 1,
+      "refs": [
+        "RATE"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "RATE"
+        ]
+      }
+    },
+    "Potentiometers | B10K": {
+      "qty": 1,
+      "refs": [
+        "VOICE"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "VOICE"
+        ]
+      }
+    },
+    "Potentiometers | B25K": {
+      "qty": 2,
+      "refs": [
+        "INTENSITY",
+        "THROB"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "INTENSITY",
+          "THROB"
+        ]
+      }
+    },
+    "Resistors | 100": {
+      "qty": 1,
+      "refs": [
+        "R26"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R26"
+        ]
+      }
+    },
+    "Resistors | 100k": {
+      "qty": 3,
+      "refs": [
+        "R11",
+        "R14",
+        "R24"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R11",
+          "R14",
+          "R24"
+        ]
+      }
+    },
+    "Resistors | 10k": {
+      "qty": 3,
+      "refs": [
+        "R13",
+        "R15",
+        "R16"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R13",
+          "R15",
+          "R16"
+        ]
+      }
+    },
+    "Resistors | 15k": {
+      "qty": 1,
+      "refs": [
+        "R22"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R22"
+        ]
+      }
+    },
+    "Resistors | 1M": {
+      "qty": 2,
+      "refs": [
+        "R1",
+        "R2"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R1",
+          "R2"
+        ]
+      }
+    },
+    "Resistors | 2.2M": {
+      "qty": 1,
+      "refs": [
+        "R21"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R21"
+        ]
+      }
+    },
+    "Resistors | 220k": {
+      "qty": 2,
+      "refs": [
+        "R17",
+        "R18"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R17",
+          "R18"
+        ]
+      }
+    },
+    "Resistors | 22k": {
+      "qty": 1,
+      "refs": [
+        "R6"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R6"
+        ]
+      }
+    },
+    "Resistors | 3.3k": {
+      "qty": 2,
+      "refs": [
+        "R19",
+        "R20"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R19",
+          "R20"
+        ]
+      }
+    },
+    "Resistors | 4.7k": {
+      "qty": 2,
+      "refs": [
+        "R23",
+        "R27"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R23",
+          "R27"
+        ]
+      }
+    },
+    "Resistors | 47k": {
+      "qty": 8,
+      "refs": [
+        "R10",
+        "R25",
+        "R3",
+        "R4",
+        "R5",
+        "R7",
+        "R8",
+        "R9"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R10",
+          "R25",
+          "R3",
+          "R4",
+          "R5",
+          "R7",
+          "R8",
+          "R9"
+        ]
+      }
+    },
+    "Resistors | 56k": {
+      "qty": 1,
+      "refs": [
+        "R12"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R12"
+        ]
+      }
+    },
+    "Transistors | MPSA18": {
+      "qty": 2,
+      "refs": [
+        "Q1",
+        "Q2"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "Q1",
+          "Q2"
+        ]
+      }
+    }
+  },
+  "metadata": {
+    "extracted_title": "The Abyss",
+    "parts_found": 57
+  }
+}

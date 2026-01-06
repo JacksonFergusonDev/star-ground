@@ -1,0 +1,719 @@
+{
+  "inventory": {
+    "Capacitors | 100n": {
+      "qty": 14,
+      "refs": [
+        "C10",
+        "C12",
+        "C14",
+        "C16",
+        "C17",
+        "C2",
+        "C28",
+        "C29",
+        "C30",
+        "C31",
+        "C33",
+        "C35",
+        "C38",
+        "C6"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C10",
+          "C12",
+          "C14",
+          "C16",
+          "C17",
+          "C2",
+          "C28",
+          "C29",
+          "C30",
+          "C31",
+          "C33",
+          "C35",
+          "C38",
+          "C6"
+        ]
+      }
+    },
+    "Capacitors | 100p": {
+      "qty": 1,
+      "refs": [
+        "C13"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C13"
+        ]
+      }
+    },
+    "Capacitors | 10n": {
+      "qty": 2,
+      "refs": [
+        "C18",
+        "C37"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C18",
+          "C37"
+        ]
+      }
+    },
+    "Capacitors | 1n": {
+      "qty": 5,
+      "refs": [
+        "C15",
+        "C23",
+        "C26",
+        "C3",
+        "C9"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C15",
+          "C23",
+          "C26",
+          "C3",
+          "C9"
+        ]
+      }
+    },
+    "Capacitors | 1u": {
+      "qty": 5,
+      "refs": [
+        "C11",
+        "C25",
+        "C36",
+        "C7",
+        "C8"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C11",
+          "C25",
+          "C36",
+          "C7",
+          "C8"
+        ]
+      }
+    },
+    "Capacitors | 220p": {
+      "qty": 2,
+      "refs": [
+        "C27",
+        "C4"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C27",
+          "C4"
+        ]
+      }
+    },
+    "Capacitors | 220u": {
+      "qty": 1,
+      "refs": [
+        "C32"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C32"
+        ]
+      }
+    },
+    "Capacitors | 22u": {
+      "qty": 9,
+      "refs": [
+        "C19",
+        "C21",
+        "C22",
+        "C34",
+        "C39",
+        "C40",
+        "C41",
+        "C42",
+        "C5"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C19",
+          "C21",
+          "C22",
+          "C34",
+          "C39",
+          "C40",
+          "C41",
+          "C42",
+          "C5"
+        ]
+      }
+    },
+    "Capacitors | 4.7n": {
+      "qty": 1,
+      "refs": [
+        "C24"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C24"
+        ]
+      }
+    },
+    "Capacitors | 47n": {
+      "qty": 1,
+      "refs": [
+        "C1"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C1"
+        ]
+      }
+    },
+    "Capacitors | 680p": {
+      "qty": 1,
+      "refs": [
+        "C20"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C20"
+        ]
+      }
+    },
+    "Diodes | BAT48": {
+      "qty": 3,
+      "refs": [
+        "D1",
+        "D2",
+        "D3"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "D1",
+          "D2",
+          "D3"
+        ]
+      }
+    },
+    "Hardware/Misc | DIP SOCKET (Check Size)": {
+      "qty": 7,
+      "refs": [
+        "IC1 (Inj)",
+        "IC2 (Inj)",
+        "IC3 (Inj)",
+        "IC4 (Inj)",
+        "IC5 (Inj)",
+        "IC6 (Inj)",
+        "IC7 (Inj)"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "IC1 (Inj)",
+          "IC2 (Inj)",
+          "IC3 (Inj)",
+          "IC4 (Inj)",
+          "IC5 (Inj)",
+          "IC6 (Inj)",
+          "IC7 (Inj)"
+        ]
+      }
+    },
+    "ICs | CD4046BE": {
+      "qty": 1,
+      "refs": [
+        "IC6"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "IC6"
+        ]
+      }
+    },
+    "ICs | LM13700N": {
+      "qty": 1,
+      "refs": [
+        "IC3"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "IC3"
+        ]
+      }
+    },
+    "ICs | LM258P": {
+      "qty": 1,
+      "refs": [
+        "IC4"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "IC4"
+        ]
+      }
+    },
+    "ICs | LM78L05": {
+      "qty": 1,
+      "refs": [
+        "IC1"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "IC1"
+        ]
+      }
+    },
+    "ICs | MCP602": {
+      "qty": 1,
+      "refs": [
+        "IC5"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "IC5"
+        ]
+      }
+    },
+    "ICs | RANDOMIZER": {
+      "qty": 1,
+      "refs": [
+        "IC2"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "IC2"
+        ]
+      }
+    },
+    "ICs | V3207D": {
+      "qty": 1,
+      "refs": [
+        "IC7"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "IC7"
+        ]
+      }
+    },
+    "Potentiometers | 1K": {
+      "qty": 2,
+      "refs": [
+        "TRIM1",
+        "TRIM2"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "TRIM1",
+          "TRIM2"
+        ]
+      }
+    },
+    "Potentiometers | A100K": {
+      "qty": 3,
+      "refs": [
+        "DEPTH",
+        "GATE",
+        "VOLUME"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "DEPTH",
+          "GATE",
+          "VOLUME"
+        ]
+      }
+    },
+    "Potentiometers | A1M DUAL": {
+      "qty": 1,
+      "refs": [
+        "SLEW"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "SLEW"
+        ]
+      }
+    },
+    "Potentiometers | B100K": {
+      "qty": 1,
+      "refs": [
+        "MIX"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "MIX"
+        ]
+      }
+    },
+    "Potentiometers | B10K": {
+      "qty": 1,
+      "refs": [
+        "RATE"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "RATE"
+        ]
+      }
+    },
+    "Resistors | 1.8k": {
+      "qty": 2,
+      "refs": [
+        "R37",
+        "R7"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R37",
+          "R7"
+        ]
+      }
+    },
+    "Resistors | 100k": {
+      "qty": 13,
+      "refs": [
+        "R16",
+        "R2",
+        "R20",
+        "R21",
+        "R27",
+        "R43",
+        "R45",
+        "R53",
+        "R56",
+        "R60",
+        "R61",
+        "R71",
+        "R8"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R16",
+          "R2",
+          "R20",
+          "R21",
+          "R27",
+          "R43",
+          "R45",
+          "R53",
+          "R56",
+          "R60",
+          "R61",
+          "R71",
+          "R8"
+        ]
+      }
+    },
+    "Resistors | 10k": {
+      "qty": 13,
+      "refs": [
+        "R22",
+        "R23",
+        "R24",
+        "R25",
+        "R26",
+        "R38",
+        "R4",
+        "R47",
+        "R57",
+        "R58",
+        "R59",
+        "R62",
+        "R66"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R22",
+          "R23",
+          "R24",
+          "R25",
+          "R26",
+          "R38",
+          "R4",
+          "R47",
+          "R57",
+          "R58",
+          "R59",
+          "R62",
+          "R66"
+        ]
+      }
+    },
+    "Resistors | 12k": {
+      "qty": 1,
+      "refs": [
+        "R9"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R9"
+        ]
+      }
+    },
+    "Resistors | 16k": {
+      "qty": 2,
+      "refs": [
+        "R11",
+        "R15"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R11",
+          "R15"
+        ]
+      }
+    },
+    "Resistors | 1M": {
+      "qty": 2,
+      "refs": [
+        "R30",
+        "R49"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R30",
+          "R49"
+        ]
+      }
+    },
+    "Resistors | 1k": {
+      "qty": 6,
+      "refs": [
+        "R13",
+        "R14",
+        "R18",
+        "R28",
+        "R32",
+        "R52"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R13",
+          "R14",
+          "R18",
+          "R28",
+          "R32",
+          "R52"
+        ]
+      }
+    },
+    "Resistors | 2.2k": {
+      "qty": 8,
+      "refs": [
+        "R17",
+        "R29",
+        "R3",
+        "R54",
+        "R67",
+        "R68",
+        "R69",
+        "R70"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R17",
+          "R29",
+          "R3",
+          "R54",
+          "R67",
+          "R68",
+          "R69",
+          "R70"
+        ]
+      }
+    },
+    "Resistors | 220k": {
+      "qty": 3,
+      "refs": [
+        "R19",
+        "R40",
+        "R64"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R19",
+          "R40",
+          "R64"
+        ]
+      }
+    },
+    "Resistors | 2M": {
+      "qty": 2,
+      "refs": [
+        "R1",
+        "R5"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R1",
+          "R5"
+        ]
+      }
+    },
+    "Resistors | 3.3k": {
+      "qty": 5,
+      "refs": [
+        "R12",
+        "R33",
+        "R36",
+        "R6",
+        "R63"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R12",
+          "R33",
+          "R36",
+          "R6",
+          "R63"
+        ]
+      }
+    },
+    "Resistors | 330": {
+      "qty": 1,
+      "refs": [
+        "R34"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R34"
+        ]
+      }
+    },
+    "Resistors | 4.7k": {
+      "qty": 6,
+      "refs": [
+        "R35",
+        "R44",
+        "R46",
+        "R50",
+        "R55",
+        "R65"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R35",
+          "R44",
+          "R46",
+          "R50",
+          "R55",
+          "R65"
+        ]
+      }
+    },
+    "Resistors | 470k": {
+      "qty": 3,
+      "refs": [
+        "R31",
+        "R39",
+        "R51"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R31",
+          "R39",
+          "R51"
+        ]
+      }
+    },
+    "Resistors | 6.8k": {
+      "qty": 1,
+      "refs": [
+        "R42"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R42"
+        ]
+      }
+    },
+    "Resistors | 620k": {
+      "qty": 1,
+      "refs": [
+        "R48"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R48"
+        ]
+      }
+    },
+    "Resistors | 68k": {
+      "qty": 1,
+      "refs": [
+        "R10"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R10"
+        ]
+      }
+    },
+    "Resistors | 9.1k": {
+      "qty": 1,
+      "refs": [
+        "R41"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R41"
+        ]
+      }
+    },
+    "Switches | DIP-2": {
+      "qty": 1,
+      "refs": [
+        "SW1"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "SW1"
+        ]
+      }
+    },
+    "Transistors | 2N3904": {
+      "qty": 3,
+      "refs": [
+        "Q2",
+        "Q3",
+        "Q5"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "Q2",
+          "Q3",
+          "Q5"
+        ]
+      }
+    },
+    "Transistors | 2SK208-Y": {
+      "qty": 1,
+      "refs": [
+        "Q1"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "Q1"
+        ]
+      }
+    },
+    "Transistors | J201": {
+      "qty": 1,
+      "refs": [
+        "Q4"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "Q4"
+        ]
+      }
+    }
+  },
+  "metadata": {
+    "extracted_title": "Low Tide Modulator",
+    "parts_found": 137
+  }
+}
