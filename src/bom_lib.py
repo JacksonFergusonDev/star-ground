@@ -1257,12 +1257,22 @@ def parse_pedalpcb_pdf(
                     if not text:
                         continue
 
-                    for match in regex.finditer(text):
+                    # We need to know where the *next* match starts to prevent overlapping captures.
+                    matches = list(regex.finditer(text))
+
+                    for i, match in enumerate(matches):
                         ref_str = match.group("ref").upper()
                         val_str = match.group("val")
+                        val_start = match.start("val")
 
-                        # If it's an LDR or a Control (Pot), we need the full text line
-                        # to catch "KE-10720" or "(Dual)" or "No Check"
+                        # Determine the safety boundary (Start of next match or End of Text)
+                        next_match_start = (
+                            matches[i + 1].start()
+                            if i + 1 < len(matches)
+                            else len(text)
+                        )
+
+                        # Check if we need to grab the full line (LDRs, Pots, Keywords)
                         needs_full_line = (
                             ref_str.startswith("LDR")
                             or ref_str in keywords
@@ -1270,12 +1280,15 @@ def parse_pedalpcb_pdf(
                         )
 
                         if needs_full_line:
-                            val_start = match.start("val")
+                            # Find end of line
                             line_end = text.find("\n", val_start)
-                            if line_end != -1:
-                                val_str = text[val_start:line_end].strip()
-                            else:
-                                val_str = text[val_start:].strip()
+                            if line_end == -1:
+                                line_end = len(text)
+
+                            # Stop at the newline OR the next component match, whichever comes first.
+                            # This prevents "MODE ... " from eating "MIX ... " on the same line.
+                            cutoff = min(line_end, next_match_start)
+                            val_str = text[val_start:cutoff].strip()
 
                         # 1. Clean Value (Strip parentheses, etc)
                         # e.g. "(1/4W)" -> "1/4W"
