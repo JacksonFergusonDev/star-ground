@@ -31,7 +31,7 @@ from src.bom_lib import (
     generate_pedalpcb_url,
 )
 
-from src.pdf_generator import generate_field_manual
+from src.pdf_generator import generate_field_manual_zip
 
 st.set_page_config(page_title="Pedal BOM Manager", page_icon="🎸")
 
@@ -911,12 +911,12 @@ if st.session_state.inventory and st.session_state.stats:
         )
 
     st.download_button(
-        "📖 Download Field Manual (PDF)",
-        data=generate_field_manual(inventory, st.session_state.pedal_slots),
-        file_name="pedal_field_manual.pdf",
-        mime="application/pdf",
-        help="A printable build guide sorted by component height.",
-        width="stretch",  # Optional: Make it full width below the columns
+        "📖 Download Field Manuals (ZIP)",
+        data=generate_field_manual_zip(inventory, st.session_state.pedal_slots),
+        file_name="pedal_field_manuals.zip",
+        mime="application/zip",
+        help="Download individual printable build guides for each pedal.",
+        width="stretch",
     )
 
 st.divider()
