@@ -3,7 +3,7 @@ import csv
 import math
 import logging
 from collections import defaultdict
-from typing import Dict, List, Tuple, Optional, TypedDict
+from typing import Dict, List, Tuple, Optional, TypedDict, Any
 from urllib.parse import quote_plus
 
 # Initialize Logger
@@ -136,6 +136,29 @@ DIODE_ALTS = {
         ),
     ],
 }
+
+
+def natural_sort_key(ref: str) -> List[Any]:
+    """
+    Splits 'R10' into ['R', 10] for human-friendly sorting.
+    """
+    return [
+        int(text) if text.isdigit() else text.upper()
+        for text in re.split(r"(\d+)", ref)
+    ]
+
+
+def deduplicate_refs(refs: List[str]) -> List[str]:
+    """
+    Cleans up a ref list:
+    1. Removes duplicates (set)
+    2. Sorts naturally (R1, R2, R10)
+    """
+    if not refs:
+        return []
+
+    unique = list(set(refs))
+    return sorted(unique, key=natural_sort_key)
 
 
 def expand_refs(ref_raw: str) -> List[str]:
