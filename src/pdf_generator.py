@@ -51,9 +51,14 @@ class FieldManual(FPDF):
             if part["polarized"]:
                 notes = f"[!] {notes}" if notes else "[!] Polarized"
 
-            # Simple text wrapping for notes could be complex,
-            # for now we truncate or let fpdf handle simple overflow if using multi_cell,
-            # but tables in FPDF are tricky. We'll use fixed cells for simplicity.
+            # Check for page overflow BEFORE drawing the checkbox.
+            # If we don't, the checkbox draws on the old page, and self.cell
+            # pushes the text to the new page.
+            # 8 is the cell height.
+            if self.get_y() + 8 > self.page_break_trigger:
+                self.add_page()
+                # Note: We could reprint table headers here if desired,
+                # but currently we just continue the list.
 
             # Draw Checkbox manually to look nice
             x = self.get_x()
