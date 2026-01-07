@@ -80,36 +80,46 @@ class FieldManual(FPDF):
 def sort_by_z_height(part_list):
     """
     Sorts parts for populating a board: Low to High.
-    1. Resistors / Diodes
-    2. Sockets (ICs)
-    3. Small Caps (Ceramic/Film)
+    1. PCB
+    2. Resistors / Diodes / Sockets
+    3. Small Caps / Crystals
     4. Transistors
     5. Electrolytics
-    6. Wire/Hardware
+    6. Pots / Mechanicals
+    7. ICs (Chips) - Always last
     """
     # Lower number = Earlier in build
     z_map = {
+        "PCB": 0,  # First
         "Resistors": 10,
         "Diodes": 15,
-        "ICs": 20,  # Sockets go in early
-        "Capacitors": 30,  # Default Cap
-        "Transistors": 40,
-        "Crystals/Oscillators": 45,
-        "Potentiometers": 80,
-        "Switches": 85,
-        "Hardware/Misc": 90,
+        # Sockets will be injected at 18
+        "Crystals/Oscillators": 30,
+        "Capacitors": 40,  # Default (Small)
+        "Transistors": 50,
+        # Electros will be injected at 60
+        "Switches": 70,
+        "Potentiometers": 80,  # "Second Last" (Mechanicals)
+        "Hardware/Misc": 85,  # Jacks, etc.
+        "ICs": 90,  # "Last" (Chip Insertion)
     }
 
     def get_rank(item):
         cat = item["category"]
-        val = item["value"]
+        val = str(item["value"])
 
-        # Specific overrides
+        # 1. Socket Check (Priority Override)
+        # Sockets are usually in "Hardware/Misc" or "ICs" but need to be soldered early
+        if "SOCKET" in val.upper():
+            return 18
+
+        # 2. Capacitor Check (Electro vs Ceramic)
         if cat == "Capacitors":
             # Electros are tall -> Late build
-            if "u" in str(val) and float_val_check(val) >= 1.0:
-                return 50  # Electrolytics rank
-            return 30  # Small caps
+            if "u" in val or "µ" in val:
+                if float_val_check(val) >= 1.0:
+                    return 60  # Electrolytics rank
+            return 40  # Small caps
 
         return z_map.get(cat, 99)
 
