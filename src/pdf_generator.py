@@ -168,6 +168,12 @@ def generate_field_manual(inventory, slots):
                 if qty > 0:
                     cat, val = key.split(" | ", 1)
 
+                    # Formatting Overrides
+                    row_notes = ""
+                    if "DIP SOCKET (Check Size)" in val:
+                        val = "DIP SOCKET"
+                        row_notes = "[!] Check Size"
+
                     is_polarized = cat in ["Diodes", "Transistors", "ICs"]
                     if cat == "Capacitors" and ("u" in val or "µ" in val):
                         is_polarized = True
@@ -178,7 +184,7 @@ def generate_field_manual(inventory, slots):
                             "value": val,
                             "qty": qty,
                             "refs": specific_refs,
-                            "notes": "",  # Notes are harder to pull from 'buy_details' per project, leaving blank or generic
+                            "notes": row_notes,
                             "polarized": is_polarized,
                         }
                     )
