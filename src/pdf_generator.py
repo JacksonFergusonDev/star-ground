@@ -60,47 +60,34 @@ class FieldManual(FPDF):
                 # Note: We could reprint table headers here if desired,
                 # but currently we just continue the list.
 
-            # Draw Checkbox manually to look nice
+            # Draw Checkbox manually
             x = self.get_x()
             y = self.get_y()
             self.draw_checkbox(x + 3, y + 2)
-            self.cell(10, 8, "", 1)  # Empty cell for box
+            self.cell(10, 8, "", 1)  # [Chk]
 
+            # [Qty]
             self.cell(15, 8, str(part["qty"]), 1, align="C")
 
-            # Value
-            val_str = str(part["value"])[:18]  # Truncate if too long
-            self.cell(35, 8, val_str, 1)
+            # Prepare Value & Notes
+            val_str = str(part["value"])
 
-            # Refs (Smart Truncation)
-            refs = ", ".join(part["refs"])
-            if len(refs) > 25:
-                refs = refs[:22] + "..."
-            self.cell(50, 8, refs, 1)
-
-            # LOGIC: Polarity / Warning Handling
-            # If polarized or has notes (like "Check Size"), text goes RED.
+            # Logic: Red text for warnings/polarity
             if part["polarized"] or part["notes"]:
                 self.set_text_color(220, 50, 50)  # Red
-                # If there's a specific note, append it to the value for context
                 if part["notes"]:
-                    # e.g. "DIP SOCKET" -> "DIP SOCKET [Check Size]"
-                    # We strip the "[!]" tag we added in previous logic if it exists
                     clean_note = part["notes"].replace("[!] ", "")
-                    # Update the local variable, not the dict
                     val_str = f"{val_str} [{clean_note}]"
             else:
                 self.set_text_color(0, 0, 0)  # Black
 
-            # Value (Expanded Truncation)
-            # 60mm allows for ~30-35 chars
+            # [Value] - Expanded Width (60mm)
             self.cell(60, 8, val_str[:35], 1)
 
-            # Reset color for Refs
+            # Reset color
             self.set_text_color(0, 0, 0)
 
-            # Refs (Smart Truncation)
-            # Remaining space is ~105mm, allows for ~60 chars
+            # [Refs] - Auto Width (Remaining)
             refs = ", ".join(part["refs"])
             if len(refs) > 60:
                 refs = refs[:57] + "..."
