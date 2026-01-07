@@ -6,6 +6,7 @@ import uuid
 import re
 import copy
 import tempfile
+import requests
 from collections import defaultdict
 from typing import cast, List, Dict, Any
 from streamlit.runtime.uploaded_file_manager import UploadedFile
@@ -31,6 +32,18 @@ from src.bom_lib import (
 )
 
 st.set_page_config(page_title="Pedal BOM Manager", page_icon="🎸")
+
+# Hide the native dataframe toolbar (Search/Download)
+st.markdown(
+    """
+<style>
+    [data-testid="stElementToolbar"] {
+        display: none;
+    }
+</style>
+""",
+    unsafe_allow_html=True,
+)
 
 
 # ttl="1h" to prevent stale token issues
@@ -313,6 +326,12 @@ def on_method_change(slot_id):
         if f"text_{slot_id}" in st.session_state:
             st.session_state[f"text_{slot_id}"] = ""
 
+    # Case: Switch to URL -> Clear Data
+    elif new_method == "From URL":
+        slot["data"] = ""
+        if f"url_{slot_id}" in st.session_state:
+            st.session_state[f"url_{slot_id}"] = ""
+
     # Case: Switch to Preset -> Load Default
     elif new_method == "Preset":
         first_preset = sorted(list(BOM_PRESETS.keys()))[0]
@@ -378,7 +397,7 @@ for i, slot in enumerate(st.session_state.pedal_slots):
         # Input Method
         slot["method"] = c3.radio(
             "Input Method",
-            ["Paste Text", "Upload File", "Preset"],
+            ["Paste Text", "Upload File", "From URL", "Preset"],
             key=f"method_{slot['id']}",
             horizontal=True,
             label_visibility="collapsed",
@@ -415,6 +434,14 @@ for i, slot in enumerate(st.session_state.pedal_slots):
                 "Upload BOM",
                 type=["csv", "pdf"],
                 key=f"file_{slot['id']}",
+            )
+
+        elif slot["method"] == "From URL":
+            url_key = f"url_{slot['id']}"
+            slot["data"] = st.text_input(
+                "BOM URL",
+                key=url_key,
+                placeholder="https://raw.githubusercontent.com/...",
             )
 
         elif slot["method"] == "Preset":
@@ -509,6 +536,48 @@ if st.button("Generate Master List", type="primary", width="stretch"):
                 finally:
                     if os.path.exists(tmp_path):
                         os.remove(tmp_path)
+
+        # C. URL Mode
+        elif slot["method"] == "From URL":
+            url = slot.get("data", "").strip()
+            if url:
+                try:
+                    response = requests.get(url)
+                    response.raise_for_status()
+
+                    # Check for PDF signature or extension
+                    is_pdf = url.lower().endswith(
+                        ".pdf"
+                    ) or response.content.startswith(b"%PDF")
+
+                    if is_pdf:
+                        with tempfile.NamedTemporaryFile(
+                            delete=False, suffix=".pdf"
+                        ) as tmp:
+                            tmp.write(response.content)
+                            tmp_path = tmp.name
+
+                        try:
+                            p_inv, p_stats = parse_pedalpcb_pdf(
+                                tmp_path, source_name=source
+                            )
+                        finally:
+                            if os.path.exists(tmp_path):
+                                os.remove(tmp_path)
+                    else:
+                        # Assume raw text
+                        raw_text = response.text
+                        p_inv, p_stats = parse_with_verification(
+                            [raw_text], source_name=source
+                        )
+
+                    merge_inventory(inventory, p_inv, qty_multiplier)
+                    stats["lines_read"] += p_stats["lines_read"]
+                    stats["parts_found"] += p_stats["parts_found"]
+                    stats["residuals"].extend(p_stats["residuals"])
+
+                except Exception as e:
+                    st.error(f"Failed to fetch URL: {e}")
 
     # Process Stock if uploaded
     stock_inventory = None
