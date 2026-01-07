@@ -174,4 +174,4 @@ def generate_field_manual(inventory, slots):
         # Add to PDF
         pdf.add_project(project_name, sorted_parts)
 
-    return pdf.output(dest="S")
+    return bytes(pdf.output(dest="S"))
