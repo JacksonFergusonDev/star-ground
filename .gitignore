@@ -9,4 +9,3 @@ output/
 *.code-workspace
 .streamlit/*
 !.streamlit/config.toml
-raw_boms/

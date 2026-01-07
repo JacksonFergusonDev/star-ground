@@ -2,634 +2,6 @@
 # DO NOT EDIT MANUALLY
 
 BOM_PRESETS = {
-    "[PedalPCB] [Dynamics] Amentum Boost": """
-        PCB Amentum Boost PCB
-        Q1 1
-        D100 1
-        C1 1
-        C2 1
-        C4 1
-        R2 1
-        R100 1
-        R4 1
-        R1 1
-        R3 1
-    """,
-    "[PedalPCB] [Dynamics] General Tso's Compressor": """
-        PCB General Tso's Compressor PCB
-        IC1 OPA2134
-        Q1 J113
-        D1 1N4148
-        D2 1N4148
-        D3 1N4148
-        D4 1N4148
-        D5 1N4148
-        D6 1N4148
-        D100 1N5817
-        SUSTAIN B100K
-        Q2 BC549C
-        Q5 BC549C
-        Q3 BC557B
-        Q4 BC557B
-        TREBLE W20K
-        SW1 SPDT
-        C9 330p
-        C7 10n
-        C8 10n
-        C1 22n
-        C16 33n
-        C17 33n
-        C4 100n
-        C14 100n
-        C15 100n
-        C3 470n
-        C11 470n
-        C2 1u
-        C10 1u
-        C5 10u
-        C12 10u
-        C13 10u
-        C18 47u
-        C6 100u
-        R15 47
-        R5 180
-        R18 180
-        R24 180
-        R26 180
-        R23 1.5k
-        R25 1.5k
-        R17 2.2k
-        R16 4.7k
-        R21 4.7k
-        R28 4.7k
-        R100 4.7k
-        R1 10k
-        R6 10k
-        R10 10k
-        R11 10k
-        R12 10k
-        R8 33k
-        R7 39k
-        R19 39k
-        R4 82k
-        R22 100k
-        R27 100k
-        R3 120k
-        R9 330k
-        R20 330k
-        R2 1M
-        R29 10M
-        IC1 (Inj) 8 PIN DIP SOCKET
-    """,
-    "[PedalPCB] [Dynamics] Triangulum Boost": """
-        PCB Triangulum Boost PCB
-        IC1 TL071
-        Q2 BC550C*
-        D2 are
-        D101 1N4001
-        D102 1N4001
-        D103 1N4001
-        D104 1N4001
-        D105 1N4001
-        D106 1N4001
-        D1 1N4148*
-        D2 1N4148*
-        D100 1N5817
-        LEVEL A5K
-        Q1 BC550C
-        IC100 TC1044SCPA
-        C8 100p
-        C13 10n
-        C10 47n
-        C15 47n
-        C14 100n
-        C16 470n
-        C12 1u
-        C9 4.7u
-        C11 4.7u
-        C102 10u
-        C103 10u
-        C104 10u
-        C105 10u
-        C106 10u
-        C107 100u
-        R15 47
-        R2 120
-        R13 220
-        R18 820
-        R6 1k
-        R12 1.8k
-        R14 2.2k
-        R17 3.9k
-        R8 4.7k
-        R11 4.7k
-        R100 4.7k
-        R101 10k
-        R4 12k
-        R16 20k
-        R9 22k
-        R1 100k
-        R3 100k
-        R102 100k
-        R7 220k
-        R103 820k
-        R5 1M
-        R10 1M
-        IC1 (Inj) 8 PIN DIP SOCKET
-    """,
-    "[PedalPCB] [Fuzz] Muffin Factory": """
-        PCB Muffin Factory PCB
-        Q3 MPSA18
-        Q5 MPSA18
-        Q1 2N5088
-        Q6 2N5088
-        Q2 106NU70
-        Q4 106NU70
-        DIP1 DIP-5
-        DIP2 DIP-5
-        DIP3 DIP-5
-        DIP4 DIP-5
-        D3 GE
-        D5 GE
-        D7 3mm
-        D8 3mm
-        D100 1N5817
-        D1 1N914
-        D2 1N914
-        D4 1N914
-        D6 1N914
-        VOLUME A100K
-        TONE B100K
-        SUSTAIN B100K
-        SW1 DPDT
-        SW2 DPDT
-        SW5 SPDT
-        SW6 SPDT
-        C3 560p
-        C10 560p
-        C15 560p
-        C16 6.8n
-        C19 10n
-        C2 22n
-        C5 22n
-        C7 22n
-        C12 22n
-        C21 22n
-        C17 39n
-        C9 47n
-        C14 47n
-        C1 100n
-        C4 100n
-        C6 100n
-        C8 100n
-        C11 100n
-        C13 100n
-        C18 100n
-        C20 100n
-        C22 100n
-        C23 100n
-        C100 100u
-        R14 120
-        R22 120
-        R34 180
-        R7 390
-        R8 1k
-        R16 1.2k
-        R24 1.2k
-        R33 2.7k
-        R100 4.7k
-        R9 11k
-        R15 12k
-        R32 12k
-        R17 15k
-        R18 18k
-        R35 18k
-        R23 22k
-        R10 33k
-        R6 39k
-        R2 47k
-        R26 56k
-        R29 56k
-        R4 82k
-        R11 82k
-        R19 82k
-        R28 100k
-        R31 100k
-        R3 110k
-        R25 130k
-        R27 130k
-        R5 390k
-        R30 390k
-        R13 560k
-        R21 680k
-        R20 910k
-        R1 1M
-        R12 1.3M
-    """,
-    "[PedalPCB] [Fuzz] Muffin Fuzz": """
-        PCB Muffin Fuzz PCB
-        Q1 BC549C*
-        Q2 BC549C*
-        Q3 BC549C*
-        Q4 BC549C*
-        Q1 2N3904
-        Q2 2N3904
-        Q3 2N3904
-        Q4 2N3904
-        Q1 2N5088
-        Q1 2N5088
-        Q1 2N5088
-        Q2 2N5088
-        Q2 2N5088
-        Q2 2N5088
-        Q3 2N5088
-        Q3 2N5088
-        Q3 2N5088
-        Q4 2N5088
-        Q4 2N5088
-        Q4 2N5088
-        Q1 2N5088
-        Q1 2N5088
-        Q2 2N5088
-        Q2 2N5088
-        Q3 2N5088
-        Q3 2N5088
-        Q4 2N5088
-        Q4 2N5088
-        D1 1N4006
-        D2 1N4006
-        D3 1N4006
-        D4 1N4006
-        D1 1N4148
-        D2 1N4148
-        D3 1N4148
-        D4 1N4148
-        D1 1N4148
-        D1 1N4148
-        D2 1N4148
-        D2 1N4148
-        D3 1N4148
-        D3 1N4148
-        D4 1N4148
-        D4 1N4148
-        D1 1N914
-        D1 1N914
-        D1 1N914
-        D2 1N914
-        D2 1N914
-        D2 1N914
-        D3 1N914
-        D3 1N914
-        D3 1N914
-        D4 1N914
-        D4 1N914
-        D4 1N914
-        D1 1N914
-        D2 1N914
-        D3 1N914
-        D4 1N914
-        SUSTAIN B100K
-        SUSTAIN B100K
-        SUSTAIN B100K
-        TONE B100K
-        TONE B100K
-        TONE B100K
-        VOLUME B100K
-        VOLUME B100K
-        VOLUME B100K
-        SUSTAIN B100K
-        SUSTAIN B100K
-        SUSTAIN B100K
-        TONE B100K
-        TONE B100K
-        TONE B100K
-        VOLUME B100K
-        VOLUME B100K
-        SUSTAIN B100K
-        SUSTAIN B100K
-        TONE B100K
-        TONE B100K
-        VOLUME B100K
-        VOLUME B100K
-        VOLUME B10K
-        FUZZ Revised9/14/25
-        Q1 2N706A
-        Q2 2N706A
-        Q3 2N706A
-        Q4 2N706A
-        C2 N/A
-        C14 N/A
-        C2 47p
-        C6 47p
-        C9 47p
-        C2 430p
-        C6 430p
-        C9 430p
-        C2 470p
-        C6 470p
-        C9 470p
-        C2 470p
-        C6 470p
-        C2 470p
-        C2 470p
-        C6 470p
-        C6 470p
-        C9 470p
-        C9 470p
-        C6 560p
-        C9 560p
-        C2 560p
-        C6 560p
-        C9 560p
-        C9 560p
-        C10 3.9n
-        C10 3.9n
-        C10 3.9n
-        C10 3.9n
-        C10 4n
-        C10 4.7n
-        C10 4.7n
-        C10 4.7n
-        C11 10n
-        C11 10n
-        C11 10n
-        C11 10n
-        C11 10n
-        C11 10n
-        C11 10n
-        C12 10n
-        C5 47n
-        C5 47n
-        C8 47n
-        C8 47n
-        C5 50n
-        C8 50n
-        C3 68n
-        C4 68n
-        C1 100n
-        C1 100n
-        C1 100n
-        C3 100n
-        C3 100n
-        C3 100n
-        C4 100n
-        C4 100n
-        C4 100n
-        C7 100n
-        C7 100n
-        C7 100n
-        C12 100n
-        C12 100n
-        C12 100n
-        C13 100n
-        C13 100n
-        C13 100n
-        C15 100n
-        C15 100n
-        C15 100n
-        C1 100n
-        C3 100n
-        C3 100n
-        C4 100n
-        C4 100n
-        C5 100n
-        C7 100n
-        C7 100n
-        C8 100n
-        C12 100n
-        C12 100n
-        C12 100n
-        C13 100n
-        C15 100n
-        C15 100n
-        C15 100n
-        C1 100n
-        C3 100n
-        C3 100n
-        C4 100n
-        C4 100n
-        C5 100n
-        C7 100n
-        C7 100n
-        C8 100n
-        C11 100n
-        C12 100n
-        C13 100n
-        C15 100n
-        C15 100n
-        C1 1u
-        C5 1u
-        C8 1u
-        C13 1u
-        C1 1u
-        C5 1u
-        C8 1u
-        C13 1u
-        C5 2.2u
-        C8 2.2u
-        C1 10u
-        C7 10u
-        C13 10u
-        C14 100u
-        C14 100u
-        C14 100u
-        C14 100u
-        C14 100u
-        C14 100u
-        C14 100u
-        R8 N/A
-        R5 100
-        R5 100
-        R11 100
-        R11 100
-        R16 100
-        R16 100
-        R5 100
-        R5 100
-        R11 100
-        R11 100
-        R16 100
-        R16 100
-        R11 150
-        R11 150
-        R16 150
-        R5 390
-        R5 390
-        R11 390
-        R11 390
-        R16 390
-        R16 390
-        R5 470
-        R5 820
-        R16 820
-        R6 1k
-        R6 1k
-        R6 1k
-        R6 1k
-        R6 1k
-        R6 1k
-        R6 1k
-        R22 2k
-        R22 2.2k
-        R22 2.7k
-        R22 2.7k
-        R22 2.7k
-        R22 3.3k
-        R22 3.3k
-        R22 4.7k
-        R7 8.2k
-        R12 8.2k
-        R6 8.2k
-        R7 8.2k
-        R7 8.2k
-        R12 8.2k
-        R12 8.2k
-        R7 10k
-        R7 10k
-        R12 10k
-        R12 10k
-        R21 10k
-        R21 10k
-        R4 10k
-        R7 10k
-        R7 10k
-        R7 10k
-        R10 10k
-        R12 10k
-        R12 10k
-        R12 10k
-        R15 10k
-        R21 10k
-        R21 10k
-        R21 10k
-        R4 12k
-        R4 12k
-        R10 12k
-        R10 12k
-        R10 12k
-        R15 12k
-        R15 12k
-        R21 12k
-        R4 12k
-        R10 12k
-        R15 12k
-        R21 12k
-        R4 12k
-        R10 12k
-        R15 12k
-        R21 12k
-        R4 15k
-        R10 15k
-        R15 15k
-        R4 15k
-        R10 15k
-        R15 15k
-        R17 20k
-        R17 20k
-        R4 22k
-        R15 22k
-        R18 22k
-        R18 22k
-        R18 22k
-        R18 22k
-        R1 33k
-        R1 33k
-        R1 33k
-        R17 33k
-        R17 33k
-        R18 33k
-        R18 33k
-        R1 33k
-        R17 33k
-        R18 33k
-        R1 39k
-        R1 39k
-        R17 39k
-        R18 39k
-        R1 39k
-        R17 39k
-        R1 39k
-        R17 39k
-        R2 82k
-        R13 82k
-        R2 100k
-        R2 100k
-        R8 100k
-        R8 100k
-        R13 100k
-        R13 100k
-        R19 100k
-        R19 100k
-        R19 100k
-        R2 100k
-        R2 100k
-        R2 100k
-        R8 100k
-        R8 100k
-        R8 100k
-        R13 100k
-        R13 100k
-        R13 100k
-        R19 100k
-        R19 100k
-        R19 100k
-        R2 100k
-        R2 100k
-        R8 100k
-        R8 100k
-        R13 100k
-        R13 100k
-        R19 100k
-        R19 100k
-        R24 150k
-        R24 150k
-        R24 150k
-        R24 160k
-        R24 160k
-        R24 160k
-        R24 160k
-        R24 160k
-        R3 390k
-        R9 390k
-        R14 390k
-        R20 390k
-        R20 390k
-        R20 430k
-        R3 470k
-        R3 470k
-        R9 470k
-        R9 470k
-        R14 470k
-        R14 470k
-        R20 470k
-        R20 470k
-        R3 470k
-        R3 470k
-        R3 470k
-        R9 470k
-        R9 470k
-        R9 470k
-        R14 470k
-        R14 470k
-        R14 470k
-        R20 470k
-        R3 470k
-        R3 470k
-        R9 470k
-        R9 470k
-        R14 470k
-        R14 470k
-        R20 470k
-        R20 510k
-        R23 1M
-        R23 1M
-        R23 1M
-        R23 1M
-        R23 1M
-        R23 1M
-        R23 1M
-        R23 1M
-    """,
     "[PedalPCB] [Fuzz] Paper Scratcher Fuzz": """
         PCB Paper Scratcher Fuzz PCB
         IC1 OPA1678
@@ -688,212 +60,7 @@ BOM_PRESETS = {
         R10 430k
         R1 2.2M
         R2 2.2M
-        IC1 (Inj) 8 PIN DIP SOCKET
-    """,
-    "[PedalPCB] [Fuzz] Parentheses Fuzz": """
-        PCB Parentheses Fuzz PCB
-        IC1 LM308
-        Q6 BS170
-        Q1 PF5102
-        Q5 PF5102
-        Q3 2N5087
-        Q2 2N5089
-        Q4 2N5089
-        D1 GE
-        D2 GE
-        D8 GE
-        D9 GE
-        D9 are
-        D2 orientation
-        D2 were
-        D2 with
-        D2 with
-        D4 3mm
-        D3 1N4148
-        D5 1N4148
-        D6 1N4148
-        D7 1N4148
-        D100 1N5817
-        FILTER A100K
-        BOOST A100K
-        FUZZ 2020
-        SW1 SPDT
-        SW1 2P4T
-        C15 30p
-        C1 100p
-        C14 100p
-        C20 100p
-        C10 1n
-        C17 3.3n
-        C8 22n
-        C18 22n
-        C2 100n
-        C3 100n
-        C4 100n
-        C5 100n
-        C11 100n
-        C6 1u
-        C7 1u
-        C19 1u
-        C21 1u
-        C13 2.2u
-        C9 4.7u
-        C16 4.7u
-        C12 10u
-        C22 10u
-        C100 100u
-        R21 47
-        R31 470
-        R20 560
-        R2 1k
-        R17 1k
-        R22 1k
-        R27 1k
-        R23 1.5k
-        R8 2.2k
-        R100 4.7k
-        R101 4.7k
-        R102 4.7k
-        R4 10k
-        R9 10k
-        R10 10k
-        R15 10k
-        R18 10k
-        R19 10k
-        R25 10k
-        R30 10k
-        R7 22k
-        R6 47k
-        R13 47k
-        R14 47k
-        R11 100k
-        R12 100k
-        R5 470k
-        R28 470k
-        R29 470k
-        R1 1M
-        R3 1M
-        R16 1M
-        R24 1M
-        R26 1M
-        IC1 (Inj) 8 PIN DIP SOCKET
-    """,
-    "[PedalPCB] [Fuzz] Sunflower Fuzz": """
-        PCB Sunflower Fuzz PCB
-        Q1 NKT275
-        Q2 NKT275
-        D100 1N5817
-        VOLUME A250K
-        FUZZ B1K
-        SUNDIAL B5K
-        IC1 TC1044SCPA
-        BIAS 5K
-        C3 10n
-        C1 1u
-        C100 10u
-        C2 22u
-        C101 47u
-        R4 470
-        R3 1k
-        R2 33k
-        R1 100k
-    """,
-    "[PedalPCB] [Modulation] Caesar Chorus": """
-        PCB Caesar Chorus PCB
-        IC2 RC4558
-        IC1 TL022
-        IC4 V3102D
-        IC3 V3207D
-        Q1 2N5088
-        Q2 2N5088
-        Q3 2N5088
-        Q4 2N5088
-        Q5 2N5088
-        D1 3mm Red
-        D2 3mm Red
-        D100 1N5817
-        D3 1N914
-        D4 1N914
-        D101 9V1
-        RATE B100K
-        DEPTH B100K
-        BLEND B10K
-        LAG B250K
-        TRIM 50K
-        C11 47p
-        C5 100p
-        C19 100p
-        C10 470p
-        C16 470p
-        C8 3.3n
-        C13 3.3n
-        C4 6.8n
-        C18 6.8n
-        C9 8.2n
-        C15 8.2n
-        C7 10n
-        C6 33n
-        C12 33n
-        C17 33n
-        C1 47n
-        C3 47n
-        C101 100n
-        C2 1u
-        C20 1u
-        C14 10u
-        C103 10u
-        C102 47u
-        C100 100u
-        C104 220u
-        R102 33
-        R40 470
-        R3 1k
-        R25 2.7k
-        R18 4.7k
-        R19 4.7k
-        R24 4.7k
-        R103 4.7k
-        R11 6.8k
-        R4 10k
-        R8 10k
-        R10 10k
-        R13 10k
-        R17 10k
-        R20 10k
-        R21 10k
-        R23 10k
-        R29 10k
-        R30 10k
-        R31 10k
-        R32 10k
-        R39 10k
-        R100 10k
-        R101 10k
-        R34 12k
-        R35 12k
-        R36 12k
-        R37 12k
-        R12 22k
-        R7 33k
-        R22 33k
-        R26 33k
-        R2 47k
-        R9 47k
-        R14 47k
-        R15 47k
-        R38 47k
-        R27 56k
-        R16 100k
-        R41 100k
-        R28 330k
-        R5 470k
-        R1 1M
-        R6 1M
-        R33 1M
-        IC1 (Inj) 8 PIN DIP SOCKET
-        IC2 (Inj) 8 PIN DIP SOCKET
-        IC3 (Inj) 8 PIN DIP SOCKET
-        IC4 (Inj) 8 PIN DIP SOCKET
+        IC1 (Inj) DIP SOCKET (Check Size)
     """,
     "[PedalPCB] [Modulation] Circulator": """
         PCB Circulator PCB
@@ -904,7 +71,11 @@ BOM_PRESETS = {
         IC5 TL072
         D100 1N5817
         DEPTH B25K
+        SWEEP B50K
         RATE C1M
+        RES C1M
+        RANGE SPDT (On/Off/On)
+        PV SPDT (On/On)
         C8 100p
         C3 2.2n
         C4 2.2n
@@ -959,11 +130,11 @@ BOM_PRESETS = {
         R34 470k
         R2 1M
         R3 1M
-        IC1 (Inj) 8 PIN DIP SOCKET
-        IC2 (Inj) 8 PIN DIP SOCKET
-        IC3 (Inj) 8 PIN DIP SOCKET
-        IC4 (Inj) 8 PIN DIP SOCKET
-        IC5 (Inj) 8 PIN DIP SOCKET
+        IC1 (Inj) DIP SOCKET (Check Size)
+        IC2 (Inj) DIP SOCKET (Check Size)
+        IC3 (Inj) DIP SOCKET (Check Size)
+        IC4 (Inj) DIP SOCKET (Check Size)
+        IC5 (Inj) DIP SOCKET (Check Size)
     """,
     "[PedalPCB] [Modulation] Low Tide Modulator": """
         PCB Low Tide Modulator PCB
@@ -1104,101 +275,31 @@ BOM_PRESETS = {
         R49 1M
         R1 2M
         R5 2M
-        IC1 (Inj) 8 PIN DIP SOCKET
-        IC2 (Inj) 8 PIN DIP SOCKET
-        IC3 (Inj) 8 PIN DIP SOCKET
-        IC4 (Inj) 8 PIN DIP SOCKET
-        IC5 (Inj) 8 PIN DIP SOCKET
-        IC6 (Inj) 8 PIN DIP SOCKET
-        IC7 (Inj) 8 PIN DIP SOCKET
-    """,
-    "[PedalPCB] [Modulation] Sea Horse": """
-        PCB Sea Horse PCB
-        IC3 L78L05
-        IC4 LM324
-        IC2 PT2399
-        IC1 TL074
-        D1 3mm
-        D2 1N5817
-        DEPTH B50K
-        RATE C1M
-        C17 100p
-        C5 470p
-        C6 470p
-        C11 3.3n
-        C19 10n
-        C1 100n
-        C22 100n
-        C4 100n
-        C9 100n
-        C12 100n
-        C13 100n
-        C14 100n
-        C20 470n
-        C2 1u
-        C7 1u
-        C15 1u
-        C16 1u
-        C18 1u
-        C3 10u
-        C23 10u
-        C24 10u
-        C8 10u
-        C10 10u
-        C21 100u
-        R20 470
-        R6 1k
-        R31 1k
-        R13 1k
-        R7 2.2k
-        R9 8.2k
-        R3 10k
-        R5 10k
-        R25 10k
-        R26 10k
-        R27 10k
-        R28 10k
-        R29 10k
-        R32 10k
-        R14 10k
-        R33 10k
-        R15 10k
-        R16 10k
-        R17 10k
-        R18 10k
-        R11 22k
-        R4 33k
-        R8 33k
-        R10 33k
-        R30 33k
-        R12 33k
-        R24 47k
-        R21 100k
-        R22 100k
-        R23 100k
-        R34 100k
-        R35 100k
-        R19 100k
-        R1 1M
-        R2 1M
-        IC1 (Inj) 8 PIN DIP SOCKET
-        IC2 (Inj) 8 PIN DIP SOCKET
-        IC3 (Inj) 8 PIN DIP SOCKET
-        IC4 (Inj) 8 PIN DIP SOCKET
+        IC1 (Inj) DIP SOCKET (Check Size)
+        IC2 (Inj) DIP SOCKET (Check Size)
+        IC3 (Inj) DIP SOCKET (Check Size)
+        IC4 (Inj) DIP SOCKET (Check Size)
+        IC5 (Inj) DIP SOCKET (Check Size)
+        IC6 (Inj) DIP SOCKET (Check Size)
+        IC7 (Inj) DIP SOCKET (Check Size)
     """,
     "[PedalPCB] [Modulation] The Abyss": """
         PCB The Abyss PCB
         IC1 TL072
         IC2 TL074
-        TL072 1
-        TL074 1
+        LDR1 5mm Radial LDR (KE-10720)
+        LDR2 5mm Radial LDR (KE-10720)
+        LDR3 5mm Radial LDR (KE-10720)
+        LDR4 5mm Radial LDR (KE-10720)
         Q1 MPSA18
         Q2 MPSA18
         D2 5mm
         D1 1N5817
         LEVEL A100K
-        RATE B100K
+        RATE B100K (Dual)
         VOICE B10K
+        INTENSITY B25K
+        THROB B25K
         C4 100p
         C6 470p
         C5 4.7n
@@ -1241,13 +342,12 @@ BOM_PRESETS = {
         R1 1M
         R2 1M
         R21 2.2M
-        IC1 (Inj) 8 PIN DIP SOCKET
-        IC2 (Inj) 8 PIN DIP SOCKET
-        TL072 (Inj) 8 PIN DIP SOCKET
-        TL074 (Inj) 8 PIN DIP SOCKET
+        IC1 (Inj) DIP SOCKET (Check Size)
+        IC2 (Inj) DIP SOCKET (Check Size)
     """,
     "[PedalPCB] [Overdrive] Kliche Overdrive": """
         PCB Kliche Overdrive PCB
+        IC3 TC1044SCPA
         IC1 TL072
         IC2 TL072
         D1 GE
@@ -1258,7 +358,6 @@ BOM_PRESETS = {
         GAIN B100K DUAL
         VOLUME B10K
         TREBLE B10K
-        IC3 TC1044SCPA
         C8 390p
         C14 820p
         C12 2.2n
@@ -1312,49 +411,17 @@ BOM_PRESETS = {
         R11 422k
         R2 1M
         R31 1M
-        IC1 (Inj) 8 PIN DIP SOCKET
-        IC2 (Inj) 8 PIN DIP SOCKET
-    """,
-    "[PedalPCB] [Overdrive] Mach 1 Overdrive": """
-        PCB Mach 1 Overdrive PCB
-        IC1 OPA2134
-        D100 1N5817
-        D2 1N914
-        D3 1N914
-        D4 1N914
-        D5 1N914
-        D6 1N914
-        VOLUME A100K
-        TONE A10K
-        DRIVE A500K
-        C7 100p
-        C9 10n
-        C1 47n
-        C6 47n
-        C8 220n
-        C5 470n
-        C2 1u
-        C100 22u
-        C101 22u
-        R5 3.3k
-        R11 3.3k
-        R3 3.9k
-        R4 4.7k
-        R100 4.7k
-        R101 4.7k
-        R9 5.6k
-        R10 5.6k
-        R102 5.6k
-        R12 12k
-        R2 430k
-        R1 1M
-        IC1 (Inj) 8 PIN DIP SOCKET
+        IC1 (Inj) DIP SOCKET (Check Size)
+        IC2 (Inj) DIP SOCKET (Check Size)
+        IC3 (Inj) DIP SOCKET (Check Size)
     """,
     "[PedalPCB] [Time] Arachnid v2": """
         PCB Arachnid v2 PCB
         IC3 FV1
         IC6 L78L33
         IC1 TL074
+        IC2 24LC32A
+        X1 AB38T-32.768KHZ
         D1 1N5817
         D2 1N914
         D3 1N914
@@ -1370,7 +437,7 @@ BOM_PRESETS = {
         CTRL3 B100K
         VOLUME B100K
         MIX B10K
-        IC2 24LC32A
+        MODE 1P8T Mini Rotary
         C7 15p
         C14 220p
         C2 470p
@@ -1409,123 +476,9 @@ BOM_PRESETS = {
         R17 100k
         R1 1M
         R2 1M
-        IC1 (Inj) 8 PIN DIP SOCKET
-        IC3 (Inj) 8 PIN DIP SOCKET
-        IC6 (Inj) 8 PIN DIP SOCKET
-    """,
-    "[PedalPCB] [Time] Cataclysm Delay": """
-        PCB Cataclysm Delay PCB
-        IC1 PT2399
-        IC2 TL072
-        IC3 78L05
-        D1 1N4148
-        D2 1N4148
-        D3 1N5817
-        TONE B25K
-        TIME B50K
-        REPEATS B5K
-        MIX B5K
-        MIX B5K
-        C24 100p
-        C14 1n
-        C22 2.2n
-        C8 22n
-        C11 22n
-        C13 22n
-        C20 22n
-        C21 22n
-        C26 22n
-        C12 100n
-        C15 100n
-        C16 100n
-        C17 100n
-        C18 100n
-        C19 100n
-        C10 220n
-        C6 1u
-        C7 1u
-        C9 1u
-        C23 1u
-        C25 1u
-        C4 10u
-        C5 10u
-        C1 100u
-        C3 100u
-        R15 1k
-        R8 4.7k
-        R5 10k
-        R6 10k
-        R11 10k
-        R13 10k
-        R16 10k
-        R17 10k
-        R19 10k
-        R21 10k
-        R20 20k
-        R10 22k
-        R14 22k
-        R18 22k
-        R9 47k
-        R12 47k
-        R22 47k
-        R7 100k
-        R4 220k
-        R23 220k
-        R2 470k
-        R3 470k
-        R1 1M
-        IC1 (Inj) 8 PIN DIP SOCKET
-        IC2 (Inj) 8 PIN DIP SOCKET
-        IC3 (Inj) 8 PIN DIP SOCKET
-    """,
-    "[PedalPCB] [Time] Deflector Reverb": """
-        PCB Deflector Reverb PCB
-        IC5 L78L33
-        IC2 SPIN
-        IC1 TL072
-        D100 1N5817
-        IC4 CD4049UB
-        IC3 24LC32A
-        C3 1n
-        C10 1n
-        C11 1n
-        C12 1n
-        C14 2.2n
-        C1 100n
-        C4 100n
-        C102 100n
-        C2 1u
-        C5 1u
-        C6 1u
-        C7 1u
-        C8 1u
-        C13 1u
-        C9 4.7u
-        C101 10u
-        C100 100u
-        C103 100u
-        R5 100
-        R12 470
-        R3 1k
-        R8 2.2k
-        R7 4.7k
-        R102 4.7k
-        R14 6.2k
-        R9 10k
-        R15 10k
-        R100 10k
-        R101 10k
-        R4 22k
-        R11 22k
-        R10 47k
-        R6 100k
-        R13 100k
-        R16 100k
-        R1 1M
-        R2 1M
-        IC1 (Inj) 8 PIN DIP SOCKET
-        IC2 (Inj) 8 PIN DIP SOCKET
-        IC5 (Inj) 8 PIN DIP SOCKET
+        IC1 (Inj) DIP SOCKET (Check Size)
+        IC2 (Inj) DIP SOCKET (Check Size)
+        IC3 (Inj) DIP SOCKET (Check Size)
     """,
     "[PedalPCB] [Time] Gravitation Reverb": """
         PCB Gravitation Reverb PCB
@@ -1538,6 +491,7 @@ BOM_PRESETS = {
         DECAY B25K
         TONE B25K
         ATMOSPHERE B50K
+        LENGTH ON/ON
         C10 100p
         C5 1n
         C7 1n
@@ -1576,116 +530,8 @@ BOM_PRESETS = {
         R12 100k
         R1 1M
         R3 1M
-        IC1 (Inj) 8 PIN DIP SOCKET
-        IC2 (Inj) 8 PIN DIP SOCKET
-        IC3 (Inj) 8 PIN DIP SOCKET
-        IC4 (Inj) 8 PIN DIP SOCKET
-    """,
-    "[PedalPCB] [Time] Spirit Box": """
-        PCB Spirit Box PCB
-        IC2 BTDR-2H
-        IC3 L78L05
-        IC6 L78L05
-        IC5 PT2399
-        IC1 TL072
-        IC4 TL072
-        D100 1N5817
-        ATTACK B10K
-        DEPTH B2K
-        C8 1n
-        C9 2.2n
-        C11 10n
-        C1 100n
-        C10 100n
-        C12 100n
-        C13 100n
-        C14 100n
-        C16 100n
-        C4 470n
-        C5 470n
-        C7 470n
-        C2 1u
-        C3 2.2u
-        C6 10u
-        C15 10u
-        C101 10u
-        C17 100u
-        C100 100u
-        R6 470
-        R18 1k
-        R100 4.7k
-        R4 10k
-        R5 10k
-        R9 10k
-        R10 10k
-        R13 10k
-        R15 10k
-        R101 10k
-        R102 10k
-        R3 12k
-        R14 15k
-        R16 15k
-        R17 15k
-        R8 22k
-        R11 22k
-        R19 22k
-        R12 33k
-        R7 100k
-        R1 1M
-        R2 1M
-        IC1 (Inj) 8 PIN DIP SOCKET
-        IC2 (Inj) 8 PIN DIP SOCKET
-        IC3 (Inj) 8 PIN DIP SOCKET
-        IC4 (Inj) 8 PIN DIP SOCKET
-        IC5 (Inj) 8 PIN DIP SOCKET
-        IC6 (Inj) 8 PIN DIP SOCKET
-    """,
-    "[PedalPCB] [Time] VHS": """
-        PCB VHS PCB
-        IC3 FV1
-        IC5 L78L33
-        IC1 TL072
-        D1 1N5817
-        VOLUME B100K
-        IC2 24LC32A
-        SW1 DPDT
-        SW2 DPDT
-        SW3 DPDT
-        C7 15p
-        C13 470p
-        C4 1n
-        C11 2.2n
-        C1 100n
-        C12 220n
-        C3 1u
-        C8 1u
-        C9 1u
-        C14 1u
-        C6 10u
-        C16 47u
-        C17 47u
-        C15 100u
-        R7 100
-        R11 100
-        R3 1k
-        R20 1k
-        R12 4.7k
-        R17 4.7k
-        R18 4.7k
-        R19 4.7k
-        R5 10k
-        R13 10k
-        R14 10k
-        R15 10k
-        R16 10k
-        R9 47k
-        R2 100k
-        R4 100k
-        R8 100k
-        R1 1M
-        IC1 (Inj) 8 PIN DIP SOCKET
-        IC3 (Inj) 8 PIN DIP SOCKET
-        IC5 (Inj) 8 PIN DIP SOCKET
+        IC1 (Inj) DIP SOCKET (Check Size)
+        IC2 (Inj) DIP SOCKET (Check Size)
     """,
     "[Tayda] [Dynamics] Micro Amp Booster": """
         PCB
