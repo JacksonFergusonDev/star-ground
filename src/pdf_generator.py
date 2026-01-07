@@ -38,9 +38,8 @@ class FieldManual(FPDF):
         self.set_font("Courier", "B", 10)
         self.cell(10, 8, "Chk", 1)
         self.cell(15, 8, "Qty", 1)
-        self.cell(35, 8, "Value", 1)
-        self.cell(50, 8, "Refs", 1)
-        self.cell(0, 8, "Notes", 1, ln=True)
+        self.cell(60, 8, "Value", 1)
+        self.cell(0, 8, "Refs", 1, ln=True)
 
         # Rows
         self.set_font("Courier", "", 9)
@@ -79,8 +78,33 @@ class FieldManual(FPDF):
                 refs = refs[:22] + "..."
             self.cell(50, 8, refs, 1)
 
-            # Notes
-            self.cell(0, 8, notes[:45], 1, ln=True)
+            # LOGIC: Polarity / Warning Handling
+            # If polarized or has notes (like "Check Size"), text goes RED.
+            if part["polarized"] or part["notes"]:
+                self.set_text_color(220, 50, 50)  # Red
+                # If there's a specific note, append it to the value for context
+                if part["notes"]:
+                    # e.g. "DIP SOCKET" -> "DIP SOCKET [Check Size]"
+                    # We strip the "[!]" tag we added in previous logic if it exists
+                    clean_note = part["notes"].replace("[!] ", "")
+                    # Update the local variable, not the dict
+                    val_str = f"{val_str} [{clean_note}]"
+            else:
+                self.set_text_color(0, 0, 0)  # Black
+
+            # Value (Expanded Truncation)
+            # 60mm allows for ~30-35 chars
+            self.cell(60, 8, val_str[:35], 1)
+
+            # Reset color for Refs
+            self.set_text_color(0, 0, 0)
+
+            # Refs (Smart Truncation)
+            # Remaining space is ~105mm, allows for ~60 chars
+            refs = ", ".join(part["refs"])
+            if len(refs) > 60:
+                refs = refs[:57] + "..."
+            self.cell(0, 8, refs, 1, ln=True)
 
 
 def sort_by_z_height(part_list):
