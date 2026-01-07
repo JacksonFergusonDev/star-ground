@@ -31,6 +31,8 @@ from src.bom_lib import (
     generate_pedalpcb_url,
 )
 
+from src.pdf_generator import generate_field_manual
+
 st.set_page_config(page_title="Pedal BOM Manager", page_icon="🎸")
 
 # Hide the native dataframe toolbar (Search/Download)
@@ -907,6 +909,15 @@ if st.session_state.inventory and st.session_state.stats:
             mime="text/csv",
             help="Upload this file next time! It contains your stock levels minus what you used here, plus what you bought.",
         )
+
+    st.download_button(
+        "📖 Download Field Manual (PDF)",
+        data=generate_field_manual(inventory, st.session_state.pedal_slots),
+        file_name="pedal_field_manual.pdf",
+        mime="application/pdf",
+        help="A printable build guide sorted by component height.",
+        width="stretch",  # Optional: Make it full width below the columns
+    )
 
 st.divider()
 
