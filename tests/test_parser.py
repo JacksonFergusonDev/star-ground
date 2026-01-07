@@ -17,6 +17,7 @@ from src.bom_lib import (
     expand_refs,
     parse_user_inventory,
     calculate_net_needs,
+    deduplicate_refs,
 )
 
 # Standard Unit Tests
@@ -527,3 +528,25 @@ def test_preset_integrity():
         # Must find parts
         assert stats["parts_found"] > 0, f"Preset '{name}' yielded 0 parts!"
         assert stats["lines_read"] > 0
+
+
+def test_ref_deduplication_and_sorting():
+    """
+    Verify the Field Manual helper logic (Commit 8).
+    """
+    # 1. Basic Deduplication
+    raw = ["R1", "R1", "R2"]
+    assert deduplicate_refs(raw) == ["R1", "R2"]
+
+    # 2. Natural Sorting (The "R10 Problem")
+    # ASCII sort would be: R1, R10, R2.
+    # Natural sort should be: R1, R2, R10.
+    unsorted = ["R10", "R2", "R1"]
+    assert deduplicate_refs(unsorted) == ["R1", "R2", "R10"]
+
+    # 3. Complex Mix
+    complex_list = ["C2", "C1", "C10", "C2"]
+    assert deduplicate_refs(complex_list) == ["C1", "C2", "C10"]
+
+    # 4. Empty Safety
+    assert deduplicate_refs([]) == []

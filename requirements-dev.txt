@@ -22,3 +22,4 @@ types-pexpect
 types-protobuf
 types-pyasn1
 types-pycurl
+types-fpdf2

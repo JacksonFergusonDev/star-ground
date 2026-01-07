@@ -105,7 +105,12 @@ def test_csv_processing_via_state_injection(app):
 
     # Check that download buttons appeared (Integration check)
     # Phase 2a added a second download button (Updated Inventory)
-    assert len(app.get("download_button")) == 2
+    # Phase 2b added a third (Field Manual)
+    btns = app.get("download_button")
+    assert len(btns) == 3
+
+    # Verify the new button is the correct one
+    assert "Field Manual" in btns[2].label
 
 
 def test_source_ref_duplication_on_merge(app):
