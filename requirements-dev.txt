@@ -6,6 +6,7 @@ ruff==0.14.8
 mypy==1.19.1
 pytest==9.0.1
 hypothesis==6.148.5
+pre-commit==4.5.1
 
 # Type Stubs
 pandas-stubs
