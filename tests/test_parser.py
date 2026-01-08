@@ -518,12 +518,18 @@ def test_preset_integrity():
     Verify that every defined preset is valid, parseable BOM text.
     This catches typos or empty strings in the presets file.
     """
-    for name, raw_text in BOM_PRESETS.items():
+    for name, data in BOM_PRESETS.items():
+        # Handle new Dict format vs Legacy string
+        if isinstance(data, dict):
+            raw_text = data["bom_text"]
+        else:
+            raw_text = data
+
         # Sanity check: Text should exist
         assert raw_text.strip(), f"Preset '{name}' is empty!"
 
         # Parse check
-        inventory, stats = parse_with_verification([raw_text], source_name=name)
+        _, stats = parse_with_verification([raw_text], source_name=name)
 
         # Must find parts
         assert stats["parts_found"] > 0, f"Preset '{name}' yielded 0 parts!"
