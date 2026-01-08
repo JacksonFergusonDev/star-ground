@@ -536,8 +536,11 @@ if st.button("Generate Master List", type="primary", width="stretch"):
     for i, slot in enumerate(st.session_state.pedal_slots):
         # Determine Source Name (Placeholder if empty)
         # We don't lock in the name yet, giving the PDF parser a chance to find a better one.
-        if slot["name"].strip():
-            source = slot["name"]
+        # SAFEGUARD: Explicit cast to str() for Pylance
+        current_name = str(slot.get("name") or "")
+
+        if current_name.strip():
+            source = current_name
         else:
             source = f"Project #{i + 1}"
 
@@ -580,9 +583,14 @@ if st.button("Generate Master List", type="primary", width="stretch"):
                             tmp_path, source_name=source
                         )
                         # Feature: Auto-Name from PDF Title
-                        if not slot["name"].strip() and p_stats.get("extracted_title"):
-                            new_title = p_stats["extracted_title"]
+                        # Check extracted_title exists and current name is empty
+                        extracted_title = p_stats.get("extracted_title")
+
+                        if not str(slot.get("name") or "").strip() and extracted_title:
+                            # SAFEGUARD: Cast to string to satisfy type checker (key cannot be None)
+                            new_title = str(extracted_title)
                             slot["name"] = new_title
+
                             # Remap the temporary source to the found title
                             for part in p_inv.values():
                                 if source in part["sources"]:
@@ -631,11 +639,17 @@ if st.button("Generate Master List", type="primary", width="stretch"):
                                 tmp_path, source_name=source
                             )
                             # Feature: Auto-Name from PDF Title
-                            if not slot["name"].strip() and p_stats.get(
-                                "extracted_title"
+                            # Check extracted_title exists and current name is empty
+                            extracted_title = p_stats.get("extracted_title")
+
+                            if (
+                                not str(slot.get("name") or "").strip()
+                                and extracted_title
                             ):
-                                new_title = p_stats["extracted_title"]
+                                # SAFEGUARD: Cast to string to satisfy type checker (key cannot be None)
+                                new_title = str(extracted_title)
                                 slot["name"] = new_title
+
                                 # Remap the temporary source to the found title
                                 for part in p_inv.values():
                                     if source in part["sources"]:
