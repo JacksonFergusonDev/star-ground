@@ -287,7 +287,16 @@ def update_from_preset(slot_id):
 
     if new_preset:
         # 1. Update BOM Data
-        slot["data"] = BOM_PRESETS[new_preset]
+        preset_obj = BOM_PRESETS[new_preset]
+
+        # Handle New Dict Format vs Legacy String
+        if isinstance(preset_obj, dict):
+            slot["data"] = preset_obj["bom_text"]
+            if preset_obj.get("is_pdf"):
+                slot["pdf_path"] = preset_obj["source_path"]
+        else:
+            slot["data"] = preset_obj
+
         # Force the text area to reflect this new data
         st.session_state[f"text_preset_{slot_id}"] = slot["data"]
 
@@ -513,8 +522,12 @@ if st.button("Generate Master List", type="primary", width="stretch"):
             f = cast(UploadedFile, slot.get("data"))
             if f:
                 # CRITICAL: Reset cursor to start.
-                # If the file was read in a previous run, the cursor is at the end.
                 f.seek(0)
+
+                # Cache for Zip
+                if f.name.lower().endswith(".pdf"):
+                    slot["cached_pdf_bytes"] = f.getvalue()
+                    f.seek(0)  # Reset again after read
 
                 ext = os.path.splitext(f.name)[1].lower()
                 with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp:
@@ -554,6 +567,9 @@ if st.button("Generate Master List", type="primary", width="stretch"):
                     ) or response.content.startswith(b"%PDF")
 
                     if is_pdf:
+                        # CACHE BYTES for Master Zip
+                        slot["cached_pdf_bytes"] = response.content
+
                         with tempfile.NamedTemporaryFile(
                             delete=False, suffix=".pdf"
                         ) as tmp:
