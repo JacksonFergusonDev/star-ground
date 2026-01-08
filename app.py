@@ -1,6 +1,4 @@
-import csv
 import datetime
-import io
 import os
 import uuid
 import re
@@ -13,6 +11,7 @@ from streamlit.runtime.uploaded_file_manager import UploadedFile
 import streamlit as st
 from src.presets import BOM_PRESETS
 from src.pdf_generator import generate_master_zip, generate_pdf_bundle
+from src.exporters import generate_shopping_list_csv, generate_stock_update_csv
 
 from src.bom_lib import (
     InventoryType,
@@ -926,69 +925,10 @@ if st.session_state.inventory and st.session_state.stats:
         help="Excel mode creates clickable 'Buy' links. Standard mode saves the full https:// URL.",
     )
 
-    # CSV Generation
-    csv_buf = io.StringIO()
-
-    # Dynamic Fields for CSV to match UI
-    fields = [
-        "Category",
-        "Part",
-        "BOM Qty",
-        "Buy Qty",
-        "Notes",
-        "Search Term",
-        "Tayda_Link",
-        "Origin",
-    ]
-    if stock:
-        fields[3:3] = ["In Stock", "Net Need"]
-
-    writer = csv.DictWriter(csv_buf, fieldnames=fields, extrasaction="ignore")
-    writer.writeheader()
-
-    # LOGIC: Conditional Formatting
-    if "Excel" in link_format:
-        # Transform for Excel
-        csv_export_data = []
-        for row in final_data:
-            export_row = row.copy()
-            row_link = export_row.get("Tayda_Link")
-            if row_link:
-                export_row["Tayda_Link"] = f'=HYPERLINK("{row_link}", "Buy")'
-            csv_export_data.append(export_row)
-        writer.writerows(csv_export_data)
-    else:
-        # Standard: Just write the raw data
-        writer.writerows(final_data)
-
-    csv_out = csv_buf.getvalue().encode("utf-8-sig")
-
-    # Generate Updated Inventory (The Circular Economy)
-    stock_update_buf = io.StringIO()
-    # Matches the format expected by parse_user_inventory
-    stock_fields = ["Category", "Part", "Qty"]
-    stock_writer = csv.DictWriter(stock_update_buf, fieldnames=stock_fields)
-    stock_writer.writeheader()
-
-    for row in final_data:
-        # Logic: New Stock = (Old Stock + Buy Qty) - Used Qty
-        # Note: We must use the values from the final_data row we just calculated
-
-        # safely get numbers, defaulting to 0
-        current_stock = cast(int, row.get("In Stock", 0))
-        buy_qty = cast(int, row.get("Buy Qty", 0))
-        used_qty = cast(int, row.get("BOM Qty", 0))
-
-        # The Math
-        new_qty = (current_stock + buy_qty) - used_qty
-
-        # Only save if we actually have stock left
-        if new_qty > 0:
-            stock_writer.writerow(
-                {"Category": row["Category"], "Part": row["Part"], "Qty": new_qty}
-            )
-
-    stock_update_csv = stock_update_buf.getvalue().encode("utf-8-sig")
+    # GENERATE EXPORTS
+    is_excel = "Excel" in link_format
+    csv_out = generate_shopping_list_csv(final_data, use_excel_formulas=is_excel)
+    stock_update_csv = generate_stock_update_csv(final_data)
 
     # Row 1: Specific Downloads
     c_dwn1, c_dwn2, c_dwn3 = st.columns(3)
