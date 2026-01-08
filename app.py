@@ -534,14 +534,13 @@ if st.button("Generate Master List", type="primary", width="stretch"):
     }
     # Process Each Slot
     for i, slot in enumerate(st.session_state.pedal_slots):
-        # Fallback: If name is empty, assign one so PDF generation works.
-        # NOTE: We only update the 'slot' dict (backend memory).
-        # We DO NOT update st.session_state[key] because the widget is already drawn.
-        if not slot["name"].strip():
-            default_name = f"Project #{i + 1}"
-            slot["name"] = default_name
+        # Determine Source Name (Placeholder if empty)
+        # We don't lock in the name yet, giving the PDF parser a chance to find a better one.
+        if slot["name"].strip():
+            source = slot["name"]
+        else:
+            source = f"Project #{i + 1}"
 
-        source = slot["name"]
         qty_multiplier = slot.get("count", 1)
 
         # A. Paste Text Mode (and Presets)
@@ -580,6 +579,16 @@ if st.button("Generate Master List", type="primary", width="stretch"):
                         p_inv, p_stats = parse_pedalpcb_pdf(
                             tmp_path, source_name=source
                         )
+                        # Feature: Auto-Name from PDF Title
+                        if not slot["name"].strip() and p_stats.get("extracted_title"):
+                            new_title = p_stats["extracted_title"]
+                            slot["name"] = new_title
+                            # Remap the temporary source to the found title
+                            for part in p_inv.values():
+                                if source in part["sources"]:
+                                    part["sources"][new_title] = part["sources"].pop(
+                                        source
+                                    )
                     else:
                         p_inv, p_stats = parse_csv_bom(tmp_path, source_name=source)
 
@@ -621,6 +630,18 @@ if st.button("Generate Master List", type="primary", width="stretch"):
                             p_inv, p_stats = parse_pedalpcb_pdf(
                                 tmp_path, source_name=source
                             )
+                            # Feature: Auto-Name from PDF Title
+                            if not slot["name"].strip() and p_stats.get(
+                                "extracted_title"
+                            ):
+                                new_title = p_stats["extracted_title"]
+                                slot["name"] = new_title
+                                # Remap the temporary source to the found title
+                                for part in p_inv.values():
+                                    if source in part["sources"]:
+                                        part["sources"][new_title] = part[
+                                            "sources"
+                                        ].pop(source)
                         finally:
                             if os.path.exists(tmp_path):
                                 os.remove(tmp_path)
@@ -657,6 +678,10 @@ if st.button("Generate Master List", type="primary", width="stretch"):
                         st.error(f"❌ '{source}': Server returned error {code}.")
                 except Exception as e:
                     st.error(f"❌ '{source}': Unexpected error: {str(e)}")
+
+        # Final Fallback: If name is still empty (no title found), lock in the placeholder
+        if not slot["name"].strip():
+            slot["name"] = source
 
     # Process Stock if uploaded
     stock_inventory = None
