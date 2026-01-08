@@ -104,13 +104,17 @@ def test_csv_processing_via_state_injection(app):
     assert "Circuit Board" in df["Origin"].values
 
     # Check that download buttons appeared (Integration check)
-    # Phase 2a added a second download button (Updated Inventory)
-    # Phase 2b added a third (Field Manual)
+    # Row 1: Shopping List, Stock, PDFs (3 buttons)
+    # Row 2: Master Zip (1 button)
     btns = app.get("download_button")
-    assert len(btns) == 3
+    assert len(btns) == 4
 
-    # Verify the new button is the correct one
-    assert "Field Manual" in btns[2].label
+    # Verify the specific buttons exist
+    # Button 2 (Index 2) is "Generated PDFs"
+    assert "Generated PDFs" in btns[2].label
+
+    # Button 3 (Index 3) is "Download All"
+    assert "Download All" in btns[3].label
 
 
 def test_source_ref_duplication_on_merge(app):

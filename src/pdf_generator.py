@@ -1,10 +1,151 @@
 from fpdf import FPDF
 from fpdf.enums import XPos, YPos
+from collections import defaultdict
 import datetime
 import zipfile
 import io
 import re
 from src.bom_lib import deduplicate_refs
+
+
+def condense_refs(refs):
+    """
+    Condenses a list of refs: ['R1', 'R2', 'R3', 'C1', 'Q3', 'Q4'] -> 'C1, Q3-Q4, R1-R3'
+    """
+    if not refs:
+        return ""
+
+    # 1. Parse into (Prefix, Number)
+    parsed = []
+    pattern = re.compile(r"([a-zA-Z]+)(\d+)")
+
+    unparseable = []
+
+    for r in refs:
+        m = pattern.match(r)
+        if m:
+            parsed.append((m.group(1), int(m.group(2))))
+        else:
+            unparseable.append(r)
+
+    # 2. Sort by Prefix then Number
+    parsed.sort(key=lambda x: (x[0], x[1]))
+
+    # 3. Group and condense
+    groups = defaultdict(list)
+    for p, n in parsed:
+        groups[p].append(n)
+
+    result_parts = sorted(unparseable)
+
+    for prefix in sorted(groups.keys()):
+        nums = groups[prefix]
+        if not nums:
+            continue
+
+        # Range finding algorithm
+        ranges = []
+        start = nums[0]
+        prev = nums[0]
+
+        for n in nums[1:]:
+            if n == prev + 1:
+                prev = n
+            else:
+                # Range ended
+                if start == prev:
+                    ranges.append(f"{prefix}{start}")
+                else:
+                    ranges.append(f"{prefix}{start}-{prefix}{prev}")
+                start = n
+                prev = n
+
+        # Final range
+        if start == prev:
+            ranges.append(f"{prefix}{start}")
+        else:
+            ranges.append(f"{prefix}{start}-{prefix}{prev}")
+
+        result_parts.extend(ranges)
+
+    return ", ".join(result_parts)
+
+
+class StickerSheet(FPDF):
+    def __init__(self):
+        # Letter size (215.9mm x 279.4mm)
+        super().__init__(format="Letter", unit="mm")
+        self.set_auto_page_break(auto=False)
+        self.set_margins(4.8, 12.7, 4.8)  # Left 0.19", Top 0.5"
+
+        # Avery 5160 Dims (Modified for Manual Cutting)
+        self.label_w = 66.6  # 2.625"
+        self.label_h = 25.4  # 1.0"
+        self.h_gap = 0.0  # No gap = shared borders for single-cut lines
+        self.v_gap = 0.0  # 0.0" between rows
+
+        self.cols = 3
+        self.rows = 10
+        self.current_idx = 0
+
+        self.add_page()
+
+    def add_sticker(self, project_code, part_val, refs, qty):
+        # Calculate Position
+        page_idx = self.current_idx % (self.cols * self.rows)
+        if self.current_idx > 0 and page_idx == 0:
+            self.add_page()
+
+        col = page_idx % self.cols
+        row = page_idx // self.cols
+
+        x = 4.8 + (col * (self.label_w + self.h_gap))
+        y = 12.7 + (row * (self.label_h + self.v_gap))
+
+        self.set_xy(x, y)
+
+        # Draw Cut Line (Border)
+        self.set_line_width(0.1)
+        self.set_draw_color(150, 150, 150)  # Light Grey cut lines
+        self.rect(x, y, self.label_w, self.label_h)
+        self.set_draw_color(0, 0, 0)  # Reset to black
+
+        # Content
+        # Top Left: Project Code
+        self.set_font("Helvetica", "B", 8)
+        self.cell(
+            self.label_w,
+            4,
+            f"[{project_code}]",
+            align="L",
+            new_x=XPos.LMARGIN,
+            new_y=YPos.NEXT,
+        )
+
+        # Center: Value
+        self.set_xy(x, y + 4)
+        self.set_font("Helvetica", "B", 12)
+        self.cell(
+            self.label_w,
+            8,
+            str(part_val)[:18],
+            align="C",
+            new_x=XPos.LMARGIN,
+            new_y=YPos.NEXT,
+        )
+
+        # Bottom: Refs (Condensed/Truncated)
+        self.set_xy(x, y + 13)
+        self.set_font("Helvetica", "", 7)
+        ref_text = condense_refs(refs)
+
+        # Add Quantity if > 1
+        if qty > 1:
+            ref_text = f"(x{qty}) {ref_text}"
+
+        self.multi_cell(self.label_w, 3, ref_text, align="C")
+
+        self.current_idx += 1
 
 
 class FieldManual(FPDF):
@@ -185,72 +326,138 @@ def float_val_check(val_str: str) -> float:
     return 0.0
 
 
-def generate_field_manual_zip(inventory, slots):
-    """
-    Generates a ZIP file containing individual Field Manual PDFs for each pedal.
-    """
+def _write_field_manuals(zf, inventory, slots):
+    """Helper: Generate Field Manual PDFs and write to ZIP."""
+    for slot in slots:
+        project_name = slot.get("locked_name", slot["name"])
+        if not project_name:
+            continue
+
+        pdf = FieldManual()
+        project_parts = []
+
+        # Filter Inventory
+        for key, data in inventory.items():
+            sources = data["sources"]
+            if project_name in sources:
+                unique_refs = deduplicate_refs(sources[project_name])
+                if unique_refs:
+                    cat, val = key.split(" | ", 1)
+
+                    # Formatting logic
+                    row_notes = ""
+                    if "DIP SOCKET" in val:
+                        row_notes = "[!] Check Size"
+                    is_polarized = cat in ["Diodes", "Transistors", "ICs"] or (
+                        cat == "Capacitors" and ("u" in val or "µ" in val)
+                    )
+
+                    project_parts.append(
+                        {
+                            "category": cat,
+                            "value": val,
+                            "qty": len(unique_refs),
+                            "refs": unique_refs,
+                            "notes": row_notes,
+                            "polarized": is_polarized,
+                        }
+                    )
+
+        if project_parts:
+            sorted_parts = sort_by_z_height(project_parts)
+            pdf.add_project(project_name, sorted_parts)
+
+            safe_name = re.sub(r"[^a-zA-Z0-9_\-]", "_", project_name)
+            zf.writestr(
+                f"Field Manuals/{safe_name}_Field_Manual.pdf", bytes(pdf.output())
+            )
+
+
+def _write_stickers(zf, inventory, slots):
+    """Helper: Generate Sticker Sheet PDFs and write to ZIP."""
+    for slot in slots:
+        project_name = slot.get("locked_name", slot["name"])
+        if not project_name:
+            continue
+
+        project_parts = []
+        for key, data in inventory.items():
+            sources = data["sources"]
+            if project_name in sources:
+                unique_refs = deduplicate_refs(sources[project_name])
+                if unique_refs:
+                    cat, val = key.split(" | ", 1)
+                    project_parts.append((val, unique_refs))
+
+        if not project_parts:
+            continue
+
+        pdf = StickerSheet()
+        code = "".join([c for c in project_name if c.isalnum()]).upper()[:4]
+        project_parts.sort(key=lambda x: x[0])
+
+        for val, refs in project_parts:
+            pdf.add_sticker(code, val, refs, len(refs))
+
+        safe_name = re.sub(r"[^a-zA-Z0-9_\-]", "_", project_name)
+        zf.writestr(
+            f"Sticker Sheets/{safe_name}_Sticker_Sheet.pdf", bytes(pdf.output())
+        )
+
+
+def generate_pdf_bundle(inventory, slots):
+    """Option 1: Returns ZIP with Field Manuals and Sticker Sheets."""
+    zip_buffer = io.BytesIO()
+    with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zf:
+        _write_field_manuals(zf, inventory, slots)
+        _write_stickers(zf, inventory, slots)
+    return zip_buffer.getvalue()
+
+
+def generate_master_zip(inventory, slots, shopping_list_csv, stock_csv):
+    """Option 2: Returns ZIP with Everything (PDFs + CSVs + Source Files)."""
     zip_buffer = io.BytesIO()
 
     with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zf:
+        # 1. Root Files
+        zf.writestr("Pedal Shopping List.csv", shopping_list_csv)
+        zf.writestr("My Inventory Updated.csv", stock_csv)
+
+        info_text = (
+            "Guitar Pedal BOM Manager\n"
+            "Generated on: "
+            + datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+            + "\n\n"
+            "CONTENTS:\n"
+            "- Field Manuals/: Printable step-by-step checklists.\n"
+            "- Sticker Sheets/: Labels for Avery 5160 (3x10).\n"
+            "- Source Documents/: The original build docs (if available).\n"
+        )
+        zf.writestr("info.txt", info_text)
+
+        # 2. Generated PDFs
+        _write_field_manuals(zf, inventory, slots)
+        _write_stickers(zf, inventory, slots)
+
+        # 3. Source Documents
         for slot in slots:
-            project_name = slot["name"]
-            if not project_name:
-                continue
-
-            # Create a FRESH PDF for this project
-            pdf = FieldManual()
-
-            project_parts = []
-
-            # Filter Inventory for this project
-            for key, data in inventory.items():
-                sources = data["sources"]
-
-                # Check if this project uses this part
-                if project_name in sources:
-                    # Deduplicate refs to get Single-Unit count
-                    unique_refs = deduplicate_refs(sources[project_name])
-                    qty = len(unique_refs)
-
-                    if qty > 0:
-                        cat, val = key.split(" | ", 1)
-
-                        # Formatting Overrides
-                        row_notes = ""
-                        if "DIP SOCKET (Check Size)" in val:
-                            val = "DIP SOCKET"
-                            row_notes = "[!] Check Size"
-
-                        is_polarized = cat in ["Diodes", "Transistors", "ICs"]
-                        if cat == "Capacitors" and ("u" in val or "µ" in val):
-                            is_polarized = True
-
-                        project_parts.append(
-                            {
-                                "category": cat,
-                                "value": val,
-                                "qty": qty,
-                                "refs": unique_refs,
-                                "notes": row_notes,
-                                "polarized": is_polarized,
-                            }
-                        )
-
-            # Sort
-            sorted_parts = sort_by_z_height(project_parts)
-
-            # Add content (starts Page 1)
-            pdf.add_project(project_name, sorted_parts)
-
-            # Generate PDF bytes
-            pdf_bytes = bytes(pdf.output())
-
-            # Create Safe Filename
-            # e.g. "Big Muff - Ram's Head" -> "Big_Muff_-_Rams_Head_Field_Manual.pdf"
+            project_name = slot.get("locked_name", slot["name"])
             safe_name = re.sub(r"[^a-zA-Z0-9_\-]", "_", project_name)
-            filename = f"{safe_name}_Field_Manual.pdf"
 
-            # Write to ZIP
-            zf.writestr(filename, pdf_bytes)
+            # Check cached bytes (URL/Upload)
+            if "cached_pdf_bytes" in slot and slot["cached_pdf_bytes"]:
+                zf.writestr(
+                    f"Source Documents/{safe_name}_Source.pdf", slot["cached_pdf_bytes"]
+                )
+
+            # Check local path (Preset)
+            elif "pdf_path" in slot and slot["pdf_path"]:
+                try:
+                    with open(slot["pdf_path"], "rb") as f:
+                        zf.writestr(
+                            f"Source Documents/{safe_name}_Source.pdf", f.read()
+                        )
+                except Exception:
+                    pass
 
     return zip_buffer.getvalue()

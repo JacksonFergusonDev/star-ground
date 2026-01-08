@@ -12,6 +12,7 @@ from typing import cast, List, Dict, Any
 from streamlit.runtime.uploaded_file_manager import UploadedFile
 import streamlit as st
 from src.presets import BOM_PRESETS
+from src.pdf_generator import generate_master_zip, generate_pdf_bundle
 
 from src.bom_lib import (
     InventoryType,
@@ -30,8 +31,6 @@ from src.bom_lib import (
     calculate_net_needs,
     generate_pedalpcb_url,
 )
-
-from src.pdf_generator import generate_field_manual_zip
 
 st.set_page_config(page_title="Pedal BOM Manager", page_icon="🎸")
 
@@ -287,7 +286,16 @@ def update_from_preset(slot_id):
 
     if new_preset:
         # 1. Update BOM Data
-        slot["data"] = BOM_PRESETS[new_preset]
+        preset_obj = BOM_PRESETS[new_preset]
+
+        # Handle New Dict Format vs Legacy String
+        if isinstance(preset_obj, dict):
+            slot["data"] = preset_obj["bom_text"]
+            if preset_obj.get("is_pdf"):
+                slot["pdf_path"] = preset_obj["source_path"]
+        else:
+            slot["data"] = preset_obj
+
         # Force the text area to reflect this new data
         st.session_state[f"text_preset_{slot_id}"] = slot["data"]
 
@@ -321,23 +329,58 @@ def on_method_change(slot_id):
     # Get the new method from the widget state
     new_method = st.session_state.get(f"method_{slot_id}")
 
-    # Case: Switch to Paste Text -> Clear Data
+    # Helper to reset name
+    name_key = f"name_{slot_id}"
+
+    # Case: Switch to Paste Text -> Clear Data & Name
     if new_method == "Paste Text":
         slot["data"] = ""
-        # Clear the text area widget state to ensure it shows empty
+        slot["name"] = ""
+        if name_key in st.session_state:
+            st.session_state[name_key] = ""
+
+        slot.pop("pdf_path", None)
+        slot.pop("cached_pdf_bytes", None)
+
         if f"text_{slot_id}" in st.session_state:
             st.session_state[f"text_{slot_id}"] = ""
 
-    # Case: Switch to URL -> Clear Data
+    # Case: Switch to URL -> Clear Data & Name
     elif new_method == "From URL":
         slot["data"] = ""
+        slot["name"] = ""
+        if name_key in st.session_state:
+            st.session_state[name_key] = ""
+
+        slot.pop("pdf_path", None)
+        slot.pop("cached_pdf_bytes", None)
+
         if f"url_{slot_id}" in st.session_state:
             st.session_state[f"url_{slot_id}"] = ""
+
+    # Case: Switch to Upload -> Clear Data & Name
+    elif new_method == "Upload File":
+        slot["data"] = None  # File uploader expects None, not ""
+        slot["name"] = ""
+        if name_key in st.session_state:
+            st.session_state[name_key] = ""
+
+        slot.pop("pdf_path", None)
+        slot.pop("cached_pdf_bytes", None)
 
     # Case: Switch to Preset -> Load Default
     elif new_method == "Preset":
         first_preset = sorted(list(BOM_PRESETS.keys()))[0]
-        slot["data"] = BOM_PRESETS[first_preset]
+        preset_obj = BOM_PRESETS[first_preset]
+
+        # Unpack Dict if necessary
+        if isinstance(preset_obj, dict):
+            slot["data"] = preset_obj["bom_text"]
+            if preset_obj.get("is_pdf"):
+                slot["pdf_path"] = preset_obj["source_path"]
+        else:
+            slot["data"] = preset_obj
+
         slot["last_loaded_preset"] = first_preset
 
         # Auto-fill name if empty
@@ -490,8 +533,17 @@ if st.button("Generate Master List", type="primary", width="stretch"):
         "seen_refs": set(),
     }
     # Process Each Slot
-    for slot in st.session_state.pedal_slots:
-        source = slot["name"] if slot["name"].strip() else "Untitled Project"
+    for i, slot in enumerate(st.session_state.pedal_slots):
+        # Determine Source Name (Placeholder if empty)
+        # We don't lock in the name yet, giving the PDF parser a chance to find a better one.
+        # SAFEGUARD: Explicit cast to str() for Pylance
+        current_name = str(slot.get("name") or "")
+
+        if current_name.strip():
+            source = current_name
+        else:
+            source = f"Project #{i + 1}"
+
         qty_multiplier = slot.get("count", 1)
 
         # A. Paste Text Mode (and Presets)
@@ -513,8 +565,12 @@ if st.button("Generate Master List", type="primary", width="stretch"):
             f = cast(UploadedFile, slot.get("data"))
             if f:
                 # CRITICAL: Reset cursor to start.
-                # If the file was read in a previous run, the cursor is at the end.
                 f.seek(0)
+
+                # Cache for Zip
+                if f.name.lower().endswith(".pdf"):
+                    slot["cached_pdf_bytes"] = f.getvalue()
+                    f.seek(0)  # Reset again after read
 
                 ext = os.path.splitext(f.name)[1].lower()
                 with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp:
@@ -526,6 +582,21 @@ if st.button("Generate Master List", type="primary", width="stretch"):
                         p_inv, p_stats = parse_pedalpcb_pdf(
                             tmp_path, source_name=source
                         )
+                        # Feature: Auto-Name from PDF Title
+                        # Check extracted_title exists and current name is empty
+                        extracted_title = p_stats.get("extracted_title")
+
+                        if not str(slot.get("name") or "").strip() and extracted_title:
+                            # SAFEGUARD: Cast to string to satisfy type checker (key cannot be None)
+                            new_title = str(extracted_title)
+                            slot["name"] = new_title
+
+                            # Remap the temporary source to the found title
+                            for part in p_inv.values():
+                                if source in part["sources"]:
+                                    part["sources"][new_title] = part["sources"].pop(
+                                        source
+                                    )
                     else:
                         p_inv, p_stats = parse_csv_bom(tmp_path, source_name=source)
 
@@ -554,6 +625,9 @@ if st.button("Generate Master List", type="primary", width="stretch"):
                     ) or response.content.startswith(b"%PDF")
 
                     if is_pdf:
+                        # CACHE BYTES for Master Zip
+                        slot["cached_pdf_bytes"] = response.content
+
                         with tempfile.NamedTemporaryFile(
                             delete=False, suffix=".pdf"
                         ) as tmp:
@@ -564,6 +638,24 @@ if st.button("Generate Master List", type="primary", width="stretch"):
                             p_inv, p_stats = parse_pedalpcb_pdf(
                                 tmp_path, source_name=source
                             )
+                            # Feature: Auto-Name from PDF Title
+                            # Check extracted_title exists and current name is empty
+                            extracted_title = p_stats.get("extracted_title")
+
+                            if (
+                                not str(slot.get("name") or "").strip()
+                                and extracted_title
+                            ):
+                                # SAFEGUARD: Cast to string to satisfy type checker (key cannot be None)
+                                new_title = str(extracted_title)
+                                slot["name"] = new_title
+
+                                # Remap the temporary source to the found title
+                                for part in p_inv.values():
+                                    if source in part["sources"]:
+                                        part["sources"][new_title] = part[
+                                            "sources"
+                                        ].pop(source)
                         finally:
                             if os.path.exists(tmp_path):
                                 os.remove(tmp_path)
@@ -600,6 +692,14 @@ if st.button("Generate Master List", type="primary", width="stretch"):
                         st.error(f"❌ '{source}': Server returned error {code}.")
                 except Exception as e:
                     st.error(f"❌ '{source}': Unexpected error: {str(e)}")
+
+        # Final Fallback: If name is still empty (no title found), lock in the placeholder
+        if not slot["name"].strip():
+            slot["name"] = source
+
+        # Save the final resolved name to a separate key that won't be overwritten
+        # by the empty text_input widget on the next script run.
+        slot["locked_name"] = slot["name"]
 
     # Process Stock if uploaded
     stock_inventory = None
@@ -890,7 +990,8 @@ if st.session_state.inventory and st.session_state.stats:
 
     stock_update_csv = stock_update_buf.getvalue().encode("utf-8-sig")
 
-    c_dwn1, c_dwn2 = st.columns(2)
+    # Row 1: Specific Downloads
+    c_dwn1, c_dwn2, c_dwn3 = st.columns(3)
 
     with c_dwn1:
         st.download_button(
@@ -898,7 +999,7 @@ if st.session_state.inventory and st.session_state.stats:
             data=csv_out,
             file_name="pedal_shopping_list.csv",
             mime="text/csv",
-            type="primary",
+            use_container_width=True,
         )
 
     with c_dwn2:
@@ -907,16 +1008,31 @@ if st.session_state.inventory and st.session_state.stats:
             data=stock_update_csv,
             file_name="my_inventory_updated.csv",
             mime="text/csv",
-            help="Upload this file next time! It contains your stock levels minus what you used here, plus what you bought.",
+            help="Stock levels minus usage + new buys.",
+            use_container_width=True,
         )
 
+    with c_dwn3:
+        st.download_button(
+            "📖 Download Generated PDFs",
+            data=generate_pdf_bundle(inventory, st.session_state.pedal_slots),
+            file_name="pedal_build_docs.zip",
+            mime="application/zip",
+            help="ZIP containing Field Manuals and Sticker Sheets.",
+            use_container_width=True,
+        )
+
+    # Row 2: Everything
     st.download_button(
-        "📖 Download Field Manuals (ZIP)",
-        data=generate_field_manual_zip(inventory, st.session_state.pedal_slots),
-        file_name="pedal_field_manuals.zip",
+        "📚 Download All Build Documents (ZIP)",
+        data=generate_master_zip(
+            inventory, st.session_state.pedal_slots, csv_out, stock_update_csv
+        ),
+        file_name="Pedal_Build_Pack_Complete.zip",
         mime="application/zip",
-        help="Download individual printable build guides for each pedal.",
-        width="stretch",
+        help="Includes: Shopping List, Inventory, Field Manuals, Stickers, and Source PDFs.",
+        type="primary",
+        use_container_width=True,
     )
 
 st.divider()

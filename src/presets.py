@@ -2,1009 +2,1081 @@
 # DO NOT EDIT MANUALLY
 
 BOM_PRESETS = {
-    "[PedalPCB] [Fuzz] Paper Scratcher Fuzz": """
-        PCB Paper Scratcher Fuzz PCB
-        IC1 OPA1678
-        Q1 2N3904
-        Q2 2N3904
-        Q3 2N3904
-        Q4 2N5088
-        D1 1N4148
-        D2 1N4148
-        D100 1N5817
-        VOL A100K
-        RIP A100K
-        FUZZ B10K
-        TONE B50K
-        C9 150p
-        C2 1n
-        C8 18n
-        C10 18n
-        C101 100n
-        C104 100n
-        C1 1u
-        C7 1u
-        C3 10u
-        C4 10u
-        C5 10u
-        C6 10u
-        C11 10u
-        C100 100u
-        C102 100u
-        C103 100u
-        R100 47
-        R23 100
-        R8 390
-        R9 390
-        R13 390
-        R17 390
-        R3 1k
-        R15 2.7k
-        R19 4.7k
-        R20 4.7k
-        R101 4.7k
-        R7 10k
-        R12 10k
-        R16 10k
-        R104 10k
-        R14 11k
-        R102 16k
-        R18 22k
-        R21 22k
-        R103 22k
-        R6 43k
-        R11 43k
-        R4 47k
-        R22 100k
-        R5 430k
-        R10 430k
-        R1 2.2M
-        R2 2.2M
-        IC1 (Inj) DIP SOCKET (Check Size)
-    """,
-    "[PedalPCB] [Modulation] Circulator": """
-        PCB Circulator PCB
-        IC1 LM13700
-        IC2 LM13700
-        IC3 LM13700
-        IC4 TL072
-        IC5 TL072
-        D100 1N5817
-        DEPTH B25K
-        SWEEP B50K
-        RATE C1M
-        RES C1M
-        RANGE SPDT (On/Off/On)
-        PV SPDT (On/On)
-        C8 100p
-        C3 2.2n
-        C4 2.2n
-        C5 2.2n
-        C6 2.2n
-        C12 47n
-        C1 100n
-        C102 100n
-        C2 1u
-        C7 1u
-        C9 1u
-        C10 1u
-        C11 1u
-        C13 1u
-        C14 4.7u
-        C101 10u
-        C100 100u
-        R25 470
-        R8 1.2k
-        R12 1.2k
-        R16 1.2k
-        R20 1.2k
-        R32 4.7k
-        R33 4.7k
-        R100 4.7k
-        R24 8.2k
-        R1 10k
-        R4 10k
-        R5 10k
-        R6 10k
-        R9 10k
-        R13 10k
-        R17 10k
-        R21 10k
-        R31 10k
-        R7 27k
-        R10 27k
-        R11 27k
-        R14 27k
-        R15 27k
-        R18 27k
-        R19 27k
-        R22 27k
-        R23 27k
-        R27 27k
-        R101 56k
-        R102 56k
-        R26 100k
-        R29 100k
-        R30 150k
-        R28 220k
-        R34 470k
-        R2 1M
-        R3 1M
-        IC1 (Inj) DIP SOCKET (Check Size)
-        IC2 (Inj) DIP SOCKET (Check Size)
-        IC3 (Inj) DIP SOCKET (Check Size)
-        IC4 (Inj) DIP SOCKET (Check Size)
-        IC5 (Inj) DIP SOCKET (Check Size)
-    """,
-    "[PedalPCB] [Modulation] Low Tide Modulator": """
-        PCB Low Tide Modulator PCB
-        IC6 CD4046BE
-        IC3 LM13700N
-        IC4 LM258P
-        IC1 LM78L05
-        IC5 MCP602
-        IC2 RANDOMIZER
-        IC7 V3207D
-        Q4 J201
-        Q2 2N3904
-        Q3 2N3904
-        Q5 2N3904
-        Q1 2SK208-Y
-        D1 BAT48
-        D2 BAT48
-        D3 BAT48
-        DEPTH A100K
-        GATE A100K
-        VOLUME A100K
-        SLEW A1M DUAL
-        MIX B100K
-        RATE B10K
-        TRIM1 1K
-        TRIM2 1K
-        SW1 DIP-2
-        C13 100p
-        C4 220p
-        C27 220p
-        C20 680p
-        C3 1n
-        C9 1n
-        C15 1n
-        C23 1n
-        C26 1n
-        C24 4.7n
-        C18 10n
-        C37 10n
-        C1 47n
-        C2 100n
-        C6 100n
-        C10 100n
-        C12 100n
-        C14 100n
-        C16 100n
-        C17 100n
-        C28 100n
-        C29 100n
-        C30 100n
-        C31 100n
-        C33 100n
-        C35 100n
-        C38 100n
-        C7 1u
-        C8 1u
-        C11 1u
-        C25 1u
-        C36 1u
-        C5 22u
-        C19 22u
-        C21 22u
-        C22 22u
-        C34 22u
-        C39 22u
-        C40 22u
-        C41 22u
-        C42 22u
-        C32 220u
-        R34 330
-        R13 1k
-        R14 1k
-        R18 1k
-        R28 1k
-        R32 1k
-        R52 1k
-        R7 1.8k
-        R37 1.8k
-        R3 2.2k
-        R17 2.2k
-        R29 2.2k
-        R54 2.2k
-        R67 2.2k
-        R68 2.2k
-        R69 2.2k
-        R70 2.2k
-        R6 3.3k
-        R12 3.3k
-        R33 3.3k
-        R36 3.3k
-        R63 3.3k
-        R35 4.7k
-        R44 4.7k
-        R46 4.7k
-        R50 4.7k
-        R55 4.7k
-        R65 4.7k
-        R42 6.8k
-        R41 9.1k
-        R4 10k
-        R22 10k
-        R23 10k
-        R24 10k
-        R25 10k
-        R26 10k
-        R38 10k
-        R47 10k
-        R57 10k
-        R58 10k
-        R59 10k
-        R62 10k
-        R66 10k
-        R9 12k
-        R11 16k
-        R15 16k
-        R10 68k
-        R2 100k
-        R8 100k
-        R16 100k
-        R20 100k
-        R21 100k
-        R27 100k
-        R43 100k
-        R45 100k
-        R53 100k
-        R56 100k
-        R60 100k
-        R61 100k
-        R71 100k
-        R19 220k
-        R40 220k
-        R64 220k
-        R31 470k
-        R39 470k
-        R51 470k
-        R48 620k
-        R30 1M
-        R49 1M
-        R1 2M
-        R5 2M
-        IC1 (Inj) DIP SOCKET (Check Size)
-        IC2 (Inj) DIP SOCKET (Check Size)
-        IC3 (Inj) DIP SOCKET (Check Size)
-        IC4 (Inj) DIP SOCKET (Check Size)
-        IC5 (Inj) DIP SOCKET (Check Size)
-        IC6 (Inj) DIP SOCKET (Check Size)
-        IC7 (Inj) DIP SOCKET (Check Size)
-    """,
-    "[PedalPCB] [Modulation] The Abyss": """
-        PCB The Abyss PCB
-        IC1 TL072
-        IC2 TL074
-        LDR1 5mm Radial LDR (KE-10720)
-        LDR2 5mm Radial LDR (KE-10720)
-        LDR3 5mm Radial LDR (KE-10720)
-        LDR4 5mm Radial LDR (KE-10720)
-        Q1 MPSA18
-        Q2 MPSA18
-        D2 5mm
-        D1 1N5817
-        LEVEL A100K
-        RATE B100K (Dual)
-        VOICE B10K
-        INTENSITY B25K
-        THROB B25K
-        C4 100p
-        C6 470p
-        C5 4.7n
-        C2 15n
-        C1 100n
-        C3 220n
-        C7 1u
-        C8 1u
-        C11 1u
-        C12 1u
-        C13 1u
-        C10 10u
-        C14 47u
-        C15 47u
-        C9 100u
-        R26 100
-        R20 3.3k
-        R19 3.3k
-        R23 4.7k
-        R27 4.7k
-        R13 10k
-        R15 10k
-        R16 10k
-        R22 15k
-        R6 22k
-        R3 47k
-        R4 47k
-        R5 47k
-        R25 47k
-        R7 47k
-        R8 47k
-        R9 47k
-        R10 47k
-        R12 56k
-        R24 100k
-        R11 100k
-        R14 100k
-        R17 220k
-        R18 220k
-        R1 1M
-        R2 1M
-        R21 2.2M
-        IC1 (Inj) DIP SOCKET (Check Size)
-        IC2 (Inj) DIP SOCKET (Check Size)
-    """,
-    "[PedalPCB] [Overdrive] Kliche Overdrive": """
-        PCB Kliche Overdrive PCB
-        IC3 TC1044SCPA
-        IC1 TL072
-        IC2 TL072
-        D1 GE
-        D2 GE
-        D4 1N4001
-        D5 1N4001
-        D3 1N4742
-        GAIN B100K DUAL
-        VOLUME B10K
-        TREBLE B10K
-        C8 390p
-        C14 820p
-        C12 2.2n
-        C15 3.9n
-        C13 27n
-        C4 68n
-        C6 68n
-        C7 82n
-        C1 100n
-        C2 100n
-        C5 390n
-        C9 1u
-        C10 1u
-        C11 1u
-        C18 1u
-        C19 1u
-        C20 1u
-        C21 1u
-        C3 4.7u
-        C16 4.7u
-        C17 47u
-        C22 47u
-        R4 560
-        R24 560
-        R7 1k
-        R12 1k
-        R6 1.5k
-        R13 1.5k
-        R20 1.8k
-        R9 2k
-        R27 3.9k
-        R23 4.7k
-        R5 5.1k
-        R1 10k
-        R8 10k
-        R18 12k
-        R10 15k
-        R14 15k
-        R16 22k
-        R17 27k
-        R25 27k
-        R26 27k
-        R15 47k
-        R28 68k
-        R29 68k
-        R3 100k
-        R21 100k
-        R22 100k
-        R30 100k
-        R19 392k
-        R11 422k
-        R2 1M
-        R31 1M
-        IC1 (Inj) DIP SOCKET (Check Size)
-        IC2 (Inj) DIP SOCKET (Check Size)
-        IC3 (Inj) DIP SOCKET (Check Size)
-    """,
-    "[PedalPCB] [Time] Arachnid v2": """
-        PCB Arachnid v2 PCB
-        IC3 FV1
-        IC6 L78L33
-        IC1 TL074
-        IC2 24LC32A
-        X1 AB38T-32.768KHZ
-        D1 1N5817
-        D2 1N914
-        D3 1N914
-        D4 1N914
-        D5 1N914
-        D6 1N914
-        D7 1N914
-        D8 1N914
-        D9 1N914
-        D10 1N914
-        CTRL1 B100K
-        CTRL2 B100K
-        CTRL3 B100K
-        VOLUME B100K
-        MIX B10K
-        MODE 1P8T Mini Rotary
-        C7 15p
-        C14 220p
-        C2 470p
-        C4 1n
-        C12 2.2n
-        C1 100n
-        C3 1u
-        C6 1u
-        C8 1u
-        C10 1u
-        C11 1u
-        C15 1u
-        C5 10u
-        C17 47u
-        C18 47u
-        C16 100u
-        R8 100
-        R12 100
-        R3 1k
-        R18 1k
-        R22 1k
-        R13 4.7k
-        R5 10k
-        R14 10k
-        R15 10k
-        R4 15k
-        R9 15k
-        R10 15k
-        R19 15k
-        R20 15k
-        R21 15k
-        R6 100k
-        R7 100k
-        R11 100k
-        R16 100k
-        R17 100k
-        R1 1M
-        R2 1M
-        IC1 (Inj) DIP SOCKET (Check Size)
-        IC2 (Inj) DIP SOCKET (Check Size)
-        IC3 (Inj) DIP SOCKET (Check Size)
-    """,
-    "[PedalPCB] [Time] Gravitation Reverb": """
-        PCB Gravitation Reverb PCB
-        IC3 BTDR-3H
-        IC4 L78L05
-        IC1 TL072
-        IC2 TL072
-        D100 1N5817
-        MIX B10K
-        DECAY B25K
-        TONE B25K
-        ATMOSPHERE B50K
-        LENGTH ON/ON
-        C10 100p
-        C5 1n
-        C7 1n
-        C4 10n
-        C1 100n
-        C12 100n
-        C13 100n
-        C16 100n
-        C17 100n
-        C2 1u
-        C3 1u
-        C6 1u
-        C8 1u
-        C9 1u
-        C11 1u
-        C101 10u
-        C14 100u
-        C15 100u
-        C100 100u
-        R11 470
-        R15 1k
-        R17 4.7k
-        R2 10k
-        R5 10k
-        R10 10k
-        R13 10k
-        R14 10k
-        R16 15k
-        R6 22k
-        R8 22k
-        R4 39k
-        R9 39k
-        R101 47k
-        R102 47k
-        R7 100k
-        R12 100k
-        R1 1M
-        R3 1M
-        IC1 (Inj) DIP SOCKET (Check Size)
-        IC2 (Inj) DIP SOCKET (Check Size)
-    """,
-    "[Tayda] [Dynamics] Micro Amp Booster": """
-        PCB
-        PCB                  MICRO AMP BOOSTER PCB
-        
-        Capacitors        
-        C1      100n      100NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
-        C2      4.7u       4.7UF 50V ELECTROLYTIC CAPACITOR 5X11MM
-        C3      47p        47PF 50V CERAMIC DISC CAPACITOR
-        C4      10u        10UF 50V ELECTROLYTIC CAPACITOR 5X11MM (Original value 15u)
-        C5      1u          1UF 50V ELECTROLYTIC CAPACITOR 5X11MM
-        
-        IC        
-        IC1    TL071     TL071 OPERATIONAL AMPLIFIER
-        
-        Resistors        
-        R1      22M       22M OHM 1/4W 1% METAL FILM RESISTOR
-        R2      1k         1K OHM 1/4W 1% METAL FILM RESISTOR
-        R3      2.7k      2.7K OHM 1/4W 1% METAL FILM RESISTOR
-        R4      47k       47K OHM 1/4W 1% METAL FILM RESISTOR
-        R5      470       470 OHM 1/4W 1% METAL FILM RESISTOR
-        R6      10k       10K OHM 1/4W 1% METAL FILM RESISTOR
-        R7      100k     100K OHM 1/4W 1% METAL FILM RESISTOR
-        R8      10M      10M OHM 1/4W 1% METAL FILM RESISTOR
-        R9      100k     100K OHM 1/4W 1% METAL FILM RESISTOR
-        
-        Potentiometer        
-        GAIN    500k-C    500KC ANTI-LOG TAPER POTENTIOMETER
-    """,
-    "[Tayda] [Dynamics] Orange Squeezer": """
-        PCB
-        PCB             ORANGE SQUEEZER PCB
-        
-        Resistors        
-        R1    2.2M     2.2M OHM 1/4W 1% METAL FILM RESISTOR
-        R2    82k       82K OHM 1/4W 1% METAL FILM RESISTOR
-        R3    470k     470K OHM 1/4W 1% METAL FILM RESISTOR
-        R4    390k     390K OHM 1/4W 1% METAL FILM RESISTOR
-        R5    2.4k      2.4K OHM 1/4W 1% METAL FILM RESISTOR
-        R6    470k     470K OHM 1/4W 1% METAL FILM RESISTOR
-        R9    220k     220K OHM 1/4W 1% METAL FILM RESISTOR
-        R10   10k      10K OHM 1/4W 1% METAL FILM RESISTOR
-        R11   1.5k     1.5K OHM 1/4W 1% METAL FILM RESISTOR
-        R12   100k    100K OHM 1/4W 1% METAL FILM RESISTOR
-        R13   470k    470K OHM 1/4W 1% METAL FILM RESISTOR
-        
-        Capacitors        
-        C1     47n     47NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
-        C2     2.2n    2.2NF 0.0022UF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
-        C3     47n     47NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
-        C4     4.7u    4.7UF 35V 105C RADIAL ELECTROLYTIC CAPACITOR 5X11MM
-        C5     4.7u    4.7UF 35V 105C RADIAL ELECTROLYTIC CAPACITOR 5X11MM
-        C6     4.7u    4.7UF 35V 105C RADIAL ELECTROLYTIC CAPACITOR 5X11MM
-        C7     4.7u    4.7UF 35V 105C RADIAL ELECTROLYTIC CAPACITOR 5X11MM
-        C8     100u   100UF 35V 105C RADIAL ELECTROLYTIC CAPACITOR 6X11MM
-        
-        Diodes        
-        D1    1N34    1N34A GERMANIUM DIODE
-        
-        IC        
-        IC1    4558       NJM4558 4558 DUAL OPERATIONAL AMPLIFIER GENERAL PURPOSE IC
-        
-        Transistors
-        Q1    2N5457    2N5457 JFET N-CHANNEL TRANSISTOR SMD
-        Q2    2N5457    2N5457 JFET N-CHANNEL TRANSISTOR SMD
-        
-        Potentiometers        
-        VOL     10k-A    10K OHM LOGARITHMIC TAPER POTENTIOMETER
-        BIAS    10k       10K OHM TRIMMER POTENTIOMETER CERMET
-    """,
-    "[Tayda] [Fuzz] Bazz Fuzz": """
-        PCB
-        PCB                BAZZ FUZZ PCB
-        
-        Resistors        
-        R1    1M         1M OHM 1/4W 1% METAL FILM RESISTOR
-        R2    100k      100K OHM 1/4W 1% METAL FILM RESISTOR
-        R3    Jumper
-        
-        Capacitors        
-        C1    4.7u       4.7UF 50V ELECTROLYTIC CAPACITOR 5X11MM
-        C2    100n      100NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
-        
-        Diode
-        D1    1N914      1N914 SIGNAL DIODE
-        
-        Transistor
-        Q1    2N5088    2N5088 GERENAL PURPOSE TRANSISTOR
-        
-        Potentiometer
-        VOL   100k-A    100K OHM LOGARITHMIC POTENTIOMETER
-    """,
-    "[Tayda] [Fuzz] Big Muff": """
-        PCB
-        BIG MUFF DIY PCB GUITAR EFFECT
-        
-        Resistors
-        R1     1M        1M OHM 1/4W 1% METAL FILM RESISTOR
-        R2     39k       39K OHM 1/4W 1% METAL FILM RESISTOR
-        R3     100k      100K OHM 1/4W 1% METAL FILM RESISTOR
-        R4     470k     470K OHM 1/4W 1% METAL FILM RESISTOR
-        R5     15k       15K OHM 1/4W 1% METAL FILM RESISTOR
-        R6     100       100 OHM 1/4W 1% METAL FILM RESISTOR
-        R7     1k         1K OHM 1/4W 1% METAL FILM RESISTOR
-        R8     8.2k       8.2k OHM 1/4W 1% METAL FILM RESISTOR
-        R9     100k     100K OHM 1/4W 1% METAL FILM RESISTOR
-        R10    470k    470K OHM 1/4W 1% METAL FILM RESISTOR
-        R11    15k      15K OHM 1/4W 1% METAL FILM RESISTOR
-        R12    100      100 OHM 1/4W 1% METAL FILM RESISTOR
-        R13    8.2k      8.2K OHM 1/4W 1% METAL FILM RESISTOR
-        R14    100k    100K OHM 1/4W 1% METAL FILM RESISTOR
-        R15    470k    470K OHM 1/4W 1% METAL FILM RESISTOR
-        R16    15k      15K OHM 1/4W 1% METAL FILM RESISTOR
-        R17    100      100 OHM 1/4W 1% METAL FILM RESISTOR
-        R18    39k      39K OHM 1/4W 1% METAL FILM RESISTOR
-        R19    100k     100K OHM 1/4W 1% METAL FILM RESISTOR
-        R20    390k    390K OHM 1/4W 1% METAL FILM RESISTOR
-        R21    100k    100K OHM 1/4W 1% METAL FILM RESISTOR
-        R22    10k      10K OHM 1/4W 1% METAL FILM RESISTOR
-        R23    2.2k     2.2k OHM 1/4W 1% METAL FILM RESISTOR
-        
-        Capacitors
-        C1    100n      100NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
-        C2    470p      470PF 50V CERAMIC DISC CAPACITOR
-        C3    1u          1UF 50V ELECTROLYTIC CAPACITOR 5X11MM
-        C4    1u          1UF 50V ELECTROLYTIC CAPACITOR 5X11MM
-        C5    470p      470PF 50V CERAMIC DISC CAPACITOR
-        C6    100n      100NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
-        C7    1u          1UF 50V ELECTROLYTIC CAPACITOR 5X11MM
-        C8    470p      470PF 50V CERAMIC DISC CAPACITOR
-        C9    100n      100NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
-        C10   3.9n      3.9NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
-        C11   10n       10NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
-        C12   100n     100NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
-        C13   100n     100NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
-        C14   100u     100UF 35V ELECTROLYTIC CAPACITOR 6X11MM
-        
-        Transistors
-        Q1    2N5088     2N5088 GEReNAL PURPOSE TRANSISTOR
-        Q2    2N5088     2N5088 GEReNAL PURPOSE TRANSISTOR
-        Q3    2N5088     2N5088 GEReNAL PURPOSE TRANSISTOR
-        Q4    2N5088     2N5088 GEReNAL PURPOSE TRANSISTOR
-        Transistor equivalents:  2N5089, BC549C, BC239 , 2N5210...
-        
-        Diodes
-        D1    1N4148      1N4148 SWITCHING SIGNAL DIODE
-        D2    1N4148      1N4148 SWITCHING SIGNAL DIODE
-        D3    1N4148      1N4148 SWITCHING SIGNAL DIODE
-        D4    1N4148      1N4148 SWITCHING SIGNAL DIODE
-        
-        Potentiometers
-        SUSTAIN    100K-A     100K ohm LOG potentiometer
-        VOL           100K-A     100K OHM LOG POTENTIOMETER
-        TONE         100K-B     100K OHM LINEAR POTENTIOMETER
-    """,
-    "[Tayda] [Fuzz] Muff Fuzz Overdrive": """
-        PCB
-        PCB               MUFF FUZZ PCB
-        
-        Capacitors        
-        C1      100n     100NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
-        C2      100n     100NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
-        C3      47u       47UF 25V ELECTROLYTIC CAPACITOR 5X11MM
-        
-        Transistors
-        Q1    2N5088     2N5088 GERENAL PURPOSE TRANSISTOR
-        Q2    2N5088     2N5088 GERENAL PURPOSE TRANSISTOR
-        
-        Resistors        
-        R1      1M        1M OHM 1/4W 1% METAL FILM RESISTOR
-        R2      100k     100K OHM 1/4W 1% METAL FILM RESISTOR
-        R3      100k     100K OHM 1/4W 1% METAL FILM RESISTOR
-        R4      2.7k      2.7K OHM 1/4W 1% METAL FILM RESISTOR
-        R5      100k     100K OHM 1/4W 1% METAL FILM RESISTOR
-        R6      10k       10K OHM 1/4W 1% METAL FILM RESISTOR
-        
-        Diodes
-        D1    1N914        1N914 SMALL SIGNAL DIODE 200MA 100V
-        D2    1N914        1N914 SMALL SIGNAL DIODE 200MA 100V
-        
-        Potentiometers        
-        VOL         100K-A     100K OHM LOG POTENTIOMETER
-    """,
-    "[Tayda] [Fuzz] Satisfaction Fuzz": """
-        PCB
-        PCB                    SATISFACTION FUZZ PCB
-        
-        Capacitors        
-        C1    22n            22NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
-        C2    22n            22NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
-        C3    1.5n           1.5NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
-        C4    4.7n           4.7NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
-        C5    100u          100UF 35V ELECTROLYTIC CAPACITOR 6X11MM
-        
-        Transistors
-        Q1    2N2222     2N2222 NPN GENERAL PURPOSE TRANSISTOR
-        Q2    2N3906     2N3906 PNP GENERAL PURPOSE TRANSISTOR
-        
-        Resistors
-        R1    150k          150K OHM 1/4W 1% METAL FILM RESISTOR
-        R2    560k          560K OHM 1/4W 1% METAL FILM RESISTOR
-        R3    560k          560K OHM 1/4W 1% METAL FILM RESISTOR
-        R4    18k            18K OHM 1/4W 1% METAL FILM RESISTOR
-        R5    18k            18K OHM 1/4W 1% METAL FILM RESISTOR
-        R6    1M             1M OHM 1/4W 1% METAL FILM RESISTOR
-        
-        Diodes        
-        D1    Not mounted
-        D2    Not mounted
-        
-        Potentiometers
-        ATTACK     100k-B     100K OHM LINEAR TAPER POTENTIOMETER
-        VOL          100k-A     100K OHM LOG POTENTIOMETER
-    """,
-    "[Tayda] [Modulation] Colorsound Tremolo": """
-        PCB
-        PCB               COLORSOUND PCB
-        
-        Resistors        
-        R1    1M         1M OHM 1/4W 1% METAL FILM RESISTOR
-        R2    100k      100K OHM 1/4W 1% METAL FILM RESISTOR
-        R3    330k      330K OHM 1/4W 1% METAL FILM RESISTOR
-        R4    18k        18K OHM 1/4W 1% METAL FILM RESISTOR
-        R5    4.7k       4.7K OHM 1/4W 1% METAL FILM RESISTOR
-        R6    100k      100K OHM 1/4W 1% METAL FILM RESISTOR
-        R7    3.3k       3.3K OHM 1/4W 1% METAL FILM RESISTOR
-        R8    22k        22K OHM 1/4W 1% METAL FILM RESISTOR
-        R9    3.3M      3.3M OHM 1/4W 1% METAL FILM RESISTOR
-        R10   3.3M     3.3M OHM 1/4W 1% METAL FILM RESISTOR
-        R11   4.7k      4.7K OHM 1/4W 1% METAL FILM RESISTOR
-        R12   220k     220K OHM 1/4W 1% METAL FILM RESISTOR
-        R13   1M        1M OHM 1/4W 1% METAL FILM RESISTOR
-        
-        Capacitors        
-        C1    100n     100NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
-        C2    100n     100NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
-        C3    100n     100NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
-        C4    470n     470NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
-        C5    470n     470NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
-        C6    470n     470NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
-        C7    220n     220NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
-        
-        Diodes
-        D1    1N4001    1N4001 DIODE 1A 50V
-        
-        Transistors
-        Q1    2N5088    2N5088 GERENAL PURPOSE TRANSISTOR
-        Q2    2N5088    2N5088 GERENAL PURPOSE TRANSISTOR
-        Q3    2N5088    2N5088 GERENAL PURPOSE TRANSISTOR
-        Q4    2N5088    2N5088 GERENAL PURPOSE TRANSISTOR
-        
-        Potentiometers
-        DEPTH   100k-C    100K OHM REVERSE LOG POTENTIOMETER
-        SPEED   100k-B    100K OHM LINEAR POTENTIOMETER
-    """,
-    "[Tayda] [Modulation] Dr Q": """
-        PCB
-        PCB               DR Q AUTOWAH PCB
-        
-        Resistors
-        R1     1M        1M OHM 1/4W 1% METAL FILM RESISTOR
-        R2     1M        1M OHM 1/4W 1% METAL FILM RESISTOR
-        R3     10k       10K OHM 1/4W 1% METAL FILM RESISTOR
-        R4     47k       47K OHM 1/4W 1% METAL FILM RESISTOR
-        R5     2.2M     2.2M OHM 1/4W 1% METAL FILM RESISTOR
-        R6     10k       10K OHM 1/4W 1% METAL FILM RESISTOR
-        R7     47         47 OHM 1/4W 1% METAL FILM RESISTOR
-        R8     100       100 OHM 1/4W 1% METAL FILM RESISTOR
-        R9      22k      22K OHM 1/4W 1% METAL FILM RESISTOR
-        R10    47k       47K OHM 1/4W 1% METAL FILM RESISTOR
-        R11    47k       47K OHM 1/4W 1% METAL FILM RESISTOR
-        R12    470k     470K OHM 1/4W 1% METAL FILM RESISTOR
-        R13    470k     470K OHM 1/4W 1% METAL FILM RESISTOR
-        R14    470k     470K OHM 1/4W 1% METAL FILM RESISTOR
-        R15    47k       47K OHM 1/4W 1% METAL FILM RESISTOR
-        R16    47k       47K OHM 1/4W 1% METAL FILM RESISTOR
-        
-        Capacitors
-        C1    47n       47NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
-        C2    47n       47NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
-        C3    10u       10UF 50V ELECTROLYTIC CAPACITOR 5X11MM
-        C4    4.7n      4.7NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
-        C5    4.7n      4.7NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
-        C6    1n         1NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR 
-        C7    10u       10UF 50V ELECTROLYTIC CAPACITOR 5X11MM
-        C8    47n       47NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
-        C9    10n       10NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
-        C10  10u       10UF 50V ELECTROLYTIC CAPACITOR 5X11MM
-        
-        Transistors
-        Q1    2N5457     SMD SOT-23 2N5457 JFET N-CHANNEL TRANSISTOR
-        (Q1  PCB     SMD TRANSISTOR PCB)
-        Q2    2N3904     2N3904 NPN GENERAL PURPOSE TRANSISTOR
-        
-        OPAMP
-        U1    TL072       TL072 OPERATIONAL AMPLIFIER
-        (U1 Socket    8 PIN DIP IC SOCKET ADAPTOR)
-        
-        Diodes
-        D1    LED            LED 3MM RED  
-        D2    LED            LED 3MM RED   
-        D3    1N914        1N914 SMALL SIGNAL DIODE 200MA 100V
-        
-        Potentiometers
-        SENS           100K-B                  100K OHM LINEAR POTENTIOMETer ANGLED
-        RANGE         20k/25k-B Trim      20K OHM TRIMMER POTENTIOMETER CERMET 1 TURN 3362P
-        
-        SWITCH
-        SW    SWITCH    MINI TOGGLE SWITCH DPDT ON-ON
-    """,
-    "[Tayda] [Overdrive] Bluesbreaker": """
-        PCB
-        PCB       blues breaker DIY PCB
-        
-        Resistors        
-        R1    2.2M     2.2M OHM 1/4W 1% METAL FILM RESISTOR
-        R2    1M        1M OHM 1/4W 1% METAL FILM RESISTOR
-        R3    4.7k      4.7K OHM 1/4W 1% METAL FILM RESISTOR
-        R4    3.3k      3.3K OHM 1/4W 1% METAL FILM RESISTOR
-        R5    10k       10K OHM 1/4W 1% METAL FILM RESISTOR
-        R6    6.8k      6.8K OHM 1/4W 1% METAL FILM RESISTOR
-        R7    220k     220K OHM 1/4W 1% METAL FILM RESISTOR
-        R8    1k         1K OHM 1/4W 1% METAL FILM RESISTOR
-        R9    6.8k      6.8K OHM 1/4W 1% METAL FILM RESISTOR
-        R10  1M        1M OHM 1/4W 1% METAL FILM RESISTOR
-        R11  47k       47K OHM 1/4W 1% METAL FILM RESISTOR
-        R12  47k       47K OHM 1/4W 1% METAL FILM RESISTOR
-        
-        Capacitors        
-        C1    10n       10NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
-        C2    10n       10NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
-        C3    10n       10NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
-        C4    47p       47PF 50V CERAMIC DISC CAPACITOR
-        C5    100n     100NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
-        C6    10n       10NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
-        C7    10n       10NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
-        C8    100n     100NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
-        C9    100u     100UF 35V ELECTROLYTIC CAPACITOR 6X11MM
-        C10  100u     100UF 35V ELECTROLYTIC CAPACITOR 6X11MM
-        
-        Diodes        
-        D1    1N4148      1N4148 SWITCHING SIGNAL DIODE
-        D2    1N4148      1N4148 SWITCHING SIGNAL DIODE
-        D3    1N4148      1N4148 SWITCHING SIGNAL DIODE
-        D4    1N4148      1N4148 SWITCHING SIGNAL DIODE
-        D5    1N4001      1N4001 DIODE 1A 50V
-        
-        IC
-        OP1    TL072       TL072 OPERATIONAL AMPLIFIER
-        (Socket     8 pin dip ic socket)
-        
-        Potentiometers
-        GAIN    100k-B      100K OHM LIN TAPER POTENTIOMETER
-        TONE    25k-B        25K OHM LOG TAPER POTENTIOMETER
-        VOL      100k-A      100K OHM LOG TAPER POTENTIOMETER
-    """,
-    "[Tayda] [Overdrive] Centaur Overdrive": """
-        Resistors        
-        R1     1M        1M OHM 1/4W 1% METAL FILM RESISTOR
-        R2     10k       10K OHM 1/4W 1% METAL FILM RESISTOR
-        R3     1M        1M OHM 1/4W 1% METAL FILM RESISTOR
-        R4     5.1k      5.1K OHM 1/4W 1% METAL FILM RESISTOR
-        R5     1.5K      1.5K OHM 1/4W 1% METAL FILM RESISTOR
-        R6     1k         1K OHM 1/4W 1% METAL FILM RESISTOR
-        R7     10k       10K OHM 1/4W 1% METAL FILM RESISTOR
-        R8     2k         2K OHM 1/4W 1% METAL FILM RESISTOR
-        R9     15k       15K OHM 1/4W 1% METAL FILM RESISTOR
-        R10    680k     680K OHM 1/4W 1% METAL FILM RESISTOR
-        R11    1k         1K OHM 1/4W 1% METAL FILM RESISTOR
-        R12    47k       47K OHM 1/4W 1% METAL FILM RESISTOR
-        R13    22k       22K OHM 1/4W 1% METAL FILM RESISTOR
-        R14    27k       27K OHM 1/4W 1% METAL FILM RESISTOR
-        R15    12k       12K OHM 1/4W 1% METAL FILM RESISTOR
-        R16    1.5K      1.5K OHM 1/4W 1% METAL FILM RESISTOR
-        R17    15k       15K OHM 1/4W 1% METAL FILM RESISTOR
-        R18    392k     392K OHM 1/4W 1% METAL FILM RESISTOR
-        R19    1.8k      1.8K OHM 1/4W 1% METAL FILM RESISTOR
-        R20    100k     100K OHM 1/4W 1% METAL FILM RESISTOR
-        R21    100k     100K OHM 1/4W 1% METAL FILM RESISTOR
-        R22    4.7k      4.7K OHM 1/4W 1% METAL FILM RESISTOR
-        R23    560       560 OHM 1/4W 1% METAL FILM RESISTOR
-        R24    27k       27K OHM 1/4W 1% METAL FILM RESISTOR
-        R25    27k       27K OHM 1/4W 1% METAL FILM RESISTOR
-        
-        Capacitors        
-        C1    100n       100NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
-        C2    68n         68NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
-        C3    390n       390NF100V 5% MYLAR FILM TYPE CAPACITOR
-        C4    100n       100NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
-        C5    68n         68NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
-        C6    82n         82NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
-        C7    390p       390PF 50V CERAMIC DISC CAPACITOR
-        C8    1u           1UF 50V ELECTROLYTIC CAPACITOR 5X11MM
-        C9    1u           1UF 50V ELECTROLYTIC CAPACITOR 5X11MM
-        C10   2.2n       2.2NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
-        C11   27n        27NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
-        C12   1u          1UF 50V ELECTROLYTIC CAPACITOR 5X11MM
-        C13   820p      820PF 50V CERAMIC DISC CAPACITOR
-        C14   3.9n       3.9NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
-        C15   4.7u       4.7UF 50V ELECTROLYTIC CAPACITOR 5X11MM
-        C16   100u      100UF 35V ELECTROLYTIC CAPACITOR 6X11MM
-        C17   47u        47UF 25V ELECTROLYTIC CAPACITOR 5X11MM
-        C18   10u        10UF 50V ELECTROLYTIC CAPACITOR 5X11MM
-        C19   10u        10UF 50V ELECTROLYTIC CAPACITOR 5X11MM
-        C20   10u        10UF 50V ELECTROLYTIC CAPACITOR 5X11MM
-        C21   10u        10UF 50V ELECTROLYTIC CAPACITOR 5X11MM
-        
-        Diodes        
-        D1    1N34A        1N34A GERMANIUM DIODE
-        D2    1N34A        1N34A GERMANIUM DIODE
-        D3    1N4001      1N4001 DIODE 1A
-        D4    1N4001      1N4001 DIODE 1A
-        D5    1N4001      1N4001 DIODE 1A
-        
-        IC
-        IC1    TL072               TL072 LOW NOISE J-FET DUAL OP-AMP IC 
-        IC2    TL072               TL072 LOW NOISE J-FET DUAL OP-AMP IC
-        IC3    ​TC1044SCPA     TC1044SCPA TC1044 VOLTAGE REGULATOR IC
-        (Socket    8 PIN DIP IC SOCKET ADAPTOR)
-        
-        Potentiometers
-        GAIN    100k-B      100K OHM LIN DUAL APER POTENTIOMETER
-        TONE    10k-B       25K OHM LIN TAPER POTENTIOMETER
-        VOL      10k-B       10K OHM LIN TAPER POTENTIOMETER
-    """,
-    "[Tayda] [Overdrive] Rat": """
-        PCB
-        PCB      RAT DIY PCB
-        
-        Capacitors
-        C1      22n      22NF 0.022UF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
-        C2      1n        1NF 0.001UF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
-        C3      30p      30PF 50V CERAMIC DISC CAPACITOR
-        C4      100p    100PF 50V CERAMIC DISC CAPACITOR
-        C5      4.7u     4.7UF 50V 105C RADIAL ELECTROLYTIC CAPACITOR 5X11MM
-        C6      2.2u     2.2UF 50V 105C RADIAL ELECTROLYTIC CAPACITOR 5X11MM
-        C7      4.7u     4.7UF 50V 105C RADIAL ELECTROLYTIC CAPACITOR 5X11MM
-        C8      3.3n     3.3NF 0.0033UF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
-        C9      22n      22NF 0.022UF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
-        C10    1u        1UF 50V 105C RADIAL ELECTROLYTIC CAPACITOR 5X11MM
-        C11    100u    100UF 35V 105C RADIAL ELECTROLYTIC CAPACITOR 6X11MM
-        C12    47u      47UF 25V 105C ALUMINUM ELECTROLYTIC CAPACITOR 5X11MM
-        C13    100n    100NF 0.1UF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
-        
-        Diodes
-        D1    1N914    1N914 SMALL SIGNAL DIODE 200MA 100V
-        D2    1N914    1N914 SMALL SIGNAL DIODE 200MA 100V
-        D3    1N4001  1N4001 DIODE 1A 50V
-        
-        Resistors
-        R1    1M       1M OHM 1/4W 1% METAL FILM RESISTOR
-        R2    1M       1M OHM 1/4W 1% METAL FILM RESISTOR
-        R3    1K       1K OHM 1/4W 1% METAL FILM RESISTOR
-        R4    560      560 OHM 1/4W 1% METAL FILM RESISTOR
-        R5    47        47 OHM 1/4W 1% METAL FILM RESISTOR
-        R6    1K       1K OHM 1/4W 1% METAL FILM RESISTOR
-        R7    1.5k     1.5K OHM 1/4W 1% METAL FILM RESISTOR
-        R8    1M       1M OHM 1/4W 1% METAL FILM RESISTOR
-        R9    10k      10K OHM 1/4W 1% METAL FILM RESISTOR
-        R10   47       47 OHM 1/4W 1% METAL FILM RESISTOR
-        R11   100k   100K OHM 1/4W 1% METAL FILM RESISTOR
-        R12   100k   100K OHM 1/4W 1% METAL FILM RESISTOR
-        
-        Transistor
-        Q1    2N5457     SMD SOT-23 2N5457 JFET N-CHANNEL TRANSISTOR
-        
-        IC
-        TL071    TL071    TL071 OPERATIONAL AMPLIFIER
-        (Socket     SOCKET IC 8 PIN)
-        
-        Potentiometers
-        TONE    100k-A    100K OHM LOGARITHMIC TAPER POTENTIOMETER
-        VOL      100k-A    100K OHM LOGARITHMIC TAPER POTENTIOMETER
-        GAIN    100k-A    100K OHM LOGARITHMIC TAPER POTENTIOMETER
-    """,
+    "[PedalPCB] [Fuzz] Paper Scratcher Fuzz": {
+        "bom_text": """
+            PCB Paper Scratcher Fuzz PCB
+            IC1 OPA1678
+            Q1 2N3904
+            Q2 2N3904
+            Q3 2N3904
+            Q4 2N5088
+            D1 1N4148
+            D2 1N4148
+            D100 1N5817
+            VOL A100K
+            RIP A100K
+            FUZZ B10K
+            TONE B50K
+            C9 150p
+            C2 1n
+            C8 18n
+            C10 18n
+            C101 100n
+            C104 100n
+            C1 1u
+            C7 1u
+            C3 10u
+            C4 10u
+            C5 10u
+            C6 10u
+            C11 10u
+            C100 100u
+            C102 100u
+            C103 100u
+            R100 47
+            R23 100
+            R8 390
+            R9 390
+            R13 390
+            R17 390
+            R3 1k
+            R15 2.7k
+            R19 4.7k
+            R20 4.7k
+            R101 4.7k
+            R7 10k
+            R12 10k
+            R16 10k
+            R104 10k
+            R14 11k
+            R102 16k
+            R18 22k
+            R21 22k
+            R103 22k
+            R6 43k
+            R11 43k
+            R4 47k
+            R22 100k
+            R5 430k
+            R10 430k
+            R1 2.2M
+            R2 2.2M
+            IC1 (Inj) DIP SOCKET (Check Size)
+        """,
+        "source_path": "raw_boms/pedalpcb/fuzz/PaperScratcher-PedalPCB.pdf",
+        "is_pdf": True,
+    },
+    "[PedalPCB] [Modulation] Circulator": {
+        "bom_text": """
+            PCB Circulator PCB
+            IC1 LM13700
+            IC2 LM13700
+            IC3 LM13700
+            IC4 TL072
+            IC5 TL072
+            D100 1N5817
+            DEPTH B25K
+            SWEEP B50K
+            RATE C1M
+            RES C1M
+            RANGE SPDT (On/Off/On)
+            PV SPDT (On/On)
+            C8 100p
+            C3 2.2n
+            C4 2.2n
+            C5 2.2n
+            C6 2.2n
+            C12 47n
+            C1 100n
+            C102 100n
+            C2 1u
+            C7 1u
+            C9 1u
+            C10 1u
+            C11 1u
+            C13 1u
+            C14 4.7u
+            C101 10u
+            C100 100u
+            R25 470
+            R8 1.2k
+            R12 1.2k
+            R16 1.2k
+            R20 1.2k
+            R32 4.7k
+            R33 4.7k
+            R100 4.7k
+            R24 8.2k
+            R1 10k
+            R4 10k
+            R5 10k
+            R6 10k
+            R9 10k
+            R13 10k
+            R17 10k
+            R21 10k
+            R31 10k
+            R7 27k
+            R10 27k
+            R11 27k
+            R14 27k
+            R15 27k
+            R18 27k
+            R19 27k
+            R22 27k
+            R23 27k
+            R27 27k
+            R101 56k
+            R102 56k
+            R26 100k
+            R29 100k
+            R30 150k
+            R28 220k
+            R34 470k
+            R2 1M
+            R3 1M
+            IC1 (Inj) DIP SOCKET (Check Size)
+            IC2 (Inj) DIP SOCKET (Check Size)
+            IC3 (Inj) DIP SOCKET (Check Size)
+            IC4 (Inj) DIP SOCKET (Check Size)
+            IC5 (Inj) DIP SOCKET (Check Size)
+        """,
+        "source_path": "raw_boms/pedalpcb/modulation/Circulator.pdf",
+        "is_pdf": True,
+    },
+    "[PedalPCB] [Modulation] Low Tide Modulator": {
+        "bom_text": """
+            PCB Low Tide Modulator PCB
+            IC6 CD4046BE
+            IC3 LM13700N
+            IC4 LM258P
+            IC1 LM78L05
+            IC5 MCP602
+            IC2 RANDOMIZER
+            IC7 V3207D
+            Q4 J201
+            Q2 2N3904
+            Q3 2N3904
+            Q5 2N3904
+            Q1 2SK208-Y
+            D1 BAT48
+            D2 BAT48
+            D3 BAT48
+            DEPTH A100K
+            GATE A100K
+            VOLUME A100K
+            SLEW A1M DUAL
+            MIX B100K
+            RATE B10K
+            TRIM1 1K
+            TRIM2 1K
+            SW1 DIP-2
+            C13 100p
+            C4 220p
+            C27 220p
+            C20 680p
+            C3 1n
+            C9 1n
+            C15 1n
+            C23 1n
+            C26 1n
+            C24 4.7n
+            C18 10n
+            C37 10n
+            C1 47n
+            C2 100n
+            C6 100n
+            C10 100n
+            C12 100n
+            C14 100n
+            C16 100n
+            C17 100n
+            C28 100n
+            C29 100n
+            C30 100n
+            C31 100n
+            C33 100n
+            C35 100n
+            C38 100n
+            C7 1u
+            C8 1u
+            C11 1u
+            C25 1u
+            C36 1u
+            C5 22u
+            C19 22u
+            C21 22u
+            C22 22u
+            C34 22u
+            C39 22u
+            C40 22u
+            C41 22u
+            C42 22u
+            C32 220u
+            R34 330
+            R13 1k
+            R14 1k
+            R18 1k
+            R28 1k
+            R32 1k
+            R52 1k
+            R7 1.8k
+            R37 1.8k
+            R3 2.2k
+            R17 2.2k
+            R29 2.2k
+            R54 2.2k
+            R67 2.2k
+            R68 2.2k
+            R69 2.2k
+            R70 2.2k
+            R6 3.3k
+            R12 3.3k
+            R33 3.3k
+            R36 3.3k
+            R63 3.3k
+            R35 4.7k
+            R44 4.7k
+            R46 4.7k
+            R50 4.7k
+            R55 4.7k
+            R65 4.7k
+            R42 6.8k
+            R41 9.1k
+            R4 10k
+            R22 10k
+            R23 10k
+            R24 10k
+            R25 10k
+            R26 10k
+            R38 10k
+            R47 10k
+            R57 10k
+            R58 10k
+            R59 10k
+            R62 10k
+            R66 10k
+            R9 12k
+            R11 16k
+            R15 16k
+            R10 68k
+            R2 100k
+            R8 100k
+            R16 100k
+            R20 100k
+            R21 100k
+            R27 100k
+            R43 100k
+            R45 100k
+            R53 100k
+            R56 100k
+            R60 100k
+            R61 100k
+            R71 100k
+            R19 220k
+            R40 220k
+            R64 220k
+            R31 470k
+            R39 470k
+            R51 470k
+            R48 620k
+            R30 1M
+            R49 1M
+            R1 2M
+            R5 2M
+            IC1 (Inj) DIP SOCKET (Check Size)
+            IC2 (Inj) DIP SOCKET (Check Size)
+            IC3 (Inj) DIP SOCKET (Check Size)
+            IC4 (Inj) DIP SOCKET (Check Size)
+            IC5 (Inj) DIP SOCKET (Check Size)
+            IC6 (Inj) DIP SOCKET (Check Size)
+            IC7 (Inj) DIP SOCKET (Check Size)
+        """,
+        "source_path": "raw_boms/pedalpcb/modulation/LowTide-PedalPCB.pdf",
+        "is_pdf": True,
+    },
+    "[PedalPCB] [Modulation] The Abyss": {
+        "bom_text": """
+            PCB The Abyss PCB
+            IC1 TL072
+            IC2 TL074
+            LDR1 5mm Radial LDR (KE-10720)
+            LDR2 5mm Radial LDR (KE-10720)
+            LDR3 5mm Radial LDR (KE-10720)
+            LDR4 5mm Radial LDR (KE-10720)
+            Q1 MPSA18
+            Q2 MPSA18
+            D2 5mm
+            D1 1N5817
+            LEVEL A100K
+            RATE B100K (Dual)
+            VOICE B10K
+            INTENSITY B25K
+            THROB B25K
+            C4 100p
+            C6 470p
+            C5 4.7n
+            C2 15n
+            C1 100n
+            C3 220n
+            C7 1u
+            C8 1u
+            C11 1u
+            C12 1u
+            C13 1u
+            C10 10u
+            C14 47u
+            C15 47u
+            C9 100u
+            R26 100
+            R20 3.3k
+            R19 3.3k
+            R23 4.7k
+            R27 4.7k
+            R13 10k
+            R15 10k
+            R16 10k
+            R22 15k
+            R6 22k
+            R3 47k
+            R4 47k
+            R5 47k
+            R25 47k
+            R7 47k
+            R8 47k
+            R9 47k
+            R10 47k
+            R12 56k
+            R24 100k
+            R11 100k
+            R14 100k
+            R17 220k
+            R18 220k
+            R1 1M
+            R2 1M
+            R21 2.2M
+            IC1 (Inj) DIP SOCKET (Check Size)
+            IC2 (Inj) DIP SOCKET (Check Size)
+        """,
+        "source_path": "raw_boms/pedalpcb/modulation/Abyss.pdf",
+        "is_pdf": True,
+    },
+    "[PedalPCB] [Overdrive] Kliche Overdrive": {
+        "bom_text": """
+            PCB Kliche Overdrive PCB
+            IC3 TC1044SCPA
+            IC1 TL072
+            IC2 TL072
+            D1 GE
+            D2 GE
+            D4 1N4001
+            D5 1N4001
+            D3 1N4742
+            GAIN B100K DUAL
+            VOLUME B10K
+            TREBLE B10K
+            C8 390p
+            C14 820p
+            C12 2.2n
+            C15 3.9n
+            C13 27n
+            C4 68n
+            C6 68n
+            C7 82n
+            C1 100n
+            C2 100n
+            C5 390n
+            C9 1u
+            C10 1u
+            C11 1u
+            C18 1u
+            C19 1u
+            C20 1u
+            C21 1u
+            C3 4.7u
+            C16 4.7u
+            C17 47u
+            C22 47u
+            R4 560
+            R24 560
+            R7 1k
+            R12 1k
+            R6 1.5k
+            R13 1.5k
+            R20 1.8k
+            R9 2k
+            R27 3.9k
+            R23 4.7k
+            R5 5.1k
+            R1 10k
+            R8 10k
+            R18 12k
+            R10 15k
+            R14 15k
+            R16 22k
+            R17 27k
+            R25 27k
+            R26 27k
+            R15 47k
+            R28 68k
+            R29 68k
+            R3 100k
+            R21 100k
+            R22 100k
+            R30 100k
+            R19 392k
+            R11 422k
+            R2 1M
+            R31 1M
+            IC1 (Inj) DIP SOCKET (Check Size)
+            IC2 (Inj) DIP SOCKET (Check Size)
+            IC3 (Inj) DIP SOCKET (Check Size)
+        """,
+        "source_path": "raw_boms/pedalpcb/overdrive/Kliche-PedalPCB.pdf",
+        "is_pdf": True,
+    },
+    "[PedalPCB] [Time] Arachnid v2": {
+        "bom_text": """
+            PCB Arachnid v2 PCB
+            IC3 FV1
+            IC6 L78L33
+            IC1 TL074
+            IC2 24LC32A
+            X1 AB38T-32.768KHZ
+            D1 1N5817
+            D2 1N914
+            D3 1N914
+            D4 1N914
+            D5 1N914
+            D6 1N914
+            D7 1N914
+            D8 1N914
+            D9 1N914
+            D10 1N914
+            CTRL1 B100K
+            CTRL2 B100K
+            CTRL3 B100K
+            VOLUME B100K
+            MIX B10K
+            MODE 1P8T Mini Rotary
+            C7 15p
+            C14 220p
+            C2 470p
+            C4 1n
+            C12 2.2n
+            C1 100n
+            C3 1u
+            C6 1u
+            C8 1u
+            C10 1u
+            C11 1u
+            C15 1u
+            C5 10u
+            C17 47u
+            C18 47u
+            C16 100u
+            R8 100
+            R12 100
+            R3 1k
+            R18 1k
+            R22 1k
+            R13 4.7k
+            R5 10k
+            R14 10k
+            R15 10k
+            R4 15k
+            R9 15k
+            R10 15k
+            R19 15k
+            R20 15k
+            R21 15k
+            R6 100k
+            R7 100k
+            R11 100k
+            R16 100k
+            R17 100k
+            R1 1M
+            R2 1M
+            IC1 (Inj) DIP SOCKET (Check Size)
+            IC2 (Inj) DIP SOCKET (Check Size)
+            IC3 (Inj) DIP SOCKET (Check Size)
+        """,
+        "source_path": "raw_boms/pedalpcb/time/Arachnid.pdf",
+        "is_pdf": True,
+    },
+    "[PedalPCB] [Time] Gravitation Reverb": {
+        "bom_text": """
+            PCB Gravitation Reverb PCB
+            IC3 BTDR-3H
+            IC4 L78L05
+            IC1 TL072
+            IC2 TL072
+            D100 1N5817
+            MIX B10K
+            DECAY B25K
+            TONE B25K
+            ATMOSPHERE B50K
+            LENGTH ON/ON
+            C10 100p
+            C5 1n
+            C7 1n
+            C4 10n
+            C1 100n
+            C12 100n
+            C13 100n
+            C16 100n
+            C17 100n
+            C2 1u
+            C3 1u
+            C6 1u
+            C8 1u
+            C9 1u
+            C11 1u
+            C101 10u
+            C14 100u
+            C15 100u
+            C100 100u
+            R11 470
+            R15 1k
+            R17 4.7k
+            R2 10k
+            R5 10k
+            R10 10k
+            R13 10k
+            R14 10k
+            R16 15k
+            R6 22k
+            R8 22k
+            R4 39k
+            R9 39k
+            R101 47k
+            R102 47k
+            R7 100k
+            R12 100k
+            R1 1M
+            R3 1M
+            IC1 (Inj) DIP SOCKET (Check Size)
+            IC2 (Inj) DIP SOCKET (Check Size)
+        """,
+        "source_path": "raw_boms/pedalpcb/time/Gravitation-PedalPCB.pdf",
+        "is_pdf": True,
+    },
+    "[Tayda] [Dynamics] Micro Amp Booster": {
+        "bom_text": """
+            PCB
+            PCB                  MICRO AMP BOOSTER PCB
+            
+            Capacitors        
+            C1      100n      100NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
+            C2      4.7u       4.7UF 50V ELECTROLYTIC CAPACITOR 5X11MM
+            C3      47p        47PF 50V CERAMIC DISC CAPACITOR
+            C4      10u        10UF 50V ELECTROLYTIC CAPACITOR 5X11MM (Original value 15u)
+            C5      1u          1UF 50V ELECTROLYTIC CAPACITOR 5X11MM
+            
+            IC        
+            IC1    TL071     TL071 OPERATIONAL AMPLIFIER
+            
+            Resistors        
+            R1      22M       22M OHM 1/4W 1% METAL FILM RESISTOR
+            R2      1k         1K OHM 1/4W 1% METAL FILM RESISTOR
+            R3      2.7k      2.7K OHM 1/4W 1% METAL FILM RESISTOR
+            R4      47k       47K OHM 1/4W 1% METAL FILM RESISTOR
+            R5      470       470 OHM 1/4W 1% METAL FILM RESISTOR
+            R6      10k       10K OHM 1/4W 1% METAL FILM RESISTOR
+            R7      100k     100K OHM 1/4W 1% METAL FILM RESISTOR
+            R8      10M      10M OHM 1/4W 1% METAL FILM RESISTOR
+            R9      100k     100K OHM 1/4W 1% METAL FILM RESISTOR
+            
+            Potentiometer        
+            GAIN    500k-C    500KC ANTI-LOG TAPER POTENTIOMETER
+        """,
+        "source_path": "raw_boms/tayda/dynamics/micro_amp_booster.txt",
+        "is_pdf": False,
+    },
+    "[Tayda] [Dynamics] Orange Squeezer": {
+        "bom_text": """
+            PCB
+            PCB             ORANGE SQUEEZER PCB
+            
+            Resistors        
+            R1    2.2M     2.2M OHM 1/4W 1% METAL FILM RESISTOR
+            R2    82k       82K OHM 1/4W 1% METAL FILM RESISTOR
+            R3    470k     470K OHM 1/4W 1% METAL FILM RESISTOR
+            R4    390k     390K OHM 1/4W 1% METAL FILM RESISTOR
+            R5    2.4k      2.4K OHM 1/4W 1% METAL FILM RESISTOR
+            R6    470k     470K OHM 1/4W 1% METAL FILM RESISTOR
+            R9    220k     220K OHM 1/4W 1% METAL FILM RESISTOR
+            R10   10k      10K OHM 1/4W 1% METAL FILM RESISTOR
+            R11   1.5k     1.5K OHM 1/4W 1% METAL FILM RESISTOR
+            R12   100k    100K OHM 1/4W 1% METAL FILM RESISTOR
+            R13   470k    470K OHM 1/4W 1% METAL FILM RESISTOR
+            
+            Capacitors        
+            C1     47n     47NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
+            C2     2.2n    2.2NF 0.0022UF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
+            C3     47n     47NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
+            C4     4.7u    4.7UF 35V 105C RADIAL ELECTROLYTIC CAPACITOR 5X11MM
+            C5     4.7u    4.7UF 35V 105C RADIAL ELECTROLYTIC CAPACITOR 5X11MM
+            C6     4.7u    4.7UF 35V 105C RADIAL ELECTROLYTIC CAPACITOR 5X11MM
+            C7     4.7u    4.7UF 35V 105C RADIAL ELECTROLYTIC CAPACITOR 5X11MM
+            C8     100u   100UF 35V 105C RADIAL ELECTROLYTIC CAPACITOR 6X11MM
+            
+            Diodes        
+            D1    1N34    1N34A GERMANIUM DIODE
+            
+            IC        
+            IC1    4558       NJM4558 4558 DUAL OPERATIONAL AMPLIFIER GENERAL PURPOSE IC
+            
+            Transistors
+            Q1    2N5457    2N5457 JFET N-CHANNEL TRANSISTOR SMD
+            Q2    2N5457    2N5457 JFET N-CHANNEL TRANSISTOR SMD
+            
+            Potentiometers        
+            VOL     10k-A    10K OHM LOGARITHMIC TAPER POTENTIOMETER
+            BIAS    10k       10K OHM TRIMMER POTENTIOMETER CERMET
+        """,
+        "source_path": "raw_boms/tayda/dynamics/orange_squeezer.txt",
+        "is_pdf": False,
+    },
+    "[Tayda] [Fuzz] Bazz Fuzz": {
+        "bom_text": """
+            PCB
+            PCB                BAZZ FUZZ PCB
+            
+            Resistors        
+            R1    1M         1M OHM 1/4W 1% METAL FILM RESISTOR
+            R2    100k      100K OHM 1/4W 1% METAL FILM RESISTOR
+            R3    Jumper
+            
+            Capacitors        
+            C1    4.7u       4.7UF 50V ELECTROLYTIC CAPACITOR 5X11MM
+            C2    100n      100NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
+            
+            Diode
+            D1    1N914      1N914 SIGNAL DIODE
+            
+            Transistor
+            Q1    2N5088    2N5088 GERENAL PURPOSE TRANSISTOR
+            
+            Potentiometer
+            VOL   100k-A    100K OHM LOGARITHMIC POTENTIOMETER
+        """,
+        "source_path": "raw_boms/tayda/fuzz/bazz_fuzz.txt",
+        "is_pdf": False,
+    },
+    "[Tayda] [Fuzz] Big Muff": {
+        "bom_text": """
+            PCB
+            BIG MUFF DIY PCB GUITAR EFFECT
+            
+            Resistors
+            R1     1M        1M OHM 1/4W 1% METAL FILM RESISTOR
+            R2     39k       39K OHM 1/4W 1% METAL FILM RESISTOR
+            R3     100k      100K OHM 1/4W 1% METAL FILM RESISTOR
+            R4     470k     470K OHM 1/4W 1% METAL FILM RESISTOR
+            R5     15k       15K OHM 1/4W 1% METAL FILM RESISTOR
+            R6     100       100 OHM 1/4W 1% METAL FILM RESISTOR
+            R7     1k         1K OHM 1/4W 1% METAL FILM RESISTOR
+            R8     8.2k       8.2k OHM 1/4W 1% METAL FILM RESISTOR
+            R9     100k     100K OHM 1/4W 1% METAL FILM RESISTOR
+            R10    470k    470K OHM 1/4W 1% METAL FILM RESISTOR
+            R11    15k      15K OHM 1/4W 1% METAL FILM RESISTOR
+            R12    100      100 OHM 1/4W 1% METAL FILM RESISTOR
+            R13    8.2k      8.2K OHM 1/4W 1% METAL FILM RESISTOR
+            R14    100k    100K OHM 1/4W 1% METAL FILM RESISTOR
+            R15    470k    470K OHM 1/4W 1% METAL FILM RESISTOR
+            R16    15k      15K OHM 1/4W 1% METAL FILM RESISTOR
+            R17    100      100 OHM 1/4W 1% METAL FILM RESISTOR
+            R18    39k      39K OHM 1/4W 1% METAL FILM RESISTOR
+            R19    100k     100K OHM 1/4W 1% METAL FILM RESISTOR
+            R20    390k    390K OHM 1/4W 1% METAL FILM RESISTOR
+            R21    100k    100K OHM 1/4W 1% METAL FILM RESISTOR
+            R22    10k      10K OHM 1/4W 1% METAL FILM RESISTOR
+            R23    2.2k     2.2k OHM 1/4W 1% METAL FILM RESISTOR
+            
+            Capacitors
+            C1    100n      100NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
+            C2    470p      470PF 50V CERAMIC DISC CAPACITOR
+            C3    1u          1UF 50V ELECTROLYTIC CAPACITOR 5X11MM
+            C4    1u          1UF 50V ELECTROLYTIC CAPACITOR 5X11MM
+            C5    470p      470PF 50V CERAMIC DISC CAPACITOR
+            C6    100n      100NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
+            C7    1u          1UF 50V ELECTROLYTIC CAPACITOR 5X11MM
+            C8    470p      470PF 50V CERAMIC DISC CAPACITOR
+            C9    100n      100NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
+            C10   3.9n      3.9NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
+            C11   10n       10NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
+            C12   100n     100NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
+            C13   100n     100NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
+            C14   100u     100UF 35V ELECTROLYTIC CAPACITOR 6X11MM
+            
+            Transistors
+            Q1    2N5088     2N5088 GEReNAL PURPOSE TRANSISTOR
+            Q2    2N5088     2N5088 GEReNAL PURPOSE TRANSISTOR
+            Q3    2N5088     2N5088 GEReNAL PURPOSE TRANSISTOR
+            Q4    2N5088     2N5088 GEReNAL PURPOSE TRANSISTOR
+            Transistor equivalents:  2N5089, BC549C, BC239 , 2N5210...
+            
+            Diodes
+            D1    1N4148      1N4148 SWITCHING SIGNAL DIODE
+            D2    1N4148      1N4148 SWITCHING SIGNAL DIODE
+            D3    1N4148      1N4148 SWITCHING SIGNAL DIODE
+            D4    1N4148      1N4148 SWITCHING SIGNAL DIODE
+            
+            Potentiometers
+            SUSTAIN    100K-A     100K ohm LOG potentiometer
+            VOL           100K-A     100K OHM LOG POTENTIOMETER
+            TONE         100K-B     100K OHM LINEAR POTENTIOMETER
+        """,
+        "source_path": "raw_boms/tayda/fuzz/big_muff.txt",
+        "is_pdf": False,
+    },
+    "[Tayda] [Fuzz] Muff Fuzz Overdrive": {
+        "bom_text": """
+            PCB
+            PCB               MUFF FUZZ PCB
+            
+            Capacitors        
+            C1      100n     100NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
+            C2      100n     100NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
+            C3      47u       47UF 25V ELECTROLYTIC CAPACITOR 5X11MM
+            
+            Transistors
+            Q1    2N5088     2N5088 GERENAL PURPOSE TRANSISTOR
+            Q2    2N5088     2N5088 GERENAL PURPOSE TRANSISTOR
+            
+            Resistors        
+            R1      1M        1M OHM 1/4W 1% METAL FILM RESISTOR
+            R2      100k     100K OHM 1/4W 1% METAL FILM RESISTOR
+            R3      100k     100K OHM 1/4W 1% METAL FILM RESISTOR
+            R4      2.7k      2.7K OHM 1/4W 1% METAL FILM RESISTOR
+            R5      100k     100K OHM 1/4W 1% METAL FILM RESISTOR
+            R6      10k       10K OHM 1/4W 1% METAL FILM RESISTOR
+            
+            Diodes
+            D1    1N914        1N914 SMALL SIGNAL DIODE 200MA 100V
+            D2    1N914        1N914 SMALL SIGNAL DIODE 200MA 100V
+            
+            Potentiometers        
+            VOL         100K-A     100K OHM LOG POTENTIOMETER
+        """,
+        "source_path": "raw_boms/tayda/fuzz/muff_fuzz_overdrive.txt",
+        "is_pdf": False,
+    },
+    "[Tayda] [Fuzz] Satisfaction Fuzz": {
+        "bom_text": """
+            PCB
+            PCB                    SATISFACTION FUZZ PCB
+            
+            Capacitors        
+            C1    22n            22NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
+            C2    22n            22NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
+            C3    1.5n           1.5NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
+            C4    4.7n           4.7NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
+            C5    100u          100UF 35V ELECTROLYTIC CAPACITOR 6X11MM
+            
+            Transistors
+            Q1    2N2222     2N2222 NPN GENERAL PURPOSE TRANSISTOR
+            Q2    2N3906     2N3906 PNP GENERAL PURPOSE TRANSISTOR
+            
+            Resistors
+            R1    150k          150K OHM 1/4W 1% METAL FILM RESISTOR
+            R2    560k          560K OHM 1/4W 1% METAL FILM RESISTOR
+            R3    560k          560K OHM 1/4W 1% METAL FILM RESISTOR
+            R4    18k            18K OHM 1/4W 1% METAL FILM RESISTOR
+            R5    18k            18K OHM 1/4W 1% METAL FILM RESISTOR
+            R6    1M             1M OHM 1/4W 1% METAL FILM RESISTOR
+            
+            Diodes        
+            D1    Not mounted
+            D2    Not mounted
+            
+            Potentiometers
+            ATTACK     100k-B     100K OHM LINEAR TAPER POTENTIOMETER
+            VOL          100k-A     100K OHM LOG POTENTIOMETER
+        """,
+        "source_path": "raw_boms/tayda/fuzz/satisfaction_fuzz.txt",
+        "is_pdf": False,
+    },
+    "[Tayda] [Modulation] Colorsound Tremolo": {
+        "bom_text": """
+            PCB
+            PCB               COLORSOUND PCB
+            
+            Resistors        
+            R1    1M         1M OHM 1/4W 1% METAL FILM RESISTOR
+            R2    100k      100K OHM 1/4W 1% METAL FILM RESISTOR
+            R3    330k      330K OHM 1/4W 1% METAL FILM RESISTOR
+            R4    18k        18K OHM 1/4W 1% METAL FILM RESISTOR
+            R5    4.7k       4.7K OHM 1/4W 1% METAL FILM RESISTOR
+            R6    100k      100K OHM 1/4W 1% METAL FILM RESISTOR
+            R7    3.3k       3.3K OHM 1/4W 1% METAL FILM RESISTOR
+            R8    22k        22K OHM 1/4W 1% METAL FILM RESISTOR
+            R9    3.3M      3.3M OHM 1/4W 1% METAL FILM RESISTOR
+            R10   3.3M     3.3M OHM 1/4W 1% METAL FILM RESISTOR
+            R11   4.7k      4.7K OHM 1/4W 1% METAL FILM RESISTOR
+            R12   220k     220K OHM 1/4W 1% METAL FILM RESISTOR
+            R13   1M        1M OHM 1/4W 1% METAL FILM RESISTOR
+            
+            Capacitors        
+            C1    100n     100NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
+            C2    100n     100NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
+            C3    100n     100NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
+            C4    470n     470NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
+            C5    470n     470NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
+            C6    470n     470NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
+            C7    220n     220NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
+            
+            Diodes
+            D1    1N4001    1N4001 DIODE 1A 50V
+            
+            Transistors
+            Q1    2N5088    2N5088 GERENAL PURPOSE TRANSISTOR
+            Q2    2N5088    2N5088 GERENAL PURPOSE TRANSISTOR
+            Q3    2N5088    2N5088 GERENAL PURPOSE TRANSISTOR
+            Q4    2N5088    2N5088 GERENAL PURPOSE TRANSISTOR
+            
+            Potentiometers
+            DEPTH   100k-C    100K OHM REVERSE LOG POTENTIOMETER
+            SPEED   100k-B    100K OHM LINEAR POTENTIOMETER
+        """,
+        "source_path": "raw_boms/tayda/modulation/colorsound_tremolo.txt",
+        "is_pdf": False,
+    },
+    "[Tayda] [Modulation] Dr Q": {
+        "bom_text": """
+            PCB
+            PCB               DR Q AUTOWAH PCB
+            
+            Resistors
+            R1     1M        1M OHM 1/4W 1% METAL FILM RESISTOR
+            R2     1M        1M OHM 1/4W 1% METAL FILM RESISTOR
+            R3     10k       10K OHM 1/4W 1% METAL FILM RESISTOR
+            R4     47k       47K OHM 1/4W 1% METAL FILM RESISTOR
+            R5     2.2M     2.2M OHM 1/4W 1% METAL FILM RESISTOR
+            R6     10k       10K OHM 1/4W 1% METAL FILM RESISTOR
+            R7     47         47 OHM 1/4W 1% METAL FILM RESISTOR
+            R8     100       100 OHM 1/4W 1% METAL FILM RESISTOR
+            R9      22k      22K OHM 1/4W 1% METAL FILM RESISTOR
+            R10    47k       47K OHM 1/4W 1% METAL FILM RESISTOR
+            R11    47k       47K OHM 1/4W 1% METAL FILM RESISTOR
+            R12    470k     470K OHM 1/4W 1% METAL FILM RESISTOR
+            R13    470k     470K OHM 1/4W 1% METAL FILM RESISTOR
+            R14    470k     470K OHM 1/4W 1% METAL FILM RESISTOR
+            R15    47k       47K OHM 1/4W 1% METAL FILM RESISTOR
+            R16    47k       47K OHM 1/4W 1% METAL FILM RESISTOR
+            
+            Capacitors
+            C1    47n       47NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
+            C2    47n       47NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
+            C3    10u       10UF 50V ELECTROLYTIC CAPACITOR 5X11MM
+            C4    4.7n      4.7NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
+            C5    4.7n      4.7NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
+            C6    1n         1NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR 
+            C7    10u       10UF 50V ELECTROLYTIC CAPACITOR 5X11MM
+            C8    47n       47NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
+            C9    10n       10NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
+            C10  10u       10UF 50V ELECTROLYTIC CAPACITOR 5X11MM
+            
+            Transistors
+            Q1    2N5457     SMD SOT-23 2N5457 JFET N-CHANNEL TRANSISTOR
+            (Q1  PCB     SMD TRANSISTOR PCB)
+            Q2    2N3904     2N3904 NPN GENERAL PURPOSE TRANSISTOR
+            
+            OPAMP
+            U1    TL072       TL072 OPERATIONAL AMPLIFIER
+            (U1 Socket    8 PIN DIP IC SOCKET ADAPTOR)
+            
+            Diodes
+            D1    LED            LED 3MM RED  
+            D2    LED            LED 3MM RED   
+            D3    1N914        1N914 SMALL SIGNAL DIODE 200MA 100V
+            
+            Potentiometers
+            SENS           100K-B                  100K OHM LINEAR POTENTIOMETer ANGLED
+            RANGE         20k/25k-B Trim      20K OHM TRIMMER POTENTIOMETER CERMET 1 TURN 3362P
+            
+            SWITCH
+            SW    SWITCH    MINI TOGGLE SWITCH DPDT ON-ON
+        """,
+        "source_path": "raw_boms/tayda/modulation/dr_q.txt",
+        "is_pdf": False,
+    },
+    "[Tayda] [Overdrive] Bluesbreaker": {
+        "bom_text": """
+            PCB
+            PCB       blues breaker DIY PCB
+            
+            Resistors        
+            R1    2.2M     2.2M OHM 1/4W 1% METAL FILM RESISTOR
+            R2    1M        1M OHM 1/4W 1% METAL FILM RESISTOR
+            R3    4.7k      4.7K OHM 1/4W 1% METAL FILM RESISTOR
+            R4    3.3k      3.3K OHM 1/4W 1% METAL FILM RESISTOR
+            R5    10k       10K OHM 1/4W 1% METAL FILM RESISTOR
+            R6    6.8k      6.8K OHM 1/4W 1% METAL FILM RESISTOR
+            R7    220k     220K OHM 1/4W 1% METAL FILM RESISTOR
+            R8    1k         1K OHM 1/4W 1% METAL FILM RESISTOR
+            R9    6.8k      6.8K OHM 1/4W 1% METAL FILM RESISTOR
+            R10  1M        1M OHM 1/4W 1% METAL FILM RESISTOR
+            R11  47k       47K OHM 1/4W 1% METAL FILM RESISTOR
+            R12  47k       47K OHM 1/4W 1% METAL FILM RESISTOR
+            
+            Capacitors        
+            C1    10n       10NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
+            C2    10n       10NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
+            C3    10n       10NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
+            C4    47p       47PF 50V CERAMIC DISC CAPACITOR
+            C5    100n     100NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
+            C6    10n       10NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
+            C7    10n       10NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
+            C8    100n     100NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
+            C9    100u     100UF 35V ELECTROLYTIC CAPACITOR 6X11MM
+            C10  100u     100UF 35V ELECTROLYTIC CAPACITOR 6X11MM
+            
+            Diodes        
+            D1    1N4148      1N4148 SWITCHING SIGNAL DIODE
+            D2    1N4148      1N4148 SWITCHING SIGNAL DIODE
+            D3    1N4148      1N4148 SWITCHING SIGNAL DIODE
+            D4    1N4148      1N4148 SWITCHING SIGNAL DIODE
+            D5    1N4001      1N4001 DIODE 1A 50V
+            
+            IC
+            OP1    TL072       TL072 OPERATIONAL AMPLIFIER
+            (Socket     8 pin dip ic socket)
+            
+            Potentiometers
+            GAIN    100k-B      100K OHM LIN TAPER POTENTIOMETER
+            TONE    25k-B        25K OHM LOG TAPER POTENTIOMETER
+            VOL      100k-A      100K OHM LOG TAPER POTENTIOMETER
+        """,
+        "source_path": "raw_boms/tayda/overdrive/bluesbreaker.txt",
+        "is_pdf": False,
+    },
+    "[Tayda] [Overdrive] Centaur Overdrive": {
+        "bom_text": """
+            Resistors        
+            R1     1M        1M OHM 1/4W 1% METAL FILM RESISTOR
+            R2     10k       10K OHM 1/4W 1% METAL FILM RESISTOR
+            R3     1M        1M OHM 1/4W 1% METAL FILM RESISTOR
+            R4     5.1k      5.1K OHM 1/4W 1% METAL FILM RESISTOR
+            R5     1.5K      1.5K OHM 1/4W 1% METAL FILM RESISTOR
+            R6     1k         1K OHM 1/4W 1% METAL FILM RESISTOR
+            R7     10k       10K OHM 1/4W 1% METAL FILM RESISTOR
+            R8     2k         2K OHM 1/4W 1% METAL FILM RESISTOR
+            R9     15k       15K OHM 1/4W 1% METAL FILM RESISTOR
+            R10    680k     680K OHM 1/4W 1% METAL FILM RESISTOR
+            R11    1k         1K OHM 1/4W 1% METAL FILM RESISTOR
+            R12    47k       47K OHM 1/4W 1% METAL FILM RESISTOR
+            R13    22k       22K OHM 1/4W 1% METAL FILM RESISTOR
+            R14    27k       27K OHM 1/4W 1% METAL FILM RESISTOR
+            R15    12k       12K OHM 1/4W 1% METAL FILM RESISTOR
+            R16    1.5K      1.5K OHM 1/4W 1% METAL FILM RESISTOR
+            R17    15k       15K OHM 1/4W 1% METAL FILM RESISTOR
+            R18    392k     392K OHM 1/4W 1% METAL FILM RESISTOR
+            R19    1.8k      1.8K OHM 1/4W 1% METAL FILM RESISTOR
+            R20    100k     100K OHM 1/4W 1% METAL FILM RESISTOR
+            R21    100k     100K OHM 1/4W 1% METAL FILM RESISTOR
+            R22    4.7k      4.7K OHM 1/4W 1% METAL FILM RESISTOR
+            R23    560       560 OHM 1/4W 1% METAL FILM RESISTOR
+            R24    27k       27K OHM 1/4W 1% METAL FILM RESISTOR
+            R25    27k       27K OHM 1/4W 1% METAL FILM RESISTOR
+            
+            Capacitors        
+            C1    100n       100NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
+            C2    68n         68NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
+            C3    390n       390NF100V 5% MYLAR FILM TYPE CAPACITOR
+            C4    100n       100NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
+            C5    68n         68NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
+            C6    82n         82NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
+            C7    390p       390PF 50V CERAMIC DISC CAPACITOR
+            C8    1u           1UF 50V ELECTROLYTIC CAPACITOR 5X11MM
+            C9    1u           1UF 50V ELECTROLYTIC CAPACITOR 5X11MM
+            C10   2.2n       2.2NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
+            C11   27n        27NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
+            C12   1u          1UF 50V ELECTROLYTIC CAPACITOR 5X11MM
+            C13   820p      820PF 50V CERAMIC DISC CAPACITOR
+            C14   3.9n       3.9NF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
+            C15   4.7u       4.7UF 50V ELECTROLYTIC CAPACITOR 5X11MM
+            C16   100u      100UF 35V ELECTROLYTIC CAPACITOR 6X11MM
+            C17   47u        47UF 25V ELECTROLYTIC CAPACITOR 5X11MM
+            C18   10u        10UF 50V ELECTROLYTIC CAPACITOR 5X11MM
+            C19   10u        10UF 50V ELECTROLYTIC CAPACITOR 5X11MM
+            C20   10u        10UF 50V ELECTROLYTIC CAPACITOR 5X11MM
+            C21   10u        10UF 50V ELECTROLYTIC CAPACITOR 5X11MM
+            
+            Diodes        
+            D1    1N34A        1N34A GERMANIUM DIODE
+            D2    1N34A        1N34A GERMANIUM DIODE
+            D3    1N4001      1N4001 DIODE 1A
+            D4    1N4001      1N4001 DIODE 1A
+            D5    1N4001      1N4001 DIODE 1A
+            
+            IC
+            IC1    TL072               TL072 LOW NOISE J-FET DUAL OP-AMP IC 
+            IC2    TL072               TL072 LOW NOISE J-FET DUAL OP-AMP IC
+            IC3    ​TC1044SCPA     TC1044SCPA TC1044 VOLTAGE REGULATOR IC
+            (Socket    8 PIN DIP IC SOCKET ADAPTOR)
+            
+            Potentiometers
+            GAIN    100k-B      100K OHM LIN DUAL APER POTENTIOMETER
+            TONE    10k-B       25K OHM LIN TAPER POTENTIOMETER
+            VOL      10k-B       10K OHM LIN TAPER POTENTIOMETER
+        """,
+        "source_path": "raw_boms/tayda/overdrive/centaur_overdrive.txt",
+        "is_pdf": False,
+    },
+    "[Tayda] [Overdrive] Rat": {
+        "bom_text": """
+            PCB
+            PCB      RAT DIY PCB
+            
+            Capacitors
+            C1      22n      22NF 0.022UF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
+            C2      1n        1NF 0.001UF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
+            C3      30p      30PF 50V CERAMIC DISC CAPACITOR
+            C4      100p    100PF 50V CERAMIC DISC CAPACITOR
+            C5      4.7u     4.7UF 50V 105C RADIAL ELECTROLYTIC CAPACITOR 5X11MM
+            C6      2.2u     2.2UF 50V 105C RADIAL ELECTROLYTIC CAPACITOR 5X11MM
+            C7      4.7u     4.7UF 50V 105C RADIAL ELECTROLYTIC CAPACITOR 5X11MM
+            C8      3.3n     3.3NF 0.0033UF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
+            C9      22n      22NF 0.022UF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
+            C10    1u        1UF 50V 105C RADIAL ELECTROLYTIC CAPACITOR 5X11MM
+            C11    100u    100UF 35V 105C RADIAL ELECTROLYTIC CAPACITOR 6X11MM
+            C12    47u      47UF 25V 105C ALUMINUM ELECTROLYTIC CAPACITOR 5X11MM
+            C13    100n    100NF 0.1UF 100V 5% POLYESTER FILM BOX TYPE CAPACITOR
+            
+            Diodes
+            D1    1N914    1N914 SMALL SIGNAL DIODE 200MA 100V
+            D2    1N914    1N914 SMALL SIGNAL DIODE 200MA 100V
+            D3    1N4001  1N4001 DIODE 1A 50V
+            
+            Resistors
+            R1    1M       1M OHM 1/4W 1% METAL FILM RESISTOR
+            R2    1M       1M OHM 1/4W 1% METAL FILM RESISTOR
+            R3    1K       1K OHM 1/4W 1% METAL FILM RESISTOR
+            R4    560      560 OHM 1/4W 1% METAL FILM RESISTOR
+            R5    47        47 OHM 1/4W 1% METAL FILM RESISTOR
+            R6    1K       1K OHM 1/4W 1% METAL FILM RESISTOR
+            R7    1.5k     1.5K OHM 1/4W 1% METAL FILM RESISTOR
+            R8    1M       1M OHM 1/4W 1% METAL FILM RESISTOR
+            R9    10k      10K OHM 1/4W 1% METAL FILM RESISTOR
+            R10   47       47 OHM 1/4W 1% METAL FILM RESISTOR
+            R11   100k   100K OHM 1/4W 1% METAL FILM RESISTOR
+            R12   100k   100K OHM 1/4W 1% METAL FILM RESISTOR
+            
+            Transistor
+            Q1    2N5457     SMD SOT-23 2N5457 JFET N-CHANNEL TRANSISTOR
+            
+            IC
+            TL071    TL071    TL071 OPERATIONAL AMPLIFIER
+            (Socket     SOCKET IC 8 PIN)
+            
+            Potentiometers
+            TONE    100k-A    100K OHM LOGARITHMIC TAPER POTENTIOMETER
+            VOL      100k-A    100K OHM LOGARITHMIC TAPER POTENTIOMETER
+            GAIN    100k-A    100K OHM LOGARITHMIC TAPER POTENTIOMETER
+        """,
+        "source_path": "raw_boms/tayda/overdrive/rat.txt",
+        "is_pdf": False,
+    },
 }
