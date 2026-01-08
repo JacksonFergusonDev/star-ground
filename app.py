@@ -697,6 +697,10 @@ if st.button("Generate Master List", type="primary", width="stretch"):
         if not slot["name"].strip():
             slot["name"] = source
 
+        # Save the final resolved name to a separate key that won't be overwritten
+        # by the empty text_input widget on the next script run.
+        slot["locked_name"] = slot["name"]
+
     # Process Stock if uploaded
     stock_inventory = None
     if stock_file:
