@@ -274,7 +274,7 @@ def float_val_check(val_str: str) -> float:
 def _write_field_manuals(zf, inventory, slots):
     """Helper: Generate Field Manual PDFs and write to ZIP."""
     for slot in slots:
-        project_name = slot["name"]
+        project_name = slot.get("locked_name", slot["name"])
         if not project_name:
             continue
 
@@ -321,7 +321,7 @@ def _write_field_manuals(zf, inventory, slots):
 def _write_stickers(zf, inventory, slots):
     """Helper: Generate Sticker Sheet PDFs and write to ZIP."""
     for slot in slots:
-        project_name = slot["name"]
+        project_name = slot.get("locked_name", slot["name"])
         if not project_name:
             continue
 
@@ -386,7 +386,8 @@ def generate_master_zip(inventory, slots, shopping_list_csv, stock_csv):
 
         # 3. Source Documents
         for slot in slots:
-            safe_name = re.sub(r"[^a-zA-Z0-9_\-]", "_", slot["name"])
+            project_name = slot.get("locked_name", slot["name"])
+            safe_name = re.sub(r"[^a-zA-Z0-9_\-]", "_", project_name)
 
             # Check cached bytes (URL/Upload)
             if "cached_pdf_bytes" in slot and slot["cached_pdf_bytes"]:
