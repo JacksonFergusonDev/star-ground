@@ -132,9 +132,7 @@ def generate_presets():
                 # Store metadata structure
                 presets[key] = {
                     "bom_text": final_text,
-                    "source_path": file_path.replace(
-                        "\\", "/"
-                    ),  # Standardize separators
+                    "source_path": file_path.replace("\\", "/"),
                     "is_pdf": file.lower().endswith(".pdf"),
                 }
 
@@ -148,8 +146,16 @@ def generate_presets():
 
         # Sort keys for stability
         for k in sorted(presets.keys()):
-            # Write the dict representation directly
-            f.write(f"    {repr(k)}: {repr(presets[k])},\n")
+            data = presets[k]
+            # Manual formatting to ensure BOM text uses triple quotes
+            # Indent deeply (12 spaces) to align inside the dict structure
+            content = data["bom_text"].strip().replace("\n", "\n            ")
+
+            f.write(f"    {repr(k)}: {{\n")
+            f.write(f'        \'bom_text\': """\n            {content}\n        """,\n')
+            f.write(f"        'source_path': {repr(data['source_path'])},\n")
+            f.write(f"        'is_pdf': {data['is_pdf']},\n")
+            f.write("    },\n")
 
         f.write("}\n")
 
