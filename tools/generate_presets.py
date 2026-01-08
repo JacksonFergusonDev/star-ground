@@ -129,7 +129,14 @@ def generate_presets():
                 else:
                     key = f"[{source}] {project_name}"
 
-                presets[key] = final_text
+                # Store metadata structure
+                presets[key] = {
+                    "bom_text": final_text,
+                    "source_path": file_path.replace(
+                        "\\", "/"
+                    ),  # Standardize separators
+                    "is_pdf": file.lower().endswith(".pdf"),
+                }
 
     # 4. Write Output
     print(f"💾 Writing {len(presets)} presets to {OUTPUT_FILE}...")
@@ -141,10 +148,8 @@ def generate_presets():
 
         # Sort keys for stability
         for k in sorted(presets.keys()):
-            # Use triple quotes for readable multi-line strings
-            # Indent the content by 8 spaces to match the dict structure
-            content = presets[k].strip().replace("\n", "\n        ")
-            f.write(f'    {repr(k)}: """\n        {content}\n    """,\n')
+            # Write the dict representation directly
+            f.write(f"    {repr(k)}: {repr(presets[k])},\n")
 
         f.write("}\n")
 
