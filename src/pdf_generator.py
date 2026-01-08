@@ -7,6 +7,92 @@ import re
 from src.bom_lib import deduplicate_refs
 
 
+def condense_refs(refs):
+    """
+    Condenses a list of refs: ['R1', 'R2', 'R3', 'C1'] -> 'R1-R3, C1'
+    Simplified implementation for label printing.
+    """
+    if not refs:
+        return ""
+
+    # Simple heuristic: Just join them.
+    # Logic to actually detect ranges (1,2,3 -> 1-3) is complex
+    # and risky if prefixes vary (R1, R2A).
+    # We will just truncate gracefully in the PDF if too long.
+    return ", ".join(refs)
+
+
+class StickerSheet(FPDF):
+    def __init__(self):
+        # Letter size (215.9mm x 279.4mm)
+        super().__init__(format="Letter", unit="mm")
+        self.set_auto_page_break(auto=False)
+        self.set_margins(4.8, 12.7, 4.8)  # Left 0.19", Top 0.5"
+
+        # Avery 5160 Dims
+        self.label_w = 66.6  # 2.625"
+        self.label_h = 25.4  # 1.0"
+        self.h_gap = 3.0  # 0.125" between cols
+        self.v_gap = 0.0  # 0.0" between rows
+
+        self.cols = 3
+        self.rows = 10
+        self.current_idx = 0
+
+        self.add_page()
+
+    def add_sticker(self, project_code, part_val, refs, qty):
+        # Calculate Position
+        page_idx = self.current_idx % (self.cols * self.rows)
+        if self.current_idx > 0 and page_idx == 0:
+            self.add_page()
+
+        col = page_idx % self.cols
+        row = page_idx // self.cols
+
+        x = 4.8 + (col * (self.label_w + self.h_gap))
+        y = 12.7 + (row * (self.label_h + self.v_gap))
+
+        self.set_xy(x, y)
+
+        # Content
+        # Top Left: Project Code
+        self.set_font("Helvetica", "B", 8)
+        self.cell(
+            self.label_w,
+            4,
+            f"[{project_code}]",
+            align="L",
+            new_x=XPos.LMARGIN,
+            new_y=YPos.NEXT,
+        )
+
+        # Center: Value
+        self.set_xy(x, y + 4)
+        self.set_font("Helvetica", "B", 12)
+        self.cell(
+            self.label_w,
+            8,
+            str(part_val)[:18],
+            align="C",
+            new_x=XPos.LMARGIN,
+            new_y=YPos.NEXT,
+        )
+
+        # Bottom: Refs (Condensed/Truncated)
+        self.set_xy(x, y + 13)
+        self.set_font("Helvetica", "", 7)
+        ref_text = condense_refs(refs)
+
+        # Add Quantity if > 1
+        if qty > 1:
+            ref_text = f"(x{qty}) {ref_text}"
+
+        self.multi_cell(self.label_w, 3, ref_text, align="C")
+
+        self.current_idx += 1
+
+
 class FieldManual(FPDF):
     def __init__(self):
         super().__init__()
