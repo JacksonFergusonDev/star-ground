@@ -12,6 +12,7 @@ from typing import cast, List, Dict, Any
 from streamlit.runtime.uploaded_file_manager import UploadedFile
 import streamlit as st
 from src.presets import BOM_PRESETS
+from src.pdf_generator import generate_master_zip, generate_pdf_bundle
 
 from src.bom_lib import (
     InventoryType,
@@ -30,8 +31,6 @@ from src.bom_lib import (
     calculate_net_needs,
     generate_pedalpcb_url,
 )
-
-from src.pdf_generator import generate_field_manual_zip
 
 st.set_page_config(page_title="Pedal BOM Manager", page_icon="🎸")
 
@@ -906,7 +905,8 @@ if st.session_state.inventory and st.session_state.stats:
 
     stock_update_csv = stock_update_buf.getvalue().encode("utf-8-sig")
 
-    c_dwn1, c_dwn2 = st.columns(2)
+    # Row 1: Specific Downloads
+    c_dwn1, c_dwn2, c_dwn3 = st.columns(3)
 
     with c_dwn1:
         st.download_button(
@@ -915,6 +915,7 @@ if st.session_state.inventory and st.session_state.stats:
             file_name="pedal_shopping_list.csv",
             mime="text/csv",
             type="primary",
+            use_container_width=True,
         )
 
     with c_dwn2:
@@ -923,16 +924,31 @@ if st.session_state.inventory and st.session_state.stats:
             data=stock_update_csv,
             file_name="my_inventory_updated.csv",
             mime="text/csv",
-            help="Upload this file next time! It contains your stock levels minus what you used here, plus what you bought.",
+            help="Stock levels minus usage + new buys.",
+            use_container_width=True,
         )
 
+    with c_dwn3:
+        st.download_button(
+            "📖 Download Generated PDFs",
+            data=generate_pdf_bundle(inventory, st.session_state.pedal_slots),
+            file_name="pedal_build_docs.zip",
+            mime="application/zip",
+            help="ZIP containing Field Manuals and Sticker Sheets.",
+            use_container_width=True,
+        )
+
+    # Row 2: Everything
     st.download_button(
-        "📖 Download Field Manuals (ZIP)",
-        data=generate_field_manual_zip(inventory, st.session_state.pedal_slots),
-        file_name="pedal_field_manuals.zip",
+        "📚 Download All Build Documents (ZIP)",
+        data=generate_master_zip(
+            inventory, st.session_state.pedal_slots, csv_out, stock_update_csv
+        ),
+        file_name="Pedal_Build_Pack_Complete.zip",
         mime="application/zip",
-        help="Download individual printable build guides for each pedal.",
-        width="stretch",
+        help="Includes: Shopping List, Inventory, Field Manuals, Stickers, and Source PDFs.",
+        type="primary",
+        use_container_width=True,
     )
 
 st.divider()
