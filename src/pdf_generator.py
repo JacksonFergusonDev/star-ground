@@ -1,5 +1,6 @@
 from fpdf import FPDF
 from fpdf.enums import XPos, YPos
+from collections import defaultdict
 import datetime
 import zipfile
 import io
@@ -9,17 +10,65 @@ from src.bom_lib import deduplicate_refs
 
 def condense_refs(refs):
     """
-    Condenses a list of refs: ['R1', 'R2', 'R3', 'C1'] -> 'R1-R3, C1'
-    Simplified implementation for label printing.
+    Condenses a list of refs: ['R1', 'R2', 'R3', 'C1', 'Q3', 'Q4'] -> 'C1, Q3-Q4, R1-R3'
     """
     if not refs:
         return ""
 
-    # Simple heuristic: Just join them.
-    # Logic to actually detect ranges (1,2,3 -> 1-3) is complex
-    # and risky if prefixes vary (R1, R2A).
-    # We will just truncate gracefully in the PDF if too long.
-    return ", ".join(refs)
+    # 1. Parse into (Prefix, Number)
+    parsed = []
+    pattern = re.compile(r"([a-zA-Z]+)(\d+)")
+
+    unparseable = []
+
+    for r in refs:
+        m = pattern.match(r)
+        if m:
+            parsed.append((m.group(1), int(m.group(2))))
+        else:
+            unparseable.append(r)
+
+    # 2. Sort by Prefix then Number
+    parsed.sort(key=lambda x: (x[0], x[1]))
+
+    # 3. Group and condense
+    groups = defaultdict(list)
+    for p, n in parsed:
+        groups[p].append(n)
+
+    result_parts = sorted(unparseable)
+
+    for prefix in sorted(groups.keys()):
+        nums = groups[prefix]
+        if not nums:
+            continue
+
+        # Range finding algorithm
+        ranges = []
+        start = nums[0]
+        prev = nums[0]
+
+        for n in nums[1:]:
+            if n == prev + 1:
+                prev = n
+            else:
+                # Range ended
+                if start == prev:
+                    ranges.append(f"{prefix}{start}")
+                else:
+                    ranges.append(f"{prefix}{start}-{prefix}{prev}")
+                start = n
+                prev = n
+
+        # Final range
+        if start == prev:
+            ranges.append(f"{prefix}{start}")
+        else:
+            ranges.append(f"{prefix}{start}-{prefix}{prev}")
+
+        result_parts.extend(ranges)
+
+    return ", ".join(result_parts)
 
 
 class StickerSheet(FPDF):
