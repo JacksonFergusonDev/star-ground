@@ -1,0 +1,382 @@
+{
+  "inventory": {
+    "Capacitors | 100n": {
+      "qty": 6,
+      "refs": [
+        "C12",
+        "C15",
+        "C16",
+        "C17",
+        "C18",
+        "C19"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C12",
+          "C15",
+          "C16",
+          "C17",
+          "C18",
+          "C19"
+        ]
+      }
+    },
+    "Capacitors | 100p": {
+      "qty": 1,
+      "refs": [
+        "C24"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C24"
+        ]
+      }
+    },
+    "Capacitors | 100u": {
+      "qty": 2,
+      "refs": [
+        "C1",
+        "C3"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C1",
+          "C3"
+        ]
+      }
+    },
+    "Capacitors | 10u": {
+      "qty": 2,
+      "refs": [
+        "C4",
+        "C5"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C4",
+          "C5"
+        ]
+      }
+    },
+    "Capacitors | 1n": {
+      "qty": 1,
+      "refs": [
+        "C14"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C14"
+        ]
+      }
+    },
+    "Capacitors | 1u": {
+      "qty": 5,
+      "refs": [
+        "C23",
+        "C25",
+        "C6",
+        "C7",
+        "C9"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C23",
+          "C25",
+          "C6",
+          "C7",
+          "C9"
+        ]
+      }
+    },
+    "Capacitors | 2.2n": {
+      "qty": 1,
+      "refs": [
+        "C22"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C22"
+        ]
+      }
+    },
+    "Capacitors | 220n": {
+      "qty": 1,
+      "refs": [
+        "C10"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C10"
+        ]
+      }
+    },
+    "Capacitors | 22n": {
+      "qty": 6,
+      "refs": [
+        "C11",
+        "C13",
+        "C20",
+        "C21",
+        "C26",
+        "C8"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C11",
+          "C13",
+          "C20",
+          "C21",
+          "C26",
+          "C8"
+        ]
+      }
+    },
+    "Diodes | 1N4148": {
+      "qty": 2,
+      "refs": [
+        "D1",
+        "D2"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "D1",
+          "D2"
+        ]
+      }
+    },
+    "Diodes | 1N5817": {
+      "qty": 1,
+      "refs": [
+        "D3"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "D3"
+        ]
+      }
+    },
+    "Hardware/Misc | DIP SOCKET (Check Size)": {
+      "qty": 3,
+      "refs": [
+        "IC1 (Inj)",
+        "IC2 (Inj)",
+        "IC3 (Inj)"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "IC1 (Inj)",
+          "IC2 (Inj)",
+          "IC3 (Inj)"
+        ]
+      }
+    },
+    "ICs | 78L05": {
+      "qty": 1,
+      "refs": [
+        "IC3"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "IC3"
+        ]
+      }
+    },
+    "ICs | PT2399": {
+      "qty": 1,
+      "refs": [
+        "IC1"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "IC1"
+        ]
+      }
+    },
+    "ICs | TL072": {
+      "qty": 1,
+      "refs": [
+        "IC2"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "IC2"
+        ]
+      }
+    },
+    "Potentiometers | B25K": {
+      "qty": 1,
+      "refs": [
+        "TONE"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "TONE"
+        ]
+      }
+    },
+    "Potentiometers | B50K": {
+      "qty": 1,
+      "refs": [
+        "TIME"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "TIME"
+        ]
+      }
+    },
+    "Potentiometers | B5K": {
+      "qty": 2,
+      "refs": [
+        "MIX",
+        "REPEATS"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "MIX",
+          "REPEATS"
+        ]
+      }
+    },
+    "Resistors | 100k": {
+      "qty": 1,
+      "refs": [
+        "R7"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R7"
+        ]
+      }
+    },
+    "Resistors | 10k": {
+      "qty": 8,
+      "refs": [
+        "R11",
+        "R13",
+        "R16",
+        "R17",
+        "R19",
+        "R21",
+        "R5",
+        "R6"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R11",
+          "R13",
+          "R16",
+          "R17",
+          "R19",
+          "R21",
+          "R5",
+          "R6"
+        ]
+      }
+    },
+    "Resistors | 1M": {
+      "qty": 1,
+      "refs": [
+        "R1"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R1"
+        ]
+      }
+    },
+    "Resistors | 1k": {
+      "qty": 1,
+      "refs": [
+        "R15"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R15"
+        ]
+      }
+    },
+    "Resistors | 20k": {
+      "qty": 1,
+      "refs": [
+        "R20"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R20"
+        ]
+      }
+    },
+    "Resistors | 220k": {
+      "qty": 2,
+      "refs": [
+        "R23",
+        "R4"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R23",
+          "R4"
+        ]
+      }
+    },
+    "Resistors | 22k": {
+      "qty": 3,
+      "refs": [
+        "R10",
+        "R14",
+        "R18"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R10",
+          "R14",
+          "R18"
+        ]
+      }
+    },
+    "Resistors | 4.7k": {
+      "qty": 1,
+      "refs": [
+        "R8"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R8"
+        ]
+      }
+    },
+    "Resistors | 470k": {
+      "qty": 2,
+      "refs": [
+        "R2",
+        "R3"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R2",
+          "R3"
+        ]
+      }
+    },
+    "Resistors | 47k": {
+      "qty": 3,
+      "refs": [
+        "R12",
+        "R22",
+        "R9"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R12",
+          "R22",
+          "R9"
+        ]
+      }
+    }
+  },
+  "metadata": {
+    "extracted_title": "Cataclysm Delay",
+    "parts_found": 58
+  }
+}

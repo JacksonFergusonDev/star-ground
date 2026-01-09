@@ -261,6 +261,7 @@ def categorize_part(
         "LEVEL",
         "MIX",
         "BLEND",
+        "BALANCE",
         "DRY",
         "WET",
         "SPEED",
@@ -294,6 +295,10 @@ def categorize_part(
         "RESONANCE",
         "AMT",
         "AMOUNT",
+        "DISTORTION",
+        "OCTAVE",
+        "AMPLITUDE",
+        "CLEAN",
     }
 
     # 3. Standard Component Prefixes
@@ -324,6 +329,7 @@ def categorize_part(
         or ref_up in switch_labels
         or any(ref_up.startswith(label) for label in pot_labels)
         or is_pot_value
+        or ref_up == "CLR"
     )
 
     if not is_valid:
@@ -356,6 +362,8 @@ def categorize_part(
             # Fallback to pot (e.g. a "LENGTH" control that is actually a B100K pot)
             category = "Potentiometers"
 
+    elif ref_up == "CLR":
+        category = "Resistors"
     elif ref_up.startswith("R") and not ref_up.startswith("RANGE"):
         category = "Resistors"
     elif ref_up.startswith("C"):
@@ -1285,6 +1293,7 @@ def parse_pedalpcb_pdf(
                 "COMP",
                 "MIX",
                 "BLEND",
+                "BALANCE",
                 "DRY",
                 "WET",
                 "REPEATS",
@@ -1310,6 +1319,9 @@ def parse_pedalpcb_pdf(
                 "AMOUNT",
                 "LO",
                 "HI",
+                "DISTORTION",
+                "OCTAVE",
+                "AMPLITUDE",
             ]
             kw_regex_str = "|".join([rf"\b{k}\b" for k in keywords])
 
@@ -1342,6 +1354,13 @@ def parse_pedalpcb_pdf(
                 "JACKS",
                 "FEATURES",
                 "CONTROLS",
+                "REVISION",
+                "REV",
+                "VERSION",
+                "COPYRIGHT",
+                "WWW",
+                ".COM",
+                "EDITION",
             ]
 
             # 3. Execution
@@ -1411,6 +1430,12 @@ def parse_pedalpcb_pdf(
                     # Notes often look like "Rate is a..." or "See note..."
                     if re.match(r"^(is|see|note)\s", val_str, re.IGNORECASE):
                         logger.debug("        -> REJECT: Sentence Start")
+                        continue
+
+                    # Date/Version Check (e.g. 03.02.20)
+                    # Rejects patterns that look like dates but are captured as values
+                    if re.match(r"^\d{1,2}[\.\-\/]\d{1,2}[\.\-\/]\d{2,4}", val_str):
+                        logger.debug("        -> REJECT: Date/Version Pattern")
                         continue
 
                     # 3. Prefix Safety Check
