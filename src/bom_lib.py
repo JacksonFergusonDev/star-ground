@@ -295,6 +295,9 @@ def categorize_part(
         "RESONANCE",
         "AMT",
         "AMOUNT",
+        "DISTORTION",
+        "OCTAVE",
+        "AMPLITUDE",
     }
 
     # 3. Standard Component Prefixes
