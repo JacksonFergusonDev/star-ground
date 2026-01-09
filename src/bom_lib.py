@@ -1315,6 +1315,9 @@ def parse_pedalpcb_pdf(
                 "AMOUNT",
                 "LO",
                 "HI",
+                "DISTORTION",
+                "OCTAVE",
+                "AMPLITUDE",
             ]
             kw_regex_str = "|".join([rf"\b{k}\b" for k in keywords])
 
