@@ -1356,6 +1356,7 @@ def parse_pedalpcb_pdf(
                 "COPYRIGHT",
                 "WWW",
                 ".COM",
+                "EDITION",
             ]
 
             # 3. Execution
