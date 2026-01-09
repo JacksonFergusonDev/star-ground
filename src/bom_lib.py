@@ -1421,6 +1421,12 @@ def parse_pedalpcb_pdf(
                         logger.debug("        -> REJECT: Sentence Start")
                         continue
 
+                    # Date/Version Check (e.g. 03.02.20)
+                    # Rejects patterns that look like dates but are captured as values
+                    if re.match(r"^\d{1,2}[\.\-\/]\d{1,2}[\.\-\/]\d{2,4}", val_str):
+                        logger.debug("        -> REJECT: Date/Version Pattern")
+                        continue
+
                     # 3. Prefix Safety Check
                     is_keyword = ref_str in keywords
                     if not is_keyword:
