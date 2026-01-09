@@ -361,6 +361,8 @@ def categorize_part(
             # Fallback to pot (e.g. a "LENGTH" control that is actually a B100K pot)
             category = "Potentiometers"
 
+    elif ref_up == "CLR":
+        category = "Resistors"
     elif ref_up.startswith("R") and not ref_up.startswith("RANGE"):
         category = "Resistors"
     elif ref_up.startswith("C"):
