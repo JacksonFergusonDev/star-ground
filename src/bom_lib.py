@@ -45,6 +45,15 @@ class PartData(TypedDict):
 InventoryType = Dict[str, PartData]
 
 
+POT_TAPER_MAP = {
+    "A": "Logarithmic",
+    "B": "Linear",
+    "C": "Reverse Log",
+    "W": "W Taper",
+    "G": "Graphic",
+}
+
+
 # Chip substitution recommendations
 # Keys are the chips found in BOM, values are fun alternatives to try.
 # Structure: (Part Name, Sonic Profile, Technical Why)
@@ -299,11 +308,12 @@ def categorize_part(
     # Looks for "B100k", "10k-A" to identify pots by value.
     is_pot_value = False
 
-    # Prevent ICs (e.g. TC1044SCPA) and Transistors (e.g. BC549C) from matching
-    # the 'Ends with A/C' regex.
+    # Prevent ICs and Transistors from matching 'Ends with A/C' regex
     if not ref_up.startswith(("IC", "U", "Q", "OP", "TL")):
-        if re.search(r"[0-9]+.*[ABCWG]$", val_up) or re.search(
-            r"^[ABCWG][0-9]+", val_up
+        # Generate regex character class from map keys: "ABCWG"
+        taper_chars = "".join(POT_TAPER_MAP.keys())
+        if re.search(rf"[0-9]+.*[{taper_chars}]$", val_up) or re.search(
+            rf"^[{taper_chars}][0-9]+", val_up
         ):
             is_pot_value = True
 
@@ -442,9 +452,7 @@ def parse_with_verification(
     """
     Parses raw text BOMs. Handles commas and ranges (R1-R4).
     """
-    inventory: InventoryType = defaultdict(
-        lambda: {"qty": 0, "refs": [], "sources": defaultdict(list)}
-    )
+    inventory = create_empty_inventory()
     stats: StatsDict = {
         "lines_read": 0,
         "parts_found": 0,
@@ -526,9 +534,7 @@ def parse_csv_bom(filepath: str, source_name: str) -> Tuple[InventoryType, Stats
     """
     Parses a CSV file. Expects columns vaguely named 'Ref' and 'Value'.
     """
-    inventory: InventoryType = defaultdict(
-        lambda: {"qty": 0, "refs": [], "sources": defaultdict(list)}
-    )
+    inventory = create_empty_inventory()
     stats: StatsDict = {
         "lines_read": 0,
         "parts_found": 0,
@@ -675,18 +681,16 @@ def generate_search_term(category: str, val: str, spec_type: str = "") -> str:
         # Check for Gang type
         is_dual = "DUAL" in val_upper or "STEREO" in val_upper
 
-        if "A" in val_upper:
-            taper = "Logarithmic"
-        elif "B" in val_upper:
-            taper = "Linear"
-        elif "C" in val_upper:
-            taper = "Reverse Log"
-        elif "W" in val_upper:
-            taper = "W Taper"
+        # Lookup taper name from map
+        for code, name in POT_TAPER_MAP.items():
+            if code in val_upper:
+                taper = name
+                break
 
         # 2. Clean Value (e.g. "B100k" -> "100k")
-        # Strip taper letters so the float parser can find the number
-        clean_raw = re.sub(r"[ABCW\-\s]", "", val_upper)
+        # Strip taper letters dynamically
+        taper_chars = "".join(POT_TAPER_MAP.keys())
+        clean_raw = re.sub(rf"[{taper_chars}\-\s]", "", val_upper)
         fval = parse_value_to_float(clean_raw)
 
         if fval is not None:
@@ -1042,18 +1046,24 @@ def get_standard_hardware(inventory: InventoryType, pedal_count: int = 1) -> Non
     Mutates the inventory in-place to add Missing/Critical hardware.
     """
 
-    def inject(category: str, val: str, qty_per_pedal: int, note: str):
+    def inject(
+        category: str,
+        val: str,
+        qty_per_pedal: int,
+        note: str,
+        qty_override: Optional[int] = None,
+    ):
         """Standardizes the injection logic."""
-        # Ensure we match the formatting of the main parser
         key = f"{category} | {val}"
 
-        total_qty = qty_per_pedal * pedal_count
+        if qty_override is not None:
+            total_qty = qty_override
+        else:
+            total_qty = qty_per_pedal * pedal_count
 
-        # In-place mutation
         inventory[key]["qty"] += total_qty
-        inventory[key]["refs"].append("HW")  # Generic ref for hardware
+        inventory[key]["refs"].append("HW")
 
-        # Track source with the note for context
         source_tag = f"Auto-Inject ({note})"
         inventory[key]["sources"]["Auto-Inject"].append(source_tag)
 
@@ -1091,11 +1101,22 @@ def get_standard_hardware(inventory: InventoryType, pedal_count: int = 1) -> Non
     # We divide by pedal_count to get pots per pedal, then re-multiply inside inject.
     # Alternatively, we just pass the raw total if we treat it as a bulk injection.
     # Let's keep the logic consistent:
+    # Knobs (Dynamic Count)
+    total_pots = sum(
+        d["qty"] for k, d in inventory.items() if k.startswith("Potentiometers")
+    )
+
     if total_pots > 0:
-        # We inject the TOTAL quantity calculated from the inventory
-        key = "Hardware/Misc | Knob"
-        inventory[key]["qty"] += total_pots
-        inventory[key]["sources"]["Auto-Inject"].append(f"Knobs ({total_pots})")
+        inject(
+            "Hardware/Misc", "Knob", 0, f"Knobs ({total_pots})", qty_override=total_pots
+        )
+        inject(
+            "Hardware/Misc",
+            "Dust Seal Cover",
+            0,
+            f"Pot Seals ({total_pots})",
+            qty_override=total_pots,
+        )
 
         key_seal = "Hardware/Misc | Dust Seal Cover"
         inventory[key_seal]["qty"] += total_pots
@@ -1116,9 +1137,7 @@ def parse_pedalpcb_pdf(
     # Lazy import: pdfplumber is heavy (~2s load time), only load if user actually uploads a PDF
     import pdfplumber
 
-    inventory: InventoryType = defaultdict(
-        lambda: {"qty": 0, "refs": [], "sources": defaultdict(list)}
-    )
+    inventory = create_empty_inventory()
     stats: StatsDict = {
         "lines_read": 0,
         "parts_found": 0,
@@ -1512,3 +1531,18 @@ def calculate_net_needs(bom: InventoryType, stock: InventoryType) -> InventoryTy
         net_inv[key]["qty"] = net_needed
 
     return net_inv
+
+
+def create_empty_inventory() -> InventoryType:
+    """Factory for the standard inventory structure."""
+    return defaultdict(lambda: {"qty": 0, "refs": [], "sources": defaultdict(list)})
+
+
+def rename_source_in_inventory(inventory: InventoryType, old_name: str, new_name: str):
+    """Remaps a source key in the inventory (e.g., 'Project #1' -> 'Big Muff')."""
+    if old_name == new_name:
+        return
+
+    for part in inventory.values():
+        if old_name in part["sources"]:
+            part["sources"][new_name] = part["sources"].pop(old_name)
