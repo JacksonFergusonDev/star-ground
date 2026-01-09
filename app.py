@@ -1,4 +1,3 @@
-import datetime
 import os
 import uuid
 import re
@@ -10,6 +9,7 @@ from typing import cast, List, Dict, Any
 from streamlit.runtime.uploaded_file_manager import UploadedFile
 import streamlit as st
 from src.presets import BOM_PRESETS
+from src.feedback import save_feedback
 from src.pdf_generator import generate_master_zip, generate_pdf_bundle
 from src.exporters import generate_shopping_list_csv, generate_stock_update_csv
 
@@ -44,33 +44,6 @@ st.markdown(
 """,
     unsafe_allow_html=True,
 )
-
-
-# ttl="1h" to prevent stale token issues
-@st.cache_resource(ttl="1h")
-def get_gsheet_client():
-    """Establishes a persistent connection to Google Sheets."""
-    # Lazy import to prevent 3-5s startup delay
-    import gspread
-    from google.oauth2.service_account import Credentials
-
-    scope = [
-        "https://spreadsheets.google.com/feeds",
-        "https://www.googleapis.com/auth/drive",
-    ]
-    creds_dict = st.secrets["gcp_service_account"]
-    creds = Credentials.from_service_account_info(creds_dict, scopes=scope)
-    return gspread.authorize(creds)
-
-
-def save_feedback(rating, text):
-    """Appends feedback row using the cached client."""
-    client = get_gsheet_client()
-    sheet = client.open("Pedal BOM Feedback").sheet1
-
-    # Append timestamp, rating, and comment
-    row = [str(datetime.datetime.now()), rating, text]
-    sheet.append_row(row)
 
 
 st.title("🎸 Guitar Pedal BOM Manager")
