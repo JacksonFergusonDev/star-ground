@@ -1038,18 +1038,20 @@ def get_standard_hardware(inventory: InventoryType, pedal_count: int = 1) -> Non
     Mutates the inventory in-place to add Missing/Critical hardware.
     """
 
-    def inject(category: str, val: str, qty_per_pedal: int, note: str):
+    def inject(
+        category: str, val: str, qty_per_pedal: int, note: str, qty_override: int = None
+    ):
         """Standardizes the injection logic."""
-        # Ensure we match the formatting of the main parser
         key = f"{category} | {val}"
 
-        total_qty = qty_per_pedal * pedal_count
+        if qty_override is not None:
+            total_qty = qty_override
+        else:
+            total_qty = qty_per_pedal * pedal_count
 
-        # In-place mutation
         inventory[key]["qty"] += total_qty
-        inventory[key]["refs"].append("HW")  # Generic ref for hardware
+        inventory[key]["refs"].append("HW")
 
-        # Track source with the note for context
         source_tag = f"Auto-Inject ({note})"
         inventory[key]["sources"]["Auto-Inject"].append(source_tag)
 
@@ -1087,11 +1089,22 @@ def get_standard_hardware(inventory: InventoryType, pedal_count: int = 1) -> Non
     # We divide by pedal_count to get pots per pedal, then re-multiply inside inject.
     # Alternatively, we just pass the raw total if we treat it as a bulk injection.
     # Let's keep the logic consistent:
+    # Knobs (Dynamic Count)
+    total_pots = sum(
+        d["qty"] for k, d in inventory.items() if k.startswith("Potentiometers")
+    )
+
     if total_pots > 0:
-        # We inject the TOTAL quantity calculated from the inventory
-        key = "Hardware/Misc | Knob"
-        inventory[key]["qty"] += total_pots
-        inventory[key]["sources"]["Auto-Inject"].append(f"Knobs ({total_pots})")
+        inject(
+            "Hardware/Misc", "Knob", 0, f"Knobs ({total_pots})", qty_override=total_pots
+        )
+        inject(
+            "Hardware/Misc",
+            "Dust Seal Cover",
+            0,
+            f"Pot Seals ({total_pots})",
+            qty_override=total_pots,
+        )
 
         key_seal = "Hardware/Misc | Dust Seal Cover"
         inventory[key_seal]["qty"] += total_pots
