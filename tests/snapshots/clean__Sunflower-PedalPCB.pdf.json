@@ -1,0 +1,219 @@
+{
+  "inventory": {
+    "Capacitors | 10n": {
+      "qty": 1,
+      "refs": [
+        "C3"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C3"
+        ]
+      }
+    },
+    "Capacitors | 10u": {
+      "qty": 1,
+      "refs": [
+        "C100"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C100"
+        ]
+      }
+    },
+    "Capacitors | 1u": {
+      "qty": 1,
+      "refs": [
+        "C1"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C1"
+        ]
+      }
+    },
+    "Capacitors | 22u": {
+      "qty": 1,
+      "refs": [
+        "C2"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C2"
+        ]
+      }
+    },
+    "Capacitors | 47u": {
+      "qty": 1,
+      "refs": [
+        "C101"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C101"
+        ]
+      }
+    },
+    "Diodes | 1N5817": {
+      "qty": 1,
+      "refs": [
+        "D100"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "D100"
+        ]
+      }
+    },
+    "Hardware/Misc | DIP SOCKET (Check Size)": {
+      "qty": 1,
+      "refs": [
+        "IC1 (Inj)"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "IC1 (Inj)"
+        ]
+      }
+    },
+    "ICs | TC1044SCPA": {
+      "qty": 1,
+      "refs": [
+        "IC1"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "IC1"
+        ]
+      }
+    },
+    "Potentiometers | 50K": {
+      "qty": 1,
+      "refs": [
+        "CLEAN"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "CLEAN"
+        ]
+      }
+    },
+    "Potentiometers | 5K": {
+      "qty": 1,
+      "refs": [
+        "BIAS"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "BIAS"
+        ]
+      }
+    },
+    "Potentiometers | A250K": {
+      "qty": 1,
+      "refs": [
+        "VOLUME"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "VOLUME"
+        ]
+      }
+    },
+    "Potentiometers | B1K": {
+      "qty": 1,
+      "refs": [
+        "FUZZ"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "FUZZ"
+        ]
+      }
+    },
+    "Potentiometers | B5K": {
+      "qty": 1,
+      "refs": [
+        "SUNDIAL"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "SUNDIAL"
+        ]
+      }
+    },
+    "Resistors | 100k": {
+      "qty": 1,
+      "refs": [
+        "R1"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R1"
+        ]
+      }
+    },
+    "Resistors | 1k": {
+      "qty": 1,
+      "refs": [
+        "R3"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R3"
+        ]
+      }
+    },
+    "Resistors | 33k": {
+      "qty": 1,
+      "refs": [
+        "R2"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R2"
+        ]
+      }
+    },
+    "Resistors | 4.7k": {
+      "qty": 1,
+      "refs": [
+        "CLR"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "CLR"
+        ]
+      }
+    },
+    "Resistors | 470": {
+      "qty": 1,
+      "refs": [
+        "R4"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R4"
+        ]
+      }
+    },
+    "Transistors | NKT275": {
+      "qty": 2,
+      "refs": [
+        "Q1",
+        "Q2"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "Q1",
+          "Q2"
+        ]
+      }
+    }
+  },
+  "metadata": {
+    "extracted_title": "Sunflower Fuzz",
+    "parts_found": 19
+  }
+}
