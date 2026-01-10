@@ -346,10 +346,12 @@ def update_from_preset(slot_id):
         # Handle New Dict Format vs Legacy String
         if isinstance(preset_obj, dict):
             slot["data"] = preset_obj["bom_text"]
-            if preset_obj.get("is_pdf"):
-                slot["pdf_path"] = preset_obj["source_path"]
+            # CHANGED: Always capture source_path, clear legacy pdf_path
+            slot["source_path"] = preset_obj.get("source_path")
+            slot.pop("pdf_path", None)  # Clear legacy key to avoid confusion
         else:
             slot["data"] = preset_obj
+            slot.pop("source_path", None)
 
         # Force the text area to reflect this new data
         st.session_state[f"text_preset_{slot_id}"] = slot["data"]
@@ -395,6 +397,7 @@ def on_method_change(slot_id):
             st.session_state[name_key] = ""
 
         slot.pop("pdf_path", None)
+        slot.pop("source_path", None)
         slot.pop("cached_pdf_bytes", None)
 
         if f"text_{slot_id}" in st.session_state:
@@ -408,6 +411,7 @@ def on_method_change(slot_id):
             st.session_state[name_key] = ""
 
         slot.pop("pdf_path", None)
+        slot.pop("source_path", None)
         slot.pop("cached_pdf_bytes", None)
 
         if f"url_{slot_id}" in st.session_state:
@@ -421,6 +425,7 @@ def on_method_change(slot_id):
             st.session_state[name_key] = ""
 
         slot.pop("pdf_path", None)
+        slot.pop("source_path", None)
         slot.pop("cached_pdf_bytes", None)
 
     # Case: Switch to Preset -> Load Default
@@ -431,8 +436,7 @@ def on_method_change(slot_id):
         # Unpack Dict if necessary
         if isinstance(preset_obj, dict):
             slot["data"] = preset_obj["bom_text"]
-            if preset_obj.get("is_pdf"):
-                slot["pdf_path"] = preset_obj["source_path"]
+            slot["source_path"] = preset_obj.get("source_path")
         else:
             slot["data"] = preset_obj
 

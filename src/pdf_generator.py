@@ -4,6 +4,7 @@ from collections import defaultdict
 import datetime
 import zipfile
 import io
+import os
 import re
 from src.bom_lib import deduplicate_refs
 
@@ -464,11 +465,28 @@ def generate_master_zip(inventory, slots, shopping_list_csv, stock_csv):
                 )
 
             # Check local path (Preset)
+            # Logic to handle generic source paths (txt or pdf)
+            elif "source_path" in slot and slot["source_path"]:
+                try:
+                    src_path = slot["source_path"]
+                    _, ext = os.path.splitext(src_path)
+                    # Default to .txt if missing, but preserve .pdf if present
+                    if not ext:
+                        ext = ".txt"
+
+                    with open(src_path, "rb") as f:
+                        zf.writestr(
+                            f"Source Documents/{safe_name} Source{ext}", f.read()
+                        )
+                except Exception:
+                    pass
+
+            # Legacy Fallback (just in case session state is old)
             elif "pdf_path" in slot and slot["pdf_path"]:
                 try:
                     with open(slot["pdf_path"], "rb") as f:
                         zf.writestr(
-                            f"Source Documents/{safe_name}_Source.pdf", f.read()
+                            f"Source Documents/{safe_name} Source.pdf", f.read()
                         )
                 except Exception:
                     pass
