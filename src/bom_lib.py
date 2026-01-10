@@ -1202,6 +1202,37 @@ def parse_pedalpcb_pdf(
                             )
                             continue
 
+                        # 5. Semantic Value Sanity Check ("Ghost Data" Filter)
+                        # If we matched a "Soft Keyword" (like LOOP, RANGE), the value strictly cannot be
+                        # a generic package type (DIP16, SOIC) or a generic component prefix (IC, R, C).
+                        # This fixes "Phase Locked LOOP -> IC" false positives.
+                        if is_keyword:
+                            val_up = val_str.upper()
+                            # Bad Starts: If the "Value" starts with these, it's likely a description overflow
+                            # e.g. "LOOP" -> "IC" (Bad), "DRIVE" -> "Pot" (Bad - handled elsewhere), "RANGE" -> "Switch" (Bad)
+                            bad_starts = (
+                                "IC",
+                                "DIP",
+                                "SOIC",
+                                "PKG",
+                                "MODULE",
+                                "PCB",
+                                "TL",
+                                "OP",
+                                "NE5",
+                            )
+
+                            # Bad Contains: If the value is purely a package name like "DIP-16"
+                            is_package = "DIP" in val_up or "SOIC" in val_up
+
+                            if any(val_up.startswith(x) for x in bad_starts) or (
+                                is_package and not has_digit
+                            ):
+                                logger.debug(
+                                    f"        -> REJECT: Value '{val_str}' looks like a Package/IC, not a Pot value."
+                                )
+                                continue
+
                     c = ingest_bom_line(inventory, source_name, ref_str, val_str, stats)
                     if c > 0:
                         stats["parts_found"] += c
