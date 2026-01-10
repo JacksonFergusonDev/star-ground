@@ -114,7 +114,7 @@ DIODE_ALTS = {
     ],
 }
 
-# 1. Define Known Switch Labels
+# Known Switch Labels
 SWITCH_LABELS = {
     "LENGTH",
     "MODE",
@@ -129,13 +129,12 @@ SWITCH_LABELS = {
     "MID",
 }
 
-# 2. Known Potentiometer Labels
-# If the ref matches these, it's definitely a knob.
-POT_LABELS = {
-    "POT",
-    "TRIM",
-    "VR",
-    "VOL",
+# Known Potentiometer Labels
+# Prefixes that indicate a potentiometer regardless of the suffix
+POT_PREFIXES = {"POT", "TRIM", "VR", "VOL"}
+
+# Functional names usually associated with Potentiometers
+POT_NAMES = {
     "VOLUME",
     "TONE",
     "GAIN",
@@ -186,67 +185,27 @@ POT_LABELS = {
     "CLEAN",
 }
 
-KEYWORDS = [
-    "VOLUME",
-    "MASTER",
-    "LEVEL",
-    "GAIN",
-    "DRIVE",
-    "DIST",
-    "FUZZ",
-    "DIRT",
-    "TONE",
-    "TREBLE",
-    "BASS",
-    "MID",
-    "MIDS",
-    "PRESENCE",
-    "CONTOUR",
-    "WIDTH",
-    "DEPTH",
-    "RATE",
-    "SPEED",
+# If the ref matches these, it's definitely a knob.
+POT_LABELS = POT_PREFIXES | POT_NAMES
+
+# Terms found in PDF descriptions that didn't fit into the strict sets above
+KEYWORD_EXTRAS = {
     "COLOR",
     "TEXTURE",
-    "BIAS",
-    "ATTACK",
-    "DECAY",
-    "SUSTAIN",
-    "RELEASE",
-    "THRESH",
-    "COMP",
-    "MIX",
-    "BLEND",
-    "BALANCE",
-    "DRY",
-    "WET",
-    "REPEATS",
-    "TIME",
-    "FEEDBACK",
-    "FILTER",
-    "CUT",
-    "BOOST",
-    "RANGE",
-    "VOICE",
     "NATURE",
-    "INTENSITY",
     "THROB",
     "SWELL",
     "PULSE",
-    "LENGTH",
-    "MODE",
-    "SWEEP",
-    "RES",
-    "RESONANCE",
-    "PV",
-    "AMT",
-    "AMOUNT",
-    "LO",
-    "HI",
-    "DISTORTION",
-    "OCTAVE",
-    "AMPLITUDE",
-]
+    "REPEATS",
+    "TIME",
+    "FEEDBACK",
+    "CUT",
+}
+
+# Master list for Control Keyword hunting in Build Docs (PDFs)
+# Combines all known functional names + extra descriptive terms.
+# Sorted list for deterministic regex generation.
+KEYWORDS = sorted(list(POT_NAMES | SWITCH_LABELS | KEYWORD_EXTRAS))
 
 IGNORE_VALUES = [
     "RESISTORS",
