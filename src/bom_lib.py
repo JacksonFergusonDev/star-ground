@@ -3,28 +3,12 @@ import csv
 import math
 import logging
 from collections import defaultdict
+import src.constants as C
 from typing import Dict, List, Tuple, Optional, TypedDict, Any
 from urllib.parse import quote_plus
 
 # Initialize Logger
 logger = logging.getLogger(__name__)
-
-
-# SI Prefix Multipliers
-MULTIPLIERS = {
-    "p": 1e-12,  # pico
-    "n": 1e-9,  # nano
-    "u": 1e-6,  # micro (standard)
-    "µ": 1e-6,  # micro (alt)
-    "m": 1e-3,  # milli
-    "k": 1e3,  # kilo
-    "K": 1e3,  # kilo (uppercase tolerance)
-    "M": 1e6,  # Mega
-    "G": 1e9,  # Giga
-}
-
-# Core Component Designators (IPC Standard)
-CORE_PREFIXES = ("R", "C", "D", "Q", "U", "IC", "SW", "X", "Y", "J")
 
 
 # --- Type Definitions ---
@@ -43,108 +27,6 @@ class PartData(TypedDict):
 
 
 InventoryType = Dict[str, PartData]
-
-
-POT_TAPER_MAP = {
-    "A": "Logarithmic",
-    "B": "Linear",
-    "C": "Reverse Log",
-    "W": "W Taper",
-    "G": "Graphic",
-}
-
-
-# Chip substitution recommendations
-# Keys are the chips found in BOM, values are fun alternatives to try.
-# Structure: (Part Name, Sonic Profile, Technical Why)
-IC_ALTS = {
-    # Dual Op-Amps
-    "TL072": [
-        (
-            "OPA2134",
-            "Hi-Fi / Studio Clean",
-            "Low distortion (0.00008%), High Slew Rate (20V/us)",
-        ),
-        (
-            "TLC2272",
-            "High Headroom Clean",
-            "Rail-to-Rail output (+6Vpp headroom on 9V)",
-        ),
-    ],
-    "JRC4558": [
-        (
-            "NJM4558D",
-            "Vintage Correct",
-            "Authentic 1980s BJT bandwidth limiting",
-        ),
-        (
-            "OPA2134",
-            "Modern/Clinical",
-            "High impedance input, removes 'warm' blur",
-        ),
-    ],
-    # Single Op-Amps (RAT style)
-    "LM308": [
-        (
-            "LM308N",
-            "Vintage RAT",
-            "Required for 0.3V/us slew-induced distortion",
-        ),
-        (
-            "OP07",
-            "Modern Tight",
-            "Faster slew rate, sounds harsher/tighter than vintage",
-        ),
-    ],
-    "NE5532": [
-        (
-            "OPA2134",
-            "Lower Noise",
-            "JFET input reduces current noise with high-Z guitars",
-        ),
-    ],
-}
-
-# Diode substitution recommendations
-# Keys are the standard BOM parts, values are (Part, Sonic Profile, Technical Why)
-DIODE_ALTS = {
-    "1N4148": [
-        (
-            "1N4001",
-            "Smooth / Tube-like",
-            "Slow reverse recovery (30µs) smears highs",
-        ),
-        (
-            "IR LED",
-            "The 'Goldilocks' Drive",
-            "1.2V drop: More crunch than LED, more headroom than Si",
-        ),
-        (
-            "Red LED",
-            "Amp-like / Open",
-            "1.8V drop: Huge headroom, loud output",
-        ),
-    ],
-    "1N914": [
-        (
-            "1N4001",
-            "Smooth / Tube-like",
-            "Slow reverse recovery (30µs) smears highs",
-        ),
-    ],
-    "1N34A": [
-        (
-            "BAT41",
-            "Modern Schottky",
-            "Stable alternative, slightly harder knee",
-        ),
-        (
-            "1N60",
-            "Alt Germanium",
-            "Different Vf variance",
-        ),
-    ],
-}
 
 
 def natural_sort_key(ref: str) -> List[Any]:
@@ -229,82 +111,9 @@ def categorize_part(
     val_clean = val.strip()  # Keep original case for display
     val_up = val_clean.upper()  # Use this for internal logic
 
-    # 1. Define Known Switch Labels
-    switch_labels = {
-        "LENGTH",
-        "MODE",
-        "CLIP",
-        "VOICE",
-        "BRIGHT",
-        "FAT",
-        "PV",
-        "RANGE",
-        "LO",
-        "HI",
-        "MID",
-    }
-
-    # 2. Known Potentiometer Labels
-    # If the ref matches these, it's definitely a knob.
-    pot_labels = {
-        "POT",
-        "TRIM",
-        "VR",
-        "VOL",
-        "VOLUME",
-        "TONE",
-        "GAIN",
-        "DRIVE",
-        "DIST",
-        "FUZZ",
-        "DIRT",
-        "LEVEL",
-        "MIX",
-        "BLEND",
-        "BALANCE",
-        "DRY",
-        "WET",
-        "SPEED",
-        "RATE",
-        "DEPTH",
-        "INTENSITY",
-        "WIDTH",
-        "DECAY",
-        "ATTACK",
-        "RELEASE",
-        "SUSTAIN",
-        "COMP",
-        "THRESH",
-        "TREBLE",
-        "BASS",
-        "MID",
-        "MIDS",
-        "PRESENCE",
-        "CONTOUR",
-        "EQ",
-        "BODY",
-        "BIAS",
-        "BOOST",
-        "MASTER",
-        "PRE",
-        "POST",
-        "FILTER",
-        "SENS",
-        "SWEEP",
-        "RES",
-        "RESONANCE",
-        "AMT",
-        "AMOUNT",
-        "DISTORTION",
-        "OCTAVE",
-        "AMPLITUDE",
-        "CLEAN",
-    }
-
     # 3. Standard Component Prefixes
     # Note: 'P' or 'POT' are handled above.
-    valid_prefixes = CORE_PREFIXES + ("OP", "TL", "LDR", "LED")
-
+    valid_prefixes = C.CORE_PREFIXES + ("OP", "TL", "LDR", "LED")
     # STRICT CHECK: Standard components MUST have a number (e.g. "R1", not "Resistors")
     # Exceptions: POT names are handled in step 1.
     has_digit = any(char.isdigit() for char in ref_up)
@@ -316,7 +125,7 @@ def categorize_part(
     # Prevent ICs and Transistors from matching 'Ends with A/C' regex
     if not ref_up.startswith(("IC", "U", "Q", "OP", "TL")):
         # Generate regex character class from map keys: "ABCWG"
-        taper_chars = "".join(POT_TAPER_MAP.keys())
+        taper_chars = "".join(C.POT_TAPER_MAP.keys())
         if re.search(rf"[0-9]+.*[{taper_chars}]$", val_up) or re.search(
             rf"^[{taper_chars}][0-9]+", val_up
         ):
@@ -325,9 +134,9 @@ def categorize_part(
     # Validity Check
     is_valid = (
         (any(ref_up.startswith(p) for p in valid_prefixes) and has_digit)
-        or ref_up in pot_labels
-        or ref_up in switch_labels
-        or any(ref_up.startswith(label) for label in pot_labels)
+        or ref_up in C.POT_LABELS
+        or ref_up in C.SWITCH_LABELS
+        or any(ref_up.startswith(label) for label in C.POT_LABELS)
         or is_pot_value
         or ref_up == "CLR"
     )
@@ -347,14 +156,14 @@ def categorize_part(
 
     # Check Pots first (avoids collisions like 'RANGE' starting with 'R')
     if (
-        ref_up in pot_labels
-        or any(ref_up.startswith(label) for label in pot_labels)
+        ref_up in C.POT_LABELS
+        or any(ref_up.startswith(label) for label in C.POT_LABELS)
         or is_pot_value
     ):
         category = "Potentiometers"
 
     # Check for named switches BEFORE the generic startswith("SW")
-    elif ref_up in switch_labels:
+    elif ref_up in C.SWITCH_LABELS:
         # Heuristic: If it says "ON", it's a switch. If it's a resistance, it's a Pot.
         if "ON" in val_up or "SW" in val_up or "SP" in val_up or "DP" in val_up:
             category = "Switches"
@@ -690,14 +499,14 @@ def generate_search_term(category: str, val: str, spec_type: str = "") -> str:
         is_dual = "DUAL" in val_upper or "STEREO" in val_upper
 
         # Lookup taper name from map
-        for code, name in POT_TAPER_MAP.items():
+        for code, name in C.POT_TAPER_MAP.items():
             if code in val_upper:
                 taper = name
                 break
 
         # 2. Clean Value (e.g. "B100k" -> "100k")
         # Strip taper letters dynamically
-        taper_chars = "".join(POT_TAPER_MAP.keys())
+        taper_chars = "".join(C.POT_TAPER_MAP.keys())
         clean_raw = re.sub(rf"[{taper_chars}\-\s]", "", val_upper)
         fval = parse_value_to_float(clean_raw)
 
@@ -832,8 +641,8 @@ def get_buy_details(category: str, val: str, count: int) -> Tuple[int, str]:
     elif category == "Diodes":
         buy = max(10, count + 5)
         # Check for Texture Upgrades
-        if val in DIODE_ALTS:
-            alts = DIODE_ALTS[val]
+        if val in C.DIODE_ALTS:
+            alts = C.DIODE_ALTS[val]
             txt_parts = []
             for item in alts:
                 # Robust unpacking for 2-tuple (Legacy) or 3-tuple (Expert)
@@ -864,8 +673,8 @@ def get_buy_details(category: str, val: str, count: int) -> Tuple[int, str]:
 
         # Suggest mods
         clean = re.sub(r"(CP|CN|P|N)$", "", val)
-        if clean in IC_ALTS:
-            alts = IC_ALTS[clean]
+        if clean in C.IC_ALTS:
+            alts = C.IC_ALTS[clean]
             txt_parts = []
             for item in alts:
                 # Robust unpacking for 2-tuple (Legacy) or 3-tuple (Expert)
@@ -962,7 +771,7 @@ def parse_value_to_float(val_str: str) -> Optional[float]:
 
         # Reassemble as float: 1k5 -> 1.5 * 1000
         base = float(f"{whole}.{fraction}")
-        return base * MULTIPLIERS[suffix]
+        return base * C.MULTIPLIERS[suffix]
 
     # 2. Standard "Number + Suffix"
     # Match: (Start)(Number)(Multiplier?)(Everything Else)
@@ -977,8 +786,8 @@ def parse_value_to_float(val_str: str) -> Optional[float]:
         except ValueError:
             return None
 
-        if suffix and suffix in MULTIPLIERS:
-            return base_val * MULTIPLIERS[suffix]
+        if suffix and suffix in C.MULTIPLIERS:
+            return base_val * C.MULTIPLIERS[suffix]
 
         return base_val
 
@@ -1261,69 +1070,7 @@ def parse_pedalpcb_pdf(
                                 stats["parts_found"] += count
 
             # --- STRATEGY 3: HYBRID CLEANUP ---
-            # 1. Define Keywords (Always safe to hunt for)
-            keywords = [
-                "VOLUME",
-                "MASTER",
-                "LEVEL",
-                "GAIN",
-                "DRIVE",
-                "DIST",
-                "FUZZ",
-                "DIRT",
-                "TONE",
-                "TREBLE",
-                "BASS",
-                "MID",
-                "MIDS",
-                "PRESENCE",
-                "CONTOUR",
-                "WIDTH",
-                "DEPTH",
-                "RATE",
-                "SPEED",
-                "COLOR",
-                "TEXTURE",
-                "BIAS",
-                "ATTACK",
-                "DECAY",
-                "SUSTAIN",
-                "RELEASE",
-                "THRESH",
-                "COMP",
-                "MIX",
-                "BLEND",
-                "BALANCE",
-                "DRY",
-                "WET",
-                "REPEATS",
-                "TIME",
-                "FEEDBACK",
-                "FILTER",
-                "CUT",
-                "BOOST",
-                "RANGE",
-                "VOICE",
-                "NATURE",
-                "INTENSITY",
-                "THROB",
-                "SWELL",
-                "PULSE",
-                "LENGTH",
-                "MODE",
-                "SWEEP",
-                "RES",
-                "RESONANCE",
-                "PV",
-                "AMT",
-                "AMOUNT",
-                "LO",
-                "HI",
-                "DISTORTION",
-                "OCTAVE",
-                "AMPLITUDE",
-            ]
-            kw_regex_str = "|".join([rf"\b{k}\b" for k in keywords])
+            kw_regex_str = "|".join([rf"\b{k}\b" for k in C.KEYWORDS])
 
             # 2. Determine Scope
             # If we have NO parts, we go 'Full Hail Mary' (Standard Refs + Keywords).
@@ -1334,34 +1081,6 @@ def parse_pedalpcb_pdf(
                 ref_pattern = rf"(?P<ref>{kw_regex_str})"
 
             regex = re.compile(rf"{ref_pattern}\s+(?P<val>[^\s]+)", re.IGNORECASE)
-
-            ignore_values = [
-                "RESISTORS",
-                "CAPACITORS",
-                "DIODES",
-                "ICS",
-                "POTENTIOMETERS",
-                "PARTS",
-                "LIST",
-                "VALUE",
-                "LOCATION",
-                "TYPE",
-                "RATING",
-                "COMPONENTS",
-                "OFFBOARD",
-                "ENCLOSURE",
-                "FOOTSWITCH",
-                "JACKS",
-                "FEATURES",
-                "CONTROLS",
-                "REVISION",
-                "REV",
-                "VERSION",
-                "COPYRIGHT",
-                "WWW",
-                ".COM",
-                "EDITION",
-            ]
 
             # 3. Execution
             for page in pdf.pages:
@@ -1387,7 +1106,7 @@ def parse_pedalpcb_pdf(
                     # Check if we need to grab the full line (LDRs, Pots, Keywords)
                     needs_full_line = (
                         ref_str.startswith("LDR")
-                        or ref_str in keywords
+                        or ref_str in C.KEYWORDS
                         or ref_str.startswith(("POT", "VR"))
                     )
 
@@ -1422,7 +1141,7 @@ def parse_pedalpcb_pdf(
                         continue
 
                     # Check against blacklist
-                    if any(bad in val_str.upper() for bad in ignore_values):
+                    if any(bad in val_str.upper() for bad in C.IGNORE_VALUES):
                         logger.debug("        -> REJECT: Blacklisted Word")
                         continue
 
@@ -1439,10 +1158,10 @@ def parse_pedalpcb_pdf(
                         continue
 
                     # 3. Prefix Safety Check
-                    is_keyword = ref_str in keywords
+                    is_keyword = ref_str in C.KEYWORDS
                     if not is_keyword:
                         # Must look like a real component (R1, C1, IC1, etc)
-                        valid_prefixes = CORE_PREFIXES + (
+                        valid_prefixes = C.CORE_PREFIXES + (
                             "POT",
                             "VR",
                             "L",
@@ -1482,6 +1201,37 @@ def parse_pedalpcb_pdf(
                                 "        -> REJECT: No Digit or Switch Keyword"
                             )
                             continue
+
+                        # 5. Semantic Value Sanity Check ("Ghost Data" Filter)
+                        # If we matched a "Soft Keyword" (like LOOP, RANGE), the value strictly cannot be
+                        # a generic package type (DIP16, SOIC) or a generic component prefix (IC, R, C).
+                        # This fixes "Phase Locked LOOP -> IC" false positives.
+                        if is_keyword:
+                            val_up = val_str.upper()
+                            # Bad Starts: If the "Value" starts with these, it's likely a description overflow
+                            # e.g. "LOOP" -> "IC" (Bad), "DRIVE" -> "Pot" (Bad - handled elsewhere), "RANGE" -> "Switch" (Bad)
+                            bad_starts = (
+                                "IC",
+                                "DIP",
+                                "SOIC",
+                                "PKG",
+                                "MODULE",
+                                "PCB",
+                                "TL",
+                                "OP",
+                                "NE5",
+                            )
+
+                            # Bad Contains: If the value is purely a package name like "DIP-16"
+                            is_package = "DIP" in val_up or "SOIC" in val_up
+
+                            if any(val_up.startswith(x) for x in bad_starts) or (
+                                is_package and not has_digit
+                            ):
+                                logger.debug(
+                                    f"        -> REJECT: Value '{val_str}' looks like a Package/IC, not a Pot value."
+                                )
+                                continue
 
                     c = ingest_bom_line(inventory, source_name, ref_str, val_str, stats)
                     if c > 0:
