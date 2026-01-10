@@ -1,0 +1,11 @@
+Guitar Pedal BOM Manager v2.0.0
+By: Jackson Ferguson
+Generated on: 2026-01-10 13:34
+
+CONTENTS:
+- Field Manuals/: Printable step-by-step checklists.
+- Sticker Sheets/: Labels for Avery 5160 (3x10).
+- Source Documents/: The original build docs (if available).
+
+Github Page:
+https://github.com/JacksonFergusonDev/pedal-bom-manager
