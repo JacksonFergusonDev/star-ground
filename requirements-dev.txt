@@ -6,7 +6,8 @@ ruff==0.14.8
 mypy==1.19.1
 pytest==9.0.1
 hypothesis==6.148.5
-pre-commit==4.5.1
+pre-commit==4.5.1       # Must also run `pre-commit install` after installing
+watchdog==6.0.0         # Better performance while testing streamlit apps
 
 # Type Stubs
 pandas-stubs

@@ -4,6 +4,7 @@ from collections import defaultdict
 import datetime
 import zipfile
 import io
+import os
 import re
 from src.bom_lib import deduplicate_refs
 
@@ -71,6 +72,13 @@ def condense_refs(refs):
     return ", ".join(result_parts)
 
 
+def clean_val_for_display(val: str) -> str:
+    """Standardizes component names for cleaner labels."""
+    if "DIP SOCKET" in val.upper():
+        return "DIP Socket"
+    return val
+
+
 class StickerSheet(FPDF):
     def __init__(self):
         # Letter size (215.9mm x 279.4mm)
@@ -123,12 +131,13 @@ class StickerSheet(FPDF):
         )
 
         # Center: Value
+        display_val = clean_val_for_display(part_val)
         self.set_xy(x, y + 4)
         self.set_font("Helvetica", "B", 12)
         self.cell(
             self.label_w,
             8,
-            str(part_val)[:18],
+            str(display_val)[:18],
             align="C",
             new_x=XPos.LMARGIN,
             new_y=YPos.NEXT,
@@ -239,14 +248,16 @@ class FieldManual(FPDF):
             self.cell(15, 8, str(part["qty"]), 1, align="C")
 
             # Prepare Value & Notes
-            val_str = str(part["value"])
+            raw_val = str(part["value"])
+            val_str = clean_val_for_display(raw_val)
 
             # Logic: Red text for warnings/polarity
             if part["polarized"] or part["notes"]:
                 self.set_text_color(220, 50, 50)  # Red
                 if part["notes"]:
                     clean_note = part["notes"].replace("[!] ", "")
-                    val_str = f"{val_str} [{clean_note}]"
+                    if "DIP Socket" not in val_str:
+                        val_str = f"{val_str} [{clean_note}]"
             else:
                 self.set_text_color(0, 0, 0)  # Black
 
@@ -258,8 +269,8 @@ class FieldManual(FPDF):
 
             # [Refs] - Auto Width (Remaining)
             refs = ", ".join(part["refs"])
-            if len(refs) > 60:
-                refs = refs[:57] + "..."
+            if len(refs) > 50:
+                refs = refs[:47] + "..."
             self.cell(0, 8, refs, 1, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
 
@@ -367,9 +378,9 @@ def _write_field_manuals(zf, inventory, slots):
             sorted_parts = sort_by_z_height(project_parts)
             pdf.add_project(project_name, sorted_parts)
 
-            safe_name = re.sub(r"[^a-zA-Z0-9_\-]", "_", project_name)
+            safe_name = re.sub(r'[<>:"/\\|?*]', "", project_name).strip()
             zf.writestr(
-                f"Field Manuals/{safe_name}_Field_Manual.pdf", bytes(pdf.output())
+                f"Field Manuals/{safe_name} Field Manual.pdf", bytes(pdf.output())
             )
 
 
@@ -399,9 +410,9 @@ def _write_stickers(zf, inventory, slots):
         for val, refs in project_parts:
             pdf.add_sticker(code, val, refs, len(refs))
 
-        safe_name = re.sub(r"[^a-zA-Z0-9_\-]", "_", project_name)
+        safe_name = re.sub(r'[<>:"/\\|?*]', "", project_name).strip()
         zf.writestr(
-            f"Sticker Sheets/{safe_name}_Sticker_Sheet.pdf", bytes(pdf.output())
+            f"Sticker Sheets/{safe_name} Sticker Sheet.pdf", bytes(pdf.output())
         )
 
 
@@ -424,14 +435,17 @@ def generate_master_zip(inventory, slots, shopping_list_csv, stock_csv):
         zf.writestr("My Inventory Updated.csv", stock_csv)
 
         info_text = (
-            "Guitar Pedal BOM Manager\n"
+            "Guitar Pedal BOM Manager v2.0.0\n"
+            "By: Jackson Ferguson\n"
             "Generated on: "
             + datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
             + "\n\n"
             "CONTENTS:\n"
             "- Field Manuals/: Printable step-by-step checklists.\n"
             "- Sticker Sheets/: Labels for Avery 5160 (3x10).\n"
-            "- Source Documents/: The original build docs (if available).\n"
+            "- Source Documents/: The original build docs (if available).\n\n"
+            "Github Page:\n"
+            "https://github.com/JacksonFergusonDev/pedal-bom-manager\n"
         )
         zf.writestr("info.txt", info_text)
 
@@ -442,7 +456,7 @@ def generate_master_zip(inventory, slots, shopping_list_csv, stock_csv):
         # 3. Source Documents
         for slot in slots:
             project_name = slot.get("locked_name", slot["name"])
-            safe_name = re.sub(r"[^a-zA-Z0-9_\-]", "_", project_name)
+            safe_name = re.sub(r'[<>:"/\\|?*]', "", project_name).strip()
 
             # Check cached bytes (URL/Upload)
             if "cached_pdf_bytes" in slot and slot["cached_pdf_bytes"]:
@@ -451,11 +465,28 @@ def generate_master_zip(inventory, slots, shopping_list_csv, stock_csv):
                 )
 
             # Check local path (Preset)
+            # Logic to handle generic source paths (txt or pdf)
+            elif "source_path" in slot and slot["source_path"]:
+                try:
+                    src_path = slot["source_path"]
+                    _, ext = os.path.splitext(src_path)
+                    # Default to .txt if missing, but preserve .pdf if present
+                    if not ext:
+                        ext = ".txt"
+
+                    with open(src_path, "rb") as f:
+                        zf.writestr(
+                            f"Source Documents/{safe_name} Source{ext}", f.read()
+                        )
+                except Exception:
+                    pass
+
+            # Legacy Fallback (just in case session state is old)
             elif "pdf_path" in slot and slot["pdf_path"]:
                 try:
                     with open(slot["pdf_path"], "rb") as f:
                         zf.writestr(
-                            f"Source Documents/{safe_name}_Source.pdf", f.read()
+                            f"Source Documents/{safe_name} Source.pdf", f.read()
                         )
                 except Exception:
                     pass
