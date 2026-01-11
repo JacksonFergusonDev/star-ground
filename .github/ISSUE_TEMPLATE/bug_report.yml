@@ -1,0 +1,41 @@
+name: 🐛 Bug Report
+description: Create a report to help us improve the BOM parser
+title: "[Bug]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+  - type: textarea
+    id: current-behavior
+    attributes:
+      label: What happened?
+      description: Describe the parsing error or unexpected behavior.
+      placeholder: "The parser skipped the J201 transistor in my Tayda list..."
+    validations:
+      required: true
+  - type: textarea
+    id: bom-snippet
+    attributes:
+      label: Raw BOM Snippet
+      description: Please paste the raw text that caused the issue. This is critical for reproduction!
+      render: text
+      placeholder: |
+        R1  100k
+        C1  10uF
+        Q1  J201
+    validations:
+      required: true
+  - type: input
+    id: source
+    attributes:
+      label: Source / Forum
+      description: Where did this BOM come from? (e.g., Tayda, PedalPCB, Aion)
+      placeholder: "Tayda Electronics Copy/Paste"
+  - type: textarea
+    id: logs
+    attributes:
+      label: Terminal Output / Logs
+      description: If you ran the CLI, paste the output here.
+      render: shell
