@@ -113,8 +113,8 @@ def test_csv_processing_via_state_injection(app):
     # Button 2 (Index 2) is "Generated PDFs"
     assert "Generated PDFs" in btns[2].label
 
-    # Button 3 (Index 3) is "Download All"
-    assert "Download All" in btns[3].label
+    # Button 3 (Index 3) is the Master Zip
+    assert "Download Complete Build Pack" in btns[3].label
 
 
 def test_source_ref_duplication_on_merge(app):

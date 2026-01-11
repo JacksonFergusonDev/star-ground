@@ -2,6 +2,66 @@
 # DO NOT EDIT MANUALLY
 
 BOM_PRESETS = {
+    "[PedalPCB] [Boost] Triangulum Boost": {
+        "bom_text": """
+            PCB Triangulum Boost PCB
+            IC100 TC1044SCPA
+            IC1 TL071
+            Q1 BC550C
+            Q2 BC550C*
+            D101 1N4001
+            D102 1N4001
+            D103 1N4001
+            D104 1N4001
+            D105 1N4001
+            D106 1N4001
+            D1 1N4148*
+            D2 1N4148*
+            D100 1N5817
+            LEVEL A5K
+            C8 100p
+            C13 10n
+            C10 47n
+            C15 47n
+            C14 100n
+            C16 470n
+            C12 1u
+            C9 4.7u
+            C11 4.7u
+            C102 10u
+            C103 10u
+            C104 10u
+            C105 10u
+            C106 10u
+            C107 100u
+            R15 47
+            R2 120
+            R13 220
+            R18 820
+            R6 1k
+            R12 1.8k
+            R14 2.2k
+            R17 3.9k
+            R8 4.7k
+            R11 4.7k
+            R100 4.7k
+            R101 10k
+            R4 12k
+            R16 20k
+            R9 22k
+            R1 100k
+            R3 100k
+            R102 100k
+            R7 220k
+            R103 820k
+            R5 1M
+            R10 1M
+            IC1 (Inj) DIP SOCKET (Check Size)
+            IC100 (Inj) DIP SOCKET (Check Size)
+        """,
+        "source_path": "raw_boms/pedalpcb/boost/PedalPCB-Triangulum.pdf",
+        "is_pdf": True,
+    },
     "[PedalPCB] [Fuzz] Paper Scratcher Fuzz": {
         "bom_text": """
             PCB Paper Scratcher Fuzz PCB
@@ -64,6 +124,121 @@ BOM_PRESETS = {
             IC1 (Inj) DIP SOCKET (Check Size)
         """,
         "source_path": "raw_boms/pedalpcb/fuzz/PaperScratcher-PedalPCB.pdf",
+        "is_pdf": True,
+    },
+    "[PedalPCB] [Fuzz] Parentheses Fuzz": {
+        "bom_text": """
+            PCB Parentheses Fuzz PCB
+            IC1 LM308
+            Q6 BS170
+            Q1 PF5102
+            Q5 PF5102
+            Q3 2N5087
+            Q2 2N5089
+            Q4 2N5089
+            D1 GE
+            D2 GE
+            D8 GE
+            D9 GE
+            D4 3mm
+            D3 1N4148
+            D5 1N4148
+            D6 1N4148
+            D7 1N4148
+            D100 1N5817
+            DISTORTION A100K
+            FILTER A100K
+            AMPLITUDE A100K
+            BOOST A100K
+            OCTAVE B50K
+            SW1 2P4T
+            C15 30p
+            C1 100p
+            C14 100p
+            C20 100p
+            C10 1n
+            C17 3.3n
+            C8 22n
+            C18 22n
+            C2 100n
+            C3 100n
+            C4 100n
+            C5 100n
+            C11 100n
+            C6 1u
+            C7 1u
+            C19 1u
+            C21 1u
+            C13 2.2u
+            C9 4.7u
+            C16 4.7u
+            C12 10u
+            C22 10u
+            C100 100u
+            R21 47
+            R31 470
+            R20 560
+            R2 1k
+            R17 1k
+            R22 1k
+            R27 1k
+            R23 1.5k
+            R8 2.2k
+            R100 4.7k
+            R101 4.7k
+            R102 4.7k
+            R4 10k
+            R9 10k
+            R10 10k
+            R15 10k
+            R18 10k
+            R19 10k
+            R25 10k
+            R30 10k
+            R7 22k
+            R6 47k
+            R13 47k
+            R14 47k
+            R11 100k
+            R12 100k
+            R5 470k
+            R28 470k
+            R29 470k
+            R1 1M
+            R3 1M
+            R16 1M
+            R24 1M
+            R26 1M
+            IC1 (Inj) DIP SOCKET (Check Size)
+        """,
+        "source_path": "raw_boms/pedalpcb/fuzz/Parentheses.pdf",
+        "is_pdf": True,
+    },
+    "[PedalPCB] [Fuzz] Sunflower Fuzz": {
+        "bom_text": """
+            PCB Sunflower Fuzz PCB
+            IC1 TC1044SCPA
+            Q1 NKT275
+            Q2 NKT275
+            D100 1N5817
+            VOLUME A250K
+            FUZZ B1K
+            SUNDIAL B5K
+            BIAS 5K
+            CLEAN 50K
+            C3 10n
+            C1 1u
+            C100 10u
+            C2 22u
+            C101 47u
+            R4 470
+            R3 1k
+            CLR 4.7k
+            R2 33k
+            R1 100k
+            IC1 (Inj) DIP SOCKET (Check Size)
+        """,
+        "source_path": "raw_boms/pedalpcb/fuzz/Sunflower-PedalPCB.pdf",
         "is_pdf": True,
     },
     "[PedalPCB] [Modulation] Circulator": {
@@ -502,6 +677,74 @@ BOM_PRESETS = {
             IC3 (Inj) DIP SOCKET (Check Size)
         """,
         "source_path": "raw_boms/pedalpcb/time/Arachnid.pdf",
+        "is_pdf": True,
+    },
+    "[PedalPCB] [Time] Cataclysm Delay": {
+        "bom_text": """
+            PCB Cataclysm Delay PCB
+            IC1 PT2399
+            IC2 TL072
+            IC3 78L05
+            D1 1N4148
+            D2 1N4148
+            D3 1N5817
+            TONE B25K
+            TIME B50K
+            REPEATS B5K
+            MIX B5K
+            C24 100p
+            C14 1n
+            C22 2.2n
+            C8 22n
+            C11 22n
+            C13 22n
+            C20 22n
+            C21 22n
+            C26 22n
+            C12 100n
+            C15 100n
+            C16 100n
+            C17 100n
+            C18 100n
+            C19 100n
+            C10 220n
+            C6 1u
+            C7 1u
+            C9 1u
+            C23 1u
+            C25 1u
+            C4 10u
+            C5 10u
+            C1 100u
+            C3 100u
+            R15 1k
+            R8 4.7k
+            R5 10k
+            R6 10k
+            R11 10k
+            R13 10k
+            R16 10k
+            R17 10k
+            R19 10k
+            R21 10k
+            R20 20k
+            R10 22k
+            R14 22k
+            R18 22k
+            R9 47k
+            R12 47k
+            R22 47k
+            R7 100k
+            R4 220k
+            R23 220k
+            R2 470k
+            R3 470k
+            R1 1M
+            IC1 (Inj) DIP SOCKET (Check Size)
+            IC2 (Inj) DIP SOCKET (Check Size)
+            IC3 (Inj) DIP SOCKET (Check Size)
+        """,
+        "source_path": "raw_boms/pedalpcb/time/Cataclysm-PedalPCB.pdf",
         "is_pdf": True,
     },
     "[PedalPCB] [Time] Gravitation Reverb": {
