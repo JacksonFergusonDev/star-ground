@@ -1,0 +1,55 @@
+[project]
+name = "pedal-bom-manager"
+version = "2.0.0"
+description = "Streamlit app for managing pedal BOMs"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "fpdf2==2.8.5",
+    "google-auth==2.43.0",
+    "gspread==6.2.1",
+    "pdfplumber==0.11.8",
+    "requests==2.32.5",
+    "streamlit==1.52.2",
+]
+
+[dependency-groups]
+dev = [
+    "hypothesis==6.148.5",
+    "mypy==1.19.1",
+    "pandas-stubs",
+    "pre-commit==4.5.1",
+    "pytest==9.0.1",
+    "ruff==0.14.8",
+    "types-cachetools",
+    "types-cffi",
+    "types-colorama",
+    "types-defusedxml",
+    "types-fpdf2",
+    "types-jsonschema",
+    "types-pexpect",
+    "types-protobuf",
+    "types-pyasn1",
+    "types-pycurl",
+    "types-pygments",
+    "types-requests",
+    "types-toml",
+    "watchdog==6.0.0",
+]
+
+[tool.mypy]
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = false
+
+[tool.pytest.ini_options]
+pythonpath = "."
+log_cli_level = "DEBUG"
+log_cli_format = "%(asctime)s [%(levelname)8s] %(message)s (%(filename)s:%(lineno)s)"
+log_cli_date_format = "%Y-%m-%d %H:%M:%S"
+testpaths = ["tests"]
+addopts = "-ra"
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
+]

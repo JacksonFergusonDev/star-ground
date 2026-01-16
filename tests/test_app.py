@@ -21,7 +21,8 @@ class MockFile:
 # --- Fixtures ---
 @pytest.fixture
 def app():
-    at = AppTest.from_file("app.py")
+    # Increase timeout to allow for PDF/ZIP generation logic
+    at = AppTest.from_file("app.py", default_timeout=30)
     at.run()
     return at
 
