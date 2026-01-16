@@ -2,6 +2,7 @@
 
 ![Python Version](https://img.shields.io/badge/python-3.13-blue.svg)
 [![Python Application CI](https://github.com/JacksonFergusonDev/pedal-bom-manager/actions/workflows/python-app.yml/badge.svg)](https://github.com/JacksonFergusonDev/pedal-bom-manager/actions/workflows/python-app.yml)
+[![Docker](https://github.com/JacksonFergusonDev/pedal-bom-manager/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/JacksonFergusonDev/pedal-bom-manager/actions/workflows/docker-publish.yml)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Status](https://img.shields.io/badge/status-active-success.svg)
 
@@ -100,6 +101,7 @@ In hardware prototyping, the cost of downtime exceeds the cost of inventory.
     -   *Linting:* Ruff
     -   *Type Safety:* Mypy
     -   *Unit Testing:* Pytest
+    -   *Delivery:* Auto-publishes Docker images to GHCR on release
     -   *Environment:* Ubuntu Latest
 
 ---
@@ -148,7 +150,14 @@ In hardware prototyping, the cost of downtime exceeds the cost of inventory.
 **🌐 [Use the hosted app here](https://pedal-bom-manager.streamlit.app/)**
 
 ### Option 2: Run via Docker
-If you have Docker installed, you can run the app in an isolated container.
+You can pull the pre-built image directly from the GitHub Container Registry without building it yourself.
+
+```bash
+# Run latest stable release
+docker run -p 8501:8501 ghcr.io/jacksonfergusondev/pedal-bom-manager:latest
+```
+
+Or build from source:
 
 ```bash
 docker build -t pedal-bom-manager .
