@@ -1,6 +1,6 @@
 # 🎸 Guitar Pedal BOM Manager (v2.0.0)
 
-![Python Version](https://img.shields.io/badge/python-3.10+-blue.svg)
+![Python Version](https://img.shields.io/badge/python-3.13-blue.svg)
 [![Python Application CI](https://github.com/JacksonFergusonDev/pedal-bom-manager/actions/workflows/python-app.yml/badge.svg)](https://github.com/JacksonFergusonDev/pedal-bom-manager/actions/workflows/python-app.yml)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Status](https://img.shields.io/badge/status-active-success.svg)
@@ -90,7 +90,8 @@ In hardware prototyping, the cost of downtime exceeds the cost of inventory.
 
 ## 🔬 Tech Stack
 
--   **Python 3.10+** - Core language (Tested on 3.10, 3.11, 3.12)
+-   **Python 3.13** - Core language (Strictly typed & pinned)
+-   **uv** - Ultra-fast dependency management and locking
 -   **Streamlit** - Interactive web interface and state management
 -   **pdfplumber** - PDF table extraction and layout analysis
 -   **fpdf2** - Programmatic PDF generation
@@ -99,7 +100,7 @@ In hardware prototyping, the cost of downtime exceeds the cost of inventory.
     -   *Linting:* Ruff
     -   *Type Safety:* Mypy
     -   *Unit Testing:* Pytest
-    -   *Validation Matrix:* Ubuntu, Windows, macOS
+    -   *Environment:* Ubuntu Latest
 
 ---
 
@@ -134,6 +135,8 @@ In hardware prototyping, the cost of downtime exceeds the cost of inventory.
 │   └── generate_presets.py
 ├── CONTRIBUTING.md        <-- Dev guide
 ├── ROADMAP.md             <-- Technical architectural plans
+├── pyproject.toml         <-- Project metadata & tool config (Ruff/Mypy/Pytest)
+├── uv.lock                <-- Exact dependency tree (Deterministic builds)
 └── requirements.txt       <-- Python dependencies
 ```
 
@@ -154,18 +157,18 @@ docker run -p 8501:8501 pedal-bom-manager
 
 ### Option 3: Local Development
 
+This project uses **uv** for dependency management.
+
 ```bash
-# 1. Clone & Venv
-git clone [https://github.com/JacksonFergusonDev/pedal-bom-manager.git](https://github.com/JacksonFergusonDev/pedal-bom-manager.git)
+# 1. Clone & Enter
+git clone https://github.com/JacksonFergusonDev/pedal-bom-manager.git
 cd pedal-bom-manager
-python -m venv venv
-source venv/bin/activate
 
-# 2. Install Deps
-pip install -r requirements-dev.txt
+# 2. Install Dependencies (Creates virtualenv automatically)
+uv sync
 
-# 3. Run
-streamlit run app.py
+# 3. Run App
+uv run streamlit run app.py
 ```
 
 ---
