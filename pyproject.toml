@@ -1,6 +1,6 @@
 [project]
 name = "pedal-bom-manager"
-version = "2.0.0"
+version = "2.1.1"
 description = "Streamlit app for managing pedal BOMs"
 readme = "README.md"
 requires-python = ">=3.13"
@@ -15,6 +15,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "bump-my-version>=1.2.6",
     "hypothesis==6.148.5",
     "mypy==1.19.1",
     "pandas-stubs",
@@ -53,3 +54,21 @@ filterwarnings = [
     "ignore::DeprecationWarning",
     "ignore::PendingDeprecationWarning",
 ]
+
+[tool.bumpversion]
+current_version = "2.1.1"
+parse = "(?P<major>\\d+)\\.(?P<minor>\\d+)\\.(?P<patch>\\d+)"
+serialize = ["{major}.{minor}.{patch}"]
+search = "{current_version}"
+replace = "{new_version}"
+regex = false
+ignore_missing_version = false
+tag = false
+sign_tags = false
+allow_dirty = false
+commit = true
+message = "chore: bump version {current_version} → {new_version}"
+commit_args = ""
+
+[[tool.bumpversion.files]]
+filename = "pyproject.toml"
