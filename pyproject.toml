@@ -1,6 +1,6 @@
 [project]
 name = "pedal-bom-manager"
-version = "2.1.1"
+version = "2.1.2"
 description = "Streamlit app for managing pedal BOMs"
 readme = "README.md"
 requires-python = ">=3.13"
@@ -56,7 +56,7 @@ filterwarnings = [
 ]
 
 [tool.bumpversion]
-current_version = "2.1.1"
+current_version = "2.1.2"
 parse = "(?P<major>\\d+)\\.(?P<minor>\\d+)\\.(?P<patch>\\d+)"
 serialize = ["{major}.{minor}.{patch}"]
 search = "{current_version}"
