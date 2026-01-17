@@ -20,3 +20,20 @@ requirements-dev.txt
 # Output / Temp
 output
 *.DS_Store
+
+# IDEs
+.vscode
+.idea
+*.code-workspace
+
+# Documentation
+CONTRIBUTING.md
+CODE_OF_CONDUCT.md
+ROADMAP.md
+LICENSE
+
+# Heavy Assets & Tooling
+examples
+tools
+uv.lock
+.python-version
