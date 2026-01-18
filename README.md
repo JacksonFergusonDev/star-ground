@@ -14,7 +14,7 @@
 
 **Star Ground** is a full-stack logistics engine for electronics. It ingests messy component lists (Text, CSV, PDF), normalizes the data, and generates a complete manufacturing bundle.
 
-**🚀 [Try the Live App](https://pedal-bom-manager.streamlit.app/)**
+**🚀 [Try the Live App](https://star-ground.streamlit.app/)**
 
 ![Demo](assets/demo.gif)
 
@@ -151,7 +151,7 @@ In hardware prototyping, the cost of downtime exceeds the cost of inventory.
 ## 🚀 Quick Start
 
 ### Option 1: Web Interface (Live App)
-**🌐 [Use the hosted app here](https://pedal-bom-manager.streamlit.app/)**
+**🌐 [Use the hosted app here](https://star-ground.streamlit.app/)**
 
 ### Option 2: Run via Docker
 You can pull the pre-built image directly from the GitHub Container Registry without building it yourself.
