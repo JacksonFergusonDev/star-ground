@@ -30,7 +30,7 @@ def app():
 # --- Tests ---
 def test_smoke_check(app):
     assert not app.exception
-    assert app.title[0].value == "🎸 Guitar Pedal BOM Manager"
+    assert app.title[0].value == "⚡ Star Ground"
 
 
 def test_happy_path_text_paste(app):

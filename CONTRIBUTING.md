@@ -1,4 +1,4 @@
-# Contributing to Pedal BOM Manager
+# Contributing to Star Ground
 
 First off, thanks for taking the time to contribute! 🎉
 

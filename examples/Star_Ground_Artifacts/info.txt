@@ -1,6 +1,6 @@
-Guitar Pedal BOM Manager v2.0.0
+Star Ground v2.1.2
 By: Jackson Ferguson
-Generated on: 2026-01-10 13:34
+Generated on: 2026-01-17 17:27
 
 CONTENTS:
 - Field Manuals/: Printable step-by-step checklists.
@@ -8,4 +8,4 @@ CONTENTS:
 - Source Documents/: The original build docs (if available).
 
 Github Page:
-https://github.com/JacksonFergusonDev/pedal-bom-manager
+https://github.com/JacksonFergusonDev/star-ground

@@ -1,16 +1,20 @@
-# 🎸 Guitar Pedal BOM Manager (v2.0.0)
+# ⚡ Star Ground (v2.2.0)
 
 ![Python Version](https://img.shields.io/badge/python-3.13-blue.svg)
-[![Python Application CI](https://github.com/JacksonFergusonDev/pedal-bom-manager/actions/workflows/python-app.yml/badge.svg)](https://github.com/JacksonFergusonDev/pedal-bom-manager/actions/workflows/python-app.yml)
-[![Docker](https://github.com/JacksonFergusonDev/pedal-bom-manager/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/JacksonFergusonDev/pedal-bom-manager/actions/workflows/docker-publish.yml)
+[![Python Application CI](https://github.com/JacksonFergusonDev/star-ground/actions/workflows/python-app.yml/badge.svg)](https://github.com/JacksonFergusonDev/star-ground/actions/workflows/python-app.yml)
+[![Docker](https://github.com/JacksonFergusonDev/star-ground/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/JacksonFergusonDev/star-ground/actions/workflows/docker-publish.yml)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Status](https://img.shields.io/badge/status-active-success.svg)
 
 **Stop manually typing parts into Tayda. Paste your list, subtract your inventory, and print your build docs.**
 
-The **Pedal BOM Manager** is a full-stack logistics engine for guitar pedal builders. It ingests messy component lists (Text, CSV, PDF), normalizes the data, subtracts your existing inventory to calculate "Net Needs," and generates a complete manufacturing bundle—including shopping lists, assembly field manuals, and binning labels.
+> **In circuit design, a "Star Ground" is the single reference point where all signal paths converge to eliminate noise.**
+>
+> **In manufacturing, this application serves the same function: it is the Single Source of Truth for your component inventory, eliminating the "noise" of disorganized BOMs, duplicate orders, and inventory drift.**
 
-**🚀 [Try the Live App](https://pedal-bom-manager.streamlit.app/)**
+**Star Ground** is a full-stack logistics engine for electronics. It ingests messy component lists (Text, CSV, PDF), normalizes the data, and generates a complete manufacturing bundle.
+
+**🚀 [Try the Live App](https://star-ground.streamlit.app/)**
 
 ![Demo](assets/demo.gif)
 
@@ -147,21 +151,21 @@ In hardware prototyping, the cost of downtime exceeds the cost of inventory.
 ## 🚀 Quick Start
 
 ### Option 1: Web Interface (Live App)
-**🌐 [Use the hosted app here](https://pedal-bom-manager.streamlit.app/)**
+**🌐 [Use the hosted app here](https://star-ground.streamlit.app/)**
 
 ### Option 2: Run via Docker
 You can pull the pre-built image directly from the GitHub Container Registry without building it yourself.
 
 ```bash
 # Run latest stable release
-docker run -p 8501:8501 ghcr.io/jacksonfergusondev/pedal-bom-manager:latest
+docker run -p 8501:8501 ghcr.io/jacksonfergusondev/star-ground:latest
 ```
 
 Or build from source:
 
 ```bash
-docker build -t pedal-bom-manager .
-docker run -p 8501:8501 pedal-bom-manager
+docker build -t star-ground .
+docker run -p 8501:8501 star-ground
 ```
 
 ### Option 3: Local Development
@@ -170,8 +174,8 @@ This project uses **uv** for dependency management.
 
 ```bash
 # 1. Clone & Enter
-git clone https://github.com/JacksonFergusonDev/pedal-bom-manager.git
-cd pedal-bom-manager
+git clone https://github.com/JacksonFergusonDev/star-ground.git
+cd star-ground
 
 # 2. Install Dependencies (Creates virtualenv automatically)
 uv sync

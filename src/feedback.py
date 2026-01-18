@@ -20,7 +20,7 @@ def get_gsheet_client():
 def save_feedback(rating, text):
     """Appends feedback row using the cached client."""
     client = get_gsheet_client()
-    sheet = client.open("Pedal BOM Feedback").sheet1
+    sheet = client.open("Star Ground Feedback").sheet1
 
     # Append timestamp, rating, and comment
     row = [str(datetime.datetime.now()), rating, text]
