@@ -32,7 +32,7 @@ from src.bom_lib import (
     create_empty_inventory,
 )
 
-st.set_page_config(page_title="Pedal BOM Manager", page_icon="🎸")
+st.set_page_config(page_title="Star Ground", page_icon="⚡")
 
 # Hide the native dataframe toolbar (Search/Download)
 st.markdown(
