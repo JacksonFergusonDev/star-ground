@@ -1,0 +1,85 @@
+﻿Category,Part,BOM Qty,In Stock,Net Need,Buy Qty,Notes,Search Term,Tayda_Link,Origin
+PCB,Parentheses Fuzz PCB,1,0,1,1,Main Board,Parentheses Fuzz PCB,"=HYPERLINK(""https://www.pedalpcb.com/?product_cat=&s=Parentheses+Fuzz&post_type=product"", ""Buy"")",Circuit Board
+PCB,Sunflower Fuzz PCB,1,0,1,1,Main Board,Sunflower Fuzz PCB,"=HYPERLINK(""https://www.pedalpcb.com/?product_cat=&s=Sunflower+Fuzz&post_type=product"", ""Buy"")",Circuit Board
+PCB,The Abyss PCB,1,0,1,1,Main Board,The Abyss PCB,"=HYPERLINK(""https://www.pedalpcb.com/?product_cat=&s=The+Abyss&post_type=product"", ""Buy"")",Circuit Board
+ICs,LM308,1,0,1,1,"Socket Recommended | 💡 TRY: LM308N (Vintage RAT: Required for 0.3V/us slew-induced distortion), OP07 (Modern Tight: Faster slew rate, sounds harsher/tighter than vintage)",LM308,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=LM308"", ""Buy"")",Circuit Board
+ICs,TC1044SCPA,1,0,1,1,Socket Recommended,TC1044SCPA,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=TC1044SCPA"", ""Buy"")",Circuit Board
+ICs,TL072,1,0,1,1,"Socket Recommended | 💡 TRY: OPA2134 (Hi-Fi / Studio Clean: Low distortion (0.00008%), High Slew Rate (20V/us)), TLC2272 (High Headroom Clean: Rail-to-Rail output (+6Vpp headroom on 9V))",TL072,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=TL072"", ""Buy"")",Circuit Board
+ICs,TL074,1,0,1,1,Socket Recommended,TL074,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=TL074"", ""Buy"")",Circuit Board
+Optoelectronics,5mm,4,0,4,5,,5mm,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=5mm"", ""Buy"")",Circuit Board
+Transistors,BS170,1,0,1,2,,BS170,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=BS170"", ""Buy"")",Circuit Board
+Transistors,Germanium PNP,0,0,0,0,,Germanium PNP,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=Germanium+PNP"", ""Buy"")",Hardware Kit
+Transistors,MPSA18,2,0,2,3,,MPSA18,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=MPSA18"", ""Buy"")",Circuit Board
+Transistors,NKT275,2,0,2,3,,NKT275,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=NKT275"", ""Buy"")",Circuit Board
+Transistors,PF5102,2,0,2,3,,PF5102,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=PF5102"", ""Buy"")",Circuit Board
+Transistors,2N5087,1,0,1,2,,2N5087,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=2N5087"", ""Buy"")",Circuit Board
+Transistors,2N5089,2,0,2,3,,2N5089,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=2N5089"", ""Buy"")",Circuit Board
+Diodes,GE,4,0,4,10,,GE,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=GE"", ""Buy"")",Circuit Board
+Diodes,LED,3,0,3,10,,LED 3mm,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=LED+3mm"", ""Buy"")",Hardware Kit
+Diodes,3mm,1,0,1,10,,3mm,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=3mm"", ""Buy"")",Circuit Board
+Diodes,5mm,1,0,1,10,,5mm,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=5mm"", ""Buy"")",Circuit Board
+Diodes,1N4148,4,0,4,10,"💡 TRY: 1N4001 (Smooth / Tube-like: Slow reverse recovery (30µs) smears highs), IR LED (The 'Goldilocks' Drive: 1.2V drop: More crunch than LED, more headroom than Si), Red LED (Amp-like / Open: 1.8V drop: Huge headroom, loud output)",1N4148,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=1N4148"", ""Buy"")",Circuit Board
+Diodes,1N5817,3,0,3,10,,1N5817,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=1N5817"", ""Buy"")",Circuit Board
+Potentiometers,A100K,5,0,5,5,,100k ohm Logarithmic potentiometer,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=100k+ohm+Logarithmic+potentiometer"", ""Buy"")",Circuit Board
+Potentiometers,A250K,1,0,1,1,,250k ohm Logarithmic potentiometer,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=250k+ohm+Logarithmic+potentiometer"", ""Buy"")",Circuit Board
+Potentiometers,B100K,1,0,1,1,,100k ohm Linear potentiometer,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=100k+ohm+Linear+potentiometer"", ""Buy"")",Circuit Board
+Potentiometers,B10K,1,0,1,1,,10k ohm Linear potentiometer,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=10k+ohm+Linear+potentiometer"", ""Buy"")",Circuit Board
+Potentiometers,B1K,1,0,1,1,,1k ohm Linear potentiometer,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=1k+ohm+Linear+potentiometer"", ""Buy"")",Circuit Board
+Potentiometers,B25K,2,0,2,2,,25k ohm Linear potentiometer,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=25k+ohm+Linear+potentiometer"", ""Buy"")",Circuit Board
+Potentiometers,B50K,1,0,1,1,,50k ohm Linear potentiometer,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=50k+ohm+Linear+potentiometer"", ""Buy"")",Circuit Board
+Potentiometers,B5K,1,0,1,1,,5k ohm Linear potentiometer,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=5k+ohm+Linear+potentiometer"", ""Buy"")",Circuit Board
+Potentiometers,5K,1,0,1,1,,5k ohm Linear potentiometer,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=5k+ohm+Linear+potentiometer"", ""Buy"")",Circuit Board
+Potentiometers,50K,1,0,1,1,,50k ohm Linear potentiometer,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=50k+ohm+Linear+potentiometer"", ""Buy"")",Circuit Board
+Switches,2P4T,1,0,1,1,,2P4T,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=2P4T"", ""Buy"")",Circuit Board
+Capacitors,30p,1,0,1,6,Rec: Class 1 Ceramic (C0G / NP0),30pF multilayer,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=30pF+multilayer"", ""Buy"")",Circuit Board
+Capacitors,100p,4,0,4,9,Rec: Class 1 Ceramic (C0G / NP0),100pF multilayer,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=100pF+multilayer"", ""Buy"")",Circuit Board
+Capacitors,470p,1,0,1,6,Rec: Class 1 Ceramic (C0G / NP0),470pF multilayer,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=470pF+multilayer"", ""Buy"")",Circuit Board
+Capacitors,1n,1,0,1,6,Rec: Box Film,1nF Box Film,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=1nF+Box+Film"", ""Buy"")",Circuit Board
+Capacitors,3.3n,1,0,1,6,Rec: Box Film,3.3nF Box Film,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=3.3nF+Box+Film"", ""Buy"")",Circuit Board
+Capacitors,4.7n,1,0,1,6,Rec: Box Film,4.7nF Box Film,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=4.7nF+Box+Film"", ""Buy"")",Circuit Board
+Capacitors,10n,1,0,1,6,Rec: Box Film,10nF Box Film,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=10nF+Box+Film"", ""Buy"")",Circuit Board
+Capacitors,15n,1,0,1,6,Rec: Box Film,15nF Box Film,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=15nF+Box+Film"", ""Buy"")",Circuit Board
+Capacitors,22n,2,0,2,7,Rec: Box Film,22nF Box Film,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=22nF+Box+Film"", ""Buy"")",Circuit Board
+Capacitors,100n,6,0,6,16,Power filtering (buy bulk). | Rec: Box Film,100nF Box Film,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=100nF+Box+Film"", ""Buy"")",Circuit Board
+Capacitors,220n,1,0,1,6,Rec: Box Film,220nF Box Film,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=220nF+Box+Film"", ""Buy"")",Circuit Board
+Capacitors,1u,10,0,10,11,Rec: Box Film (Check BOM: Could be Electrolytic),1uF Box Film,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=1uF+Box+Film"", ""Buy"")",Circuit Board
+Capacitors,2.2u,1,0,1,2,Rec: Electrolytic,2.2uF Electrolytic,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=2.2uF+Electrolytic"", ""Buy"")",Circuit Board
+Capacitors,4.7u,2,0,2,3,Rec: Electrolytic,4.7uF Electrolytic,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=4.7uF+Electrolytic"", ""Buy"")",Circuit Board
+Capacitors,10u,4,0,4,5,Rec: Electrolytic,10uF Electrolytic,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=10uF+Electrolytic"", ""Buy"")",Circuit Board
+Capacitors,22u,1,0,1,2,Rec: Electrolytic,22uF Electrolytic,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=22uF+Electrolytic"", ""Buy"")",Circuit Board
+Capacitors,47u,3,0,3,4,Rec: Electrolytic,47uF Electrolytic,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=47uF+Electrolytic"", ""Buy"")",Circuit Board
+Capacitors,100u,2,0,2,3,Rec: Electrolytic,100uF Electrolytic,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=100uF+Electrolytic"", ""Buy"")",Circuit Board
+Resistors,47,1,0,1,10,Use 1/4W Metal Film (1%),47 ohm 1/4w metal film,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=47+ohm+1%2F4w+metal+film"", ""Buy"")",Circuit Board
+Resistors,100,1,0,1,10,Use 1/4W Metal Film (1%),100 ohm 1/4w metal film,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=100+ohm+1%2F4w+metal+film"", ""Buy"")",Circuit Board
+Resistors,470,2,0,2,10,Use 1/4W Metal Film (1%),470 ohm 1/4w metal film,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=470+ohm+1%2F4w+metal+film"", ""Buy"")",Circuit Board
+Resistors,560,1,0,1,10,Use 1/4W Metal Film (1%),560 ohm 1/4w metal film,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=560+ohm+1%2F4w+metal+film"", ""Buy"")",Circuit Board
+Resistors,1k,5,0,5,10,Use 1/4W Metal Film (1%),1k ohm 1/4w metal film,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=1k+ohm+1%2F4w+metal+film"", ""Buy"")",Circuit Board
+Resistors,1.5k,1,0,1,10,Use 1/4W Metal Film (1%),1.5k ohm 1/4w metal film,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=1.5k+ohm+1%2F4w+metal+film"", ""Buy"")",Circuit Board
+Resistors,2.2k,1,0,1,10,Use 1/4W Metal Film (1%),2.2k ohm 1/4w metal film,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=2.2k+ohm+1%2F4w+metal+film"", ""Buy"")",Circuit Board
+Resistors,3.3k,5,0,5,10,Use 1/4W Metal Film (1%) | 🤖 Standard Part: Auto-Inject (LED CLR),3.3k ohm 1/4w metal film,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=3.3k+ohm+1%2F4w+metal+film"", ""Buy"")",Circuit Board
+Resistors,4.7k,6,0,6,20,Use 1/4W Metal Film (1%),4.7k ohm 1/4w metal film,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=4.7k+ohm+1%2F4w+metal+film"", ""Buy"")",Circuit Board
+Resistors,10k,11,0,11,20,Use 1/4W Metal Film (1%),10k ohm 1/4w metal film,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=10k+ohm+1%2F4w+metal+film"", ""Buy"")",Circuit Board
+Resistors,15k,1,0,1,10,Use 1/4W Metal Film (1%),15k ohm 1/4w metal film,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=15k+ohm+1%2F4w+metal+film"", ""Buy"")",Circuit Board
+Resistors,22k,2,0,2,10,Use 1/4W Metal Film (1%),22k ohm 1/4w metal film,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=22k+ohm+1%2F4w+metal+film"", ""Buy"")",Circuit Board
+Resistors,33k,1,0,1,10,Use 1/4W Metal Film (1%),33k ohm 1/4w metal film,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=33k+ohm+1%2F4w+metal+film"", ""Buy"")",Circuit Board
+Resistors,47k,11,0,11,20,Use 1/4W Metal Film (1%),47k ohm 1/4w metal film,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=47k+ohm+1%2F4w+metal+film"", ""Buy"")",Circuit Board
+Resistors,56k,1,0,1,10,Use 1/4W Metal Film (1%),56k ohm 1/4w metal film,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=56k+ohm+1%2F4w+metal+film"", ""Buy"")",Circuit Board
+Resistors,100k,6,0,6,20,Use 1/4W Metal Film (1%),100k ohm 1/4w metal film,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=100k+ohm+1%2F4w+metal+film"", ""Buy"")",Circuit Board
+Resistors,220k,2,0,2,10,Use 1/4W Metal Film (1%),220k ohm 1/4w metal film,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=220k+ohm+1%2F4w+metal+film"", ""Buy"")",Circuit Board
+Resistors,470k,3,0,3,10,Use 1/4W Metal Film (1%),470k ohm 1/4w metal film,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=470k+ohm+1%2F4w+metal+film"", ""Buy"")",Circuit Board
+Resistors,1M,7,0,7,20,Use 1/4W Metal Film (1%),1M ohm 1/4w metal film,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=1M+ohm+1%2F4w+metal+film"", ""Buy"")",Circuit Board
+Resistors,2.2M,1,0,1,10,Use 1/4W Metal Film (1%),2.2M ohm 1/4w metal film,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=2.2M+ohm+1%2F4w+metal+film"", ""Buy"")",Circuit Board
+Hardware/Misc,AWG 24 Hook-Up Wire,9,0,9,9,,AWG 24 Hook-Up Wire,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=AWG+24+Hook-Up+Wire"", ""Buy"")",Hardware Kit
+Hardware/Misc,Bezel LED Holder,3,0,3,3,,Bezel LED Holder,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=Bezel+LED+Holder"", ""Buy"")",Hardware Kit
+Hardware/Misc,DC POWER JACK 2.1MM,3,0,3,3,,DC POWER JACK 2.1MM,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=DC+POWER+JACK+2.1MM"", ""Buy"")",Hardware Kit
+Hardware/Misc,DIP SOCKET (Check Size),4,0,4,5,[AUTO] For chip safety.,DIP SOCKET (Check Size),"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=DIP+SOCKET+%28Check+Size%29"", ""Buy"")",Extras
+Hardware/Misc,Dust Seal Cover,30,0,30,30,,Dust Seal Cover,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=Dust+Seal+Cover"", ""Buy"")",Hardware Kit
+Hardware/Misc,Heat Shrink Tubing,3,0,3,3,,Heat Shrink Tubing,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=Heat+Shrink+Tubing"", ""Buy"")",Hardware Kit
+Hardware/Misc,Knob,15,0,15,15,,Knob,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=Knob"", ""Buy"")",Hardware Kit
+Hardware/Misc,Rubber Feet (Black),12,0,12,12,,Rubber Feet (Black),"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=Rubber+Feet+%28Black%29"", ""Buy"")",Hardware Kit
+Hardware/Misc,3PDT FOOTSWITCH PCB,3,0,3,3,,3PDT FOOTSWITCH PCB,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=3PDT+FOOTSWITCH+PCB"", ""Buy"")",Hardware Kit
+Hardware/Misc,3PDT STOMP SWITCH,3,0,3,3,,3PDT STOMP SWITCH,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=3PDT+STOMP+SWITCH"", ""Buy"")",Hardware Kit
+Hardware/Misc,9V BATTERY CLIP,3,0,3,3,,9V BATTERY CLIP,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=9V+BATTERY+CLIP"", ""Buy"")",Hardware Kit
+Hardware/Misc,1590B Enclosure,3,0,3,3,,1590B Enclosure,"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=1590B+Enclosure"", ""Buy"")",Hardware Kit
+Hardware/Misc,6.35MM JACK (MONO),3,0,3,3,,6.35MM JACK (MONO),"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=6.35MM+JACK+%28MONO%29"", ""Buy"")",Hardware Kit
+Hardware/Misc,6.35MM JACK (STEREO),3,0,3,3,,6.35MM JACK (STEREO),"=HYPERLINK(""https://www.taydaelectronics.com/catalogsearch/result/?q=6.35MM+JACK+%28STEREO%29"", ""Buy"")",Hardware Kit

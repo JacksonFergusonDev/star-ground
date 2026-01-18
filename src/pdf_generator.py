@@ -161,14 +161,14 @@ class FieldManual(FPDF):
     def __init__(self):
         super().__init__()
         self.set_auto_page_break(auto=True, margin=15)
-        self.set_title("Pedal BOM Field Manual")
+        self.set_title("Star Ground Field Manual")
 
     def header(self):
         self.set_font("Courier", "B", 10)
         self.cell(
             0,
             10,
-            "Pedal Builder's Field Manual",
+            "Star Ground Field Manual",
             align="R",
             new_x=XPos.LMARGIN,
             new_y=YPos.NEXT,
@@ -431,11 +431,11 @@ def generate_master_zip(inventory, slots, shopping_list_csv, stock_csv):
 
     with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zf:
         # 1. Root Files
-        zf.writestr("Pedal Shopping List.csv", shopping_list_csv)
+        zf.writestr("Shopping List.csv", shopping_list_csv)
         zf.writestr("My Inventory Updated.csv", stock_csv)
 
         info_text = (
-            "Guitar Pedal BOM Manager v2.0.0\n"
+            "Star Ground v2.1.2\n"
             "By: Jackson Ferguson\n"
             "Generated on: "
             + datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
@@ -445,7 +445,7 @@ def generate_master_zip(inventory, slots, shopping_list_csv, stock_csv):
             "- Sticker Sheets/: Labels for Avery 5160 (3x10).\n"
             "- Source Documents/: The original build docs (if available).\n\n"
             "Github Page:\n"
-            "https://github.com/JacksonFergusonDev/pedal-bom-manager\n"
+            "https://github.com/JacksonFergusonDev/star-ground\n"
         )
         zf.writestr("info.txt", info_text)
 

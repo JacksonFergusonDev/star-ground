@@ -1,6 +1,6 @@
 # 🗺️ Project Roadmap: Electronics BOM Parsing Engine
 
-This document outlines the development trajectory for the Pedal BOM Manager. The roadmap is divided into **Architectural Milestones** (improving the core parsing engine) and **Feature Expansions** (new capabilities for the end user).
+This document outlines the development trajectory for Star Ground. The roadmap is divided into **Architectural Milestones** (improving the core parsing engine) and **Feature Expansions** (new capabilities for the end user).
 
 ---
 
