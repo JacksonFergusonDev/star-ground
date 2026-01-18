@@ -47,12 +47,12 @@ st.markdown(
 )
 
 
-st.title("🎸 Guitar Pedal BOM Manager")
+st.title("⚡ Star Ground")
 st.markdown("""
-**Automate your electronics sourcing.**
+**The Single Source of Truth for Analog Electronics.**
 
-Paste your component lists, upload CSVs/PDFs, import directly from URLs, or select a preset. 
-This tool cleans the data, handles component ranges, and calculates purchasing buffers using *Nerd Economics* to prevent shortages.
+In circuit design, a **Star Ground** is the reference point where all signal paths converge to eliminate noise. 
+This tool serves the same function for your logistics: it aggregates BOMs, subtracts inventory, and generates clean manufacturing data to eliminate the "noise" of disorganized spreadsheets.
 """)
 
 if "inventory" not in st.session_state:
@@ -858,7 +858,7 @@ if st.session_state.inventory and st.session_state.stats:
         st.download_button(
             "🛒 Download Shopping List",
             data=csv_out,
-            file_name="pedal_shopping_list.csv",
+            file_name="shopping_list.csv",
             mime="text/csv",
             use_container_width=True,
         )
@@ -877,7 +877,7 @@ if st.session_state.inventory and st.session_state.stats:
         st.download_button(
             "📖 Download Generated PDFs",
             data=generate_pdf_bundle(inventory, st.session_state.pedal_slots),
-            file_name="pedal_build_docs.zip",
+            file_name="Star_Ground_Docs.zip",
             mime="application/zip",
             help="ZIP containing Field Manuals and Sticker Sheets.",
             use_container_width=True,
@@ -889,7 +889,7 @@ if st.session_state.inventory and st.session_state.stats:
         data=generate_master_zip(
             inventory, st.session_state.pedal_slots, csv_out, stock_update_csv
         ),
-        file_name="Pedal_Build_Pack_Complete.zip",
+        file_name="Star_Ground_Artifacts.zip",
         mime="application/zip",
         help="Includes: Shopping List, Inventory, Field Manuals, Stickers, and Source Files.",
         type="primary",
