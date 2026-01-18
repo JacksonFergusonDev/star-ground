@@ -1,5 +1,5 @@
-name: 🐛 Bug Report
-description: Create a report to help us improve the BOM parser
+name: Bug Report
+description: Create a report to help us improve Star Ground
 title: "[Bug]: "
 labels: ["bug", "triage"]
 body:
