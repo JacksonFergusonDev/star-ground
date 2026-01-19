@@ -10,37 +10,65 @@ First off, thanks for taking the time to contribute! 🎉
 3. Include the BOM text that caused the error (if applicable).
 
 ### Development Setup
-1. Fork the repo and clone it locally.
 
-2. Create a virtual environment:
+This project uses [uv](https://github.com/astral-sh/uv) for dependency management and Python 3.12+.
+
+1. **Fork & Clone**
+   Fork the repo and clone it locally:
    ```bash
-   python -m venv venv
-   source venv/bin/activate
+   git clone https://github.com/jacksonfergusondev/star-ground.git
+   cd git-pulsar
    ```
 
-3. Install development dependencies:
-    ```bash
-    pip install -r requirements-dev.txt
-    ```
+2. **Environment Setup**
+   We use `uv` to manage the virtual environment and dependencies.
+   ```bash
+   # Creates .venv and installs dependencies (including dev groups)
+   uv sync
+   ```
 
-4. Install pre-commit hooks:
-    ```bash
-    pre-commit install
-    ```
+   *Optional: If you use `direnv`, allow the automatically generated configuration:*
+   ```bash
+   direnv allow
+   ```
 
-### Pull Requests:
+3. **Install Hooks**
+   Set up pre-commit hooks to handle linting (Ruff) and type checking (Mypy) automatically.
+   ```bash
+   pre-commit install
+   ```
 
-1. Create a branch for your feature
-    ```bash
-    git checkout -b feature/amazing-feature
-    ```
+### Running Tests
 
-2. Commit your changes
+We use `pytest` for the test suite.
 
-3. Run tests locally (pytest).
+```bash
+uv run pytest
+```
 
-4. Push to the branch.
+### Pull Requests
 
-5. Open a Pull Request.
+1. **Create a Branch**
+   ```bash
+   git checkout -b feature/my-amazing-feature
+   ```
 
-6. Please ensure your code passes the linting checks (Ruff/Mypy).
+2. **Make Changes**
+   Write code and add tests for your changes.
+
+3. **Verify**
+   Ensure your code passes the linter and tests locally.
+   ```bash
+   uv run pytest
+   ```
+   (Pre-commit will also run `ruff` and `mypy` when you commit).
+
+4. **Commit & Push**
+   Please use clear commit messages.
+   ```bash
+   git commit -m "feat: add support for solar flares"
+   git push origin feature/my-amazing-feature
+   ```
+
+5. **Open a Pull Request**
+   Submit your PR against the `main` branch.
