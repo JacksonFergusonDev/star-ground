@@ -6,22 +6,22 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "fpdf2==2.8.5",
-    "google-auth==2.43.0",
+    "google-auth==2.47.0",
     "gspread==6.2.1",
-    "pdfplumber==0.11.8",
+    "pdfplumber==0.11.9",
     "requests==2.32.5",
-    "streamlit==1.52.2",
+    "streamlit==1.53.0",
 ]
 
 [dependency-groups]
 dev = [
     "bump-my-version>=1.2.6",
-    "hypothesis==6.148.5",
+    "hypothesis==6.150.2",
     "mypy==1.19.1",
     "pandas-stubs",
     "pre-commit==4.5.1",
-    "pytest==9.0.1",
-    "ruff==0.14.8",
+    "pytest==9.0.2",
+    "ruff==0.14.13",
     "types-cachetools",
     "types-cffi",
     "types-colorama",
