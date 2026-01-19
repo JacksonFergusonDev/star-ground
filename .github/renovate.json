@@ -1,0 +1,40 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:base"
+  ],
+  "labels": [
+    "dependencies"
+  ],
+  "packageRules": [
+    {
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
+      "automerge": false,
+      "description": "Group all non-major updates to reduce noise"
+    },
+    {
+      "matchPackageNames": [
+        "streamlit"
+      ],
+      "minimumReleaseAge": "3 days",
+      "description": "Wait 3 days before proposing Streamlit updates to let others find bugs first"
+    },
+    {
+      "matchManagers": [
+        "ruff",
+        "mypy"
+      ],
+      "automerge": true,
+      "description": "Dev tools like linter/type-checkers are usually safe to auto-merge if CI passes"
+    }
+  ],
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": [
+      "before 4am on monday"
+    ]
+  }
+}
