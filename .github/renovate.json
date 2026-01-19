@@ -1,0 +1,39 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:base"
+  ],
+  "labels": [
+    "dependencies"
+  ],
+  "packageRules": [
+    {
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
+      "groupName": "all non-major dependencies",
+      "automerge": false,
+      "description": "This is the magic key I missed. It forces them into one PR."
+    },
+    {
+      "matchPackageNames": [
+        "streamlit"
+      ],
+      "minimumReleaseAge": "3 days"
+    },
+    {
+      "matchManagers": [
+        "ruff",
+        "mypy"
+      ],
+      "automerge": true
+    }
+  ],
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": [
+      "before 4am on monday"
+    ]
+  }
+}
