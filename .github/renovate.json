@@ -3,18 +3,41 @@
   "extends": [
     "config:base"
   ],
+  "pyenv": {
+    "enabled": false
+  },
+  "schedule": [
+    "before 4am on the 1st day of the month",
+    "before 4am on the 15th day of the month"
+  ],
+  "timezone": "America/Vancouver",
   "labels": [
     "dependencies"
   ],
+  "vulnerabilityAlerts": {
+    "schedule": []
+  },
   "packageRules": [
     {
+      "description": "Group all non-major dependencies to reduce noise",
       "matchUpdateTypes": [
         "minor",
         "patch"
       ],
       "groupName": "all non-major dependencies",
-      "automerge": false,
-      "description": "This is the magic key I missed. It forces them into one PR."
+      "automerge": false
+    },
+    {
+      "description": "Automerge all minor/patch updates for dev dependencies (safe)",
+      "matchDepTypes": [
+        "dev",
+        "dependency-groups"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
+      "automerge": true
     },
     {
       "matchPackageNames": [
@@ -23,6 +46,7 @@
       "minimumReleaseAge": "3 days"
     },
     {
+      "description": "Explicitly automerge formatters/linters if not caught by dev rule",
       "matchManagers": [
         "ruff",
         "mypy"
@@ -33,7 +57,8 @@
   "lockFileMaintenance": {
     "enabled": true,
     "schedule": [
-      "before 4am on monday"
-    ]
+      "before 4am on the first day of the month"
+    ],
+    "automerge": true
   }
 }
