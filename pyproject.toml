@@ -16,12 +16,12 @@ dependencies = [
 [dependency-groups]
 dev = [
     "bump-my-version>=1.2.6",
-    "hypothesis==6.150.2",
+    "hypothesis==6.150.3",
     "mypy==1.19.1",
     "pandas-stubs",
     "pre-commit==4.5.1",
     "pytest==9.0.2",
-    "ruff==0.14.13",
+    "ruff==0.14.14",
     "types-cachetools",
     "types-cffi",
     "types-colorama",
