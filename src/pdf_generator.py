@@ -315,9 +315,8 @@ def sort_by_z_height(part_list):
         # 2. Capacitor Check (Electro vs Ceramic)
         if cat == "Capacitors":
             # Electros are tall -> Late build
-            if "u" in val or "µ" in val:
-                if float_val_check(val) >= 1.0:
-                    return 60  # Electrolytics rank
+            if ("u" in val or "µ" in val) and float_val_check(val) >= 1.0:
+                return 60  # Electrolytics rank
             return 40  # Small caps
 
         return z_map.get(cat, 99)

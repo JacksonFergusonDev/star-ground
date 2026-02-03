@@ -52,7 +52,7 @@ def generate_presets():
 
     print(f"🔍 Scanning {INPUT_DIR}...")
 
-    for root, dirs, files in os.walk(INPUT_DIR):
+    for root, _dirs, files in os.walk(INPUT_DIR):
         for file in files:
             file_path = os.path.join(root, file)
             filename_no_ext = os.path.splitext(file)[0]

@@ -523,10 +523,7 @@ def test_preset_integrity():
     """
     for name, data in BOM_PRESETS.items():
         # Handle new Dict format vs Legacy string
-        if isinstance(data, dict):
-            raw_text = data["bom_text"]
-        else:
-            raw_text = data
+        raw_text = data["bom_text"] if isinstance(data, dict) else data
 
         # Sanity check: Text should exist
         assert raw_text.strip(), f"Preset '{name}' is empty!"

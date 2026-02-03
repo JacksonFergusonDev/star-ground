@@ -166,7 +166,7 @@ def test_preset_selection_flow(app):
     # 2. Select a specific preset
     # New UI has 3 Selectboxes: [0]=Source, [1]=Category, [2]=Project
     # Dynamically find the key to handle stale presets.py (Pedalpcb vs PedalPCB)
-    target_preset = next(k for k in BOM_PRESETS.keys() if "Kliche" in k)
+    target_preset = next(k for k in BOM_PRESETS if "Kliche" in k)
 
     app.selectbox[2].set_value(target_preset).run()
 

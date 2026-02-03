@@ -199,7 +199,7 @@ def get_preset_metadata():
     # Matches: [Group1] (optional [Group2]) Remainder
     pattern = re.compile(r"^\[(.*?)\] (?:\[(.*?)\] )?(.*)$")
 
-    for key in BOM_PRESETS.keys():
+    for key in BOM_PRESETS:
         match = pattern.match(key)
         if match:
             src = match.group(1)
@@ -511,10 +511,11 @@ for i, slot in enumerate(st.session_state.pedal_slots):
         )
 
         # Remove Button (Top Right)
-        if len(st.session_state.pedal_slots) > 1:
-            if c4.button("🗑️", key=f"del_{slot['id']}"):
-                remove_slot(i)
-                st.rerun()
+        if len(st.session_state.pedal_slots) > 1 and c4.button(
+            "🗑️", key=f"del_{slot['id']}"
+        ):
+            remove_slot(i)
+            st.rerun()
 
         # Row 2: Data Input (Full Width)
         if slot["method"] == "Paste Text":
@@ -775,8 +776,8 @@ if st.session_state.inventory and st.session_state.stats:
 
         # Link Generation Logic
         # Check if any source for this part contains "PedalPCB"
-        is_pedalpcb_source = any("PedalPCB" in s for s in sources.keys())
-        is_tayda_source = any("Tayda" in s for s in sources.keys())
+        is_pedalpcb_source = any("PedalPCB" in s for s in sources)
+        is_tayda_source = any("Tayda" in s for s in sources)
 
         if category == "PCB":
             # Only link to PedalPCB if it is explicitly PedalPCB and NOT Tayda

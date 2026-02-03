@@ -56,7 +56,7 @@ def save_snapshot(filename, data):
 # 🔍 Gather all PDFs in the samples folder (Recursive)
 pdf_files = []
 if os.path.exists(SAMPLES_DIR):
-    for root, dirs, files in os.walk(SAMPLES_DIR):
+    for root, _dirs, files in os.walk(SAMPLES_DIR):
         for file in files:
             if file.endswith(".pdf"):
                 # We store the full relative path so pytest can find it later
