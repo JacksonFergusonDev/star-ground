@@ -4,6 +4,7 @@
 
 # Python / Environment
 venv
+.venv
 __pycache__
 *.pyc
 .pytest_cache
@@ -13,7 +14,7 @@ pytest.ini
 
 # Testing & Dev
 tests
-requirements-dev.txt
+requirements.txt
 .pre-commit-config.yaml
 .github
 
@@ -35,5 +36,3 @@ LICENSE
 # Heavy Assets & Tooling
 examples
 tools
-uv.lock
-.python-version
