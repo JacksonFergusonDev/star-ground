@@ -82,3 +82,47 @@ replace = "v{new_version}"
 filename = "uv.lock"
 search = "name = \"git-pulsar\"\nversion = \"{current_version}\""
 replace = "name = \"git-pulsar\"\nversion = \"{new_version}\""
+
+[tool.ruff]
+# Target Python 3.13 for code generation and linting analysis
+target-version = "py313"
+line-length = 88
+indent-width = 4
+
+# Exclude common build/cache directories
+exclude = [
+    ".git",
+    ".mypy_cache",
+    ".ruff_cache",
+    ".venv",
+    "__pypackages__",
+    "build",
+    "dist",
+]
+
+[tool.ruff.lint]
+# Enable specific rule sets:
+# E, W: pycodestyle (standard linting)
+# F: Pyflakes (error detection)
+# I: isort (import sorting)
+# B: flake8-bugbear (finds likely bugs and design problems)
+# UP: pyupgrade (modernizes code, e.g., List[] -> list[])
+# SIM: flake8-simplify (logic simplification)
+select = ["E", "F", "I", "B", "UP", "SIM"]
+
+# Ignore E501 (Line too long) as ruff format handles line wrapping efficiently
+ignore = ["E501"]
+
+# Allow unused variables when underscored (e.g., for unpacking)
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+[tool.ruff.lint.isort]
+# Ensure 'src' is treated as a local application for import grouping
+known-first-party = ["src"]
+section-order = ["future", "standard-library", "third-party", "first-party", "local-folder"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"

@@ -1,7 +1,9 @@
-import pytest
-from typing import cast
-from streamlit.testing.v1 import AppTest
 from collections import defaultdict
+from typing import cast
+
+import pytest
+from streamlit.testing.v1 import AppTest
+
 from src.bom_lib import InventoryType
 from src.presets import BOM_PRESETS
 

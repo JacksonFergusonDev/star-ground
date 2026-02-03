@@ -1,20 +1,20 @@
-import os
-import uuid
-import re
 import copy
+import os
+import re
 import tempfile
-import requests
+import uuid
 from collections import defaultdict
-from typing import cast, List, Dict, Any
+from typing import Any, cast
+
+import requests
 import streamlit as st
-from src.presets import BOM_PRESETS
-from src.feedback import save_feedback
-from src.pdf_generator import generate_master_zip, generate_pdf_bundle
-from src.exporters import generate_shopping_list_csv, generate_stock_update_csv
 
 from src.bom_lib import (
     InventoryType,
     StatsDict,
+    calculate_net_needs,
+    create_empty_inventory,
+    generate_pedalpcb_url,
     generate_search_term,
     generate_tayda_url,
     get_buy_details,
@@ -22,15 +22,16 @@ from src.bom_lib import (
     get_spec_type,
     get_standard_hardware,
     parse_csv_bom,
-    parse_with_verification,
-    sort_inventory,
     parse_pedalpcb_pdf,
     parse_user_inventory,
-    calculate_net_needs,
-    generate_pedalpcb_url,
+    parse_with_verification,
     rename_source_in_inventory,
-    create_empty_inventory,
+    sort_inventory,
 )
+from src.exporters import generate_shopping_list_csv, generate_stock_update_csv
+from src.feedback import save_feedback
+from src.pdf_generator import generate_master_zip, generate_pdf_bundle
+from src.presets import BOM_PRESETS
 
 st.set_page_config(page_title="Star Ground", page_icon="⚡")
 
@@ -62,7 +63,7 @@ if "stats" not in st.session_state:
 
 # Initialize Slots
 if "pedal_slots" not in st.session_state:
-    init_slots: List[Dict[str, Any]] = [
+    init_slots: list[dict[str, Any]] = [
         {"id": str(uuid.uuid4()), "name": "", "method": "Paste Text"}
     ]
     st.session_state.pedal_slots = init_slots

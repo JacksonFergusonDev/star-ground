@@ -1,11 +1,13 @@
-from fpdf import FPDF
-from fpdf.enums import XPos, YPos
-from collections import defaultdict
 import datetime
-import zipfile
 import io
 import os
 import re
+import zipfile
+from collections import defaultdict
+
+from fpdf import FPDF
+from fpdf.enums import XPos, YPos
+
 from src.bom_lib import deduplicate_refs
 
 
