@@ -16,7 +16,8 @@
 
 **🚀 [Try the Live App](https://star-ground.streamlit.app/)**
 
-![Demo](assets/demo.gif)
+<img src="assets/demo.gif" alt="Demo"
+     style="display:block;margin-left:auto;margin-right:auto;width:70%;" />
 
 ### ⚙️ Engineering Overview
 **A robust Python tool designed to automate the chaotic process of sourcing and assembling electronics.**
