@@ -1,11 +1,12 @@
-import re
 import csv
-import math
 import logging
+import math
+import re
 from collections import defaultdict
-import src.constants as C
-from typing import Dict, List, Tuple, Optional, TypedDict, Any
+from typing import Any, TypedDict
 from urllib.parse import quote_plus
+
+import src.constants as C
 
 # Initialize Logger
 logger = logging.getLogger(__name__)
@@ -15,21 +16,21 @@ logger = logging.getLogger(__name__)
 class StatsDict(TypedDict):
     lines_read: int
     parts_found: int
-    residuals: List[str]
-    extracted_title: Optional[str]
+    residuals: list[str]
+    extracted_title: str | None
     seen_refs: set
 
 
 class PartData(TypedDict):
     qty: int
-    refs: List[str]
-    sources: Dict[str, List[str]]
+    refs: list[str]
+    sources: dict[str, list[str]]
 
 
-InventoryType = Dict[str, PartData]
+InventoryType = dict[str, PartData]
 
 
-def natural_sort_key(ref: str) -> List[Any]:
+def natural_sort_key(ref: str) -> list[Any]:
     """
     Splits 'R10' into ['R', 10] for human-friendly sorting.
     """
@@ -39,7 +40,7 @@ def natural_sort_key(ref: str) -> List[Any]:
     ]
 
 
-def deduplicate_refs(refs: List[str]) -> List[str]:
+def deduplicate_refs(refs: list[str]) -> list[str]:
     """
     Cleans up a ref list:
     1. Removes duplicates (set)
@@ -52,7 +53,7 @@ def deduplicate_refs(refs: List[str]) -> List[str]:
     return sorted(unique, key=natural_sort_key)
 
 
-def expand_refs(ref_raw: str) -> List[str]:
+def expand_refs(ref_raw: str) -> list[str]:
     """Explodes ranges like 'R1-R4' or 'R1-4' into ['R1', 'R2', 'R3', 'R4']."""
     refs = []
     ref_raw = ref_raw.strip()
@@ -101,9 +102,7 @@ def normalize_value_by_category(category: str, val_raw: str) -> str:
     return clean_val
 
 
-def categorize_part(
-    ref: str, val: str
-) -> Tuple[Optional[str], Optional[str], Optional[str]]:
+def categorize_part(ref: str, val: str) -> tuple[str | None, str | None, str | None]:
     """
     Decides what a part is based on its Ref (Name) and Value.
     """
@@ -146,7 +145,7 @@ def categorize_part(
 
     # Classification
     category = "Unknown"
-    injection: Optional[str] = None
+    injection: str | None = None
 
     # LDR Check (Priority Fix)
     if ref_up.startswith("LDR"):
@@ -171,9 +170,7 @@ def categorize_part(
             # Fallback to pot (e.g. a "LENGTH" control that is actually a B100K pot)
             category = "Potentiometers"
 
-    elif ref_up == "CLR":
-        category = "Resistors"
-    elif ref_up.startswith("R") and not ref_up.startswith("RANGE"):
+    elif ref_up == "CLR" or ref_up.startswith("R") and not ref_up.startswith("RANGE"):
         category = "Resistors"
     elif ref_up.startswith("C"):
         category = "Capacitors"
@@ -229,7 +226,7 @@ def ingest_bom_line(
     source: str,
     ref_raw: str,
     val_raw: str,
-    stats: Optional[StatsDict] = None,
+    stats: StatsDict | None = None,
 ) -> int:
     """
     Central Logic Kernel:
@@ -264,8 +261,8 @@ def ingest_bom_line(
 
 
 def parse_with_verification(
-    bom_list: List[str], source_name: str = "Manual Input"
-) -> Tuple[InventoryType, StatsDict]:
+    bom_list: list[str], source_name: str = "Manual Input"
+) -> tuple[InventoryType, StatsDict]:
     """
     Parses raw text BOMs. Handles commas and ranges (R1-R4).
     """
@@ -347,7 +344,7 @@ def parse_with_verification(
     return inventory, stats
 
 
-def parse_csv_bom(filepath: str, source_name: str) -> Tuple[InventoryType, StatsDict]:
+def parse_csv_bom(filepath: str, source_name: str) -> tuple[InventoryType, StatsDict]:
     """
     Parses a CSV file. Expects columns vaguely named 'Ref' and 'Value'.
     """
@@ -359,7 +356,7 @@ def parse_csv_bom(filepath: str, source_name: str) -> Tuple[InventoryType, Stats
         "extracted_title": None,
         "seen_refs": set(),
     }
-    with open(filepath, "r", encoding="utf-8-sig") as f:
+    with open(filepath, encoding="utf-8-sig") as f:
         reader = csv.DictReader(f)
         for row in reader:
             stats["lines_read"] += 1
@@ -398,7 +395,7 @@ def parse_csv_bom(filepath: str, source_name: str) -> Tuple[InventoryType, Stats
     return inventory, stats
 
 
-def get_residual_report(stats: StatsDict) -> List[str]:
+def get_residual_report(stats: StatsDict) -> list[str]:
     """Returns lines that look like parts but were skipped."""
     safe_words = [
         "RESISTORS",
@@ -410,7 +407,7 @@ def get_residual_report(stats: StatsDict) -> List[str]:
         "COMPONENT LIST",
         "SOCKET",
     ]
-    suspicious: List[str] = []
+    suspicious: list[str] = []
 
     for line in stats["residuals"]:
         # Always passthrough explicit errors
@@ -428,7 +425,7 @@ def get_residual_report(stats: StatsDict) -> List[str]:
     return suspicious
 
 
-def get_injection_warnings(inventory: InventoryType) -> List[str]:
+def get_injection_warnings(inventory: InventoryType) -> list[str]:
     """Warns user if we made assumptions (SMD adapters, Sockets)."""
     warnings = []
     if inventory["Hardware/Misc | SMD_ADAPTER_BOARD"]["qty"] > 0:
@@ -457,11 +454,7 @@ def get_spec_type(category: str, val: str) -> str:
             return "MLCC"
 
         # Film Range (1nF < val < 1uF)
-        elif 1.0e-9 <= fval < 1.0e-6:
-            return "Box Film"
-
-        # The Ambiguous 1uF Crossover (== 1uF)
-        elif abs(fval - 1.0e-6) < 1.0e-9:
+        elif 1.0e-9 <= fval < 1.0e-6 or abs(fval - 1.0e-6) < 1.0e-9:
             return "Box Film"
 
         # The Power Range (> 1uF)
@@ -567,7 +560,7 @@ def generate_pedalpcb_url(search_term: str) -> str:
     return f"https://www.pedalpcb.com/?product_cat=&s={encoded}&post_type=product"
 
 
-def get_buy_details(category: str, val: str, count: int) -> Tuple[int, str]:
+def get_buy_details(category: str, val: str, count: int) -> tuple[int, str]:
     """Applies 'Nerd Economics' to calculate buy quantity."""
     # If we don't need any (Net Need <= 0), don't buy any.
     if count <= 0:
@@ -599,7 +592,7 @@ def get_buy_details(category: str, val: str, count: int) -> Tuple[int, str]:
 
     elif category == "Capacitors":
         # Explicitly type hint the list to keep mypy happy
-        note_parts: List[str] = []
+        note_parts: list[str] = []
 
         # Default Safety Factor: Moderate (Ceramics/Films are small and cheap)
         buffer = 5
@@ -713,7 +706,7 @@ def get_buy_details(category: str, val: str, count: int) -> Tuple[int, str]:
     return buy, note
 
 
-def sort_inventory(inventory: InventoryType) -> List[Tuple[str, PartData]]:
+def sort_inventory(inventory: InventoryType) -> list[tuple[str, PartData]]:
     """Sorts parts by Category Rank, THEN by Physical Value (Ohms/Farads)."""
     order = [
         "PCB",
@@ -731,7 +724,7 @@ def sort_inventory(inventory: InventoryType) -> List[Tuple[str, PartData]]:
     # Map name to index for sorting
     pmap = {name: i for i, name in enumerate(order)}
 
-    def sort_key(item: Tuple[str, PartData]) -> Tuple[int, float, str]:
+    def sort_key(item: tuple[str, PartData]) -> tuple[int, float, str]:
         key = item[0]
         if " | " not in key:
             return (999, 0.0, key)
@@ -749,7 +742,7 @@ def sort_inventory(inventory: InventoryType) -> List[Tuple[str, PartData]]:
     return sorted(inventory.items(), key=sort_key)
 
 
-def parse_value_to_float(val_str: str) -> Optional[float]:
+def parse_value_to_float(val_str: str) -> float | None:
     """
     Reduces component values to their base SI unit (Ohms/Farads).
     Handles: '10k', '4.7u', '100', '1M'
@@ -868,7 +861,7 @@ def get_standard_hardware(inventory: InventoryType, pedal_count: int = 1) -> Non
         val: str,
         qty_per_pedal: int,
         note: str,
-        qty_override: Optional[int] = None,
+        qty_override: int | None = None,
     ):
         """Standardizes the injection logic."""
         key = f"{category} | {val}"
@@ -944,7 +937,7 @@ def get_standard_hardware(inventory: InventoryType, pedal_count: int = 1) -> Non
 
 def parse_pedalpcb_pdf(
     filepath: str, source_name: str
-) -> Tuple[InventoryType, StatsDict]:
+) -> tuple[InventoryType, StatsDict]:
     """
     Parses a PedalPCB Build Document (PDF).
     Strategy 1: Visual Table Extraction (Lines)
@@ -1127,9 +1120,12 @@ def parse_pedalpcb_pdf(
                     # 1. Clean Value (Strip parentheses, etc)
                     # e.g. "(1/4W)" -> "1/4W"
                     # Only remove brackets if they surround the whole string
-                    if val_str.startswith("(") and val_str.endswith(")"):
-                        val_str = val_str[1:-1].strip()
-                    elif val_str.startswith("[") and val_str.endswith("]"):
+                    if (
+                        val_str.startswith("(")
+                        and val_str.endswith(")")
+                        or val_str.startswith("[")
+                        and val_str.endswith("]")
+                    ):
                         val_str = val_str[1:-1].strip()
 
                     # [DEBUG] Trace the Cleaned Value
@@ -1257,7 +1253,7 @@ def parse_user_inventory(filepath: str) -> InventoryType:
         lambda: {"qty": 0, "refs": [], "sources": defaultdict(list)}
     )
 
-    with open(filepath, "r", encoding="utf-8-sig") as f:
+    with open(filepath, encoding="utf-8-sig") as f:
         reader = csv.DictReader(f)
         for row in reader:
             # Flexible column names

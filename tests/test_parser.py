@@ -1,24 +1,27 @@
-import pytest
 from collections import defaultdict
 from typing import cast
-from hypothesis import given, strategies as st
-from src.presets import BOM_PRESETS
+
+import pytest
+from hypothesis import given
+from hypothesis import strategies as st
+
 from src.bom_lib import (
     InventoryType,
-    parse_with_verification,
-    get_buy_details,
-    parse_value_to_float,
-    float_to_search_string,
-    float_to_display_string,
-    get_standard_hardware,
-    get_spec_type,
-    generate_search_term,
-    generate_tayda_url,
-    expand_refs,
-    parse_user_inventory,
     calculate_net_needs,
     deduplicate_refs,
+    expand_refs,
+    float_to_display_string,
+    float_to_search_string,
+    generate_search_term,
+    generate_tayda_url,
+    get_buy_details,
+    get_spec_type,
+    get_standard_hardware,
+    parse_user_inventory,
+    parse_value_to_float,
+    parse_with_verification,
 )
+from src.presets import BOM_PRESETS
 
 # Standard Unit Tests
 
@@ -462,8 +465,8 @@ Capacitors,100n,50
 Resistors,1k5,20
 """
     # Create temp file
-    import tempfile
     import os
+    import tempfile
 
     with tempfile.NamedTemporaryFile(mode="w+", delete=False, suffix=".csv") as tmp:
         tmp.write(csv_content)
@@ -520,10 +523,7 @@ def test_preset_integrity():
     """
     for name, data in BOM_PRESETS.items():
         # Handle new Dict format vs Legacy string
-        if isinstance(data, dict):
-            raw_text = data["bom_text"]
-        else:
-            raw_text = data
+        raw_text = data["bom_text"] if isinstance(data, dict) else data
 
         # Sanity check: Text should exist
         assert raw_text.strip(), f"Preset '{name}' is empty!"

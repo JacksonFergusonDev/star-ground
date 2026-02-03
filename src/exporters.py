@@ -1,10 +1,10 @@
 import csv
 import io
-from typing import List, Dict, Any
+from typing import Any
 
 
 def generate_shopping_list_csv(
-    data: List[Dict[str, Any]], use_excel_formulas: bool = False
+    data: list[dict[str, Any]], use_excel_formulas: bool = False
 ) -> bytes:
     """Generates the shopping list CSV bytes."""
     csv_buf = io.StringIO()
@@ -39,7 +39,7 @@ def generate_shopping_list_csv(
     return csv_buf.getvalue().encode("utf-8-sig")
 
 
-def generate_stock_update_csv(data: List[Dict[str, Any]]) -> bytes:
+def generate_stock_update_csv(data: list[dict[str, Any]]) -> bytes:
     """Calculates new stock levels and returns CSV bytes."""
     stock_update_buf = io.StringIO()
     stock_fields = ["Category", "Part", "Qty"]
