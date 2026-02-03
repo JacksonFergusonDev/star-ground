@@ -80,8 +80,8 @@ replace = "v{new_version}"
 
 [[tool.bumpversion.files]]
 filename = "uv.lock"
-search = "name = \"git-pulsar\"\nversion = \"{current_version}\""
-replace = "name = \"git-pulsar\"\nversion = \"{new_version}\""
+search = "name = \"star-ground\"\nversion = \"{current_version}\""
+replace = "name = \"star-ground\"\nversion = \"{new_version}\""
 
 [tool.ruff]
 # Target Python 3.13 for code generation and linting analysis
