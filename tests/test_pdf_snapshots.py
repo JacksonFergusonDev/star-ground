@@ -1,7 +1,9 @@
-import pytest
-import os
 import json
 import logging
+import os
+
+import pytest
+
 from src.bom_lib import parse_pedalpcb_pdf
 
 # Logging Config
@@ -40,7 +42,7 @@ def load_snapshot(filename):
     path = os.path.join(SNAPSHOTS_DIR, filename)
     if not os.path.exists(path):
         return None
-    with open(path, "r", encoding="utf-8") as f:
+    with open(path, encoding="utf-8") as f:
         return json.load(f)
 
 
@@ -54,7 +56,7 @@ def save_snapshot(filename, data):
 # 🔍 Gather all PDFs in the samples folder (Recursive)
 pdf_files = []
 if os.path.exists(SAMPLES_DIR):
-    for root, dirs, files in os.walk(SAMPLES_DIR):
+    for root, _dirs, files in os.walk(SAMPLES_DIR):
         for file in files:
             if file.endswith(".pdf"):
                 # We store the full relative path so pytest can find it later

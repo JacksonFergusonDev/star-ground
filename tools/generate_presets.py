@@ -52,7 +52,7 @@ def generate_presets():
 
     print(f"🔍 Scanning {INPUT_DIR}...")
 
-    for root, dirs, files in os.walk(INPUT_DIR):
+    for root, _dirs, files in os.walk(INPUT_DIR):
         for file in files:
             file_path = os.path.join(root, file)
             filename_no_ext = os.path.splitext(file)[0]
@@ -84,7 +84,7 @@ def generate_presets():
             if file.lower().endswith(".txt"):
                 # CASE A: Tayda / Raw Text
                 # Trust the user's formatting (app.py verifies it anyway)
-                with open(file_path, "r", encoding="utf-8") as f:
+                with open(file_path, encoding="utf-8") as f:
                     final_text = f.read()
                     print(f"   📄 Read Text: {file}")
 
