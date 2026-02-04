@@ -28,10 +28,10 @@ from src.bom_lib import (
     rename_source_in_inventory,
     sort_inventory,
 )
+from src.bom_lib.presets import BOM_PRESETS
 from src.exporters import generate_shopping_list_csv, generate_stock_update_csv
 from src.feedback import save_feedback
 from src.pdf_generator import generate_master_zip, generate_pdf_bundle
-from src.presets import BOM_PRESETS
 
 st.set_page_config(page_title="Star Ground", page_icon="⚡")
 
