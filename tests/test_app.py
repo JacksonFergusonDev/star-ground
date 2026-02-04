@@ -5,7 +5,7 @@ import pytest
 from streamlit.testing.v1 import AppTest
 
 from src.bom_lib import InventoryType
-from src.presets import BOM_PRESETS
+from src.bom_lib.presets import BOM_PRESETS
 
 
 # --- Helpers ---

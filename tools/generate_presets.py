@@ -1,48 +1,12 @@
 import os
-import sys
 
-# Add the parent directory to sys.path to access src.bom_lib
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-from src.bom_lib import parse_pedalpcb_pdf, sort_inventory
+from src.bom_lib import parse_pedalpcb_pdf, serialize_inventory
 
 INPUT_DIR = "raw_boms"
-OUTPUT_FILE = "src/presets.py"
+OUTPUT_FILE = "src/bom_lib/presets.py"
 
 
-def serialize_inventory(inventory):
-    """
-    Converts the parsed dictionary back into the string format app.py expects.
-    e.g. {'Resistors | 10k': refs=['R1', 'R2']} -> "R1 10k\nR2 10k"
-    """
-    lines = []
-
-    # helper to clean the value (remove " | " prefix)
-    def get_val(key):
-        if " | " in key:
-            return key.split(" | ", 1)[1]
-        return key
-
-    # Sort so the output text is tidy
-    sorted_items = sort_inventory(inventory)
-
-    for key, data in sorted_items:
-        clean_val = get_val(key)
-
-        # If we have specific refs (R1, C1), list them individually
-        if data["refs"]:
-            for ref in data["refs"]:
-                # Ignore generic hardware refs if they slipped in
-                if ref != "HW":
-                    lines.append(f"{ref} {clean_val}")
-        else:
-            # Fallback for things without refs (rare in presets)
-            lines.append(f"{clean_val} (Qty: {data['qty']})")
-
-    return "\n".join(lines)
-
-
-def generate_presets():
+def main():
     if not os.path.exists(INPUT_DIR):
         os.makedirs(INPUT_DIR)
         print(f"Created directory '{INPUT_DIR}'.")
@@ -97,8 +61,6 @@ def generate_presets():
                     inv, stats = parse_pedalpcb_pdf(file_path, source_name=project_name)
 
                     if stats["parts_found"] > 0:
-                        final_text = serialize_inventory(inv)
-
                         # Use extracted title if available
                         extracted = stats.get("extracted_title")
                         if extracted:
@@ -114,6 +76,7 @@ def generate_presets():
                             inv[key]["qty"] += 1
                             inv[key]["refs"].append("PCB")
 
+                        # Use the shared library function to format the output
                         final_text = serialize_inventory(inv)
                     else:
                         print(f"   ⚠️ Skipping {file}: No parts found.")
@@ -163,4 +126,4 @@ def generate_presets():
 
 
 if __name__ == "__main__":
-    generate_presets()
+    main()
