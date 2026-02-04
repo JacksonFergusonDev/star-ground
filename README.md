@@ -119,22 +119,29 @@ In hardware prototyping, the cost of downtime exceeds the cost of inventory.
 ├── assets/                <-- Static assets (images, demos)
 ├── Dockerfile             <-- Container configuration
 ├── examples/              <-- Output: Sample generated artifacts
-│   └── Pedal_Build_Pack_Complete/
+│   └── Star_Ground_Artifacts/
 │       ├── Field Manuals/
 │       ├── Sticker Sheets/
 │       ├── Source Documents/
-│       ├── Pedal Shopping List.csv
+│       ├── Shopping List.csv
 │       └── My Inventory Updated.csv
 ├── raw_boms/              <-- Input: Source files for the Presets Library
 │   ├── pedalpcb/
 │   └── tayda/
 ├── src/                   <-- Application Core
-│   ├── bom_lib.py         <-- Logic: Regex engine & buying rules
-│   ├── constants.py       <-- Data: Static lookups and regex patterns
+│   ├── bom_lib/           <-- Domain Logic Package
+│   │   ├── __init__.py    <-- Public API exposure
+│   │   ├── classifier.py  <-- Logic: Component identification heuristics
+│   │   ├── constants.py   <-- Data: Static lookups and regex patterns
+│   │   ├── manager.py     <-- Logic: Inventory mutation & net needs calculation
+│   │   ├── parser.py      <-- Logic: PDF/CSV ingestion engines
+│   │   ├── presets.py     <-- Data: Library of known pedal circuits
+│   │   ├── sourcing.py    <-- Logic: Purchasing rules & hardware injection
+│   │   ├── types.py       <-- Data: Type definitions (TypedDicts)
+│   │   └── utils.py       <-- Logic: String parsing & normalization
 │   ├── exporters.py       <-- Logic: CSV/Excel generation
 │   ├── feedback.py        <-- Logic: Google Sheets API integration
-│   ├── pdf_generator.py   <-- Output: Field Manuals & Sticker Sheets
-│   └── presets.py         <-- Data: Library of known pedal circuits
+│   └── pdf_generator.py   <-- Output: Field Manuals & Sticker Sheets
 ├── tests/                 <-- QA Suite
 │   ├── samples/           <-- Real-world PDF/Text inputs for regression
 │   └── snapshots/         <-- Golden Master JSONs for PDF testing
