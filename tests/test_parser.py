@@ -21,7 +21,7 @@ from src.bom_lib import (
     parse_value_to_float,
     parse_with_verification,
 )
-from src.presets import BOM_PRESETS
+from src.bom_lib.presets import BOM_PRESETS
 
 # Standard Unit Tests
 
