@@ -133,3 +133,40 @@ def rename_source_in_inventory(
     for part in inventory.values():
         if old_name in part["sources"]:
             part["sources"][new_name] = part["sources"].pop(old_name)
+
+
+def serialize_inventory(inventory: InventoryType) -> str:
+    """
+    Converts the inventory dict back into the standardized text format.
+    e.g. {'Resistors | 10k': refs=['R1', 'R2']} -> "R1 10k\\nR2 10k"
+
+    Args:
+        inventory: The populated inventory dictionary.
+
+    Returns:
+        A newline-separated string suitable for the 'Manual Input' text area.
+    """
+    lines = []
+
+    def get_val(key: str) -> str:
+        if " | " in key:
+            return key.split(" | ", 1)[1]
+        return key
+
+    # Use the existing sort logic in this module
+    sorted_items = sort_inventory(inventory)
+
+    for key, data in sorted_items:
+        clean_val = get_val(key)
+
+        # If we have specific refs (R1, C1), list them individually
+        if data["refs"]:
+            for ref in data["refs"]:
+                # Ignore generic hardware refs if they slipped in
+                if ref != "HW":
+                    lines.append(f"{ref} {clean_val}")
+        else:
+            # Fallback for things without refs (rare in presets)
+            lines.append(f"{clean_val} (Qty: {data['qty']})")
+
+    return "\n".join(lines)

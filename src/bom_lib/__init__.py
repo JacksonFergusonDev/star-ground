@@ -8,6 +8,7 @@ and sourcing.
 from .manager import (
     calculate_net_needs,
     rename_source_in_inventory,
+    serialize_inventory,
     sort_inventory,
 )
 from .parser import (
@@ -48,7 +49,7 @@ __all__ = [
     "calculate_net_needs",
     "rename_source_in_inventory",
     "sort_inventory",
-    # sourcing
+    "serialize_inventory",
     "generate_pedalpcb_url",
     "generate_search_term",
     "generate_tayda_url",
