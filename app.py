@@ -37,7 +37,7 @@ from src.pdf_generator import generate_master_zip, generate_pdf_bundle
 
 st.set_page_config(page_title="Star Ground", page_icon="⚡")
 
-# Hide the native dataframe toolbar (Search/Download)
+# Hide the native Streamlit dataframe toolbar (Search/Download)
 st.markdown(
     """
 <style>
@@ -58,12 +58,13 @@ In circuit design, a **Star Ground** is the reference point where all signal pat
 This tool serves the same function for your logistics: it aggregates BOMs, subtracts inventory, and generates clean manufacturing data to eliminate the "noise" of disorganized spreadsheets.
 """)
 
+# Initialize session state for inventory and statistics
 if "inventory" not in st.session_state:
     st.session_state.inventory = None
 if "stats" not in st.session_state:
     st.session_state.stats = None
 
-# Initialize Slots
+# Initialize session state for pedal slots
 if "pedal_slots" not in st.session_state:
     init_slots: list[dict[str, Any]] = [
         {"id": str(uuid.uuid4()), "name": "", "method": "Paste Text"}
@@ -72,24 +73,43 @@ if "pedal_slots" not in st.session_state:
 
 
 def add_slot():
+    """Appends a new empty pedal slot to the session state."""
     st.session_state.pedal_slots.append(
         {"id": str(uuid.uuid4()), "name": "", "method": "Paste Text"}
     )
 
 
 def remove_slot(idx):
+    """
+    Removes a pedal slot from the session state by index.
+
+    Args:
+        idx (int): The index of the slot to remove.
+    """
     st.session_state.pedal_slots.pop(idx)
 
 
 def process_slot_data(slot, source_name):
     """
-    Unified handler for Text, File, and URL inputs.
-    Returns: (Inventory, StatsDict, Detected_Name_Or_None)
+    Unified handler for processing Text, File, and URL inputs.
+
+    Parses the data contained in a slot based on the selected input method
+    and returns the resulting inventory and statistics.
+
+    Args:
+        slot (dict): The slot dictionary containing method, data, and metadata.
+        source_name (str): The display name for the source (used for logging/errors).
+
+    Returns:
+        tuple: A tuple containing:
+            - InventoryType: The parsed inventory structure.
+            - StatsDict: Parsing statistics (lines read, parts found, etc.).
+            - str or None: The detected project title, if extraction was successful.
     """
     method = slot["method"]
     data = slot.get("data")
 
-    # 1. Early Exit
+    # 1. Handle empty data case
     if not data:
         return (
             create_empty_inventory(),
@@ -99,7 +119,7 @@ def process_slot_data(slot, source_name):
 
     inv, stats = create_empty_inventory(), {}
 
-    # 2. Strategy Pattern
+    # 2. Select extraction strategy based on input method
     try:
         # A. PASTE TEXT / PRESET
         if method in ["Paste Text", "Preset"]:
@@ -115,7 +135,7 @@ def process_slot_data(slot, source_name):
             )
 
             if is_pdf:
-                slot["cached_pdf_bytes"] = response.content  # Cache for Zip
+                slot["cached_pdf_bytes"] = response.content  # Cache for Export
                 with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
                     tmp.write(response.content)
                     tmp_path = tmp.name
@@ -131,7 +151,7 @@ def process_slot_data(slot, source_name):
 
         # C. UPLOAD FILE
         elif method == "Upload File":
-            # Data is UploadedFile object
+            # Data is an UploadedFile object
             f = data
             f.seek(0)
             if f.name.lower().endswith(".pdf"):
@@ -165,7 +185,17 @@ def process_slot_data(slot, source_name):
 
 def render_preset_selector(slot, idx):
     """
-    Renders a 3-stage smart selector for a specific slot.
+    Renders a 3-stage smart selector widget for a specific slot.
+
+    Includes filters for Source and Category to narrow down the main
+    project selection list.
+
+    Args:
+        slot (dict): The slot dictionary to render controls for.
+        idx (int): The index of the slot (unused in logic but useful for keys).
+
+    Returns:
+        Any: The Streamlit widget object for the main selector.
     """
     # Load metadata (cached)
     all_sources, cat_map, lookup = get_preset_metadata()
@@ -174,7 +204,7 @@ def render_preset_selector(slot, idx):
     c_filt1, c_filt2, c_main = st.columns([1, 1, 2])
 
     # --- 1. Source Filter ---
-    # We use session state to remember the filter per slot
+    # Use session state to persist the filter choice per slot
     src_key = f"filter_src_{slot['id']}"
     selected_src = c_filt1.selectbox(
         "Source",
@@ -185,7 +215,7 @@ def render_preset_selector(slot, idx):
     )
 
     # --- 2. Category Filter ---
-    # Dynamic options based on Source
+    # Dynamic options based on Source selection
     if selected_src != "All":
         cat_options = ["All"] + cat_map.get(selected_src, [])
     else:
@@ -265,9 +295,13 @@ def render_preset_selector(slot, idx):
     return selection
 
 
-# Callback to handle preset changes safely
 def update_from_preset(slot_id):
-    """Callback: Updates slot data and name when preset changes."""
+    """
+    Callback to update slot data and name when the preset selection changes.
+
+    Args:
+        slot_id (str): The unique identifier for the slot being updated.
+    """
     # Find the specific slot by ID
     slot = next((s for s in st.session_state.pedal_slots if s["id"] == slot_id), None)
     if not slot:
@@ -316,7 +350,13 @@ def update_from_preset(slot_id):
 
 
 def on_method_change(slot_id):
-    """Callback: Handle input method switches (Paste/Upload/Preset)."""
+    """
+    Callback to handle input method switches (Paste, Upload, URL, Preset).
+    Clears invalid data when switching contexts.
+
+    Args:
+        slot_id (str): The unique identifier for the slot being updated.
+    """
     slot = next((s for s in st.session_state.pedal_slots if s["id"] == slot_id), None)
     if not slot:
         return
@@ -398,7 +438,7 @@ def on_method_change(slot_id):
 st.divider()
 st.subheader("1. Project Configuration")
 
-# Placeholder Examples
+# Placeholder Examples for UI hints
 PLACEHOLDERS = [
     "Big Muff",
     "Pro Co RAT",
@@ -584,7 +624,7 @@ if st.button("Generate Master List", type="primary", width="stretch"):
     else:
         st.toast("Master List Generated Successfully", icon="✅")
 
-# Main Process
+# Main Process Flow
 if st.session_state.inventory and st.session_state.stats:
     inventory = copy.deepcopy(st.session_state.inventory)
     stats = cast(StatsDict, st.session_state.stats)
@@ -603,7 +643,7 @@ if st.session_state.inventory and st.session_state.stats:
     if stats["parts_found"] == 0:
         st.stop()
 
-    # Check for junk
+    # Check for junk / parsing residuals
     suspicious = get_residual_report(stats)
     if suspicious:
         st.warning(f"⚠️ Skipped {len(suspicious)} lines that looked important:")
@@ -695,7 +735,7 @@ if st.session_state.inventory and st.session_state.stats:
         else:
             origin = "Circuit Board"
 
-        # Nerd Economics applies to the NET need (Deficit)
+        # Calculate purchasing requirements based on net deficit
         buy_qty, note = get_buy_details(category, value, net_qty)
 
         # Append context from Auto-Inject if present
@@ -743,7 +783,7 @@ if st.session_state.inventory and st.session_state.stats:
     # 3. Render
     st.subheader("🛒 Master Shopping List")
 
-    # Dynamic Columns (Change 1)
+    # Dynamic Columns (Conditionally add stock columns)
     display_cols = [
         "Category",
         "Part",
@@ -785,7 +825,7 @@ if st.session_state.inventory and st.session_state.stats:
         help="Excel mode creates clickable 'Buy' links. Standard mode saves the full https:// URL.",
     )
 
-    # GENERATE EXPORTS
+    # Generate Exports
     is_excel = "Excel" in link_format
     csv_out = generate_shopping_list_csv(final_data, use_excel_formulas=is_excel)
     stock_update_csv = generate_stock_update_csv(final_data)

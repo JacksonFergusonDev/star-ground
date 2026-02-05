@@ -1,3 +1,14 @@
+"""
+Unit and Property-Based Tests for the Parser and Core Business Logic.
+
+This suite covers:
+1. Basic BOM parsing and normalization.
+2. Advanced parsing features (Ranges, PCB detection, exclusions).
+3. "Nerd Economics" (purchasing logic and buffers).
+4. Component classification and search term generation.
+5. Property-based stress testing using Hypothesis.
+"""
+
 from collections import defaultdict
 from typing import cast
 
@@ -23,11 +34,16 @@ from src.bom_lib import (
     parse_with_verification,
 )
 
-# Standard Unit Tests
+# --- Standard Unit Tests ---
 
 
 def test_basic_resistor_parsing():
-    """Does it handle a perfect input?"""
+    """
+    Verifies the 'Happy Path' for parsing a standard component line.
+
+    Ensures that a simple string like "R1 10k" is correctly parsed into
+    the inventory structure with the right quantity and source mapping.
+    """
     raw_text = "R1 10k"
     inventory, stats = parse_with_verification([raw_text], source_name="Test Bench")
 
@@ -41,12 +57,15 @@ def test_basic_resistor_parsing():
 
 def test_source_tracking_logic():
     """
-    Verify that we can distinguish WHERE a part came from.
+    Verifies that the parser correctly aggregates sources for a single part.
+
+    When the same part appears in multiple projects (or multiple times in one),
+    we must track exactly which project requested which specific references.
     """
     raw_text = "R1 10k"
     inventory, _ = parse_with_verification([raw_text], source_name="Big Muff")
 
-    # Simulate a merge (manually adding a second source)
+    # Simulate a merge operation (manually adding a second source)
     inventory["Resistors | 10k"]["qty"] += 1
     inventory["Resistors | 10k"]["sources"]["Tube Screamer"].append("R5")
 
@@ -57,8 +76,12 @@ def test_source_tracking_logic():
 
 
 def test_pcb_trap():
-    """Does it handle the permissive PCB logic (PCB anywhere in line)?"""
-    # Parser now expects "PCB" to appear anywhere in the line
+    """
+    Verifies the relaxed PCB detection logic.
+
+    The parser should identify a line as a PCB if the keyword "PCB" appears
+    anywhere in the text, handling permissive formatting (e.g., project titles).
+    """
     raw_text = "BIG MUFF DIY PCB GUITAR EFFECT"
     inventory, stats = parse_with_verification([raw_text], source_name="My Build")
 
@@ -69,8 +92,11 @@ def test_pcb_trap():
 
 def test_2n5457_behavior():
     """
-    Ensure we do NOT auto-replace 2N5457 or inject adapters.
-    The user is smart; we just warn them in the notes.
+    Verifies specific handling of the 2N5457 JFET logic.
+
+    Legacy THT parts (2N5457) should NOT be auto-replaced, nor should adapters
+    be injected unless explicitly requested. We assume the user might have
+    actual vintage stock or specifically wants the THT version.
     """
     # Case 1: Vintage THT Part
     raw_text = "Q1 2N5457"
@@ -87,12 +113,17 @@ def test_2n5457_behavior():
 
     # Should stay as MMBF5457
     assert inventory_2["Transistors | MMBF5457"]["qty"] == 1
-    # Should NOT inject adapter (User might have SOT-23 pads)
+    # Should NOT inject adapter (User might have SOT-23 pads on PCB)
     assert inventory_2.get("Hardware/Misc | SMD_ADAPTER_BOARD", {}).get("qty", 0) == 0
 
 
 def test_warning_flags():
-    """Verify that get_buy_details generates the correct warnings."""
+    """
+    Verifies that `get_buy_details` generates appropriate warning flags.
+
+    Ensures that obsolete parts and SMD components trigger visual warnings
+    in the final shopping list.
+    """
     # Test Obsolete Warning
     _, note = get_buy_details("Transistors", "2N5457", 1)
     assert "Obsolete" in note
@@ -102,14 +133,17 @@ def test_warning_flags():
     assert "SMD Part" in note
 
 
-# Stress Testing
+# --- Stress Testing ---
 
 
 @given(st.text())
 def test_parser_never_crashes(garbage_string):
     """
-    STRESS TEST: Feed the parser absolute garbage (emojis, chinese characters,
-    binary data, massive strings) and ensure it NEVER raises an exception.
+    Hypothesis Stress Test: Fuzzing the parser input.
+
+    Feeds the parser absolute garbage (emojis, chinese characters, binary data,
+    massive strings) to ensure it handles exceptions gracefully and NEVER crashes
+    the application logic.
     """
     try:
         inventory, stats = parse_with_verification([garbage_string])
@@ -118,29 +152,33 @@ def test_parser_never_crashes(garbage_string):
         assert isinstance(stats, dict)
 
     except Exception as e:
-        # If the parser crashes, this test fails and prints the input that killed it
+        # If the parser crashes, fail the test and print the input that killed it
         pytest.fail(f"Parser crashed on input: {garbage_string!r} with error: {e}")
 
 
 @given(st.integers(min_value=1, max_value=1000))
 def test_buy_logic_scaling(qty):
     """
-    STRESS TEST: Verify that 'Buy Qty' is ALWAYS >= 'BOM Qty'
-    regardless of how many parts we order.
+    Hypothesis Property Test: Quantity Scaling Integrity.
+
+    Verifies the invariant that 'Buy Qty' must ALWAYS be >= 'BOM Qty',
+    regardless of the scale (from 1 to 1000 items).
     """
     category = "Resistors"
     val = "10k"
 
     buy_qty, note = get_buy_details(category, val, qty)
 
-    # We should never buy FEWER than we need
+    # Invariant: We should never buy FEWER than we need
     assert buy_qty >= qty
 
 
 def test_float_engine_round_trip():
     """
-    Verifies the full lifecycle of a value.
-    Raw -> Float -> Display
+    Verifies the full lifecycle of component value normalization.
+
+    Workflow: Raw String -> Float (Backend) -> Display String / Search String.
+    Ensures that "1k5" becomes 1500.0 and converts back correctly.
     """
     # Test Case: 1.5k Resistor
     val = parse_value_to_float("1k5")
@@ -159,14 +197,19 @@ def test_float_engine_round_trip():
     assert val1 is not None
 
     # We normalized 100n -> 1.0e-7.
-    # Our renderer might output "100n" or "0.1u" depending on implementation details,
-    # but it will definitely be one of them.
+    # Our renderer might output "100n" or "0.1u" depending on formatting rules,
+    # but the numeric value must be correct.
     out = float_to_search_string(val1)
     assert "u" in out or "n" in out
 
 
 def test_bs1852_formatting():
-    """Does the 'Pretty' renderer handle the decimal swap?"""
+    """
+    Verifies the 'BS 1852' (European) formatting style.
+
+    Ensures decimal points are replaced by unit multipliers (e.g., 4.7k -> 4k7)
+    to prevent misreading dirty prints.
+    """
     val = 1500.0  # 1.5k
     assert float_to_display_string(val) == "1k5"
 
@@ -179,7 +222,10 @@ def test_bs1852_formatting():
 
 def test_suspicious_physics_warnings():
     """
-    Ensure we flag physically improbable values.
+    Verifies validation against physical reality.
+
+    Ensures the system flags values that are likely typos because they are
+    physically improbable (e.g., a 1 Farad capacitor or 0.1 Ohm resistor).
     """
     # 1. Resistor too small (0.1 Ohm)
     # Note: 0.1 -> parse_value_to_float -> 0.1
@@ -200,8 +246,9 @@ def test_suspicious_physics_warnings():
 
 def test_resistor_rounding_logic():
     """
-    Verify 'Nerd Economics' for Resistors:
-    Buffer +5, then Round UP to nearest 10.
+    Verifies 'Nerd Economics' purchasing logic for Resistors.
+
+    Rule: Add a buffer of 5, then round UP to the nearest 10.
     """
     # Case 1: Need 1. Buffer = 6. Round up -> 10.
     qty, _ = get_buy_details("Resistors", "10k", 1)
@@ -218,7 +265,12 @@ def test_resistor_rounding_logic():
 
 def test_capacitor_material_recommendations():
     """
-    Verify MLCC vs Box Film vs Electrolytic logic.
+    Verifies material suggestions based on capacitance range.
+
+    Logic:
+    - Pico (<= 1nF): Class 1 Ceramic (C0G/NP0)
+    - Nano (> 1nF, < 1uF): Box Film
+    - Bulk (> 1uF): Electrolytic
     """
     # Case 1: Pico range (<= 1nF) -> Class 1 Ceramic (C0G)
     _, note_p = get_buy_details("Capacitors", "100p", 1)
@@ -241,8 +293,14 @@ def test_capacitor_material_recommendations():
 
 def test_hardware_injection_and_smart_merge():
     """
-    Verify get_standard_hardware calculates standard items
-    AND merges them into inventory if they already exist.
+    Verifies that `get_standard_hardware` correctly injects standard parts
+    and merges them into existing inventory.
+
+    Scenario:
+    - Inventory has 2x 3.3k resistors.
+    - Hardware injection adds 1x 3.3k (for LED CLR).
+    - Result: 3x 3.3k total, with source tags updated.
+    - Also validates dynamic knob calculation based on Potentiometer count.
     """
     # Setup: Inventory has 2 existing 3.3k resistors (for the circuit)
     # and 3 Pots (which implies we need 3 Knobs)
@@ -275,11 +333,11 @@ def test_hardware_injection_and_smart_merge():
     assert inventory[knob_key]["qty"] == 3
 
 
-# Search Engine & Vendor Integration Tests
+# --- Search Engine & Vendor Integration Tests ---
 
 
 def test_spec_type_logic():
-    """Verify we correctly identify capacitor types based on value."""
+    """Verifies correct capacitor dielectric classification based on value."""
     # Pico range -> MLCC
     assert get_spec_type("Capacitors", "100p") == "MLCC"
 
@@ -294,13 +352,18 @@ def test_spec_type_logic():
 
 
 def test_vintage_search_mapping():
-    """Verify JRC4558 maps to NJM4558."""
+    """Verifies that generic vintage part numbers map to modern equivalents."""
     res = generate_search_term("ICs", "JRC4558")
     assert res == "NJM4558D"
 
 
 def test_expert_system_recommendations():
-    """Verify Silicon Sommelier logic for ICs and Diodes."""
+    """
+    Verifies 'Silicon Sommelier' expert recommendations.
+
+    Ensures that generic parts (TL072, 1N4148) get annotated with
+    audiophile-grade alternatives or usage notes.
+    """
     # 1. IC Mojo (TL072 -> OPA2134)
     _, note_ic = get_buy_details("ICs", "TL072", 1)
     assert "OPA2134" in note_ic
@@ -313,7 +376,10 @@ def test_expert_system_recommendations():
 
 
 def test_fuzz_germanium_trigger():
-    """Verify Fuzz PCBs trigger Germanium Transistor injection."""
+    """
+    Verifies that detecting a 'Fuzz Face' PCB triggers the injection
+    of Germanium Transistors into the shopping list.
+    """
     # Setup inventory with a Fuzz PCB
     inventory = cast(
         InventoryType,
@@ -334,7 +400,9 @@ def test_fuzz_germanium_trigger():
 
 
 def test_search_term_generation():
-    """Verify the string building logic for Tayda."""
+    """
+    Verifies that search strings are constructed correctly for Tayda Electronics.
+    """
     # 1. Resistors (Must include keywords)
     res = generate_search_term("Resistors", "10k")
     assert res == "10k ohm 1/4w metal film"
@@ -359,7 +427,7 @@ def test_search_term_generation():
 
 
 def test_tayda_url_encoding():
-    """Does it properly encode spaces and special chars?"""
+    """Verifies correct URL encoding of search terms (spaces -> +, / -> %2F)."""
     term = "10k ohm 1/4w"
     url = generate_tayda_url(term)
 
@@ -369,8 +437,9 @@ def test_tayda_url_encoding():
 
 def test_hardware_search_term_validity():
     """
-    Ensure injected hardware keys generate valid search terms/links.
-    (Logic moved from bom_lib to app.py, so we simulate the app's utilization).
+    Verifies that auto-injected hardware keys generate valid search terms/links.
+
+    (Simulates usage pattern in app.py).
     """
     # Fix: Must use defaultdict to prevent KeyError during injection
     inventory = cast(
@@ -395,12 +464,13 @@ def test_hardware_search_term_validity():
     assert "1590B+Enclosure" in url
 
 
-# Range Expansion Tests
+# --- Range Expansion Tests ---
 
 
 def test_range_expansion_logic():
     """
-    Verify the regex logic for expanding R1-R4 (Commit 1).
+    Verifies the regex logic for expanding component ranges.
+    e.g., 'R1-R4' -> ['R1', 'R2', 'R3', 'R4'].
     """
     # 1. Standard Range
     assert expand_refs("R1-R4") == ["R1", "R2", "R3", "R4"]
@@ -417,7 +487,7 @@ def test_range_expansion_logic():
 
 def test_ref_expansion_integrity():
     """
-    Integration Test: Ensure parsers actually USE the expansion (Commit 1).
+    Integration Test: Verifies that the parser actually invokes expansion logic.
     """
     raw_text = "R1-R3 10k"
     inventory, _ = parse_with_verification([raw_text], source_name="Range Test")
@@ -434,13 +504,13 @@ def test_ref_expansion_integrity():
     assert "R3" in item["sources"]["Range Test"]
 
 
-# Inventory & Logistics Tests
+# --- Inventory & Logistics Tests ---
 
 
 def test_zero_buy_guard():
     """
-    Ensure we don't buy parts if Net Need is 0, even if 'Nerd Economics'
-    would usually suggest a buffer.
+    Verifies boundary conditions for purchasing logic.
+    If 'Net Need' is 0, 'Buy Qty' must be 0, regardless of standard buffers.
     """
     # Standard logic: 10k -> Buffer +5 -> Round up -> Buy 10.
     # BUT if input is 0, we must buy 0.
@@ -455,8 +525,10 @@ def test_zero_buy_guard():
 
 def test_user_inventory_parsing():
     """
-    Verify that we can digest a User Stock CSV and that values
-    are normalized to match BOM keys.
+    Integration Test: Verifies ingestion of a User Stock CSV.
+
+    Ensures that values from the CSV are normalized (1k5 -> 1.5k) to match
+    the canonical format used by BOM parsers.
     """
     # Mock CSV Content
     csv_content = """Category,Part,Qty
@@ -488,7 +560,9 @@ Resistors,1k5,20
 
 def test_net_needs_calculation():
     """
-    Verify the logic: Net = Max(0, BOM - Stock)
+    Verifies the inventory subtraction logic.
+
+    Formula: Net = Max(0, BOM_Needed - Stock_Available)
     """
     # 1. Setup BOM
     bom = cast(
@@ -518,8 +592,12 @@ def test_net_needs_calculation():
 
 def test_preset_integrity():
     """
-    Verify that every defined preset is valid, parseable BOM text.
-    This catches typos or empty strings in the presets file.
+    Verifies the integrity of the static `BOM_PRESETS` library.
+
+    Iterates through every preset to ensure:
+    1. The data structure is valid.
+    2. The text content is not empty.
+    3. The parser can successfully find parts in it.
     """
     for name, data in BOM_PRESETS.items():
         # Handle new Dict format vs Legacy string
@@ -538,7 +616,10 @@ def test_preset_integrity():
 
 def test_ref_deduplication_and_sorting():
     """
-    Verify the Field Manual helper logic (Commit 8).
+    Verifies the logic for natural sorting and deduplication of component references.
+
+    Ensures that ["R1", "R10", "R2"] sorts as ["R1", "R2", "R10"] (Human readable)
+    rather than ["R1", "R10", "R2"] (ASCII/Machine sort).
     """
     # 1. Basic Deduplication
     raw = ["R1", "R1", "R2"]
