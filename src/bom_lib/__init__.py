@@ -18,6 +18,7 @@ from .parser import (
     parse_user_inventory,
     parse_with_verification,
 )
+from .presets import BOM_PRESETS, get_preset_metadata
 from .sourcing import (
     generate_pedalpcb_url,
     generate_search_term,
@@ -67,4 +68,7 @@ __all__ = [
     "float_to_search_string",
     "parse_value_to_float",
     "get_clean_name",
+    # presets
+    "get_preset_metadata",
+    "BOM_PRESETS",
 ]
