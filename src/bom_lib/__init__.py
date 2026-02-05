@@ -7,6 +7,7 @@ and sourcing.
 
 from .manager import (
     calculate_net_needs,
+    merge_inventory,
     rename_source_in_inventory,
     serialize_inventory,
     sort_inventory,
@@ -17,6 +18,7 @@ from .parser import (
     parse_user_inventory,
     parse_with_verification,
 )
+from .presets import BOM_PRESETS, get_preset_metadata
 from .sourcing import (
     generate_pedalpcb_url,
     generate_search_term,
@@ -32,6 +34,7 @@ from .utils import (
     expand_refs,
     float_to_display_string,
     float_to_search_string,
+    get_clean_name,
     parse_value_to_float,
 )
 
@@ -57,10 +60,15 @@ __all__ = [
     "get_residual_report",
     "get_spec_type",
     "get_standard_hardware",
+    "merge_inventory",
     # utils
     "deduplicate_refs",
     "expand_refs",
     "float_to_display_string",
     "float_to_search_string",
     "parse_value_to_float",
+    "get_clean_name",
+    # presets
+    "get_preset_metadata",
+    "BOM_PRESETS",
 ]

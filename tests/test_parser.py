@@ -6,6 +6,7 @@ from hypothesis import given
 from hypothesis import strategies as st
 
 from src.bom_lib import (
+    BOM_PRESETS,
     InventoryType,
     calculate_net_needs,
     deduplicate_refs,
@@ -21,7 +22,6 @@ from src.bom_lib import (
     parse_value_to_float,
     parse_with_verification,
 )
-from src.bom_lib.presets import BOM_PRESETS
 
 # Standard Unit Tests
 
