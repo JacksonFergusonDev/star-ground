@@ -1,9 +1,25 @@
+"""
+Static Knowledge Base for the Star Ground Engine.
+
+This module serves as the central repository for:
+1.  **Physical Constants:** SI prefix multipliers for component value normalization.
+2.  **Parsing Heuristics:** Keyword lists for identifying components, knobs, and switches
+    in unstructured PDF text.
+3.  **Expert System Data:** "Silicon Sommelier" dictionaries that map generic parts
+    (like TL072) to audiophile alternatives with sonic descriptions and technical justifications.
+4.  **Exclusion Lists:** Terms used to identify and discard manufacturing artifacts (fiduciaries, test points).
+"""
+
+# --- Physics & Standards ---
+
 # SI Prefix Multipliers
+# Maps shorthand prefixes to their float multipliers.
+# Includes 'u' (legacy) and 'µ' (correct) for micro-farads.
 MULTIPLIERS = {
     "p": 1e-12,  # pico
     "n": 1e-9,  # nano
-    "u": 1e-6,  # micro (standard)
-    "µ": 1e-6,  # micro (alt)
+    "u": 1e-6,  # micro (standard text)
+    "µ": 1e-6,  # micro (alt/unicode)
     "m": 1e-3,  # milli
     "k": 1e3,  # kilo
     "K": 1e3,  # kilo (uppercase tolerance)
@@ -12,8 +28,11 @@ MULTIPLIERS = {
 }
 
 # Core Component Designators (IPC Standard)
+# Used to validate if a text token is likely a component reference (e.g., "R1", "C10").
 CORE_PREFIXES = ("R", "C", "D", "Q", "U", "IC", "SW", "X", "Y", "J")
 
+# Potentiometer Taper Codes
+# Maps the suffix character to the taper curve description.
 POT_TAPER_MAP = {
     "A": "Logarithmic",
     "B": "Linear",
@@ -22,9 +41,11 @@ POT_TAPER_MAP = {
     "G": "Graphic",
 }
 
-# Chip substitution recommendations
-# Keys are the chips found in BOM, values are fun alternatives to try.
-# Structure: (Part Name, Sonic Profile, Technical Why)
+# --- Expert System Data (The "Silicon Sommelier") ---
+
+# Operational Amplifier Substitution Table
+# Maps generic BOM parts to a list of "flavor" alternatives.
+# Schema: { Generic_Name: [ (Alt_Name, Sonic_Profile, Technical_Justification), ... ] }
 IC_ALTS = {
     # Dual Op-Amps
     "TL072": [
@@ -73,8 +94,9 @@ IC_ALTS = {
     ],
 }
 
-# Diode substitution recommendations
-# Keys are the standard BOM parts, values are (Part, Sonic Profile, Technical Why)
+# Diode Clipping Profiles
+# Maps standard switching diodes to alternatives with distinct clipping characteristics.
+# Schema: { Generic_Name: [ (Alt_Name, Sonic_Profile, Technical_Justification), ... ] }
 DIODE_ALTS = {
     "1N4148": [
         (
@@ -114,7 +136,10 @@ DIODE_ALTS = {
     ],
 }
 
-# Known Switch Labels
+# --- Parsing Heuristics & Keywords ---
+
+# Known Switch Function Labels
+# Used to detect switches in BOM descriptions.
 SWITCH_LABELS = {
     "LENGTH",
     "MODE",
@@ -130,10 +155,11 @@ SWITCH_LABELS = {
 }
 
 # Known Potentiometer Labels
-# Prefixes that indicate a potentiometer regardless of the suffix
+# Prefixes that indicate a potentiometer regardless of the suffix.
 POT_PREFIXES = {"POT", "TRIM", "VR", "VOL"}
 
-# Functional names usually associated with Potentiometers
+# Functional names usually associated with Potentiometers.
+# These help identify knobs even if the ref designator is missing or obscured.
 POT_NAMES = {
     "VOLUME",
     "TONE",
@@ -185,10 +211,11 @@ POT_NAMES = {
     "CLEAN",
 }
 
-# If the ref matches these, it's definitely a knob.
+# Union of all Potentiometer identifiers
 POT_LABELS = POT_PREFIXES | POT_NAMES
 
-# Terms found in PDF descriptions that didn't fit into the strict sets above
+# Contextual Keywords
+# Terms found in PDF descriptions that imply controls but don't fit strict categories.
 KEYWORD_EXTRAS = {
     "COLOR",
     "TEXTURE",
@@ -202,11 +229,14 @@ KEYWORD_EXTRAS = {
     "CUT",
 }
 
-# Master list for Control Keyword hunting in Build Docs (PDFs)
-# Combines all known functional names + extra descriptive terms.
-# Sorted list for deterministic regex generation.
+# Master Keyword List
+# Combines all functional names and extra descriptive terms.
+# Sorted list used for deterministic Regex generation in the PDF parser.
 KEYWORDS = sorted(list(POT_NAMES | SWITCH_LABELS | KEYWORD_EXTRAS))
 
+# Manufacturing Artifact Exclusion List
+# These tokens indicate lines in a BOM that describe non-purchasable items
+# (e.g., Test Points, Fiduciaries, PCB layers) or explicitly excluded parts.
 IGNORE_VALUES = [
     # --- Manufacturing Artifacts (Ghost Data) ---
     "TP",
