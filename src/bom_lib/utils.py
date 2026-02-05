@@ -219,3 +219,15 @@ def float_to_display_string(val: float) -> str:
             return f"{num}{suffix}{decimal_part}"
 
     return base
+
+
+def get_clean_name(raw_key: str) -> str:
+    """Parses '[Source] [Category] Name' into 'Name - Source'."""
+    if not raw_key:
+        return ""
+    match = re.match(r"^\[(.*?)\] (?:\[(.*?)\] )?(.*)$", raw_key)
+    if match:
+        src = match.group(1)
+        name = match.group(3)
+        return f"{name} - {src}"
+    return raw_key

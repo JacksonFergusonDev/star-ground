@@ -1,6 +1,5 @@
 import copy
 import os
-import re
 import tempfile
 import uuid
 from collections import defaultdict
@@ -10,6 +9,7 @@ import requests
 import streamlit as st
 
 from src.bom_lib import (
+    BOM_PRESETS,
     InventoryType,
     StatsDict,
     calculate_net_needs,
@@ -18,9 +18,12 @@ from src.bom_lib import (
     generate_search_term,
     generate_tayda_url,
     get_buy_details,
+    get_clean_name,
+    get_preset_metadata,
     get_residual_report,
     get_spec_type,
     get_standard_hardware,
+    merge_inventory,
     parse_csv_bom,
     parse_pedalpcb_pdf,
     parse_user_inventory,
@@ -28,7 +31,6 @@ from src.bom_lib import (
     rename_source_in_inventory,
     sort_inventory,
 )
-from src.bom_lib.presets import BOM_PRESETS
 from src.exporters import generate_shopping_list_csv, generate_stock_update_csv
 from src.feedback import save_feedback
 from src.pdf_generator import generate_master_zip, generate_pdf_bundle
@@ -69,18 +71,6 @@ if "pedal_slots" not in st.session_state:
     st.session_state.pedal_slots = init_slots
 
 
-def get_clean_name(raw_key):
-    """Parses '[Source] [Category] Name' into 'Name - Source'."""
-    if not raw_key:
-        return ""
-    match = re.match(r"^\[(.*?)\] (?:\[(.*?)\] )?(.*)$", raw_key)
-    if match:
-        src = match.group(1)
-        name = match.group(3)
-        return f"{name} - {src}"
-    return raw_key
-
-
 def add_slot():
     st.session_state.pedal_slots.append(
         {"id": str(uuid.uuid4()), "name": "", "method": "Paste Text"}
@@ -89,15 +79,6 @@ def add_slot():
 
 def remove_slot(idx):
     st.session_state.pedal_slots.pop(idx)
-
-
-def merge_inventory(master_inv, new_inv, multiplier):
-    """Merges a parsed BOM into the master inventory with a quantity multiplier."""
-    for key, data in new_inv.items():
-        master_inv[key]["qty"] += data["qty"] * multiplier
-        master_inv[key]["refs"].extend(data["refs"])
-        for src, refs in data["sources"].items():
-            master_inv[key]["sources"][src].extend(refs * multiplier)
 
 
 def process_slot_data(slot, source_name):
@@ -180,50 +161,6 @@ def process_slot_data(slot, source_name):
         )
 
     return inv, stats, stats.get("extracted_title")
-
-
-@st.cache_data
-def get_preset_metadata():
-    """
-    Parses BOM_PRESETS keys into a queryable structure.
-    Returns:
-        sources (list): Unique sources (e.g., 'PedalPCB', 'Tayda')
-        categories (dict): Map of Source -> List of Categories
-        lookup (list): List of dicts {'key', 'source', 'category', 'name'}
-    """
-    lookup = []
-    sources = set()
-    categories = defaultdict(set)
-
-    # Regex to handle "[Source] [Category] Name" or "[Source] Name"
-    # Matches: [Group1] (optional [Group2]) Remainder
-    pattern = re.compile(r"^\[(.*?)\] (?:\[(.*?)\] )?(.*)$")
-
-    for key in BOM_PRESETS:
-        match = pattern.match(key)
-        if match:
-            src = match.group(1)
-            cat = match.group(2) or "Misc"
-            name = match.group(3)
-
-            sources.add(src)
-            categories[src].add(cat)
-
-            lookup.append(
-                {
-                    "full_key": key,
-                    "source": src,
-                    "category": cat,
-                    "name": name,
-                }
-            )
-
-    # Sort for UI consistency
-    return (
-        sorted(list(sources)),
-        {k: sorted(list(v)) for k, v in categories.items()},
-        lookup,
-    )
 
 
 def render_preset_selector(slot, idx):

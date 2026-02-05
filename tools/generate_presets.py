@@ -3,7 +3,7 @@ import os
 from src.bom_lib import parse_pedalpcb_pdf, serialize_inventory
 
 INPUT_DIR = "raw_boms"
-OUTPUT_FILE = "src/bom_lib/presets.py"
+OUTPUT_FILE = "src/bom_lib/_presets_data.py"
 
 
 def main():
