@@ -19,12 +19,15 @@
 <img src="assets/demo.gif" alt="Demo"
      style="display:block;margin-left:auto;margin-right:auto;width:70%;" />
 
+> **Case Study:** This engine was utilized as the logistics backbone for [**Systems Audio Lab**](https://github.com/JacksonFergusonDev/systems-audio-lab), a project demonstrating the "recursive engineering" of physical instrumentation.
+
 ### ⚙️ Engineering Overview
-**A robust Python tool designed to automate the chaotic process of sourcing and assembling electronics.**
 
-It aggregates data from inconsistent Bill of Materials (BOM) sources, performs statistical verification to ensure data integrity, and applies "Nerd Economics" (heuristic safety buffering) to generate smart purchasing lists.
+In software, dependencies are resolved instantly via package managers. In hardware, dependencies are physical and finite—a single missing resistor constitutes a blocking failure that can halt a project for weeks. This is the **Logistical Entropy** I am focused on.
 
-v2.0.0 introduces a **lossless data structure** that tracks component provenance across multiple projects simultaneously, enabling batch-building logistics (e.g., "Build 2x Big Muffs and 1x Tube Screamer").
+**Star Ground** applies rigorous systems engineering principles to this chaos. It treats the Bill of Materials (BOM) not as a text file, but as a strict dependency tree. By enforcing **deterministic ingestion** (Regex over probabilistic LLMs) and **heuristic buffering** ("Nerd Economics"), it ensures that the physical compilation of a device is as reliable as the software code that runs on it.
+
+This tool transforms the procurement process from a stochastic guessing game into a reproducible data pipeline.
 
 ---
 
@@ -53,8 +56,8 @@ This tool treats BOM parsing as a data reduction problem. It doesn't just read l
 ### Key Features
 1.  **Multi-Format Ingestion:**
     * **PDF Parsing:** Extracts tables from PedalPCB build docs using visual layout analysis (hybrid grid/text strategy).
-    * **Presets Library:** Hierarchical selection of standard circuits (e.g., "Parentheses Fuzz - PedalPCB").
-    * **URL Ingestion:** Fetch BOMs directly from GitHub or raw text links.
+    * **Smart Presets:** A hierarchical browser allowing filtering by Source (e.g., PedalPCB) and Category to load standard circuit definitions.
+    * **URL Ingestion:** Fetch BOMs directly from websites like PedalPCB.
 2.  **Inventory Logistics (Net Needs):**
     * Upload your current stock CSV.
     * The engine calculates `Net Need = max(0, BOM_Qty - Stock_Qty)`.
@@ -69,28 +72,54 @@ This tool treats BOM parsing as a data reduction problem. It doesn't just read l
 
 ---
 
-## 🧠 Engineering Decisions
+## 🧠 Engineering Architecture & Decisions
 
-This project was built to solve a specific reliability problem. Here is the reasoning behind the architectural choices:
+This system is designed to bridge the gap between **Software Precision** and **Hardware Chaos**. The architectural choices prioritize data integrity and human ergonomics over simple automation.
 
-### 1. Deterministic Regex over LLMs
-While it might be easier to pass BOMs to an LLM, non-deterministic outputs are unacceptable for procurement. A hallucinated quantity results in a failed hardware build.
-* **Decision:** I implemented a **deterministic Regex parser** with a "Hybrid Strategy" for PDFs (Table Extraction + Regex Fallback) to ensure 100% repeatability.
+### 1. Physical-Digital Isomorphism (Z-Height Sorting)
+Most BOM tools sort lists alphabetically or by Reference ID (`C1, C2, R1...`). **Star Ground** sorts by **Physical Z-Height**.
+* **The Insight:** Efficient PCB assembly requires soldering low-profile components (Resistors/Diodes) before high-profile ones (Electrolytic Capacitors/Switches) to keep the board flat on the workbench.
+* **The Implementation:** The PDF generation engine (`src/pdf_generator.py`) enforces a strict topological sort order on the output artifacts. The software explicitly optimizes the *human operator's* runtime performance, reducing context switching and physical instability during assembly.
 
-### 2. Lossless Data Structure
-v1.0.0 used simple counters. v2.0.0 implements a `PartData` TypedDict that tracks specific references per source.
-* **The Benefit:** We can merge 3 different projects into one master list, but still generate individual "Field Manuals" for each project because the provenance of every `R1` is preserved.
+### 2. Hybrid Spatial-Text Ingestion
+PDFs are visual documents, not data structures. A standard text scraper loses the row/column relationships defined by the grid lines.
+* **The Strategy:** I implemented a **Hybrid Parser** that utilizes `pdfplumber` to extract table vectors (spatial analysis) first.
+* **The Fallback:** If the spatial grid is ambiguous, the system gracefully degrades to a deterministic Regex scanner. This "Defense in Depth" strategy allows the engine to digest everything from pristine digital exports to legacy documents without hallucinating data.
 
-### 3. Snapshot Testing
-To manage the fragility of PDF parsing, the test suite uses **Snapshot Testing**.
-* **The Mechanism:** The parser runs against a library of "Golden Master" PDFs. The output is compared against stored JSON snapshots. Any deviation in parsing logic triggers a regression failure, ensuring that supporting a new PDF format doesn't break support for older ones.
+### 3. Yield Management ("Nerd Economics")
+In small-batch manufacturing, the cost of a "Stockout" (halting work for a $0.05 part) is effectively infinite relative to the cost of inventory.
+* **The Algorithm:** The sourcing engine applies a **category-specific risk profile** to the "Net Needs" calculation:
+    * *Resistors:* **Round up to nearest 10** (Economy of scale; cheaper to buy 10 than 1).
+    * *Discrete Silicon:* **+1 Safety Buffer** for Transistors/Oscillators (high risk of heat damage during soldering).
+    * *ICs:* **Exact Count** (Protected by sockets, reducing risk of installation failure).
+* This transforms the purchasing logic from simple arithmetic into a risk-management strategy.
 
-### 4. Heuristic Safety Stock ("Nerd Economics")
-In hardware prototyping, the cost of downtime exceeds the cost of inventory.
-* **Decision:** I implemented a **Yield Management Algorithm** that adjusts purchase quantities based on component risk vs. cost.
-    * *High Risk / Low Cost:* Resistors get a +10 buffer.
-    * *Critical Silicon:* ICs get a +1 buffer (socketing protection).
-    * *Low Risk / High Cost:* Potentiometers and Switches get a zero buffer.
+### 4. SI Unit Normalization Engine
+Electronic component values are notoriously inconsistent (`4k7`, `4.7k`, `4700`, `4,700R`). String matching fails here.
+* **The Mechanism:** The ingestion layer (`src/bom_lib/utils.py`) acts as a recursive parser for SI prefixes (`p`, `n`, `u`, `k`, `M`). It normalizes all inputs to floating-point primitives ($4.7 \times 10^3$) before any aggregation occurs.
+* **The Result:** `4k7` and `4700` are correctly aggregated as the exact same SKU, preventing duplicate orders that string-based parsers would miss.
+
+---
+
+## 🛡️ Verification & Validation
+
+The reliability of the physical build depends entirely on the determinism of the data pipeline. To mitigate the "Logistical Entropy" of changing PDF formats, the system employs a multi-layered testing strategy:
+
+### 1. Golden Master Regression (Snapshot Testing)
+PDF parsing is inherently fragile. To ensure that updates to the parser do not silently break support for legacy formats, we utilize **Snapshot Testing**.
+* **Methodology:** The test suite parses a library of "Golden Master" PDFs (real-world build docs).
+* **Verification:** The resulting object model is serialized to JSON and diffed against a stored "Truth" file.
+* **Outcome:** Any deviation in the parsing logic—even a single changed resistor value—triggers a CI failure, guaranteeing 100% backward compatibility.
+
+### 2. Property-Based Testing (Hypothesis)
+Standard unit tests only check the "happy path." We use the **Hypothesis** library to perform property-based testing.
+* **Fuzzing:** The test runner generates thousands of semi-random inputs (malformed text, edge-case floats, Unicode injection) to "attack" the parser.
+* **Invariant Checking:** Ensures that `calculate_net_needs()` remains mathematically sound (e.g., `Net_Need >= 0`) regardless of input chaos.
+
+### 3. Headless Integration Testing
+We utilize `Streamlit.AppTest` to run headless simulations of the user interface during CI.
+* **Simulation:** The test runner instantiates the app kernel, mimics user clicks/uploads, and asserts the state of the dataframes.
+* **Scope:** Verifies the full "Paste → Parse → Download" lifecycle without requiring a browser driver.
 
 ---
 
@@ -105,7 +134,9 @@ In hardware prototyping, the cost of downtime exceeds the cost of inventory.
 -   **GitHub Actions** - Continuous Integration enforcing strict quality gates:
     -   *Linting:* Ruff
     -   *Type Safety:* Mypy
-    -   *Unit Testing:* Pytest
+    -   *Snapshot Regression Testing:* PDF "Golden Master" verification (ensures parser stability across legacy build docs)
+    -   *Property-Based Testing:* Hypothesis (Fuzzing component values to ensure mathematical invariants)
+    -   *Integration Testing:* Streamlit AppTest (Headless simulation of the full "Paste-to-PDF" user lifecycle)
     -   *Delivery:* Auto-publishes Docker images to GHCR on release
     -   *Environment:* Ubuntu Latest
 
