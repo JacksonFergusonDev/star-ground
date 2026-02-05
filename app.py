@@ -18,6 +18,7 @@ from src.bom_lib import (
     generate_search_term,
     generate_tayda_url,
     get_buy_details,
+    get_clean_name,
     get_residual_report,
     get_spec_type,
     get_standard_hardware,
@@ -68,18 +69,6 @@ if "pedal_slots" not in st.session_state:
         {"id": str(uuid.uuid4()), "name": "", "method": "Paste Text"}
     ]
     st.session_state.pedal_slots = init_slots
-
-
-def get_clean_name(raw_key):
-    """Parses '[Source] [Category] Name' into 'Name - Source'."""
-    if not raw_key:
-        return ""
-    match = re.match(r"^\[(.*?)\] (?:\[(.*?)\] )?(.*)$", raw_key)
-    if match:
-        src = match.group(1)
-        name = match.group(3)
-        return f"{name} - {src}"
-    return raw_key
 
 
 def add_slot():

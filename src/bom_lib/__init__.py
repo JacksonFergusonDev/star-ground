@@ -33,6 +33,7 @@ from .utils import (
     expand_refs,
     float_to_display_string,
     float_to_search_string,
+    get_clean_name,
     parse_value_to_float,
 )
 
@@ -65,4 +66,5 @@ __all__ = [
     "float_to_display_string",
     "float_to_search_string",
     "parse_value_to_float",
+    "get_clean_name",
 ]
