@@ -1,6 +1,5 @@
 import copy
 import os
-import re
 import tempfile
 import uuid
 from collections import defaultdict
@@ -10,6 +9,7 @@ import requests
 import streamlit as st
 
 from src.bom_lib import (
+    BOM_PRESETS,
     InventoryType,
     StatsDict,
     calculate_net_needs,
@@ -19,6 +19,7 @@ from src.bom_lib import (
     generate_tayda_url,
     get_buy_details,
     get_clean_name,
+    get_preset_metadata,
     get_residual_report,
     get_spec_type,
     get_standard_hardware,
@@ -30,7 +31,6 @@ from src.bom_lib import (
     rename_source_in_inventory,
     sort_inventory,
 )
-from src.bom_lib.presets import BOM_PRESETS
 from src.exporters import generate_shopping_list_csv, generate_stock_update_csv
 from src.feedback import save_feedback
 from src.pdf_generator import generate_master_zip, generate_pdf_bundle
@@ -161,50 +161,6 @@ def process_slot_data(slot, source_name):
         )
 
     return inv, stats, stats.get("extracted_title")
-
-
-@st.cache_data
-def get_preset_metadata():
-    """
-    Parses BOM_PRESETS keys into a queryable structure.
-    Returns:
-        sources (list): Unique sources (e.g., 'PedalPCB', 'Tayda')
-        categories (dict): Map of Source -> List of Categories
-        lookup (list): List of dicts {'key', 'source', 'category', 'name'}
-    """
-    lookup = []
-    sources = set()
-    categories = defaultdict(set)
-
-    # Regex to handle "[Source] [Category] Name" or "[Source] Name"
-    # Matches: [Group1] (optional [Group2]) Remainder
-    pattern = re.compile(r"^\[(.*?)\] (?:\[(.*?)\] )?(.*)$")
-
-    for key in BOM_PRESETS:
-        match = pattern.match(key)
-        if match:
-            src = match.group(1)
-            cat = match.group(2) or "Misc"
-            name = match.group(3)
-
-            sources.add(src)
-            categories[src].add(cat)
-
-            lookup.append(
-                {
-                    "full_key": key,
-                    "source": src,
-                    "category": cat,
-                    "name": name,
-                }
-            )
-
-    # Sort for UI consistency
-    return (
-        sorted(list(sources)),
-        {k: sorted(list(v)) for k, v in categories.items()},
-        lookup,
-    )
 
 
 def render_preset_selector(slot, idx):
