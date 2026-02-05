@@ -7,6 +7,7 @@ and sourcing.
 
 from .manager import (
     calculate_net_needs,
+    merge_inventory,
     rename_source_in_inventory,
     serialize_inventory,
     sort_inventory,
@@ -57,6 +58,7 @@ __all__ = [
     "get_residual_report",
     "get_spec_type",
     "get_standard_hardware",
+    "merge_inventory",
     # utils
     "deduplicate_refs",
     "expand_refs",

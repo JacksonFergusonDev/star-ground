@@ -170,3 +170,14 @@ def serialize_inventory(inventory: InventoryType) -> str:
             lines.append(f"{clean_val} (Qty: {data['qty']})")
 
     return "\n".join(lines)
+
+
+def merge_inventory(
+    master_inv: InventoryType, new_inv: InventoryType, multiplier: int = 1
+) -> None:
+    """Merges a parsed BOM into the master inventory with a quantity multiplier."""
+    for key, data in new_inv.items():
+        master_inv[key]["qty"] += data["qty"] * multiplier
+        master_inv[key]["refs"].extend(data["refs"])
+        for src, refs in data["sources"].items():
+            master_inv[key]["sources"][src].extend(refs * multiplier)

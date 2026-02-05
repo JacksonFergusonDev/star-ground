@@ -21,6 +21,7 @@ from src.bom_lib import (
     get_residual_report,
     get_spec_type,
     get_standard_hardware,
+    merge_inventory,
     parse_csv_bom,
     parse_pedalpcb_pdf,
     parse_user_inventory,
@@ -89,15 +90,6 @@ def add_slot():
 
 def remove_slot(idx):
     st.session_state.pedal_slots.pop(idx)
-
-
-def merge_inventory(master_inv, new_inv, multiplier):
-    """Merges a parsed BOM into the master inventory with a quantity multiplier."""
-    for key, data in new_inv.items():
-        master_inv[key]["qty"] += data["qty"] * multiplier
-        master_inv[key]["refs"].extend(data["refs"])
-        for src, refs in data["sources"].items():
-            master_inv[key]["sources"][src].extend(refs * multiplier)
 
 
 def process_slot_data(slot, source_name):
