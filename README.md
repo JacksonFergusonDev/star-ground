@@ -6,28 +6,43 @@
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Status](https://img.shields.io/badge/status-active-success.svg)
 
-**Stop manually typing parts into Tayda. Paste your list, subtract your inventory, and print your build docs.**
+**A deterministic dependency manager for physical hardware manufacturing.**
 
 > **In circuit design, a "Star Ground" is the single reference point where all signal paths converge to eliminate noise.**
 >
-> **In manufacturing, this application serves the same function: it is the Single Source of Truth for your component inventory, eliminating the "noise" of disorganized BOMs, duplicate orders, and inventory drift.**
+> **In manufacturing, this application serves the same function: it is the Single Source of Truth for your inventory, eliminating the "noise" of disorganized BOMs and supply chain drift.**
 
-**Star Ground** is a full-stack logistics engine for electronics. It ingests messy component lists (Text, CSV, PDF), normalizes the data, and generates a complete manufacturing bundle.
+### 📡 The Mission: Deterministic Procurement
+In software, dependency resolution is **deterministic**: `uv sync` guarantees the exact same environment every time. In hardware, procurement is currently stochastic: manual aggregation introduces human error, where a single forgotten $0.01 resistor causes a blocking failure weeks later.
+
+*Star Ground* forces hardware logistics to behave like software. It rejects ambiguous inputs and treats physical inventory as a strict dependency tree. By enforcing a validated schema on unstructured data, it transforms procurement from **fragile manual aggregation** into a **deterministic data pipeline**.
 
 **🚀 [Try the Live App](https://star-ground.streamlit.app/)**
 
 <img src="assets/demo.gif" alt="Demo"
      style="display:block;margin-left:auto;margin-right:auto;width:70%;" />
 
-> **Case Study:** This engine was utilized as the logistics backbone for [**Systems Audio Lab**](https://github.com/JacksonFergusonDev/systems-audio-lab), a project demonstrating the "recursive engineering" of physical instrumentation.
+> **Case Study:** This engine was utilized as the logistics backbone for [**Systems Audio Lab**](https://github.com/JacksonFergusonDev/systems-audio-lab), a project demonstrating the recursive engineering of physical instrumentation.
 
-### ⚙️ Engineering Overview
+---
 
-In software, dependencies are resolved instantly via package managers. In hardware, dependencies are physical and finite—a single missing resistor constitutes a blocking failure that can halt a project for weeks. This is the **Logistical Entropy** I am focused on.
+### ⚙️ Engineering Philosophy: Invariants over Inference
 
-**Star Ground** applies rigorous systems engineering principles to this chaos. It treats the Bill of Materials (BOM) not as a text file, but as a strict dependency tree. By enforcing **deterministic ingestion** (Regex over probabilistic LLMs) and **heuristic buffering** ("Nerd Economics"), it ensures that the physical compilation of a device is as reliable as the software code that runs on it.
+This system is designed to bridge the gap between **Software Precision** and **Hardware Chaos**. The architectural choices prioritize data integrity and human ergonomics over simple automation.
 
-This tool transforms the procurement process from a stochastic guessing game into a reproducible data pipeline.
+#### 1. Determinism over Probabilistic Models (Why not LLMs?)
+Supply chains have zero tolerance for hallucination. A 10k resistor cannot be "inferred" as 1k.
+* **The Decision:** Instead of using an LLM to parse PDFs, I implemented a **Hybrid Spatial Parser** (`src/bom_lib/parser.py`). It uses `pdfplumber` to extract table vectors (spatial analysis) and falls back to rigorous Regex pattern matching.
+* **The Result:** 100% reproducible ingestion. The system fails loudly on ambiguity rather than guessing silently.
+
+#### 2. Physical-Digital Isomorphism (Z-Height Sorting)
+Most BOM tools sort lists alphabetically. **Star Ground** sorts by **Physical Z-Height**.
+* **The Insight:** Efficient PCB assembly requires soldering low-profile components (Resistors, Diodes) before bulky ones (Electrolytic Capacitors, Switches) to keep the board flat on the workbench.
+* **The Implementation:** The PDF generation engine enforces a topological sort order on the output artifacts, optimizing the *human operator's* runtime performance.
+
+#### 3. Yield Management ("Nerd Economics")
+* **The Problem:** The cost of a "Stockout" (halting work) is infinite relative to the cost of inventory.
+* **The Algorithm:** The sourcing engine applies a **category-specific risk profile**. It automatically buffers cheap components (resistors rounded to nearest 10) while strictly calculating expensive ones (ICs), transforming purchasing logic from simple arithmetic into a risk-management strategy.
 
 ---
 
