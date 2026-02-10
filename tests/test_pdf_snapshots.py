@@ -34,15 +34,14 @@ if not os.path.exists(SNAPSHOTS_DIR):
 
 
 def stabilize_inventory(inventory):
-    """
-    Normalizes the inventory dictionary for deterministic JSON comparison.
+    """Normalizes the inventory dictionary for deterministic JSON comparison.
 
     Converts `defaultdict`s to regular dicts and sorts all lists (refs, sources).
     This ensures that two identical inventories produce identical JSON strings,
     ignoring the random order of dictionary keys or set iterations.
 
     Args:
-        inventory (InventoryType): The raw inventory dictionary from the parser.
+        inventory (dict): The raw inventory dictionary from the parser.
 
     Returns:
         dict: A sorted, standard dictionary representation of the inventory.
@@ -59,14 +58,13 @@ def stabilize_inventory(inventory):
 
 
 def load_snapshot(filename):
-    """
-    Loads the 'Truth' JSON snapshot if it exists.
+    """Loads the 'Truth' JSON snapshot if it exists.
 
     Args:
         filename (str): The filename of the snapshot to load.
 
     Returns:
-        dict or None: The parsed JSON data, or None if the file is missing.
+        dict | None: The parsed JSON data, or None if the file is missing.
     """
     path = os.path.join(SNAPSHOTS_DIR, filename)
     if not os.path.exists(path):
@@ -76,8 +74,7 @@ def load_snapshot(filename):
 
 
 def save_snapshot(filename, data):
-    """
-    Saves the current output as the new 'Truth' snapshot.
+    """Saves the current output as the new 'Truth' snapshot.
 
     Args:
         filename (str): The filename to save.
@@ -102,24 +99,23 @@ if os.path.exists(SAMPLES_DIR):
 
 
 @pytest.mark.parametrize("pdf_rel_path", pdf_files)
-def test_pdf_parsing_regression(pdf_rel_path):
-    """
-    Regression Test: Compares parser output against stored snapshots.
+def test_pdf_parsing_regression(pdf_rel_path, snapshot_update):
+    """Regression Test: Compares parser output against stored snapshots.
 
     Runs the production parser against a real PDF sample and asserts that the
     output matches the stored JSON snapshot exactly.
 
-    If the snapshot is missing, this test generates it and fails intentionally,
-    prompting the developer to verify the new snapshot manually.
+    If the `snapshot_update` fixture is True (via --snapshot-update flag),
+    this test will overwrite the existing snapshot with the new output and pass.
 
     Args:
         pdf_rel_path (str): Relative path to the PDF sample file.
+        snapshot_update (bool): Fixture indicating if snapshots should be updated.
     """
     # Reconstruct full path
     pdf_path = os.path.join(SAMPLES_DIR, pdf_rel_path)
 
-    # Flatten the snapshot filename to avoid deep directory structures in snapshots/
-    # Example: "dirty/Muffin_Fuzz.pdf" -> "dirty__Muffin_Fuzz.pdf.json"
+    # Flatten the snapshot filename to avoid deep directory structures
     snapshot_filename = pdf_rel_path.replace(os.sep, "__") + ".json"
 
     # 1. Run the Real Code
@@ -134,7 +130,14 @@ def test_pdf_parsing_regression(pdf_rel_path):
         "inventory": stabilize_inventory(inventory),
     }
 
-    # 3. Load & Compare
+    # 3. Handle Updates vs Comparison
+    if snapshot_update:
+        save_snapshot(snapshot_filename, current_result)
+        # Explicitly verify write success
+        assert os.path.exists(os.path.join(SNAPSHOTS_DIR, snapshot_filename))
+        return
+
+    # 4. Load & Compare (Normal Mode)
     expected_result = load_snapshot(snapshot_filename)
 
     if expected_result is None:
@@ -144,5 +147,6 @@ def test_pdf_parsing_regression(pdf_rel_path):
         )
 
     assert current_result == expected_result, (
-        f"⚠️ Output mismatch for {pdf_rel_path}. Parser behavior changed!"
+        f"⚠️ Output mismatch for {pdf_rel_path}.\n"
+        f"Run `pytest --snapshot-update` if this change is intentional."
     )
