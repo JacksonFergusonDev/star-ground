@@ -26,6 +26,7 @@ class StatsDict(TypedDict):
     residuals: list[str]
     extracted_title: str | None
     seen_refs: set[str]
+    errors: list[str]
 
 
 class PartData(TypedDict):

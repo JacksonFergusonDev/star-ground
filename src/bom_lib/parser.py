@@ -96,6 +96,7 @@ def parse_with_verification(
         "residuals": [],
         "extracted_title": None,
         "seen_refs": set(),
+        "errors": [],
     }
 
     # Regex: Matches Ref + Separator + Value.
@@ -173,6 +174,7 @@ def parse_csv_bom(filepath: str, source_name: str) -> tuple[InventoryType, Stats
         "residuals": [],
         "extracted_title": None,
         "seen_refs": set(),
+        "errors": [],
     }
 
     with open(filepath, encoding="utf-8-sig") as f:
@@ -280,6 +282,7 @@ def parse_pedalpcb_pdf(
         "residuals": [],
         "extracted_title": None,
         "seen_refs": set(),
+        "errors": [],
     }
 
     try:

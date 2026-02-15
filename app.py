@@ -113,8 +113,12 @@ def process_slot_data(slot, source_name):
     if not data:
         return (
             create_empty_inventory(),
-            {"lines_read": 0, "parts_found": 0, "residuals": []},
-            None,
+            {
+                "lines_read": 0,
+                "parts_found": 0,
+                "residuals": [],
+                "errors": [],
+            },
         )
 
     inv, stats = create_empty_inventory(), {}
@@ -569,6 +573,7 @@ if st.button("Generate Master List", type="primary", width="stretch"):
         "residuals": [],
         "extracted_title": None,
         "seen_refs": set(),
+        "errors": [],
     }
     # Process Each Slot
     for i, slot in enumerate(st.session_state.pedal_slots):
