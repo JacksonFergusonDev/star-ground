@@ -9,6 +9,7 @@ delegation to the classification engine.
 import csv
 import logging
 import re
+import traceback
 
 import src.bom_lib.constants as C
 from src.bom_lib.classifier import categorize_part, normalize_value_by_category
@@ -466,6 +467,8 @@ def parse_pedalpcb_pdf(
                         stats["parts_found"] += c
 
     except Exception as e:
-        stats["residuals"].append(f"PDF Parse Error: {e}")
+        logger.error(f"CRITICAL PARSE FAILURE: {source_name}")
+        logger.error(traceback.format_exc())
+        stats["errors"].append(f"{source_name}: {str(e)}")
 
     return inventory, stats
