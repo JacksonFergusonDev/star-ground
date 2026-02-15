@@ -1,4 +1,6 @@
 import copy
+import io
+import logging
 import os
 import tempfile
 import uuid
@@ -48,6 +50,42 @@ st.markdown(
 """,
     unsafe_allow_html=True,
 )
+
+# Initialize session state for logs
+if "log_capture" not in st.session_state:
+    st.session_state.log_capture = io.StringIO()
+
+
+class StreamlitLogHandler(logging.Handler):
+    """Custom handler to route logs to Streamlit session state."""
+
+    def emit(self, record):
+        try:
+            msg = self.format(record)
+            # Write to the StringIO buffer in session state
+            st.session_state.log_capture.write(msg + "\n")
+        except Exception:
+            self.handleError(record)
+
+
+# Setup Logger
+logger = logging.getLogger()
+# Only add handlers if they aren't already attached (prevents duplicates on rerun)
+if not logger.handlers:
+    logger.setLevel(logging.INFO)
+
+    # 1. Console Handler (for Docker/Terminal logs)
+    console_handler = logging.StreamHandler()
+    formatter = logging.Formatter(
+        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    )
+    console_handler.setFormatter(formatter)
+    logger.addHandler(console_handler)
+
+    # 2. UI Handler (for the Debug Console)
+    st_handler = StreamlitLogHandler()
+    st_handler.setFormatter(formatter)
+    logger.addHandler(st_handler)
 
 
 st.title("⚡ Star Ground")
