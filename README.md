@@ -44,6 +44,13 @@ Most BOM tools sort lists alphabetically. **Star Ground** sorts by **Physical Z-
 * **The Problem:** The cost of a "Stockout" (halting work) is infinite relative to the cost of inventory.
 * **The Algorithm:** The sourcing engine applies a **category-specific risk profile**. It automatically buffers cheap components (resistors rounded to nearest 10) while strictly calculating expensive ones (ICs), transforming purchasing logic from simple arithmetic into a risk-management strategy.
 
+#### 4. Transparent Failure States (The "Loud" UI)
+* **The Problem:** Most web apps swallow errors to "look clean," leaving users stranded when edge cases occur. In hardware, a silent failure (e.g., a parser dropping a line) results in a missing component and a failed build.
+* **The Solution:** I implemented a **User-Facing Debug Console** and **Log Artifact Generation**.
+    * The system strictly separates **"Residuals"** (noise) from **"Exceptions"** (logic failures).
+    * Critical errors are never suppressed; they are surfaced in the UI with full stack traces.
+    * Users can download a `debug.log` snapshot to attach to GitHub Issues, creating a deterministic feedback loop for bug reporting.
+
 ---
 
 ### 🍷 Feature Spotlight: The "Silicon Sommelier"
@@ -84,6 +91,9 @@ This tool treats BOM parsing as a data reduction problem. It doesn't just read l
 4.  **Smart Normalization:**
     * Expands ranges automatically (`R1-R5` → `R1, R2, R3, R4, R5`).
     * Detects potentiometers by value (`B100k`) even if labeled non-standardly.
+5.  **Observability & Debugging:**
+    * **In-App Console:** Real-time visibility into the parsing kernel via a `st.session_state` log buffer.
+    * **Error Taxonomy:** Visual distinction between "Partial Success" (warnings) and "Critical Failure" (errors), ensuring the user always knows the integrity of their data.
 
 ---
 
