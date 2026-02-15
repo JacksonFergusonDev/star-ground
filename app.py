@@ -664,7 +664,20 @@ if st.button("Generate Master List", type="primary", width="stretch"):
     # Validation Logic
     if stats["parts_found"] == 0:
         st.error("❌ No parts found! Check your BOM text or file.")
+        # If we failed completely, show the specific errors immediately so user knows why
+        if stats.get("errors"):
+            with st.expander("Show Errors", expanded=True):
+                for err in stats["errors"]:
+                    st.error(f"❌ {err}")
+
+    elif stats.get("errors"):
+        # Case: We found parts, but some files/lines failed (Partial Success)
+        st.warning("⚠️ Master List generated, but some inputs had errors.")
+        for err in stats["errors"]:
+            st.error(f"❌ {err}")
+
     else:
+        # Case: Parts found AND No errors (Clean Run)
         st.toast("Master List Generated Successfully", icon="✅")
 
 # Main Process Flow
@@ -920,6 +933,12 @@ if st.session_state.inventory and st.session_state.stats:
 
 st.divider()
 
+# --- Debug & Feedback Section ---
+
+# Checking if logs exist to decide whether to show the debug console and download button.
+# This prevents showing an empty log interface.
+logs = st.session_state.log_capture.getvalue()
+
 if "feedback_submitted" not in st.session_state:
     st.session_state.feedback_submitted = False
 
@@ -953,3 +972,30 @@ with st.expander("🐞 Found a bug? / 📢 Feedback"):
                         st.rerun()
                     except Exception as e:
                         st.error(f"Error: {e}")
+
+    if logs:
+        st.divider()
+        st.download_button(
+            "📥 Download Debug Logs",
+            data=logs,
+            file_name="star_ground_debug.log",
+            mime="text/plain",
+            help="Attach this file when reporting bugs!",
+            use_container_width=True,
+        )
+
+if logs:
+    with st.expander("📟 Debug Console", expanded=False):
+        st.caption("System logs for debugging parsing issues.")
+        st.text_area(
+            "Log Output",
+            value=logs,
+            height=300,
+            disabled=True,
+            label_visibility="collapsed",
+        )
+
+        if st.button("Clear Logs"):
+            st.session_state.log_capture.truncate(0)
+            st.session_state.log_capture.seek(0)
+            st.rerun()
