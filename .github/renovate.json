@@ -41,6 +41,13 @@
     },
     {
       "matchPackageNames": [
+        "python"
+      ],
+      "allowedVersions": "3.13.x",
+      "description": "Pin Python to 3.13 to maintain streamlit compatibility"
+    },
+    {
+      "matchPackageNames": [
         "streamlit"
       ],
       "minimumReleaseAge": "3 days"
