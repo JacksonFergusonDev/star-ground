@@ -10,6 +10,7 @@ import csv
 import logging
 import re
 import traceback
+from typing import Any
 
 import src.bom_lib.constants as C
 from src.bom_lib.classifier import categorize_part, normalize_value_by_category
@@ -255,6 +256,193 @@ def parse_user_inventory(filepath: str) -> InventoryType:
     return stock
 
 
+def _parse_via_tables(
+    pdf_obj: Any,
+    inventory: InventoryType,
+    source_name: str,
+    stats: StatsDict,
+) -> None:
+    """
+    Strategy 1: Extract data using visual table boundaries.
+
+    Iterates through recognized tables in the PDF, heuristically identifying
+    header columns (Location, Value) to extract component data.
+
+    Args:
+        pdf_obj: The open pdfplumber PDF object.
+        inventory: The inventory dictionary to update.
+        source_name: The name of the source file.
+        stats: The statistics dictionary for tracking progress.
+    """
+    for page in pdf_obj.pages:
+        tables = page.extract_tables()
+        for table in tables:
+            if not table:
+                continue
+
+            # Header mapping
+            headers = [str(h).upper().strip() for h in table[0] if h]
+            loc_idx = -1
+            val_idx = -1
+            start_row_idx = 1
+
+            for i, h in enumerate(headers):
+                if h in ("LOCATION", "REF", "DESIGNATOR", "PART"):
+                    loc_idx = i
+                elif h in ("VALUE", "VAL", "DESCRIPTION"):
+                    val_idx = i
+
+            # Fallback mapping
+            if loc_idx == -1 or val_idx == -1:
+                loc_idx, val_idx, start_row_idx = 0, 1, 0
+
+            for row in table[start_row_idx:]:
+                stats["lines_read"] += 1
+                row_safe = [str(cell) if cell else "" for cell in row]
+
+                # Skip Summary lines (e.g., "1 x 100k")
+                first_content = next((c for c in row_safe if c), "")
+                if re.match(r"^\d+\s*[xX]", first_content):
+                    continue
+
+                ref_raw = ""
+                val_raw = ""
+
+                if len(row_safe) > max(loc_idx, val_idx):
+                    ref_raw = row_safe[loc_idx].replace("\n", " ").strip()
+                    val_raw = row_safe[val_idx].replace("\n", " ").strip()
+                elif len(row_safe) == 1 and row_safe[0]:
+                    parts = row_safe[0].strip().split(None, 1)
+                    if len(parts) == 2:
+                        ref_raw, val_raw = parts[0].strip(), parts[1].strip()
+
+                if ref_raw and val_raw:
+                    count = ingest_bom_line(
+                        inventory, source_name, ref_raw, val_raw, stats
+                    )
+                    if count > 0:
+                        stats["parts_found"] += count
+
+
+def _parse_via_regex(
+    pdf_obj: Any,
+    inventory: InventoryType,
+    source_name: str,
+    stats: StatsDict,
+) -> None:
+    """
+    Strategy 2: Fallback extraction using regex pattern matching.
+
+    Scans the raw text of the PDF for component patterns (e.g., "R1 10k",
+    "VOLUME 100kB"). It dynamically adjusts its strictness based on whether
+    parts were already found by the table strategy.
+
+    Args:
+        pdf_obj: The open pdfplumber PDF object.
+        inventory: The inventory dictionary to update.
+        source_name: The name of the source file.
+        stats: The statistics dictionary for tracking progress.
+    """
+    kw_regex_str = "|".join([rf"\b{k}\b" for k in C.KEYWORDS])
+
+    # Scope: If nothing found yet, match everything.
+    # If parts found, restrict to Keywords (controls) to avoid noise.
+    if stats["parts_found"] == 0:
+        ref_pattern = rf"(?P<ref>\b[A-Z]{{1,4}}\d+\b|{kw_regex_str})"
+    else:
+        ref_pattern = rf"(?P<ref>{kw_regex_str})"
+
+    regex = re.compile(rf"{ref_pattern}\s+(?P<val>[^\s]+)", re.IGNORECASE)
+
+    for page in pdf_obj.pages:
+        text = page.extract_text()
+        if not text:
+            continue
+
+        matches = list(regex.finditer(text))
+
+        for i, match in enumerate(matches):
+            ref_str = match.group("ref").upper()
+            val_str = match.group("val")
+            val_start = match.start("val")
+
+            # Lookahead safely
+            next_match_start = (
+                matches[i + 1].start() if i + 1 < len(matches) else len(text)
+            )
+
+            # Expand value capture for multi-word items (Switches, Pots)
+            if (
+                ref_str.startswith("LDR")
+                or ref_str in C.KEYWORDS
+                or ref_str.startswith(("POT", "VR"))
+            ):
+                line_end = text.find("\n", val_start)
+                if line_end == -1:
+                    line_end = len(text)
+                cutoff = min(line_end, next_match_start)
+                val_str = text[val_start:cutoff].strip()
+
+            # Clean brackets
+            if (val_str.startswith("(") and val_str.endswith(")")) or (
+                val_str.startswith("[") and val_str.endswith("]")
+            ):
+                val_str = val_str[1:-1].strip()
+
+            # Filters
+            if len(val_str) > 50 or len(val_str) < 1:
+                continue
+            if any(bad in val_str.upper() for bad in C.IGNORE_VALUES):
+                continue
+            if re.match(r"^(is|see|note)\s", val_str, re.IGNORECASE):
+                continue
+            if re.match(r"^\d{1,2}[\.\-\/]\d{1,2}[\.\-\/]\d{2,4}", val_str):
+                continue
+
+            # Validation
+            is_keyword = ref_str in C.KEYWORDS
+            if not is_keyword:
+                # Must start with valid prefix
+                valid_prefixes = C.CORE_PREFIXES + ("POT", "VR", "L", "LD")
+                if not any(ref_str.startswith(p) for p in valid_prefixes):
+                    continue
+                # "Ghost Data" check (Qty Part reversed)
+                if len(ref_str) >= 3 and re.match(r"^\d+$", val_str):
+                    continue
+            else:
+                # Keyword validation
+                has_digit = any(char.isdigit() for char in val_str)
+                is_switch = any(
+                    x in val_str.upper()
+                    for x in ["SPDT", "DPDT", "3PDT", "ON/ON", "ON/OFF"]
+                )
+                if not has_digit and not is_switch:
+                    continue
+
+                # Semantic Check (e.g., prevent "LOOP" -> "IC")
+                val_up = val_str.upper()
+                bad_starts = (
+                    "IC",
+                    "DIP",
+                    "SOIC",
+                    "PKG",
+                    "MODULE",
+                    "PCB",
+                    "TL",
+                    "OP",
+                    "NE5",
+                )
+                is_package = "DIP" in val_up or "SOIC" in val_up
+                if any(val_up.startswith(x) for x in bad_starts) or (
+                    is_package and not has_digit
+                ):
+                    continue
+
+            c = ingest_bom_line(inventory, source_name, ref_str, val_str, stats)
+            if c > 0:
+                stats["parts_found"] += c
+
+
 def parse_pedalpcb_pdf(
     filepath: str, source_name: str
 ) -> tuple[InventoryType, StatsDict]:
@@ -263,8 +451,7 @@ def parse_pedalpcb_pdf(
 
     Uses a multi-stage strategy:
     1. Visual Table Extraction (via pdfplumber lines).
-    2. Text-based heuristic layout analysis.
-    3. Regex "Hail Mary" pass for difficult files.
+    2. Text-based heuristic layout analysis (Regex fallback).
 
     Args:
         filepath: Path to the PDF file.
@@ -317,154 +504,11 @@ def parse_pedalpcb_pdf(
                 pass
 
             # --- STRATEGY 1: TABLE EXTRACTION ---
-            for page in pdf.pages:
-                tables = page.extract_tables()
-                for table in tables:
-                    if not table:
-                        continue
-
-                    # Header mapping
-                    headers = [str(h).upper().strip() for h in table[0] if h]
-                    loc_idx = -1
-                    val_idx = -1
-                    start_row_idx = 1
-
-                    for i, h in enumerate(headers):
-                        if h in ("LOCATION", "REF", "DESIGNATOR", "PART"):
-                            loc_idx = i
-                        elif h in ("VALUE", "VAL", "DESCRIPTION"):
-                            val_idx = i
-
-                    # Fallback mapping
-                    if loc_idx == -1 or val_idx == -1:
-                        loc_idx, val_idx, start_row_idx = 0, 1, 0
-
-                    for row in table[start_row_idx:]:
-                        stats["lines_read"] += 1
-                        row_safe = [str(cell) if cell else "" for cell in row]
-
-                        # Skip Summary lines (e.g., "1 x 100k")
-                        first_content = next((c for c in row_safe if c), "")
-                        if re.match(r"^\d+\s*[xX]", first_content):
-                            continue
-
-                        ref_raw = ""
-                        val_raw = ""
-
-                        if len(row_safe) > max(loc_idx, val_idx):
-                            ref_raw = row_safe[loc_idx].replace("\n", " ").strip()
-                            val_raw = row_safe[val_idx].replace("\n", " ").strip()
-                        elif len(row_safe) == 1 and row_safe[0]:
-                            parts = row_safe[0].strip().split(None, 1)
-                            if len(parts) == 2:
-                                ref_raw, val_raw = parts[0].strip(), parts[1].strip()
-
-                        if ref_raw and val_raw:
-                            count = ingest_bom_line(
-                                inventory, source_name, ref_raw, val_raw, stats
-                            )
-                            if count > 0:
-                                stats["parts_found"] += count
+            _parse_via_tables(pdf, inventory, source_name, stats)
 
             # --- STRATEGY 2: REGEX FALLBACK ---
-            kw_regex_str = "|".join([rf"\b{k}\b" for k in C.KEYWORDS])
-
-            # Scope: If nothing found yet, match everything.
-            # If parts found, restrict to Keywords (controls) to avoid noise.
-            if stats["parts_found"] == 0:
-                ref_pattern = rf"(?P<ref>\b[A-Z]{{1,4}}\d+\b|{kw_regex_str})"
-            else:
-                ref_pattern = rf"(?P<ref>{kw_regex_str})"
-
-            regex = re.compile(rf"{ref_pattern}\s+(?P<val>[^\s]+)", re.IGNORECASE)
-
-            for page in pdf.pages:
-                text = page.extract_text()
-                if not text:
-                    continue
-
-                matches = list(regex.finditer(text))
-
-                for i, match in enumerate(matches):
-                    ref_str = match.group("ref").upper()
-                    val_str = match.group("val")
-                    val_start = match.start("val")
-
-                    # Lookahead safely
-                    next_match_start = (
-                        matches[i + 1].start() if i + 1 < len(matches) else len(text)
-                    )
-
-                    # Expand value capture for multi-word items (Switches, Pots)
-                    if (
-                        ref_str.startswith("LDR")
-                        or ref_str in C.KEYWORDS
-                        or ref_str.startswith(("POT", "VR"))
-                    ):
-                        line_end = text.find("\n", val_start)
-                        if line_end == -1:
-                            line_end = len(text)
-                        cutoff = min(line_end, next_match_start)
-                        val_str = text[val_start:cutoff].strip()
-
-                    # Clean brackets
-                    if (val_str.startswith("(") and val_str.endswith(")")) or (
-                        val_str.startswith("[") and val_str.endswith("]")
-                    ):
-                        val_str = val_str[1:-1].strip()
-
-                    # Filters
-                    if len(val_str) > 50 or len(val_str) < 1:
-                        continue
-                    if any(bad in val_str.upper() for bad in C.IGNORE_VALUES):
-                        continue
-                    if re.match(r"^(is|see|note)\s", val_str, re.IGNORECASE):
-                        continue
-                    if re.match(r"^\d{1,2}[\.\-\/]\d{1,2}[\.\-\/]\d{2,4}", val_str):
-                        continue
-
-                    # Validation
-                    is_keyword = ref_str in C.KEYWORDS
-                    if not is_keyword:
-                        # Must start with valid prefix
-                        valid_prefixes = C.CORE_PREFIXES + ("POT", "VR", "L", "LD")
-                        if not any(ref_str.startswith(p) for p in valid_prefixes):
-                            continue
-                        # "Ghost Data" check (Qty Part reversed)
-                        if len(ref_str) >= 3 and re.match(r"^\d+$", val_str):
-                            continue
-                    else:
-                        # Keyword validation
-                        has_digit = any(char.isdigit() for char in val_str)
-                        is_switch = any(
-                            x in val_str.upper()
-                            for x in ["SPDT", "DPDT", "3PDT", "ON/ON", "ON/OFF"]
-                        )
-                        if not has_digit and not is_switch:
-                            continue
-
-                        # Semantic Check (e.g., prevent "LOOP" -> "IC")
-                        val_up = val_str.upper()
-                        bad_starts = (
-                            "IC",
-                            "DIP",
-                            "SOIC",
-                            "PKG",
-                            "MODULE",
-                            "PCB",
-                            "TL",
-                            "OP",
-                            "NE5",
-                        )
-                        is_package = "DIP" in val_up or "SOIC" in val_up
-                        if any(val_up.startswith(x) for x in bad_starts) or (
-                            is_package and not has_digit
-                        ):
-                            continue
-
-                    c = ingest_bom_line(inventory, source_name, ref_str, val_str, stats)
-                    if c > 0:
-                        stats["parts_found"] += c
+            # Automatically adjusts strictness based on whether tables were found
+            _parse_via_regex(pdf, inventory, source_name, stats)
 
     except Exception as e:
         logger.error(f"CRITICAL PARSE FAILURE: {source_name}")

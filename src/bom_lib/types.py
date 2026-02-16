@@ -35,11 +35,14 @@ class PartData(TypedDict):
 
     Attributes:
         qty: Total quantity required across all projects.
+        val_float: The cached numeric value of the component (e.g. 1000.0 for '1k').
+                   None if the value is non-numeric (e.g. 'TL072').
         refs: List of designators (e.g., ['R1', 'R2']).
         sources: Mapping of project names to the specific refs they contributed.
     """
 
     qty: int
+    val_float: float | None
     refs: list[str]
     sources: dict[str, list[str]]
 
@@ -55,4 +58,6 @@ def create_empty_inventory() -> InventoryType:
     Returns:
         A defaultdict initialized with zero quantity and empty lists.
     """
-    return defaultdict(lambda: {"qty": 0, "refs": [], "sources": defaultdict(list)})
+    return defaultdict(
+        lambda: {"qty": 0, "val_float": None, "refs": [], "sources": defaultdict(list)}
+    )

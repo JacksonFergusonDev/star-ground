@@ -7,7 +7,6 @@ import uuid
 from collections import defaultdict
 from typing import Any, cast
 
-import requests
 import streamlit as st
 
 from src.bom_lib import (
@@ -15,7 +14,6 @@ from src.bom_lib import (
     InventoryType,
     StatsDict,
     calculate_net_needs,
-    create_empty_inventory,
     generate_pedalpcb_url,
     generate_search_term,
     generate_tayda_url,
@@ -26,10 +24,8 @@ from src.bom_lib import (
     get_spec_type,
     get_standard_hardware,
     merge_inventory,
-    parse_csv_bom,
-    parse_pedalpcb_pdf,
     parse_user_inventory,
-    parse_with_verification,
+    process_input_data,
     rename_source_in_inventory,
     sort_inventory,
 )
@@ -125,104 +121,6 @@ def remove_slot(idx):
         idx (int): The index of the slot to remove.
     """
     st.session_state.pedal_slots.pop(idx)
-
-
-def process_slot_data(slot, source_name):
-    """
-    Unified handler for processing Text, File, and URL inputs.
-
-    Parses the data contained in a slot based on the selected input method
-    and returns the resulting inventory and statistics.
-
-    Args:
-        slot (dict): The slot dictionary containing method, data, and metadata.
-        source_name (str): The display name for the source (used for logging/errors).
-
-    Returns:
-        tuple: A tuple containing:
-            - InventoryType: The parsed inventory structure.
-            - StatsDict: Parsing statistics (lines read, parts found, etc.).
-            - str or None: The detected project title, if extraction was successful.
-    """
-    method = slot["method"]
-    data = slot.get("data")
-
-    # 1. Handle empty data case
-    if not data:
-        return (
-            create_empty_inventory(),
-            {
-                "lines_read": 0,
-                "parts_found": 0,
-                "residuals": [],
-                "errors": [],
-            },
-        )
-
-    inv, stats = create_empty_inventory(), {}
-
-    # 2. Select extraction strategy based on input method
-    try:
-        # A. PASTE TEXT / PRESET
-        if method in ["Paste Text", "Preset"]:
-            inv, stats = parse_with_verification([data], source_name=source_name)
-
-        # B. URL
-        elif method == "From URL":
-            response = requests.get(data.strip(), timeout=10)
-            response.raise_for_status()
-
-            is_pdf = data.lower().endswith(".pdf") or response.content.startswith(
-                b"%PDF"
-            )
-
-            if is_pdf:
-                slot["cached_pdf_bytes"] = response.content  # Cache for Export
-                with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
-                    tmp.write(response.content)
-                    tmp_path = tmp.name
-                try:
-                    inv, stats = parse_pedalpcb_pdf(tmp_path, source_name=source_name)
-                finally:
-                    if os.path.exists(tmp_path):
-                        os.remove(tmp_path)
-            else:
-                inv, stats = parse_with_verification(
-                    [response.text], source_name=source_name
-                )
-
-        # C. UPLOAD FILE
-        elif method == "Upload File":
-            # Data is an UploadedFile object
-            f = data
-            f.seek(0)
-            if f.name.lower().endswith(".pdf"):
-                slot["cached_pdf_bytes"] = f.getvalue()
-                f.seek(0)
-
-            ext = os.path.splitext(f.name)[1].lower()
-            with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp:
-                tmp.write(f.getvalue())
-                tmp_path = tmp.name
-
-            try:
-                if ext == ".pdf":
-                    inv, stats = parse_pedalpcb_pdf(tmp_path, source_name=source_name)
-                else:
-                    inv, stats = parse_csv_bom(tmp_path, source_name=source_name)
-            finally:
-                if os.path.exists(tmp_path):
-                    os.remove(tmp_path)
-
-    except Exception as e:
-        st.error(f"❌ Error processing {source_name}: {str(e)}")
-        return (
-            create_empty_inventory(),
-            {"lines_read": 0, "parts_found": 0, "residuals": []},
-            None,
-        )
-
-    return inv, stats, stats.get("extracted_title")
 
 
 def render_preset_selector(slot, idx):
@@ -354,15 +252,19 @@ def update_from_preset(slot_id):
     new_preset = st.session_state.get(key)
 
     if new_preset:
+        # Safety Check: Guard against race conditions where the session state
+        # holds a key that is no longer valid or present in the master list.
+        if new_preset not in BOM_PRESETS:
+            return
+
         # 1. Update BOM Data
         preset_obj = BOM_PRESETS[new_preset]
 
         # Handle New Dict Format vs Legacy String
         if isinstance(preset_obj, dict):
             slot["data"] = preset_obj["bom_text"]
-            # CHANGED: Always capture source_path, clear legacy pdf_path
             slot["source_path"] = preset_obj.get("source_path")
-            slot.pop("pdf_path", None)  # Clear legacy key to avoid confusion
+            slot.pop("pdf_path", None)
         else:
             slot["data"] = preset_obj
             slot.pop("source_path", None)
@@ -373,13 +275,14 @@ def update_from_preset(slot_id):
         # 2. Update Name (Only if empty or matches previous preset)
         last_loaded_key = slot.get("last_loaded_preset")
 
-        # We compare against the formatted version of the LAST key to see if we should overwrite
-        # (i.e. if the user hasn't manually changed it from the last auto-generated name)
         current_name = slot["name"]
-        should_update = (
-            not current_name
-            or current_name == get_clean_name(last_loaded_key)
-            or current_name == last_loaded_key
+
+        # Safe helper for the name check
+        last_clean = get_clean_name(last_loaded_key) if last_loaded_key else ""
+
+        should_update = not current_name or current_name in (
+            last_clean,
+            last_loaded_key,
         )
 
         if should_update:
@@ -391,69 +294,64 @@ def update_from_preset(slot_id):
         slot["last_loaded_preset"] = new_preset
 
 
+def _reset_slot_state(slot: dict[str, Any], new_method: str) -> None:
+    """
+    Clears data and UI state for a slot when switching input methods.
+
+    Args:
+        slot: The slot dictionary to reset.
+        new_method: The new method string being switched to.
+    """
+    slot_id = slot["id"]
+
+    # 1. Clear Data Fields
+    slot["data"] = None if new_method == "Upload File" else ""
+    slot["name"] = ""
+
+    # 2. Clear Metadata / Cache
+    keys_to_pop = ["pdf_path", "source_path", "cached_pdf_bytes", "last_loaded_preset"]
+    for k in keys_to_pop:
+        slot.pop(k, None)
+
+    # 3. Clear Streamlit Session Keys
+    # We clear the UI widgets so they don't retain old values
+    keys_to_clear = [
+        f"name_{slot_id}",
+        f"text_{slot_id}",
+        f"url_{slot_id}",
+        f"text_preset_{slot_id}",
+        f"preset_select_{slot_id}",
+        f"filter_src_{slot_id}",
+        f"filter_cat_{slot_id}",
+    ]
+    for k in keys_to_clear:
+        if k in st.session_state:
+            del st.session_state[k]
+
+    # 4. Update Method Tracker
+    slot["method"] = new_method
+    slot["last_method"] = new_method
+
+
 def on_method_change(slot_id):
     """
     Callback to handle input method switches (Paste, Upload, URL, Preset).
-    Clears invalid data when switching contexts.
-
-    Args:
-        slot_id (str): The unique identifier for the slot being updated.
     """
     slot = next((s for s in st.session_state.pedal_slots if s["id"] == slot_id), None)
     if not slot:
         return
 
-    # Get the new method from the widget state
-    new_method = st.session_state.get(f"method_{slot_id}")
+    # Fix: Pylance error. .get() returns Any | None, but we need str.
+    # We provide a default and wrap in str() to ensure type safety.
+    new_method = str(st.session_state.get(f"method_{slot_id}", "Paste Text"))
 
-    # Helper to reset name
-    name_key = f"name_{slot_id}"
+    _reset_slot_state(slot, new_method)
 
-    # Case: Switch to Paste Text -> Clear Data & Name
-    if new_method == "Paste Text":
-        slot["data"] = ""
-        slot["name"] = ""
-        if name_key in st.session_state:
-            st.session_state[name_key] = ""
-
-        slot.pop("pdf_path", None)
-        slot.pop("source_path", None)
-        slot.pop("cached_pdf_bytes", None)
-
-        if f"text_{slot_id}" in st.session_state:
-            st.session_state[f"text_{slot_id}"] = ""
-
-    # Case: Switch to URL -> Clear Data & Name
-    elif new_method == "From URL":
-        slot["data"] = ""
-        slot["name"] = ""
-        if name_key in st.session_state:
-            st.session_state[name_key] = ""
-
-        slot.pop("pdf_path", None)
-        slot.pop("source_path", None)
-        slot.pop("cached_pdf_bytes", None)
-
-        if f"url_{slot_id}" in st.session_state:
-            st.session_state[f"url_{slot_id}"] = ""
-
-    # Case: Switch to Upload -> Clear Data & Name
-    elif new_method == "Upload File":
-        slot["data"] = None  # File uploader expects None, not ""
-        slot["name"] = ""
-        if name_key in st.session_state:
-            st.session_state[name_key] = ""
-
-        slot.pop("pdf_path", None)
-        slot.pop("source_path", None)
-        slot.pop("cached_pdf_bytes", None)
-
-    # Case: Switch to Preset -> Load Default
-    elif new_method == "Preset":
+    # Handle specific initialization for Presets
+    if new_method == "Preset":
         first_preset = sorted(list(BOM_PRESETS.keys()))[0]
         preset_obj = BOM_PRESETS[first_preset]
 
-        # Unpack Dict if necessary
         if isinstance(preset_obj, dict):
             slot["data"] = preset_obj["bom_text"]
             slot["source_path"] = preset_obj.get("source_path")
@@ -462,19 +360,11 @@ def on_method_change(slot_id):
 
         slot["last_loaded_preset"] = first_preset
 
-        # Auto-fill name if empty
-        if not slot["name"]:
-            clean = get_clean_name(first_preset)
-            slot["name"] = clean
-            # Update the widget key directly so it renders correctly immediately
-            st.session_state[f"name_{slot_id}"] = clean
-
-        # Ensure the preset text area is populated
+        # Auto-fill name
+        clean_name = get_clean_name(first_preset)
+        slot["name"] = clean_name
+        st.session_state[f"name_{slot_id}"] = clean_name
         st.session_state[f"text_preset_{slot_id}"] = slot["data"]
-
-    # Update slot tracking
-    slot["method"] = new_method
-    slot["last_method"] = new_method
 
 
 st.divider()
@@ -601,9 +491,18 @@ stock_file = st.file_uploader(
 )
 st.divider()
 
+active_names = [
+    s["name"] for s in st.session_state.pedal_slots if s["name"] and s["name"].strip()
+]
+if len(active_names) != len(set(active_names)):
+    st.warning(
+        "⚠️ Duplicate projects detected. Quantities will be summed, but source documents will only be included once."
+    )
+
 if st.button("Generate Master List", type="primary", width="stretch"):
-    inventory: InventoryType = defaultdict(
-        lambda: {"qty": 0, "refs": [], "sources": defaultdict(list)}
+    inventory: InventoryType = cast(
+        InventoryType,
+        defaultdict(lambda: {"qty": 0, "refs": [], "sources": defaultdict(list)}),
     )
     stats: StatsDict = {
         "lines_read": 0,
@@ -621,7 +520,14 @@ if st.button("Generate Master List", type="primary", width="stretch"):
         qty_multiplier = slot.get("count", 1)
 
         # Unified Processing
-        p_inv, p_stats, detected_title = process_slot_data(slot, source)
+        p_inv, p_stats, detected_title, raw_content = process_input_data(
+            slot["method"], slot["data"], source_name=source
+        )
+
+        # Store the raw content in the slot if it was returned (i.e. it was a PDF)
+        # This enables the "Export" feature to include the original PDF in the ZIP.
+        if raw_content:
+            slot["cached_pdf_bytes"] = raw_content
 
         # Auto-Rename Logic
         if detected_title and not current_name.strip():
@@ -792,7 +698,10 @@ if st.session_state.inventory and st.session_state.stats:
             origin = "Circuit Board"
 
         # Calculate purchasing requirements based on net deficit
-        buy_qty, note = get_buy_details(category, value, net_qty)
+        # Pass the cached float value to avoid re-parsing
+        buy_qty, note = get_buy_details(
+            category, value, net_qty, fval=item.get("val_float")
+        )
 
         # Append context from Auto-Inject if present
         auto_inject_notes = sources.get("Auto-Inject", [])
