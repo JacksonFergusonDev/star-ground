@@ -391,69 +391,61 @@ def update_from_preset(slot_id):
         slot["last_loaded_preset"] = new_preset
 
 
+def _reset_slot_state(slot: dict[str, Any], new_method: str) -> None:
+    """
+    Clears data and UI state for a slot when switching input methods.
+
+    Args:
+        slot: The slot dictionary to reset.
+        new_method: The new method string being switched to.
+    """
+    slot_id = slot["id"]
+
+    # 1. Clear Data Fields
+    slot["data"] = None if new_method == "Upload File" else ""
+    slot["name"] = ""
+
+    # 2. Clear Metadata / Cache
+    keys_to_pop = ["pdf_path", "source_path", "cached_pdf_bytes", "last_loaded_preset"]
+    for k in keys_to_pop:
+        slot.pop(k, None)
+
+    # 3. Clear Streamlit Session Keys
+    # We clear the UI widgets so they don't retain old values
+    keys_to_clear = [
+        f"name_{slot_id}",
+        f"text_{slot_id}",
+        f"url_{slot_id}",
+        f"text_preset_{slot_id}",
+    ]
+    for k in keys_to_clear:
+        if k in st.session_state:
+            del st.session_state[k]
+
+    # 4. Update Method Tracker
+    slot["method"] = new_method
+    slot["last_method"] = new_method
+
+
 def on_method_change(slot_id):
     """
     Callback to handle input method switches (Paste, Upload, URL, Preset).
-    Clears invalid data when switching contexts.
-
-    Args:
-        slot_id (str): The unique identifier for the slot being updated.
     """
     slot = next((s for s in st.session_state.pedal_slots if s["id"] == slot_id), None)
     if not slot:
         return
 
-    # Get the new method from the widget state
-    new_method = st.session_state.get(f"method_{slot_id}")
+    # Fix: Pylance error. .get() returns Any | None, but we need str.
+    # We provide a default and wrap in str() to ensure type safety.
+    new_method = str(st.session_state.get(f"method_{slot_id}", "Paste Text"))
 
-    # Helper to reset name
-    name_key = f"name_{slot_id}"
+    _reset_slot_state(slot, new_method)
 
-    # Case: Switch to Paste Text -> Clear Data & Name
-    if new_method == "Paste Text":
-        slot["data"] = ""
-        slot["name"] = ""
-        if name_key in st.session_state:
-            st.session_state[name_key] = ""
-
-        slot.pop("pdf_path", None)
-        slot.pop("source_path", None)
-        slot.pop("cached_pdf_bytes", None)
-
-        if f"text_{slot_id}" in st.session_state:
-            st.session_state[f"text_{slot_id}"] = ""
-
-    # Case: Switch to URL -> Clear Data & Name
-    elif new_method == "From URL":
-        slot["data"] = ""
-        slot["name"] = ""
-        if name_key in st.session_state:
-            st.session_state[name_key] = ""
-
-        slot.pop("pdf_path", None)
-        slot.pop("source_path", None)
-        slot.pop("cached_pdf_bytes", None)
-
-        if f"url_{slot_id}" in st.session_state:
-            st.session_state[f"url_{slot_id}"] = ""
-
-    # Case: Switch to Upload -> Clear Data & Name
-    elif new_method == "Upload File":
-        slot["data"] = None  # File uploader expects None, not ""
-        slot["name"] = ""
-        if name_key in st.session_state:
-            st.session_state[name_key] = ""
-
-        slot.pop("pdf_path", None)
-        slot.pop("source_path", None)
-        slot.pop("cached_pdf_bytes", None)
-
-    # Case: Switch to Preset -> Load Default
-    elif new_method == "Preset":
+    # Handle specific initialization for Presets
+    if new_method == "Preset":
         first_preset = sorted(list(BOM_PRESETS.keys()))[0]
         preset_obj = BOM_PRESETS[first_preset]
 
-        # Unpack Dict if necessary
         if isinstance(preset_obj, dict):
             slot["data"] = preset_obj["bom_text"]
             slot["source_path"] = preset_obj.get("source_path")
@@ -462,19 +454,11 @@ def on_method_change(slot_id):
 
         slot["last_loaded_preset"] = first_preset
 
-        # Auto-fill name if empty
-        if not slot["name"]:
-            clean = get_clean_name(first_preset)
-            slot["name"] = clean
-            # Update the widget key directly so it renders correctly immediately
-            st.session_state[f"name_{slot_id}"] = clean
-
-        # Ensure the preset text area is populated
+        # Auto-fill name
+        clean_name = get_clean_name(first_preset)
+        slot["name"] = clean_name
+        st.session_state[f"name_{slot_id}"] = clean_name
         st.session_state[f"text_preset_{slot_id}"] = slot["data"]
-
-    # Update slot tracking
-    slot["method"] = new_method
-    slot["last_method"] = new_method
 
 
 st.divider()
