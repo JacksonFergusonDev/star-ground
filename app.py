@@ -586,8 +586,9 @@ stock_file = st.file_uploader(
 st.divider()
 
 if st.button("Generate Master List", type="primary", width="stretch"):
-    inventory: InventoryType = defaultdict(
-        lambda: {"qty": 0, "refs": [], "sources": defaultdict(list)}
+    inventory: InventoryType = cast(
+        InventoryType,
+        defaultdict(lambda: {"qty": 0, "refs": [], "sources": defaultdict(list)}),
     )
     stats: StatsDict = {
         "lines_read": 0,
@@ -776,7 +777,10 @@ if st.session_state.inventory and st.session_state.stats:
             origin = "Circuit Board"
 
         # Calculate purchasing requirements based on net deficit
-        buy_qty, note = get_buy_details(category, value, net_qty)
+        # Pass the cached float value to avoid re-parsing
+        buy_qty, note = get_buy_details(
+            category, value, net_qty, fval=item.get("val_float")
+        )
 
         # Append context from Auto-Inject if present
         auto_inject_notes = sources.get("Auto-Inject", [])

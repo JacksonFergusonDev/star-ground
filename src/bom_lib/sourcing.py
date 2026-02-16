@@ -197,7 +197,9 @@ def generate_pedalpcb_url(search_term: str) -> str:
     return f"https://www.pedalpcb.com/?product_cat=&s={encoded}&post_type=product"
 
 
-def get_buy_details(category: str, val: str, count: int) -> tuple[int, str]:
+def get_buy_details(
+    category: str, val: str, count: int, fval: float | None = None
+) -> tuple[int, str]:
     """
     Calculates the purchase quantity and notes based on 'Nerd Economics'.
 
@@ -219,7 +221,10 @@ def get_buy_details(category: str, val: str, count: int) -> tuple[int, str]:
 
     buy = count
     note = ""
-    fval = parse_value_to_float(val)
+
+    # Fallback if fval wasn't passed (for backward compatibility or tests)
+    if fval is None:
+        fval = parse_value_to_float(val)
 
     if category == "Resistors":
         # Buffer +5, then round up to nearest 10
