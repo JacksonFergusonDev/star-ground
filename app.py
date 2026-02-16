@@ -7,7 +7,6 @@ import uuid
 from collections import defaultdict
 from typing import Any, cast
 
-import requests
 import streamlit as st
 
 from src.bom_lib import (
@@ -15,7 +14,6 @@ from src.bom_lib import (
     InventoryType,
     StatsDict,
     calculate_net_needs,
-    create_empty_inventory,
     generate_pedalpcb_url,
     generate_search_term,
     generate_tayda_url,
@@ -26,10 +24,8 @@ from src.bom_lib import (
     get_spec_type,
     get_standard_hardware,
     merge_inventory,
-    parse_csv_bom,
-    parse_pedalpcb_pdf,
     parse_user_inventory,
-    parse_with_verification,
+    process_input_data,
     rename_source_in_inventory,
     sort_inventory,
 )
@@ -125,104 +121,6 @@ def remove_slot(idx):
         idx (int): The index of the slot to remove.
     """
     st.session_state.pedal_slots.pop(idx)
-
-
-def process_slot_data(slot, source_name):
-    """
-    Unified handler for processing Text, File, and URL inputs.
-
-    Parses the data contained in a slot based on the selected input method
-    and returns the resulting inventory and statistics.
-
-    Args:
-        slot (dict): The slot dictionary containing method, data, and metadata.
-        source_name (str): The display name for the source (used for logging/errors).
-
-    Returns:
-        tuple: A tuple containing:
-            - InventoryType: The parsed inventory structure.
-            - StatsDict: Parsing statistics (lines read, parts found, etc.).
-            - str or None: The detected project title, if extraction was successful.
-    """
-    method = slot["method"]
-    data = slot.get("data")
-
-    # 1. Handle empty data case
-    if not data:
-        return (
-            create_empty_inventory(),
-            {
-                "lines_read": 0,
-                "parts_found": 0,
-                "residuals": [],
-                "errors": [],
-            },
-        )
-
-    inv, stats = create_empty_inventory(), {}
-
-    # 2. Select extraction strategy based on input method
-    try:
-        # A. PASTE TEXT / PRESET
-        if method in ["Paste Text", "Preset"]:
-            inv, stats = parse_with_verification([data], source_name=source_name)
-
-        # B. URL
-        elif method == "From URL":
-            response = requests.get(data.strip(), timeout=10)
-            response.raise_for_status()
-
-            is_pdf = data.lower().endswith(".pdf") or response.content.startswith(
-                b"%PDF"
-            )
-
-            if is_pdf:
-                slot["cached_pdf_bytes"] = response.content  # Cache for Export
-                with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
-                    tmp.write(response.content)
-                    tmp_path = tmp.name
-                try:
-                    inv, stats = parse_pedalpcb_pdf(tmp_path, source_name=source_name)
-                finally:
-                    if os.path.exists(tmp_path):
-                        os.remove(tmp_path)
-            else:
-                inv, stats = parse_with_verification(
-                    [response.text], source_name=source_name
-                )
-
-        # C. UPLOAD FILE
-        elif method == "Upload File":
-            # Data is an UploadedFile object
-            f = data
-            f.seek(0)
-            if f.name.lower().endswith(".pdf"):
-                slot["cached_pdf_bytes"] = f.getvalue()
-                f.seek(0)
-
-            ext = os.path.splitext(f.name)[1].lower()
-            with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp:
-                tmp.write(f.getvalue())
-                tmp_path = tmp.name
-
-            try:
-                if ext == ".pdf":
-                    inv, stats = parse_pedalpcb_pdf(tmp_path, source_name=source_name)
-                else:
-                    inv, stats = parse_csv_bom(tmp_path, source_name=source_name)
-            finally:
-                if os.path.exists(tmp_path):
-                    os.remove(tmp_path)
-
-    except Exception as e:
-        st.error(f"❌ Error processing {source_name}: {str(e)}")
-        return (
-            create_empty_inventory(),
-            {"lines_read": 0, "parts_found": 0, "residuals": []},
-            None,
-        )
-
-    return inv, stats, stats.get("extracted_title")
 
 
 def render_preset_selector(slot, idx):
@@ -606,7 +504,14 @@ if st.button("Generate Master List", type="primary", width="stretch"):
         qty_multiplier = slot.get("count", 1)
 
         # Unified Processing
-        p_inv, p_stats, detected_title = process_slot_data(slot, source)
+        p_inv, p_stats, detected_title, raw_content = process_input_data(
+            slot["method"], slot["data"], source_name=source
+        )
+
+        # Store the raw content in the slot if it was returned (i.e. it was a PDF)
+        # This enables the "Export" feature to include the original PDF in the ZIP.
+        if raw_content:
+            slot["cached_pdf_bytes"] = raw_content
 
         # Auto-Rename Logic
         if detected_title and not current_name.strip():

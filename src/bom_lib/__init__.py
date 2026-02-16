@@ -5,6 +5,7 @@ Exposes the core logic and data structures for BOM ingestion, classification,
 and sourcing.
 """
 
+from .loader import process_input_data
 from .manager import (
     calculate_net_needs,
     merge_inventory,
@@ -71,4 +72,6 @@ __all__ = [
     # presets
     "get_preset_metadata",
     "BOM_PRESETS",
+    # loader
+    "process_input_data",
 ]
