@@ -8,7 +8,10 @@ This module serves as the central repository for:
 3.  **Expert System Data:** "Silicon Sommelier" dictionaries that map generic parts
     (like TL072) to audiophile alternatives with sonic descriptions and technical justifications.
 4.  **Exclusion Lists:** Terms used to identify and discard manufacturing artifacts (fiduciaries, test points).
+5.  **Purchasing Rules:** Configuration for safe buy quantities (buffers) and round-up logic.
 """
+
+from typing import Any
 
 # --- Physics & Standards ---
 
@@ -39,6 +42,29 @@ POT_TAPER_MAP = {
     "C": "Reverse Log",
     "W": "W Taper",
     "G": "Graphic",
+}
+
+# --- Purchasing & Sourcing Rules ---
+
+PURCHASING_CONFIG: dict[str, dict[str, Any]] = {
+    "Resistors": {
+        "buffer_add": 5,
+        "round_to": 10,
+        "note": "Use 1/4W Metal Film (1%)",
+        "suspicious_threshold_low": 1.0,  # Ohms
+    },
+    "Capacitors": {
+        "bulk_threshold": 1.0e-7,  # 100nF
+        "bulk_buffer": 10,
+        "standard_buffer": 5,
+        "large_threshold": 1.0e-6,  # 1uF
+        "large_buffer": 1,
+        "suspicious_threshold_high": 0.01,  # 10mF
+    },
+    "Diodes": {
+        "min_buy": 10,
+        "buffer_add": 5,
+    },
 }
 
 # --- Expert System Data (The "Silicon Sommelier") ---

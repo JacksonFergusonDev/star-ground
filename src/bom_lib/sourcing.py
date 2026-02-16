@@ -227,11 +227,14 @@ def get_buy_details(
         fval = parse_value_to_float(val)
 
     if category == "Resistors":
-        # Buffer +5, then round up to nearest 10
-        buffered_qty = count + 5
-        buy = math.ceil(buffered_qty / 10) * 10
-        note = "Use 1/4W Metal Film (1%)"
-        if fval is not None and fval < 1.0:
+        rules = C.PURCHASING_CONFIG["Resistors"]
+
+        buffered_qty = count + rules["buffer_add"]
+        round_step = rules["round_to"]
+        buy = math.ceil(buffered_qty / round_step) * round_step
+
+        note = rules["note"]
+        if fval is not None and fval < rules["suspicious_threshold_low"]:
             note = "⚠️ Suspicious Value (< 1Ω). Verify BOM."
 
     elif category == "Optoelectronics":
