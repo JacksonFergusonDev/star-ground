@@ -27,8 +27,17 @@ def _record_part(
         ref: The reference designator (e.g., "R1").
         qty: Quantity to add.
     """
+    # Initialize cached float if this is a new part entry
+    if inventory[key]["qty"] == 0:
+        # Extract value from key "Category | Value"
+        if " | " in key:
+            _, val_str = key.split(" | ", 1)
+            inventory[key]["val_float"] = parse_value_to_float(val_str)
+        else:
+            inventory[key]["val_float"] = None
+
     inventory[key]["qty"] += qty
-    # Only track refs if provided (avoids empty strings for stock items)
+
     if ref:
         inventory[key]["refs"].append(ref)
         inventory[key]["sources"][source].append(ref)
@@ -47,7 +56,7 @@ def calculate_net_needs(bom: InventoryType, stock: InventoryType) -> InventoryTy
         Quantities are set to `max(0, required - owned)`.
     """
     net_inv: InventoryType = defaultdict(
-        lambda: {"qty": 0, "refs": [], "sources": defaultdict(list)}
+        lambda: {"qty": 0, "refs": [], "sources": defaultdict(list), "val_float": None}
     )
 
     for key, data in bom.items():

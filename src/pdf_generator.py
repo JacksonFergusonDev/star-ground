@@ -409,10 +409,17 @@ def float_val_check(val_str: str) -> float:
 
 def _write_field_manuals(zf: zipfile.ZipFile, inventory: dict, slots: list[dict]):
     """Helper: Generates Field Manual PDFs and writes them to the ZIP archive."""
+    processed_projects = set()
+
     for slot in slots:
         project_name = slot.get("locked_name", slot["name"])
         if not project_name:
             continue
+
+        # Prevent duplicates if multiple slots have the same project name
+        if project_name in processed_projects:
+            continue
+        processed_projects.add(project_name)
 
         pdf = FieldManual()
         project_parts = []
@@ -457,10 +464,17 @@ def _write_field_manuals(zf: zipfile.ZipFile, inventory: dict, slots: list[dict]
 
 def _write_stickers(zf: zipfile.ZipFile, inventory: dict, slots: list[dict]):
     """Helper: Generates Sticker Sheet PDFs and writes them to the ZIP archive."""
+    processed_projects = set()
+
     for slot in slots:
         project_name = slot.get("locked_name", slot["name"])
         if not project_name:
             continue
+
+        # Prevent duplicates
+        if project_name in processed_projects:
+            continue
+        processed_projects.add(project_name)
 
         project_parts = []
         for key, data in inventory.items():
@@ -554,6 +568,8 @@ def generate_master_zip(
         _write_stickers(zf, inventory, slots)
 
         # 3. Source Documents (Preservation Logic)
+        used_filenames = set()
+
         for slot in slots:
             project_name = slot.get("locked_name", slot["name"])
             if not project_name:
@@ -561,11 +577,13 @@ def generate_master_zip(
 
             safe_name = re.sub(r'[<>:"/\\|?*]', "", project_name).strip()
 
+            file_content = None
+            dest_name = ""
+
             # Strategy A: Use Cached Bytes (URL/Upload)
             if "cached_pdf_bytes" in slot and slot["cached_pdf_bytes"]:
-                zf.writestr(
-                    f"Source Documents/{safe_name}_Source.pdf", slot["cached_pdf_bytes"]
-                )
+                file_content = slot["cached_pdf_bytes"]
+                dest_name = f"Source Documents/{safe_name} Source.pdf"
 
             # Strategy B: Use Local Path (Preset)
             elif "source_path" in slot and slot["source_path"]:
@@ -576,9 +594,8 @@ def generate_master_zip(
                         ext = ".txt"
 
                     with open(src_path, "rb") as f:
-                        zf.writestr(
-                            f"Source Documents/{safe_name} Source{ext}", f.read()
-                        )
+                        file_content = f.read()
+                    dest_name = f"Source Documents/{safe_name} Source{ext}"
                 except Exception:
                     pass
 
@@ -586,10 +603,16 @@ def generate_master_zip(
             elif "pdf_path" in slot and slot["pdf_path"]:
                 try:
                     with open(slot["pdf_path"], "rb") as f:
-                        zf.writestr(
-                            f"Source Documents/{safe_name} Source.pdf", f.read()
-                        )
+                        file_content = f.read()
+                    dest_name = f"Source Documents/{safe_name} Source.pdf"
                 except Exception:
                     pass
+
+            # Deduplication Logic:
+            # If we've already added a file with this name (e.g. "Big Muff Source.pdf"),
+            # we simply skip adding it again to avoid redundancy/warnings.
+            if file_content and dest_name and dest_name not in used_filenames:
+                zf.writestr(dest_name, file_content)
+                used_filenames.add(dest_name)
 
     return zip_buffer.getvalue()
