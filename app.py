@@ -491,6 +491,14 @@ stock_file = st.file_uploader(
 )
 st.divider()
 
+active_names = [
+    s["name"] for s in st.session_state.pedal_slots if s["name"] and s["name"].strip()
+]
+if len(active_names) != len(set(active_names)):
+    st.warning(
+        "⚠️ Duplicate projects detected. Quantities will be summed, but source documents will only be included once."
+    )
+
 if st.button("Generate Master List", type="primary", width="stretch"):
     inventory: InventoryType = cast(
         InventoryType,
