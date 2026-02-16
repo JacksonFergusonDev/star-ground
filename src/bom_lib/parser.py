@@ -21,6 +21,19 @@ from src.bom_lib.utils import expand_refs
 # Initialize Logger
 logger = logging.getLogger(__name__)
 
+# 1. Base Keyword Pattern: Matches any Control/Pot/Switch label (e.g., "VOLUME", "SPDT")
+_KW_REGEX_STR = "|".join([rf"\b{k}\b" for k in C.KEYWORDS])
+
+# 2. Strict Pattern (Keywords Only)
+# Used when tables have already populated the BOM, restricting regex to just Controls.
+_REF_PATTERN_STRICT = rf"(?P<ref>{_KW_REGEX_STR})"
+_REGEX_STRICT = re.compile(rf"{_REF_PATTERN_STRICT}\s+(?P<val>[^\s]+)", re.IGNORECASE)
+
+# 3. Loose Pattern (Standard Refs + Keywords)
+# Used as a fallback if table extraction failed completely. Matches "R1", "C1", etc.
+_REF_PATTERN_LOOSE = rf"(?P<ref>\b[A-Z]{{1,4}}\d+\b|{_KW_REGEX_STR})"
+_REGEX_LOOSE = re.compile(rf"{_REF_PATTERN_LOOSE}\s+(?P<val>[^\s]+)", re.IGNORECASE)
+
 
 def ingest_bom_line(
     inventory: InventoryType,
@@ -257,7 +270,7 @@ def parse_user_inventory(filepath: str) -> InventoryType:
 
 
 def _parse_via_tables(
-    pdf_obj: Any,
+    pages_data: list[dict[str, Any]],
     inventory: InventoryType,
     source_name: str,
     stats: StatsDict,
@@ -269,13 +282,13 @@ def _parse_via_tables(
     header columns (Location, Value) to extract component data.
 
     Args:
-        pdf_obj: The open pdfplumber PDF object.
+        pages_data: Pre-extracted list of dicts containing 'tables' and 'text'.
         inventory: The inventory dictionary to update.
         source_name: The name of the source file.
         stats: The statistics dictionary for tracking progress.
     """
-    for page in pdf_obj.pages:
-        tables = page.extract_tables()
+    for data in pages_data:
+        tables = data["tables"]
         for table in tables:
             if not table:
                 continue
@@ -325,7 +338,7 @@ def _parse_via_tables(
 
 
 def _parse_via_regex(
-    pdf_obj: Any,
+    pages_data: list[dict[str, Any]],
     inventory: InventoryType,
     source_name: str,
     stats: StatsDict,
@@ -338,24 +351,17 @@ def _parse_via_regex(
     parts were already found by the table strategy.
 
     Args:
-        pdf_obj: The open pdfplumber PDF object.
+        pages_data: Pre-extracted list of dicts containing 'tables' and 'text'.
         inventory: The inventory dictionary to update.
         source_name: The name of the source file.
         stats: The statistics dictionary for tracking progress.
     """
-    kw_regex_str = "|".join([rf"\b{k}\b" for k in C.KEYWORDS])
-
     # Scope: If nothing found yet, match everything.
     # If parts found, restrict to Keywords (controls) to avoid noise.
-    if stats["parts_found"] == 0:
-        ref_pattern = rf"(?P<ref>\b[A-Z]{{1,4}}\d+\b|{kw_regex_str})"
-    else:
-        ref_pattern = rf"(?P<ref>{kw_regex_str})"
+    regex = _REGEX_LOOSE if stats["parts_found"] == 0 else _REGEX_STRICT
 
-    regex = re.compile(rf"{ref_pattern}\s+(?P<val>[^\s]+)", re.IGNORECASE)
-
-    for page in pdf_obj.pages:
-        text = page.extract_text()
+    for data in pages_data:
+        text = data["text"]
         if not text:
             continue
 
@@ -475,7 +481,15 @@ def parse_pedalpcb_pdf(
 
     try:
         with pdfplumber.open(filepath) as pdf:
-            # --- TITLE EXTRACTION (Page 1) ---
+            # --- PHASE 1: DATA EXTRACTION (Single Pass) ---
+            # Iterate pages once to grab expensive text/table data
+            pages_data = []
+            for page in pdf.pages:
+                pages_data.append(
+                    {"tables": page.extract_tables(), "text": page.extract_text()}
+                )
+
+            # --- PHASE 2: TITLE EXTRACTION ---
             try:
                 p1 = pdf.pages[0]
                 words = p1.extract_words(extra_attrs=["size"])
@@ -504,11 +518,11 @@ def parse_pedalpcb_pdf(
                 pass
 
             # --- STRATEGY 1: TABLE EXTRACTION ---
-            _parse_via_tables(pdf, inventory, source_name, stats)
+            _parse_via_tables(pages_data, inventory, source_name, stats)
 
             # --- STRATEGY 2: REGEX FALLBACK ---
             # Automatically adjusts strictness based on whether tables were found
-            _parse_via_regex(pdf, inventory, source_name, stats)
+            _parse_via_regex(pages_data, inventory, source_name, stats)
 
     except Exception as e:
         logger.error(f"CRITICAL PARSE FAILURE: {source_name}")
