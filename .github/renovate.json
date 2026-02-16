@@ -40,11 +40,25 @@
       "automerge": true
     },
     {
-      "description": "Pin Python to 3.13.x across all managers (Docker, GHA, etc.)",
-      "matchPackageNames": [
-        "python"
+      "description": "GitHub Actions: allow Python 3.13 patch upgrades only (block 3.14+)",
+      "matchManagers": [
+        "github-actions"
+      ],
+      "matchDatasources": [
+        "github-releases"
       ],
       "matchDepNames": [
+        "python"
+      ],
+      "allowedVersions": "/^3\\.13\\./"
+    },
+    {
+      "description": "Pin Python Docker and Pyenv to 3.13.x",
+      "matchManagers": [
+        "dockerfile",
+        "pyenv"
+      ],
+      "matchPackageNames": [
         "python"
       ],
       "allowedVersions": "3.13.x"
