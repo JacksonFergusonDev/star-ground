@@ -252,15 +252,19 @@ def update_from_preset(slot_id):
     new_preset = st.session_state.get(key)
 
     if new_preset:
+        # Safety Check: Guard against race conditions where the session state
+        # holds a key that is no longer valid or present in the master list.
+        if new_preset not in BOM_PRESETS:
+            return
+
         # 1. Update BOM Data
         preset_obj = BOM_PRESETS[new_preset]
 
         # Handle New Dict Format vs Legacy String
         if isinstance(preset_obj, dict):
             slot["data"] = preset_obj["bom_text"]
-            # CHANGED: Always capture source_path, clear legacy pdf_path
             slot["source_path"] = preset_obj.get("source_path")
-            slot.pop("pdf_path", None)  # Clear legacy key to avoid confusion
+            slot.pop("pdf_path", None)
         else:
             slot["data"] = preset_obj
             slot.pop("source_path", None)
@@ -271,13 +275,14 @@ def update_from_preset(slot_id):
         # 2. Update Name (Only if empty or matches previous preset)
         last_loaded_key = slot.get("last_loaded_preset")
 
-        # We compare against the formatted version of the LAST key to see if we should overwrite
-        # (i.e. if the user hasn't manually changed it from the last auto-generated name)
         current_name = slot["name"]
-        should_update = (
-            not current_name
-            or current_name == get_clean_name(last_loaded_key)
-            or current_name == last_loaded_key
+
+        # Safe helper for the name check
+        last_clean = get_clean_name(last_loaded_key) if last_loaded_key else ""
+
+        should_update = not current_name or current_name in (
+            last_clean,
+            last_loaded_key,
         )
 
         if should_update:
@@ -315,6 +320,9 @@ def _reset_slot_state(slot: dict[str, Any], new_method: str) -> None:
         f"text_{slot_id}",
         f"url_{slot_id}",
         f"text_preset_{slot_id}",
+        f"preset_select_{slot_id}",
+        f"filter_src_{slot_id}",
+        f"filter_cat_{slot_id}",
     ]
     for k in keys_to_clear:
         if k in st.session_state:
