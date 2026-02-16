@@ -40,7 +40,7 @@
       "automerge": true
     },
     {
-      "description": "GitHub Actions: allow Python 3.13 patch upgrades only (block 3.14+)",
+      "description": "GitHub Actions (setup-python uses-with): allow Python 3.13 patch upgrades only",
       "matchManagers": [
         "github-actions"
       ],
@@ -53,7 +53,17 @@
       "allowedVersions": "/^3\\.13\\./"
     },
     {
-      "description": "Pin Python Docker and Pyenv to 3.13.x",
+      "description": "pyproject.toml requires-python: do not move off Python 3.13.x",
+      "matchDatasources": [
+        "python-version"
+      ],
+      "matchDepNames": [
+        "python"
+      ],
+      "allowedVersions": "/^3\\.13\\./"
+    },
+    {
+      "description": "Pin .python-version (pyenv manager) to Python 3.13.x",
       "matchManagers": [
         "dockerfile",
         "pyenv"
@@ -61,7 +71,7 @@
       "matchPackageNames": [
         "python"
       ],
-      "allowedVersions": "3.13.x"
+      "allowedVersions": "/^3\\.13\\./"
     },
     {
       "matchPackageNames": [
