@@ -10,6 +10,7 @@ This suite covers:
 """
 
 from collections import defaultdict
+from collections.abc import MutableMapping
 from typing import cast
 
 import pytest
@@ -148,7 +149,7 @@ def test_parser_never_crashes(garbage_string):
     try:
         inventory, stats = parse_with_verification([garbage_string])
 
-        assert isinstance(inventory, dict)
+        assert isinstance(inventory, MutableMapping)
         assert isinstance(stats, dict)
 
     except Exception as e:
