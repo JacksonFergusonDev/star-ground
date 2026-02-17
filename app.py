@@ -381,14 +381,14 @@ for i, slot in enumerate(st.session_state.pedal_slots):
 
         # Project Name
         name_key = f"name_{slot.id}"
-        # For the dataclass, we access .name directly
-        name_kwargs = {"value": slot.name} if name_key not in st.session_state else {}
+        # Initialize session state if missing to set default value
+        if name_key not in st.session_state:
+            st.session_state[name_key] = slot.name
 
         slot.name = c1.text_input(
             f"Project Name #{i + 1}",
             key=name_key,
             placeholder=f"e.g. {PLACEHOLDERS[i % len(PLACEHOLDERS)]}",
-            **name_kwargs,
         )
 
         # Quantity
@@ -421,10 +421,8 @@ for i, slot in enumerate(st.session_state.pedal_slots):
         # Row 2: Data Input (Full Width)
         if slot.method == "Paste Text":
             text_key = f"text_{slot.id}"
-            # Use dot access for data, default to empty string
-            area_kwargs = (
-                {"value": slot.data or ""} if text_key not in st.session_state else {}
-            )
+            if text_key not in st.session_state:
+                st.session_state[text_key] = slot.data or ""
 
             slot.data = st.text_area(
                 "BOM Text",
@@ -432,7 +430,6 @@ for i, slot in enumerate(st.session_state.pedal_slots):
                 key=text_key,
                 placeholder="Paste your BOM here...",
                 help="Paste raw text like 'R1 10k', 'C1 100n', etc.",
-                **area_kwargs,
             )
 
         elif slot.method == "Upload File":
@@ -457,9 +454,8 @@ for i, slot in enumerate(st.session_state.pedal_slots):
 
             # 2. The Read-Only Preview
             text_key = f"text_preset_{slot.id}"
-            area_kwargs = (
-                {"value": slot.data or ""} if text_key not in st.session_state else {}
-            )
+            if text_key not in st.session_state:
+                st.session_state[text_key] = slot.data or ""
 
             slot.data = st.text_area(
                 "Preview",
@@ -467,7 +463,6 @@ for i, slot in enumerate(st.session_state.pedal_slots):
                 key=text_key,
                 disabled=True,
                 label_visibility="collapsed",
-                **area_kwargs,
             )
 
         st.divider()

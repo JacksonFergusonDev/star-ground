@@ -19,7 +19,7 @@ from collections import defaultdict
 from fpdf import FPDF
 from fpdf.enums import XPos, YPos
 
-from src.bom_lib import Inventory, deduplicate_refs, ProjectSlot
+from src.bom_lib import Inventory, ProjectSlot, deduplicate_refs
 
 
 def condense_refs(refs: list[str]) -> str:
@@ -408,7 +408,7 @@ def float_val_check(val_str: str) -> float:
 
 
 def _write_field_manuals(
-    zf: zipfile.ZipFile, inventory: dict, slots: list[ProjectSlot]
+    zf: zipfile.ZipFile, inventory: Inventory, slots: list[ProjectSlot]
 ):
     """Helper: Generates Field Manual PDFs and writes them to the ZIP archive."""
     processed_projects = set()
@@ -464,7 +464,9 @@ def _write_field_manuals(
             )
 
 
-def _write_stickers(zf: zipfile.ZipFile, inventory: dict, slots: list[ProjectSlot]):
+def _write_stickers(
+    zf: zipfile.ZipFile, inventory: Inventory, slots: list[ProjectSlot]
+):
     """Helper: Generates Sticker Sheet PDFs and writes them to the ZIP archive."""
     processed_projects = set()
 
@@ -504,7 +506,7 @@ def _write_stickers(zf: zipfile.ZipFile, inventory: dict, slots: list[ProjectSlo
         )
 
 
-def generate_pdf_bundle(inventory: dict, slots: list[ProjectSlot]) -> bytes:
+def generate_pdf_bundle(inventory: Inventory, slots: list[ProjectSlot]) -> bytes:
     """
     Generates a ZIP file containing only the generated PDFs (Manuals + Stickers).
 
@@ -523,7 +525,7 @@ def generate_pdf_bundle(inventory: dict, slots: list[ProjectSlot]) -> bytes:
 
 
 def generate_master_zip(
-    inventory: dict,
+    inventory: Inventory,
     slots: list[ProjectSlot],
     shopping_list_csv: bytes,
     stock_csv: bytes,
