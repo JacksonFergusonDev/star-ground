@@ -8,11 +8,11 @@ This module acts as the "Controller" for the BOM library. It handles:
 - Renaming sources/projects.
 """
 
-from src.bom_lib.types import InventoryType, PartData
+from src.bom_lib.types import Inventory, PartData
 from src.bom_lib.utils import parse_value_to_float
 
 
-def calculate_net_needs(bom: InventoryType, stock: InventoryType) -> InventoryType:
+def calculate_net_needs(bom: Inventory, stock: Inventory) -> Inventory:
     """
     Calculates the deficit between Required parts (BOM) and Owned parts (Stock).
 
@@ -21,10 +21,10 @@ def calculate_net_needs(bom: InventoryType, stock: InventoryType) -> InventoryTy
         stock: The user's current inventory.
 
     Returns:
-        A new InventoryType containing ONLY the items that need to be purchased.
+        A new Inventory dictionary containing ONLY the items that need to be purchased.
         Quantities are set to `max(0, required - owned)`.
     """
-    net_inv = InventoryType()
+    net_inv = Inventory()
 
     for key, data in bom.items():
         gross_needed = data["qty"]
@@ -43,7 +43,7 @@ def calculate_net_needs(bom: InventoryType, stock: InventoryType) -> InventoryTy
     return net_inv
 
 
-def sort_inventory(inventory: InventoryType) -> list[tuple[str, PartData]]:
+def sort_inventory(inventory: Inventory) -> list[tuple[str, PartData]]:
     """
     Sorts the inventory for display.
 
@@ -93,7 +93,7 @@ def sort_inventory(inventory: InventoryType) -> list[tuple[str, PartData]]:
 
 
 def rename_source_in_inventory(
-    inventory: InventoryType, old_name: str, new_name: str
+    inventory: Inventory, old_name: str, new_name: str
 ) -> None:
     """
     Updates the source key in the inventory (e.g., renaming a project).
@@ -111,7 +111,7 @@ def rename_source_in_inventory(
             part["sources"][new_name] = part["sources"].pop(old_name)
 
 
-def serialize_inventory(inventory: InventoryType) -> str:
+def serialize_inventory(inventory: Inventory) -> str:
     """
     Converts the inventory dict back into the standardized text format.
     e.g. {'Resistors | 10k': refs=['R1', 'R2']} -> "R1 10k\\nR2 10k"

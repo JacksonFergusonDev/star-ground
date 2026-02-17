@@ -13,7 +13,7 @@ import re
 from urllib.parse import quote_plus
 
 import src.bom_lib.constants as C
-from src.bom_lib.types import InventoryType, StatsDict
+from src.bom_lib.types import Inventory, StatsDict
 from src.bom_lib.utils import float_to_search_string, parse_value_to_float
 
 
@@ -58,7 +58,7 @@ def get_residual_report(stats: StatsDict) -> list[str]:
     return suspicious
 
 
-def get_injection_warnings(inventory: InventoryType) -> list[str]:
+def get_injection_warnings(inventory: Inventory) -> list[str]:
     """
     Generates user warnings based on automated hardware injections.
 
@@ -321,7 +321,7 @@ def get_buy_details(
     return buy, note
 
 
-def get_standard_hardware(inventory: InventoryType, pedal_count: int = 1) -> None:
+def get_standard_hardware(inventory: Inventory, pedal_count: int = 1) -> None:
     """
     Injects standard enclosure hardware into the inventory.
 
