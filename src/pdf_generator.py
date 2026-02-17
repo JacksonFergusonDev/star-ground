@@ -19,7 +19,7 @@ from collections import defaultdict
 from fpdf import FPDF
 from fpdf.enums import XPos, YPos
 
-from src.bom_lib import deduplicate_refs
+from src.bom_lib import Inventory, deduplicate_refs
 
 
 def condense_refs(refs: list[str]) -> str:
@@ -502,12 +502,12 @@ def _write_stickers(zf: zipfile.ZipFile, inventory: dict, slots: list[dict]):
         )
 
 
-def generate_pdf_bundle(inventory: dict, slots: list[dict]) -> bytes:
+def generate_pdf_bundle(inventory: Inventory, slots: list[dict]) -> bytes:
     """
     Generates a ZIP file containing only the generated PDFs (Manuals + Stickers).
 
     Args:
-        inventory (dict): The master inventory dictionary.
+        inventory (Inventory): The master inventory object.
         slots (list[dict]): The list of project slots.
 
     Returns:
@@ -515,13 +515,13 @@ def generate_pdf_bundle(inventory: dict, slots: list[dict]) -> bytes:
     """
     zip_buffer = io.BytesIO()
     with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zf:
-        _write_field_manuals(zf, inventory, slots)
-        _write_stickers(zf, inventory, slots)
+        _write_field_manuals(zf, inventory.data, slots)
+        _write_stickers(zf, inventory.data, slots)
     return zip_buffer.getvalue()
 
 
 def generate_master_zip(
-    inventory: dict, slots: list[dict], shopping_list_csv: bytes, stock_csv: bytes
+    inventory: Inventory, slots: list[dict], shopping_list_csv: bytes, stock_csv: bytes
 ) -> bytes:
     """
     Generates the "Master ZIP" containing all project artifacts.
@@ -533,7 +533,7 @@ def generate_master_zip(
     4. Info.txt (Metadata)
 
     Args:
-        inventory (dict): The master inventory.
+        inventory (Inventory): The master inventory.
         slots (list[dict]): The project slots.
         shopping_list_csv (bytes): The CSV bytes for the shopping list.
         stock_csv (bytes): The CSV bytes for the stock update.
@@ -564,8 +564,8 @@ def generate_master_zip(
         zf.writestr("info.txt", info_text)
 
         # 2. Generated PDFs
-        _write_field_manuals(zf, inventory, slots)
-        _write_stickers(zf, inventory, slots)
+        _write_field_manuals(zf, inventory.data, slots)
+        _write_stickers(zf, inventory.data, slots)
 
         # 3. Source Documents (Preservation Logic)
         used_filenames = set()

@@ -9,7 +9,7 @@ values to ensure consistent matching between BOMs and Inventory.
 import re
 
 import src.bom_lib.constants as C
-from src.bom_lib.utils import float_to_search_string, parse_value_to_float
+from src.bom_lib import float_to_search_string, parse_value_to_float
 
 
 def normalize_value_by_category(category: str, val_raw: str) -> str:

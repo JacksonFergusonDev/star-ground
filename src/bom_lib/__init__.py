@@ -5,10 +5,10 @@ Exposes the core logic and data structures for BOM ingestion, classification,
 and sourcing.
 """
 
+from .classifier import categorize_part, normalize_value_by_category
 from .loader import process_input_data
 from .manager import (
     calculate_net_needs,
-    merge_inventory,
     rename_source_in_inventory,
     serialize_inventory,
     sort_inventory,
@@ -29,7 +29,7 @@ from .sourcing import (
     get_spec_type,
     get_standard_hardware,
 )
-from .types import InventoryType, StatsDict, create_empty_inventory
+from .types import Inventory, InventoryType, PartData, StatsDict, create_empty_inventory
 from .utils import (
     deduplicate_refs,
     expand_refs,
@@ -44,6 +44,8 @@ __all__ = [
     "InventoryType",
     "StatsDict",
     "create_empty_inventory",
+    "PartData",
+    "Inventory",
     # parser
     "parse_csv_bom",
     "parse_pedalpcb_pdf",
@@ -61,7 +63,6 @@ __all__ = [
     "get_residual_report",
     "get_spec_type",
     "get_standard_hardware",
-    "merge_inventory",
     # utils
     "deduplicate_refs",
     "expand_refs",
@@ -74,4 +75,7 @@ __all__ = [
     "BOM_PRESETS",
     # loader
     "process_input_data",
+    # classifier
+    "categorize_part",
+    "normalize_value_by_category",
 ]

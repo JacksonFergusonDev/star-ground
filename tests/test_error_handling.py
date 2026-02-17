@@ -2,7 +2,7 @@ from unittest.mock import patch
 
 import pytest
 
-from src.bom_lib.parser import parse_pedalpcb_pdf
+from src.bom_lib import parse_pedalpcb_pdf
 
 try:
     import pdfplumber

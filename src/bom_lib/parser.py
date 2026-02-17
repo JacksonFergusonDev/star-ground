@@ -13,10 +13,14 @@ import traceback
 from typing import Any
 
 import src.bom_lib.constants as C
-from src.bom_lib.classifier import categorize_part, normalize_value_by_category
-from src.bom_lib.manager import _record_part
-from src.bom_lib.types import InventoryType, StatsDict, create_empty_inventory
-from src.bom_lib.utils import expand_refs
+from src.bom_lib import (
+    InventoryType,
+    StatsDict,
+    categorize_part,
+    create_empty_inventory,
+    expand_refs,
+    normalize_value_by_category,
+)
 
 # Initialize Logger
 logger = logging.getLogger(__name__)
@@ -79,12 +83,12 @@ def ingest_bom_line(
             main_key = f"{cat} | {clean_val}"
 
             # 1. Record Main Part
-            _record_part(inventory, source, main_key, r)
+            inventory.add_part(source, main_key, r)
 
             # 2. Handle Auto-Injection (e.g., Sockets)
             if inj:
                 # inj is pre-formatted as "Category | Value"
-                _record_part(inventory, source, inj, f"{r} (Inj)")
+                inventory.add_part(source, inj, f"{r} (Inj)")
 
     return parts_found
 
@@ -264,7 +268,7 @@ def parse_user_inventory(filepath: str) -> InventoryType:
                 clean_val = normalize_value_by_category(cat, val)
                 key = f"{cat} | {clean_val}"
 
-                _record_part(stock, "User Stock", key, ref="", qty=qty)
+                stock.add_part("User Stock", key, ref="", qty=qty)
 
     return stock
 

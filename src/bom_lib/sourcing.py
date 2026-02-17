@@ -13,8 +13,12 @@ import re
 from urllib.parse import quote_plus
 
 import src.bom_lib.constants as C
-from src.bom_lib.types import InventoryType, StatsDict
-from src.bom_lib.utils import float_to_search_string, parse_value_to_float
+from src.bom_lib import (
+    InventoryType,
+    StatsDict,
+    float_to_search_string,
+    parse_value_to_float,
+)
 
 
 def get_residual_report(stats: StatsDict) -> list[str]:

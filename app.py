@@ -23,7 +23,6 @@ from src.bom_lib import (
     get_residual_report,
     get_spec_type,
     get_standard_hardware,
-    merge_inventory,
     parse_user_inventory,
     process_input_data,
     rename_source_in_inventory,
@@ -537,7 +536,7 @@ if st.button("Generate Master List", type="primary", width="stretch"):
             rename_source_in_inventory(p_inv, source, str(detected_title))
 
         # Merge
-        merge_inventory(inventory, p_inv, qty_multiplier)
+        inventory.merge(p_inv, qty_multiplier)
         stats["lines_read"] += p_stats.get("lines_read", 0)
         stats["parts_found"] += p_stats.get("parts_found", 0)
         stats["residuals"].extend(p_stats.get("residuals", []))

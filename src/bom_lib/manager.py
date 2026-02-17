@@ -8,39 +8,7 @@ This module acts as the "Controller" for the BOM library. It handles:
 - Renaming sources/projects.
 """
 
-from collections import defaultdict
-
-from src.bom_lib.types import InventoryType, PartData
-from src.bom_lib.utils import parse_value_to_float
-
-
-def _record_part(
-    inventory: InventoryType, source: str, key: str, ref: str, qty: int = 1
-) -> None:
-    """
-    Low-level helper to update the inventory dictionary.
-
-    Args:
-        inventory: The inventory data structure.
-        source: Source identifier (e.g., "Big Muff").
-        key: The unique component key (e.g., "Resistors | 10k").
-        ref: The reference designator (e.g., "R1").
-        qty: Quantity to add.
-    """
-    # Initialize cached float if this is a new part entry
-    if inventory[key]["qty"] == 0:
-        # Extract value from key "Category | Value"
-        if " | " in key:
-            _, val_str = key.split(" | ", 1)
-            inventory[key]["val_float"] = parse_value_to_float(val_str)
-        else:
-            inventory[key]["val_float"] = None
-
-    inventory[key]["qty"] += qty
-
-    if ref:
-        inventory[key]["refs"].append(ref)
-        inventory[key]["sources"][source].append(ref)
+from src.bom_lib import InventoryType, PartData, parse_value_to_float
 
 
 def calculate_net_needs(bom: InventoryType, stock: InventoryType) -> InventoryType:
@@ -55,9 +23,7 @@ def calculate_net_needs(bom: InventoryType, stock: InventoryType) -> InventoryTy
         A new InventoryType containing ONLY the items that need to be purchased.
         Quantities are set to `max(0, required - owned)`.
     """
-    net_inv: InventoryType = defaultdict(
-        lambda: {"qty": 0, "refs": [], "sources": defaultdict(list), "val_float": None}
-    )
+    net_inv = InventoryType()
 
     for key, data in bom.items():
         gross_needed = data["qty"]
@@ -179,14 +145,3 @@ def serialize_inventory(inventory: InventoryType) -> str:
             lines.append(f"{clean_val} (Qty: {data['qty']})")
 
     return "\n".join(lines)
-
-
-def merge_inventory(
-    master_inv: InventoryType, new_inv: InventoryType, multiplier: int = 1
-) -> None:
-    """Merges a parsed BOM into the master inventory with a quantity multiplier."""
-    for key, data in new_inv.items():
-        master_inv[key]["qty"] += data["qty"] * multiplier
-        master_inv[key]["refs"].extend(data["refs"])
-        for src, refs in data["sources"].items():
-            master_inv[key]["sources"][src].extend(refs * multiplier)

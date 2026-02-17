@@ -13,12 +13,14 @@ from typing import Any
 
 import requests
 
-from src.bom_lib.parser import (
+from src.bom_lib import (
+    InventoryType,
+    StatsDict,
+    create_empty_inventory,
     parse_csv_bom,
     parse_pedalpcb_pdf,
     parse_with_verification,
 )
-from src.bom_lib.types import InventoryType, StatsDict, create_empty_inventory
 
 logger = logging.getLogger(__name__)
 
