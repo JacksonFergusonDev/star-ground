@@ -18,14 +18,14 @@ from src.bom_lib.parser import (
     parse_pedalpcb_pdf,
     parse_with_verification,
 )
-from src.bom_lib.types import InventoryType, StatsDict, create_empty_inventory
+from src.bom_lib.types import Inventory, StatsDict, create_empty_inventory
 
 logger = logging.getLogger(__name__)
 
 
 def _process_pdf_content(
     content: bytes, source_name: str
-) -> tuple[InventoryType, StatsDict]:
+) -> tuple[Inventory, StatsDict]:
     """Helper to handle binary PDF content via temp file."""
     with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
         tmp.write(content)
@@ -40,7 +40,7 @@ def _process_pdf_content(
 
 def process_input_data(
     method: str, data: Any, source_name: str
-) -> tuple[InventoryType, StatsDict, str | None, bytes | None]:
+) -> tuple[Inventory, StatsDict, str | None, bytes | None]:
     """
     Unified handler for processing Text, File, and URL inputs.
 

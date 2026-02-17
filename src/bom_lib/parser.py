@@ -14,7 +14,7 @@ from typing import Any
 
 import src.bom_lib.constants as C
 from src.bom_lib.classifier import categorize_part, normalize_value_by_category
-from src.bom_lib.types import InventoryType, StatsDict, create_empty_inventory
+from src.bom_lib.types import Inventory, StatsDict, create_empty_inventory
 from src.bom_lib.utils import expand_refs
 
 # Initialize Logger
@@ -35,7 +35,7 @@ _REGEX_LOOSE = re.compile(rf"{_REF_PATTERN_LOOSE}\s+(?P<val>[^\s]+)", re.IGNOREC
 
 
 def ingest_bom_line(
-    inventory: InventoryType,
+    inventory: Inventory,
     source: str,
     ref_raw: str,
     val_raw: str,
@@ -90,7 +90,7 @@ def ingest_bom_line(
 
 def parse_with_verification(
     bom_list: list[str], source_name: str = "Manual Input"
-) -> tuple[InventoryType, StatsDict]:
+) -> tuple[Inventory, StatsDict]:
     """
     Parses a list of raw text strings (Manual BOM Input).
 
@@ -167,7 +167,7 @@ def parse_with_verification(
     return inventory, stats
 
 
-def parse_csv_bom(filepath: str, source_name: str) -> tuple[InventoryType, StatsDict]:
+def parse_csv_bom(filepath: str, source_name: str) -> tuple[Inventory, StatsDict]:
     """
     Parses a CSV BOM file.
 
@@ -229,7 +229,7 @@ def parse_csv_bom(filepath: str, source_name: str) -> tuple[InventoryType, Stats
     return inventory, stats
 
 
-def parse_user_inventory(filepath: str) -> InventoryType:
+def parse_user_inventory(filepath: str) -> Inventory:
     """
     Parses a user's stock CSV.
 
@@ -240,9 +240,9 @@ def parse_user_inventory(filepath: str) -> InventoryType:
         filepath: Path to the user inventory CSV.
 
     Returns:
-        A populated InventoryType dictionary.
+        A populated Inventory dictionary.
     """
-    stock: InventoryType = create_empty_inventory()
+    stock: Inventory = create_empty_inventory()
 
     with open(filepath, encoding="utf-8-sig") as f:
         reader = csv.DictReader(f)
@@ -270,7 +270,7 @@ def parse_user_inventory(filepath: str) -> InventoryType:
 
 def _parse_via_tables(
     pages_data: list[dict[str, Any]],
-    inventory: InventoryType,
+    inventory: Inventory,
     source_name: str,
     stats: StatsDict,
 ) -> None:
@@ -338,7 +338,7 @@ def _parse_via_tables(
 
 def _parse_via_regex(
     pages_data: list[dict[str, Any]],
-    inventory: InventoryType,
+    inventory: Inventory,
     source_name: str,
     stats: StatsDict,
 ) -> None:
@@ -448,9 +448,7 @@ def _parse_via_regex(
                 stats["parts_found"] += c
 
 
-def parse_pedalpcb_pdf(
-    filepath: str, source_name: str
-) -> tuple[InventoryType, StatsDict]:
+def parse_pedalpcb_pdf(filepath: str, source_name: str) -> tuple[Inventory, StatsDict]:
     """
     Parses a PedalPCB Build Document (PDF).
 
