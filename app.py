@@ -3,7 +3,7 @@ import io
 import logging
 import os
 import tempfile
-from typing import Any, cast
+from typing import cast
 
 import streamlit as st
 
@@ -106,17 +106,18 @@ def add_slot():
     st.session_state.pedal_slots.append(ProjectSlot())
 
 
-def remove_slot(idx):
+def remove_slot(idx: int):
     """
     Removes a pedal slot from the session state by index.
 
     Args:
         idx (int): The index of the slot to remove.
     """
-    st.session_state.pedal_slots.pop(idx)
+    if 0 <= idx < len(st.session_state.pedal_slots):
+        st.session_state.pedal_slots.pop(idx)
 
 
-def render_preset_selector(slot, idx):
+def render_preset_selector(slot: ProjectSlot, idx: int):
     """
     Renders a 3-stage smart selector widget for a specific slot.
 
@@ -124,7 +125,7 @@ def render_preset_selector(slot, idx):
     project selection list.
 
     Args:
-        slot (dict): The slot dictionary to render controls for.
+        slot (ProjectSlot): The slot object to render controls for.
         idx (int): The index of the slot (unused in logic but useful for keys).
 
     Returns:
@@ -137,8 +138,7 @@ def render_preset_selector(slot, idx):
     c_filt1, c_filt2, c_main = st.columns([1, 1, 2])
 
     # --- 1. Source Filter ---
-    # Use session state to persist the filter choice per slot
-    src_key = f"filter_src_{slot['id']}"
+    src_key = f"filter_src_{slot.id}"
     selected_src = c_filt1.selectbox(
         "Source",
         ["All"] + all_sources,
@@ -159,7 +159,7 @@ def render_preset_selector(slot, idx):
         )
         cat_options = ["All"] + flat_cats
 
-    cat_key = f"filter_cat_{slot['id']}"
+    cat_key = f"filter_cat_{slot.id}"
     selected_cat = c_filt2.selectbox(
         "Category",
         cat_options,
@@ -179,13 +179,13 @@ def render_preset_selector(slot, idx):
     # Extract just the full keys for the widget
     option_keys = [i["full_key"] for i in filtered_items]
 
-    # Handle Edge Case: If filter results in empty list
+    # Handle Edge Case
     if not option_keys:
         st.warning("No presets match filters.")
         return
 
-    # Find current index (maintain selection if still valid after filter)
-    current_val = slot.get("last_loaded_preset")
+    # Find current index
+    current_val = slot.last_loaded_preset
     try:
         current_idx = option_keys.index(current_val)
     except (ValueError, TypeError):
@@ -197,18 +197,12 @@ def render_preset_selector(slot, idx):
         meta = next((i for i in filtered_items if i["full_key"] == key), None)
         if not meta:
             return key
-
-        # Smart Labeling:
-        # If Source is already filtered, don't show it in the label.
-        # If Category is already filtered, don't show it.
         label = meta["name"]
-
         extras = []
         if selected_src == "All":
             extras.append(meta["source"])
         if selected_cat == "All" and meta["category"] != "Misc":
             extras.append(meta["category"])
-
         if extras:
             return f"{label}  ({', '.join(extras)})"
         return label
@@ -219,16 +213,16 @@ def render_preset_selector(slot, idx):
         options=option_keys,
         index=current_idx,
         format_func=format_label,
-        key=f"preset_select_{slot['id']}",
+        key=f"preset_select_{slot.id}",
         label_visibility="collapsed",
         on_change=update_from_preset,
-        args=(slot["id"],),
+        args=(slot.id,),
     )
 
     return selection
 
 
-def update_from_preset(slot_id):
+def update_from_preset(slot_id: str):
     """
     Callback to update slot data and name when the preset selection changes.
 
@@ -236,7 +230,7 @@ def update_from_preset(slot_id):
         slot_id (str): The unique identifier for the slot being updated.
     """
     # Find the specific slot by ID
-    slot = next((s for s in st.session_state.pedal_slots if s["id"] == slot_id), None)
+    slot = next((s for s in st.session_state.pedal_slots if s.id == slot_id), None)
     if not slot:
         return
 
@@ -255,24 +249,19 @@ def update_from_preset(slot_id):
 
         # Handle New Dict Format vs Legacy String
         if isinstance(preset_obj, dict):
-            slot["data"] = preset_obj["bom_text"]
-            slot["source_path"] = preset_obj.get("source_path")
-            slot.pop("pdf_path", None)
+            slot.data = preset_obj["bom_text"]
+            slot.source_path = preset_obj.get("source_path")
         else:
-            slot["data"] = preset_obj
-            slot.pop("source_path", None)
+            slot.data = preset_obj
+            slot.source_path = None
 
         # Force the text area to reflect this new data
-        st.session_state[f"text_preset_{slot_id}"] = slot["data"]
+        st.session_state[f"text_preset_{slot_id}"] = slot.data
 
-        # 2. Update Name (Only if empty or matches previous preset)
-        last_loaded_key = slot.get("last_loaded_preset")
-
-        current_name = slot["name"]
-
-        # Safe helper for the name check
+        # 2. Update Name
+        last_loaded_key = slot.last_loaded_preset
+        current_name = slot.name
         last_clean = get_clean_name(last_loaded_key) if last_loaded_key else ""
-
         should_update = not current_name or current_name in (
             last_clean,
             last_loaded_key,
@@ -280,31 +269,33 @@ def update_from_preset(slot_id):
 
         if should_update:
             clean_name = get_clean_name(new_preset)
-            slot["name"] = clean_name
+            slot.name = clean_name
             st.session_state[f"name_{slot_id}"] = clean_name
 
         # 3. Update Tracking
-        slot["last_loaded_preset"] = new_preset
+        slot.last_loaded_preset = new_preset
 
 
-def _reset_slot_state(slot: dict[str, Any], new_method: str) -> None:
+def _reset_slot_state(slot: ProjectSlot, new_method: str) -> None:
     """
     Clears data and UI state for a slot when switching input methods.
 
     Args:
-        slot: The slot dictionary to reset.
+        slot: The slot object to reset.
         new_method: The new method string being switched to.
     """
-    slot_id = slot["id"]
+    slot_id = slot.id
 
     # 1. Clear Data Fields
-    slot["data"] = None if new_method == "Upload File" else ""
-    slot["name"] = ""
+    slot.data = None if new_method == "Upload File" else ""
+    slot.name = ""
 
     # 2. Clear Metadata / Cache
-    keys_to_pop = ["pdf_path", "source_path", "cached_pdf_bytes", "last_loaded_preset"]
-    for k in keys_to_pop:
-        slot.pop(k, None)
+    # ProjectSlot doesn't use pop(), we set to None
+    slot.source_path = None
+    slot.cached_pdf_bytes = None
+    slot.last_loaded_preset = None
+    # pdf_path was legacy, ignored
 
     # 3. Clear Streamlit Session Keys
     # We clear the UI widgets so they don't retain old values
@@ -322,20 +313,18 @@ def _reset_slot_state(slot: dict[str, Any], new_method: str) -> None:
             del st.session_state[k]
 
     # 4. Update Method Tracker
-    slot["method"] = new_method
-    slot["last_method"] = new_method
+    slot.method = new_method
+    # last_method is removed in new architecture
 
 
-def on_method_change(slot_id):
+def on_method_change(slot_id: str):
     """
     Callback to handle input method switches (Paste, Upload, URL, Preset).
     """
-    slot = next((s for s in st.session_state.pedal_slots if s["id"] == slot_id), None)
+    slot = next((s for s in st.session_state.pedal_slots if s.id == slot_id), None)
     if not slot:
         return
 
-    # Fix: Pylance error. .get() returns Any | None, but we need str.
-    # We provide a default and wrap in str() to ensure type safety.
     new_method = str(st.session_state.get(f"method_{slot_id}", "Paste Text"))
 
     _reset_slot_state(slot, new_method)
@@ -346,18 +335,18 @@ def on_method_change(slot_id):
         preset_obj = BOM_PRESETS[first_preset]
 
         if isinstance(preset_obj, dict):
-            slot["data"] = preset_obj["bom_text"]
-            slot["source_path"] = preset_obj.get("source_path")
+            slot.data = preset_obj["bom_text"]
+            slot.source_path = preset_obj.get("source_path")
         else:
-            slot["data"] = preset_obj
+            slot.data = preset_obj
 
-        slot["last_loaded_preset"] = first_preset
+        slot.last_loaded_preset = first_preset
 
         # Auto-fill name
         clean_name = get_clean_name(first_preset)
-        slot["name"] = clean_name
+        slot.name = clean_name
         st.session_state[f"name_{slot_id}"] = clean_name
-        st.session_state[f"text_preset_{slot_id}"] = slot["data"]
+        st.session_state[f"text_preset_{slot_id}"] = slot.data
 
 
 st.divider()
