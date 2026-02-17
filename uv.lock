@@ -1200,7 +1200,7 @@ wheels = [
 [[package]]
 name = "star-ground"
 version = "2.2.1"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
     { name = "fpdf2" },
     { name = "google-auth" },
