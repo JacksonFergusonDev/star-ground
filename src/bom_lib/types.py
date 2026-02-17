@@ -137,10 +137,6 @@ class Inventory(UserDict):
                 self[key]["sources"][src].extend(refs * multiplier)
 
 
-# Update Type Alias to point to new Class for backward compatibility checks
-InventoryType = Inventory
-
-
 def create_empty_inventory() -> Inventory:
     """Factory function to return new Inventory instance."""
     return Inventory()

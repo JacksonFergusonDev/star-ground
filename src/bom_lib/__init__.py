@@ -31,7 +31,6 @@ from .sourcing import (
 )
 from .types import (
     Inventory,
-    InventoryType,
     PartData,
     ProjectSlot,
     StatsDict,
@@ -48,7 +47,6 @@ from .utils import (
 
 __all__ = [
     # types
-    "InventoryType",
     "StatsDict",
     "create_empty_inventory",
     "PartData",
