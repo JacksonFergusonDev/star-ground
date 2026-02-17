@@ -258,7 +258,7 @@ KEYWORD_EXTRAS = {
 # Master Keyword List
 # Combines all functional names and extra descriptive terms.
 # Sorted list used for deterministic Regex generation in the PDF parser.
-KEYWORDS = sorted(list(POT_NAMES | SWITCH_LABELS | KEYWORD_EXTRAS))
+KEYWORDS = sorted(POT_NAMES | SWITCH_LABELS | KEYWORD_EXTRAS)
 
 # Manufacturing Artifact Exclusion List
 # These tokens indicate lines in a BOM that describe non-purchasable items

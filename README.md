@@ -1,4 +1,4 @@
-# ⚡ Star Ground (v2.2.1)
+# ⚡ Star Ground (v2.3.0)
 
 ![Python Version](https://img.shields.io/badge/python-3.13-blue.svg)
 [![Python Application CI](https://github.com/JacksonFergusonDev/star-ground/actions/workflows/python-app.yml/badge.svg)](https://github.com/JacksonFergusonDev/star-ground/actions/workflows/python-app.yml)

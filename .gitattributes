@@ -1,0 +1,13 @@
+# 1. Global Settings
+* text=auto eol=lf
+
+# 2. Binary Files
+*.pdf binary
+*.gif binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.ico binary
+
+# 3. Lockfiles
+uv.lock binary linguist-generated

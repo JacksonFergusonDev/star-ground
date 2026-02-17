@@ -18,7 +18,7 @@ INPUT_DIR = "raw_boms"
 OUTPUT_FILE = "src/bom_lib/_presets_data.py"
 
 
-def main():
+def main() -> None:
     """
     Main execution entry point.
 
@@ -135,7 +135,7 @@ def main():
             data = presets[k]
             # Manual formatting to ensure BOM text uses Python triple quotes correctly.
             # We indent deeply (12 spaces) to align inside the dict structure.
-            content = data["bom_text"].strip().replace("\n", "\n            ")
+            content = str(data["bom_text"]).strip().replace("\n", "\n            ")
 
             f.write(f"    {repr(k)}: {{\n")
             f.write(f'        \'bom_text\': """\n            {content}\n        """,\n')
