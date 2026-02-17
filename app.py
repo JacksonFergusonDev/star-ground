@@ -154,9 +154,7 @@ def render_preset_selector(slot: ProjectSlot, idx: int):
     else:
         # If All sources, show all unique categories across everything
         # Flatten the list of lists
-        flat_cats = sorted(
-            list(set(cat for sublist in cat_map.values() for cat in sublist))
-        )
+        flat_cats = sorted({cat for sublist in cat_map.values() for cat in sublist})
         cat_options = ["All"] + flat_cats
 
     cat_key = f"filter_cat_{slot.id}"
@@ -331,7 +329,7 @@ def on_method_change(slot_id: str):
 
     # Handle specific initialization for Presets
     if new_method == "Preset":
-        first_preset = sorted(list(BOM_PRESETS.keys()))[0]
+        first_preset = sorted(BOM_PRESETS.keys())[0]
         preset_obj = BOM_PRESETS[first_preset]
 
         if isinstance(preset_obj, dict):
