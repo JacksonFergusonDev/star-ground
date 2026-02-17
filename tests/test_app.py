@@ -4,7 +4,8 @@ from typing import cast
 import pytest
 from streamlit.testing.v1 import AppTest
 
-from src.bom_lib import BOM_PRESETS, InventoryType, ProjectSlot
+from src.bom_lib import BOM_PRESETS, ProjectSlot
+from src.bom_lib.types import Inventory
 
 
 # --- Helpers ---
@@ -79,7 +80,7 @@ def test_csv_processing_via_state_injection(app):
     """
     # 1. Mock the inventory structure that the CSV parser WOULD have produced
     mock_inventory = cast(
-        InventoryType,
+        Inventory,
         defaultdict(lambda: {"qty": 0, "refs": [], "sources": defaultdict(list)}),
     )
     mock_inventory["Resistors | 10k"]["qty"] = 5
@@ -90,7 +91,7 @@ def test_csv_processing_via_state_injection(app):
 
     # Mock Stock (User already has 2x 10k resistors)
     mock_stock = cast(
-        InventoryType,
+        Inventory,
         defaultdict(lambda: {"qty": 0, "refs": [], "sources": defaultdict(list)}),
     )
     mock_stock["Resistors | 10k"]["qty"] = 2

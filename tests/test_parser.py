@@ -19,7 +19,6 @@ from hypothesis import strategies as st
 
 from src.bom_lib import (
     BOM_PRESETS,
-    InventoryType,
     calculate_net_needs,
     deduplicate_refs,
     expand_refs,
@@ -34,6 +33,7 @@ from src.bom_lib import (
     parse_value_to_float,
     parse_with_verification,
 )
+from src.bom_lib.types import Inventory
 
 # --- Standard Unit Tests ---
 
@@ -306,7 +306,7 @@ def test_hardware_injection_and_smart_merge():
     # Setup: Inventory has 2 existing 3.3k resistors (for the circuit)
     # and 3 Pots (which implies we need 3 Knobs)
     inventory = cast(
-        InventoryType,
+        Inventory,
         defaultdict(lambda: {"qty": 0, "refs": [], "sources": defaultdict(list)}),
     )
     inventory["Resistors | 3.3k"]["qty"] = 2
@@ -383,7 +383,7 @@ def test_fuzz_germanium_trigger():
     """
     # Setup inventory with a Fuzz PCB
     inventory = cast(
-        InventoryType,
+        Inventory,
         defaultdict(lambda: {"qty": 0, "refs": [], "sources": defaultdict(list)}),
     )
     inventory["PCB | Fuzz Face"]["qty"] = 1
@@ -444,7 +444,7 @@ def test_hardware_search_term_validity():
     """
     # Fix: Must use defaultdict to prevent KeyError during injection
     inventory = cast(
-        InventoryType,
+        Inventory,
         defaultdict(lambda: {"qty": 0, "refs": [], "sources": defaultdict(list)}),
     )
 
@@ -567,7 +567,7 @@ def test_net_needs_calculation():
     """
     # 1. Setup BOM
     bom = cast(
-        InventoryType,
+        Inventory,
         defaultdict(lambda: {"qty": 0, "refs": [], "sources": defaultdict(list)}),
     )
     bom["Resistors | 10k"]["qty"] = 10  # Need 10
@@ -575,7 +575,7 @@ def test_net_needs_calculation():
 
     # 2. Setup Stock
     stock = cast(
-        InventoryType,
+        Inventory,
         defaultdict(lambda: {"qty": 0, "refs": [], "sources": defaultdict(list)}),
     )
     stock["Resistors | 10k"]["qty"] = 4  # Have 4 (Deficit 6)
