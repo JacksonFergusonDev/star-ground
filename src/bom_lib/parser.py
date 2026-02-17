@@ -471,7 +471,18 @@ def parse_pedalpcb_pdf(
         A tuple of (Updated Inventory, Parsing Statistics).
     """
     # Lazy import to avoid loading heavy PDF libraries unless needed
-    import pdfplumber
+    try:
+        import pdfplumber
+    except ImportError:
+        logger.error("pdfplumber not installed.")
+        return create_empty_inventory(), {
+            "lines_read": 0,
+            "parts_found": 0,
+            "residuals": [],
+            "extracted_title": None,
+            "seen_refs": set(),
+            "errors": ["Missing dependency: pdfplumber"],
+        }
 
     inventory = create_empty_inventory()
     stats: StatsDict = {
@@ -483,9 +494,19 @@ def parse_pedalpcb_pdf(
         "errors": [],
     }
 
+    pdf = None
     try:
-        with pdfplumber.open(filepath) as pdf:
-            # --- PHASE 1: DATA EXTRACTION (Single Pass) ---
+        # Phase 1: File Access
+        # We isolate this to distinguish between "Bad File" and "Bad Code"
+        try:
+            pdf = pdfplumber.open(filepath)
+        except Exception as e:
+            logger.error(f"Failed to open PDF {source_name}: {e}")
+            stats["errors"].append(f"File Error: {str(e)}")
+            return inventory, stats
+
+        # Phase 2: Extraction
+        try:
             # Iterate pages once to grab expensive text/table data
             pages_data = []
             for page in pdf.pages:
@@ -519,6 +540,7 @@ def parse_pedalpcb_pdf(
                     title_words.sort(key=lambda x: (x["top"], x["x0"]))
                     stats["extracted_title"] = " ".join(w["text"] for w in title_words)
             except Exception:
+                # Title extraction is heuristic/optional; don't fail the build if it misses.
                 pass
 
             # --- STRATEGY 1: TABLE EXTRACTION ---
@@ -528,9 +550,15 @@ def parse_pedalpcb_pdf(
             # Automatically adjusts strictness based on whether tables were found
             _parse_via_regex(pages_data, inventory, source_name, stats)
 
-    except Exception as e:
-        logger.error(f"CRITICAL PARSE FAILURE: {source_name}")
-        logger.error(traceback.format_exc())
-        stats["errors"].append(f"{source_name}: {str(e)}")
+        except Exception as e:
+            # Capture internal parsing errors (logic bugs, layout changes)
+            logger.error(f"Parsing logic failed for {source_name}")
+            logger.error(traceback.format_exc())
+            stats["errors"].append(f"Parse Error: {str(e)}")
+
+    finally:
+        # Always close the file handle
+        if pdf:
+            pdf.close()
 
     return inventory, stats
