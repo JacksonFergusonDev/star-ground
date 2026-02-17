@@ -112,7 +112,7 @@ class StickerSheet(FPDF):
         - Margins: optimized for standard US Letter.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         # Letter size (215.9mm x 279.4mm)
         super().__init__(format="Letter", unit="mm")
         self.set_auto_page_break(auto=False)
@@ -130,7 +130,9 @@ class StickerSheet(FPDF):
 
         self.add_page()
 
-    def add_sticker(self, project_code: str, part_val: str, refs: list[str], qty: int):
+    def add_sticker(
+        self, project_code: str, part_val: str, refs: list[str], qty: int
+    ) -> None:
         """
         Draws a single sticker at the next available slot.
 
@@ -209,12 +211,12 @@ class FieldManual(FPDF):
         - Logic to handle large checklists that span multiple pages.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.set_auto_page_break(auto=True, margin=15)
         self.set_title("Star Ground Field Manual")
 
-    def header(self):
+    def header(self) -> None:
         """Renders the header on every page."""
         self.set_font("Courier", "B", 10)
         self.cell(
@@ -228,17 +230,17 @@ class FieldManual(FPDF):
         self.line(10, 20, 200, 20)
         self.ln(10)
 
-    def footer(self):
+    def footer(self) -> None:
         """Renders the footer on every page."""
         self.set_y(-15)
         self.set_font("Courier", "I", 8)
         self.cell(0, 10, f"Page {self.page_no()}", align="C")
 
-    def draw_checkbox(self, x: float, y: float):
+    def draw_checkbox(self, x: float, y: float) -> None:
         """Draws a square checkbox at the specified coordinates."""
         self.rect(x, y, 4, 4)
 
-    def add_project(self, project_name: str, parts: list[dict]):
+    def add_project(self, project_name: str, parts: list[dict]) -> None:
         """
         Adds a full project checklist to the PDF.
 
@@ -367,7 +369,7 @@ def sort_by_z_height(part_list: list[dict]) -> list[dict]:
         "ICs": 90,  # "Last" (Chip Insertion)
     }
 
-    def get_rank(item):
+    def get_rank(item: dict) -> int:
         cat = item["category"]
         val = str(item["value"])
 
@@ -409,7 +411,7 @@ def float_val_check(val_str: str) -> float:
 
 def _write_field_manuals(
     zf: zipfile.ZipFile, inventory: Inventory, slots: list[ProjectSlot]
-):
+) -> None:
     """Helper: Generates Field Manual PDFs and writes them to the ZIP archive."""
     processed_projects = set()
 
@@ -466,7 +468,7 @@ def _write_field_manuals(
 
 def _write_stickers(
     zf: zipfile.ZipFile, inventory: Inventory, slots: list[ProjectSlot]
-):
+) -> None:
     """Helper: Generates Sticker Sheet PDFs and writes them to the ZIP archive."""
     processed_projects = set()
 
