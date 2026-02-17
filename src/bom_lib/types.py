@@ -5,10 +5,32 @@ This module contains the TypedDicts and type aliases used throughout the
 parsing and sourcing pipeline to ensure consistent data passing.
 """
 
+import uuid
 from collections import UserDict, defaultdict
-from typing import TypedDict
+from dataclasses import dataclass, field
+from typing import Any, TypedDict
 
 from src.bom_lib import parse_value_to_float
+
+
+@dataclass
+class ProjectSlot:
+    """
+    Represents the UI state for a single pedal project slot.
+    Shared between the Streamlit frontend and PDF generation backend.
+    """
+
+    id: str = field(default_factory=lambda: str(uuid.uuid4()))
+    name: str = ""
+    method: str = "Paste Text"
+    count: int = 1
+    data: Any = None
+
+    # Cache fields
+    last_loaded_preset: str | None = None
+    cached_pdf_bytes: bytes | None = None
+    source_path: str | None = None
+    locked_name: str | None = None
 
 
 class StatsDict(TypedDict):

@@ -29,7 +29,14 @@ from .sourcing import (
     get_spec_type,
     get_standard_hardware,
 )
-from .types import Inventory, InventoryType, PartData, StatsDict, create_empty_inventory
+from .types import (
+    Inventory,
+    InventoryType,
+    PartData,
+    ProjectSlot,
+    StatsDict,
+    create_empty_inventory,
+)
 from .utils import (
     deduplicate_refs,
     expand_refs,
@@ -46,6 +53,7 @@ __all__ = [
     "create_empty_inventory",
     "PartData",
     "Inventory",
+    "ProjectSlot",
     # parser
     "parse_csv_bom",
     "parse_pedalpcb_pdf",

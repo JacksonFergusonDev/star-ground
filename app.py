@@ -3,16 +3,16 @@ import io
 import logging
 import os
 import tempfile
-import uuid
 from typing import Any, cast
-from dataclasses import dataclass, field
 
 import streamlit as st
 
 from src.bom_lib import (
     BOM_PRESETS,
+    ProjectSlot,
     StatsDict,
     calculate_net_needs,
+    create_empty_inventory,
     generate_pedalpcb_url,
     generate_search_term,
     generate_tayda_url,
@@ -48,25 +48,6 @@ st.markdown(
 # Initialize session state for logs
 if "log_capture" not in st.session_state:
     st.session_state.log_capture = io.StringIO()
-
-
-@dataclass
-class ProjectSlot:
-    """
-    Represents the UI state for a single pedal project slot.
-    """
-
-    id: str = field(default_factory=lambda: str(uuid.uuid4()))
-    name: str = ""
-    method: str = "Paste Text"
-    count: int = 1
-    data: Any = None
-
-    # Cache fields
-    last_loaded_preset: str | None = None
-    cached_pdf_bytes: bytes | None = None
-    source_path: str | None = None
-    locked_name: str | None = None
 
 
 class StreamlitLogHandler(logging.Handler):
