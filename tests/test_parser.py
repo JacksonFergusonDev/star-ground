@@ -601,8 +601,8 @@ def test_preset_integrity():
     3. The parser can successfully find parts in it.
     """
     for name, data in BOM_PRESETS.items():
-        # Handle new Dict format vs Legacy string
-        raw_text = data["bom_text"] if isinstance(data, dict) else data
+        val = data["bom_text"] if isinstance(data, dict) else data
+        raw_text = str(val)
 
         # Sanity check: Text should exist
         assert raw_text.strip(), f"Preset '{name}' is empty!"

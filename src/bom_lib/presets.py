@@ -50,7 +50,7 @@ def get_preset_metadata() -> tuple[
             )
 
     return (
-        sorted(list(sources)),
-        {k: sorted(list(v)) for k, v in categories.items()},
+        sorted(sources),
+        {k: sorted(v) for k, v in categories.items()},
         lookup,
     )

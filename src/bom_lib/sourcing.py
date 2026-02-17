@@ -339,7 +339,7 @@ def get_standard_hardware(inventory: Inventory, pedal_count: int = 1) -> None:
         qty_per_pedal: int,
         note: str,
         qty_override: int | None = None,
-    ):
+    ) -> None:
         key = f"{category} | {val}"
         total_qty = (
             qty_override if qty_override is not None else (qty_per_pedal * pedal_count)

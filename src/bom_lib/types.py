@@ -79,7 +79,7 @@ class Inventory(UserDict):
     invalid state transitions (e.g., assigning string to quantity).
     """
 
-    def __init__(self, data=None):
+    def __init__(self, data: dict[str, PartData] | None = None) -> None:
         super().__init__(data)
         # Ensure default factory behavior for new keys
         if self.data is None:

@@ -1,10 +1,14 @@
 import datetime
+from typing import TYPE_CHECKING
 
 import streamlit as st
 
+if TYPE_CHECKING:
+    import gspread
+
 
 @st.cache_resource(ttl="1h")
-def get_gsheet_client():
+def get_gsheet_client() -> "gspread.Client":
     """
     Establishes a persistent connection to Google Sheets.
 
@@ -28,7 +32,7 @@ def get_gsheet_client():
     return gspread.authorize(creds)
 
 
-def save_feedback(rating, text):
+def save_feedback(rating: str, text: str) -> None:
     """
     Appends a new feedback entry to the "Star Ground Feedback" Google Sheet.
 
