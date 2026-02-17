@@ -19,7 +19,7 @@ from collections import defaultdict
 from fpdf import FPDF
 from fpdf.enums import XPos, YPos
 
-from src.bom_lib import deduplicate_refs
+from src.bom_lib import Inventory, ProjectSlot, deduplicate_refs
 
 
 def condense_refs(refs: list[str]) -> str:
@@ -407,12 +407,14 @@ def float_val_check(val_str: str) -> float:
     return 0.0
 
 
-def _write_field_manuals(zf: zipfile.ZipFile, inventory: dict, slots: list[dict]):
+def _write_field_manuals(
+    zf: zipfile.ZipFile, inventory: Inventory, slots: list[ProjectSlot]
+):
     """Helper: Generates Field Manual PDFs and writes them to the ZIP archive."""
     processed_projects = set()
 
     for slot in slots:
-        project_name = slot.get("locked_name", slot["name"])
+        project_name = slot.locked_name or slot.name
         if not project_name:
             continue
 
@@ -462,12 +464,14 @@ def _write_field_manuals(zf: zipfile.ZipFile, inventory: dict, slots: list[dict]
             )
 
 
-def _write_stickers(zf: zipfile.ZipFile, inventory: dict, slots: list[dict]):
+def _write_stickers(
+    zf: zipfile.ZipFile, inventory: Inventory, slots: list[ProjectSlot]
+):
     """Helper: Generates Sticker Sheet PDFs and writes them to the ZIP archive."""
     processed_projects = set()
 
     for slot in slots:
-        project_name = slot.get("locked_name", slot["name"])
+        project_name = slot.locked_name or slot.name
         if not project_name:
             continue
 
@@ -502,12 +506,12 @@ def _write_stickers(zf: zipfile.ZipFile, inventory: dict, slots: list[dict]):
         )
 
 
-def generate_pdf_bundle(inventory: dict, slots: list[dict]) -> bytes:
+def generate_pdf_bundle(inventory: Inventory, slots: list[ProjectSlot]) -> bytes:
     """
     Generates a ZIP file containing only the generated PDFs (Manuals + Stickers).
 
     Args:
-        inventory (dict): The master inventory dictionary.
+        inventory (Inventory): The master inventory object.
         slots (list[dict]): The list of project slots.
 
     Returns:
@@ -521,7 +525,10 @@ def generate_pdf_bundle(inventory: dict, slots: list[dict]) -> bytes:
 
 
 def generate_master_zip(
-    inventory: dict, slots: list[dict], shopping_list_csv: bytes, stock_csv: bytes
+    inventory: Inventory,
+    slots: list[ProjectSlot],
+    shopping_list_csv: bytes,
+    stock_csv: bytes,
 ) -> bytes:
     """
     Generates the "Master ZIP" containing all project artifacts.
@@ -533,7 +540,7 @@ def generate_master_zip(
     4. Info.txt (Metadata)
 
     Args:
-        inventory (dict): The master inventory.
+        inventory (Inventory): The master inventory.
         slots (list[dict]): The project slots.
         shopping_list_csv (bytes): The CSV bytes for the shopping list.
         stock_csv (bytes): The CSV bytes for the stock update.
@@ -571,7 +578,7 @@ def generate_master_zip(
         used_filenames = set()
 
         for slot in slots:
-            project_name = slot.get("locked_name", slot["name"])
+            project_name = slot.locked_name or slot.name
             if not project_name:
                 continue
 
@@ -581,14 +588,14 @@ def generate_master_zip(
             dest_name = ""
 
             # Strategy A: Use Cached Bytes (URL/Upload)
-            if "cached_pdf_bytes" in slot and slot["cached_pdf_bytes"]:
-                file_content = slot["cached_pdf_bytes"]
+            if slot.cached_pdf_bytes:
+                file_content = slot.cached_pdf_bytes
                 dest_name = f"Source Documents/{safe_name} Source.pdf"
 
             # Strategy B: Use Local Path (Preset)
-            elif "source_path" in slot and slot["source_path"]:
+            elif slot.source_path:
                 try:
-                    src_path = slot["source_path"]
+                    src_path = slot.source_path
                     _, ext = os.path.splitext(src_path)
                     if not ext:
                         ext = ".txt"
@@ -599,18 +606,6 @@ def generate_master_zip(
                 except Exception:
                     pass
 
-            # Strategy C: Legacy Fallback (Session State Backwards Compatibility)
-            elif "pdf_path" in slot and slot["pdf_path"]:
-                try:
-                    with open(slot["pdf_path"], "rb") as f:
-                        file_content = f.read()
-                    dest_name = f"Source Documents/{safe_name} Source.pdf"
-                except Exception:
-                    pass
-
-            # Deduplication Logic:
-            # If we've already added a file with this name (e.g. "Big Muff Source.pdf"),
-            # we simply skip adding it again to avoid redundancy/warnings.
             if file_content and dest_name and dest_name not in used_filenames:
                 zf.writestr(dest_name, file_content)
                 used_filenames.add(dest_name)

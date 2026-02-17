@@ -4,7 +4,7 @@ from typing import cast
 import pytest
 from streamlit.testing.v1 import AppTest
 
-from src.bom_lib import BOM_PRESETS, InventoryType
+from src.bom_lib import BOM_PRESETS, InventoryType, ProjectSlot
 
 
 # --- Helpers ---
@@ -148,14 +148,13 @@ def test_source_ref_duplication_on_merge(app):
     # 1. Inject State directly
     app.session_state["pedal_slots"] = [
         # Slot 1: 2x Pedal
-        {
-            "id": "A",
-            "name": "DupeTest",
-            "count": 2,
-            "method": "Paste Text",
-            "last_method": "Paste Text",
-            "data": "R1 10k",
-        },
+        ProjectSlot(
+            id="A",
+            name="DupeTest",
+            count=2,
+            method="Paste Text",
+            data="R1 10k",
+        ),
     ]
 
     # 2. Click Generate
