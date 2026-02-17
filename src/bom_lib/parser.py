@@ -13,14 +13,9 @@ import traceback
 from typing import Any
 
 import src.bom_lib.constants as C
-from src.bom_lib import (
-    InventoryType,
-    StatsDict,
-    categorize_part,
-    create_empty_inventory,
-    expand_refs,
-    normalize_value_by_category,
-)
+from src.bom_lib.classifier import categorize_part, normalize_value_by_category
+from src.bom_lib.types import InventoryType, StatsDict, create_empty_inventory
+from src.bom_lib.utils import expand_refs
 
 # Initialize Logger
 logger = logging.getLogger(__name__)

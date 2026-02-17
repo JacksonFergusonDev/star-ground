@@ -8,7 +8,8 @@ This module acts as the "Controller" for the BOM library. It handles:
 - Renaming sources/projects.
 """
 
-from src.bom_lib import InventoryType, PartData, parse_value_to_float
+from src.bom_lib.types import InventoryType, PartData
+from src.bom_lib.utils import parse_value_to_float
 
 
 def calculate_net_needs(bom: InventoryType, stock: InventoryType) -> InventoryType:

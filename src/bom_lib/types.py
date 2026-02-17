@@ -10,7 +10,7 @@ from collections import UserDict, defaultdict
 from dataclasses import dataclass, field
 from typing import Any, TypedDict
 
-from src.bom_lib import parse_value_to_float
+from src.bom_lib.utils import parse_value_to_float
 
 
 @dataclass
