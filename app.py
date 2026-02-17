@@ -4,14 +4,13 @@ import logging
 import os
 import tempfile
 import uuid
-from collections import defaultdict
 from typing import Any, cast
+from dataclasses import dataclass, field
 
 import streamlit as st
 
 from src.bom_lib import (
     BOM_PRESETS,
-    InventoryType,
     StatsDict,
     calculate_net_needs,
     generate_pedalpcb_url,
@@ -49,6 +48,25 @@ st.markdown(
 # Initialize session state for logs
 if "log_capture" not in st.session_state:
     st.session_state.log_capture = io.StringIO()
+
+
+@dataclass
+class ProjectSlot:
+    """
+    Represents the UI state for a single pedal project slot.
+    """
+
+    id: str = field(default_factory=lambda: str(uuid.uuid4()))
+    name: str = ""
+    method: str = "Paste Text"
+    count: int = 1
+    data: Any = None
+
+    # Cache fields
+    last_loaded_preset: str | None = None
+    cached_pdf_bytes: bytes | None = None
+    source_path: str | None = None
+    locked_name: str | None = None
 
 
 class StreamlitLogHandler(logging.Handler):
@@ -99,17 +117,12 @@ if "stats" not in st.session_state:
 
 # Initialize session state for pedal slots
 if "pedal_slots" not in st.session_state:
-    init_slots: list[dict[str, Any]] = [
-        {"id": str(uuid.uuid4()), "name": "", "method": "Paste Text"}
-    ]
-    st.session_state.pedal_slots = init_slots
+    st.session_state.pedal_slots = [ProjectSlot()]
 
 
 def add_slot():
     """Appends a new empty pedal slot to the session state."""
-    st.session_state.pedal_slots.append(
-        {"id": str(uuid.uuid4()), "name": "", "method": "Paste Text"}
-    )
+    st.session_state.pedal_slots.append(ProjectSlot())
 
 
 def remove_slot(idx):
@@ -386,12 +399,11 @@ for i, slot in enumerate(st.session_state.pedal_slots):
         c1, c2, c3, c4 = st.columns([3, 1, 2, 0.5])
 
         # Project Name
-        name_key = f"name_{slot['id']}"
-        name_kwargs = (
-            {"value": slot["name"]} if name_key not in st.session_state else {}
-        )
+        name_key = f"name_{slot.id}"
+        # For the dataclass, we access .name directly
+        name_kwargs = {"value": slot.name} if name_key not in st.session_state else {}
 
-        slot["name"] = c1.text_input(
+        slot.name = c1.text_input(
             f"Project Name #{i + 1}",
             key=name_key,
             placeholder=f"e.g. {PLACEHOLDERS[i % len(PLACEHOLDERS)]}",
@@ -399,42 +411,41 @@ for i, slot in enumerate(st.session_state.pedal_slots):
         )
 
         # Quantity
-        slot["count"] = c2.number_input(
+        slot.count = c2.number_input(
             "Qty",
             min_value=1,
-            value=slot.get("count", 1),
-            key=f"qty_{slot['id']}",
+            value=slot.count,
+            key=f"qty_{slot.id}",
             label_visibility="visible",
         )
 
         # Input Method
-        slot["method"] = c3.radio(
+        slot.method = c3.radio(
             "Input Method",
             ["Paste Text", "Upload File", "From URL", "Preset"],
-            key=f"method_{slot['id']}",
+            key=f"method_{slot.id}",
             horizontal=True,
             label_visibility="collapsed",
             on_change=on_method_change,
-            args=(slot["id"],),
+            args=(slot.id,),
         )
 
         # Remove Button (Top Right)
         if len(st.session_state.pedal_slots) > 1 and c4.button(
-            "🗑️", key=f"del_{slot['id']}"
+            "🗑️", key=f"del_{slot.id}"
         ):
             remove_slot(i)
             st.rerun()
 
         # Row 2: Data Input (Full Width)
-        if slot["method"] == "Paste Text":
-            text_key = f"text_{slot['id']}"
+        if slot.method == "Paste Text":
+            text_key = f"text_{slot.id}"
+            # Use dot access for data, default to empty string
             area_kwargs = (
-                {"value": slot.get("data", "")}
-                if text_key not in st.session_state
-                else {}
+                {"value": slot.data or ""} if text_key not in st.session_state else {}
             )
 
-            slot["data"] = st.text_area(
+            slot.data = st.text_area(
                 "BOM Text",
                 height=150,
                 key=text_key,
@@ -443,34 +454,33 @@ for i, slot in enumerate(st.session_state.pedal_slots):
                 **area_kwargs,
             )
 
-        elif slot["method"] == "Upload File":
-            slot["data"] = st.file_uploader(
+        elif slot.method == "Upload File":
+            slot.data = st.file_uploader(
                 "Upload BOM",
                 type=["csv", "pdf"],
-                key=f"file_{slot['id']}",
+                key=f"file_{slot.id}",
             )
 
-        elif slot["method"] == "From URL":
-            url_key = f"url_{slot['id']}"
-            slot["data"] = st.text_input(
+        elif slot.method == "From URL":
+            url_key = f"url_{slot.id}"
+            slot.data = st.text_input(
                 "BOM URL",
                 key=url_key,
                 placeholder="https://raw.githubusercontent.com/...",
             )
 
-        elif slot["method"] == "Preset":
+        elif slot.method == "Preset":
             # 1. The Selector (Hierarchical)
+            # Note: Ensure render_preset_selector is compatible with ProjectSlot objects
             render_preset_selector(slot, i)
 
             # 2. The Read-Only Preview
-            text_key = f"text_preset_{slot['id']}"
+            text_key = f"text_preset_{slot.id}"
             area_kwargs = (
-                {"value": slot.get("data", "")}
-                if text_key not in st.session_state
-                else {}
+                {"value": slot.data or ""} if text_key not in st.session_state else {}
             )
 
-            slot["data"] = st.text_area(
+            slot.data = st.text_area(
                 "Preview",
                 height=150,
                 key=text_key,
@@ -491,7 +501,7 @@ stock_file = st.file_uploader(
 st.divider()
 
 active_names = [
-    s["name"] for s in st.session_state.pedal_slots if s["name"] and s["name"].strip()
+    s.name for s in st.session_state.pedal_slots if s.name and s.name.strip()
 ]
 if len(active_names) != len(set(active_names)):
     st.warning(
@@ -499,10 +509,11 @@ if len(active_names) != len(set(active_names)):
     )
 
 if st.button("Generate Master List", type="primary", width="stretch"):
-    inventory: InventoryType = cast(
-        InventoryType,
-        defaultdict(lambda: {"qty": 0, "refs": [], "sources": defaultdict(list)}),
-    )
+    # REFACTOR: Use the factory to get the new Inventory Class
+    from src.bom_lib.types import create_empty_inventory
+
+    inventory = create_empty_inventory()
+
     stats: StatsDict = {
         "lines_read": 0,
         "parts_found": 0,
@@ -511,42 +522,43 @@ if st.button("Generate Master List", type="primary", width="stretch"):
         "seen_refs": set(),
         "errors": [],
     }
+
     # Process Each Slot
     for i, slot in enumerate(st.session_state.pedal_slots):
         # Resolve Name
-        current_name = str(slot.get("name") or "")
+        current_name = str(slot.name or "")
         source = current_name if current_name.strip() else f"Project #{i + 1}"
-        qty_multiplier = slot.get("count", 1)
+        qty_multiplier = slot.count
 
         # Unified Processing
         p_inv, p_stats, detected_title, raw_content = process_input_data(
-            slot["method"], slot["data"], source_name=source
+            slot.method, slot.data, source_name=source
         )
 
         # Store the raw content in the slot if it was returned (i.e. it was a PDF)
-        # This enables the "Export" feature to include the original PDF in the ZIP.
         if raw_content:
-            slot["cached_pdf_bytes"] = raw_content
+            slot.cached_pdf_bytes = raw_content
 
         # Auto-Rename Logic
         if detected_title and not current_name.strip():
             # Update Slot Name
-            slot["name"] = str(detected_title)
+            slot.name = str(detected_title)
             # Remap Inventory Keys
             rename_source_in_inventory(p_inv, source, str(detected_title))
 
-        # Merge
+        # REFACTOR: Use the .merge() method of the Inventory class
         inventory.merge(p_inv, qty_multiplier)
+
         stats["lines_read"] += p_stats.get("lines_read", 0)
         stats["parts_found"] += p_stats.get("parts_found", 0)
         stats["residuals"].extend(p_stats.get("residuals", []))
 
         # Final Fallback: If name is still empty, lock in the placeholder
-        if not slot["name"].strip():
-            slot["name"] = source
+        if not slot.name.strip():
+            slot.name = source
 
         # Save the final resolved name
-        slot["locked_name"] = slot["name"]
+        slot.locked_name = slot.name
 
     # Process Stock if uploaded
     stock_inventory = None
@@ -569,7 +581,6 @@ if st.button("Generate Master List", type="primary", width="stretch"):
     # Validation Logic
     if stats["parts_found"] == 0:
         st.error("❌ No parts found! Check your BOM text or file.")
-        # If we failed completely, show the specific errors immediately so user knows why
         if stats.get("errors"):
             with st.expander("Show Errors", expanded=True):
                 for err in stats["errors"]:
@@ -582,7 +593,6 @@ if st.button("Generate Master List", type="primary", width="stretch"):
             st.error(f"❌ {err}")
 
     else:
-        # Case: Parts found AND No errors (Clean Run)
         st.toast("Master List Generated Successfully", icon="✅")
 
 # Main Process Flow
@@ -590,7 +600,7 @@ if st.session_state.inventory and st.session_state.stats:
     inventory = copy.deepcopy(st.session_state.inventory)
     stats = cast(StatsDict, st.session_state.stats)
 
-    # 1. Show Stats (Always show to help debug)
+    # 1. Show Stats
     with st.container():
         c1, c2, c3 = st.columns(3)
         c1.metric("Lines Scanned", stats["lines_read"])
@@ -620,7 +630,6 @@ if st.session_state.inventory and st.session_state.stats:
         show_hardware = c_filt1.checkbox("Include Hardware Kit", value=True)
         show_extras = c_filt2.checkbox("Include Sockets & Adapters", value=True)
 
-    # Explain the columns
     st.info("""
     **📋 Key:**
     * **Circuit Board:** Components found in your BOM.
@@ -632,9 +641,7 @@ if st.session_state.inventory and st.session_state.stats:
     final_data = []
 
     # STEP A: Inject Hardware (Mutates Inventory In-Place)
-    calc_pedal_count = sum(
-        slot.get("count", 1) for slot in st.session_state.pedal_slots
-    )
+    calc_pedal_count = sum(slot.count for slot in st.session_state.pedal_slots)
     # No return value, just mutation
     get_standard_hardware(inventory, calc_pedal_count)
 
@@ -645,8 +652,6 @@ if st.session_state.inventory and st.session_state.stats:
     if stock:
         # Calculate Net Needs (Deficit)
         net_inventory = calculate_net_needs(inventory, stock)
-        # We iterate the ORIGINAL inventory to show everything,
-        # but we pull purchasing math from net_inventory
         display_source = inventory
     else:
         display_source = inventory
@@ -688,7 +693,6 @@ if st.session_state.inventory and st.session_state.stats:
             continue
 
         # --- ORIGIN ASSIGNMENT ---
-        # Friendly names for the user
         if is_pure_hardware:
             origin = "Hardware Kit"
         elif is_extra:
@@ -696,8 +700,7 @@ if st.session_state.inventory and st.session_state.stats:
         else:
             origin = "Circuit Board"
 
-        # Calculate purchasing requirements based on net deficit
-        # Pass the cached float value to avoid re-parsing
+        # Calculate purchasing requirements
         buy_qty, note = get_buy_details(
             category, value, net_qty, fval=item.get("val_float")
         )
@@ -705,10 +708,7 @@ if st.session_state.inventory and st.session_state.stats:
         # Append context from Auto-Inject if present
         auto_inject_notes = sources.get("Auto-Inject", [])
 
-        # Check against origin (using the new friendly label "Hardware Kit")
         if auto_inject_notes and origin != "Hardware Kit":
-            # This handles "Smart Merge" cases (e.g. LED CLR merged into Resistors)
-            # e.g. "🤖 Standard Part: LED CLR"
             formatted_notes = ", ".join(auto_inject_notes)
             note += f" | 🤖 Standard Part: {formatted_notes}"
 
@@ -716,12 +716,10 @@ if st.session_state.inventory and st.session_state.stats:
         search_term = generate_search_term(category, value, spec_type)
 
         # Link Generation Logic
-        # Check if any source for this part contains "PedalPCB"
         is_pedalpcb_source = any("PedalPCB" in s for s in sources)
         is_tayda_source = any("Tayda" in s for s in sources)
 
         if category == "PCB":
-            # Only link to PedalPCB if it is explicitly PedalPCB and NOT Tayda
             if is_pedalpcb_source and not is_tayda_source:
                 url = generate_pedalpcb_url(search_term)
             else:
@@ -844,14 +842,12 @@ st.divider()
 # --- Debug & Feedback Section ---
 
 # Checking if logs exist to decide whether to show the debug console and download button.
-# This prevents showing an empty log interface.
 logs = st.session_state.log_capture.getvalue()
 
 if "feedback_submitted" not in st.session_state:
     st.session_state.feedback_submitted = False
 
 with st.expander("🐞 Found a bug? / 📢 Feedback"):
-    # Check if they have already submitted
     if st.session_state.feedback_submitted:
         st.success("Feedback received. Thank you!")
     else:
