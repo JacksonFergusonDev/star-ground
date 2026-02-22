@@ -12,7 +12,7 @@
 >
 > **In manufacturing, this application serves the same function: it is the Single Source of Truth for your inventory, eliminating the "noise" of disorganized BOMs and supply chain drift.**
 
-### 📡 The Mission: Deterministic Procurement
+## 📡 The Mission: Deterministic Procurement
 
 In software, dependency resolution is **deterministic**: `uv sync` guarantees the exact same environment every time. In hardware, procurement is currently stochastic: manual aggregation introduces human error, where a single forgotten $0.01 resistor causes a blocking failure weeks later.
 
@@ -27,31 +27,31 @@ In software, dependency resolution is **deterministic**: `uv sync` guarantees th
 
 ---
 
-### ⚙️ Engineering Philosophy: Invariants over Inference
+## ⚙️ Engineering Philosophy: Invariants over Inference
 
 This system is designed to bridge the gap between **Software Precision** and **Hardware Chaos**. The architectural choices prioritize data integrity and human ergonomics over simple automation.
 
-#### 1. Determinism over Probabilistic Models (Why not LLMs?)
+### 1. Determinism over Probabilistic Models (Why not LLMs?)
 
 Supply chains have zero tolerance for hallucination. A 10k resistor cannot be "inferred" as 1k.
 
 - **The Decision:** Instead of using an LLM to parse PDFs, I implemented a **Hybrid Spatial Parser** (`src/bom_lib/parser.py`). It uses `pdfplumber` to extract table vectors (spatial analysis) and falls back to rigorous Regex pattern matching.
 - **The Result:** 100% reproducible ingestion. The system fails loudly on ambiguity rather than guessing silently.
 
-#### 2. Physical-Digital Isomorphism (Z-Height Sorting)
+### 2. Physical-Digital Isomorphism (Z-Height Sorting)
 
 Most BOM tools sort lists alphabetically. **Star Ground** sorts by **Physical Z-Height**.
 
 - **The Insight:** Efficient PCB assembly requires soldering low-profile components (Resistors, Diodes) before bulky ones (Electrolytic Capacitors, Switches) to keep the board flat on the workbench.
 - **The Implementation:** The PDF generation engine enforces a topological sort order on the output artifacts, optimizing the *human operator's* runtime performance.
 
-#### 3. Yield Management ("Nerd Economics")
+### 3. Yield Management ("Nerd Economics")
 
 - **The Problem:** The cost of a "Stockout" (halting work) is infinite relative to the cost of inventory.
 
 - **The Algorithm:** The sourcing engine applies a **category-specific risk profile**. It automatically buffers cheap components (resistors rounded to nearest 10) while strictly calculating expensive ones (ICs), transforming purchasing logic from simple arithmetic into a risk-management strategy.
 
-#### 4. Transparent Failure States (The "Loud" UI)
+### 4. Transparent Failure States (The "Loud" UI)
 
 - **The Problem:** Most web apps swallow errors to "look clean," leaving users stranded when edge cases occur. In hardware, a silent failure (e.g., a parser dropping a line) results in a missing component and a failed build.
 
@@ -62,7 +62,7 @@ Most BOM tools sort lists alphabetically. **Star Ground** sorts by **Physical Z-
 
 ---
 
-### 🍷 Feature Spotlight: The "Silicon Sommelier"
+## 🍷 Feature Spotlight: The "Silicon Sommelier"
 
 Beyond parsing, the engine functions as a domain expert system. It utilizes a lookup table of heuristic substitutions to suggest component upgrades based on audio engineering best practices.
 
@@ -90,18 +90,18 @@ This tool treats BOM parsing as a data reduction problem. It doesn't just read l
     - **PDF Parsing:** Extracts tables from PedalPCB build docs using visual layout analysis (hybrid grid/text strategy).
     - **Smart Presets:** A hierarchical browser allowing filtering by Source (e.g., PedalPCB) and Category to load standard circuit definitions.
     - **URL Ingestion:** Fetch BOMs directly from websites like PedalPCB.
-2. **Inventory Logistics (Net Needs):**
+1. **Inventory Logistics (Net Needs):**
     - Upload your current stock CSV.
     - The engine calculates `Net Need = max(0, BOM_Qty - Stock_Qty)`.
     - Safety buffers are only applied to the *deficit*, preventing over-ordering.
-3. **Manufacturing Outputs:**
+1. **Manufacturing Outputs:**
     - **Field Manuals:** Generates Z-height sorted printable PDF checklists (Resistors → Sockets → Caps) for streamlined assembly.
     - **Sticker Sheets:** Generates Avery 5160 labels with condensed references (e.g., `R1-R4`) for part binning.
     - **Master Bundle:** Downloads a single ZIP containing all source docs, shopping lists, and manual PDFs.
-4. **Smart Normalization:**
+1. **Smart Normalization:**
     - Expands ranges automatically (`R1-R5` → `R1, R2, R3, R4, R5`).
     - Detects potentiometers by value (`B100k`) even if labeled non-standardly.
-5. **Observability & Debugging:**
+1. **Observability & Debugging:**
     - **In-App Console:** Real-time visibility into the parsing kernel via a `st.session_state` log buffer.
     - **Error Taxonomy:** Visual distinction between "Partial Success" (warnings) and "Critical Failure" (errors), ensuring the user always knows the integrity of their data.
 
@@ -298,7 +298,7 @@ We welcome contributions! Please see **[CONTRIBUTING.md](CONTRIBUTING.md)** for 
 
 ## 📧 Contact
 
-**Jackson Ferguson**
+### Jackson Ferguson
 
 - **GitHub:** [@JacksonFergusonDev](https://github.com/JacksonFergusonDev)
 - **LinkedIn:** [Jackson Ferguson](https://www.linkedin.com/in/jackson--ferguson/)
