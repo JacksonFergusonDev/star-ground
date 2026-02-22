@@ -30,6 +30,9 @@ jobs:
     - name: Lint with Ruff
       run: uv run ruff check .
 
+    - name: Lint Markdown
+      run: npx --yes markdownlint-cli "**/*.md" --ignore ".venv"
+
     - name: Type check with mypy
       run: uv run mypy .
 

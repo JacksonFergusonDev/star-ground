@@ -26,3 +26,10 @@ repos:
         language: system
         types: [python]
         pass_filenames: false
+
+  # 3. Markdown linting
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.47.0
+    hooks:
+      - id: markdownlint
+        args: ["--fix"] # Automatically resolves formatting deviations
