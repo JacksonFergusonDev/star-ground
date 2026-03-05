@@ -12,14 +12,14 @@ First off, thanks for taking the time to contribute! 🎉
 
 ### Development Setup
 
-This project uses [uv](https://github.com/astral-sh/uv) for dependency management and Python 3.12+.
+This project uses [uv](https://github.com/astral-sh/uv) for dependency management and Python 3.13.
 
 1. **Fork & Clone**
    Fork the repo and clone it locally:
 
    ```bash
    git clone https://github.com/jacksonfergusondev/star-ground.git
-   cd git-pulsar
+   cd star-ground
    ```
 
 1. **Environment Setup**

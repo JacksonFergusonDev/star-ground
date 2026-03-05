@@ -9,3 +9,4 @@ output/
 *.code-workspace
 .streamlit/*
 !.streamlit/config.toml
+.mypy_cache

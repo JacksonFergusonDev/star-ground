@@ -10,6 +10,9 @@
     "before 4am on the 1st day of the month",
     "before 4am on the 15th day of the month"
   ],
+  "internalChecksFilter": "strict",
+  "prCreation": "immediate",
+  "rebaseWhen": "conflicted",
   "timezone": "America/Vancouver",
   "labels": [
     "dependencies"
@@ -19,16 +22,16 @@
   },
   "packageRules": [
     {
-      "description": "Group all non-major dependencies to reduce noise",
+      "description": "Group and automerge all non-major dependencies to reduce noise",
       "matchUpdateTypes": [
         "minor",
         "patch"
       ],
       "groupName": "all non-major dependencies",
-      "automerge": false
+      "automerge": true
     },
     {
-      "description": "Automerge all minor/patch updates for dev dependencies (safe)",
+      "description": "Automerge all minor/patch updates for dev dependencies",
       "matchDepTypes": [
         "dev",
         "dependency-groups"
