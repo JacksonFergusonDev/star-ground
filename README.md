@@ -1,16 +1,35 @@
-# ⚡ Star Ground (v2.3.0)
+<!-- markdownlint-disable-file MD041 -->
+<div align="center">
 
-![Python Version](https://img.shields.io/badge/python-3.13-blue.svg)
-[![Python Application CI](https://github.com/JacksonFergusonDev/star-ground/actions/workflows/python-app.yml/badge.svg)](https://github.com/JacksonFergusonDev/star-ground/actions/workflows/python-app.yml)
-[![Docker](https://github.com/JacksonFergusonDev/star-ground/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/JacksonFergusonDev/star-ground/actions/workflows/docker-publish.yml)
-![License](https://img.shields.io/badge/license-MIT-green.svg)
-![Status](https://img.shields.io/badge/status-active-success.svg)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/readme-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="assets/readme-light.svg">
+  <img alt="Star Ground Logo"
+       src="assets/readme-light.svg"
+       width="520"
+       style="max-width:100%; height:auto;">
+</picture>
+
+<br>
 
 **A deterministic dependency manager for physical hardware manufacturing.**
+
+[![Version](https://img.shields.io/github/v/release/JacksonFergusonDev/star-ground?style=flat-square&labelColor=0A0A0A&color=4ade80)](https://github.com/JacksonFergusonDev/star-ground/releases)
+![Python Version](https://img.shields.io/badge/python-3.13-4ade80?style=flat-square&labelColor=0A0A0A&logo=python&logoColor=white)
+[![CI](https://github.com/JacksonFergusonDev/star-ground/actions/workflows/ci.yml/badge.svg?style=flat-square)](https://github.com/JacksonFergusonDev/star-ground/actions/workflows/ci.yml)
+[![Docker](https://github.com/JacksonFergusonDev/star-ground/actions/workflows/docker-publish.yml/badge.svg?style=flat-square)](https://github.com/JacksonFergusonDev/star-ground/actions/workflows/docker-publish.yml)
+[![Ruff](https://img.shields.io/badge/style-ruff-4ade80?style=flat-square&labelColor=0A0A0A)](https://github.com/astral-sh/ruff)
+[![Mypy](https://img.shields.io/badge/mypy-checked-4ade80?style=flat-square&labelColor=0A0A0A)](https://mypy-lang.org/)
+[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-4ade80?style=flat-square&labelColor=0A0A0A&logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
+![License](https://img.shields.io/badge/license-MIT-4ade80?style=flat-square&labelColor=0A0A0A)
+
+</div>
 
 > **In circuit design, a "Star Ground" is the single reference point where all signal paths converge to eliminate noise.**
 >
 > **In manufacturing, this application serves the same function: it is the Single Source of Truth for your inventory, eliminating the "noise" of disorganized BOMs and supply chain drift.**
+
+---
 
 ## 📡 The Mission: Deterministic Procurement
 
