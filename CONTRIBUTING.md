@@ -1,20 +1,17 @@
 # Contributing to Star Ground
 
-First off, thanks for taking the time to contribute! 🎉
-
-## How to Contribute
-
-### Reporting Bugs
+## Reporting Bugs
 
 1. Check if the issue has already been reported.
 1. Open a new issue with a clear title and description.
 1. Include the BOM text that caused the error (if applicable).
 
-### Development Setup
+## Development Setup
 
 This project uses [uv](https://github.com/astral-sh/uv) for dependency management and Python 3.13.
 
 1. **Fork & Clone**
+
    Fork the repo and clone it locally:
 
    ```bash
@@ -23,6 +20,7 @@ This project uses [uv](https://github.com/astral-sh/uv) for dependency managemen
    ```
 
 1. **Environment Setup**
+
    We use `uv` to manage the virtual environment and dependencies.
 
    ```bash
@@ -37,13 +35,14 @@ This project uses [uv](https://github.com/astral-sh/uv) for dependency managemen
    ```
 
 1. **Install Hooks**
+
    Set up pre-commit hooks to handle linting (Ruff) and type checking (Mypy) automatically.
 
    ```bash
    pre-commit install
    ```
 
-### Running Tests
+## Running Tests
 
 We use `pytest` for the test suite.
 
@@ -51,7 +50,7 @@ We use `pytest` for the test suite.
 uv run pytest
 ```
 
-### Pull Requests
+## Pull Requests
 
 1. **Create a Branch**
 
@@ -60,9 +59,11 @@ uv run pytest
    ```
 
 1. **Make Changes**
+
    Write code and add tests for your changes.
 
 1. **Verify**
+
    Ensure your code passes the linter and tests locally.
 
    ```bash
@@ -72,6 +73,7 @@ uv run pytest
    (Pre-commit will also run `ruff` and `mypy` when you commit).
 
 1. **Commit & Push**
+
    Please use clear commit messages.
 
    ```bash
@@ -80,4 +82,5 @@ uv run pytest
    ```
 
 1. **Open a Pull Request**
+
    Submit your PR against the `main` branch.
