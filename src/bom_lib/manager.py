@@ -1,5 +1,4 @@
-"""
-High-level inventory management and data mutation logic.
+"""High-level inventory management and data mutation logic.
 
 This module acts as the "Controller" for the BOM library. It handles:
 - Core dictionary mutation (recording parts).
@@ -13,8 +12,7 @@ from src.bom_lib.utils import parse_value_to_float
 
 
 def calculate_net_needs(bom: Inventory, stock: Inventory) -> Inventory:
-    """
-    Calculates the deficit between Required parts (BOM) and Owned parts (Stock).
+    """Calculates the deficit between Required parts (BOM) and Owned parts (Stock).
 
     Args:
         bom: The requested build materials.
@@ -44,8 +42,7 @@ def calculate_net_needs(bom: Inventory, stock: Inventory) -> Inventory:
 
 
 def sort_inventory(inventory: Inventory) -> list[tuple[str, PartData]]:
-    """
-    Sorts the inventory for display.
+    """Sorts the inventory for display.
 
     Sorting hierarchy:
     1. Category (defined by fixed rank).
@@ -95,8 +92,7 @@ def sort_inventory(inventory: Inventory) -> list[tuple[str, PartData]]:
 def rename_source_in_inventory(
     inventory: Inventory, old_name: str, new_name: str
 ) -> None:
-    """
-    Updates the source key in the inventory (e.g., renaming a project).
+    """Updates the source key in the inventory (e.g., renaming a project).
 
     Args:
         inventory: The inventory to mutate.
@@ -112,9 +108,9 @@ def rename_source_in_inventory(
 
 
 def serialize_inventory(inventory: Inventory) -> str:
-    """
-    Converts the inventory dict back into the standardized text format.
-    e.g. {'Resistors | 10k': refs=['R1', 'R2']} -> "R1 10k\\nR2 10k"
+    r"""Converts the inventory dict back into the standardized text format.
+
+    e.g. {'Resistors | 10k': refs=['R1', 'R2']} -> "R1 10k\nR2 10k"
 
     Args:
         inventory: The populated inventory dictionary.

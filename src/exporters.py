@@ -6,8 +6,7 @@ from typing import Any
 def generate_shopping_list_csv(
     data: list[dict[str, Any]], use_excel_formulas: bool = False
 ) -> bytes:
-    """
-    Generates a CSV file for the shopping list.
+    """Generates a CSV file for the shopping list.
 
     Constructs a UTF-8 encoded CSV string (with BOM signature) suitable for
     download. It adapts the columns dynamically based on whether 'Net Need'
@@ -59,8 +58,7 @@ def generate_shopping_list_csv(
 
 
 def generate_stock_update_csv(data: list[dict[str, Any]]) -> bytes:
-    """
-    Calculates updated stock levels and generates a CSV import file.
+    """Calculates updated stock levels and generates a CSV import file.
 
     Logic:
         New Stock = (Current Stock + Buy Qty) - Used Qty

@@ -1,5 +1,4 @@
-"""
-Utility functions for string manipulation and numeric parsing.
+"""Utility functions for string manipulation and numeric parsing.
 
 This module handles the low-level formatting logic, including:
 - Natural sorting (R1, R2, R10).
@@ -11,12 +10,11 @@ This module handles the low-level formatting logic, including:
 import re
 from typing import Any
 
-from src.bom_lib import constants as C
+from src.bom_lib import constants
 
 
 def natural_sort_key(ref: str) -> list[Any]:
-    """
-    Generates a sort key for natural alphanumeric sorting.
+    """Generates a sort key for natural alphanumeric sorting.
 
     Splits strings into text and numeric chunks so that 'R10' comes
     after 'R2', rather than 'R1'.
@@ -34,8 +32,7 @@ def natural_sort_key(ref: str) -> list[Any]:
 
 
 def deduplicate_refs(refs: list[str]) -> list[str]:
-    """
-    Removes duplicates and applies natural sorting to a reference list.
+    """Removes duplicates and applies natural sorting to a reference list.
 
     Args:
         refs: A list of reference strings (e.g., ['R1', 'R10', 'R1', 'R2']).
@@ -51,8 +48,7 @@ def deduplicate_refs(refs: list[str]) -> list[str]:
 
 
 def expand_refs(ref_raw: str) -> list[str]:
-    """
-    Explodes range strings into individual references.
+    """Explodes range strings into individual references.
 
     Handles formats like 'R1-R4' or 'R1-4'. Includes a sanity check
     to prevent exploding massive invalid ranges (limit 50).
@@ -94,8 +90,7 @@ def expand_refs(ref_raw: str) -> list[str]:
 
 
 def parse_value_to_float(val_str: str) -> float | None:
-    """
-    Reduces component values to their base SI unit (Ohms/Farads).
+    """Reduces component values to their base SI unit (Ohms/Farads).
 
     Handles standard notation ('10k', '4.7u') and BS 1852 "sandwich"
     notation ('1k5').
@@ -122,7 +117,7 @@ def parse_value_to_float(val_str: str) -> float | None:
 
         # Reassemble as float: 1k5 -> 1.5 * multiplier
         base = float(f"{whole}.{fraction}")
-        return base * C.MULTIPLIERS[suffix]
+        return base * constants.MULTIPLIERS[suffix]
 
     # Strategy 2: Standard "Number + Suffix"
     # Match: (Start)(Number)(Multiplier?)(Everything Else)
@@ -137,8 +132,8 @@ def parse_value_to_float(val_str: str) -> float | None:
         except ValueError:
             return None
 
-        if suffix and suffix in C.MULTIPLIERS:
-            return base_val * C.MULTIPLIERS[suffix]
+        if suffix and suffix in constants.MULTIPLIERS:
+            return base_val * constants.MULTIPLIERS[suffix]
 
         return base_val
 
@@ -146,8 +141,7 @@ def parse_value_to_float(val_str: str) -> float | None:
 
 
 def float_to_search_string(val: float | None) -> str:
-    """
-    Converts a float back to a standard engineering string (e.g., '1.5k').
+    """Converts a float back to a standard engineering string (e.g., '1.5k').
 
     This format is optimized for searching parts suppliers (e.g., Tayda).
 
@@ -193,8 +187,7 @@ def float_to_search_string(val: float | None) -> str:
 
 
 def float_to_display_string(val: float) -> str:
-    """
-    Converts a float to BS 1852 "Sandwich" format (e.g., '1k5').
+    """Converts a float to BS 1852 "Sandwich" format (e.g., '1k5').
 
     This format is preferred for printed checklists and PCBs as it is
     more compact and harder to misread (no decimal points).

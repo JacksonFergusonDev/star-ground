@@ -1,5 +1,4 @@
-"""
-PDF Generation Engine.
+"""PDF Generation Engine.
 
 This module handles the creation of printable assets for the build process:
 1. Field Manuals: Step-by-step build checklists sorted by component height (Z-Height).
@@ -15,6 +14,7 @@ import os
 import re
 import zipfile
 from collections import defaultdict
+from typing import Any
 
 from fpdf import FPDF
 from fpdf.enums import XPos, YPos
@@ -23,8 +23,7 @@ from src.bom_lib import Inventory, ProjectSlot, deduplicate_refs
 
 
 def condense_refs(refs: list[str]) -> str:
-    """
-    Condenses a list of component references into a human-readable range string.
+    """Condenses a list of component references into a human-readable range string.
 
     Example:
         Input:  ['R1', 'R2', 'R3', 'C1', 'Q3', 'Q4']
@@ -103,8 +102,7 @@ def clean_val_for_display(val: str) -> str:
 
 
 class StickerSheet(FPDF):
-    """
-    FPDF Subclass for generating Avery 5160 component labels.
+    """FPDF Subclass for generating Avery 5160 component labels.
 
     Layout:
         - 3 Columns x 10 Rows (30 labels per page).
@@ -133,8 +131,7 @@ class StickerSheet(FPDF):
     def add_sticker(
         self, project_code: str, part_val: str, refs: list[str], qty: int
     ) -> None:
-        """
-        Draws a single sticker at the next available slot.
+        """Draws a single sticker at the next available slot.
 
         Args:
             project_code (str): Short code for the project (e.g., "BIGM").
@@ -202,8 +199,7 @@ class StickerSheet(FPDF):
 
 
 class FieldManual(FPDF):
-    """
-    FPDF Subclass for generating the 'Field Manual' build document.
+    """FPDF Subclass for generating the 'Field Manual' build document.
 
     Features:
         - Automatic pagination.
@@ -240,13 +236,12 @@ class FieldManual(FPDF):
         """Draws a square checkbox at the specified coordinates."""
         self.rect(x, y, 4, 4)
 
-    def add_project(self, project_name: str, parts: list[dict]) -> None:
-        """
-        Adds a full project checklist to the PDF.
+    def add_project(self, project_name: str, parts: list[dict[str, Any]]) -> None:
+        """Adds a full project checklist to the PDF.
 
         Args:
             project_name (str): The name of the project.
-            parts (list[dict]): Sorted list of component dictionaries.
+            parts (list[dict[str, Any]]): Sorted list of component dictionaries.
         """
         self.add_page()
 
@@ -334,9 +329,8 @@ class FieldManual(FPDF):
             self.cell(0, 8, refs, 1, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
 
-def sort_by_z_height(part_list: list[dict]) -> list[dict]:
-    """
-    Sorts components by their physical Z-Height (Low to High).
+def sort_by_z_height(part_list: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Sorts components by their physical Z-Height (Low to High).
 
     This ordering dictates the most efficient soldering sequence:
     1. PCB (Base)
@@ -348,10 +342,10 @@ def sort_by_z_height(part_list: list[dict]) -> list[dict]:
     7. Potentiometers / Mechanicals (Tallest/Rigid)
 
     Args:
-        part_list (list[dict]): List of component parts.
+        part_list (list[dict[str, Any]]): List of component parts.
 
     Returns:
-        list[dict]: The sorted list.
+        list[dict[str, Any]]: The sorted list.
     """
     # Mapping Categories to Rank (Lower number = Earlier in build)
     z_map = {
@@ -369,7 +363,7 @@ def sort_by_z_height(part_list: list[dict]) -> list[dict]:
         "ICs": 90,  # "Last" (Chip Insertion)
     }
 
-    def get_rank(item: dict) -> int:
+    def get_rank(item: dict[str, Any]) -> int:
         cat = item["category"]
         val = str(item["value"])
 
@@ -391,8 +385,7 @@ def sort_by_z_height(part_list: list[dict]) -> list[dict]:
 
 
 def float_val_check(val_str: str) -> float:
-    """
-    Heuristic to detect bulk capacitance (Electrolytics).
+    """Heuristic to detect bulk capacitance (Electrolytics).
 
     Args:
         val_str (str): The component value (e.g., "100uF").
@@ -509,8 +502,7 @@ def _write_stickers(
 
 
 def generate_pdf_bundle(inventory: Inventory, slots: list[ProjectSlot]) -> bytes:
-    """
-    Generates a ZIP file containing only the generated PDFs (Manuals + Stickers).
+    """Generates a ZIP file containing only the generated PDFs (Manuals + Stickers).
 
     Args:
         inventory (Inventory): The master inventory object.
@@ -532,8 +524,7 @@ def generate_master_zip(
     shopping_list_csv: bytes,
     stock_csv: bytes,
 ) -> bytes:
-    """
-    Generates the "Master ZIP" containing all project artifacts.
+    """Generates the "Master ZIP" containing all project artifacts.
 
     Contents:
     1. CSVs (Shopping List, Inventory Update)

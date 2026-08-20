@@ -1,5 +1,4 @@
-"""
-Component classification and heuristic categorization logic.
+"""Component classification and heuristic categorization logic.
 
 This module determines what a component *is* (e.g., Resistor, Potentiometer, IC)
 based on its reference designator (R1, U1) and value. It also normalizes
@@ -8,13 +7,12 @@ values to ensure consistent matching between BOMs and Inventory.
 
 import re
 
-import src.bom_lib.constants as C
+from src.bom_lib import constants
 from src.bom_lib.utils import float_to_search_string, parse_value_to_float
 
 
 def normalize_value_by_category(category: str, val_raw: str) -> str:
-    """
-    Standardizes component values for consistent string matching.
+    """Standardizes component values for consistent string matching.
 
     For passives (Resistors/Caps), this converts raw strings like "10,000" or
     "10K" into a canonical format "10k" using the utility parser.
@@ -43,8 +41,7 @@ def normalize_value_by_category(category: str, val_raw: str) -> str:
 
 
 def categorize_part(ref: str, val: str) -> tuple[str | None, str | None, str | None]:
-    """
-    Classifies a component based on its Reference Designator and Value.
+    """Classifies a component based on its Reference Designator and Value.
 
     This function acts as a rules engine. It checks standard prefixes (R, C, Q),
     identifies potentiometers by known names (VOL, GAIN) or taper markings
@@ -67,7 +64,7 @@ def categorize_part(ref: str, val: str) -> tuple[str | None, str | None, str | N
     val_up = val_clean.upper()  # Use this for internal logic
 
     # 1. Validate Prefix / Structure
-    valid_prefixes = C.CORE_PREFIXES + ("OP", "TL", "LDR", "LED")
+    valid_prefixes = (*constants.CORE_PREFIXES, "OP", "TL", "LDR", "LED")
 
     # Standard components (R1, C1) usually require a digit.
     # Named controls (VOLUME, SW_BRIGHT) do not.
@@ -77,7 +74,7 @@ def categorize_part(ref: str, val: str) -> tuple[str | None, str | None, str | N
     # Detects pots by value style (e.g., "B100k", "10k-A") if the ref isn't obviously a chip.
     is_pot_value = False
     if not ref_up.startswith(("IC", "U", "Q", "OP", "TL")):
-        taper_chars = "".join(C.POT_TAPER_MAP.keys())
+        taper_chars = "".join(constants.POT_TAPER_MAP.keys())
         # Matches "B100k" or "100k-B"
         if re.search(rf"[0-9]+.*[{taper_chars}]$", val_up) or re.search(
             rf"^[{taper_chars}][0-9]+", val_up
@@ -87,9 +84,9 @@ def categorize_part(ref: str, val: str) -> tuple[str | None, str | None, str | N
     # 3. Validity Check
     is_valid = (
         (any(ref_up.startswith(p) for p in valid_prefixes) and has_digit)
-        or ref_up in C.POT_LABELS
-        or ref_up in C.SWITCH_LABELS
-        or any(ref_up.startswith(label) for label in C.POT_LABELS)
+        or ref_up in constants.POT_LABELS
+        or ref_up in constants.SWITCH_LABELS
+        or any(ref_up.startswith(label) for label in constants.POT_LABELS)
         or is_pot_value
         or ref_up == "CLR"
     )
@@ -107,14 +104,14 @@ def categorize_part(ref: str, val: str) -> tuple[str | None, str | None, str | N
 
     # Potentiometers (Priority over Resistors to catch 'RANGE')
     if (
-        ref_up in C.POT_LABELS
-        or any(ref_up.startswith(label) for label in C.POT_LABELS)
+        ref_up in constants.POT_LABELS
+        or any(ref_up.startswith(label) for label in constants.POT_LABELS)
         or is_pot_value
     ):
         category = "Potentiometers"
 
     # Switches
-    elif ref_up in C.SWITCH_LABELS:
+    elif ref_up in constants.SWITCH_LABELS:
         # Ambiguity check: "LENGTH" could be a switch or a pot.
         if any(x in val_up for x in ["ON", "SW", "SP", "DP"]):
             category = "Switches"

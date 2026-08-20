@@ -1,23 +1,24 @@
-"""
-src/bom_lib/presets.py
-Logic for querying and managing BOM presets.
-"""
+"""Logic for querying and managing BOM presets."""
 
 import re
 from collections import defaultdict
 from typing import Any
+
+BOM_PRESETS: dict[str, Any]
 
 try:
     from ._presets_data import BOM_PRESETS
 except ImportError:
     BOM_PRESETS = {}
 
+__all__ = ["BOM_PRESETS", "get_preset_metadata"]
+
 
 def get_preset_metadata() -> tuple[
     list[str], dict[str, list[str]], list[dict[str, Any]]
 ]:
-    """
-    Parses BOM_PRESETS keys into a queryable structure.
+    """Parses BOM_PRESETS keys into a queryable structure.
+
     Returns:
         sources (list): Unique sources (e.g., 'PedalPCB', 'Tayda')
         categories (dict): Map of Source -> List of Categories

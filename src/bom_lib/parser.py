@@ -1,5 +1,4 @@
-"""
-File ingestion and parsing logic for BOMs and Inventory.
+"""File ingestion and parsing logic for BOMs and Inventory.
 
 This module handles the extraction of component data from various file formats
 (PDF, CSV, Text). It orchestrates the line-by-line reading, cleaning, and
@@ -12,7 +11,7 @@ import re
 import traceback
 from typing import Any
 
-import src.bom_lib.constants as C
+from src.bom_lib import constants
 from src.bom_lib.classifier import categorize_part, normalize_value_by_category
 from src.bom_lib.types import Inventory, StatsDict, create_empty_inventory
 from src.bom_lib.utils import expand_refs
@@ -21,7 +20,7 @@ from src.bom_lib.utils import expand_refs
 logger = logging.getLogger(__name__)
 
 # 1. Base Keyword Pattern: Matches any Control/Pot/Switch label (e.g., "VOLUME", "SPDT")
-_KW_REGEX_STR = "|".join([rf"\b{k}\b" for k in C.KEYWORDS])
+_KW_REGEX_STR = "|".join([rf"\b{k}\b" for k in constants.KEYWORDS])
 
 # 2. Strict Pattern (Keywords Only)
 # Used when tables have already populated the BOM, restricting regex to just Controls.
@@ -41,8 +40,7 @@ def ingest_bom_line(
     val_raw: str,
     stats: StatsDict | None = None,
 ) -> int:
-    """
-    Core ingestion kernel: Expands refs, classifies, and updates inventory.
+    """Core ingestion kernel: Expands refs, classifies, and updates inventory.
 
     This function bridges the gap between raw text (R1-R4, 10k) and the
     structured inventory. It handles:
@@ -91,8 +89,7 @@ def ingest_bom_line(
 def parse_with_verification(
     bom_list: list[str], source_name: str = "Manual Input"
 ) -> tuple[Inventory, StatsDict]:
-    """
-    Parses a list of raw text strings (Manual BOM Input).
+    """Parses a list of raw text strings (Manual BOM Input).
 
     Handles standard formats like "R1 10k" and special cases like "PCB Name".
 
@@ -168,8 +165,7 @@ def parse_with_verification(
 
 
 def parse_csv_bom(filepath: str, source_name: str) -> tuple[Inventory, StatsDict]:
-    """
-    Parses a CSV BOM file.
+    """Parses a CSV BOM file.
 
     Attempts to intelligently guess columns ('Ref', 'Value') or falls back
     to using the first two columns.
@@ -230,8 +226,7 @@ def parse_csv_bom(filepath: str, source_name: str) -> tuple[Inventory, StatsDict
 
 
 def parse_user_inventory(filepath: str) -> Inventory:
-    """
-    Parses a user's stock CSV.
+    """Parses a user's stock CSV.
 
     Expects columns: Category, Part, Qty.
     Applies the same value normalization as BOM parsing to ensure keys match.
@@ -274,8 +269,7 @@ def _parse_via_tables(
     source_name: str,
     stats: StatsDict,
 ) -> None:
-    """
-    Strategy 1: Extract data using visual table boundaries.
+    """Strategy 1: Extract data using visual table boundaries.
 
     Iterates through recognized tables in the PDF, heuristically identifying
     header columns (Location, Value) to extract component data.
@@ -342,8 +336,7 @@ def _parse_via_regex(
     source_name: str,
     stats: StatsDict,
 ) -> None:
-    """
-    Strategy 2: Fallback extraction using regex pattern matching.
+    """Strategy 2: Fallback extraction using regex pattern matching.
 
     Scans the raw text of the PDF for component patterns (e.g., "R1 10k",
     "VOLUME 100kB"). It dynamically adjusts its strictness based on whether
@@ -379,7 +372,7 @@ def _parse_via_regex(
             # Expand value capture for multi-word items (Switches, Pots)
             if (
                 ref_str.startswith("LDR")
-                or ref_str in C.KEYWORDS
+                or ref_str in constants.KEYWORDS
                 or ref_str.startswith(("POT", "VR"))
             ):
                 line_end = text.find("\n", val_start)
@@ -397,7 +390,7 @@ def _parse_via_regex(
             # Filters
             if len(val_str) > 50 or len(val_str) < 1:
                 continue
-            if any(bad in val_str.upper() for bad in C.IGNORE_VALUES):
+            if any(bad in val_str.upper() for bad in constants.IGNORE_VALUES):
                 continue
             if re.match(r"^(is|see|note)\s", val_str, re.IGNORECASE):
                 continue
@@ -405,10 +398,10 @@ def _parse_via_regex(
                 continue
 
             # Validation
-            is_keyword = ref_str in C.KEYWORDS
+            is_keyword = ref_str in constants.KEYWORDS
             if not is_keyword:
                 # Must start with valid prefix
-                valid_prefixes = C.CORE_PREFIXES + ("POT", "VR", "L", "LD")
+                valid_prefixes = (*constants.CORE_PREFIXES, "POT", "VR", "L", "LD")
                 if not any(ref_str.startswith(p) for p in valid_prefixes):
                     continue
                 # "Ghost Data" check (Qty Part reversed)
@@ -449,8 +442,7 @@ def _parse_via_regex(
 
 
 def parse_pedalpcb_pdf(filepath: str, source_name: str) -> tuple[Inventory, StatsDict]:
-    """
-    Parses a PedalPCB Build Document (PDF).
+    """Parses a PedalPCB Build Document (PDF).
 
     Uses a multi-stage strategy:
     1. Visual Table Extraction (via pdfplumber lines).
@@ -495,7 +487,7 @@ def parse_pedalpcb_pdf(filepath: str, source_name: str) -> tuple[Inventory, Stat
             pdf = pdfplumber.open(filepath)
         except Exception as e:
             logger.error(f"Failed to open PDF {source_name}: {e}")
-            stats["errors"].append(f"File Error: {str(e)}")
+            stats["errors"].append(f"File Error: {e!s}")
             return inventory, stats
 
         # Phase 2: Extraction
@@ -547,7 +539,7 @@ def parse_pedalpcb_pdf(filepath: str, source_name: str) -> tuple[Inventory, Stat
             # Capture internal parsing errors (logic bugs, layout changes)
             logger.error(f"Parsing logic failed for {source_name}")
             logger.error(traceback.format_exc())
-            stats["errors"].append(f"Parse Error: {str(e)}")
+            stats["errors"].append(f"Parse Error: {e!s}")
 
     finally:
         # Always close the file handle

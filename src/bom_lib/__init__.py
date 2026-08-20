@@ -1,5 +1,4 @@
-"""
-Star Ground BOM Library (Package Entry Point).
+"""Star Ground BOM Library (Package Entry Point).
 
 Exposes the core logic and data structures for BOM ingestion, classification,
 and sourcing.
@@ -46,42 +45,35 @@ from .utils import (
 )
 
 __all__ = [
-    # types
-    "StatsDict",
-    "create_empty_inventory",
-    "PartData",
+    "BOM_PRESETS",
     "Inventory",
+    "PartData",
     "ProjectSlot",
-    # parser
-    "parse_csv_bom",
-    "parse_pedalpcb_pdf",
-    "parse_user_inventory",
-    "parse_with_verification",
-    # manager
+    "StatsDict",
     "calculate_net_needs",
-    "rename_source_in_inventory",
-    "sort_inventory",
-    "serialize_inventory",
-    "generate_pedalpcb_url",
-    "generate_search_term",
-    "generate_tayda_url",
-    "get_buy_details",
-    "get_residual_report",
-    "get_spec_type",
-    "get_standard_hardware",
-    # utils
+    "categorize_part",
+    "create_empty_inventory",
     "deduplicate_refs",
     "expand_refs",
     "float_to_display_string",
     "float_to_search_string",
-    "parse_value_to_float",
+    "generate_pedalpcb_url",
+    "generate_search_term",
+    "generate_tayda_url",
+    "get_buy_details",
     "get_clean_name",
-    # presets
     "get_preset_metadata",
-    "BOM_PRESETS",
-    # loader
-    "process_input_data",
-    # classifier
-    "categorize_part",
+    "get_residual_report",
+    "get_spec_type",
+    "get_standard_hardware",
     "normalize_value_by_category",
+    "parse_csv_bom",
+    "parse_pedalpcb_pdf",
+    "parse_user_inventory",
+    "parse_value_to_float",
+    "parse_with_verification",
+    "process_input_data",
+    "rename_source_in_inventory",
+    "serialize_inventory",
+    "sort_inventory",
 ]
