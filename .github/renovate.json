@@ -51,6 +51,27 @@
       ],
       "groupName": "github-actions",
       "automerge": true
+    },
+    {
+      "description": "Group all non-major dependency updates (Python, Docker, devcontainer, pyenv) into one PR",
+      "matchManagers": [
+        "pep621",
+        "pip_requirements",
+        "dockerfile",
+        "pyenv"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "pin",
+        "digest"
+      ],
+      "groupName": "all-minor-patch-dependencies",
+      "labels": [
+        "dependencies",
+        "grouped"
+      ],
+      "prPriority": 5
     }
   ]
 }
