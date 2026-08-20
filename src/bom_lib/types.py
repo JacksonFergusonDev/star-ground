@@ -117,7 +117,7 @@ class Inventory(UserDict[str, PartData]):
             part["refs"].append(ref)
             part["sources"][source].append(ref)
 
-    def merge(self, other: "Inventory", multiplier: int = 1) -> None:
+    def merge(self, other: Inventory, multiplier: int = 1) -> None:
         """Merges another inventory into this one.
 
         Args:

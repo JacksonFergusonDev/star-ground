@@ -8,7 +8,7 @@ if TYPE_CHECKING:
 
 
 @st.cache_resource(ttl="1h")
-def get_gsheet_client() -> "gspread.Client":
+def get_gsheet_client() -> gspread.Client:
     """Establishes a persistent connection to Google Sheets.
 
     Uses Streamlit's resource caching to maintain a connection pool,
