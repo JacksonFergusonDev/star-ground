@@ -25,10 +25,15 @@ jobs:
         python-version: "3.13.x"
 
     - name: Install dependencies
-      run: uv sync --frozen
+      run: |
+        uv sync --frozen
+        uv pip install pytest-github-actions-annotate-failures
 
-    - name: Lint with Ruff
-      run: uv run ruff check .
+    - name: Run Ruff Linter
+      run: uv run ruff check --output-format=github .
+
+    - name: Run Ruff Formatter
+      run: uv run ruff format --check --output-format=github .
 
     - name: Lint Markdown
       uses: DavidAnson/markdownlint-cli2-action@8de2aa07cae85fd17c0b35642db70cf5495f1d25 # v24
