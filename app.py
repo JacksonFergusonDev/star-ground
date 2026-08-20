@@ -185,7 +185,7 @@ def render_preset_selector(slot: ProjectSlot, idx: int) -> Any:
     current_val = slot.last_loaded_preset
     try:
         current_idx = option_keys.index(current_val)
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         current_idx = 0
 
     # --- 4. The Smart Selectbox ---

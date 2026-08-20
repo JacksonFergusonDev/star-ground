@@ -5,7 +5,7 @@ description = "Logistics engine for analog electronics"
 readme = "README.md"
 license = {file = "LICENSE"}
 classifiers = ["License :: OSI Approved :: MIT License"]
-requires-python = ">=3.13,<3.14"
+requires-python = ">=3.14"
 dependencies = [
     "fpdf2==2.8.7",
     "google-auth==2.56.2",
@@ -52,9 +52,6 @@ dev = [
 
 # ---- ruff ---- #
 
-[tool.ruff]
-target-version = "py313"
-
 [tool.ruff.lint]
 select = [
     "A",   # flake8-builtins
@@ -93,7 +90,7 @@ section-order = [
 
 [tool.mypy]
 mypy_path = "."
-python_version = "3.13"
+python_version = "3.14"
 strict=true
 pretty = true
 show_error_codes = true

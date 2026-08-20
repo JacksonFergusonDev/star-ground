@@ -15,7 +15,7 @@
 **A deterministic dependency manager for physical hardware manufacturing.**
 
 [![Version](https://img.shields.io/github/v/release/JacksonFergusonDev/star-ground?style=flat-square&labelColor=0A0A0A&color=4ade80)](https://github.com/JacksonFergusonDev/star-ground/releases)
-![Python Version](https://img.shields.io/badge/python-3.13-4ade80?style=flat-square&labelColor=0A0A0A&logo=python&logoColor=white)
+![Python Version](https://img.shields.io/badge/python-3.14-4ade80?style=flat-square&labelColor=0A0A0A&logo=python&logoColor=white)
 [![CI](https://github.com/JacksonFergusonDev/star-ground/actions/workflows/ci.yml/badge.svg?style=flat-square)](https://github.com/JacksonFergusonDev/star-ground/actions/workflows/ci.yml)
 [![Docker](https://github.com/JacksonFergusonDev/star-ground/actions/workflows/docker-publish.yml/badge.svg?style=flat-square)](https://github.com/JacksonFergusonDev/star-ground/actions/workflows/docker-publish.yml)
 [![Ruff](https://img.shields.io/badge/style-ruff-4ade80?style=flat-square&labelColor=0A0A0A)](https://github.com/astral-sh/ruff)
@@ -193,7 +193,7 @@ We utilize `Streamlit.AppTest` to run headless simulations of the user interface
 
 ## 🔬 Tech Stack
 
-- **Python 3.13** - Core language (Strictly typed & pinned)
+- **Python 3.14** - Core language (Strictly typed & pinned)
 - **uv** - Ultra-fast dependency management and locking
 - **Streamlit** - Interactive web interface and state management
 - **pdfplumber** - PDF table extraction and layout analysis
@@ -279,7 +279,7 @@ docker run -p 8501:8501 star-ground
 
 ### Option 3: Local Development
 
-This project uses **uv** for dependency management.
+This project uses **[uv](https://github.com/astral-sh/uv)** for dependency management and Python 3.14.
 
 ```bash
 # 1. Clone & Enter
