@@ -36,10 +36,10 @@ This project uses [uv](https://github.com/astral-sh/uv) for dependency managemen
 
 1. **Install Hooks**
 
-   Set up pre-commit hooks to handle linting (Ruff) and type checking (Mypy) automatically.
+   Set up prek hooks to handle linting (Ruff) and type checking (Mypy) automatically.
 
    ```bash
-   pre-commit install
+   prek install
    ```
 
 ## Running Tests

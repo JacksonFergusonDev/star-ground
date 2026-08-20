@@ -1,7 +1,6 @@
 repos:
-  # 1. Generic hooks (configured to IGNORE Python)
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v6.0.0
+  # Generic hooks (configured to IGNORE Python)
+  - repo: builtin
     hooks:
       - id: trailing-whitespace
         exclude: \.py$
@@ -9,33 +8,43 @@ repos:
         exclude: \.py$
       - id: check-yaml
       - id: check-added-large-files
+      - id: check-merge-conflict
+      - id: check-toml
 
-  # 2. Python-specific toolchain
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.4
-    hooks:
-      - id: ruff-format
-      - id: ruff
-        args: [ --fix ]
-
+  # Local Python Toolchain (Managed via uv.lock)
   - repo: local
     hooks:
-      - id: mypy
-        name: mypy (uv)
-        entry: uv run mypy --config-file pyproject.toml src tests app.py
+      - id: ruff-check
+        name: ruff check
+        entry: uv run ruff check --fix
         language: system
         types: [python]
         pass_filenames: false
 
-  # 3. Markdown linting
-  - repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: v0.48.0
-    hooks:
-      - id: markdownlint
-        args: ["--fix"] # Automatically resolves formatting deviations
+      - id: ruff-format
+        name: ruff format
+        entry: uv run ruff format
+        language: system
+        types: [python]
+        pass_filenames: false
 
+      - id: mypy
+        name: mypy
+        entry: uv run mypy
+        language: system
+        types: [python]
+        pass_filenames: true
+
+  # Markdown linting
+  - repo: https://github.com/DavidAnson/markdownlint-cli2
+    rev: v0.23.2
+    hooks:
+      - id: markdownlint-cli2
+        args: ["--fix"]
+
+  # Renovate config validation
   - repo: https://github.com/renovatebot/pre-commit-hooks
-    rev: 43.55.1
+    rev: 44.24.3
     hooks:
       - id: renovate-config-validator
         files: '.github/renovate.json'
