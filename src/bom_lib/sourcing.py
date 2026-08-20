@@ -1,5 +1,4 @@
-"""
-Business logic for sourcing, purchasing, and hardware injection.
+"""Business logic for sourcing, purchasing, and hardware injection.
 
 This module contains the "Nerd Economics" logic, which includes:
 - Calculating safe buy quantities (buffers for small parts).
@@ -12,14 +11,13 @@ import math
 import re
 from urllib.parse import quote_plus
 
-import src.bom_lib.constants as C
+from src.bom_lib import constants
 from src.bom_lib.types import Inventory, StatsDict
 from src.bom_lib.utils import float_to_search_string, parse_value_to_float
 
 
 def get_residual_report(stats: StatsDict) -> list[str]:
-    """
-    Identifies potential parts hidden in the parser's rejected lines.
+    """Identifies potential parts hidden in the parser's rejected lines.
 
     Scans the 'residuals' (unparsed lines) for text that looks like a part
     but was missed by the regex. Useful for debugging parsing errors.
@@ -59,8 +57,7 @@ def get_residual_report(stats: StatsDict) -> list[str]:
 
 
 def get_injection_warnings(inventory: Inventory) -> list[str]:
-    """
-    Generates user warnings based on automated hardware injections.
+    """Generates user warnings based on automated hardware injections.
 
     Args:
         inventory: The current inventory state.
@@ -75,14 +72,13 @@ def get_injection_warnings(inventory: Inventory) -> list[str]:
         )
     if inventory["Hardware/Misc | 8 PIN DIP SOCKET"]["qty"] > 0:
         warnings.append(
-            "ℹ️  IC SOCKETS: Added sockets for chips. Optional but recommended."
+            "ℹ️  IC SOCKETS: Added sockets for chips. Optional but recommended."  # noqa: RUF001
         )
     return warnings
 
 
 def get_spec_type(category: str, val: str) -> str:
-    """
-    Determines the specific capacitor dielectric or material type.
+    """Determines the specific capacitor dielectric or material type.
 
     Used to refine search terms (e.g., distinguishing MLCC from Electrolytic
     based on capacitance).
@@ -105,19 +101,17 @@ def get_spec_type(category: str, val: str) -> str:
             return "MLCC"
 
         # 1nF to 1uF -> Film
-        elif 1.0e-9 <= fval < 1.0e-6 or abs(fval - 1.0e-6) < 1.0e-9:
+        if 1.0e-9 <= fval < 1.0e-6 or abs(fval - 1.0e-6) < 1.0e-9:
             return "Box Film"
 
         # > 1uF -> Electrolytic
-        else:
-            return "Electrolytic"
+        return "Electrolytic"
 
     return ""
 
 
 def generate_search_term(category: str, val: str, spec_type: str = "") -> str:
-    """
-    Generates a supplier-optimized search string.
+    """Generates a supplier-optimized search string.
 
     Targeted primarily at Tayda Electronics' search engine behavior.
 
@@ -132,7 +126,7 @@ def generate_search_term(category: str, val: str, spec_type: str = "") -> str:
     if category == "Resistors":
         return f"{val} ohm 1/4w metal film"
 
-    elif category == "Capacitors":
+    if category == "Capacitors":
         # Check if it ends in a shorthand unit (p, n, u) and append 'F'
         if val and val[-1] in "pnu":
             val += "F"
@@ -143,18 +137,18 @@ def generate_search_term(category: str, val: str, spec_type: str = "") -> str:
             return f"{val} {spec_type}"
         return val
 
-    elif category == "Potentiometers":
+    if category == "Potentiometers":
         taper = "Linear"  # Default
         val_upper = val.upper()
         is_dual = "DUAL" in val_upper or "STEREO" in val_upper
 
-        for code, name in C.POT_TAPER_MAP.items():
+        for code, name in constants.POT_TAPER_MAP.items():
             if code in val_upper:
                 taper = name
                 break
 
         # Clean "B100k" -> "100k"
-        taper_chars = "".join(C.POT_TAPER_MAP.keys())
+        taper_chars = "".join(constants.POT_TAPER_MAP.keys())
         clean_raw = re.sub(rf"[{taper_chars}\-\s]", "", val_upper)
         fval = parse_value_to_float(clean_raw)
 
@@ -166,7 +160,7 @@ def generate_search_term(category: str, val: str, spec_type: str = "") -> str:
         base_term = f"{clean_val} ohm {taper} potentiometer"
         return f"Dual Gang {base_term}" if is_dual else base_term
 
-    elif category == "Diodes":
+    if category == "Diodes":
         if val.upper() == "LED":
             return "LED 3mm"
         return val
@@ -200,8 +194,7 @@ def generate_pedalpcb_url(search_term: str) -> str:
 def get_buy_details(
     category: str, val: str, count: int, fval: float | None = None
 ) -> tuple[int, str]:
-    """
-    Calculates the purchase quantity and notes based on 'Nerd Economics'.
+    """Calculates the purchase quantity and notes based on 'Nerd Economics'.
 
     Applies logic to buffer small parts (resistors), enforce exact counts
     for expensive parts (ICs), and suggest substitutions or warnings.
@@ -210,6 +203,7 @@ def get_buy_details(
         category: Component category.
         val: Component value.
         count: The raw net need (BOM Qty - Stock Qty).
+        fval: Pre-computed float value of the component, if available.
 
     Returns:
         A tuple containing:
@@ -227,7 +221,7 @@ def get_buy_details(
         fval = parse_value_to_float(val)
 
     if category == "Resistors":
-        rules = C.PURCHASING_CONFIG["Resistors"]
+        rules = constants.PURCHASING_CONFIG["Resistors"]
 
         buffered_qty = count + rules["buffer_add"]
         round_step = rules["round_to"]
@@ -273,8 +267,8 @@ def get_buy_details(
     elif category == "Diodes":
         buy = max(10, count + 5)
         # Check substitutions
-        if val in C.DIODE_ALTS:
-            alts = C.DIODE_ALTS[val]
+        if val in constants.DIODE_ALTS:
+            alts = constants.DIODE_ALTS[val]
             txt_parts = [
                 f"{item[0]} ({item[1]}{': ' + item[2] if len(item) > 2 else ''})"
                 for item in alts
@@ -292,8 +286,8 @@ def get_buy_details(
         buy = count
         note = "Socket Recommended"
         clean_ic = re.sub(r"(CP|CN|P|N)$", "", val)
-        if clean_ic in C.IC_ALTS:
-            alts = C.IC_ALTS[clean_ic]
+        if clean_ic in constants.IC_ALTS:
+            alts = constants.IC_ALTS[clean_ic]
             txt_parts = [
                 f"{item[0]} ({item[1]}{': ' + item[2] if len(item) > 2 else ''})"
                 for item in alts
@@ -322,8 +316,7 @@ def get_buy_details(
 
 
 def get_standard_hardware(inventory: Inventory, pedal_count: int = 1) -> None:
-    """
-    Injects standard enclosure hardware into the inventory.
+    """Injects standard enclosure hardware into the inventory.
 
     Adds items like jacks, switches, DC sockets, and wiring that are almost
     never listed on the PCB BOM but are required to build the pedal.

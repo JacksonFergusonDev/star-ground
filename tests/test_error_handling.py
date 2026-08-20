@@ -19,7 +19,7 @@ def test_pdf_parser_catches_critical_errors():
     # We simulate a "Corrupt File" scenario where opening the PDF raises an error
     with patch("pdfplumber.open", side_effect=Exception("Simulated PDF Corruption")):
         # We can pass a dummy path because the mock intercepts the call before file access
-        inventory, stats = parse_pedalpcb_pdf("fake_path.pdf", source_name="CrashTest")
+        _, stats = parse_pedalpcb_pdf("fake_path.pdf", source_name="CrashTest")
 
         # ASSERTION 1: The app did not crash (implicit if we reach this line)
 

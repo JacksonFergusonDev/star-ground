@@ -1,5 +1,4 @@
-"""
-Static Knowledge Base for the Star Ground Engine.
+"""Static Knowledge Base for the Star Ground Engine.
 
 This module serves as the central repository for:
 1.  **Physical Constants:** SI prefix multipliers for component value normalization.

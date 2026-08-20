@@ -1,5 +1,4 @@
-"""
-Preset Generation Tool.
+"""Preset Generation Tool.
 
 This script acts as an ETL (Extract, Transform, Load) pipeline for the application's
 BOM presets. It crawls a specified directory of raw BOM files (PDFs and Text files),
@@ -19,8 +18,7 @@ OUTPUT_FILE = "src/bom_lib/_presets_data.py"
 
 
 def main() -> None:
-    """
-    Main execution entry point.
+    """Main execution entry point.
 
     Walks the 'raw_boms' directory, categorizes files based on folder structure,
     parses content (handling PDFs via OCR/Scraping and Text via direct read),
@@ -137,9 +135,9 @@ def main() -> None:
             # We indent deeply (12 spaces) to align inside the dict structure.
             content = str(data["bom_text"]).strip().replace("\n", "\n            ")
 
-            f.write(f"    {repr(k)}: {{\n")
+            f.write(f"    {k!r}: {{\n")
             f.write(f'        \'bom_text\': """\n            {content}\n        """,\n')
-            f.write(f"        'source_path': {repr(data['source_path'])},\n")
+            f.write(f"        'source_path': {data['source_path']!r},\n")
             f.write(f"        'is_pdf': {data['is_pdf']},\n")
             f.write("    },\n")
 

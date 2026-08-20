@@ -1,5 +1,4 @@
-"""
-Type definitions and shared data structures for the BOM library.
+"""Type definitions and shared data structures for the BOM library.
 
 This module contains the TypedDicts and type aliases used throughout the
 parsing and sourcing pipeline to ensure consistent data passing.
@@ -15,8 +14,8 @@ from src.bom_lib.utils import parse_value_to_float
 
 @dataclass
 class ProjectSlot:
-    """
-    Represents the UI state for a single pedal project slot.
+    """Represents the UI state for a single pedal project slot.
+
     Shared between the Streamlit frontend and PDF generation backend.
     """
 
@@ -34,8 +33,7 @@ class ProjectSlot:
 
 
 class StatsDict(TypedDict):
-    """
-    Tracking metrics and errors for a single ingestion session.
+    """Tracking metrics and errors for a single ingestion session.
 
     Attributes:
         lines_read: Total lines processed from the source file.
@@ -54,8 +52,7 @@ class StatsDict(TypedDict):
 
 
 class PartData(TypedDict):
-    """
-    Structure representing a specific component's aggregate data.
+    """Structure representing a specific component's aggregate data.
 
     Attributes:
         qty: Total quantity required across all projects.
@@ -71,9 +68,8 @@ class PartData(TypedDict):
     sources: dict[str, list[str]]
 
 
-class Inventory(UserDict):
-    """
-    Concrete class for managing component inventory.
+class Inventory(UserDict[str, PartData]):
+    """Concrete class for managing component inventory.
 
     Encapsulates storage, mutation, and aggregation logic to prevent
     invalid state transitions (e.g., assigning string to quantity).
@@ -97,8 +93,7 @@ class Inventory(UserDict):
         return value
 
     def add_part(self, source: str, key: str, ref: str, qty: int = 1) -> None:
-        """
-        Records a part in the inventory.
+        """Records a part in the inventory.
 
         Args:
             source: Source identifier (e.g., "Big Muff").
@@ -123,8 +118,7 @@ class Inventory(UserDict):
             part["sources"][source].append(ref)
 
     def merge(self, other: "Inventory", multiplier: int = 1) -> None:
-        """
-        Merges another inventory into this one.
+        """Merges another inventory into this one.
 
         Args:
             other: The Inventory object to merge in.

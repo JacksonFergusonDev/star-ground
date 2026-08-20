@@ -84,7 +84,7 @@ def test_pcb_trap():
     anywhere in the text, handling permissive formatting (e.g., project titles).
     """
     raw_text = "BIG MUFF DIY PCB GUITAR EFFECT"
-    inventory, stats = parse_with_verification([raw_text], source_name="My Build")
+    inventory, _ = parse_with_verification([raw_text], source_name="My Build")
 
     key = "PCB | BIG MUFF DIY PCB GUITAR EFFECT"
     assert inventory[key]["qty"] == 1
@@ -106,7 +106,8 @@ def test_2n5457_behavior():
     # Should stay as 2N5457
     assert inventory["Transistors | 2N5457"]["qty"] == 1
     # Should NOT inject adapter
-    assert inventory.get("Hardware/Misc | SMD_ADAPTER_BOARD", {}).get("qty", 0) == 0
+    adapter = inventory.get("Hardware/Misc | SMD_ADAPTER_BOARD")
+    assert adapter is None or adapter["qty"] == 0
 
     # Case 2: Modern SMD Part
     raw_text_2 = "Q2 MMBF5457"
@@ -115,7 +116,8 @@ def test_2n5457_behavior():
     # Should stay as MMBF5457
     assert inventory_2["Transistors | MMBF5457"]["qty"] == 1
     # Should NOT inject adapter (User might have SOT-23 pads on PCB)
-    assert inventory_2.get("Hardware/Misc | SMD_ADAPTER_BOARD", {}).get("qty", 0) == 0
+    adapter_2 = inventory_2.get("Hardware/Misc | SMD_ADAPTER_BOARD")
+    assert adapter_2 is None or adapter_2["qty"] == 0
 
 
 def test_warning_flags():
@@ -168,7 +170,7 @@ def test_buy_logic_scaling(qty):
     category = "Resistors"
     val = "10k"
 
-    buy_qty, note = get_buy_details(category, val, qty)
+    buy_qty, _ = get_buy_details(category, val, qty)
 
     # Invariant: We should never buy FEWER than we need
     assert buy_qty >= qty

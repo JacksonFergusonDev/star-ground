@@ -3,7 +3,7 @@ import io
 import logging
 import os
 import tempfile
-from typing import cast
+from typing import Any, cast
 
 import streamlit as st
 
@@ -53,7 +53,8 @@ if "log_capture" not in st.session_state:
 class StreamlitLogHandler(logging.Handler):
     """Custom handler to route logs to Streamlit session state."""
 
-    def emit(self, record):
+    def emit(self, record: logging.LogRecord) -> None:
+        """Route log record to session state buffer."""
         try:
             msg = self.format(record)
             # Write to the StringIO buffer in session state
@@ -101,14 +102,13 @@ if "pedal_slots" not in st.session_state:
     st.session_state.pedal_slots = [ProjectSlot()]
 
 
-def add_slot():
+def add_slot() -> None:
     """Appends a new empty pedal slot to the session state."""
     st.session_state.pedal_slots.append(ProjectSlot())
 
 
-def remove_slot(idx: int):
-    """
-    Removes a pedal slot from the session state by index.
+def remove_slot(idx: int) -> None:
+    """Removes a pedal slot from the session state by index.
 
     Args:
         idx (int): The index of the slot to remove.
@@ -117,9 +117,8 @@ def remove_slot(idx: int):
         st.session_state.pedal_slots.pop(idx)
 
 
-def render_preset_selector(slot: ProjectSlot, idx: int):
-    """
-    Renders a 3-stage smart selector widget for a specific slot.
+def render_preset_selector(slot: ProjectSlot, idx: int) -> Any:
+    """Renders a 3-stage smart selector widget for a specific slot.
 
     Includes filters for Source and Category to narrow down the main
     project selection list.
@@ -141,7 +140,7 @@ def render_preset_selector(slot: ProjectSlot, idx: int):
     src_key = f"filter_src_{slot.id}"
     selected_src = c_filt1.selectbox(
         "Source",
-        ["All"] + all_sources,
+        ["All", *all_sources],
         key=src_key,
         label_visibility="collapsed",
         help="Filter by Vendor",
@@ -150,12 +149,12 @@ def render_preset_selector(slot: ProjectSlot, idx: int):
     # --- 2. Category Filter ---
     # Dynamic options based on Source selection
     if selected_src != "All":
-        cat_options = ["All"] + cat_map.get(selected_src, [])
+        cat_options = ["All", *cat_map.get(selected_src, [])]
     else:
         # If All sources, show all unique categories across everything
         # Flatten the list of lists
         flat_cats = sorted({cat for sublist in cat_map.values() for cat in sublist})
-        cat_options = ["All"] + flat_cats
+        cat_options = ["All", *flat_cats]
 
     cat_key = f"filter_cat_{slot.id}"
     selected_cat = c_filt2.selectbox(
@@ -180,7 +179,7 @@ def render_preset_selector(slot: ProjectSlot, idx: int):
     # Handle Edge Case
     if not option_keys:
         st.warning("No presets match filters.")
-        return
+        return None
 
     # Find current index
     current_val = slot.last_loaded_preset
@@ -190,23 +189,23 @@ def render_preset_selector(slot: ProjectSlot, idx: int):
         current_idx = 0
 
     # --- 4. The Smart Selectbox ---
-    def format_label(key):
+    def format_label(key: str) -> str:
         # Find the metadata for this key
         meta = next((i for i in filtered_items if i["full_key"] == key), None)
         if not meta:
             return key
-        label = meta["name"]
+        label = str(meta["name"])
         extras = []
         if selected_src == "All":
-            extras.append(meta["source"])
+            extras.append(str(meta["source"]))
         if selected_cat == "All" and meta["category"] != "Misc":
-            extras.append(meta["category"])
+            extras.append(str(meta["category"]))
         if extras:
             return f"{label}  ({', '.join(extras)})"
         return label
 
     # The actual widget
-    selection = c_main.selectbox(
+    return c_main.selectbox(
         "Select Project",
         options=option_keys,
         index=current_idx,
@@ -217,12 +216,9 @@ def render_preset_selector(slot: ProjectSlot, idx: int):
         args=(slot.id,),
     )
 
-    return selection
 
-
-def update_from_preset(slot_id: str):
-    """
-    Callback to update slot data and name when the preset selection changes.
+def update_from_preset(slot_id: str) -> None:
+    """Callback to update slot data and name when the preset selection changes.
 
     Args:
         slot_id (str): The unique identifier for the slot being updated.
@@ -275,8 +271,7 @@ def update_from_preset(slot_id: str):
 
 
 def _reset_slot_state(slot: ProjectSlot, new_method: str) -> None:
-    """
-    Clears data and UI state for a slot when switching input methods.
+    """Clears data and UI state for a slot when switching input methods.
 
     Args:
         slot: The slot object to reset.
@@ -315,10 +310,8 @@ def _reset_slot_state(slot: ProjectSlot, new_method: str) -> None:
     # last_method is removed in new architecture
 
 
-def on_method_change(slot_id: str):
-    """
-    Callback to handle input method switches (Paste, Upload, URL, Preset).
-    """
+def on_method_change(slot_id: str) -> None:
+    """Callback to handle input method switches (Paste, Upload, URL, Preset)."""
     slot = next((s for s in st.session_state.pedal_slots if s.id == slot_id), None)
     if not slot:
         return
@@ -454,7 +447,7 @@ for i, slot in enumerate(st.session_state.pedal_slots):
 
         st.divider()
 
-st.button("➕ Add Another Pedal", on_click=add_slot)
+st.button("➕ Add Another Pedal", on_click=add_slot)  # noqa: RUF001
 
 st.divider()
 st.subheader("2. Inventory Check (Optional)")
