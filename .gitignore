@@ -10,3 +10,6 @@ output/
 .streamlit/*
 !.streamlit/config.toml
 .mypy_cache
+
+# Streamlit agent skills (environment-specific symlinks)
+.agents/skills/developing-with-streamlit
