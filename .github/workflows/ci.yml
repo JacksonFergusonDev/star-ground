@@ -31,7 +31,7 @@ jobs:
       run: uv run ruff format --check --output-format=github .
 
     - name: Lint Markdown
-      uses: DavidAnson/markdownlint-cli2-action@8de2aa07cae85fd17c0b35642db70cf5495f1d25 # v24
+      uses: DavidAnson/markdownlint-cli2-action@21c1be1b93ad9ed58fa840aacc3f279cde2a72ff # v24
       with:
         globs: '**/*.md'
 
