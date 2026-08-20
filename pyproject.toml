@@ -3,6 +3,8 @@ name = "star-ground"
 version = "2.3.0"
 description = "Logistics engine for analog electronics"
 readme = "README.md"
+license = {file = "LICENSE"}
+classifiers = ["License :: OSI Approved :: MIT License"]
 requires-python = ">=3.13,<3.14"
 dependencies = [
     "fpdf2==2.8.7",
@@ -22,7 +24,6 @@ packages = ["src"]
 
 [dependency-groups]
 dev = [
-    "bump-my-version>=1.2.6",
     "hypothesis==6.164.0",
     "mypy==1.20.2",
     "pandas-stubs",
@@ -45,98 +46,79 @@ dev = [
     "watchdog==6.0.0",
 ]
 
-[tool.mypy]
-warn_return_any = true
-warn_unused_configs = true
-ignore_missing_imports = false
-check_untyped_defs = true
-disallow_untyped_defs = true
+# ==================================================
+# Tool Configuration
+# ==================================================
 
-[[tool.mypy.overrides]]
-module = ["tests.*", "app"]
-disallow_untyped_defs = false
-
-[tool.pytest.ini_options]
-pythonpath = "."
-log_cli_level = "DEBUG"
-log_cli_format = "%(asctime)s [%(levelname)8s] %(message)s (%(filename)s:%(lineno)s)"
-log_cli_date_format = "%Y-%m-%d %H:%M:%S"
-testpaths = ["tests"]
-addopts = "-ra"
-filterwarnings = [
-    "ignore::DeprecationWarning",
-    "ignore::PendingDeprecationWarning",
-]
-
-[tool.bumpversion]
-current_version = "2.3.0"
-parse = "(?P<major>\\d+)\\.(?P<minor>\\d+)\\.(?P<patch>\\d+)"
-serialize = ["{major}.{minor}.{patch}"]
-search = "{current_version}"
-replace = "{new_version}"
-regex = false
-ignore_missing_version = false
-tag = false
-sign_tags = false
-allow_dirty = false
-commit = true
-message = "chore: bump version {current_version} → {new_version}"
-commit_args = ""
-
-[[tool.bumpversion.files]]
-filename = "pyproject.toml"
-
-[[tool.bumpversion.files]]
-filename = "README.md"
-search = "v{current_version}"
-replace = "v{new_version}"
+# ---- ruff ---- #
 
 [tool.ruff]
-# Target Python 3.13 for code generation and linting analysis
 target-version = "py313"
-line-length = 88
-indent-width = 4
-
-# Exclude common build/cache directories
-exclude = [
-    ".git",
-    ".mypy_cache",
-    ".ruff_cache",
-    ".venv",
-    "__pypackages__",
-    "build",
-    "dist",
-]
 
 [tool.ruff.lint]
-# Enable specific rule sets:
-# E, W: pycodestyle (standard linting)
-# F: Pyflakes (error detection)
-# I: isort (import sorting)
-# B: flake8-bugbear (finds likely bugs and design problems)
-# UP: pyupgrade (modernizes code, e.g., List[] -> list[])
-# SIM: flake8-simplify (logic simplification)
-# T20: flake8-print (Catch print() statements)
-# PT:  flake8-pytest-style (Best practices for tests)
-# C4:  flake8-comprehensions (Better list/dict comprehensions)
-select = ["E", "F", "I", "B", "UP", "SIM", "T20", "PT", "C4"]
+select = [
+    "A",   # flake8-builtins
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "D",   # pydocstyle
+    "E",   # pycodestyle errors
+    "F",   # Pyflakes
+    "I",   # isort
+    "N",   # pep8-naming
+    "PT",  # flake8-pytest
+    "RET", # flake8-return
+    "RUF", # Ruff-specific
+    "SIM", # flake8-simplify
+    "UP",  # pyupgrade
+]
+ignore = ["D100", "D104", "D107", "E501"]
 
-# Ignore E501 (Line too long) as ruff format handles line wrapping efficiently
-ignore = ["E501"]
-
-# Allow unused variables when underscored (e.g., for unpacking)
-dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+[tool.ruff.lint.pydocstyle]
+convention = "google"
 
 [tool.ruff.lint.isort]
-# Ensure 'src' is treated as a local application for import grouping
-known-first-party = ["src"]
-section-order = ["future", "standard-library", "third-party", "first-party", "local-folder"]
+known-first-party = ["star-ground"]
+section-order = [
+    "future",
+    "standard-library",
+    "third-party",
+    "first-party",
+    "local-folder",
+]
 
 [tool.ruff.lint.per-file-ignores]
-"tools/*.py" = ["T201", "T203"]
+"tests/*.py" = ["D"]
 
-[tool.ruff.format]
-quote-style = "double"
-indent-style = "space"
-skip-magic-trailing-comma = false
-line-ending = "auto"
+# ---- mypy ---- #
+
+[tool.mypy]
+mypy_path = "."
+python_version = "3.13"
+strict=true
+pretty = true
+show_error_codes = true
+show_error_context = true
+explicit_package_bases = true
+
+[[tool.mypy.overrides]]
+module = ["tests.*"]
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+disallow_untyped_calls = false
+warn_return_any = false
+
+# ---- pytest ---- #
+
+[tool.pytest.ini_options]
+addopts = "--strict-markers"
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.coverage.run]
+source = ["src/"]
+branch = true
+
+[tool.coverage.report]
+omit = ["src/**/__init__.py"]
+show_missing = true
+skip_covered = true
