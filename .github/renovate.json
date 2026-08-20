@@ -1,101 +1,56 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:base"
+    "config:best-practices",
+    ":semanticCommits",
+    ":prHourlyLimit2"
   ],
-  "pyenv": {
-    "enabled": true
-  },
   "schedule": [
-    "before 4am on the 1st day of the month",
-    "before 4am on the 15th day of the month"
+    "before 4am on the first day of the month"
   ],
   "internalChecksFilter": "strict",
   "prCreation": "immediate",
   "rebaseWhen": "conflicted",
-  "timezone": "America/Vancouver",
   "labels": [
-    "dependencies"
+    "dependencies",
+    "chore"
   ],
   "vulnerabilityAlerts": {
-    "schedule": []
+    "schedule": [
+      "at any time"
+    ]
   },
   "packageRules": [
     {
-      "description": "Group and automerge all non-major dependencies to reduce noise",
+      "description": "Require a package to be 2 weeks old before updating, but exclude vulnerability remediation from this wait.",
       "matchUpdateTypes": [
+        "major",
         "minor",
-        "patch"
+        "patch",
+        "pin",
+        "digest",
+        "lockFileMaintenance"
       ],
-      "groupName": "all non-major dependencies",
-      "automerge": true
+      "minimumReleaseAge": "2 weeks"
     },
     {
-      "description": "Automerge all minor/patch updates for dev dependencies",
+      "description": "Group all python dev-dependencies (ruff, mypy, pytest) into one PR and automerge them.",
+      "matchFileNames": [
+        "pyproject.toml"
+      ],
       "matchDepTypes": [
-        "dev",
         "dependency-groups"
       ],
-      "matchUpdateTypes": [
-        "minor",
-        "patch"
-      ],
+      "groupName": "python-dev-tools",
       "automerge": true
     },
     {
-      "description": "GitHub Actions (setup-python uses-with): allow Python 3.13 patch upgrades only",
+      "description": "Group GitHub Actions updates and automerge them.",
       "matchManagers": [
         "github-actions"
       ],
-      "matchDatasources": [
-        "github-releases"
-      ],
-      "matchDepNames": [
-        "python"
-      ],
-      "allowedVersions": "/^3\\.13\\./"
-    },
-    {
-      "description": "pyproject.toml requires-python: do not move off Python 3.13.x",
-      "matchDatasources": [
-        "python-version"
-      ],
-      "matchDepNames": [
-        "python"
-      ],
-      "allowedVersions": "/^3\\.13\\./"
-    },
-    {
-      "description": "Pin .python-version (pyenv manager) to Python 3.13.x",
-      "matchManagers": [
-        "dockerfile",
-        "pyenv"
-      ],
-      "matchPackageNames": [
-        "python"
-      ],
-      "allowedVersions": "/^3\\.13\\./"
-    },
-    {
-      "matchPackageNames": [
-        "streamlit"
-      ],
-      "minimumReleaseAge": "3 days"
-    },
-    {
-      "description": "Explicitly automerge formatters/linters if not caught by dev rule",
-      "matchManagers": [
-        "ruff",
-        "mypy"
-      ],
+      "groupName": "github-actions",
       "automerge": true
     }
-  ],
-  "lockFileMaintenance": {
-    "enabled": true,
-    "schedule": [
-      "before 4am on the first day of the month"
-    ],
-    "automerge": true
-  }
+  ]
 }
