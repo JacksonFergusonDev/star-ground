@@ -1,10 +1,9 @@
 [theme]
-# "Oscilloscope" Aesthetic: High contrast, technical, and low eye strain.
 base = "dark"
-primaryColor = "#F5A623"                # Warm Amber: Mimics retro CRT phosphors and test equipment.
-backgroundColor = "#1C1C1C"             # Matte Dark Grey: Reduces harsh contrast compared to pure black (#000000).
-secondaryBackgroundColor = "#2D2D2D"    # Panel Grey: Distinct separation for input fields and sidebars.
-textColor = "#D0D0D0"                   # Off-White: Softened white to prevent halation on dark backgrounds.
+primaryColor = "#4ADE80"                # Star Ground Green: Matches logo circuit ground accent
+backgroundColor = "#0F172A"             # Dark Slate: Matches logo container background
+secondaryBackgroundColor = "#1E293B"    # Slate Panel: Distinct separation for input fields and sidebars
+textColor = "#FFFFFF"                   # Crisp White: Matches logo highlight and high-contrast text
 font = "monospace"                        # Monospace: Essential for tabular data alignment and "IDE" feel.
 
 [client]
