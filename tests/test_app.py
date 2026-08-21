@@ -36,7 +36,7 @@ def app():
     Sets a higher timeout to accommodate PDF/ZIP generation logic during tests.
     """
     # Increase timeout to allow for heavier processing (PDF generation)
-    at = AppTest.from_file("app.py", default_timeout=30)
+    at = AppTest.from_file("../app.py", default_timeout=30)
     at.run()
     return at
 
