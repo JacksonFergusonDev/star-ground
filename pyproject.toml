@@ -8,11 +8,11 @@ classifiers = ["License :: OSI Approved :: MIT License"]
 requires-python = ">=3.14"
 dependencies = [
     "fpdf2==2.8.7",
-    "google-auth==2.56.2",
+    "google-auth==2.56.3",
     "gspread==6.2.1",
     "pdfplumber==0.11.10",
     "requests==2.34.2",
-    "streamlit==1.60.0",
+    "streamlit==1.61.1",
 ]
 
 [build-system]
@@ -24,12 +24,12 @@ packages = ["src"]
 
 [dependency-groups]
 dev = [
-    "hypothesis==6.164.0",
+    "hypothesis==6.165.2",
     "mypy==2.3.0",
     "pandas-stubs",
     "prek>=0.4.14",
-    "pytest==9.1.0",
-    "ruff==0.15.17",
+    "pytest==9.1.1",
+    "ruff==0.16.1",
     "types-cachetools",
     "types-cffi",
     "types-colorama",
