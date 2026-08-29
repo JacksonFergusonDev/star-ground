@@ -12,6 +12,7 @@ dependencies = [
     "gspread==6.2.1",
     "pdfplumber==0.11.10",
     "pint>=0.25.3",
+    "pyparsing>=3.3.2",
     "requests==2.34.2",
     "streamlit==1.61.1",
 ]
