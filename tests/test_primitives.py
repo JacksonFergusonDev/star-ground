@@ -16,6 +16,8 @@ import pint
 import pytest
 
 from src.bom_lib.classifier import categorize_part, normalize_value_to_quantity
+from src.bom_lib.manager import sort_inventory
+from src.bom_lib.sourcing import get_buy_details, get_spec_type
 from src.bom_lib.types import Inventory
 from src.bom_lib.units import ureg
 from src.bom_lib.utils import (
@@ -324,3 +326,64 @@ def test_inventory_add_part_val_qty() -> None:
 
     inv.add_part("Test", "RawKeyWithoutPipe", "")
     assert inv["RawKeyWithoutPipe"]["val_qty"] is None
+
+
+# --- sort_inventory Tests ---
+
+
+def test_sort_inventory_numerical_order() -> None:
+    """Verifies that sort_inventory sorts component values by their exact numeric magnitude."""
+    inv = Inventory()
+    inv.add_part("P1", "Resistors | 100k", "R3")
+    inv.add_part("P1", "Resistors | 1k", "R1")
+    inv.add_part("P1", "Resistors | 10k", "R2")
+    inv.add_part("P1", "Resistors | 1M", "R4")
+
+    sorted_parts = [key for key, _ in sort_inventory(inv)]
+    assert sorted_parts == [
+        "Resistors | 1k",
+        "Resistors | 10k",
+        "Resistors | 100k",
+        "Resistors | 1M",
+    ]
+
+
+def test_sort_inventory_capacitors_order() -> None:
+    """Verifies capacitor sorting across sub-microfarad ranges."""
+    inv = Inventory()
+    inv.add_part("P1", "Capacitors | 100u", "C4")
+    inv.add_part("P1", "Capacitors | 100p", "C1")
+    inv.add_part("P1", "Capacitors | 1u", "C3")
+    inv.add_part("P1", "Capacitors | 100n", "C2")
+
+    sorted_parts = [key for key, _ in sort_inventory(inv)]
+    assert sorted_parts == [
+        "Capacitors | 100p",
+        "Capacitors | 100n",
+        "Capacitors | 1u",
+        "Capacitors | 100u",
+    ]
+
+
+# --- Sourcing exact equality tests ---
+
+
+def test_get_spec_type_exact() -> None:
+    """Verifies get_spec_type dielectric classification at boundary conditions."""
+    assert get_spec_type("Capacitors", "100p") == "MLCC"
+    assert get_spec_type("Capacitors", "1n") == "Box Film"
+    assert get_spec_type("Capacitors", "1u") == "Box Film"
+    assert get_spec_type("Capacitors", "2.2u") == "Electrolytic"
+
+
+def test_get_buy_details_exact_quantities() -> None:
+    """Verifies get_buy_details exact matching on bulk and large capacitor thresholds."""
+    # 100nF bulk buy
+    buy, note = get_buy_details("Capacitors", "100n", 1)
+    assert buy == 11  # 1 + bulk_buffer (10)
+    assert "Power filtering (buy bulk)." in note
+
+    # 1uF large cap low buffer
+    buy_1u, note_1u = get_buy_details("Capacitors", "1u", 1)
+    assert buy_1u == 2  # 1 + large_buffer (1)
+    assert "Rec: Box Film (Check BOM: Could be Electrolytic)" in note_1u

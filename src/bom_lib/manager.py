@@ -7,8 +7,11 @@ This module acts as the "Controller" for the BOM library. It handles:
 - Renaming sources/projects.
 """
 
+from decimal import Decimal
+
+import pint
+
 from src.bom_lib.types import Inventory, PartData
-from src.bom_lib.utils import parse_value_to_float
 
 
 def calculate_net_needs(bom: Inventory, stock: Inventory) -> Inventory:
@@ -71,20 +74,23 @@ def sort_inventory(inventory: Inventory) -> list[tuple[str, PartData]]:
     # Map name to index for sorting efficiency
     pmap = {name: i for i, name in enumerate(order)}
 
-    def sort_key(item: tuple[str, PartData]) -> tuple[int, float, str]:
-        key = item[0]
+    def sort_key(item: tuple[str, PartData]) -> tuple[int, Decimal, str]:
+        key, data = item
         if " | " not in key:
-            return (999, 0.0, key)
+            return (999, Decimal(0), key)
 
         cat, val = key.split(" | ", 1)
         rank = pmap.get(cat, 100)
 
-        # Parse value for sorting
-        fval = parse_value_to_float(val)
-        if fval is None:
-            fval = 0.0
+        val_qty = data.get("val_qty")
+        if isinstance(val_qty, pint.Quantity):
+            mag = Decimal(str(val_qty.to_base_units().magnitude))
+        elif isinstance(val_qty, Decimal):
+            mag = val_qty
+        else:
+            mag = Decimal(0)
 
-        return (rank, fval, val)
+        return (rank, mag, val)
 
     return sorted(inventory.items(), key=sort_key)
 
