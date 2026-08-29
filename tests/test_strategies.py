@@ -5,11 +5,13 @@ import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
+import requests
 
 from src.bom_lib.strategies import (
+    BOMParserContext,
     CSVParserStrategy,
     ManualInputStrategy,
     ParseResult,
@@ -41,7 +43,7 @@ class TestManualInputStrategy:
         assert strategy.can_handle("Preset", "R1 10k") is True
         assert strategy.can_handle("", "R1 10k") is True
         assert strategy.can_handle("", ["R1 10k"]) is True
-        assert strategy.can_handle("From URL", "https://example.com/test.pdf") is False
+        assert strategy.can_handle("From URL", "R1 10k") is True
         assert strategy.can_handle("Upload File", b"%PDF-1.4") is False
 
     def test_parse_string(self) -> None:
@@ -227,3 +229,133 @@ class TestPDFParserStrategy:
         strategy = PDFParserStrategy()
         with pytest.raises(ValueError, match="Unsupported data type"):
             strategy.parse(12345, source_name="Invalid")
+
+
+class TestBOMParserContext:
+    """Tests for BOMParserContext."""
+
+    @pytest.fixture
+    def sample_pdf_bytes(self) -> bytes:
+        pdf_path = Path("tests/samples/clean/Cataclysm-PedalPCB.pdf")
+        assert pdf_path.exists(), f"Sample PDF not found at {pdf_path}"
+        with open(pdf_path, "rb") as f:
+            return f.read()
+
+    def test_default_strategies_registered(self) -> None:
+        context = BOMParserContext()
+        assert len(context.strategies) == 3
+        assert isinstance(context.strategies[0], PDFParserStrategy)
+        assert isinstance(context.strategies[1], CSVParserStrategy)
+        assert isinstance(context.strategies[2], ManualInputStrategy)
+
+    def test_custom_strategies_and_register(self) -> None:
+        context = BOMParserContext([ManualInputStrategy()])
+        assert len(context.strategies) == 1
+        context.register_strategy(CSVParserStrategy())
+        assert len(context.strategies) == 2
+
+    def test_process_empty_data(self) -> None:
+        context = BOMParserContext()
+        result = context.process("Paste Text", "", "Empty")
+
+        assert isinstance(result, ParseResult)
+        assert result.stats["parts_found"] == 0
+        assert result.stats["lines_read"] == 0
+        assert len(result.inventory) == 0
+
+    def test_process_paste_text(self) -> None:
+        context = BOMParserContext()
+        result = context.process("Paste Text", "R1 10k\nC1 100n", "PastePedal")
+
+        assert isinstance(result, ParseResult)
+        assert result.stats["parts_found"] == 2
+        assert "Resistors | 10k" in result.inventory
+        assert "Capacitors | 100n" in result.inventory
+
+    def test_process_preset(self) -> None:
+        context = BOMParserContext()
+        result = context.process("Preset", "R1 10k", "PresetPedal")
+
+        assert isinstance(result, ParseResult)
+        assert result.stats["parts_found"] == 1
+        assert "Resistors | 10k" in result.inventory
+
+    def test_process_upload_file_csv(self) -> None:
+        context = BOMParserContext()
+        mock_file = MockUploadedFile(
+            name="build.csv", _buffer=b"Designator,Value\nR1,10k\n"
+        )
+        result = context.process("Upload File", mock_file, "CSVPedal")
+
+        assert isinstance(result, ParseResult)
+        assert result.stats["parts_found"] == 1
+        assert "Resistors | 10k" in result.inventory
+
+    def test_process_upload_file_pdf(self, sample_pdf_bytes: bytes) -> None:
+        context = BOMParserContext()
+        mock_file = MockUploadedFile(name="Cataclysm.pdf", _buffer=sample_pdf_bytes)
+        result = context.process("Upload File", mock_file, "PDFPedal")
+
+        assert isinstance(result, ParseResult)
+        assert result.stats["parts_found"] > 0
+        assert result.title is not None
+        assert result.raw_content == sample_pdf_bytes
+
+    def test_process_from_url_pdf(self, sample_pdf_bytes: bytes) -> None:
+        context = BOMParserContext()
+
+        mock_resp = MagicMock()
+        mock_resp.content = sample_pdf_bytes
+        mock_resp.raise_for_status = MagicMock()
+
+        with patch("requests.get", return_value=mock_resp):
+            result = context.process(
+                "From URL", "https://example.com/Cataclysm.pdf", "URLPedal"
+            )
+
+        assert isinstance(result, ParseResult)
+        assert result.stats["parts_found"] > 0
+        assert result.title is not None
+        assert result.raw_content == sample_pdf_bytes
+
+    def test_process_from_url_text(self) -> None:
+        context = BOMParserContext()
+
+        mock_resp = MagicMock()
+        mock_resp.content = b"R1 10k\nR2 100k\n"
+        mock_resp.text = "R1 10k\nR2 100k\n"
+        mock_resp.raise_for_status = MagicMock()
+
+        with patch("requests.get", return_value=mock_resp):
+            result = context.process(
+                "From URL", "https://example.com/raw_bom.txt", "URLPedal"
+            )
+
+        assert isinstance(result, ParseResult)
+        assert result.stats["parts_found"] == 2
+        assert "Resistors | 10k" in result.inventory
+
+    def test_process_from_url_network_error(self) -> None:
+        context = BOMParserContext()
+
+        with patch(
+            "requests.get",
+            side_effect=requests.RequestException("Connection timed out"),
+        ):
+            result = context.process(
+                "From URL", "https://example.com/bad.pdf", "ErrPedal"
+            )
+
+        assert isinstance(result, ParseResult)
+        assert result.stats["parts_found"] == 0
+        assert len(result.stats["errors"]) == 1
+        assert "Connection timed out" in result.stats["errors"][0]
+
+    def test_process_unknown_method(self) -> None:
+        context = BOMParserContext([])
+        result = context.process("NonExistentMethod", 12345, "Unknown")
+
+        assert isinstance(result, ParseResult)
+        assert result.stats["parts_found"] == 0
+        assert len(result.stats["errors"]) == 1
+        assert result.stats["errors"][0] == "Unknown Method"
