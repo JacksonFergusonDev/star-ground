@@ -25,13 +25,22 @@ packages = ["src"]
 
 [dependency-groups]
 dev = [
+    "prek>=0.4.14",
+    "watchdog==6.0.0",
+    { include-group = "ci" },
+]
+
+ci = [
     "hypothesis==6.165.2",
     "mypy==2.3.0",
-    "pandas-stubs",
-    "prek>=0.4.14",
     "pytest==9.1.1",
     "ruff==0.16.1",
     "rumdl>=0.2.62",
+    { include-group = "type-stubs" },
+]
+
+type-stubs = [
+    "pandas-stubs",
     "types-cachetools",
     "types-cffi",
     "types-colorama",
@@ -45,7 +54,6 @@ dev = [
     "types-pygments",
     "types-requests",
     "types-toml",
-    "watchdog==6.0.0",
 ]
 
 # ==================================================

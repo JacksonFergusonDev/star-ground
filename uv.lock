@@ -1184,6 +1184,27 @@ dependencies = [
 ]
 
 [package.dev-dependencies]
+ci = [
+    { name = "hypothesis" },
+    { name = "mypy" },
+    { name = "pandas-stubs" },
+    { name = "pytest" },
+    { name = "ruff" },
+    { name = "rumdl" },
+    { name = "types-cachetools" },
+    { name = "types-cffi" },
+    { name = "types-colorama" },
+    { name = "types-defusedxml" },
+    { name = "types-fpdf2" },
+    { name = "types-jsonschema" },
+    { name = "types-pexpect" },
+    { name = "types-protobuf" },
+    { name = "types-pyasn1" },
+    { name = "types-pycurl" },
+    { name = "types-pygments" },
+    { name = "types-requests" },
+    { name = "types-toml" },
+]
 dev = [
     { name = "hypothesis" },
     { name = "mypy" },
@@ -1207,6 +1228,22 @@ dev = [
     { name = "types-toml" },
     { name = "watchdog" },
 ]
+type-stubs = [
+    { name = "pandas-stubs" },
+    { name = "types-cachetools" },
+    { name = "types-cffi" },
+    { name = "types-colorama" },
+    { name = "types-defusedxml" },
+    { name = "types-fpdf2" },
+    { name = "types-jsonschema" },
+    { name = "types-pexpect" },
+    { name = "types-protobuf" },
+    { name = "types-pyasn1" },
+    { name = "types-pycurl" },
+    { name = "types-pygments" },
+    { name = "types-requests" },
+    { name = "types-toml" },
+]
 
 [package.metadata]
 requires-dist = [
@@ -1220,6 +1257,27 @@ requires-dist = [
 ]
 
 [package.metadata.requires-dev]
+ci = [
+    { name = "hypothesis", specifier = "==6.165.2" },
+    { name = "mypy", specifier = "==2.3.0" },
+    { name = "pandas-stubs" },
+    { name = "pytest", specifier = "==9.1.1" },
+    { name = "ruff", specifier = "==0.16.1" },
+    { name = "rumdl", specifier = ">=0.2.62" },
+    { name = "types-cachetools" },
+    { name = "types-cffi" },
+    { name = "types-colorama" },
+    { name = "types-defusedxml" },
+    { name = "types-fpdf2" },
+    { name = "types-jsonschema" },
+    { name = "types-pexpect" },
+    { name = "types-protobuf" },
+    { name = "types-pyasn1" },
+    { name = "types-pycurl" },
+    { name = "types-pygments" },
+    { name = "types-requests" },
+    { name = "types-toml" },
+]
 dev = [
     { name = "hypothesis", specifier = "==6.165.2" },
     { name = "mypy", specifier = "==2.3.0" },
@@ -1242,6 +1300,22 @@ dev = [
     { name = "types-requests" },
     { name = "types-toml" },
     { name = "watchdog", specifier = "==6.0.0" },
+]
+type-stubs = [
+    { name = "pandas-stubs" },
+    { name = "types-cachetools" },
+    { name = "types-cffi" },
+    { name = "types-colorama" },
+    { name = "types-defusedxml" },
+    { name = "types-fpdf2" },
+    { name = "types-jsonschema" },
+    { name = "types-pexpect" },
+    { name = "types-protobuf" },
+    { name = "types-pyasn1" },
+    { name = "types-pycurl" },
+    { name = "types-pygments" },
+    { name = "types-requests" },
+    { name = "types-toml" },
 ]
 
 [[package]]
