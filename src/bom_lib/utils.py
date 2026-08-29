@@ -8,10 +8,10 @@ This module handles the low-level formatting logic, including:
 """
 
 import re
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 from typing import Any
 
-from src.bom_lib import constants
+from src.bom_lib.grammar import parse_si_value
 
 
 def natural_sort_key(ref: str) -> list[Any]:
@@ -102,46 +102,7 @@ def parse_value_to_decimal(val_str: str) -> Decimal | None:
     Returns:
         The Decimal value in base units (e.g., Decimal("4700.0")), or None if parsing fails.
     """
-    if not val_str:
-        return None
-
-    val_str = val_str.strip()
-
-    # Strategy 1: "Sandwich" notation (BS 1852): 1k5 -> 1500.0
-    # Match: (Digits)(Multiplier)(Digits)
-    sandwich = re.match(r"^(\d+)([pnuµmkKMG])(\d+)", val_str)
-
-    if sandwich:
-        whole = sandwich.group(1)
-        suffix = sandwich.group(2)
-        fraction = sandwich.group(3)
-
-        # Reassemble as Decimal: 1k5 -> Decimal("1.5") * multiplier
-        try:
-            base = Decimal(f"{whole}.{fraction}")
-        except InvalidOperation:
-            return None
-        return base * constants.MULTIPLIERS[suffix]
-
-    # Strategy 2: Standard "Number + Suffix"
-    # Match: (Start)(Number)(Multiplier?)(Everything Else)
-    match = re.search(r"^([\d\.]+)\s*([pnuµmkKMG])?", val_str)
-
-    if match:
-        num_str = match.group(1)
-        suffix = match.group(2)
-
-        try:
-            base_val = Decimal(num_str)
-        except InvalidOperation:
-            return None
-
-        if suffix and suffix in constants.MULTIPLIERS:
-            return base_val * constants.MULTIPLIERS[suffix]
-
-        return base_val
-
-    return None
+    return parse_si_value(val_str)
 
 
 def float_to_search_string(val: float | None) -> str:
