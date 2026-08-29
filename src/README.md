@@ -12,7 +12,6 @@ The system enforces strict separation between **Ingestion**, **Normalization**, 
 
 - **`bom_lib/parser.py`**: The entry point for dynamic data.
   - **Strategy:** Implements a **Hybrid Strategy**. It attempts to map PDF table vectors using `pdfplumber` (Spatial Analysis) but falls back to a deterministic Regex scanner if the visual layout is ambiguous.
-
 - **`bom_lib/presets.py`**: The entry point for static data.
   - **Role:** Acts as the "Reference Library." It allows users to load pre-verified BOMs for known circuits (e.g., PedalPCB projects) without parsing a file.
 - **`bom_lib/_presets_data.py`**: The static database.
@@ -22,7 +21,6 @@ The system enforces strict separation between **Ingestion**, **Normalization**, 
 
 - **`bom_lib/classifier.py`**: The identification engine.
   - **Heuristics:** Uses reference designators (`R1`, `U1`) and value signatures to categorize components. It determines if `C1` is a Ceramic Disc (low profile) or an Electrolytic (high profile) based on value thresholds.
-
 - **`bom_lib/utils.py`**: The recursive SI parser.
   - **Role:** The "Unit Enforcer." It converts chaotic strings (`4k7`, `4.7k`, `4,700R`) into floating-point primitives ($4.7 \times 10^3$) before storage, ensuring mathematical uniqueness.
 - **`bom_lib/constants.py`**: The knowledge base.
@@ -74,3 +72,4 @@ class PartData(TypedDict):
     qty: int
     refs: list[str]  # ["R1", "R2"]
     sources: dict[str, list[str]]  # Traceability back to origin PDF
+```
