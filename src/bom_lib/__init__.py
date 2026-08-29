@@ -54,7 +54,6 @@ from .utils import (
     float_to_search_string,
     get_clean_name,
     parse_value_to_decimal,
-    parse_value_to_float,
 )
 
 __all__ = [
@@ -91,7 +90,6 @@ __all__ = [
     "parse_pedalpcb_pdf",
     "parse_user_inventory",
     "parse_value_to_decimal",
-    "parse_value_to_float",
     "parse_with_verification",
     "rename_source_in_inventory",
     "serialize_inventory",

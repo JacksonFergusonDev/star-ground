@@ -1,7 +1,7 @@
 """Characterization golden unit tests for core parsing primitives.
 
 These tests lock down the exact baseline behavior of:
-- `parse_value_to_float`
+- `parse_value_to_decimal`
 - `expand_refs`
 - `categorize_part`
 - `natural_sort_key`
@@ -24,7 +24,6 @@ from src.bom_lib.utils import (
     expand_refs,
     natural_sort_key,
     parse_value_to_decimal,
-    parse_value_to_float,
 )
 
 # --- parse_value_to_decimal Tests ---
@@ -80,61 +79,6 @@ def test_parse_value_to_decimal_none_returns(val_str: str) -> None:
 def test_parse_value_to_decimal_falsy_none() -> None:
     """Verifies that None/empty input safely returns None."""
     assert parse_value_to_decimal(cast(str, None)) is None
-
-
-# --- parse_value_to_float Tests ---
-
-
-@pytest.mark.parametrize(
-    ("val_str", "expected"),
-    [
-        # Standard notation
-        ("10k", 10000.0),
-        ("4.7u", 4.7e-6),
-        ("100n", 1e-7),
-        ("2.2M", 2.2e6),
-        ("100p", 100e-12),
-        ("10m", 0.01),
-        ("1G", 1e9),
-        ("4.7µ", 4.7e-6),
-        # Sandwich notation (BS 1852)
-        ("1k5", 1500.0),
-        ("4n7", 4.7e-9),
-        ("2M2", 2200000.0),
-        ("4u7", 4.7e-6),
-        ("2p2", 2.2e-12),
-        # Bare numbers
-        ("100", 100.0),
-        ("0.1", 0.1),
-        ("0", 0.0),
-        ("470", 470.0),
-    ],
-)
-def test_parse_value_to_float_valid(val_str: str, expected: float) -> None:
-    """Verifies standard, sandwich, and bare number parsing."""
-    result = parse_value_to_float(val_str)
-    assert result is not None
-    assert pytest.approx(result) == expected
-
-
-@pytest.mark.parametrize(
-    "val_str",
-    [
-        "",
-        "   ",
-        "FOOBAR",
-        "R1",
-        "hello",
-    ],
-)
-def test_parse_value_to_float_none_returns(val_str: str) -> None:
-    """Verifies that invalid or empty strings return None."""
-    assert parse_value_to_float(val_str) is None
-
-
-def test_parse_value_to_float_falsy_none() -> None:
-    """Verifies that None/empty input safely returns None."""
-    assert parse_value_to_float(cast(str, None)) is None
 
 
 # --- expand_refs Tests ---

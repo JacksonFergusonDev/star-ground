@@ -11,6 +11,7 @@ This suite covers:
 
 from collections import defaultdict
 from collections.abc import MutableMapping
+from decimal import Decimal
 from typing import cast
 
 import pytest
@@ -30,7 +31,7 @@ from src.bom_lib import (
     get_spec_type,
     get_standard_hardware,
     parse_user_inventory,
-    parse_value_to_float,
+    parse_value_to_decimal,
     parse_with_verification,
 )
 from src.bom_lib.types import Inventory
@@ -176,25 +177,25 @@ def test_buy_logic_scaling(qty):
     assert buy_qty >= qty
 
 
-def test_float_engine_round_trip():
+def test_value_normalization_lifecycle():
     """
     Verifies the full lifecycle of component value normalization.
 
-    Workflow: Raw String -> Float (Backend) -> Display String / Search String.
-    Ensures that "1k5" becomes 1500.0 and converts back correctly.
+    Workflow: Raw String -> Decimal (Backend) -> Display String / Search String.
+    Ensures that "1k5" becomes Decimal("1500") and converts back correctly.
     """
     # Test Case: 1.5k Resistor
-    val = parse_value_to_float("1k5")
+    val = parse_value_to_decimal("1k5")
 
     # TYPE GUARD: Tell Mypy "If this is None, crash the test right here"
     assert val is not None
 
-    assert val == 1500.0
-    assert float_to_search_string(val) == "1.5k"
-    assert float_to_display_string(val) == "1k5"
+    assert val == Decimal("1500")
+    assert float_to_search_string(float(val)) == "1.5k"
+    assert float_to_display_string(float(val)) == "1k5"
 
     # Test Case: 100n (Capacitor Normalization)
-    val1 = parse_value_to_float("100n")
+    val1 = parse_value_to_decimal("100n")
 
     # TYPE GUARD
     assert val1 is not None
@@ -202,7 +203,7 @@ def test_float_engine_round_trip():
     # We normalized 100n -> 1.0e-7.
     # Our renderer might output "100n" or "0.1u" depending on formatting rules,
     # but the numeric value must be correct.
-    out = float_to_search_string(val1)
+    out = float_to_search_string(float(val1))
     assert "u" in out or "n" in out
 
 
@@ -231,13 +232,13 @@ def test_suspicious_physics_warnings():
     physically improbable (e.g., a 1 Farad capacitor or 0.1 Ohm resistor).
     """
     # 1. Resistor too small (0.1 Ohm)
-    # Note: 0.1 -> parse_value_to_float -> 0.1
+    # Note: 0.1 -> parse_value_to_decimal -> 0.1
     _, note_r = get_buy_details("Resistors", "0.1", 1)
     assert "Suspicious" in note_r
     assert "< 1Ω" in note_r
 
     # 2. Capacitor too huge (1 Farad)
-    # Note: "1F" -> parse_value_to_float -> 1.0 (Huge!)
+    # Note: "1F" -> parse_value_to_decimal -> 1.0 (Huge!)
     _, note_c = get_buy_details("Capacitors", "1F", 1)
     assert "Suspicious" in note_c
     assert "> 10mF" in note_c
