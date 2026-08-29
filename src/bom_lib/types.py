@@ -7,9 +7,12 @@ parsing and sourcing pipeline to ensure consistent data passing.
 import uuid
 from collections import UserDict, defaultdict
 from dataclasses import dataclass, field
+from decimal import Decimal
 from typing import Any, TypedDict
 
-from src.bom_lib.utils import parse_value_to_float
+import pint
+
+from src.bom_lib.classifier import normalize_value_to_quantity
 
 
 @dataclass
@@ -56,14 +59,15 @@ class PartData(TypedDict):
 
     Attributes:
         qty: Total quantity required across all projects.
-        val_float: The cached numeric value of the component (e.g. 1000.0 for '1k').
-                   None if the value is non-numeric (e.g. 'TL072').
+        val_qty: The cached physical quantity or Decimal value of the component
+                 (e.g. 10000 * ureg.ohm for '10k' Resistors).
+                 None if the value is non-numeric (e.g. 'TL072').
         refs: List of designators (e.g., ['R1', 'R2']).
         sources: Mapping of project names to the specific refs they contributed.
     """
 
     qty: int
-    val_float: float | None
+    val_qty: pint.Quantity[Any] | Decimal | None
     refs: list[str]
     sources: dict[str, list[str]]
 
@@ -85,7 +89,7 @@ class Inventory(UserDict[str, PartData]):
         """Default factory for new parts."""
         value: PartData = {
             "qty": 0,
-            "val_float": None,
+            "val_qty": None,
             "refs": [],
             "sources": defaultdict(list),
         }
@@ -103,13 +107,13 @@ class Inventory(UserDict[str, PartData]):
         """
         part = self[key]
 
-        # Initialize cached float if this is a new part entry
+        # Initialize cached quantity if this is a new part entry
         if part["qty"] == 0:
             if " | " in key:
-                _, val_str = key.split(" | ", 1)
-                part["val_float"] = parse_value_to_float(val_str)
+                cat, val_str = key.split(" | ", 1)
+                part["val_qty"] = normalize_value_to_quantity(cat, val_str)
             else:
-                part["val_float"] = None
+                part["val_qty"] = None
 
         part["qty"] += qty
 

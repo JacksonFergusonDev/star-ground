@@ -6,9 +6,46 @@ values to ensure consistent matching between BOMs and Inventory.
 """
 
 import re
+from decimal import Decimal
+from typing import Any, cast
+
+import pint
 
 from src.bom_lib import constants
-from src.bom_lib.utils import float_to_search_string, parse_value_to_float
+from src.bom_lib.units import ureg
+from src.bom_lib.utils import (
+    float_to_search_string,
+    parse_value_to_decimal,
+    parse_value_to_float,
+)
+
+
+def normalize_value_to_quantity(
+    category: str, val_raw: str
+) -> pint.Quantity[Any] | Decimal | None:
+    """Attaches the correct physical unit to the parsed value based on category.
+
+    Args:
+        category: The determined component category (e.g., "Resistors").
+        val_raw: The raw value string from the BOM (e.g., "10k", "100n").
+
+    Returns:
+        A pint.Quantity with ureg.ohm for Resistors, ureg.farad for Capacitors,
+        a Decimal for other categories with numeric values, or None if parsing fails.
+    """
+    clean_val = val_raw.strip()
+    if "mm" in clean_val.lower():
+        return None
+
+    dec = parse_value_to_decimal(clean_val)
+    if dec is None:
+        return None
+
+    if category == "Resistors":
+        return cast(pint.Quantity[Any], dec * ureg.ohm)
+    if category == "Capacitors":
+        return cast(pint.Quantity[Any], dec * ureg.farad)
+    return dec
 
 
 def normalize_value_by_category(category: str, val_raw: str) -> str:

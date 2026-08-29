@@ -12,9 +12,12 @@ Part of Phase 0 safety net ahead of Milestone 2 grammar refactoring.
 from decimal import Decimal
 from typing import cast
 
+import pint
 import pytest
 
-from src.bom_lib.classifier import categorize_part
+from src.bom_lib.classifier import categorize_part, normalize_value_to_quantity
+from src.bom_lib.types import Inventory
+from src.bom_lib.units import ureg
 from src.bom_lib.utils import (
     expand_refs,
     natural_sort_key,
@@ -269,3 +272,55 @@ def test_natural_sort_key_list_sorting() -> None:
     mixed = ["SW10", "C2", "R1", "SW2", "C10", "C1"]
     expected_mixed = ["C1", "C2", "C10", "R1", "SW2", "SW10"]
     assert sorted(mixed, key=natural_sort_key) == expected_mixed
+
+
+# --- normalize_value_to_quantity Tests ---
+
+
+def test_normalize_value_to_quantity_resistors() -> None:
+    """Verifies that Resistors are parsed with ureg.ohm units."""
+    qty = normalize_value_to_quantity("Resistors", "10k")
+    assert isinstance(qty, pint.Quantity)
+    assert qty.units == ureg.ohm
+    assert qty.magnitude == Decimal("10000")
+
+
+def test_normalize_value_to_quantity_capacitors() -> None:
+    """Verifies that Capacitors are parsed with ureg.farad units."""
+    qty = normalize_value_to_quantity("Capacitors", "100n")
+    assert isinstance(qty, pint.Quantity)
+    assert qty.units == ureg.farad
+    assert qty.magnitude == Decimal("1e-7")
+
+
+def test_normalize_value_to_quantity_other_categories() -> None:
+    """Verifies that non-passive numeric values return bare Decimals."""
+    qty = normalize_value_to_quantity("Potentiometers", "100k")
+    assert isinstance(qty, Decimal)
+    assert qty == Decimal("100000")
+
+
+def test_normalize_value_to_quantity_invalid() -> None:
+    """Verifies that dimensions (mm) and unparseable values return None."""
+    assert normalize_value_to_quantity("Resistors", "5mm LDR") is None
+    assert normalize_value_to_quantity("ICs", "TL072") is None
+    assert normalize_value_to_quantity("Resistors", "") is None
+
+
+# --- Inventory val_qty Tests ---
+
+
+def test_inventory_add_part_val_qty() -> None:
+    """Verifies that Inventory.add_part populates val_qty correctly."""
+    inv = Inventory()
+    inv.add_part("Test", "Resistors | 10k", "R1")
+    assert inv["Resistors | 10k"]["val_qty"] == Decimal("10000") * ureg.ohm
+
+    inv.add_part("Test", "Capacitors | 100n", "C1")
+    assert inv["Capacitors | 100n"]["val_qty"] == Decimal("1e-7") * ureg.farad
+
+    inv.add_part("Test", "ICs | TL072", "U1")
+    assert inv["ICs | TL072"]["val_qty"] is None
+
+    inv.add_part("Test", "RawKeyWithoutPipe", "")
+    assert inv["RawKeyWithoutPipe"]["val_qty"] is None
