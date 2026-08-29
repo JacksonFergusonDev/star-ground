@@ -1,0 +1,311 @@
+{
+  "inventory": {
+    "Capacitors | 100n": {
+      "qty": 1,
+      "refs": [
+        "C1"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C1"
+        ]
+      }
+    },
+    "Capacitors | 10n": {
+      "qty": 1,
+      "refs": [
+        "C8"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C8"
+        ]
+      }
+    },
+    "Capacitors | 2.2n": {
+      "qty": 2,
+      "refs": [
+        "C10",
+        "C11"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C10",
+          "C11"
+        ]
+      }
+    },
+    "Capacitors | 22n": {
+      "qty": 3,
+      "refs": [
+        "C2",
+        "C4",
+        "C9"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C2",
+          "C4",
+          "C9"
+        ]
+      }
+    },
+    "Capacitors | 470p": {
+      "qty": 1,
+      "refs": [
+        "C3"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C3"
+        ]
+      }
+    },
+    "Capacitors | 47n": {
+      "qty": 1,
+      "refs": [
+        "C6"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C6"
+        ]
+      }
+    },
+    "Capacitors | 47u": {
+      "qty": 1,
+      "refs": [
+        "C12"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C12"
+        ]
+      }
+    },
+    "Capacitors | 56n": {
+      "qty": 1,
+      "refs": [
+        "C7"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C7"
+        ]
+      }
+    },
+    "Capacitors | 820n": {
+      "qty": 1,
+      "refs": [
+        "C5"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C5"
+        ]
+      }
+    },
+    "Diodes | 1N5817": {
+      "qty": 1,
+      "refs": [
+        "D2"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "D2"
+        ]
+      }
+    },
+    "Diodes | 9v1": {
+      "qty": 1,
+      "refs": [
+        "D1"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "D1"
+        ]
+      }
+    },
+    "Diodes | LED": {
+      "qty": 1,
+      "refs": [
+        "D3"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "D3"
+        ]
+      }
+    },
+    "Potentiometers | A100K": {
+      "qty": 1,
+      "refs": [
+        "VOLUME"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "VOLUME"
+        ]
+      }
+    },
+    "Potentiometers | B100K": {
+      "qty": 1,
+      "refs": [
+        "TONE"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "TONE"
+        ]
+      }
+    },
+    "Potentiometers | C5K": {
+      "qty": 1,
+      "refs": [
+        "DRIVE"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "DRIVE"
+        ]
+      }
+    },
+    "Potentiometers | SPDT (On - On)": {
+      "qty": 1,
+      "refs": [
+        "GAIN"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "GAIN"
+        ]
+      }
+    },
+    "Resistors | 10k": {
+      "qty": 2,
+      "refs": [
+        "R16",
+        "R17"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R16",
+          "R17"
+        ]
+      }
+    },
+    "Resistors | 180": {
+      "qty": 1,
+      "refs": [
+        "R9"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R9"
+        ]
+      }
+    },
+    "Resistors | 1M": {
+      "qty": 7,
+      "refs": [
+        "R1",
+        "R10",
+        "R11",
+        "R2",
+        "R3",
+        "R6",
+        "R7"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R1",
+          "R10",
+          "R11",
+          "R2",
+          "R3",
+          "R6",
+          "R7"
+        ]
+      }
+    },
+    "Resistors | 4.7k": {
+      "qty": 1,
+      "refs": [
+        "R19"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R19"
+        ]
+      }
+    },
+    "Resistors | 470k": {
+      "qty": 1,
+      "refs": [
+        "R5"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R5"
+        ]
+      }
+    },
+    "Resistors | 47k": {
+      "qty": 1,
+      "refs": [
+        "R14"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R14"
+        ]
+      }
+    },
+    "Resistors | 5.1k": {
+      "qty": 3,
+      "refs": [
+        "R12",
+        "R4",
+        "R8"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R12",
+          "R4",
+          "R8"
+        ]
+      }
+    },
+    "Resistors | 82k": {
+      "qty": 1,
+      "refs": [
+        "R15"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R15"
+        ]
+      }
+    },
+    "Transistors | BS170": {
+      "qty": 3,
+      "refs": [
+        "Q1",
+        "Q2",
+        "Q3"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "Q1",
+          "Q2",
+          "Q3"
+        ]
+      }
+    }
+  },
+  "metadata": {
+    "extracted_title": "Distortr",
+    "parts_found": 39
+  }
+}

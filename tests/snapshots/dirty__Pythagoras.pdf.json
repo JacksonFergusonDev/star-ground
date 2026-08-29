@@ -1,0 +1,366 @@
+{
+  "inventory": {
+    "Capacitors | 100n": {
+      "qty": 1,
+      "refs": [
+        "C1"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C1"
+        ]
+      }
+    },
+    "Capacitors | 100u": {
+      "qty": 1,
+      "refs": [
+        "C14"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C14"
+        ]
+      }
+    },
+    "Capacitors | 10u": {
+      "qty": 1,
+      "refs": [
+        "C5"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C5"
+        ]
+      }
+    },
+    "Capacitors | 15p": {
+      "qty": 1,
+      "refs": [
+        "C7"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C7"
+        ]
+      }
+    },
+    "Capacitors | 1n": {
+      "qty": 1,
+      "refs": [
+        "C4"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C4"
+        ]
+      }
+    },
+    "Capacitors | 1u": {
+      "qty": 6,
+      "refs": [
+        "C10",
+        "C2",
+        "C3",
+        "C6",
+        "C8",
+        "C9"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C10",
+          "C2",
+          "C3",
+          "C6",
+          "C8",
+          "C9"
+        ]
+      }
+    },
+    "Capacitors | 2.2n": {
+      "qty": 1,
+      "refs": [
+        "C11"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C11"
+        ]
+      }
+    },
+    "Capacitors | 220p": {
+      "qty": 1,
+      "refs": [
+        "C12"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C12"
+        ]
+      }
+    },
+    "Capacitors | 470p": {
+      "qty": 1,
+      "refs": [
+        "C13"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C13"
+        ]
+      }
+    },
+    "Capacitors | 47u": {
+      "qty": 2,
+      "refs": [
+        "C15",
+        "C16"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C15",
+          "C16"
+        ]
+      }
+    },
+    "Crystals/Oscillators | AB38T-32.768KHZ": {
+      "qty": 1,
+      "refs": [
+        "X1"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "X1"
+        ]
+      }
+    },
+    "Diodes | 1N5817": {
+      "qty": 1,
+      "refs": [
+        "D1"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "D1"
+        ]
+      }
+    },
+    "Hardware/Misc | DIP SOCKET (Check Size)": {
+      "qty": 4,
+      "refs": [
+        "IC1 (Inj)",
+        "IC2 (Inj)",
+        "IC3 (Inj)",
+        "IC5 (Inj)"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "IC1 (Inj)",
+          "IC2 (Inj)",
+          "IC3 (Inj)",
+          "IC5 (Inj)"
+        ]
+      }
+    },
+    "ICs | 24LC32A": {
+      "qty": 1,
+      "refs": [
+        "IC2"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "IC2"
+        ]
+      }
+    },
+    "ICs | FV1": {
+      "qty": 1,
+      "refs": [
+        "IC3"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "IC3"
+        ]
+      }
+    },
+    "ICs | L78L33": {
+      "qty": 1,
+      "refs": [
+        "IC4"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "IC4"
+        ]
+      }
+    },
+    "ICs | TL072": {
+      "qty": 2,
+      "refs": [
+        "IC1",
+        "IC5"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "IC1",
+          "IC5"
+        ]
+      }
+    },
+    "Potentiometers | B100K": {
+      "qty": 4,
+      "refs": [
+        "CTRL1",
+        "CTRL2",
+        "CTRL3",
+        "VOLUME"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "CTRL1",
+          "CTRL2",
+          "CTRL3",
+          "VOLUME"
+        ]
+      }
+    },
+    "Potentiometers | B10K": {
+      "qty": 1,
+      "refs": [
+        "MIX"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "MIX"
+        ]
+      }
+    },
+    "Resistors | 100": {
+      "qty": 2,
+      "refs": [
+        "R12",
+        "R8"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R12",
+          "R8"
+        ]
+      }
+    },
+    "Resistors | 100k": {
+      "qty": 2,
+      "refs": [
+        "R20",
+        "R6"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R20",
+          "R6"
+        ]
+      }
+    },
+    "Resistors | 10k": {
+      "qty": 5,
+      "refs": [
+        "R14",
+        "R15",
+        "R16",
+        "R5",
+        "R7"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R14",
+          "R15",
+          "R16",
+          "R5",
+          "R7"
+        ]
+      }
+    },
+    "Resistors | 15k": {
+      "qty": 5,
+      "refs": [
+        "R10",
+        "R18",
+        "R19",
+        "R4",
+        "R9"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R10",
+          "R18",
+          "R19",
+          "R4",
+          "R9"
+        ]
+      }
+    },
+    "Resistors | 1M": {
+      "qty": 2,
+      "refs": [
+        "R1",
+        "R2"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R1",
+          "R2"
+        ]
+      }
+    },
+    "Resistors | 1k": {
+      "qty": 2,
+      "refs": [
+        "R17",
+        "R3"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R17",
+          "R3"
+        ]
+      }
+    },
+    "Resistors | 22k": {
+      "qty": 1,
+      "refs": [
+        "R11"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R11"
+        ]
+      }
+    },
+    "Resistors | 4.7k": {
+      "qty": 1,
+      "refs": [
+        "R13"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R13"
+        ]
+      }
+    },
+    "Switches | SPDT": {
+      "qty": 1,
+      "refs": [
+        "SW1"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "SW1"
+        ]
+      }
+    }
+  },
+  "metadata": {
+    "extracted_title": "Pythagoras v3",
+    "parts_found": 49
+  }
+}
