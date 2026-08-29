@@ -1,0 +1,291 @@
+{
+  "inventory": {
+    "Capacitors | 100n": {
+      "qty": 8,
+      "refs": [
+        "C1",
+        "C12",
+        "C13",
+        "C3",
+        "C4",
+        "C5",
+        "C7",
+        "C8"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C1",
+          "C12",
+          "C13",
+          "C3",
+          "C4",
+          "C5",
+          "C7",
+          "C8"
+        ]
+      }
+    },
+    "Capacitors | 100u": {
+      "qty": 1,
+      "refs": [
+        "C14"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C14"
+        ]
+      }
+    },
+    "Capacitors | 470p": {
+      "qty": 3,
+      "refs": [
+        "C2",
+        "C6",
+        "C9"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C2",
+          "C6",
+          "C9"
+        ]
+      }
+    },
+    "Capacitors | 6.8n": {
+      "qty": 2,
+      "refs": [
+        "C10",
+        "C11"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C10",
+          "C11"
+        ]
+      }
+    },
+    "Diodes | 1N5817": {
+      "qty": 1,
+      "refs": [
+        "D5"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "D5"
+        ]
+      }
+    },
+    "Diodes | 3mm": {
+      "qty": 4,
+      "refs": [
+        "D1",
+        "D2",
+        "D3",
+        "D4"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "D1",
+          "D2",
+          "D3",
+          "D4"
+        ]
+      }
+    },
+    "Potentiometers | A1M": {
+      "qty": 1,
+      "refs": [
+        "LEVEL"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "LEVEL"
+        ]
+      }
+    },
+    "Potentiometers | B100K": {
+      "qty": 1,
+      "refs": [
+        "TONE"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "TONE"
+        ]
+      }
+    },
+    "Potentiometers | B50K": {
+      "qty": 1,
+      "refs": [
+        "FUZZ"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "FUZZ"
+        ]
+      }
+    },
+    "Resistors | 100": {
+      "qty": 1,
+      "refs": [
+        "R5"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R5"
+        ]
+      }
+    },
+    "Resistors | 100k": {
+      "qty": 4,
+      "refs": [
+        "R13",
+        "R19",
+        "R2",
+        "R8"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R13",
+          "R19",
+          "R2",
+          "R8"
+        ]
+      }
+    },
+    "Resistors | 10k": {
+      "qty": 1,
+      "refs": [
+        "R21"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R21"
+        ]
+      }
+    },
+    "Resistors | 15k": {
+      "qty": 3,
+      "refs": [
+        "R10",
+        "R15",
+        "R4"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R10",
+          "R15",
+          "R4"
+        ]
+      }
+    },
+    "Resistors | 1M": {
+      "qty": 1,
+      "refs": [
+        "R23"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R23"
+        ]
+      }
+    },
+    "Resistors | 2.2k": {
+      "qty": 3,
+      "refs": [
+        "R18",
+        "R22",
+        "R6"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R18",
+          "R22",
+          "R6"
+        ]
+      }
+    },
+    "Resistors | 390k": {
+      "qty": 1,
+      "refs": [
+        "R20"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R20"
+        ]
+      }
+    },
+    "Resistors | 39k": {
+      "qty": 2,
+      "refs": [
+        "R1",
+        "R17"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R1",
+          "R17"
+        ]
+      }
+    },
+    "Resistors | 470k": {
+      "qty": 3,
+      "refs": [
+        "R14",
+        "R3",
+        "R9"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R14",
+          "R3",
+          "R9"
+        ]
+      }
+    },
+    "Resistors | 8.2k": {
+      "qty": 2,
+      "refs": [
+        "R12",
+        "R7"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R12",
+          "R7"
+        ]
+      }
+    },
+    "Transistors | 2N1308*": {
+      "qty": 2,
+      "refs": [
+        "Q2",
+        "Q3"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "Q2",
+          "Q3"
+        ]
+      }
+    },
+    "Transistors | 2N3904*": {
+      "qty": 2,
+      "refs": [
+        "Q1",
+        "Q4"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "Q1",
+          "Q4"
+        ]
+      }
+    }
+  },
+  "metadata": {
+    "extracted_title": "Ungula",
+    "parts_found": 47
+  }
+}
