@@ -9,12 +9,73 @@ These tests lock down the exact baseline behavior of:
 Part of Phase 0 safety net ahead of Milestone 2 grammar refactoring.
 """
 
+from decimal import Decimal
 from typing import cast
 
 import pytest
 
 from src.bom_lib.classifier import categorize_part
-from src.bom_lib.utils import expand_refs, natural_sort_key, parse_value_to_float
+from src.bom_lib.utils import (
+    expand_refs,
+    natural_sort_key,
+    parse_value_to_decimal,
+    parse_value_to_float,
+)
+
+# --- parse_value_to_decimal Tests ---
+
+
+@pytest.mark.parametrize(
+    ("val_str", "expected"),
+    [
+        # Standard notation
+        ("10k", Decimal("10000")),
+        ("4.7u", Decimal("4.7e-6")),
+        ("100n", Decimal("1e-7")),
+        ("2.2M", Decimal("2.2e6")),
+        ("100p", Decimal("100e-12")),
+        ("10m", Decimal("0.01")),
+        ("1G", Decimal("1e9")),
+        ("4.7µ", Decimal("4.7e-6")),
+        # Sandwich notation (BS 1852)
+        ("1k5", Decimal("1500")),
+        ("4n7", Decimal("4.7e-9")),
+        ("2M2", Decimal("2200000")),
+        ("4u7", Decimal("4.7e-6")),
+        ("2p2", Decimal("2.2e-12")),
+        # Bare numbers
+        ("100", Decimal("100")),
+        ("0.1", Decimal("0.1")),
+        ("0", Decimal("0")),
+        ("470", Decimal("470")),
+    ],
+)
+def test_parse_value_to_decimal_valid(val_str: str, expected: Decimal) -> None:
+    """Verifies standard, sandwich, and bare number parsing to Decimal."""
+    result = parse_value_to_decimal(val_str)
+    assert result is not None
+    assert result == expected
+
+
+@pytest.mark.parametrize(
+    "val_str",
+    [
+        "",
+        "   ",
+        "FOOBAR",
+        "R1",
+        "hello",
+    ],
+)
+def test_parse_value_to_decimal_none_returns(val_str: str) -> None:
+    """Verifies that invalid or empty strings return None."""
+    assert parse_value_to_decimal(val_str) is None
+
+
+def test_parse_value_to_decimal_falsy_none() -> None:
+    """Verifies that None/empty input safely returns None."""
+    assert parse_value_to_decimal(cast(str, None)) is None
+
 
 # --- parse_value_to_float Tests ---
 

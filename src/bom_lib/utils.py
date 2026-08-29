@@ -8,6 +8,7 @@ This module handles the low-level formatting logic, including:
 """
 
 import re
+from decimal import Decimal, InvalidOperation
 from typing import Any
 
 from src.bom_lib import constants
@@ -89,8 +90,8 @@ def expand_refs(ref_raw: str) -> list[str]:
     return refs
 
 
-def parse_value_to_float(val_str: str) -> float | None:
-    """Reduces component values to their base SI unit (Ohms/Farads).
+def parse_value_to_decimal(val_str: str) -> Decimal | None:
+    """Reduces component values to their base SI unit as an exact Decimal.
 
     Handles standard notation ('10k', '4.7u') and BS 1852 "sandwich"
     notation ('1k5').
@@ -99,7 +100,7 @@ def parse_value_to_float(val_str: str) -> float | None:
         val_str: The raw value string (e.g., "4k7").
 
     Returns:
-        The float value in base units (e.g., 4700.0), or None if parsing fails.
+        The Decimal value in base units (e.g., Decimal("4700.0")), or None if parsing fails.
     """
     if not val_str:
         return None
@@ -115,8 +116,11 @@ def parse_value_to_float(val_str: str) -> float | None:
         suffix = sandwich.group(2)
         fraction = sandwich.group(3)
 
-        # Reassemble as float: 1k5 -> 1.5 * multiplier
-        base = float(f"{whole}.{fraction}")
+        # Reassemble as Decimal: 1k5 -> Decimal("1.5") * multiplier
+        try:
+            base = Decimal(f"{whole}.{fraction}")
+        except InvalidOperation:
+            return None
         return base * constants.MULTIPLIERS[suffix]
 
     # Strategy 2: Standard "Number + Suffix"
@@ -128,8 +132,8 @@ def parse_value_to_float(val_str: str) -> float | None:
         suffix = match.group(2)
 
         try:
-            base_val = float(num_str)
-        except ValueError:
+            base_val = Decimal(num_str)
+        except InvalidOperation:
             return None
 
         if suffix and suffix in constants.MULTIPLIERS:
@@ -138,6 +142,21 @@ def parse_value_to_float(val_str: str) -> float | None:
         return base_val
 
     return None
+
+
+def parse_value_to_float(val_str: str) -> float | None:
+    """Reduces component values to their base SI unit (Ohms/Farads).
+
+    Shim wrapping `parse_value_to_decimal` for backward compatibility.
+
+    Args:
+        val_str: The raw value string (e.g., "4k7").
+
+    Returns:
+        The float value in base units (e.g., 4700.0), or None if parsing fails.
+    """
+    dec = parse_value_to_decimal(val_str)
+    return float(dec) if dec is not None else None
 
 
 def float_to_search_string(val: float | None) -> str:

@@ -42,12 +42,14 @@ from .types import (
     StatsDict,
     create_empty_inventory,
 )
+from .units import ureg
 from .utils import (
     deduplicate_refs,
     expand_refs,
     float_to_display_string,
     float_to_search_string,
     get_clean_name,
+    parse_value_to_decimal,
     parse_value_to_float,
 )
 
@@ -83,9 +85,11 @@ __all__ = [
     "parse_csv_bom",
     "parse_pedalpcb_pdf",
     "parse_user_inventory",
+    "parse_value_to_decimal",
     "parse_value_to_float",
     "parse_with_verification",
     "rename_source_in_inventory",
     "serialize_inventory",
     "sort_inventory",
+    "ureg",
 ]

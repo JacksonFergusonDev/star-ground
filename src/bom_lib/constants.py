@@ -10,23 +10,24 @@ This module serves as the central repository for:
 5.  **Purchasing Rules:** Configuration for safe buy quantities (buffers) and round-up logic.
 """
 
+from decimal import Decimal
 from typing import Any
 
 # --- Physics & Standards ---
 
 # SI Prefix Multipliers
-# Maps shorthand prefixes to their float multipliers.
+# Maps shorthand prefixes to their Decimal multipliers.
 # Includes 'u' (legacy) and 'µ' (correct) for micro-farads.
-MULTIPLIERS = {
-    "p": 1e-12,  # pico
-    "n": 1e-9,  # nano
-    "u": 1e-6,  # micro (standard text)
-    "µ": 1e-6,  # micro (alt/unicode)
-    "m": 1e-3,  # milli
-    "k": 1e3,  # kilo
-    "K": 1e3,  # kilo (uppercase tolerance)
-    "M": 1e6,  # Mega
-    "G": 1e9,  # Giga
+MULTIPLIERS: dict[str, Decimal] = {
+    "p": Decimal("1e-12"),  # pico
+    "n": Decimal("1e-9"),  # nano
+    "u": Decimal("1e-6"),  # micro (standard text)
+    "µ": Decimal("1e-6"),  # micro (alt/unicode)
+    "m": Decimal("1e-3"),  # milli
+    "k": Decimal("1e3"),  # kilo
+    "K": Decimal("1e3"),  # kilo (uppercase tolerance)
+    "M": Decimal("1e6"),  # Mega
+    "G": Decimal("1e9"),  # Giga
 }
 
 # Core Component Designators (IPC Standard)
