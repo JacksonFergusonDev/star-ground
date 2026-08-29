@@ -1,40 +1,58 @@
+default_install_hook_types:
+  - pre-commit
+  - commit-msg
+
+default_stages:
+  - pre-commit
+
 repos:
   # Generic hooks (configured to IGNORE Python)
   - repo: builtin
     hooks:
+      - id: check-added-large-files
+        args: ['--maxkb=2000']
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: check-symlinks
+      - id: check-executables-have-shebangs
       - id: trailing-whitespace
         exclude: \.py$
       - id: end-of-file-fixer
         exclude: \.py$
       - id: check-yaml
-      - id: check-added-large-files
-        args: ['--maxkb=2000']
-      - id: check-merge-conflict
+      - id: check-json
       - id: check-toml
 
   # Local Python Toolchain (Managed via uv.lock)
   - repo: local
     hooks:
+      - id: uv-lock-check
+        name: uv lock check
+        entry: uv lock --check
+        language: system
+        pass_filenames: false
+        files: ^(pyproject\.toml|uv\.lock)$
+
       - id: ruff-check
         name: ruff check
         entry: uv run ruff check --fix
         language: system
         types: [python]
-        pass_filenames: false
+        require_serial: true
 
       - id: ruff-format
         name: ruff format
         entry: uv run ruff format
         language: system
         types: [python]
-        pass_filenames: false
+        require_serial: true
 
       - id: mypy
         name: mypy
         entry: uv run mypy
         language: system
         types: [python]
-        pass_filenames: true
+        require_serial: true
 
   # Markdown linting
   - repo: https://github.com/DavidAnson/markdownlint-cli2
@@ -43,9 +61,23 @@ repos:
       - id: markdownlint-cli2
         args: ["--fix"]
 
+  # Check for accidental commits of secrets
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.1
+    hooks:
+      - id: gitleaks
+
+  # Commit message validation
+  - repo: https://github.com/Goldziher/gitfluff
+    rev: v0.8.0
+    hooks:
+      - id: gitfluff-lint
+        args: [--write]
+        stages: [commit-msg]
+
   # Renovate config validation
   - repo: https://github.com/renovatebot/pre-commit-hooks
-    rev: 44.24.3
+    rev: 44.51.0
     hooks:
       - id: renovate-config-validator
         files: '.github/renovate.json'
