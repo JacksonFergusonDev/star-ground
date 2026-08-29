@@ -16,7 +16,6 @@ from src.bom_lib.units import ureg
 from src.bom_lib.utils import (
     float_to_search_string,
     parse_value_to_decimal,
-    parse_value_to_float,
 )
 
 
@@ -70,9 +69,9 @@ def normalize_value_by_category(category: str, val_raw: str) -> str:
         if "mm" in clean_val.lower():
             return clean_val
 
-        fval = parse_value_to_float(clean_val)
-        if fval is not None:
-            clean_val = float_to_search_string(fval)
+        dec = parse_value_to_decimal(clean_val)
+        if dec is not None:
+            clean_val = float_to_search_string(float(dec))
 
     return clean_val
 
