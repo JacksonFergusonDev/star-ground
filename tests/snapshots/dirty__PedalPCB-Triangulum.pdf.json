@@ -262,15 +262,24 @@
       }
     },
     "Resistors | 1M": {
-      "qty": 2,
+      "qty": 1,
       "refs": [
-        "R10",
         "R5"
       ],
       "sources": {
         "SnapshotTest": [
-          "R10",
           "R5"
+        ]
+      }
+    },
+    "Resistors | 1M*": {
+      "qty": 1,
+      "refs": [
+        "R10"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R10"
         ]
       }
     },
@@ -329,7 +338,7 @@
         ]
       }
     },
-    "Resistors | 22k": {
+    "Resistors | 22K*": {
       "qty": 1,
       "refs": [
         "R9"

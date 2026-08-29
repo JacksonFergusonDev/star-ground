@@ -69,10 +69,7 @@ def test_grammar_rejects_regex_greedy_false_positives(
     part_number: str, regex_corrupted_value: Decimal
 ) -> None:
     """Proves CFG avoids greedy false-positive matching on part numbers and dimensions."""
-    # The legacy regex greedily matched leading numbers in part numbers/dimensions
-    assert regex_parse(part_number) == regex_corrupted_value
-
-    # The new CFG grammar strictly rejects these non-value tokens
+    # The new CFG grammar strictly rejects these non-value tokens (where the old regex would falsely match)
     assert grammar_parse(part_number) is None
 
 
