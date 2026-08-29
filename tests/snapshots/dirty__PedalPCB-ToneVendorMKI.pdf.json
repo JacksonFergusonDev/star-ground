@@ -1,0 +1,245 @@
+{
+  "inventory": {
+    "Capacitors | 100n": {
+      "qty": 2,
+      "refs": [
+        "C3",
+        "C4"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C3",
+          "C4"
+        ]
+      }
+    },
+    "Capacitors | 10n": {
+      "qty": 1,
+      "refs": [
+        "C1"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C1"
+        ]
+      }
+    },
+    "Capacitors | 10u": {
+      "qty": 1,
+      "refs": [
+        "C5"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C5"
+        ]
+      }
+    },
+    "Capacitors | 25u": {
+      "qty": 1,
+      "refs": [
+        "C2"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C2"
+        ]
+      }
+    },
+    "Capacitors | 47u": {
+      "qty": 1,
+      "refs": [
+        "C6"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C6"
+        ]
+      }
+    },
+    "Diodes | 1N5817": {
+      "qty": 1,
+      "refs": [
+        "D1"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "D1"
+        ]
+      }
+    },
+    "Hardware/Misc | DIP SOCKET (Check Size)": {
+      "qty": 1,
+      "refs": [
+        "IC1 (Inj)"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "IC1 (Inj)"
+        ]
+      }
+    },
+    "ICs | TC1044SCPA": {
+      "qty": 1,
+      "refs": [
+        "IC1"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "IC1"
+        ]
+      }
+    },
+    "Potentiometers | A500K": {
+      "qty": 1,
+      "refs": [
+        "LEVEL"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "LEVEL"
+        ]
+      }
+    },
+    "Potentiometers | B50K": {
+      "qty": 1,
+      "refs": [
+        "ATTACK"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "ATTACK"
+        ]
+      }
+    },
+    "Resistors | 1.8k": {
+      "qty": 1,
+      "refs": [
+        "R4"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R4"
+        ]
+      }
+    },
+    "Resistors | 15k": {
+      "qty": 1,
+      "refs": [
+        "R7"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R7"
+        ]
+      }
+    },
+    "Resistors | 1M": {
+      "qty": 1,
+      "refs": [
+        "R1"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R1"
+        ]
+      }
+    },
+    "Resistors | 2.2M": {
+      "qty": 1,
+      "refs": [
+        "R9"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R9"
+        ]
+      }
+    },
+    "Resistors | 2.2k": {
+      "qty": 1,
+      "refs": [
+        "R5"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R5"
+        ]
+      }
+    },
+    "Resistors | 4.7k": {
+      "qty": 1,
+      "refs": [
+        "R10"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R10"
+        ]
+      }
+    },
+    "Resistors | 470k": {
+      "qty": 1,
+      "refs": [
+        "R3"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R3"
+        ]
+      }
+    },
+    "Resistors | 47k": {
+      "qty": 1,
+      "refs": [
+        "R8"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R8"
+        ]
+      }
+    },
+    "Resistors | 8.2k": {
+      "qty": 2,
+      "refs": [
+        "R2",
+        "R6"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R2",
+          "R6"
+        ]
+      }
+    },
+    "Transistors | 2G381": {
+      "qty": 2,
+      "refs": [
+        "Q2",
+        "Q3"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "Q2",
+          "Q3"
+        ]
+      }
+    },
+    "Transistors | OC75": {
+      "qty": 1,
+      "refs": [
+        "Q1"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "Q1"
+        ]
+      }
+    }
+  },
+  "metadata": {
+    "extracted_title": "Tone Vendor MKI",
+    "parts_found": 23
+  }
+}

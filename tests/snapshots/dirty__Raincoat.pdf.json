@@ -1,0 +1,255 @@
+{
+  "inventory": {
+    "Capacitors | 100n": {
+      "qty": 5,
+      "refs": [
+        "C1",
+        "C3",
+        "C4",
+        "C8",
+        "C9"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C1",
+          "C3",
+          "C4",
+          "C8",
+          "C9"
+        ]
+      }
+    },
+    "Capacitors | 10n": {
+      "qty": 1,
+      "refs": [
+        "C6"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C6"
+        ]
+      }
+    },
+    "Capacitors | 330n": {
+      "qty": 1,
+      "refs": [
+        "C10"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C10"
+        ]
+      }
+    },
+    "Capacitors | 470p": {
+      "qty": 3,
+      "refs": [
+        "C2",
+        "C5",
+        "C7"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C2",
+          "C5",
+          "C7"
+        ]
+      }
+    },
+    "Capacitors | 47u": {
+      "qty": 1,
+      "refs": [
+        "C11"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C11"
+        ]
+      }
+    },
+    "Diodes | 1N5817": {
+      "qty": 1,
+      "refs": [
+        "D1"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "D1"
+        ]
+      }
+    },
+    "Diodes | 3mm": {
+      "qty": 1,
+      "refs": [
+        "D2"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "D2"
+        ]
+      }
+    },
+    "Diodes | N/A": {
+      "qty": 1,
+      "refs": [
+        "D3"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "D3"
+        ]
+      }
+    },
+    "Potentiometers | A100K": {
+      "qty": 2,
+      "refs": [
+        "SUSTAIN",
+        "VOLUME"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "SUSTAIN",
+          "VOLUME"
+        ]
+      }
+    },
+    "Potentiometers | B1K": {
+      "qty": 1,
+      "refs": [
+        "TONE"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "TONE"
+        ]
+      }
+    },
+    "Resistors | 100k": {
+      "qty": 4,
+      "refs": [
+        "R11",
+        "R16",
+        "R2",
+        "R7"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R11",
+          "R16",
+          "R2",
+          "R7"
+        ]
+      }
+    },
+    "Resistors | 12k": {
+      "qty": 4,
+      "refs": [
+        "R13",
+        "R17",
+        "R4",
+        "R9"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R13",
+          "R17",
+          "R4",
+          "R9"
+        ]
+      }
+    },
+    "Resistors | 1M": {
+      "qty": 1,
+      "refs": [
+        "R1"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R1"
+        ]
+      }
+    },
+    "Resistors | 2.2k": {
+      "qty": 1,
+      "refs": [
+        "R18"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R18"
+        ]
+      }
+    },
+    "Resistors | 220": {
+      "qty": 1,
+      "refs": [
+        "R6"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R6"
+        ]
+      }
+    },
+    "Resistors | 390": {
+      "qty": 1,
+      "refs": [
+        "R5"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R5"
+        ]
+      }
+    },
+    "Resistors | 4.7k": {
+      "qty": 1,
+      "refs": [
+        "R20"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R20"
+        ]
+      }
+    },
+    "Resistors | 470k": {
+      "qty": 4,
+      "refs": [
+        "R12",
+        "R15",
+        "R3",
+        "R8"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R12",
+          "R15",
+          "R3",
+          "R8"
+        ]
+      }
+    },
+    "Transistors | BC549C": {
+      "qty": 4,
+      "refs": [
+        "Q1",
+        "Q2",
+        "Q3",
+        "Q4"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "Q1",
+          "Q2",
+          "Q3",
+          "Q4"
+        ]
+      }
+    }
+  },
+  "metadata": {
+    "extracted_title": "Raincoat",
+    "parts_found": 38
+  }
+}
