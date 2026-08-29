@@ -144,21 +144,6 @@ def parse_value_to_decimal(val_str: str) -> Decimal | None:
     return None
 
 
-def parse_value_to_float(val_str: str) -> float | None:
-    """Reduces component values to their base SI unit (Ohms/Farads).
-
-    Shim wrapping `parse_value_to_decimal` for backward compatibility.
-
-    Args:
-        val_str: The raw value string (e.g., "4k7").
-
-    Returns:
-        The float value in base units (e.g., 4700.0), or None if parsing fails.
-    """
-    dec = parse_value_to_decimal(val_str)
-    return float(dec) if dec is not None else None
-
-
 def float_to_search_string(val: float | None) -> str:
     """Converts a float back to a standard engineering string (e.g., '1.5k').
 
