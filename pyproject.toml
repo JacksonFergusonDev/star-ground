@@ -31,6 +31,7 @@ dev = [
     "prek>=0.4.14",
     "pytest==9.1.1",
     "ruff==0.16.1",
+    "rumdl>=0.2.62",
     "types-cachetools",
     "types-cffi",
     "types-colorama",
@@ -120,3 +121,29 @@ branch = true
 omit = ["src/**/__init__.py"]
 show_missing = true
 skip_covered = true
+
+# ---- rumdl  ---- #
+
+[tool.rumdl]
+# Disabled globally
+disable = [
+    "MD013", # line length – soft‑wrap instead
+    "MD033", # inline HTML – needed for <details>, custom layouts
+]
+
+# Enforced with custom options
+[tool.rumdl.MD003]
+style = "atx"          # # headings only
+
+[tool.rumdl.MD004]
+style = "dash"         # - lists (cleaner than * or +)
+
+[tool.rumdl.MD009]
+br-spaces = 2          # allow 2 spaces for hard line breaks
+strict = false         # flag only stray trailing spaces
+
+[tool.rumdl.MD024]
+siblings-only = true   # allow duplicate headings under different parents
+
+[tool.rumdl.MD029]
+style = "one"          # all list items numbered 1. – reduces diff noise

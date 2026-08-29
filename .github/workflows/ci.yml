@@ -30,10 +30,11 @@ jobs:
     - name: Run Ruff Formatter
       run: uv run ruff format --check --output-format=github .
 
-    - name: Lint Markdown
-      uses: DavidAnson/markdownlint-cli2-action@8de2aa07cae85fd17c0b35642db70cf5495f1d25 # v24
-      with:
-        globs: '**/*.md'
+    - name: Lint Markdown with rumdl
+      run: uv run rumdl check --output-format github .
+
+    - name: Check Markdown formatting with rumdl
+      run: uv run rumdl fmt --check --output-format github .
 
     - name: Type check with mypy
       run: uv run mypy .
