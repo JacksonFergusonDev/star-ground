@@ -660,7 +660,9 @@ if st.session_state.inventory and st.session_state.stats:
             origin = "Circuit Board"
 
         # Calculate purchasing requirements
-        buy_qty, note = get_buy_details(category, value, net_qty)
+        buy_qty, note = get_buy_details(
+            category, value, net_qty, val_qty=item.get("val_qty")
+        )
 
         # Append context from Auto-Inject if present
         auto_inject_notes = sources.get("Auto-Inject", [])

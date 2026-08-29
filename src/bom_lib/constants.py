@@ -13,6 +13,8 @@ This module serves as the central repository for:
 from decimal import Decimal
 from typing import Any
 
+from src.bom_lib.units import ureg
+
 # --- Physics & Standards ---
 
 # SI Prefix Multipliers
@@ -51,15 +53,15 @@ PURCHASING_CONFIG: dict[str, dict[str, Any]] = {
         "buffer_add": 5,
         "round_to": 10,
         "note": "Use 1/4W Metal Film (1%)",
-        "suspicious_threshold_low": 1.0,  # Ohms
+        "suspicious_threshold_low": Decimal("1.0") * ureg.ohm,  # Ohms
     },
     "Capacitors": {
-        "bulk_threshold": 1.0e-7,  # 100nF
+        "bulk_threshold": Decimal("1.0e-7") * ureg.farad,  # 100nF
         "bulk_buffer": 10,
         "standard_buffer": 5,
-        "large_threshold": 1.0e-6,  # 1uF
+        "large_threshold": Decimal("1.0e-6") * ureg.farad,  # 1uF
         "large_buffer": 1,
-        "suspicious_threshold_high": 0.01,  # 10mF
+        "suspicious_threshold_high": Decimal("0.01") * ureg.farad,  # 10mF
     },
     "Diodes": {
         "min_buy": 10,
