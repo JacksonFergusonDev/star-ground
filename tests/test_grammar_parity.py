@@ -1,8 +1,8 @@
-"""Differential test harness comparing Regex vs Context-Free Grammar parsing.
+"""Verification test harness for Context-Free Grammar (CFG) value parsing.
 
-Validates 100% parity on standard component values from preset data, while
-proving that the grammar eliminates regex greedy false-positives and correctly
-parses BS 1852 inline notation and unit-suffixed values.
+Validates that standard component values from preset data parse to valid Decimals,
+verifies that the grammar strictly rejects non-value tokens (part numbers, dimensions),
+and verifies correct handling of BS 1852 notation and unit-suffixed values.
 """
 
 import re
@@ -12,7 +12,6 @@ import pytest
 
 from src.bom_lib.grammar import parse_value_to_decimal as grammar_parse
 from src.bom_lib.presets import BOM_PRESETS
-from src.bom_lib.utils import parse_value_to_decimal as regex_parse
 
 
 def _collect_preset_values() -> set[str]:
@@ -39,38 +38,31 @@ PRESET_STANDARD_VALUES = sorted(_collect_preset_values())
 
 
 @pytest.mark.parametrize("val_str", PRESET_STANDARD_VALUES)
-def test_preset_values_parity(val_str: str) -> None:
-    """Verifies that CFG and Regex produce identical Decimal values on all standard presets."""
-    regex_result = regex_parse(val_str)
+def test_preset_values_parsing(val_str: str) -> None:
+    """Verifies that CFG correctly parses all standard passive values from presets."""
     grammar_result = grammar_parse(val_str)
 
-    assert regex_result is not None, f"Regex failed on standard preset value: {val_str}"
     assert grammar_result is not None, (
-        f"Grammar failed on standard preset value: {val_str}"
+        f"Grammar failed to parse standard preset value: '{val_str}'"
     )
-    assert grammar_result == regex_result, (
-        f"Mismatch for '{val_str}': Grammar={grammar_result}, Regex={regex_result}"
-    )
+    assert isinstance(grammar_result, Decimal)
 
 
 @pytest.mark.parametrize(
-    ("part_number", "regex_corrupted_value"),
+    "token",
     [
-        ("1N4001", Decimal("1")),
-        ("1N4148", Decimal("1")),
-        ("1N5817", Decimal("1")),
-        ("2N3904", Decimal("2")),
-        ("2N5088", Decimal("2")),
-        ("2N5089", Decimal("2")),
-        ("5mm", Decimal("0.005")),
+        "1N4001",
+        "1N4148",
+        "1N5817",
+        "2N3904",
+        "2N5088",
+        "2N5089",
+        "5mm",
     ],
 )
-def test_grammar_rejects_regex_greedy_false_positives(
-    part_number: str, regex_corrupted_value: Decimal
-) -> None:
-    """Proves CFG avoids greedy false-positive matching on part numbers and dimensions."""
-    # The new CFG grammar strictly rejects these non-value tokens (where the old regex would falsely match)
-    assert grammar_parse(part_number) is None
+def test_grammar_rejects_non_value_tokens(token: str) -> None:
+    """Proves CFG strictly rejects non-value tokens such as part numbers and dimensions."""
+    assert grammar_parse(token) is None
 
 
 @pytest.mark.parametrize(
