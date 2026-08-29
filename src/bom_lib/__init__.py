@@ -4,7 +4,11 @@ Exposes the core logic and data structures for BOM ingestion, classification,
 and sourcing.
 """
 
-from .classifier import categorize_part, normalize_value_by_category
+from .classifier import (
+    categorize_part,
+    normalize_value_by_category,
+    normalize_value_to_quantity,
+)
 from .manager import (
     calculate_net_needs,
     rename_source_in_inventory,
@@ -82,6 +86,7 @@ __all__ = [
     "get_spec_type",
     "get_standard_hardware",
     "normalize_value_by_category",
+    "normalize_value_to_quantity",
     "parse_csv_bom",
     "parse_pedalpcb_pdf",
     "parse_user_inventory",
