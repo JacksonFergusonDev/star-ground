@@ -3,6 +3,7 @@
 import os
 import tempfile
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 from unittest.mock import patch
 
@@ -12,6 +13,7 @@ from src.bom_lib.strategies import (
     CSVParserStrategy,
     ManualInputStrategy,
     ParseResult,
+    PDFParserStrategy,
 )
 
 
@@ -147,5 +149,81 @@ class TestCSVParserStrategy:
 
     def test_parse_unsupported_type_raises(self) -> None:
         strategy = CSVParserStrategy()
+        with pytest.raises(ValueError, match="Unsupported data type"):
+            strategy.parse(12345, source_name="Invalid")
+
+
+class TestPDFParserStrategy:
+    """Tests for PDFParserStrategy."""
+
+    @pytest.fixture
+    def sample_pdf_path(self) -> str:
+        pdf_path = Path("tests/samples/clean/Cataclysm-PedalPCB.pdf")
+        assert pdf_path.exists(), f"Sample PDF not found at {pdf_path}"
+        return str(pdf_path)
+
+    def test_can_handle(self) -> None:
+        strategy = PDFParserStrategy()
+
+        pdf_file = MockUploadedFile(name="pedal.pdf", _buffer=b"")
+        csv_file = MockUploadedFile(name="pedal.csv", _buffer=b"")
+
+        assert strategy.can_handle("Upload File", pdf_file) is True
+        assert strategy.can_handle("Upload File", csv_file) is False
+
+        assert strategy.can_handle("", "path/to/pedal.pdf") is True
+        assert strategy.can_handle("", "path/to/pedal.PDF") is True
+        assert strategy.can_handle("", "path/to/pedal.csv") is False
+
+        assert strategy.can_handle("Upload File", b"%PDF-1.4 binary data") is True
+        assert strategy.can_handle("Upload File", b"Designator,Value\nR1,10k") is False
+
+    def test_parse_file_path(self, sample_pdf_path: str) -> None:
+        strategy = PDFParserStrategy()
+
+        result = strategy.parse(sample_pdf_path, source_name="Cataclysm")
+
+        assert isinstance(result, ParseResult)
+        assert result.stats["parts_found"] > 0
+        assert result.title is not None
+        assert "Cataclysm" in result.title
+        assert result.raw_content is not None
+        assert result.raw_content.startswith(b"%PDF")
+
+    def test_parse_uploaded_file(self, sample_pdf_path: str) -> None:
+        strategy = PDFParserStrategy()
+        with open(sample_pdf_path, "rb") as f:
+            pdf_bytes = f.read()
+
+        mock_file = MockUploadedFile(name="Cataclysm-PedalPCB.pdf", _buffer=pdf_bytes)
+        result = strategy.parse(mock_file, source_name="Cataclysm")
+
+        assert isinstance(result, ParseResult)
+        assert result.stats["parts_found"] > 0
+        assert result.title is not None
+        assert result.raw_content == pdf_bytes
+
+    def test_parse_raw_bytes_and_cleanup(self, sample_pdf_path: str) -> None:
+        strategy = PDFParserStrategy()
+        with open(sample_pdf_path, "rb") as f:
+            pdf_bytes = f.read()
+
+        created_temp_files: list[str] = []
+        original_named_temp_file = tempfile.NamedTemporaryFile
+
+        def track_temp_file(*args: Any, **kwargs: Any) -> Any:
+            tmp = original_named_temp_file(*args, **kwargs)
+            created_temp_files.append(tmp.name)
+            return tmp
+
+        with patch("tempfile.NamedTemporaryFile", side_effect=track_temp_file):
+            result = strategy.parse(pdf_bytes, source_name="Cataclysm")
+
+        assert result.stats["parts_found"] > 0
+        assert len(created_temp_files) == 1
+        assert not os.path.exists(created_temp_files[0])
+
+    def test_parse_unsupported_type_raises(self) -> None:
+        strategy = PDFParserStrategy()
         with pytest.raises(ValueError, match="Unsupported data type"):
             strategy.parse(12345, source_name="Invalid")

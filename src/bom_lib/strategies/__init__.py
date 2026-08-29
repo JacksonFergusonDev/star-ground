@@ -3,10 +3,12 @@
 from src.bom_lib.strategies.base import BOMParserStrategy, ParseResult
 from src.bom_lib.strategies.csv import CSVParserStrategy
 from src.bom_lib.strategies.manual import ManualInputStrategy
+from src.bom_lib.strategies.pdf import PDFParserStrategy
 
 __all__ = [
     "BOMParserStrategy",
     "CSVParserStrategy",
     "ManualInputStrategy",
+    "PDFParserStrategy",
     "ParseResult",
 ]
