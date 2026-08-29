@@ -9,6 +9,7 @@ import streamlit as st
 
 from src.bom_lib import (
     BOM_PRESETS,
+    BOMParserContext,
     ProjectSlot,
     StatsDict,
     calculate_net_needs,
@@ -23,7 +24,6 @@ from src.bom_lib import (
     get_spec_type,
     get_standard_hardware,
     parse_user_inventory,
-    process_input_data,
     rename_source_in_inventory,
     sort_inventory,
 )
@@ -480,16 +480,19 @@ if st.button("Generate Master List", type="primary", width="stretch"):
     }
 
     # Process Each Slot
+    parser_context = BOMParserContext()
     for i, slot in enumerate(st.session_state.pedal_slots):
         # Resolve Name
         current_name = str(slot.name or "")
         source = current_name if current_name.strip() else f"Project #{i + 1}"
         qty_multiplier = slot.count
 
-        # Unified Processing
-        p_inv, p_stats, detected_title, raw_content = process_input_data(
-            slot.method, slot.data, source_name=source
-        )
+        # Unified Processing via Strategy Pattern
+        result = parser_context.process(slot.method, slot.data, source_name=source)
+        p_inv = result.inventory
+        p_stats = result.stats
+        detected_title = result.title
+        raw_content = result.raw_content
 
         # Store the raw content in the slot if it was returned (i.e. it was a PDF)
         if raw_content:

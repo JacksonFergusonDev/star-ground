@@ -5,7 +5,6 @@ and sourcing.
 """
 
 from .classifier import categorize_part, normalize_value_by_category
-from .loader import process_input_data
 from .manager import (
     calculate_net_needs,
     rename_source_in_inventory,
@@ -28,6 +27,14 @@ from .sourcing import (
     get_spec_type,
     get_standard_hardware,
 )
+from .strategies import (
+    BOMParserContext,
+    BOMParserStrategy,
+    CSVParserStrategy,
+    ManualInputStrategy,
+    ParseResult,
+    PDFParserStrategy,
+)
 from .types import (
     Inventory,
     PartData,
@@ -46,7 +53,13 @@ from .utils import (
 
 __all__ = [
     "BOM_PRESETS",
+    "BOMParserContext",
+    "BOMParserStrategy",
+    "CSVParserStrategy",
     "Inventory",
+    "ManualInputStrategy",
+    "PDFParserStrategy",
+    "ParseResult",
     "PartData",
     "ProjectSlot",
     "StatsDict",
@@ -72,7 +85,6 @@ __all__ = [
     "parse_user_inventory",
     "parse_value_to_float",
     "parse_with_verification",
-    "process_input_data",
     "rename_source_in_inventory",
     "serialize_inventory",
     "sort_inventory",
