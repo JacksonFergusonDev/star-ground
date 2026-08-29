@@ -9,11 +9,20 @@ This module contains the "Nerd Economics" logic, which includes:
 
 import math
 import re
+from decimal import Decimal
+from typing import Any
 from urllib.parse import quote_plus
 
+import pint
+
 from src.bom_lib import constants
+from src.bom_lib.classifier import normalize_value_to_quantity
 from src.bom_lib.types import Inventory, StatsDict
-from src.bom_lib.utils import float_to_search_string, parse_value_to_float
+from src.bom_lib.units import ureg
+from src.bom_lib.utils import (
+    float_to_search_string,
+    parse_value_to_decimal,
+)
 
 
 def get_residual_report(stats: StatsDict) -> list[str]:
@@ -77,7 +86,11 @@ def get_injection_warnings(inventory: Inventory) -> list[str]:
     return warnings
 
 
-def get_spec_type(category: str, val: str) -> str:
+def get_spec_type(
+    category: str,
+    val: str,
+    val_qty: pint.Quantity[Any] | Decimal | None = None,
+) -> str:
     """Determines the specific capacitor dielectric or material type.
 
     Used to refine search terms (e.g., distinguishing MLCC from Electrolytic
@@ -86,22 +99,27 @@ def get_spec_type(category: str, val: str) -> str:
     Args:
         category: Component category.
         val: Component value string.
+        val_qty: Optional pre-computed physical quantity or Decimal.
 
     Returns:
         A string describing the type (e.g., "MLCC", "Box Film", "Electrolytic"),
         or an empty string if not applicable.
     """
     if category == "Capacitors":
-        fval = parse_value_to_float(val)
-        if fval is None:
+        if val_qty is None:
+            val_qty = normalize_value_to_quantity(category, val)
+        if val_qty is None:
             return ""
 
-        # <= 1nF -> Ceramic/MLCC
-        if fval < 1.0e-9:
+        threshold_1n = Decimal("1e-9") * ureg.farad
+        threshold_1u = Decimal("1e-6") * ureg.farad
+
+        # < 1nF -> Ceramic/MLCC
+        if val_qty < threshold_1n:
             return "MLCC"
 
-        # 1nF to 1uF -> Film
-        if 1.0e-9 <= fval < 1.0e-6 or abs(fval - 1.0e-6) < 1.0e-9:
+        # 1nF to 1uF -> Film (including exact 1uF)
+        if threshold_1n <= val_qty <= threshold_1u:
             return "Box Film"
 
         # > 1uF -> Electrolytic
@@ -150,10 +168,10 @@ def generate_search_term(category: str, val: str, spec_type: str = "") -> str:
         # Clean "B100k" -> "100k"
         taper_chars = "".join(constants.POT_TAPER_MAP.keys())
         clean_raw = re.sub(rf"[{taper_chars}\-\s]", "", val_upper)
-        fval = parse_value_to_float(clean_raw)
+        dec = parse_value_to_decimal(clean_raw)
 
-        if fval is not None:
-            clean_val = float_to_search_string(fval)
+        if dec is not None:
+            clean_val = float_to_search_string(float(dec))
         else:
             clean_val = clean_raw if clean_raw else val
 
@@ -192,7 +210,10 @@ def generate_pedalpcb_url(search_term: str) -> str:
 
 
 def get_buy_details(
-    category: str, val: str, count: int, fval: float | None = None
+    category: str,
+    val: str,
+    count: int,
+    val_qty: pint.Quantity[Any] | Decimal | None = None,
 ) -> tuple[int, str]:
     """Calculates the purchase quantity and notes based on 'Nerd Economics'.
 
@@ -203,7 +224,7 @@ def get_buy_details(
         category: Component category.
         val: Component value.
         count: The raw net need (BOM Qty - Stock Qty).
-        fval: Pre-computed float value of the component, if available.
+        val_qty: Pre-computed quantity or Decimal value of the component, if available.
 
     Returns:
         A tuple containing:
@@ -216,9 +237,9 @@ def get_buy_details(
     buy = count
     note = ""
 
-    # Fallback if fval wasn't passed (for backward compatibility or tests)
-    if fval is None:
-        fval = parse_value_to_float(val)
+    # Fallback if val_qty wasn't passed (for backward compatibility or tests)
+    if val_qty is None:
+        val_qty = normalize_value_to_quantity(category, val)
 
     if category == "Resistors":
         rules = constants.PURCHASING_CONFIG["Resistors"]
@@ -228,34 +249,35 @@ def get_buy_details(
         buy = math.ceil(buffered_qty / round_step) * round_step
 
         note = rules["note"]
-        if fval is not None and fval < rules["suspicious_threshold_low"]:
+        if val_qty is not None and val_qty < rules["suspicious_threshold_low"]:
             note = "⚠️ Suspicious Value (< 1Ω). Verify BOM."
 
     elif category == "Optoelectronics":
         buy = count + 1  # Fragile legs
 
     elif category == "Capacitors":
+        rules = constants.PURCHASING_CONFIG["Capacitors"]
         note_parts: list[str] = []
-        buffer = 5
+        buffer = rules["standard_buffer"]
 
         # Bypass caps (100nF) -> Bulk buy
-        if fval is not None and abs(fval - 1.0e-7) < 1.0e-9:
-            buffer = 10
+        if val_qty is not None and val_qty == rules["bulk_threshold"]:
+            buffer = rules["bulk_buffer"]
             note_parts.append("Power filtering (buy bulk).")
-        # Large caps (> 1uF) -> Low buffer
-        elif fval is not None and fval >= 1.0e-6:
-            buffer = 1
+        # Large caps (>= 1uF) -> Low buffer
+        elif val_qty is not None and val_qty >= rules["large_threshold"]:
+            buffer = rules["large_buffer"]
 
         buy = count + buffer
-        if fval is not None and fval > 0.01:
+        if val_qty is not None and val_qty > rules["suspicious_threshold_high"]:
             note_parts.append("⚠️ Suspicious Value (> 10mF).")
 
-        spec_type = get_spec_type(category, val)
+        spec_type = get_spec_type(category, val, val_qty=val_qty)
         if spec_type:
             if (
                 spec_type == "Box Film"
-                and fval is not None
-                and abs(fval - 1.0e-6) < 1.0e-9
+                and val_qty is not None
+                and val_qty == rules["large_threshold"]
             ):
                 note_parts.append("Rec: Box Film (Check BOM: Could be Electrolytic)")
             elif spec_type == "MLCC":
