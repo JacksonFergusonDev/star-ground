@@ -3,6 +3,7 @@ import io
 import logging
 import os
 import tempfile
+import uuid
 from typing import Any, cast
 
 import streamlit as st
@@ -11,6 +12,7 @@ from src.bom_lib import (
     BOM_PRESETS,
     BOMParserContext,
     ComponentCategory,
+    InputMethod,
     ProjectSlot,
     StatsDict,
     calculate_net_needs,
@@ -218,11 +220,11 @@ def render_preset_selector(slot: ProjectSlot, idx: int) -> Any:
     )
 
 
-def update_from_preset(slot_id: str) -> None:
+def update_from_preset(slot_id: uuid.UUID) -> None:
     """Callback to update slot data and name when the preset selection changes.
 
     Args:
-        slot_id (str): The unique identifier for the slot being updated.
+        slot_id: The unique identifier for the slot being updated.
     """
     # Find the specific slot by ID
     slot = next((s for s in st.session_state.pedal_slots if s.id == slot_id), None)
@@ -271,17 +273,17 @@ def update_from_preset(slot_id: str) -> None:
         slot.last_loaded_preset = new_preset
 
 
-def _reset_slot_state(slot: ProjectSlot, new_method: str) -> None:
+def _reset_slot_state(slot: ProjectSlot, new_method: InputMethod) -> None:
     """Clears data and UI state for a slot when switching input methods.
 
     Args:
         slot: The slot object to reset.
-        new_method: The new method string being switched to.
+        new_method: The new InputMethod enum being switched to.
     """
     slot_id = slot.id
 
     # 1. Clear Data Fields
-    slot.data = None if new_method == "Upload File" else ""
+    slot.data = None if new_method == InputMethod.UPLOAD_FILE else ""
     slot.name = ""
 
     # 2. Clear Metadata / Cache
@@ -308,21 +310,20 @@ def _reset_slot_state(slot: ProjectSlot, new_method: str) -> None:
 
     # 4. Update Method Tracker
     slot.method = new_method
-    # last_method is removed in new architecture
 
 
-def on_method_change(slot_id: str) -> None:
+def on_method_change(slot_id: uuid.UUID) -> None:
     """Callback to handle input method switches (Paste, Upload, URL, Preset)."""
     slot = next((s for s in st.session_state.pedal_slots if s.id == slot_id), None)
     if not slot:
         return
 
-    new_method = str(st.session_state.get(f"method_{slot_id}", "Paste Text"))
+    new_method = st.session_state.get(f"method_{slot_id}", InputMethod.PASTE_TEXT)
 
     _reset_slot_state(slot, new_method)
 
     # Handle specific initialization for Presets
-    if new_method == "Preset":
+    if new_method == InputMethod.PRESET:
         first_preset = sorted(BOM_PRESETS.keys())[0]
         preset_obj = BOM_PRESETS[first_preset]
 
@@ -384,7 +385,13 @@ for i, slot in enumerate(st.session_state.pedal_slots):
         # Input Method
         slot.method = c3.radio(
             "Input Method",
-            ["Paste Text", "Upload File", "From URL", "Preset"],
+            [
+                InputMethod.PASTE_TEXT,
+                InputMethod.UPLOAD_FILE,
+                InputMethod.FROM_URL,
+                InputMethod.PRESET,
+            ],
+            format_func=lambda m: m.value,
             key=f"method_{slot.id}",
             horizontal=True,
             label_visibility="collapsed",
@@ -400,7 +407,7 @@ for i, slot in enumerate(st.session_state.pedal_slots):
             st.rerun()
 
         # Row 2: Data Input (Full Width)
-        if slot.method == "Paste Text":
+        if slot.method == InputMethod.PASTE_TEXT:
             text_key = f"text_{slot.id}"
             if text_key not in st.session_state:
                 st.session_state[text_key] = slot.data or ""
@@ -413,14 +420,14 @@ for i, slot in enumerate(st.session_state.pedal_slots):
                 help="Paste raw text like 'R1 10k', 'C1 100n', etc.",
             )
 
-        elif slot.method == "Upload File":
+        elif slot.method == InputMethod.UPLOAD_FILE:
             slot.data = st.file_uploader(
                 "Upload BOM",
                 type=["csv", "pdf"],
                 key=f"file_{slot.id}",
             )
 
-        elif slot.method == "From URL":
+        elif slot.method == InputMethod.FROM_URL:
             url_key = f"url_{slot.id}"
             slot.data = st.text_input(
                 "BOM URL",
@@ -428,7 +435,7 @@ for i, slot in enumerate(st.session_state.pedal_slots):
                 placeholder="https://raw.githubusercontent.com/...",
             )
 
-        elif slot.method == "Preset":
+        elif slot.method == InputMethod.PRESET:
             # 1. The Selector (Hierarchical)
             # Note: Ensure render_preset_selector is compatible with ProjectSlot objects
             render_preset_selector(slot, i)

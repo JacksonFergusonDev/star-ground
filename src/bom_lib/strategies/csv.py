@@ -4,6 +4,7 @@ import os
 import tempfile
 from typing import Any
 
+from src.bom_lib.enums import InputMethod
 from src.bom_lib.parser import parse_csv_bom
 from src.bom_lib.strategies.base import BOMParserStrategy, ParseResult
 
@@ -11,21 +12,21 @@ from src.bom_lib.strategies.base import BOMParserStrategy, ParseResult
 class CSVParserStrategy(BOMParserStrategy):
     """Parses CSV BOM files by extracting contents and delegating to parse_csv_bom."""
 
-    def can_handle(self, method: str, data: Any) -> bool:
+    def can_handle(self, method: InputMethod, data: Any) -> bool:
         """Determine if this strategy can handle the given CSV/tabular input."""
         if hasattr(data, "name"):
             filename = str(data.name).lower()
             ext = os.path.splitext(filename)[1]
             if ext in [".csv", ".tsv", ".txt"]:
                 return True
-            if method == "Upload File" and ext != ".pdf":
+            if method == InputMethod.UPLOAD_FILE and ext != ".pdf":
                 return True
 
         if isinstance(data, str) and data.lower().endswith((".csv", ".tsv")):
             return True
 
         return bool(
-            method == "Upload File"
+            method == InputMethod.UPLOAD_FILE
             and isinstance(data, (bytes, bytearray))
             and not data.startswith(b"%PDF")
         )

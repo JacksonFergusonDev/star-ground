@@ -1,10 +1,11 @@
+import uuid
 from collections import defaultdict
 from typing import cast
 
 import pytest
 from streamlit.testing.v1 import AppTest
 
-from src.bom_lib import BOM_PRESETS, ProjectSlot
+from src.bom_lib import BOM_PRESETS, InputMethod, ProjectSlot
 from src.bom_lib.types import Inventory
 
 
@@ -106,7 +107,7 @@ def test_csv_processing_via_state_injection(app):
     # Ensure at least one slot exists to prevent UI errors
     if "pedal_slots" not in app.session_state:
         app.session_state["pedal_slots"] = [
-            {"id": "test", "name": "test", "method": "Paste Text"}
+            ProjectSlot(id=uuid.uuid4(), name="test", method=InputMethod.PASTE_TEXT)
         ]
 
     # 3. Rerun the app to trigger the "Main Process" block with injected state
@@ -150,10 +151,10 @@ def test_source_ref_duplication_on_merge(app):
     app.session_state["pedal_slots"] = [
         # Slot 1: 2x Pedal
         ProjectSlot(
-            id="A",
+            id=uuid.uuid4(),
             name="DupeTest",
             count=2,
-            method="Paste Text",
+            method=InputMethod.PASTE_TEXT,
             data="R1 10k",
         ),
     ]
@@ -188,7 +189,7 @@ def test_preset_selection_flow(app):
     # 1. Switch to Preset Mode
     # The radio button is the 2nd widget type in the column group.
     # app.radio[0] corresponds to the first slot's method selector.
-    app.radio[0].set_value("Preset").run()
+    app.radio[0].set_value(InputMethod.PRESET).run()
 
     # 2. Select a specific preset
     # The UI uses 3 Selectboxes: [0]=Source, [1]=Category, [2]=Project
@@ -218,19 +219,19 @@ def test_input_method_state_clearing(app):
     switches back to 'Paste Text' mode.
     """
     # 1. Start in Preset Mode
-    app.radio[0].set_value("Preset").run()
+    app.radio[0].set_value(InputMethod.PRESET).run()
 
     # Ensure data is present (Auto-load first preset logic)
     assert app.text_area[0].value != ""
 
     # 2. Switch to Paste Text
-    app.radio[0].set_value("Paste Text").run()
+    app.radio[0].set_value(InputMethod.PASTE_TEXT).run()
 
     # 3. Verify Empty (The 'Flush' logic worked)
     assert app.text_area[0].value == ""
 
     # 4. Switch back to Preset
-    app.radio[0].set_value("Preset").run()
+    app.radio[0].set_value(InputMethod.PRESET).run()
 
     # 5. Verify data re-loaded (Auto-load logic worked)
     assert app.text_area[0].value != ""

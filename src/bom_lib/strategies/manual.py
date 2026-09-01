@@ -2,6 +2,7 @@
 
 from typing import Any
 
+from src.bom_lib.enums import InputMethod
 from src.bom_lib.parser import parse_with_verification
 from src.bom_lib.strategies.base import BOMParserStrategy, ParseResult
 
@@ -9,11 +10,11 @@ from src.bom_lib.strategies.base import BOMParserStrategy, ParseResult
 class ManualInputStrategy(BOMParserStrategy):
     """Parses raw text BOM lines from manual copy-paste or pre-configured presets."""
 
-    def can_handle(self, method: str, data: Any) -> bool:
+    def can_handle(self, method: InputMethod, data: Any) -> bool:
         """Determine if this strategy can handle manual text input."""
-        if method in ["Paste Text", "Preset", "From URL"]:
+        if method in (InputMethod.PASTE_TEXT, InputMethod.PRESET, InputMethod.FROM_URL):
             return isinstance(data, (str, list))
-        return isinstance(data, (str, list))
+        return False
 
     def parse(self, data: Any, source_name: str) -> ParseResult:
         """Parse manual text input into a ParseResult.

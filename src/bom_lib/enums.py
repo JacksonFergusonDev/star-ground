@@ -27,3 +27,12 @@ class ComponentSpec(Enum):
     BOX_FILM = "Box Film"
     ELECTROLYTIC = "Electrolytic"
     NONE = ""
+
+
+class InputMethod(Enum):
+    """BOM input methods for project slots and strategies."""
+
+    PASTE_TEXT = "Paste Text"
+    UPLOAD_FILE = "Upload File"
+    FROM_URL = "From URL"
+    PRESET = "Preset"
