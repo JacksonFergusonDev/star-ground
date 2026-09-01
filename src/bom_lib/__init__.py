@@ -9,7 +9,7 @@ from .classifier import (
     normalize_value_by_category,
     normalize_value_to_quantity,
 )
-from .enums import ComponentCategory, ComponentSpec, InputMethod
+from .enums import ComponentCategory, ComponentSpec, FeedbackRating, InputMethod
 from .manager import (
     calculate_net_needs,
     rename_source_in_inventory,
@@ -64,6 +64,7 @@ __all__ = [
     "CSVParserStrategy",
     "ComponentCategory",
     "ComponentSpec",
+    "FeedbackRating",
     "InputMethod",
     "Inventory",
     "ManualInputStrategy",
