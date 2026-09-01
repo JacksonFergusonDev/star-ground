@@ -12,6 +12,7 @@ from src.bom_lib import (
     BOM_PRESETS,
     BOMParserContext,
     ComponentCategory,
+    FeedbackRating,
     InputMethod,
     ProjectSlot,
     StatsDict,
@@ -828,7 +829,16 @@ with st.expander("🐞 Found a bug? / 📢 Feedback"):
             col1, col2 = st.columns([1, 4])
             with col1:
                 rating = st.select_slider(
-                    "Rating", options=["😡", "😕", "😐", "🙂", "🤩"], value="🤩"
+                    "Rating",
+                    options=[
+                        FeedbackRating.TERRIBLE,
+                        FeedbackRating.BAD,
+                        FeedbackRating.NEUTRAL,
+                        FeedbackRating.GOOD,
+                        FeedbackRating.EXCELLENT,
+                    ],
+                    value=FeedbackRating.EXCELLENT,
+                    format_func=lambda r: r.value,
                 )
             with col2:
                 comment = st.text_area(

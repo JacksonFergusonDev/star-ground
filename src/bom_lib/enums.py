@@ -36,3 +36,13 @@ class InputMethod(Enum):
     UPLOAD_FILE = "Upload File"
     FROM_URL = "From URL"
     PRESET = "Preset"
+
+
+class FeedbackRating(Enum):
+    """User feedback sentiment ratings."""
+
+    TERRIBLE = "😡"
+    BAD = "😕"
+    NEUTRAL = "😐"
+    GOOD = "🙂"
+    EXCELLENT = "🤩"
