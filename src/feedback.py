@@ -3,6 +3,8 @@ from typing import TYPE_CHECKING
 
 import streamlit as st
 
+from src.bom_lib.enums import FeedbackRating
+
 if TYPE_CHECKING:
     import gspread
 
@@ -33,12 +35,12 @@ def get_gsheet_client() -> gspread.Client:
     return gspread.authorize(creds)
 
 
-def save_feedback(rating: str, text: str) -> None:
+def save_feedback(rating: FeedbackRating, text: str) -> None:
     """Appends a new feedback entry to the "Star Ground Feedback" Google Sheet.
 
     Args:
-        rating (str): The user's rating (e.g., "🤩", "😕").
-        text (str): The user's comment or bug report.
+        rating: The user's FeedbackRating enum (e.g., FeedbackRating.EXCELLENT).
+        text: The user's comment or bug report.
 
     Raises:
         Exception: If connection fails or sheet is not found.
@@ -46,6 +48,6 @@ def save_feedback(rating: str, text: str) -> None:
     client = get_gsheet_client()
     sheet = client.open("Star Ground Feedback").sheet1
 
-    # Append timestamp, rating, and comment as a new row
-    row = [str(datetime.datetime.now()), rating, text]
+    # Append timestamp, rating value, and comment as a new row
+    row = [str(datetime.datetime.now()), rating.value, text]
     sheet.append_row(row)
