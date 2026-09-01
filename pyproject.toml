@@ -7,7 +7,7 @@ license = {file = "LICENSE"}
 classifiers = ["License :: OSI Approved :: MIT License"]
 requires-python = ">=3.14"
 dependencies = [
-    "fpdf2==2.8.7",
+    "fpdf2==2.8.8",
     "google-auth==2.56.3",
     "gspread==6.2.1",
     "pdfplumber==0.11.10",
@@ -32,10 +32,10 @@ dev = [
 ]
 
 ci = [
-    "hypothesis==6.165.2",
-    "mypy==2.3.0",
+    "hypothesis==6.165.10",
+    "mypy==2.3.1",
     "pytest==9.1.1",
-    "ruff==0.16.1",
+    "ruff==0.16.3",
     "rumdl>=0.2.62",
     { include-group = "type-stubs" },
 ]
