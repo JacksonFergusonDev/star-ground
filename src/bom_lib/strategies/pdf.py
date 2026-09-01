@@ -4,6 +4,7 @@ import os
 import tempfile
 from typing import Any
 
+from src.bom_lib.enums import InputMethod
 from src.bom_lib.parser import parse_pedalpcb_pdf
 from src.bom_lib.strategies.base import BOMParserStrategy, ParseResult
 
@@ -11,7 +12,7 @@ from src.bom_lib.strategies.base import BOMParserStrategy, ParseResult
 class PDFParserStrategy(BOMParserStrategy):
     """Parses PDF BOM files by extracting contents and delegating to parse_pedalpcb_pdf."""
 
-    def can_handle(self, method: str, data: Any) -> bool:
+    def can_handle(self, method: InputMethod, data: Any) -> bool:
         """Determine if this strategy can handle PDF inputs via extension or magic bytes."""
         if hasattr(data, "name") and str(data.name).lower().endswith(".pdf"):
             return True
