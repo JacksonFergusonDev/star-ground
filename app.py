@@ -10,6 +10,7 @@ import streamlit as st
 from src.bom_lib import (
     BOM_PRESETS,
     BOMParserContext,
+    ComponentCategory,
     ProjectSlot,
     StatsDict,
     calculate_net_needs,
@@ -622,7 +623,11 @@ if st.session_state.inventory and st.session_state.stats:
         if " | " not in part_key:
             continue
 
-        category, value = part_key.split(" | ", 1)
+        cat_str, value = part_key.split(" | ", 1)
+        try:
+            category = ComponentCategory(cat_str)
+        except ValueError:
+            category = ComponentCategory.UNKNOWN
 
         gross_qty = item["qty"]
 
@@ -678,7 +683,7 @@ if st.session_state.inventory and st.session_state.stats:
         is_pedalpcb_source = any("PedalPCB" in s for s in sources)
         is_tayda_source = any("Tayda" in s for s in sources)
 
-        if category == "PCB":
+        if category == ComponentCategory.PCB:
             if is_pedalpcb_source and not is_tayda_source:
                 url = generate_pedalpcb_url(search_term)
             else:
@@ -689,7 +694,7 @@ if st.session_state.inventory and st.session_state.stats:
         final_data.append(
             {
                 "Origin": origin,
-                "Category": category,
+                "Category": category.value,
                 "Part": value,
                 "BOM Qty": gross_qty,
                 "In Stock": in_stock,
