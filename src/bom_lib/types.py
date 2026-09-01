@@ -13,6 +13,7 @@ from typing import Any, TypedDict
 import pint
 
 from src.bom_lib.classifier import normalize_value_to_quantity
+from src.bom_lib.enums import ComponentCategory
 
 
 @dataclass
@@ -110,8 +111,12 @@ class Inventory(UserDict[str, PartData]):
         # Initialize cached quantity if this is a new part entry
         if part["qty"] == 0:
             if " | " in key:
-                cat, val_str = key.split(" | ", 1)
-                part["val_qty"] = normalize_value_to_quantity(cat, val_str)
+                cat_str, val_str = key.split(" | ", 1)
+                try:
+                    cat = ComponentCategory(cat_str)
+                    part["val_qty"] = normalize_value_to_quantity(cat, val_str)
+                except ValueError:
+                    part["val_qty"] = None
             else:
                 part["val_qty"] = None
 

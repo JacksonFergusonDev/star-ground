@@ -17,6 +17,7 @@ import pint
 
 from src.bom_lib import constants
 from src.bom_lib.classifier import normalize_value_to_quantity
+from src.bom_lib.enums import ComponentCategory, ComponentSpec
 from src.bom_lib.types import Inventory, StatsDict
 from src.bom_lib.units import ureg
 from src.bom_lib.utils import (
@@ -87,10 +88,10 @@ def get_injection_warnings(inventory: Inventory) -> list[str]:
 
 
 def get_spec_type(
-    category: str,
+    category: ComponentCategory,
     val: str,
     val_qty: pint.Quantity[Any] | Decimal | None = None,
-) -> str:
+) -> ComponentSpec:
     """Determines the specific capacitor dielectric or material type.
 
     Used to refine search terms (e.g., distinguishing MLCC from Electrolytic
@@ -102,33 +103,37 @@ def get_spec_type(
         val_qty: Optional pre-computed physical quantity or Decimal.
 
     Returns:
-        A string describing the type (e.g., "MLCC", "Box Film", "Electrolytic"),
-        or an empty string if not applicable.
+        A ComponentSpec describing the type (e.g., ComponentSpec.MLCC, ComponentSpec.BOX_FILM),
+        or ComponentSpec.NONE if not applicable.
     """
-    if category == "Capacitors":
+    if category == ComponentCategory.CAPACITORS:
         if val_qty is None:
             val_qty = normalize_value_to_quantity(category, val)
         if val_qty is None:
-            return ""
+            return ComponentSpec.NONE
 
         threshold_1n = Decimal("1e-9") * ureg.farad
         threshold_1u = Decimal("1e-6") * ureg.farad
 
         # < 1nF -> Ceramic/MLCC
         if val_qty < threshold_1n:
-            return "MLCC"
+            return ComponentSpec.MLCC
 
         # 1nF to 1uF -> Film (including exact 1uF)
         if threshold_1n <= val_qty <= threshold_1u:
-            return "Box Film"
+            return ComponentSpec.BOX_FILM
 
         # > 1uF -> Electrolytic
-        return "Electrolytic"
+        return ComponentSpec.ELECTROLYTIC
 
-    return ""
+    return ComponentSpec.NONE
 
 
-def generate_search_term(category: str, val: str, spec_type: str = "") -> str:
+def generate_search_term(
+    category: ComponentCategory,
+    val: str,
+    spec_type: ComponentSpec = ComponentSpec.NONE,
+) -> str:
     """Generates a supplier-optimized search string.
 
     Targeted primarily at Tayda Electronics' search engine behavior.
@@ -141,21 +146,21 @@ def generate_search_term(category: str, val: str, spec_type: str = "") -> str:
     Returns:
         A search string (e.g., "100k ohm Linear potentiometer").
     """
-    if category == "Resistors":
+    if category == ComponentCategory.RESISTORS:
         return f"{val} ohm 1/4w metal film"
 
-    if category == "Capacitors":
+    if category == ComponentCategory.CAPACITORS:
         # Check if it ends in a shorthand unit (p, n, u) and append 'F'
         if val and val[-1] in "pnu":
             val += "F"
 
-        if spec_type == "MLCC":
+        if spec_type == ComponentSpec.MLCC:
             return f"{val} multilayer"
-        if spec_type:
-            return f"{val} {spec_type}"
+        if spec_type and spec_type != ComponentSpec.NONE:
+            return f"{val} {spec_type.value}"
         return val
 
-    if category == "Potentiometers":
+    if category == ComponentCategory.POTENTIOMETERS:
         taper = "Linear"  # Default
         val_upper = val.upper()
         is_dual = "DUAL" in val_upper or "STEREO" in val_upper
@@ -178,7 +183,7 @@ def generate_search_term(category: str, val: str, spec_type: str = "") -> str:
         base_term = f"{clean_val} ohm {taper} potentiometer"
         return f"Dual Gang {base_term}" if is_dual else base_term
 
-    if category == "Diodes":
+    if category == ComponentCategory.DIODES:
         if val.upper() == "LED":
             return "LED 3mm"
         return val
@@ -210,7 +215,7 @@ def generate_pedalpcb_url(search_term: str) -> str:
 
 
 def get_buy_details(
-    category: str,
+    category: ComponentCategory,
     val: str,
     count: int,
     val_qty: pint.Quantity[Any] | Decimal | None = None,
@@ -241,8 +246,8 @@ def get_buy_details(
     if val_qty is None:
         val_qty = normalize_value_to_quantity(category, val)
 
-    if category == "Resistors":
-        rules = constants.PURCHASING_CONFIG["Resistors"]
+    if category == ComponentCategory.RESISTORS:
+        rules = constants.PURCHASING_CONFIG[ComponentCategory.RESISTORS.value]
 
         buffered_qty = count + rules["buffer_add"]
         round_step = rules["round_to"]
@@ -252,11 +257,11 @@ def get_buy_details(
         if val_qty is not None and val_qty < rules["suspicious_threshold_low"]:
             note = "⚠️ Suspicious Value (< 1Ω). Verify BOM."
 
-    elif category == "Optoelectronics":
+    elif category == ComponentCategory.OPTOELECTRONICS:
         buy = count + 1  # Fragile legs
 
-    elif category == "Capacitors":
-        rules = constants.PURCHASING_CONFIG["Capacitors"]
+    elif category == ComponentCategory.CAPACITORS:
+        rules = constants.PURCHASING_CONFIG[ComponentCategory.CAPACITORS.value]
         note_parts: list[str] = []
         buffer = rules["standard_buffer"]
 
@@ -273,20 +278,20 @@ def get_buy_details(
             note_parts.append("⚠️ Suspicious Value (> 10mF).")
 
         spec_type = get_spec_type(category, val, val_qty=val_qty)
-        if spec_type:
+        if spec_type and spec_type != ComponentSpec.NONE:
             if (
-                spec_type == "Box Film"
+                spec_type == ComponentSpec.BOX_FILM
                 and val_qty is not None
                 and val_qty == rules["large_threshold"]
             ):
                 note_parts.append("Rec: Box Film (Check BOM: Could be Electrolytic)")
-            elif spec_type == "MLCC":
+            elif spec_type == ComponentSpec.MLCC:
                 note_parts.append("Rec: Class 1 Ceramic (C0G / NP0)")
             else:
-                note_parts.append(f"Rec: {spec_type}")
+                note_parts.append(f"Rec: {spec_type.value}")
         note = " | ".join(note_parts)
 
-    elif category == "Diodes":
+    elif category == ComponentCategory.DIODES:
         buy = max(10, count + 5)
         # Check substitutions
         if val in constants.DIODE_ALTS:
@@ -297,14 +302,14 @@ def get_buy_details(
             ]
             note = f"💡 TRY: {', '.join(txt_parts)}"
 
-    elif category == "Transistors":
+    elif category == ComponentCategory.TRANSISTORS:
         buy = count + 1
         if "2N5457" in val.upper():
             note = "⚠️ Obsolete part! Check for speciality vendors or consider MMBF5457."
         elif "MMBF" in val.upper():
             note = "SMD Part! Verify PCB pads or buy adapter."
 
-    elif category == "ICs":
+    elif category == ComponentCategory.ICS:
         buy = count
         note = "Socket Recommended"
         clean_ic = re.sub(r"(CP|CN|P|N)$", "", val)
@@ -316,11 +321,11 @@ def get_buy_details(
             ]
             note += f" | 💡 TRY: {', '.join(txt_parts)}"
 
-    elif category == "Crystals/Oscillators":
+    elif category == ComponentCategory.CRYSTALS_OSCILLATORS:
         buy = count + 1
         note = "Heat sensitive / Fragile"
 
-    elif category == "Hardware/Misc":
+    elif category == ComponentCategory.HARDWARE_MISC:
         if "ADAPTER" in val or "SOCKET" in val:
             buy = count + 1
             note = (
@@ -331,7 +336,7 @@ def get_buy_details(
         else:
             buy = count
 
-    elif category == "PCB":
+    elif category == ComponentCategory.PCB:
         note = "Main Board"
 
     return buy, note
@@ -349,13 +354,13 @@ def get_standard_hardware(inventory: Inventory, pedal_count: int = 1) -> None:
     """
 
     def inject(
-        category: str,
+        category: ComponentCategory,
         val: str,
         qty_per_pedal: int,
         note: str,
         qty_override: int | None = None,
     ) -> None:
-        key = f"{category} | {val}"
+        key = f"{category.value} | {val}"
         total_qty = (
             qty_override if qty_override is not None else (qty_per_pedal * pedal_count)
         )
@@ -365,25 +370,27 @@ def get_standard_hardware(inventory: Inventory, pedal_count: int = 1) -> None:
         inventory[key]["sources"]["Auto-Inject"].append(f"Auto-Inject ({note})")
 
     # 1. Smart Merges (Add to existing categories)
-    inject("Resistors", "3.3k", 1, "LED CLR")
-    inject("Diodes", "LED", 1, "Status Light")
+    inject(ComponentCategory.RESISTORS, "3.3k", 1, "LED CLR")
+    inject(ComponentCategory.DIODES, "LED", 1, "Status Light")
 
     # 2. Germanium Heuristic (Fuzz check)
     if any("FUZZ" in k.upper() for k in inventory if k.startswith("PCB")):
-        inject("Transistors", "Germanium PNP", 0, "Vintage Option")
+        inject(ComponentCategory.TRANSISTORS, "Germanium PNP", 0, "Vintage Option")
 
     # 3. Standard Enclosure Hardware
-    inject("Hardware/Misc", "1590B Enclosure", 1, "Verify PCB fit")
-    inject("Hardware/Misc", "3PDT FOOTSWITCH PCB", 1, "Wiring Board")
-    inject("Hardware/Misc", "3PDT STOMP SWITCH", 1, "Blue/Standard")
-    inject("Hardware/Misc", "6.35MM JACK (STEREO)", 1, "Input")
-    inject("Hardware/Misc", "6.35MM JACK (MONO)", 1, "Output")
-    inject("Hardware/Misc", "DC POWER JACK 2.1MM", 1, "Center Negative")
-    inject("Hardware/Misc", "Bezel LED Holder", 1, "3mm Metal")
-    inject("Hardware/Misc", "Rubber Feet (Black)", 4, "Enclosure Feet")
-    inject("Hardware/Misc", "AWG 24 Hook-Up Wire", 3, "Approx 1ft/pedal")
-    inject("Hardware/Misc", "9V BATTERY CLIP", 1, "Optional")
-    inject("Hardware/Misc", "Heat Shrink Tubing", 1, "Insulation")
+    inject(ComponentCategory.HARDWARE_MISC, "1590B Enclosure", 1, "Verify PCB fit")
+    inject(ComponentCategory.HARDWARE_MISC, "3PDT FOOTSWITCH PCB", 1, "Wiring Board")
+    inject(ComponentCategory.HARDWARE_MISC, "3PDT STOMP SWITCH", 1, "Blue/Standard")
+    inject(ComponentCategory.HARDWARE_MISC, "6.35MM JACK (STEREO)", 1, "Input")
+    inject(ComponentCategory.HARDWARE_MISC, "6.35MM JACK (MONO)", 1, "Output")
+    inject(ComponentCategory.HARDWARE_MISC, "DC POWER JACK 2.1MM", 1, "Center Negative")
+    inject(ComponentCategory.HARDWARE_MISC, "Bezel LED Holder", 1, "3mm Metal")
+    inject(ComponentCategory.HARDWARE_MISC, "Rubber Feet (Black)", 4, "Enclosure Feet")
+    inject(
+        ComponentCategory.HARDWARE_MISC, "AWG 24 Hook-Up Wire", 3, "Approx 1ft/pedal"
+    )
+    inject(ComponentCategory.HARDWARE_MISC, "9V BATTERY CLIP", 1, "Optional")
+    inject(ComponentCategory.HARDWARE_MISC, "Heat Shrink Tubing", 1, "Insulation")
 
     # 4. Potentiometer Hardware (Knobs/Seals)
     total_pots = sum(
@@ -391,10 +398,14 @@ def get_standard_hardware(inventory: Inventory, pedal_count: int = 1) -> None:
     )
     if total_pots > 0:
         inject(
-            "Hardware/Misc", "Knob", 0, f"Knobs ({total_pots})", qty_override=total_pots
+            ComponentCategory.HARDWARE_MISC,
+            "Knob",
+            0,
+            f"Knobs ({total_pots})",
+            qty_override=total_pots,
         )
         inject(
-            "Hardware/Misc",
+            ComponentCategory.HARDWARE_MISC,
             "Dust Seal Cover",
             0,
             f"Pot Seals ({total_pots})",
