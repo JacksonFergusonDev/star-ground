@@ -13,6 +13,7 @@ This module serves as the central repository for:
 from decimal import Decimal
 from typing import Any
 
+from src.bom_lib.enums import ComponentCategory
 from src.bom_lib.units import ureg
 
 # --- Physics & Standards ---
@@ -49,13 +50,13 @@ POT_TAPER_MAP = {
 # --- Purchasing & Sourcing Rules ---
 
 PURCHASING_CONFIG: dict[str, dict[str, Any]] = {
-    "Resistors": {
+    ComponentCategory.RESISTORS.value: {
         "buffer_add": 5,
         "round_to": 10,
         "note": "Use 1/4W Metal Film (1%)",
         "suspicious_threshold_low": Decimal("1.0") * ureg.ohm,  # Ohms
     },
-    "Capacitors": {
+    ComponentCategory.CAPACITORS.value: {
         "bulk_threshold": Decimal("1.0e-7") * ureg.farad,  # 100nF
         "bulk_buffer": 10,
         "standard_buffer": 5,
@@ -63,7 +64,7 @@ PURCHASING_CONFIG: dict[str, dict[str, Any]] = {
         "large_buffer": 1,
         "suspicious_threshold_high": Decimal("0.01") * ureg.farad,  # 10mF
     },
-    "Diodes": {
+    ComponentCategory.DIODES.value: {
         "min_buy": 10,
         "buffer_add": 5,
     },

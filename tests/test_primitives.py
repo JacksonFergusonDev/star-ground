@@ -16,6 +16,7 @@ import pint
 import pytest
 
 from src.bom_lib.classifier import categorize_part, normalize_value_to_quantity
+from src.bom_lib.enums import ComponentCategory, ComponentSpec
 from src.bom_lib.manager import sort_inventory
 from src.bom_lib.sourcing import get_buy_details, get_spec_type
 from src.bom_lib.types import Inventory
@@ -125,74 +126,158 @@ def test_expand_refs_non_ranges_and_malformed() -> None:
 
 def test_categorize_part_resistors() -> None:
     """Verifies resistor classification branches including standard R prefix and CLR."""
-    assert categorize_part("R1", "10k") == ("Resistors", "10k", None)
-    assert categorize_part("CLR", "4.7k") == ("Resistors", "4.7k", None)
-    assert categorize_part("R10", "100") == ("Resistors", "100", None)
+    assert categorize_part("R1", "10k") == (ComponentCategory.RESISTORS, "10k", None)
+    assert categorize_part("CLR", "4.7k") == (ComponentCategory.RESISTORS, "4.7k", None)
+    assert categorize_part("R10", "100") == (ComponentCategory.RESISTORS, "100", None)
 
 
 def test_categorize_part_capacitors() -> None:
     """Verifies capacitor classification branch."""
-    assert categorize_part("C1", "100n") == ("Capacitors", "100n", None)
-    assert categorize_part("C20", "4.7u") == ("Capacitors", "4.7u", None)
+    assert categorize_part("C1", "100n") == (ComponentCategory.CAPACITORS, "100n", None)
+    assert categorize_part("C20", "4.7u") == (
+        ComponentCategory.CAPACITORS,
+        "4.7u",
+        None,
+    )
 
 
 def test_categorize_part_potentiometer_via_taper() -> None:
     """Verifies potentiometer detection triggered by taper code in value."""
-    assert categorize_part("VR1", "B100k") == ("Potentiometers", "B100k", None)
-    assert categorize_part("R1", "10k-A") == ("Potentiometers", "10k-A", None)
-    assert categorize_part("POT1", "A100k") == ("Potentiometers", "A100k", None)
+    assert categorize_part("VR1", "B100k") == (
+        ComponentCategory.POTENTIOMETERS,
+        "B100k",
+        None,
+    )
+    assert categorize_part("R1", "10k-A") == (
+        ComponentCategory.POTENTIOMETERS,
+        "10k-A",
+        None,
+    )
+    assert categorize_part("POT1", "A100k") == (
+        ComponentCategory.POTENTIOMETERS,
+        "A100k",
+        None,
+    )
 
 
 def test_categorize_part_potentiometer_via_name() -> None:
     """Verifies potentiometer detection triggered by known knob/control name."""
-    assert categorize_part("VOLUME", "100k") == ("Potentiometers", "100k", None)
-    assert categorize_part("GAIN", "10k") == ("Potentiometers", "10k", None)
-    assert categorize_part("TONE", "50k") == ("Potentiometers", "50k", None)
+    assert categorize_part("VOLUME", "100k") == (
+        ComponentCategory.POTENTIOMETERS,
+        "100k",
+        None,
+    )
+    assert categorize_part("GAIN", "10k") == (
+        ComponentCategory.POTENTIOMETERS,
+        "10k",
+        None,
+    )
+    assert categorize_part("TONE", "50k") == (
+        ComponentCategory.POTENTIOMETERS,
+        "50k",
+        None,
+    )
 
 
 def test_categorize_part_switch_ambiguity() -> None:
     """Verifies disambiguation between switches and potentiometers for ambiguous labels."""
     # Ambiguous label "LENGTH" with switch-like value -> Switches
-    assert categorize_part("LENGTH", "SPDT ON-ON") == ("Switches", "SPDT ON-ON", None)
-    assert categorize_part("LENGTH", "SPDT") == ("Switches", "SPDT", None)
+    assert categorize_part("LENGTH", "SPDT ON-ON") == (
+        ComponentCategory.SWITCHES,
+        "SPDT ON-ON",
+        None,
+    )
+    assert categorize_part("LENGTH", "SPDT") == (
+        ComponentCategory.SWITCHES,
+        "SPDT",
+        None,
+    )
 
     # Ambiguous label "LENGTH" with resistance/pot value -> Potentiometers fallback
-    assert categorize_part("LENGTH", "100k") == ("Potentiometers", "100k", None)
+    assert categorize_part("LENGTH", "100k") == (
+        ComponentCategory.POTENTIOMETERS,
+        "100k",
+        None,
+    )
 
     # Explicit switch prefix -> Switches
-    assert categorize_part("SW1", "DPDT") == ("Switches", "DPDT", None)
+    assert categorize_part("SW1", "DPDT") == (ComponentCategory.SWITCHES, "DPDT", None)
 
 
 def test_categorize_part_ic_with_socket() -> None:
     """Verifies IC classification with automatic DIP socket injection."""
     expected_injection = "Hardware/Misc | DIP SOCKET (Check Size)"
-    assert categorize_part("IC1", "TL072") == ("ICs", "TL072", expected_injection)
-    assert categorize_part("U1", "NE5532") == ("ICs", "NE5532", expected_injection)
-    assert categorize_part("OP1", "LM308") == ("ICs", "LM308", expected_injection)
+    assert categorize_part("IC1", "TL072") == (
+        ComponentCategory.ICS,
+        "TL072",
+        expected_injection,
+    )
+    assert categorize_part("U1", "NE5532") == (
+        ComponentCategory.ICS,
+        "NE5532",
+        expected_injection,
+    )
+    assert categorize_part("OP1", "LM308") == (
+        ComponentCategory.ICS,
+        "LM308",
+        expected_injection,
+    )
 
 
 def test_categorize_part_ic_without_socket_keywords() -> None:
     """Verifies IC classification skipping socket injection for regulators/modules/reverb."""
-    assert categorize_part("U1", "78L05 REGULATOR") == ("ICs", "78L05 REGULATOR", None)
-    assert categorize_part("U2", "L78L05") == ("ICs", "L78L05", None)
-    assert categorize_part("IC1", "BTDR-2H REVERB") == ("ICs", "BTDR-2H REVERB", None)
-    assert categorize_part("U3", "DSP MODULE") == ("ICs", "DSP MODULE", None)
+    assert categorize_part("U1", "78L05 REGULATOR") == (
+        ComponentCategory.ICS,
+        "78L05 REGULATOR",
+        None,
+    )
+    assert categorize_part("U2", "L78L05") == (ComponentCategory.ICS, "L78L05", None)
+    assert categorize_part("IC1", "BTDR-2H REVERB") == (
+        ComponentCategory.ICS,
+        "BTDR-2H REVERB",
+        None,
+    )
+    assert categorize_part("U3", "DSP MODULE") == (
+        ComponentCategory.ICS,
+        "DSP MODULE",
+        None,
+    )
 
 
 def test_categorize_part_ldr() -> None:
     """Verifies LDR (Light Dependent Resistor) optoelectronics branch."""
-    assert categorize_part("LDR1", "5mm") == ("Optoelectronics", "5mm", None)
-    assert categorize_part("LDR2", "GL5528") == ("Optoelectronics", "GL5528", None)
+    assert categorize_part("LDR1", "5mm") == (
+        ComponentCategory.OPTOELECTRONICS,
+        "5mm",
+        None,
+    )
+    assert categorize_part("LDR2", "GL5528") == (
+        ComponentCategory.OPTOELECTRONICS,
+        "GL5528",
+        None,
+    )
 
 
 def test_categorize_part_other_branches() -> None:
     """Verifies diodes, transistors, crystals, and invalid parts."""
-    assert categorize_part("D1", "1N4148") == ("Diodes", "1N4148", None)
-    assert categorize_part("LED1", "3mm Red") == ("Diodes", "3mm Red", None)
-    assert categorize_part("Q1", "2N3904") == ("Transistors", "2N3904", None)
-    assert categorize_part("X1", "16MHz") == ("Crystals/Oscillators", "16MHz", None)
+    assert categorize_part("D1", "1N4148") == (ComponentCategory.DIODES, "1N4148", None)
+    assert categorize_part("LED1", "3mm Red") == (
+        ComponentCategory.DIODES,
+        "3mm Red",
+        None,
+    )
+    assert categorize_part("Q1", "2N3904") == (
+        ComponentCategory.TRANSISTORS,
+        "2N3904",
+        None,
+    )
+    assert categorize_part("X1", "16MHz") == (
+        ComponentCategory.CRYSTALS_OSCILLATORS,
+        "16MHz",
+        None,
+    )
     assert categorize_part("J1", "1/4 Mono Jack") == (
-        "Hardware/Misc",
+        ComponentCategory.HARDWARE_MISC,
         "1/4 Mono Jack",
         None,
     )
@@ -225,7 +310,7 @@ def test_natural_sort_key_list_sorting() -> None:
 
 def test_normalize_value_to_quantity_resistors() -> None:
     """Verifies that Resistors are parsed with ureg.ohm units."""
-    qty = normalize_value_to_quantity("Resistors", "10k")
+    qty = normalize_value_to_quantity(ComponentCategory.RESISTORS, "10k")
     assert isinstance(qty, pint.Quantity)
     assert qty.units == ureg.ohm
     assert qty.magnitude == Decimal("10000")
@@ -233,7 +318,7 @@ def test_normalize_value_to_quantity_resistors() -> None:
 
 def test_normalize_value_to_quantity_capacitors() -> None:
     """Verifies that Capacitors are parsed with ureg.farad units."""
-    qty = normalize_value_to_quantity("Capacitors", "100n")
+    qty = normalize_value_to_quantity(ComponentCategory.CAPACITORS, "100n")
     assert isinstance(qty, pint.Quantity)
     assert qty.units == ureg.farad
     assert qty.magnitude == Decimal("1e-7")
@@ -241,16 +326,16 @@ def test_normalize_value_to_quantity_capacitors() -> None:
 
 def test_normalize_value_to_quantity_other_categories() -> None:
     """Verifies that non-passive numeric values return bare Decimals."""
-    qty = normalize_value_to_quantity("Potentiometers", "100k")
+    qty = normalize_value_to_quantity(ComponentCategory.POTENTIOMETERS, "100k")
     assert isinstance(qty, Decimal)
     assert qty == Decimal("100000")
 
 
 def test_normalize_value_to_quantity_invalid() -> None:
     """Verifies that dimensions (mm) and unparseable values return None."""
-    assert normalize_value_to_quantity("Resistors", "5mm LDR") is None
-    assert normalize_value_to_quantity("ICs", "TL072") is None
-    assert normalize_value_to_quantity("Resistors", "") is None
+    assert normalize_value_to_quantity(ComponentCategory.RESISTORS, "5mm LDR") is None
+    assert normalize_value_to_quantity(ComponentCategory.ICS, "TL072") is None
+    assert normalize_value_to_quantity(ComponentCategory.RESISTORS, "") is None
 
 
 # --- Inventory val_qty Tests ---
@@ -314,20 +399,23 @@ def test_sort_inventory_capacitors_order() -> None:
 
 def test_get_spec_type_exact() -> None:
     """Verifies get_spec_type dielectric classification at boundary conditions."""
-    assert get_spec_type("Capacitors", "100p") == "MLCC"
-    assert get_spec_type("Capacitors", "1n") == "Box Film"
-    assert get_spec_type("Capacitors", "1u") == "Box Film"
-    assert get_spec_type("Capacitors", "2.2u") == "Electrolytic"
+    assert get_spec_type(ComponentCategory.CAPACITORS, "100p") == ComponentSpec.MLCC
+    assert get_spec_type(ComponentCategory.CAPACITORS, "1n") == ComponentSpec.BOX_FILM
+    assert get_spec_type(ComponentCategory.CAPACITORS, "1u") == ComponentSpec.BOX_FILM
+    assert (
+        get_spec_type(ComponentCategory.CAPACITORS, "2.2u")
+        == ComponentSpec.ELECTROLYTIC
+    )
 
 
 def test_get_buy_details_exact_quantities() -> None:
     """Verifies get_buy_details exact matching on bulk and large capacitor thresholds."""
     # 100nF bulk buy
-    buy, note = get_buy_details("Capacitors", "100n", 1)
+    buy, note = get_buy_details(ComponentCategory.CAPACITORS, "100n", 1)
     assert buy == 11  # 1 + bulk_buffer (10)
     assert "Power filtering (buy bulk)." in note
 
     # 1uF large cap low buffer
-    buy_1u, note_1u = get_buy_details("Capacitors", "1u", 1)
+    buy_1u, note_1u = get_buy_details(ComponentCategory.CAPACITORS, "1u", 1)
     assert buy_1u == 2  # 1 + large_buffer (1)
     assert "Rec: Box Film (Check BOM: Could be Electrolytic)" in note_1u

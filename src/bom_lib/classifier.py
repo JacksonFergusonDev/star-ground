@@ -12,6 +12,7 @@ from typing import Any, cast
 import pint
 
 from src.bom_lib import constants
+from src.bom_lib.enums import ComponentCategory
 from src.bom_lib.units import ureg
 from src.bom_lib.utils import (
     float_to_search_string,
@@ -20,12 +21,12 @@ from src.bom_lib.utils import (
 
 
 def normalize_value_to_quantity(
-    category: str, val_raw: str
+    category: ComponentCategory, val_raw: str
 ) -> pint.Quantity[Any] | Decimal | None:
     """Attaches the correct physical unit to the parsed value based on category.
 
     Args:
-        category: The determined component category (e.g., "Resistors").
+        category: The determined component category (e.g., ComponentCategory.RESISTORS).
         val_raw: The raw value string from the BOM (e.g., "10k", "100n").
 
     Returns:
@@ -40,21 +41,21 @@ def normalize_value_to_quantity(
     if dec is None:
         return None
 
-    if category == "Resistors":
+    if category == ComponentCategory.RESISTORS:
         return cast(pint.Quantity[Any], dec * ureg.ohm)
-    if category == "Capacitors":
+    if category == ComponentCategory.CAPACITORS:
         return cast(pint.Quantity[Any], dec * ureg.farad)
     return dec
 
 
-def normalize_value_by_category(category: str, val_raw: str) -> str:
+def normalize_value_by_category(category: ComponentCategory, val_raw: str) -> str:
     """Standardizes component values for consistent string matching.
 
     For passives (Resistors/Caps), this converts raw strings like "10,000" or
     "10K" into a canonical format "10k" using the utility parser.
 
     Args:
-        category: The determined component category (e.g., "Resistors").
+        category: The determined component category.
         val_raw: The raw value string from the BOM (e.g., "100n").
 
     Returns:
@@ -64,7 +65,7 @@ def normalize_value_by_category(category: str, val_raw: str) -> str:
     clean_val = val_raw.strip()
 
     # Only normalize Passives (Resistors/Caps)
-    if category in ("Resistors", "Capacitors"):
+    if category in (ComponentCategory.RESISTORS, ComponentCategory.CAPACITORS):
         # Exception: Don't normalize physical dimensions (e.g., "5mm LDR")
         if "mm" in clean_val.lower():
             return clean_val
@@ -76,7 +77,9 @@ def normalize_value_by_category(category: str, val_raw: str) -> str:
     return clean_val
 
 
-def categorize_part(ref: str, val: str) -> tuple[str | None, str | None, str | None]:
+def categorize_part(
+    ref: str, val: str
+) -> tuple[ComponentCategory | None, str | None, str | None]:
     """Classifies a component based on its Reference Designator and Value.
 
     This function acts as a rules engine. It checks standard prefixes (R, C, Q),
@@ -89,7 +92,7 @@ def categorize_part(ref: str, val: str) -> tuple[str | None, str | None, str | N
 
     Returns:
         A tuple containing:
-            - category: The standardized category string (e.g., "Resistors").
+            - category: The standardized ComponentCategory (e.g., ComponentCategory.RESISTORS).
             - clean_val: The normalized value string.
             - injection: An optional string describing a secondary part to
               inject (e.g., "Hardware/Misc | DIP SOCKET").
@@ -131,12 +134,12 @@ def categorize_part(ref: str, val: str) -> tuple[str | None, str | None, str | N
         return None, None, None
 
     # 4. Classification Logic
-    category = "Unknown"
+    category = ComponentCategory.UNKNOWN
     injection: str | None = None
 
     # LDR Exception (Light Dependent Resistor)
     if ref_up.startswith("LDR"):
-        return "Optoelectronics", val_clean, None
+        return ComponentCategory.OPTOELECTRONICS, val_clean, None
 
     # Potentiometers (Priority over Resistors to catch 'RANGE')
     if (
@@ -144,43 +147,45 @@ def categorize_part(ref: str, val: str) -> tuple[str | None, str | None, str | N
         or any(ref_up.startswith(label) for label in constants.POT_LABELS)
         or is_pot_value
     ):
-        category = "Potentiometers"
+        category = ComponentCategory.POTENTIOMETERS
 
     # Switches
     elif ref_up in constants.SWITCH_LABELS:
         # Ambiguity check: "LENGTH" could be a switch or a pot.
         if any(x in val_up for x in ["ON", "SW", "SP", "DP"]):
-            category = "Switches"
+            category = ComponentCategory.SWITCHES
         else:
-            category = "Potentiometers"  # Fallback
+            category = ComponentCategory.POTENTIOMETERS  # Fallback
 
     # Standard Components
     elif ref_up == "CLR" or (ref_up.startswith("R") and not ref_up.startswith("RANGE")):
-        category = "Resistors"
+        category = ComponentCategory.RESISTORS
     elif ref_up.startswith("C"):
-        category = "Capacitors"
+        category = ComponentCategory.CAPACITORS
     elif ref_up.startswith("D"):
-        category = "Diodes"
+        category = ComponentCategory.DIODES
     elif ref_up.startswith("Q"):
-        category = "Transistors"
+        category = ComponentCategory.TRANSISTORS
     elif ref_up.startswith("SW"):
-        category = "Switches"
+        category = ComponentCategory.SWITCHES
     elif ref_up.startswith("LED"):
-        category = "Diodes"
+        category = ComponentCategory.DIODES
     elif ref_up.startswith(("X", "Y")):
-        category = "Crystals/Oscillators"
+        category = ComponentCategory.CRYSTALS_OSCILLATORS
     elif ref_up.startswith("J"):
-        category = "Hardware/Misc"
+        category = ComponentCategory.HARDWARE_MISC
 
     # ICs & Socket Injection
     elif ref_up.startswith(("U", "IC", "OP", "TL")):
-        category = "ICs"
+        category = ComponentCategory.ICS
 
         # Don't inject sockets for things that aren't DIP chips
         # (e.g., Regulators, Reverb Bricks)
         skip_injection_keywords = ["REGULATOR", "L78L", "MODULE", "BTDR", "REVERB"]
         if not any(k in val_up for k in skip_injection_keywords):
-            injection = "Hardware/Misc | DIP SOCKET (Check Size)"
+            injection = (
+                f"{ComponentCategory.HARDWARE_MISC.value} | DIP SOCKET (Check Size)"
+            )
 
     # Final Normalization
     val_clean = normalize_value_by_category(category, val_clean)

@@ -13,6 +13,7 @@ from typing import Any
 
 from src.bom_lib import constants
 from src.bom_lib.classifier import categorize_part, normalize_value_by_category
+from src.bom_lib.enums import ComponentCategory
 from src.bom_lib.types import Inventory, StatsDict, create_empty_inventory
 from src.bom_lib.utils import expand_refs
 
@@ -73,7 +74,7 @@ def ingest_bom_line(
 
         if cat:
             parts_found += 1
-            main_key = f"{cat} | {clean_val}"
+            main_key = f"{cat.value} | {clean_val}"
 
             # 1. Record Main Part
             inventory.add_part(source, main_key, r)
@@ -255,8 +256,13 @@ def parse_user_inventory(filepath: str) -> Inventory:
                     continue
 
                 # Critical: Normalize value so it matches BOM keys
-                clean_val = normalize_value_by_category(cat, val)
-                key = f"{cat} | {clean_val}"
+
+                try:
+                    cat_enum = ComponentCategory(cat)
+                except ValueError:
+                    continue
+                clean_val = normalize_value_by_category(cat_enum, val)
+                key = f"{cat_enum.value} | {clean_val}"
 
                 stock.add_part("User Stock", key, ref="", qty=qty)
 

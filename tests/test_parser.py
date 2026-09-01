@@ -34,6 +34,7 @@ from src.bom_lib import (
     parse_value_to_decimal,
     parse_with_verification,
 )
+from src.bom_lib.enums import ComponentCategory, ComponentSpec
 from src.bom_lib.types import Inventory
 
 # --- Standard Unit Tests ---
@@ -129,11 +130,11 @@ def test_warning_flags():
     in the final shopping list.
     """
     # Test Obsolete Warning
-    _, note = get_buy_details("Transistors", "2N5457", 1)
+    _, note = get_buy_details(ComponentCategory.TRANSISTORS, "2N5457", 1)
     assert "Obsolete" in note
 
     # Test SMD Warning
-    _, note = get_buy_details("Transistors", "MMBF5457", 1)
+    _, note = get_buy_details(ComponentCategory.TRANSISTORS, "MMBF5457", 1)
     assert "SMD Part" in note
 
 
@@ -168,7 +169,7 @@ def test_buy_logic_scaling(qty):
     Verifies the invariant that 'Buy Qty' must ALWAYS be >= 'BOM Qty',
     regardless of the scale (from 1 to 1000 items).
     """
-    category = "Resistors"
+    category = ComponentCategory.RESISTORS
     val = "10k"
 
     buy_qty, _ = get_buy_details(category, val, qty)
@@ -233,18 +234,18 @@ def test_suspicious_physics_warnings():
     """
     # 1. Resistor too small (0.1 Ohm)
     # Note: 0.1 -> parse_value_to_decimal -> 0.1
-    _, note_r = get_buy_details("Resistors", "0.1", 1)
+    _, note_r = get_buy_details(ComponentCategory.RESISTORS, "0.1", 1)
     assert "Suspicious" in note_r
     assert "< 1Ω" in note_r
 
     # 2. Capacitor too huge (1 Farad)
     # Note: "1F" -> parse_value_to_decimal -> 1.0 (Huge!)
-    _, note_c = get_buy_details("Capacitors", "1F", 1)
+    _, note_c = get_buy_details(ComponentCategory.CAPACITORS, "1F", 1)
     assert "Suspicious" in note_c
     assert "> 10mF" in note_c
 
     # 3. Normal values should be fine
-    _, note_ok = get_buy_details("Resistors", "10k", 1)
+    _, note_ok = get_buy_details(ComponentCategory.RESISTORS, "10k", 1)
     assert "Suspicious" not in note_ok
 
 
@@ -255,15 +256,15 @@ def test_resistor_rounding_logic():
     Rule: Add a buffer of 5, then round UP to the nearest 10.
     """
     # Case 1: Need 1. Buffer = 6. Round up -> 10.
-    qty, _ = get_buy_details("Resistors", "10k", 1)
+    qty, _ = get_buy_details(ComponentCategory.RESISTORS, "10k", 1)
     assert qty == 10
 
     # Case 2: Need 6. Buffer = 11. Round up -> 20.
-    qty, _ = get_buy_details("Resistors", "10k", 6)
+    qty, _ = get_buy_details(ComponentCategory.RESISTORS, "10k", 6)
     assert qty == 20
 
     # Case 3: Need 15. Buffer = 20. Round up -> 20 (Exact match).
-    qty, _ = get_buy_details("Resistors", "10k", 15)
+    qty, _ = get_buy_details(ComponentCategory.RESISTORS, "10k", 15)
     assert qty == 20
 
 
@@ -277,22 +278,22 @@ def test_capacitor_material_recommendations():
     - Bulk (> 1uF): Electrolytic
     """
     # Case 1: Pico range (<= 1nF) -> Class 1 Ceramic (C0G)
-    _, note_p = get_buy_details("Capacitors", "100p", 1)
+    _, note_p = get_buy_details(ComponentCategory.CAPACITORS, "100p", 1)
     assert "Class 1 Ceramic" in note_p
 
     # Case 2: Nano range (> 1nF, < 1uF) -> Box Film
-    _, note_n = get_buy_details("Capacitors", "100n", 1)
-    assert "Box Film" in note_n
-    assert "Electrolytic" not in note_n
+    _, note_n = get_buy_details(ComponentCategory.CAPACITORS, "100n", 1)
+    assert ComponentSpec.BOX_FILM.value in note_n
+    assert ComponentSpec.ELECTROLYTIC.value not in note_n
 
     # Case 3: 1uF Crossover -> Box Film + Warning
-    _, note_1u = get_buy_details("Capacitors", "1u", 1)
-    assert "Box Film" in note_1u
+    _, note_1u = get_buy_details(ComponentCategory.CAPACITORS, "1u", 1)
+    assert ComponentSpec.BOX_FILM.value in note_1u
     assert "Check BOM" in note_1u
 
     # Case 4: Bulk range (> 1uF) -> Electrolytic
-    _, note_bulk = get_buy_details("Capacitors", "100u", 1)
-    assert "Electrolytic" in note_bulk
+    _, note_bulk = get_buy_details(ComponentCategory.CAPACITORS, "100u", 1)
+    assert ComponentSpec.ELECTROLYTIC.value in note_bulk
 
 
 def test_hardware_injection_and_smart_merge():
@@ -343,21 +344,24 @@ def test_hardware_injection_and_smart_merge():
 def test_spec_type_logic():
     """Verifies correct capacitor dielectric classification based on value."""
     # Pico range -> MLCC
-    assert get_spec_type("Capacitors", "100p") == "MLCC"
+    assert get_spec_type(ComponentCategory.CAPACITORS, "100p") == ComponentSpec.MLCC
 
     # Nano range -> Box Film
-    assert get_spec_type("Capacitors", "10n") == "Box Film"
+    assert get_spec_type(ComponentCategory.CAPACITORS, "10n") == ComponentSpec.BOX_FILM
 
     # The 1uF Crossover -> Box Film
-    assert get_spec_type("Capacitors", "1u") == "Box Film"
+    assert get_spec_type(ComponentCategory.CAPACITORS, "1u") == ComponentSpec.BOX_FILM
 
     # Bulk range -> Electrolytic
-    assert get_spec_type("Capacitors", "100u") == "Electrolytic"
+    assert (
+        get_spec_type(ComponentCategory.CAPACITORS, "100u")
+        == ComponentSpec.ELECTROLYTIC
+    )
 
 
 def test_vintage_search_mapping():
     """Verifies that generic vintage part numbers map to modern equivalents."""
-    res = generate_search_term("ICs", "JRC4558")
+    res = generate_search_term(ComponentCategory.ICS, "JRC4558")
     assert res == "NJM4558D"
 
 
@@ -369,12 +373,12 @@ def test_expert_system_recommendations():
     audiophile-grade alternatives or usage notes.
     """
     # 1. IC Mojo (TL072 -> OPA2134)
-    _, note_ic = get_buy_details("ICs", "TL072", 1)
+    _, note_ic = get_buy_details(ComponentCategory.ICS, "TL072", 1)
     assert "OPA2134" in note_ic
     assert "Hi-Fi" in note_ic
 
     # 2. Diode Textures (1N4148 -> Tube-like)
-    _, note_d = get_buy_details("Diodes", "1N4148", 1)
+    _, note_d = get_buy_details(ComponentCategory.DIODES, "1N4148", 1)
     assert "1N4001" in note_d
     assert "Tube-like" in note_d
 
@@ -408,25 +412,27 @@ def test_search_term_generation():
     Verifies that search strings are constructed correctly for Tayda Electronics.
     """
     # 1. Resistors (Must include keywords)
-    res = generate_search_term("Resistors", "10k")
+    res = generate_search_term(ComponentCategory.RESISTORS, "10k")
     assert res == "10k ohm 1/4w metal film"
 
     # 2. Potentiometers (Taper Mapping)
     # Log Taper
-    pot_log = generate_search_term("Potentiometers", "100k-A")
+    pot_log = generate_search_term(ComponentCategory.POTENTIOMETERS, "100k-A")
     assert "Logarithmic" in pot_log
     assert "100k" in pot_log
 
     # Linear Taper
-    pot_lin = generate_search_term("Potentiometers", "10k-B")
+    pot_lin = generate_search_term(ComponentCategory.POTENTIOMETERS, "10k-B")
     assert "Linear" in pot_lin
 
     # 3. Capacitors (Should include spec type)
-    cap = generate_search_term("Capacitors", "100n", "Box Film")
+    cap = generate_search_term(
+        ComponentCategory.CAPACITORS, "100n", ComponentSpec.BOX_FILM
+    )
     assert cap == "100nF Box Film"
 
     # 4. Diodes (LED Handling)
-    led = generate_search_term("Diodes", "LED")
+    led = generate_search_term(ComponentCategory.DIODES, "LED")
     assert "3mm" in led
 
 
@@ -460,7 +466,7 @@ def test_hardware_search_term_validity():
     # Simulate App Logic: specific -> generate -> url
     category, val = target_key.split(" | ", 1)
 
-    term = generate_search_term(category, val)
+    term = generate_search_term(ComponentCategory(category), val)
     url = generate_tayda_url(term)
 
     # Verify content
@@ -518,12 +524,12 @@ def test_zero_buy_guard():
     """
     # Standard logic: 10k -> Buffer +5 -> Round up -> Buy 10.
     # BUT if input is 0, we must buy 0.
-    qty, note = get_buy_details("Resistors", "10k", 0)
+    qty, note = get_buy_details(ComponentCategory.RESISTORS, "10k", 0)
     assert qty == 0
     assert note == ""
 
     # Negative input safety check
-    qty_neg, _ = get_buy_details("Resistors", "10k", -5)
+    qty_neg, _ = get_buy_details(ComponentCategory.RESISTORS, "10k", -5)
     assert qty_neg == 0
 
 
