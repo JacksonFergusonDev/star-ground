@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Any
 
+from src.bom_lib.enums import InputMethod
 from src.bom_lib.types import Inventory, StatsDict
 
 
@@ -21,11 +22,11 @@ class BOMParserStrategy(ABC):
     """Abstract base class for all BOM parsing strategies."""
 
     @abstractmethod
-    def can_handle(self, method: str, data: Any) -> bool:
+    def can_handle(self, method: InputMethod, data: Any) -> bool:
         """Determine if this strategy can parse the given input data.
 
         Args:
-            method: The UI method string (e.g., "Paste Text", "Upload File").
+            method: The UI method enum (e.g., InputMethod.PASTE_TEXT, InputMethod.UPLOAD_FILE).
             data: The raw input data to inspect.
 
         Returns:

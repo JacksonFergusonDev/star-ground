@@ -13,7 +13,7 @@ from typing import Any, TypedDict
 import pint
 
 from src.bom_lib.classifier import normalize_value_to_quantity
-from src.bom_lib.enums import ComponentCategory
+from src.bom_lib.enums import ComponentCategory, InputMethod
 
 
 @dataclass
@@ -23,9 +23,9 @@ class ProjectSlot:
     Shared between the Streamlit frontend and PDF generation backend.
     """
 
-    id: str = field(default_factory=lambda: str(uuid.uuid4()))
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
     name: str = ""
-    method: str = "Paste Text"
+    method: InputMethod = InputMethod.PASTE_TEXT
     count: int = 1
     data: Any = None
 

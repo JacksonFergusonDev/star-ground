@@ -5,6 +5,7 @@ from typing import Any
 
 import requests
 
+from src.bom_lib.enums import InputMethod
 from src.bom_lib.strategies.base import BOMParserStrategy, ParseResult
 from src.bom_lib.strategies.csv import CSVParserStrategy
 from src.bom_lib.strategies.manual import ManualInputStrategy
@@ -41,11 +42,11 @@ class BOMParserContext:
         """
         self.strategies.append(strategy)
 
-    def process(self, method: str, data: Any, source_name: str) -> ParseResult:
+    def process(self, method: InputMethod, data: Any, source_name: str) -> ParseResult:
         """Unified handler for processing Text, File, and URL inputs.
 
         Args:
-            method: The input method ("Paste Text", "Preset", "From URL", "Upload File").
+            method: The input method enum (InputMethod.PASTE_TEXT, InputMethod.PRESET, etc.).
             data: The raw data associated with the method (String, UploadedFile, etc.).
             source_name: A display name for logging and error messages.
 
@@ -70,7 +71,7 @@ class BOMParserContext:
         try:
             data_to_parse = data
 
-            if method == "From URL":
+            if method == InputMethod.FROM_URL:
                 url = str(data).strip()
                 response = requests.get(url, timeout=10)
                 response.raise_for_status()

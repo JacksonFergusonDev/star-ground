@@ -10,6 +10,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 import requests
 
+from src.bom_lib.enums import InputMethod
 from src.bom_lib.strategies import (
     BOMParserContext,
     CSVParserStrategy,
@@ -39,12 +40,11 @@ class TestManualInputStrategy:
     def test_can_handle(self) -> None:
         strategy = ManualInputStrategy()
 
-        assert strategy.can_handle("Paste Text", "R1 10k") is True
-        assert strategy.can_handle("Preset", "R1 10k") is True
-        assert strategy.can_handle("", "R1 10k") is True
-        assert strategy.can_handle("", ["R1 10k"]) is True
-        assert strategy.can_handle("From URL", "R1 10k") is True
-        assert strategy.can_handle("Upload File", b"%PDF-1.4") is False
+        assert strategy.can_handle(InputMethod.PASTE_TEXT, "R1 10k") is True
+        assert strategy.can_handle(InputMethod.PRESET, "R1 10k") is True
+        assert strategy.can_handle(InputMethod.FROM_URL, "R1 10k") is True
+        assert strategy.can_handle(InputMethod.PRESET, ["R1 10k"]) is True
+        assert strategy.can_handle(InputMethod.UPLOAD_FILE, b"%PDF-1.4") is False
 
     def test_parse_string(self) -> None:
         strategy = ManualInputStrategy()
@@ -84,17 +84,22 @@ class TestCSVParserStrategy:
         pdf_file = MockUploadedFile(name="bom.pdf", _buffer=b"%PDF-1.4")
         other_file = MockUploadedFile(name="bom.unknown", _buffer=b"")
 
-        assert strategy.can_handle("Upload File", csv_file) is True
-        assert strategy.can_handle("Upload File", tsv_file) is True
-        assert strategy.can_handle("Upload File", pdf_file) is False
-        assert strategy.can_handle("Upload File", other_file) is True
+        assert strategy.can_handle(InputMethod.UPLOAD_FILE, csv_file) is True
+        assert strategy.can_handle(InputMethod.UPLOAD_FILE, tsv_file) is True
+        assert strategy.can_handle(InputMethod.UPLOAD_FILE, pdf_file) is False
+        assert strategy.can_handle(InputMethod.UPLOAD_FILE, other_file) is True
 
-        assert strategy.can_handle("", "project/bom.csv") is True
-        assert strategy.can_handle("", "project/bom.tsv") is True
-        assert strategy.can_handle("", "project/bom.pdf") is False
+        assert strategy.can_handle(InputMethod.UPLOAD_FILE, "project/bom.csv") is True
+        assert strategy.can_handle(InputMethod.UPLOAD_FILE, "project/bom.tsv") is True
+        assert strategy.can_handle(InputMethod.UPLOAD_FILE, "project/bom.pdf") is False
 
-        assert strategy.can_handle("Upload File", b"Designator,Value\nR1,10k") is True
-        assert strategy.can_handle("Upload File", b"%PDF-1.4\nsome pdf") is False
+        assert (
+            strategy.can_handle(InputMethod.UPLOAD_FILE, b"Designator,Value\nR1,10k")
+            is True
+        )
+        assert (
+            strategy.can_handle(InputMethod.UPLOAD_FILE, b"%PDF-1.4\nsome pdf") is False
+        )
 
     def test_parse_uploaded_file(self) -> None:
         strategy = CSVParserStrategy()
@@ -170,15 +175,23 @@ class TestPDFParserStrategy:
         pdf_file = MockUploadedFile(name="pedal.pdf", _buffer=b"")
         csv_file = MockUploadedFile(name="pedal.csv", _buffer=b"")
 
-        assert strategy.can_handle("Upload File", pdf_file) is True
-        assert strategy.can_handle("Upload File", csv_file) is False
+        assert strategy.can_handle(InputMethod.UPLOAD_FILE, pdf_file) is True
+        assert strategy.can_handle(InputMethod.UPLOAD_FILE, csv_file) is False
 
-        assert strategy.can_handle("", "path/to/pedal.pdf") is True
-        assert strategy.can_handle("", "path/to/pedal.PDF") is True
-        assert strategy.can_handle("", "path/to/pedal.csv") is False
+        assert strategy.can_handle(InputMethod.UPLOAD_FILE, "path/to/pedal.pdf") is True
+        assert strategy.can_handle(InputMethod.UPLOAD_FILE, "path/to/pedal.PDF") is True
+        assert (
+            strategy.can_handle(InputMethod.UPLOAD_FILE, "path/to/pedal.csv") is False
+        )
 
-        assert strategy.can_handle("Upload File", b"%PDF-1.4 binary data") is True
-        assert strategy.can_handle("Upload File", b"Designator,Value\nR1,10k") is False
+        assert (
+            strategy.can_handle(InputMethod.UPLOAD_FILE, b"%PDF-1.4 binary data")
+            is True
+        )
+        assert (
+            strategy.can_handle(InputMethod.UPLOAD_FILE, b"Designator,Value\nR1,10k")
+            is False
+        )
 
     def test_parse_file_path(self, sample_pdf_path: str) -> None:
         strategy = PDFParserStrategy()
@@ -256,7 +269,7 @@ class TestBOMParserContext:
 
     def test_process_empty_data(self) -> None:
         context = BOMParserContext()
-        result = context.process("Paste Text", "", "Empty")
+        result = context.process(InputMethod.PASTE_TEXT, "", "Empty")
 
         assert isinstance(result, ParseResult)
         assert result.stats["parts_found"] == 0
@@ -265,7 +278,9 @@ class TestBOMParserContext:
 
     def test_process_paste_text(self) -> None:
         context = BOMParserContext()
-        result = context.process("Paste Text", "R1 10k\nC1 100n", "PastePedal")
+        result = context.process(
+            InputMethod.PASTE_TEXT, "R1 10k\nC1 100n", "PastePedal"
+        )
 
         assert isinstance(result, ParseResult)
         assert result.stats["parts_found"] == 2
@@ -274,7 +289,7 @@ class TestBOMParserContext:
 
     def test_process_preset(self) -> None:
         context = BOMParserContext()
-        result = context.process("Preset", "R1 10k", "PresetPedal")
+        result = context.process(InputMethod.PRESET, "R1 10k", "PresetPedal")
 
         assert isinstance(result, ParseResult)
         assert result.stats["parts_found"] == 1
@@ -285,7 +300,7 @@ class TestBOMParserContext:
         mock_file = MockUploadedFile(
             name="build.csv", _buffer=b"Designator,Value\nR1,10k\n"
         )
-        result = context.process("Upload File", mock_file, "CSVPedal")
+        result = context.process(InputMethod.UPLOAD_FILE, mock_file, "CSVPedal")
 
         assert isinstance(result, ParseResult)
         assert result.stats["parts_found"] == 1
@@ -294,7 +309,7 @@ class TestBOMParserContext:
     def test_process_upload_file_pdf(self, sample_pdf_bytes: bytes) -> None:
         context = BOMParserContext()
         mock_file = MockUploadedFile(name="Cataclysm.pdf", _buffer=sample_pdf_bytes)
-        result = context.process("Upload File", mock_file, "PDFPedal")
+        result = context.process(InputMethod.UPLOAD_FILE, mock_file, "PDFPedal")
 
         assert isinstance(result, ParseResult)
         assert result.stats["parts_found"] > 0
@@ -310,7 +325,7 @@ class TestBOMParserContext:
 
         with patch("requests.get", return_value=mock_resp):
             result = context.process(
-                "From URL", "https://example.com/Cataclysm.pdf", "URLPedal"
+                InputMethod.FROM_URL, "https://example.com/Cataclysm.pdf", "URLPedal"
             )
 
         assert isinstance(result, ParseResult)
@@ -328,7 +343,7 @@ class TestBOMParserContext:
 
         with patch("requests.get", return_value=mock_resp):
             result = context.process(
-                "From URL", "https://example.com/raw_bom.txt", "URLPedal"
+                InputMethod.FROM_URL, "https://example.com/raw_bom.txt", "URLPedal"
             )
 
         assert isinstance(result, ParseResult)
@@ -343,7 +358,7 @@ class TestBOMParserContext:
             side_effect=requests.RequestException("Connection timed out"),
         ):
             result = context.process(
-                "From URL", "https://example.com/bad.pdf", "ErrPedal"
+                InputMethod.FROM_URL, "https://example.com/bad.pdf", "ErrPedal"
             )
 
         assert isinstance(result, ParseResult)
@@ -353,7 +368,7 @@ class TestBOMParserContext:
 
     def test_process_unknown_method(self) -> None:
         context = BOMParserContext([])
-        result = context.process("NonExistentMethod", 12345, "Unknown")
+        result = context.process(InputMethod.PASTE_TEXT, "12345", "Unknown")
 
         assert isinstance(result, ParseResult)
         assert result.stats["parts_found"] == 0
