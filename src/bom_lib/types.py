@@ -8,11 +8,41 @@ import uuid
 from collections import UserDict, defaultdict
 from dataclasses import dataclass, field
 from decimal import Decimal
-from typing import Any, NamedTuple, NotRequired, TypedDict
+from typing import Any, NamedTuple, NotRequired, Protocol, TypedDict, runtime_checkable
 
 import pint
 
 from src.bom_lib.enums import ComponentCategory, ComponentSpec, InputMethod
+
+
+@runtime_checkable
+class SupportsRead(Protocol):
+    """Protocol for file-like objects providing a read method."""
+
+    def read(self, *args: Any, **kwargs: Any) -> Any:
+        """Read and return content from the underlying stream."""
+        ...
+
+
+@runtime_checkable
+class SupportsGetValue(Protocol):
+    """Protocol for buffer objects providing a getvalue method (e.g. UploadedFile, BytesIO)."""
+
+    def getvalue(self) -> Any:
+        """Return the complete buffer contents as bytes or str."""
+        ...
+
+
+RawBOMData = (
+    str
+    | bytes
+    | bytearray
+    | list[str]
+    | SupportsRead
+    | SupportsGetValue
+    | dict[str, str]
+    | None
+)
 
 
 @dataclass
@@ -26,7 +56,7 @@ class ProjectSlot:
     name: str = ""
     method: InputMethod = InputMethod.PASTE_TEXT
     count: int = 1
-    data: Any = None
+    data: RawBOMData = None
 
     # Cache fields
     last_loaded_preset: str | None = None
@@ -126,6 +156,18 @@ class ChecklistPart(TypedDict):
     polarized: bool
 
 
+class PDFPageExtraction(TypedDict):
+    """Extracted text and tabular layout from a single PDF page.
+
+    Attributes:
+        tables: List of extracted tables (each table is rows of string cells or None).
+        text: Raw extracted text string from the page.
+    """
+
+    tables: list[list[list[str | None]]]
+    text: str | None
+
+
 ShoppingListRow = TypedDict(
     "ShoppingListRow",
     {
@@ -143,8 +185,46 @@ ShoppingListRow = TypedDict(
 )
 
 
+def make_component_key(category: ComponentCategory | str, val: str) -> str:
+    """Formats a standardized inventory component key 'Category | Value'.
+
+    Args:
+        category: Component category enum or raw category string.
+        val: Component value or part name string.
+
+    Returns:
+        Standardized string key formatted as 'Category | Value'.
+    """
+    cat_str = (
+        category.value if isinstance(category, ComponentCategory) else str(category)
+    )
+    return f"{cat_str} | {val}"
+
+
+def parse_component_key(key: str) -> tuple[ComponentCategory, str]:
+    """Parses a standardized component key into (ComponentCategory, value).
+
+    If the key does not contain the ' | ' delimiter or has an unrecognized
+    category, returns (ComponentCategory.UNKNOWN, key).
+
+    Args:
+        key: Standardized inventory key string.
+
+    Returns:
+        Tuple of (ComponentCategory, value_string).
+    """
+    if " | " not in key:
+        return ComponentCategory.UNKNOWN, key
+    cat_str, val = key.split(" | ", 1)
+    try:
+        category = ComponentCategory(cat_str)
+    except ValueError:
+        category = ComponentCategory.UNKNOWN
+    return category, val
+
+
 class Inventory(UserDict[str, PartData]):
-    """Concrete class for managing component inventory.
+    """Stateful domain model for tracking aggregated BOM components.
 
     Encapsulates storage, mutation, and aggregation logic to prevent
     invalid state transitions (e.g., assigning string to quantity).
@@ -180,12 +260,11 @@ class Inventory(UserDict[str, PartData]):
 
         # Initialize cached quantity if this is a new part entry
         if part["qty"] == 0:
-            if " | " in key:
-                cat_str, val_str = key.split(" | ", 1)
+            cat, val_str = parse_component_key(key)
+            if cat != ComponentCategory.UNKNOWN:
                 try:
                     from src.bom_lib.classifier import normalize_value_to_quantity
 
-                    cat = ComponentCategory(cat_str)
                     part["val_qty"] = normalize_value_to_quantity(cat, val_str)
                 except ValueError:
                     part["val_qty"] = None

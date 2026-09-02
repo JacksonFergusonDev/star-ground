@@ -11,7 +11,7 @@ from decimal import Decimal
 
 import pint
 
-from src.bom_lib.types import Inventory, PartData
+from src.bom_lib.types import Inventory, PartData, parse_component_key
 
 
 def calculate_net_needs(bom: Inventory, stock: Inventory) -> Inventory:
@@ -79,8 +79,8 @@ def sort_inventory(inventory: Inventory) -> list[tuple[str, PartData]]:
         if " | " not in key:
             return (999, Decimal(0), key)
 
-        cat, val = key.split(" | ", 1)
-        rank = pmap.get(cat, 100)
+        cat_enum, val = parse_component_key(key)
+        rank = pmap.get(cat_enum.value, 100)
 
         val_qty = data.get("val_qty")
         if isinstance(val_qty, pint.Quantity):
@@ -126,16 +126,11 @@ def serialize_inventory(inventory: Inventory) -> str:
     """
     lines = []
 
-    def get_val(key: str) -> str:
-        if " | " in key:
-            return key.split(" | ", 1)[1]
-        return key
-
     # Use the existing sort logic in this module
     sorted_items = sort_inventory(inventory)
 
     for key, data in sorted_items:
-        clean_val = get_val(key)
+        clean_val = parse_component_key(key)[1]
 
         # If we have specific refs (R1, C1), list them individually
         if data["refs"]:

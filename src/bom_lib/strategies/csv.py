@@ -1,20 +1,21 @@
 """Strategy for parsing CSV and tabular BOM uploads."""
 
 import os
-from typing import Any
 
 from src.bom_lib.enums import InputMethod
 from src.bom_lib.parser import parse_csv_bom
 from src.bom_lib.strategies.base import BOMParserStrategy, ParseResult
+from src.bom_lib.types import RawBOMData
 
 
 class CSVParserStrategy(BOMParserStrategy):
     """Parses CSV BOM files by extracting contents and delegating to parse_csv_bom."""
 
-    def can_handle(self, method: InputMethod, data: Any) -> bool:
+    def can_handle(self, method: InputMethod, data: RawBOMData) -> bool:
         """Determine if this strategy can handle the given CSV/tabular input."""
-        if hasattr(data, "name"):
-            filename = str(data.name).lower()
+        name = getattr(data, "name", None)
+        if name:
+            filename = str(name).lower()
             ext = os.path.splitext(filename)[1]
             if ext in [".csv", ".tsv", ".txt"]:
                 return True
@@ -30,7 +31,7 @@ class CSVParserStrategy(BOMParserStrategy):
             and not data.startswith(b"%PDF")
         )
 
-    def parse(self, data: Any, source_name: str) -> ParseResult:
+    def parse(self, data: RawBOMData, source_name: str) -> ParseResult:
         """Parse CSV data into a ParseResult, managing temporary files as needed.
 
         Args:
@@ -46,8 +47,9 @@ class CSVParserStrategy(BOMParserStrategy):
             return ParseResult(inventory=inventory, stats=stats)
 
         ext = ".csv"
-        if hasattr(data, "name"):
-            filename = str(data.name)
+        name = getattr(data, "name", None)
+        if name:
+            filename = str(name)
             detected_ext = os.path.splitext(filename)[1]
             if detected_ext:
                 ext = detected_ext.lower()
