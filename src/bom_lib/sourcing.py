@@ -19,7 +19,14 @@ from src.bom_lib import constants
 from src.bom_lib.classifier import normalize_value_to_quantity
 from src.bom_lib.constants import AUTO_INJECT_SOURCE
 from src.bom_lib.enums import ComponentCategory, ComponentSpec
-from src.bom_lib.types import AlternativeSpec, Inventory, StatsDict
+from src.bom_lib.manager import calculate_net_needs, sort_inventory
+from src.bom_lib.types import (
+    AlternativeSpec,
+    Inventory,
+    ResolvedPartSourcing,
+    ShoppingListRow,
+    StatsDict,
+)
 from src.bom_lib.units import ureg
 from src.bom_lib.utils import (
     float_to_search_string,
@@ -413,3 +420,161 @@ def get_standard_hardware(inventory: Inventory, pedal_count: int = 1) -> None:
             f"Pot Seals ({total_pots})",
             qty_override=total_pots,
         )
+
+
+def is_pure_hardware(sources: dict[str, list[str]]) -> bool:
+    """Returns True if the part is exclusively auto-injected hardware."""
+    return len(sources) == 1 and AUTO_INJECT_SOURCE in sources
+
+
+def is_extra_part(val: str) -> bool:
+    """Returns True if the part is a socket or adapter extra."""
+    val_upper = val.upper()
+    return "SOCKET" in val_upper or "ADAPTER" in val_upper
+
+
+def determine_origin(val: str, sources: dict[str, list[str]]) -> str:
+    """Classifies component origin as 'Hardware Kit', 'Extras', or 'Circuit Board'."""
+    if is_pure_hardware(sources):
+        return "Hardware Kit"
+    if is_extra_part(val):
+        return "Extras"
+    return "Circuit Board"
+
+
+def resolve_part_sourcing(
+    category: ComponentCategory,
+    val: str,
+    net_qty: int,
+    sources: dict[str, list[str]],
+    val_qty: pint.Quantity[Any] | Decimal | None = None,
+) -> ResolvedPartSourcing:
+    """Resolves the complete purchasing and supplier specification for a component.
+
+    Unifies origin assignment, buffer calculation, auto-inject notes,
+    dielectric spec resolution, and supplier routing (PedalPCB vs Tayda).
+
+    Args:
+        category: Component category enum.
+        val: Component value or part name.
+        net_qty: Quantity required after deducting stock (deficit).
+        sources: Project sources mapping.
+        val_qty: Cached physical unit quantity or Decimal.
+
+    Returns:
+        ResolvedPartSourcing with origin, buy_qty, notes, spec_type, search_term, supplier_url.
+    """
+    origin = determine_origin(val, sources)
+
+    buy_qty, note = get_buy_details(category, val, net_qty, val_qty=val_qty)
+
+    auto_inject_notes = sources.get(AUTO_INJECT_SOURCE, [])
+    if auto_inject_notes and origin != "Hardware Kit":
+        formatted_notes = ", ".join(auto_inject_notes)
+        note += f" | 🤖 Standard Part: {formatted_notes}"
+
+    spec_type = get_spec_type(category, val, val_qty=val_qty)
+    search_term = generate_search_term(category, val, spec_type)
+
+    is_pedalpcb_source = any("PedalPCB" in s for s in sources)
+    is_tayda_source = any("Tayda" in s for s in sources)
+
+    if category == ComponentCategory.PCB:
+        if is_pedalpcb_source and not is_tayda_source:
+            url = generate_pedalpcb_url(search_term)
+        else:
+            url = generate_tayda_url(search_term)
+    else:
+        url = generate_tayda_url(search_term)
+
+    return ResolvedPartSourcing(
+        origin=origin,
+        buy_qty=buy_qty,
+        notes=note,
+        spec_type=spec_type,
+        search_term=search_term,
+        supplier_url=url,
+    )
+
+
+def build_shopping_list(
+    inventory: Inventory,
+    stock: Inventory | None = None,
+    show_hardware: bool = True,
+    show_extras: bool = True,
+) -> list[ShoppingListRow]:
+    """Assembles the master shopping list across all projects.
+
+    Applies inventory stock deductions, sorts parts according to display hierarchy,
+    filters hardware/extras based on user preferences, and resolves purchasing details.
+
+    Args:
+        inventory: Aggregated inventory from all projects.
+        stock: Optional user stock inventory to calculate net needs.
+        show_hardware: Whether to include pure auto-injected hardware kit parts.
+        show_extras: Whether to include sockets and SMD adapters.
+
+    Returns:
+        List of structured ShoppingListRow dictionaries for display and export.
+    """
+    if stock:
+        net_inventory = calculate_net_needs(inventory, stock)
+        display_source = inventory
+    else:
+        display_source = inventory
+        net_inventory = inventory
+
+    sorted_parts = sort_inventory(display_source)
+    shopping_list: list[ShoppingListRow] = []
+
+    for part_key, item in sorted_parts:
+        if " | " not in part_key:
+            continue
+
+        cat_str, value = part_key.split(" | ", 1)
+        try:
+            category = ComponentCategory(cat_str)
+        except ValueError:
+            category = ComponentCategory.UNKNOWN
+
+        sources = item["sources"]
+
+        if is_pure_hardware(sources) and not show_hardware:
+            continue
+        if is_extra_part(value) and not show_extras:
+            continue
+
+        gross_qty = item["qty"]
+
+        net_item = net_inventory.get(part_key)
+        net_qty = net_item["qty"] if net_item else 0
+
+        in_stock = 0
+        if stock:
+            s_item = stock.get(part_key)
+            in_stock = s_item["qty"] if s_item else 0
+
+        val_qty = item.get("val_qty")
+        resolved = resolve_part_sourcing(
+            category=category,
+            val=value,
+            net_qty=net_qty,
+            sources=sources,
+            val_qty=val_qty,
+        )
+
+        row: ShoppingListRow = {
+            "Origin": resolved.origin,
+            "Category": category.value,
+            "Part": value,
+            "BOM Qty": gross_qty,
+            "In Stock": in_stock,
+            "Net Need": net_qty,
+            "Buy Qty": resolved.buy_qty,
+            "Notes": resolved.notes,
+            "Search Term": resolved.search_term,
+            "Tayda_Link": resolved.supplier_url,
+        }
+        shopping_list.append(row)
+
+    return shopping_list
