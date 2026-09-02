@@ -22,7 +22,12 @@ from .parser import (
     parse_user_inventory,
     parse_with_verification,
 )
-from .presets import BOM_PRESETS, get_preset_metadata
+from .presets import (
+    BOM_PRESETS,
+    PresetCatalog,
+    PresetLookupEntry,
+    get_preset_metadata,
+)
 from .sourcing import (
     generate_pedalpcb_url,
     generate_search_term,
@@ -41,9 +46,12 @@ from .strategies import (
     PDFParserStrategy,
 )
 from .types import (
+    AlternativeSpec,
+    ChecklistPart,
     Inventory,
     PartData,
     ProjectSlot,
+    ShoppingListRow,
     StatsDict,
     create_empty_inventory,
     create_empty_stats,
@@ -60,9 +68,11 @@ from .utils import (
 
 __all__ = [
     "BOM_PRESETS",
+    "AlternativeSpec",
     "BOMParserContext",
     "BOMParserStrategy",
     "CSVParserStrategy",
+    "ChecklistPart",
     "ComponentCategory",
     "ComponentSpec",
     "FeedbackRating",
@@ -72,7 +82,10 @@ __all__ = [
     "PDFParserStrategy",
     "ParseResult",
     "PartData",
+    "PresetCatalog",
+    "PresetLookupEntry",
     "ProjectSlot",
+    "ShoppingListRow",
     "StatsDict",
     "calculate_net_needs",
     "categorize_part",

@@ -19,7 +19,7 @@ from src.bom_lib import constants
 from src.bom_lib.classifier import normalize_value_to_quantity
 from src.bom_lib.constants import AUTO_INJECT_SOURCE
 from src.bom_lib.enums import ComponentCategory, ComponentSpec
-from src.bom_lib.types import Inventory, StatsDict
+from src.bom_lib.types import AlternativeSpec, Inventory, StatsDict
 from src.bom_lib.units import ureg
 from src.bom_lib.utils import (
     float_to_search_string,
@@ -27,11 +27,11 @@ from src.bom_lib.utils import (
 )
 
 
-def _format_alts(alts: list[Any]) -> str:
+def _format_alts(alts: list[AlternativeSpec]) -> str:
     """Format an alternatives list into a '💡 TRY: ...' string."""
     txt_parts = [
-        f"{item[0]} ({item[1]}{': ' + item[2] if len(item) > 2 else ''})"
-        for item in alts
+        f"{alt.name} ({alt.profile}{': ' + alt.justification if alt.justification else ''})"
+        for alt in alts
     ]
     return f"💡 TRY: {', '.join(txt_parts)}"
 

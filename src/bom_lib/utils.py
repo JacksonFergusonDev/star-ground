@@ -9,12 +9,11 @@ This module handles the low-level formatting logic, including:
 
 import re
 from decimal import Decimal
-from typing import Any
 
 from src.bom_lib.grammar import parse_si_value
 
 
-def natural_sort_key(ref: str) -> list[Any]:
+def natural_sort_key(ref: str) -> list[int | str]:
     """Generates a sort key for natural alphanumeric sorting.
 
     Splits strings into text and numeric chunks so that 'R10' comes

@@ -2,7 +2,7 @@
 
 import re
 from collections import defaultdict
-from typing import Any
+from typing import Any, NamedTuple, TypedDict
 
 BOM_PRESETS: dict[str, Any]
 
@@ -11,20 +11,52 @@ try:
 except ImportError:
     BOM_PRESETS = {}
 
-__all__ = ["BOM_PRESETS", "get_preset_metadata"]
+
+class PresetLookupEntry(TypedDict):
+    """A flattened preset lookup entry for filtering and search.
+
+    Attributes:
+        full_key: The full preset dictionary key (e.g. '[PedalPCB] [Boost] Triangulum Boost').
+        source: Source brand / origin (e.g. 'PedalPCB').
+        category: Circuit category (e.g. 'Boost', 'Overdrive', 'Misc').
+        name: Circuit name (e.g. 'Triangulum Boost').
+    """
+
+    full_key: str
+    source: str
+    category: str
+    name: str
 
 
-def get_preset_metadata() -> tuple[
-    list[str], dict[str, list[str]], list[dict[str, Any]]
-]:
+class PresetCatalog(NamedTuple):
+    """Catalog metadata extracted from BOM presets for UI filtering.
+
+    Attributes:
+        sources: Sorted list of distinct sources (e.g. ['PedalPCB', 'Tayda']).
+        categories: Mapping of source brand to sorted list of categories.
+        lookup: Flattened list of preset lookup entries.
+    """
+
+    sources: list[str]
+    categories: dict[str, list[str]]
+    lookup: list[PresetLookupEntry]
+
+
+__all__ = [
+    "BOM_PRESETS",
+    "PresetCatalog",
+    "PresetLookupEntry",
+    "get_preset_metadata",
+]
+
+
+def get_preset_metadata() -> PresetCatalog:
     """Parses BOM_PRESETS keys into a queryable structure.
 
     Returns:
-        sources (list): Unique sources (e.g., 'PedalPCB', 'Tayda')
-        categories (dict): Map of Source -> List of Categories
-        lookup (list): List of dicts {'key', 'source', 'category', 'name'}
+        PresetCatalog containing sorted sources, category mapping, and lookup entries.
     """
-    lookup = []
+    lookup: list[PresetLookupEntry] = []
     sources = set()
     categories = defaultdict(set)
 
@@ -50,8 +82,8 @@ def get_preset_metadata() -> tuple[
                 }
             )
 
-    return (
-        sorted(sources),
-        {k: sorted(v) for k, v in categories.items()},
-        lookup,
+    return PresetCatalog(
+        sources=sorted(sources),
+        categories={k: sorted(v) for k, v in categories.items()},
+        lookup=lookup,
     )
