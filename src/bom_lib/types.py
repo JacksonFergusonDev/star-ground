@@ -12,7 +12,7 @@ from typing import Any, NamedTuple, NotRequired, TypedDict
 
 import pint
 
-from src.bom_lib.enums import ComponentCategory, InputMethod
+from src.bom_lib.enums import ComponentCategory, ComponentSpec, InputMethod
 
 
 @dataclass
@@ -84,6 +84,26 @@ class AlternativeSpec(NamedTuple):
     name: str
     profile: str
     justification: str | None = None
+
+
+class ResolvedPartSourcing(NamedTuple):
+    """Resolved purchasing and supplier details for a component.
+
+    Attributes:
+        origin: Sourcing origin ('Circuit Board', 'Hardware Kit', 'Extras').
+        buy_qty: Recommended purchase quantity with buffer applied.
+        notes: Sourcing notes, package warnings, or Silicon Sommelier recommendations.
+        spec_type: Physical material/dielectric specification.
+        search_term: Optimized search string for supplier catalog lookup.
+        supplier_url: Direct link to supplier product page or catalog search.
+    """
+
+    origin: str
+    buy_qty: int
+    notes: str
+    spec_type: ComponentSpec
+    search_term: str
+    supplier_url: str
 
 
 class ChecklistPart(TypedDict):

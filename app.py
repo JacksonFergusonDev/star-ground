@@ -11,29 +11,21 @@ import streamlit as st
 from src.bom_lib import (
     BOM_PRESETS,
     BOMParserContext,
-    ComponentCategory,
     FeedbackRating,
     InputMethod,
     ProjectSlot,
-    ShoppingListRow,
     StatsDict,
-    calculate_net_needs,
+    build_shopping_list,
     create_empty_inventory,
     create_empty_stats,
-    generate_pedalpcb_url,
-    generate_search_term,
-    generate_tayda_url,
-    get_buy_details,
     get_clean_name,
     get_preset_metadata,
     get_residual_report,
-    get_spec_type,
     get_standard_hardware,
     parse_user_inventory,
     rename_source_in_inventory,
     sort_inventory,
 )
-from src.bom_lib.constants import AUTO_INJECT_SOURCE
 from src.exporters import (
     BASE_SHOPPING_LIST_COLS,
     generate_shopping_list_csv,
@@ -606,113 +598,16 @@ if st.session_state.inventory and st.session_state.stats:
     """)
 
     # 2. Build the Shopping List
-    final_data: list[ShoppingListRow] = []
-
-    # STEP A: Inject Hardware (Mutates Inventory In-Place)
     calc_pedal_count = sum(slot.count for slot in st.session_state.pedal_slots)
-    # No return value, just mutation
     get_standard_hardware(inventory, calc_pedal_count)
 
-    # STEP B: Process the Unified Inventory
     stock = st.session_state.get("stock")
-
-    # If stock exists, we calculate net needs, otherwise net = gross
-    if stock:
-        # Calculate Net Needs (Deficit)
-        net_inventory = calculate_net_needs(inventory, stock)
-        display_source = inventory
-    else:
-        display_source = inventory
-        net_inventory = inventory
-
-    sorted_parts = sort_inventory(display_source)
-
-    for part_key, item in sorted_parts:
-        if " | " not in part_key:
-            continue
-
-        cat_str, value = part_key.split(" | ", 1)
-        try:
-            category = ComponentCategory(cat_str)
-        except ValueError:
-            category = ComponentCategory.UNKNOWN
-
-        gross_qty = item["qty"]
-
-        # Lookup Net Need
-        net_item = net_inventory.get(part_key)
-        net_qty = net_item["qty"] if net_item else 0
-
-        # Lookup Stock for Display
-        in_stock = 0
-        if stock:
-            s_item = stock.get(part_key)
-            in_stock = s_item["qty"] if s_item else 0
-
-        sources = item["sources"]
-
-        # --- FILTERING LOGIC ---
-
-        # Check if this is PURELY an auto-injected item (no parsed sources)
-        is_pure_hardware = len(sources) == 1 and AUTO_INJECT_SOURCE in sources
-
-        if is_pure_hardware and not show_hardware:
-            continue
-
-        # Check for Extras (Sockets/Adapters)
-        is_extra = "SOCKET" in value or "ADAPTER" in value
-        if is_extra and not show_extras:
-            continue
-
-        # --- ORIGIN ASSIGNMENT ---
-        if is_pure_hardware:
-            origin = "Hardware Kit"
-        elif is_extra:
-            origin = "Extras"
-        else:
-            origin = "Circuit Board"
-
-        # Calculate purchasing requirements
-        buy_qty, note = get_buy_details(
-            category, value, net_qty, val_qty=item.get("val_qty")
-        )
-
-        # Append context from Auto-Inject if present
-        auto_inject_notes = sources.get(AUTO_INJECT_SOURCE, [])
-
-        if auto_inject_notes and origin != "Hardware Kit":
-            formatted_notes = ", ".join(auto_inject_notes)
-            note += f" | 🤖 Standard Part: {formatted_notes}"
-
-        spec_type = get_spec_type(category, value)
-        search_term = generate_search_term(category, value, spec_type)
-
-        # Link Generation Logic
-        is_pedalpcb_source = any("PedalPCB" in s for s in sources)
-        is_tayda_source = any("Tayda" in s for s in sources)
-
-        if category == ComponentCategory.PCB:
-            if is_pedalpcb_source and not is_tayda_source:
-                url = generate_pedalpcb_url(search_term)
-            else:
-                url = generate_tayda_url(search_term)
-        else:
-            url = generate_tayda_url(search_term)
-
-        final_data.append(
-            {
-                "Origin": origin,
-                "Category": category.value,
-                "Part": value,
-                "BOM Qty": gross_qty,
-                "In Stock": in_stock,
-                "Net Need": net_qty,
-                "Buy Qty": buy_qty,
-                "Notes": note,
-                "Search Term": search_term,
-                "Tayda_Link": url,
-            }
-        )
+    final_data = build_shopping_list(
+        inventory=inventory,
+        stock=stock,
+        show_hardware=show_hardware,
+        show_extras=show_extras,
+    )
 
     # 3. Render
     st.subheader("🛒 Master Shopping List")
