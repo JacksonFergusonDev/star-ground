@@ -18,6 +18,7 @@ from src.bom_lib import (
     StatsDict,
     calculate_net_needs,
     create_empty_inventory,
+    create_empty_stats,
     generate_pedalpcb_url,
     generate_search_term,
     generate_tayda_url,
@@ -31,7 +32,12 @@ from src.bom_lib import (
     rename_source_in_inventory,
     sort_inventory,
 )
-from src.exporters import generate_shopping_list_csv, generate_stock_update_csv
+from src.bom_lib.constants import AUTO_INJECT_SOURCE
+from src.exporters import (
+    BASE_SHOPPING_LIST_COLS,
+    generate_shopping_list_csv,
+    generate_stock_update_csv,
+)
 from src.feedback import save_feedback
 from src.pdf_generator import generate_master_zip, generate_pdf_bundle
 
@@ -479,14 +485,7 @@ if st.button("Generate Master List", type="primary", width="stretch"):
 
     inventory = create_empty_inventory()
 
-    stats: StatsDict = {
-        "lines_read": 0,
-        "parts_found": 0,
-        "residuals": [],
-        "extracted_title": None,
-        "seen_refs": set(),
-        "errors": [],
-    }
+    stats: StatsDict = create_empty_stats()
 
     # Process Each Slot
     parser_context = BOMParserContext()
@@ -654,7 +653,7 @@ if st.session_state.inventory and st.session_state.stats:
         # --- FILTERING LOGIC ---
 
         # Check if this is PURELY an auto-injected item (no parsed sources)
-        is_pure_hardware = len(sources) == 1 and "Auto-Inject" in sources
+        is_pure_hardware = len(sources) == 1 and AUTO_INJECT_SOURCE in sources
 
         if is_pure_hardware and not show_hardware:
             continue
@@ -678,7 +677,7 @@ if st.session_state.inventory and st.session_state.stats:
         )
 
         # Append context from Auto-Inject if present
-        auto_inject_notes = sources.get("Auto-Inject", [])
+        auto_inject_notes = sources.get(AUTO_INJECT_SOURCE, [])
 
         if auto_inject_notes and origin != "Hardware Kit":
             formatted_notes = ", ".join(auto_inject_notes)
@@ -718,15 +717,7 @@ if st.session_state.inventory and st.session_state.stats:
     st.subheader("🛒 Master Shopping List")
 
     # Dynamic Columns (Conditionally add stock columns)
-    display_cols = [
-        "Category",
-        "Part",
-        "BOM Qty",
-        "Buy Qty",
-        "Notes",
-        "Tayda_Link",
-        "Origin",
-    ]
+    display_cols = BASE_SHOPPING_LIST_COLS.copy()
 
     # Only add Stock columns if stock was actually provided
     if stock:

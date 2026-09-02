@@ -2,6 +2,16 @@ import csv
 import io
 from typing import Any
 
+BASE_SHOPPING_LIST_COLS = [
+    "Category",
+    "Part",
+    "BOM Qty",
+    "Buy Qty",
+    "Notes",
+    "Tayda_Link",
+    "Origin",
+]
+
 
 def generate_shopping_list_csv(
     data: list[dict[str, Any]], use_excel_formulas: bool = False
@@ -23,16 +33,8 @@ def generate_shopping_list_csv(
     csv_buf = io.StringIO()
 
     # Define columns based on data presence
-    fields = [
-        "Category",
-        "Part",
-        "BOM Qty",
-        "Buy Qty",
-        "Notes",
-        "Search Term",
-        "Tayda_Link",
-        "Origin",
-    ]
+    fields = BASE_SHOPPING_LIST_COLS.copy()
+    fields.insert(5, "Search Term")
 
     # Inject Stock columns if they exist in the dataset
     if data and "Net Need" in data[0]:

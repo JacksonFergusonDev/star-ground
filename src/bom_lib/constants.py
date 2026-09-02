@@ -356,3 +356,5 @@ IGNORE_VALUES = [
     "PACKAGE",
     "PKG",
 ]
+
+AUTO_INJECT_SOURCE = "Auto-Inject"
