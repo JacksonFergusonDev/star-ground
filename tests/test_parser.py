@@ -34,6 +34,7 @@ from src.bom_lib import (
     parse_value_to_decimal,
     parse_with_verification,
 )
+from src.bom_lib.classifier import normalize_value_to_quantity
 from src.bom_lib.enums import ComponentCategory, ComponentSpec
 from src.bom_lib.types import Inventory
 
@@ -130,11 +131,21 @@ def test_warning_flags():
     in the final shopping list.
     """
     # Test Obsolete Warning
-    _, note = get_buy_details(ComponentCategory.TRANSISTORS, "2N5457", 1)
+    _, note = get_buy_details(
+        ComponentCategory.TRANSISTORS,
+        "2N5457",
+        1,
+        val_qty=normalize_value_to_quantity(ComponentCategory.TRANSISTORS, "2N5457"),
+    )
     assert "Obsolete" in note
 
     # Test SMD Warning
-    _, note = get_buy_details(ComponentCategory.TRANSISTORS, "MMBF5457", 1)
+    _, note = get_buy_details(
+        ComponentCategory.TRANSISTORS,
+        "MMBF5457",
+        1,
+        val_qty=normalize_value_to_quantity(ComponentCategory.TRANSISTORS, "MMBF5457"),
+    )
     assert "SMD Part" in note
 
 
@@ -172,7 +183,9 @@ def test_buy_logic_scaling(qty):
     category = ComponentCategory.RESISTORS
     val = "10k"
 
-    buy_qty, _ = get_buy_details(category, val, qty)
+    buy_qty, _ = get_buy_details(
+        category, val, qty, val_qty=normalize_value_to_quantity(category, val)
+    )
 
     # Invariant: We should never buy FEWER than we need
     assert buy_qty >= qty
@@ -234,18 +247,33 @@ def test_suspicious_physics_warnings():
     """
     # 1. Resistor too small (0.1 Ohm)
     # Note: 0.1 -> parse_value_to_decimal -> 0.1
-    _, note_r = get_buy_details(ComponentCategory.RESISTORS, "0.1", 1)
+    _, note_r = get_buy_details(
+        ComponentCategory.RESISTORS,
+        "0.1",
+        1,
+        val_qty=normalize_value_to_quantity(ComponentCategory.RESISTORS, "0.1"),
+    )
     assert "Suspicious" in note_r
     assert "< 1Ω" in note_r
 
     # 2. Capacitor too huge (1 Farad)
     # Note: "1F" -> parse_value_to_decimal -> 1.0 (Huge!)
-    _, note_c = get_buy_details(ComponentCategory.CAPACITORS, "1F", 1)
+    _, note_c = get_buy_details(
+        ComponentCategory.CAPACITORS,
+        "1F",
+        1,
+        val_qty=normalize_value_to_quantity(ComponentCategory.CAPACITORS, "1F"),
+    )
     assert "Suspicious" in note_c
     assert "> 10mF" in note_c
 
     # 3. Normal values should be fine
-    _, note_ok = get_buy_details(ComponentCategory.RESISTORS, "10k", 1)
+    _, note_ok = get_buy_details(
+        ComponentCategory.RESISTORS,
+        "10k",
+        1,
+        val_qty=normalize_value_to_quantity(ComponentCategory.RESISTORS, "10k"),
+    )
     assert "Suspicious" not in note_ok
 
 
@@ -256,15 +284,30 @@ def test_resistor_rounding_logic():
     Rule: Add a buffer of 5, then round UP to the nearest 10.
     """
     # Case 1: Need 1. Buffer = 6. Round up -> 10.
-    qty, _ = get_buy_details(ComponentCategory.RESISTORS, "10k", 1)
+    qty, _ = get_buy_details(
+        ComponentCategory.RESISTORS,
+        "10k",
+        1,
+        val_qty=normalize_value_to_quantity(ComponentCategory.RESISTORS, "10k"),
+    )
     assert qty == 10
 
     # Case 2: Need 6. Buffer = 11. Round up -> 20.
-    qty, _ = get_buy_details(ComponentCategory.RESISTORS, "10k", 6)
+    qty, _ = get_buy_details(
+        ComponentCategory.RESISTORS,
+        "10k",
+        6,
+        val_qty=normalize_value_to_quantity(ComponentCategory.RESISTORS, "10k"),
+    )
     assert qty == 20
 
     # Case 3: Need 15. Buffer = 20. Round up -> 20 (Exact match).
-    qty, _ = get_buy_details(ComponentCategory.RESISTORS, "10k", 15)
+    qty, _ = get_buy_details(
+        ComponentCategory.RESISTORS,
+        "10k",
+        15,
+        val_qty=normalize_value_to_quantity(ComponentCategory.RESISTORS, "10k"),
+    )
     assert qty == 20
 
 
@@ -278,21 +321,41 @@ def test_capacitor_material_recommendations():
     - Bulk (> 1uF): Electrolytic
     """
     # Case 1: Pico range (<= 1nF) -> Class 1 Ceramic (C0G)
-    _, note_p = get_buy_details(ComponentCategory.CAPACITORS, "100p", 1)
+    _, note_p = get_buy_details(
+        ComponentCategory.CAPACITORS,
+        "100p",
+        1,
+        val_qty=normalize_value_to_quantity(ComponentCategory.CAPACITORS, "100p"),
+    )
     assert "Class 1 Ceramic" in note_p
 
     # Case 2: Nano range (> 1nF, < 1uF) -> Box Film
-    _, note_n = get_buy_details(ComponentCategory.CAPACITORS, "100n", 1)
+    _, note_n = get_buy_details(
+        ComponentCategory.CAPACITORS,
+        "100n",
+        1,
+        val_qty=normalize_value_to_quantity(ComponentCategory.CAPACITORS, "100n"),
+    )
     assert ComponentSpec.BOX_FILM.value in note_n
     assert ComponentSpec.ELECTROLYTIC.value not in note_n
 
     # Case 3: 1uF Crossover -> Box Film + Warning
-    _, note_1u = get_buy_details(ComponentCategory.CAPACITORS, "1u", 1)
+    _, note_1u = get_buy_details(
+        ComponentCategory.CAPACITORS,
+        "1u",
+        1,
+        val_qty=normalize_value_to_quantity(ComponentCategory.CAPACITORS, "1u"),
+    )
     assert ComponentSpec.BOX_FILM.value in note_1u
     assert "Check BOM" in note_1u
 
     # Case 4: Bulk range (> 1uF) -> Electrolytic
-    _, note_bulk = get_buy_details(ComponentCategory.CAPACITORS, "100u", 1)
+    _, note_bulk = get_buy_details(
+        ComponentCategory.CAPACITORS,
+        "100u",
+        1,
+        val_qty=normalize_value_to_quantity(ComponentCategory.CAPACITORS, "100u"),
+    )
     assert ComponentSpec.ELECTROLYTIC.value in note_bulk
 
 
@@ -344,17 +407,42 @@ def test_hardware_injection_and_smart_merge():
 def test_spec_type_logic():
     """Verifies correct capacitor dielectric classification based on value."""
     # Pico range -> MLCC
-    assert get_spec_type(ComponentCategory.CAPACITORS, "100p") == ComponentSpec.MLCC
+    assert (
+        get_spec_type(
+            ComponentCategory.CAPACITORS,
+            "100p",
+            val_qty=normalize_value_to_quantity(ComponentCategory.CAPACITORS, "100p"),
+        )
+        == ComponentSpec.MLCC
+    )
 
     # Nano range -> Box Film
-    assert get_spec_type(ComponentCategory.CAPACITORS, "10n") == ComponentSpec.BOX_FILM
+    assert (
+        get_spec_type(
+            ComponentCategory.CAPACITORS,
+            "10n",
+            val_qty=normalize_value_to_quantity(ComponentCategory.CAPACITORS, "10n"),
+        )
+        == ComponentSpec.BOX_FILM
+    )
 
     # The 1uF Crossover -> Box Film
-    assert get_spec_type(ComponentCategory.CAPACITORS, "1u") == ComponentSpec.BOX_FILM
+    assert (
+        get_spec_type(
+            ComponentCategory.CAPACITORS,
+            "1u",
+            val_qty=normalize_value_to_quantity(ComponentCategory.CAPACITORS, "1u"),
+        )
+        == ComponentSpec.BOX_FILM
+    )
 
     # Bulk range -> Electrolytic
     assert (
-        get_spec_type(ComponentCategory.CAPACITORS, "100u")
+        get_spec_type(
+            ComponentCategory.CAPACITORS,
+            "100u",
+            val_qty=normalize_value_to_quantity(ComponentCategory.CAPACITORS, "100u"),
+        )
         == ComponentSpec.ELECTROLYTIC
     )
 
@@ -373,12 +461,22 @@ def test_expert_system_recommendations():
     audiophile-grade alternatives or usage notes.
     """
     # 1. IC Mojo (TL072 -> OPA2134)
-    _, note_ic = get_buy_details(ComponentCategory.ICS, "TL072", 1)
+    _, note_ic = get_buy_details(
+        ComponentCategory.ICS,
+        "TL072",
+        1,
+        val_qty=normalize_value_to_quantity(ComponentCategory.ICS, "TL072"),
+    )
     assert "OPA2134" in note_ic
     assert "Hi-Fi" in note_ic
 
     # 2. Diode Textures (1N4148 -> Tube-like)
-    _, note_d = get_buy_details(ComponentCategory.DIODES, "1N4148", 1)
+    _, note_d = get_buy_details(
+        ComponentCategory.DIODES,
+        "1N4148",
+        1,
+        val_qty=normalize_value_to_quantity(ComponentCategory.DIODES, "1N4148"),
+    )
     assert "1N4001" in note_d
     assert "Tube-like" in note_d
 
@@ -524,12 +622,22 @@ def test_zero_buy_guard():
     """
     # Standard logic: 10k -> Buffer +5 -> Round up -> Buy 10.
     # BUT if input is 0, we must buy 0.
-    qty, note = get_buy_details(ComponentCategory.RESISTORS, "10k", 0)
+    qty, note = get_buy_details(
+        ComponentCategory.RESISTORS,
+        "10k",
+        0,
+        val_qty=normalize_value_to_quantity(ComponentCategory.RESISTORS, "10k"),
+    )
     assert qty == 0
     assert note == ""
 
     # Negative input safety check
-    qty_neg, _ = get_buy_details(ComponentCategory.RESISTORS, "10k", -5)
+    qty_neg, _ = get_buy_details(
+        ComponentCategory.RESISTORS,
+        "10k",
+        -5,
+        val_qty=normalize_value_to_quantity(ComponentCategory.RESISTORS, "10k"),
+    )
     assert qty_neg == 0
 
 
@@ -610,7 +718,7 @@ def test_preset_integrity():
     3. The parser can successfully find parts in it.
     """
     for name, data in BOM_PRESETS.items():
-        val = data["bom_text"] if isinstance(data, dict) else data
+        val = data["bom_text"]
         raw_text = str(val)
 
         # Sanity check: Text should exist

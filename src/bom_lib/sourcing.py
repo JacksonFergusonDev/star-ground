@@ -16,7 +16,6 @@ from urllib.parse import quote_plus
 import pint
 
 from src.bom_lib import constants
-from src.bom_lib.classifier import normalize_value_to_quantity
 from src.bom_lib.constants import AUTO_INJECT_SOURCE
 from src.bom_lib.enums import ComponentCategory, ComponentSpec
 from src.bom_lib.manager import calculate_net_needs, sort_inventory
@@ -125,8 +124,6 @@ def get_spec_type(
         or ComponentSpec.NONE if not applicable.
     """
     if category == ComponentCategory.CAPACITORS:
-        if val_qty is None:
-            val_qty = normalize_value_to_quantity(category, val)
         if val_qty is None:
             return ComponentSpec.NONE
 
@@ -259,10 +256,6 @@ def get_buy_details(
 
     buy = count
     note = ""
-
-    # Fallback if val_qty wasn't passed (for backward compatibility or tests)
-    if val_qty is None:
-        val_qty = normalize_value_to_quantity(category, val)
 
     # Pre-fetch rules if they exist for this category
     rules = constants.PURCHASING_CONFIG.get(category.value, {})
