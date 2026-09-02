@@ -2,12 +2,25 @@
 
 import re
 from collections import defaultdict
-from typing import Any, NamedTuple, TypedDict
+from typing import NamedTuple, TypedDict, cast
 
-BOM_PRESETS: dict[str, Any]
+
+class PresetData(TypedDict):
+    """Raw BOM preset data structure.
+
+    Attributes:
+        bom_text: The complete text content of the parsed BOM preset.
+    """
+
+    bom_text: str
+
+
+BOM_PRESETS: dict[str, PresetData]
 
 try:
-    from ._presets_data import BOM_PRESETS
+    from . import _presets_data
+
+    BOM_PRESETS = cast(dict[str, PresetData], _presets_data.BOM_PRESETS)
 except ImportError:
     BOM_PRESETS = {}
 
@@ -45,6 +58,7 @@ class PresetCatalog(NamedTuple):
 __all__ = [
     "BOM_PRESETS",
     "PresetCatalog",
+    "PresetData",
     "PresetLookupEntry",
     "get_preset_metadata",
 ]

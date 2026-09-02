@@ -26,6 +26,7 @@ from src.bom_lib.types import (
     ResolvedPartSourcing,
     ShoppingListRow,
     StatsDict,
+    parse_component_key,
 )
 from src.bom_lib.units import ureg
 from src.bom_lib.utils import (
@@ -531,12 +532,7 @@ def build_shopping_list(
         if " | " not in part_key:
             continue
 
-        cat_str, value = part_key.split(" | ", 1)
-        try:
-            category = ComponentCategory(cat_str)
-        except ValueError:
-            category = ComponentCategory.UNKNOWN
-
+        category, value = parse_component_key(part_key)
         sources = item["sources"]
 
         if is_pure_hardware(sources) and not show_hardware:

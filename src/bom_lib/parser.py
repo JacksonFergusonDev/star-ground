@@ -9,16 +9,17 @@ import csv
 import logging
 import re
 import traceback
-from typing import Any
 
 from src.bom_lib import constants
 from src.bom_lib.classifier import categorize_part, normalize_value_by_category
 from src.bom_lib.enums import ComponentCategory
 from src.bom_lib.types import (
     Inventory,
+    PDFPageExtraction,
     StatsDict,
     create_empty_inventory,
     create_empty_stats,
+    make_component_key,
 )
 from src.bom_lib.utils import expand_refs
 
@@ -79,7 +80,7 @@ def ingest_bom_line(
 
         if cat:
             parts_found += 1
-            main_key = f"{cat.value} | {clean_val}"
+            main_key = make_component_key(cat, clean_val or "")
 
             # 1. Record Main Part
             inventory.add_part(source, main_key, r)
@@ -95,7 +96,7 @@ def ingest_bom_line(
 def _record_pcb(
     inventory: Inventory, source_name: str, name: str, stats: StatsDict
 ) -> None:
-    key = f"PCB | {name}"
+    key = make_component_key(ComponentCategory.PCB, name)
     inventory[key]["qty"] += 1
     if "PCB" not in inventory[key]["sources"][source_name]:
         inventory[key]["sources"][source_name].append("PCB")
@@ -253,7 +254,7 @@ def parse_user_inventory(filepath: str) -> Inventory:
                 except ValueError:
                     continue
                 clean_val = normalize_value_by_category(cat_enum, val)
-                key = f"{cat_enum.value} | {clean_val}"
+                key = make_component_key(cat_enum, clean_val)
 
                 stock.add_part("User Stock", key, ref="", qty=qty)
 
@@ -261,7 +262,7 @@ def parse_user_inventory(filepath: str) -> Inventory:
 
 
 def _parse_via_tables(
-    pages_data: list[dict[str, Any]],
+    pages_data: list[PDFPageExtraction],
     inventory: Inventory,
     source_name: str,
     stats: StatsDict,
@@ -328,7 +329,7 @@ def _parse_via_tables(
 
 
 def _parse_via_regex(
-    pages_data: list[dict[str, Any]],
+    pages_data: list[PDFPageExtraction],
     inventory: Inventory,
     source_name: str,
     stats: StatsDict,
@@ -478,7 +479,7 @@ def parse_pedalpcb_pdf(filepath: str, source_name: str) -> tuple[Inventory, Stat
         # Phase 2: Extraction
         try:
             # Iterate pages once to grab expensive text/table data
-            pages_data = []
+            pages_data: list[PDFPageExtraction] = []
             for page in pdf.pages:
                 pages_data.append(
                     {"tables": page.extract_tables(), "text": page.extract_text()}

@@ -19,6 +19,7 @@ from fpdf import FPDF
 from fpdf.enums import XPos, YPos
 
 from src.bom_lib import ChecklistPart, Inventory, ProjectSlot, deduplicate_refs
+from src.bom_lib.types import parse_component_key
 
 
 def condense_refs(refs: list[str]) -> str:
@@ -426,7 +427,8 @@ def _write_field_manuals(
             if project_name in sources:
                 unique_refs = deduplicate_refs(sources[project_name])
                 if unique_refs:
-                    cat, val = key.split(" | ", 1)
+                    cat_enum, val = parse_component_key(key)
+                    cat = cat_enum.value
 
                     # Annotations Logic
                     row_notes = ""
@@ -480,7 +482,7 @@ def _write_stickers(
             if project_name in sources:
                 unique_refs = deduplicate_refs(sources[project_name])
                 if unique_refs:
-                    _, val = key.split(" | ", 1)
+                    val = parse_component_key(key)[1]
                     project_parts.append((val, unique_refs))
 
         if not project_parts:

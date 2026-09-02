@@ -6,10 +6,9 @@ from abc import ABC, abstractmethod
 from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import dataclass
-from typing import Any
 
 from src.bom_lib.enums import InputMethod
-from src.bom_lib.types import Inventory, StatsDict
+from src.bom_lib.types import Inventory, RawBOMData, StatsDict
 
 
 @dataclass
@@ -26,20 +25,22 @@ class BOMParserStrategy(ABC):
     """Abstract base class for all BOM parsing strategies."""
 
     @abstractmethod
-    def can_handle(self, method: InputMethod, data: Any) -> bool:
+    def can_handle(self, method: InputMethod, data: RawBOMData) -> bool:
         """Determine if this strategy can parse the given input data."""
         pass
 
     @staticmethod
-    def _read_to_bytes(data: Any, strategy_name: str) -> bytes:
-        if hasattr(data, "getvalue"):
-            raw = data.getvalue()
-        elif hasattr(data, "read"):
-            raw = data.read()
-        elif isinstance(data, (bytes, bytearray)):
+    def _read_to_bytes(data: RawBOMData, strategy_name: str) -> bytes:
+        if data is None:
+            raise ValueError(f"Unsupported data type for {strategy_name}: None")
+        if isinstance(data, (bytes, bytearray)):
             raw = bytes(data)
         elif isinstance(data, str):
             raw = data.encode("utf-8")
+        elif hasattr(data, "getvalue"):
+            raw = data.getvalue()
+        elif hasattr(data, "read"):
+            raw = data.read()
         else:
             raise ValueError(f"Unsupported data type for {strategy_name}: {type(data)}")
         return raw if isinstance(raw, bytes) else raw.encode("utf-8")
@@ -57,6 +58,6 @@ class BOMParserStrategy(ABC):
                 os.remove(tmp_path)
 
     @abstractmethod
-    def parse(self, data: Any, source_name: str) -> ParseResult:
+    def parse(self, data: RawBOMData, source_name: str) -> ParseResult:
         """Parse the given input data into a standard ParseResult."""
         pass
