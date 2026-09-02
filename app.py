@@ -134,7 +134,10 @@ def render_preset_selector(slot: ProjectSlot, idx: int) -> Any:
         Any: The Streamlit widget object for the main selector.
     """
     # Load metadata (cached)
-    all_sources, cat_map, lookup = get_preset_metadata()
+    preset_catalog = get_preset_metadata()
+    all_sources = preset_catalog.sources
+    cat_map = preset_catalog.categories
+    lookup = preset_catalog.lookup
 
     # Layout: 2 small filter columns, 1 main selector
     c_filt1, c_filt2, c_main = st.columns([1, 1, 2])
@@ -244,13 +247,8 @@ def update_from_preset(slot_id: uuid.UUID) -> None:
         # 1. Update BOM Data
         preset_obj = BOM_PRESETS[new_preset]
 
-        # Handle New Dict Format vs Legacy String
-        if isinstance(preset_obj, dict):
-            slot.data = preset_obj["bom_text"]
-            slot.source_path = preset_obj.get("source_path")
-        else:
-            slot.data = preset_obj
-            slot.source_path = None
+        slot.data = preset_obj["bom_text"]
+        slot.source_path = preset_obj.get("source_path")
 
         # Force the text area to reflect this new data
         st.session_state[f"text_preset_{slot_id}"] = slot.data
@@ -291,7 +289,6 @@ def _reset_slot_state(slot: ProjectSlot, new_method: InputMethod) -> None:
     slot.source_path = None
     slot.cached_pdf_bytes = None
     slot.last_loaded_preset = None
-    # pdf_path was legacy, ignored
 
     # 3. Clear Streamlit Session Keys
     # We clear the UI widgets so they don't retain old values
@@ -327,11 +324,8 @@ def on_method_change(slot_id: uuid.UUID) -> None:
         first_preset = sorted(BOM_PRESETS.keys())[0]
         preset_obj = BOM_PRESETS[first_preset]
 
-        if isinstance(preset_obj, dict):
-            slot.data = preset_obj["bom_text"]
-            slot.source_path = preset_obj.get("source_path")
-        else:
-            slot.data = preset_obj
+        slot.data = preset_obj["bom_text"]
+        slot.source_path = preset_obj.get("source_path")
 
         slot.last_loaded_preset = first_preset
 

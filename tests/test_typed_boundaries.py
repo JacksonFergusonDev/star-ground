@@ -35,11 +35,7 @@ def test_preset_catalog_structure() -> None:
     assert isinstance(catalog.categories, dict)
     assert isinstance(catalog.lookup, list)
 
-    # Tuple unpacking compatibility
-    sources, categories, lookup = get_preset_metadata()
-    assert sources == catalog.sources
-    assert categories == catalog.categories
-    assert lookup == catalog.lookup
+    # Tuple unpacking backward compatibility removed
 
     if catalog.lookup:
         entry: PresetLookupEntry = catalog.lookup[0]
