@@ -17,6 +17,7 @@ import pint
 
 from src.bom_lib import constants
 from src.bom_lib.classifier import normalize_value_to_quantity
+from src.bom_lib.constants import AUTO_INJECT_SOURCE
 from src.bom_lib.enums import ComponentCategory, ComponentSpec
 from src.bom_lib.types import Inventory, StatsDict
 from src.bom_lib.units import ureg
@@ -24,6 +25,15 @@ from src.bom_lib.utils import (
     float_to_search_string,
     parse_value_to_decimal,
 )
+
+
+def _format_alts(alts: list[Any]) -> str:
+    """Format an alternatives list into a '💡 TRY: ...' string."""
+    txt_parts = [
+        f"{item[0]} ({item[1]}{': ' + item[2] if len(item) > 2 else ''})"
+        for item in alts
+    ]
+    return f"💡 TRY: {', '.join(txt_parts)}"
 
 
 def get_residual_report(stats: StatsDict) -> list[str]:
@@ -246,9 +256,10 @@ def get_buy_details(
     if val_qty is None:
         val_qty = normalize_value_to_quantity(category, val)
 
-    if category == ComponentCategory.RESISTORS:
-        rules = constants.PURCHASING_CONFIG[ComponentCategory.RESISTORS.value]
+    # Pre-fetch rules if they exist for this category
+    rules = constants.PURCHASING_CONFIG.get(category.value, {})
 
+    if category == ComponentCategory.RESISTORS:
         buffered_qty = count + rules["buffer_add"]
         round_step = rules["round_to"]
         buy = math.ceil(buffered_qty / round_step) * round_step
@@ -261,7 +272,6 @@ def get_buy_details(
         buy = count + 1  # Fragile legs
 
     elif category == ComponentCategory.CAPACITORS:
-        rules = constants.PURCHASING_CONFIG[ComponentCategory.CAPACITORS.value]
         note_parts: list[str] = []
         buffer = rules["standard_buffer"]
 
@@ -296,11 +306,7 @@ def get_buy_details(
         # Check substitutions
         if val in constants.DIODE_ALTS:
             alts = constants.DIODE_ALTS[val]
-            txt_parts = [
-                f"{item[0]} ({item[1]}{': ' + item[2] if len(item) > 2 else ''})"
-                for item in alts
-            ]
-            note = f"💡 TRY: {', '.join(txt_parts)}"
+            note = _format_alts(alts)
 
     elif category == ComponentCategory.TRANSISTORS:
         buy = count + 1
@@ -315,11 +321,7 @@ def get_buy_details(
         clean_ic = re.sub(r"(CP|CN|P|N)$", "", val)
         if clean_ic in constants.IC_ALTS:
             alts = constants.IC_ALTS[clean_ic]
-            txt_parts = [
-                f"{item[0]} ({item[1]}{': ' + item[2] if len(item) > 2 else ''})"
-                for item in alts
-            ]
-            note += f" | 💡 TRY: {', '.join(txt_parts)}"
+            note += f" | {_format_alts(alts)}"
 
     elif category == ComponentCategory.CRYSTALS_OSCILLATORS:
         buy = count + 1
@@ -367,7 +369,7 @@ def get_standard_hardware(inventory: Inventory, pedal_count: int = 1) -> None:
 
         inventory[key]["qty"] += total_qty
         inventory[key]["refs"].append("HW")
-        inventory[key]["sources"]["Auto-Inject"].append(f"Auto-Inject ({note})")
+        inventory[key]["sources"][AUTO_INJECT_SOURCE].append(f"Auto-Inject ({note})")
 
     # 1. Smart Merges (Add to existing categories)
     inject(ComponentCategory.RESISTORS, "3.3k", 1, "LED CLR")

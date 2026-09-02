@@ -140,6 +140,18 @@ class Inventory(UserDict[str, PartData]):
                 self[key]["sources"][src].extend(refs * multiplier)
 
 
+def create_empty_stats() -> StatsDict:
+    """Factory function to return a zeroed StatsDict."""
+    return {
+        "lines_read": 0,
+        "parts_found": 0,
+        "residuals": [],
+        "extracted_title": None,
+        "seen_refs": set(),
+        "errors": [],
+    }
+
+
 def create_empty_inventory() -> Inventory:
     """Factory function to return new Inventory instance."""
     return Inventory()
