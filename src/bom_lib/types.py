@@ -34,14 +34,7 @@ class SupportsGetValue(Protocol):
 
 
 RawBOMData = (
-    str
-    | bytes
-    | bytearray
-    | list[str]
-    | SupportsRead
-    | SupportsGetValue
-    | dict[str, str]
-    | None
+    str | bytes | bytearray | list[str] | SupportsRead | SupportsGetValue | None
 )
 
 
@@ -185,20 +178,17 @@ ShoppingListRow = TypedDict(
 )
 
 
-def make_component_key(category: ComponentCategory | str, val: str) -> str:
-    """Formats a standardized inventory component key 'Category | Value'.
+def make_component_key(category: ComponentCategory, val: str) -> str:
+    """Creates a standardized string key for inventory dictionaries.
 
     Args:
-        category: Component category enum or raw category string.
+        category: Component category enum.
         val: Component value or part name string.
 
     Returns:
         Standardized string key formatted as 'Category | Value'.
     """
-    cat_str = (
-        category.value if isinstance(category, ComponentCategory) else str(category)
-    )
-    return f"{cat_str} | {val}"
+    return f"{category.value} | {val}"
 
 
 def parse_component_key(key: str) -> tuple[ComponentCategory, str]:

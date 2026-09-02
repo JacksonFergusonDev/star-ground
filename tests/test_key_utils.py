@@ -24,8 +24,8 @@ def test_make_component_key() -> None:
     assert make_component_key(ComponentCategory.RESISTORS, "10k") == "Resistors | 10k"
     assert make_component_key(ComponentCategory.PCB, "Big Muff") == "PCB | Big Muff"
 
-    # With Raw String
-    assert make_component_key("Capacitors", "100n") == "Capacitors | 100n"
+    # With Raw String (Removed backwards compatibility)
+    # Testing only enum now
 
 
 def test_parse_component_key_valid() -> None:

@@ -399,11 +399,36 @@ def test_sort_inventory_capacitors_order() -> None:
 
 def test_get_spec_type_exact() -> None:
     """Verifies get_spec_type dielectric classification at boundary conditions."""
-    assert get_spec_type(ComponentCategory.CAPACITORS, "100p") == ComponentSpec.MLCC
-    assert get_spec_type(ComponentCategory.CAPACITORS, "1n") == ComponentSpec.BOX_FILM
-    assert get_spec_type(ComponentCategory.CAPACITORS, "1u") == ComponentSpec.BOX_FILM
     assert (
-        get_spec_type(ComponentCategory.CAPACITORS, "2.2u")
+        get_spec_type(
+            ComponentCategory.CAPACITORS,
+            "100p",
+            val_qty=normalize_value_to_quantity(ComponentCategory.CAPACITORS, "100p"),
+        )
+        == ComponentSpec.MLCC
+    )
+    assert (
+        get_spec_type(
+            ComponentCategory.CAPACITORS,
+            "1n",
+            val_qty=normalize_value_to_quantity(ComponentCategory.CAPACITORS, "1n"),
+        )
+        == ComponentSpec.BOX_FILM
+    )
+    assert (
+        get_spec_type(
+            ComponentCategory.CAPACITORS,
+            "1u",
+            val_qty=normalize_value_to_quantity(ComponentCategory.CAPACITORS, "1u"),
+        )
+        == ComponentSpec.BOX_FILM
+    )
+    assert (
+        get_spec_type(
+            ComponentCategory.CAPACITORS,
+            "2.2u",
+            val_qty=normalize_value_to_quantity(ComponentCategory.CAPACITORS, "2.2u"),
+        )
         == ComponentSpec.ELECTROLYTIC
     )
 
@@ -411,11 +436,21 @@ def test_get_spec_type_exact() -> None:
 def test_get_buy_details_exact_quantities() -> None:
     """Verifies get_buy_details exact matching on bulk and large capacitor thresholds."""
     # 100nF bulk buy
-    buy, note = get_buy_details(ComponentCategory.CAPACITORS, "100n", 1)
+    buy, note = get_buy_details(
+        ComponentCategory.CAPACITORS,
+        "100n",
+        1,
+        val_qty=normalize_value_to_quantity(ComponentCategory.CAPACITORS, "100n"),
+    )
     assert buy == 11  # 1 + bulk_buffer (10)
     assert "Power filtering (buy bulk)." in note
 
     # 1uF large cap low buffer
-    buy_1u, note_1u = get_buy_details(ComponentCategory.CAPACITORS, "1u", 1)
+    buy_1u, note_1u = get_buy_details(
+        ComponentCategory.CAPACITORS,
+        "1u",
+        1,
+        val_qty=normalize_value_to_quantity(ComponentCategory.CAPACITORS, "1u"),
+    )
     assert buy_1u == 2  # 1 + large_buffer (1)
     assert "Rec: Box Film (Check BOM: Could be Electrolytic)" in note_1u

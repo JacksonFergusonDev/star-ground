@@ -2,7 +2,7 @@
 
 import re
 from collections import defaultdict
-from typing import NamedTuple, TypedDict, cast
+from typing import NamedTuple, NotRequired, TypedDict, cast
 
 
 class PresetData(TypedDict):
@@ -10,9 +10,13 @@ class PresetData(TypedDict):
 
     Attributes:
         bom_text: The complete text content of the parsed BOM preset.
+        source_path: The file path to the original BOM source document.
+        is_pdf: True if the source document was a PDF.
     """
 
     bom_text: str
+    source_path: NotRequired[str]
+    is_pdf: NotRequired[bool]
 
 
 BOM_PRESETS: dict[str, PresetData]
