@@ -10,7 +10,7 @@ from src.bom_lib.strategies.base import BOMParserStrategy, ParseResult
 from src.bom_lib.strategies.csv import CSVParserStrategy
 from src.bom_lib.strategies.manual import ManualInputStrategy
 from src.bom_lib.strategies.pdf import PDFParserStrategy
-from src.bom_lib.types import create_empty_inventory
+from src.bom_lib.types import create_empty_inventory, create_empty_stats
 
 logger = logging.getLogger(__name__)
 
@@ -56,14 +56,7 @@ class BOMParserContext:
         if not data:
             return ParseResult(
                 inventory=create_empty_inventory(),
-                stats={
-                    "lines_read": 0,
-                    "parts_found": 0,
-                    "residuals": [],
-                    "extracted_title": None,
-                    "seen_refs": set(),
-                    "errors": [],
-                },
+                stats=create_empty_stats(),
                 title=None,
                 raw_content=None,
             )
@@ -85,32 +78,22 @@ class BOMParserContext:
                 if strategy.can_handle(method, data_to_parse):
                     return strategy.parse(data_to_parse, source_name=source_name)
 
+            err_stats = create_empty_stats()
+            err_stats["errors"].append("Unknown Method")
             return ParseResult(
                 inventory=create_empty_inventory(),
-                stats={
-                    "lines_read": 0,
-                    "parts_found": 0,
-                    "residuals": [],
-                    "extracted_title": None,
-                    "seen_refs": set(),
-                    "errors": ["Unknown Method"],
-                },
+                stats=err_stats,
                 title=None,
                 raw_content=None,
             )
 
         except Exception as e:
             logger.error(f"Error processing {source_name}: {e}")
+            err_stats = create_empty_stats()
+            err_stats["errors"].append(str(e))
             return ParseResult(
                 inventory=create_empty_inventory(),
-                stats={
-                    "lines_read": 0,
-                    "parts_found": 0,
-                    "residuals": [],
-                    "extracted_title": None,
-                    "seen_refs": set(),
-                    "errors": [str(e)],
-                },
+                stats=err_stats,
                 title=None,
                 raw_content=None,
             )

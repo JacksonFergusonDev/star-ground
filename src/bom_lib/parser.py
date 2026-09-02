@@ -14,7 +14,12 @@ from typing import Any
 from src.bom_lib import constants
 from src.bom_lib.classifier import categorize_part, normalize_value_by_category
 from src.bom_lib.enums import ComponentCategory
-from src.bom_lib.types import Inventory, StatsDict, create_empty_inventory
+from src.bom_lib.types import (
+    Inventory,
+    StatsDict,
+    create_empty_inventory,
+    create_empty_stats,
+)
 from src.bom_lib.utils import expand_refs
 
 # Initialize Logger
@@ -87,6 +92,16 @@ def ingest_bom_line(
     return parts_found
 
 
+def _record_pcb(
+    inventory: Inventory, source_name: str, name: str, stats: StatsDict
+) -> None:
+    key = f"PCB | {name}"
+    inventory[key]["qty"] += 1
+    if "PCB" not in inventory[key]["sources"][source_name]:
+        inventory[key]["sources"][source_name].append("PCB")
+    stats["parts_found"] += 1
+
+
 def parse_with_verification(
     bom_list: list[str], source_name: str = "Manual Input"
 ) -> tuple[Inventory, StatsDict]:
@@ -102,14 +117,7 @@ def parse_with_verification(
         A tuple of (Updated Inventory, Parsing Statistics).
     """
     inventory = create_empty_inventory()
-    stats: StatsDict = {
-        "lines_read": 0,
-        "parts_found": 0,
-        "residuals": [],
-        "extracted_title": None,
-        "seen_refs": set(),
-        "errors": [],
-    }
+    stats: StatsDict = create_empty_stats()
 
     # Regex: Matches Ref + Separator + Value.
     pattern = re.compile(r"^([a-zA-Z0-9_\-]+)[\s,]+([0-9a-zA-Z\.\-\/]+).*")
@@ -131,13 +139,7 @@ def parse_with_verification(
                     continue
 
                 clean_name = parts[1].strip()
-                key = f"PCB | {clean_name}"
-
-                inventory[key]["qty"] += 1
-                if "PCB" not in inventory[key]["sources"][source_name]:
-                    inventory[key]["sources"][source_name].append("PCB")
-
-                stats["parts_found"] += 1
+                _record_pcb(inventory, source_name, clean_name, stats)
                 continue
 
             match = pattern.match(line)
@@ -154,11 +156,7 @@ def parse_with_verification(
             if not success:
                 # Fallback: Check if line contains "PCB" (heuristic)
                 if "PCB" in line.upper() and line.strip().upper() != "PCB":
-                    key = f"PCB | {line.strip()}"
-                    inventory[key]["qty"] += 1
-                    if "PCB" not in inventory[key]["sources"][source_name]:
-                        inventory[key]["sources"][source_name].append("PCB")
-                    stats["parts_found"] += 1
+                    _record_pcb(inventory, source_name, line.strip(), stats)
                 else:
                     stats["residuals"].append(line)
 
@@ -179,14 +177,7 @@ def parse_csv_bom(filepath: str, source_name: str) -> tuple[Inventory, StatsDict
         A tuple of (Updated Inventory, Parsing Statistics).
     """
     inventory = create_empty_inventory()
-    stats: StatsDict = {
-        "lines_read": 0,
-        "parts_found": 0,
-        "residuals": [],
-        "extracted_title": None,
-        "seen_refs": set(),
-        "errors": [],
-    }
+    stats: StatsDict = create_empty_stats()
 
     with open(filepath, encoding="utf-8-sig") as f:
         reader = csv.DictReader(f)
@@ -466,24 +457,12 @@ def parse_pedalpcb_pdf(filepath: str, source_name: str) -> tuple[Inventory, Stat
         import pdfplumber
     except ImportError:
         logger.error("pdfplumber not installed.")
-        return create_empty_inventory(), {
-            "lines_read": 0,
-            "parts_found": 0,
-            "residuals": [],
-            "extracted_title": None,
-            "seen_refs": set(),
-            "errors": ["Missing dependency: pdfplumber"],
-        }
+        err_stats = create_empty_stats()
+        err_stats["errors"].append("Missing dependency: pdfplumber")
+        return create_empty_inventory(), err_stats
 
     inventory = create_empty_inventory()
-    stats: StatsDict = {
-        "lines_read": 0,
-        "parts_found": 0,
-        "residuals": [],
-        "extracted_title": None,
-        "seen_refs": set(),
-        "errors": [],
-    }
+    stats: StatsDict = create_empty_stats()
 
     pdf = None
     try:

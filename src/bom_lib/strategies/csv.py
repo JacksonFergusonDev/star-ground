@@ -1,7 +1,6 @@
 """Strategy for parsing CSV and tabular BOM uploads."""
 
 import os
-import tempfile
 from typing import Any
 
 from src.bom_lib.enums import InputMethod
@@ -53,29 +52,7 @@ class CSVParserStrategy(BOMParserStrategy):
             if detected_ext:
                 ext = detected_ext.lower()
 
-        if hasattr(data, "getvalue"):
-            raw_content = data.getvalue()
-        elif hasattr(data, "read"):
-            raw_content = data.read()
-        elif isinstance(data, (bytes, bytearray)):
-            raw_content = bytes(data)
-        elif isinstance(data, str):
-            raw_content = data.encode("utf-8")
-        else:
-            raise ValueError(
-                f"Unsupported data type for CSVParserStrategy: {type(data)}"
-            )
-
-        if isinstance(raw_content, str):
-            raw_content = raw_content.encode("utf-8")
-
-        with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp:
-            tmp.write(raw_content)
-            tmp_path = tmp.name
-
-        try:
+        raw_content = self._read_to_bytes(data, "CSVParserStrategy")
+        with self._temp_file_from_bytes(raw_content, ext) as tmp_path:
             inventory, stats = parse_csv_bom(tmp_path, source_name=source_name)
             return ParseResult(inventory=inventory, stats=stats)
-        finally:
-            if os.path.exists(tmp_path):
-                os.remove(tmp_path)

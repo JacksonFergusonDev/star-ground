@@ -1,7 +1,6 @@
 """Strategy for parsing PedalPCB PDF build documents."""
 
 import os
-import tempfile
 from typing import Any
 
 from src.bom_lib.enums import InputMethod
@@ -45,25 +44,8 @@ class PDFParserStrategy(BOMParserStrategy):
                 raw_content=raw_bytes,
             )
 
-        if hasattr(data, "getvalue"):
-            raw_content = data.getvalue()
-        elif hasattr(data, "read"):
-            raw_content = data.read()
-        elif isinstance(data, (bytes, bytearray)):
-            raw_content = bytes(data)
-        else:
-            raise ValueError(
-                f"Unsupported data type for PDFParserStrategy: {type(data)}"
-            )
-
-        if isinstance(raw_content, str):
-            raw_content = raw_content.encode("utf-8")
-
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
-            tmp.write(raw_content)
-            tmp_path = tmp.name
-
-        try:
+        raw_content = self._read_to_bytes(data, "PDFParserStrategy")
+        with self._temp_file_from_bytes(raw_content, ".pdf") as tmp_path:
             inventory, stats = parse_pedalpcb_pdf(tmp_path, source_name=source_name)
             return ParseResult(
                 inventory=inventory,
@@ -71,6 +53,3 @@ class PDFParserStrategy(BOMParserStrategy):
                 title=stats.get("extracted_title"),
                 raw_content=raw_content,
             )
-        finally:
-            if os.path.exists(tmp_path):
-                os.remove(tmp_path)

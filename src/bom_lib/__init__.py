@@ -46,6 +46,7 @@ from .types import (
     ProjectSlot,
     StatsDict,
     create_empty_inventory,
+    create_empty_stats,
 )
 from .units import ureg
 from .utils import (
@@ -76,6 +77,7 @@ __all__ = [
     "calculate_net_needs",
     "categorize_part",
     "create_empty_inventory",
+    "create_empty_stats",
     "deduplicate_refs",
     "expand_refs",
     "float_to_display_string",
