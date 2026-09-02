@@ -238,7 +238,7 @@ We utilize `Streamlit.AppTest` to run headless simulations of the user interface
 │   │   ├── presets.py     <-- Data: Library of known pedal circuits
 │   │   ├── sourcing.py    <-- Logic: Purchasing rules & hardware injection
 │   │   ├── strategies/    <-- Logic: Strategy pattern for multi-format ingestion
-│   │   ├── types.py       <-- Data: Type definitions (TypedDicts)
+│   │   ├── types.py       <-- Data: Type definitions (TypedDicts, NamedTuples, boundary models)
 │   │   └── utils.py       <-- Logic: String parsing & normalization
 │   ├── exporters.py       <-- Logic: CSV/Excel generation
 │   ├── feedback.py        <-- Logic: Google Sheets API integration

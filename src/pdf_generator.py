@@ -14,12 +14,11 @@ import os
 import re
 import zipfile
 from collections import defaultdict
-from typing import Any
 
 from fpdf import FPDF
 from fpdf.enums import XPos, YPos
 
-from src.bom_lib import Inventory, ProjectSlot, deduplicate_refs
+from src.bom_lib import ChecklistPart, Inventory, ProjectSlot, deduplicate_refs
 
 
 def condense_refs(refs: list[str]) -> str:
@@ -236,12 +235,12 @@ class FieldManual(FPDF):
         """Draws a square checkbox at the specified coordinates."""
         self.rect(x, y, 4, 4)
 
-    def add_project(self, project_name: str, parts: list[dict[str, Any]]) -> None:
+    def add_project(self, project_name: str, parts: list[ChecklistPart]) -> None:
         """Adds a full project checklist to the PDF.
 
         Args:
             project_name (str): The name of the project.
-            parts (list[dict[str, Any]]): Sorted list of component dictionaries.
+            parts (list[ChecklistPart]): Sorted list of component dictionaries.
         """
         self.add_page()
 
@@ -329,7 +328,7 @@ class FieldManual(FPDF):
             self.cell(0, 8, refs, 1, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
 
-def sort_by_z_height(part_list: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def sort_by_z_height(part_list: list[ChecklistPart]) -> list[ChecklistPart]:
     """Sorts components by their physical Z-Height (Low to High).
 
     This ordering dictates the most efficient soldering sequence:
@@ -342,10 +341,10 @@ def sort_by_z_height(part_list: list[dict[str, Any]]) -> list[dict[str, Any]]:
     7. Potentiometers / Mechanicals (Tallest/Rigid)
 
     Args:
-        part_list (list[dict[str, Any]]): List of component parts.
+        part_list (list[ChecklistPart]): List of component parts.
 
     Returns:
-        list[dict[str, Any]]: The sorted list.
+        list[ChecklistPart]: The sorted list.
     """
     # Mapping Categories to Rank (Lower number = Earlier in build)
     z_map = {
@@ -363,7 +362,7 @@ def sort_by_z_height(part_list: list[dict[str, Any]]) -> list[dict[str, Any]]:
         "ICs": 90,  # "Last" (Chip Insertion)
     }
 
-    def get_rank(item: dict[str, Any]) -> int:
+    def get_rank(item: ChecklistPart) -> int:
         cat = item["category"]
         val = str(item["value"])
 
@@ -419,7 +418,7 @@ def _write_field_manuals(
         processed_projects.add(project_name)
 
         pdf = FieldManual()
-        project_parts = []
+        project_parts: list[ChecklistPart] = []
 
         # Filter Global Inventory for this specific Project
         for key, data in inventory.items():
