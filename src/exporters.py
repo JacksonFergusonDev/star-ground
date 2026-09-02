@@ -1,6 +1,7 @@
 import csv
 import io
-from typing import Any
+
+from src.bom_lib.types import ShoppingListRow
 
 BASE_SHOPPING_LIST_COLS = [
     "Category",
@@ -14,7 +15,7 @@ BASE_SHOPPING_LIST_COLS = [
 
 
 def generate_shopping_list_csv(
-    data: list[dict[str, Any]], use_excel_formulas: bool = False
+    data: list[ShoppingListRow], use_excel_formulas: bool = False
 ) -> bytes:
     """Generates a CSV file for the shopping list.
 
@@ -23,7 +24,7 @@ def generate_shopping_list_csv(
     data is available (i.e., if stock was checked).
 
     Args:
-        data (list[dict]): The list of row dictionaries to write.
+        data (list[ShoppingListRow]): The list of row dictionaries to write.
         use_excel_formulas (bool):  If True, formats URLs as Excel `=HYPERLINK()` formulas.
                                     If False, writes raw URL strings.
 
@@ -59,7 +60,7 @@ def generate_shopping_list_csv(
     return csv_buf.getvalue().encode("utf-8-sig")
 
 
-def generate_stock_update_csv(data: list[dict[str, Any]]) -> bytes:
+def generate_stock_update_csv(data: list[ShoppingListRow]) -> bytes:
     """Calculates updated stock levels and generates a CSV import file.
 
     Logic:
@@ -69,7 +70,7 @@ def generate_stock_update_csv(data: list[dict[str, Any]]) -> bytes:
     the app, closing the logistics loop.
 
     Args:
-        data (list[dict]): The processed master list data.
+        data (list[ShoppingListRow]): The processed master list data.
 
     Returns:
         bytes: The CSV content encoded as utf-8-sig.

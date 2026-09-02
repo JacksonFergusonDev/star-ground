@@ -15,6 +15,7 @@ from src.bom_lib import (
     FeedbackRating,
     InputMethod,
     ProjectSlot,
+    ShoppingListRow,
     StatsDict,
     calculate_net_needs,
     create_empty_inventory,
@@ -194,7 +195,7 @@ def render_preset_selector(slot: ProjectSlot, idx: int) -> Any:
     # Find current index
     current_val = slot.last_loaded_preset
     try:
-        current_idx = option_keys.index(current_val)
+        current_idx = option_keys.index(current_val) if current_val is not None else 0
     except ValueError, TypeError:
         current_idx = 0
 
@@ -605,7 +606,7 @@ if st.session_state.inventory and st.session_state.stats:
     """)
 
     # 2. Build the Shopping List
-    final_data = []
+    final_data: list[ShoppingListRow] = []
 
     # STEP A: Inject Hardware (Mutates Inventory In-Place)
     calc_pedal_count = sum(slot.count for slot in st.session_state.pedal_slots)

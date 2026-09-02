@@ -14,6 +14,7 @@ from decimal import Decimal
 from typing import Any
 
 from src.bom_lib.enums import ComponentCategory
+from src.bom_lib.types import AlternativeSpec
 from src.bom_lib.units import ureg
 
 # --- Physics & Standards ---
@@ -75,27 +76,27 @@ PURCHASING_CONFIG: dict[str, dict[str, Any]] = {
 # Operational Amplifier Substitution Table
 # Maps generic BOM parts to a list of "flavor" alternatives.
 # Schema: { Generic_Name: [ (Alt_Name, Sonic_Profile, Technical_Justification), ... ] }
-IC_ALTS = {
+IC_ALTS: dict[str, list[AlternativeSpec]] = {
     # Dual Op-Amps
     "TL072": [
-        (
+        AlternativeSpec(
             "OPA2134",
             "Hi-Fi / Studio Clean",
             "Low distortion (0.00008%), High Slew Rate (20V/us)",
         ),
-        (
+        AlternativeSpec(
             "TLC2272",
             "High Headroom Clean",
             "Rail-to-Rail output (+6Vpp headroom on 9V)",
         ),
     ],
     "JRC4558": [
-        (
+        AlternativeSpec(
             "NJM4558D",
             "Vintage Correct",
             "Authentic 1980s BJT bandwidth limiting",
         ),
-        (
+        AlternativeSpec(
             "OPA2134",
             "Modern/Clinical",
             "High impedance input, removes 'warm' blur",
@@ -103,19 +104,19 @@ IC_ALTS = {
     ],
     # Single Op-Amps (RAT style)
     "LM308": [
-        (
+        AlternativeSpec(
             "LM308N",
             "Vintage RAT",
             "Required for 0.3V/us slew-induced distortion",
         ),
-        (
+        AlternativeSpec(
             "OP07",
             "Modern Tight",
             "Faster slew rate, sounds harsher/tighter than vintage",
         ),
     ],
     "NE5532": [
-        (
+        AlternativeSpec(
             "OPA2134",
             "Lower Noise",
             "JFET input reduces current noise with high-Z guitars",
@@ -125,39 +126,39 @@ IC_ALTS = {
 
 # Diode Clipping Profiles
 # Maps standard switching diodes to alternatives with distinct clipping characteristics.
-# Schema: { Generic_Name: [ (Alt_Name, Sonic_Profile, Technical_Justification), ... ] }
-DIODE_ALTS = {
+# Schema: { Generic_Name: [ AlternativeSpec(name, profile, justification), ... ] }
+DIODE_ALTS: dict[str, list[AlternativeSpec]] = {
     "1N4148": [
-        (
+        AlternativeSpec(
             "1N4001",
             "Smooth / Tube-like",
             "Slow reverse recovery (30µs) smears highs",
         ),
-        (
+        AlternativeSpec(
             "IR LED",
             "The 'Goldilocks' Drive",
             "1.2V drop: More crunch than LED, more headroom than Si",
         ),
-        (
+        AlternativeSpec(
             "Red LED",
             "Amp-like / Open",
             "1.8V drop: Huge headroom, loud output",
         ),
     ],
     "1N914": [
-        (
+        AlternativeSpec(
             "1N4001",
             "Smooth / Tube-like",
             "Slow reverse recovery (30µs) smears highs",
         ),
     ],
     "1N34A": [
-        (
+        AlternativeSpec(
             "BAT41",
             "Modern Schottky",
             "Stable alternative, slightly harder knee",
         ),
-        (
+        AlternativeSpec(
             "1N60",
             "Alt Germanium",
             "Different Vf variance",

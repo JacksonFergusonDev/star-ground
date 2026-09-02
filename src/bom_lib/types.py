@@ -8,11 +8,10 @@ import uuid
 from collections import UserDict, defaultdict
 from dataclasses import dataclass, field
 from decimal import Decimal
-from typing import Any, TypedDict
+from typing import Any, NamedTuple, NotRequired, TypedDict
 
 import pint
 
-from src.bom_lib.classifier import normalize_value_to_quantity
 from src.bom_lib.enums import ComponentCategory, InputMethod
 
 
@@ -73,6 +72,57 @@ class PartData(TypedDict):
     sources: dict[str, list[str]]
 
 
+class AlternativeSpec(NamedTuple):
+    """Specification for component substitutions and tonal alternatives.
+
+    Attributes:
+        name: Name of the alternative component (e.g., 'OPA2134').
+        profile: Sonic profile or character description (e.g., 'Hi-Fi / Studio Clean').
+        justification: Technical rationale or specification detail.
+    """
+
+    name: str
+    profile: str
+    justification: str | None = None
+
+
+class ChecklistPart(TypedDict):
+    """Component checklist item for PDF Field Manual generation.
+
+    Attributes:
+        category: Component category name (e.g., 'Resistors', 'Capacitors').
+        value: Cleaned component value string (e.g., '10k', 'TL072').
+        qty: Total count of this part in the project.
+        refs: List of designators for this component (e.g., ['R1', 'R2']).
+        notes: Build annotations (e.g. '[!] Check Size').
+        polarized: True if component requires orientation verification.
+    """
+
+    category: str
+    value: str
+    qty: int
+    refs: list[str]
+    notes: str
+    polarized: bool
+
+
+ShoppingListRow = TypedDict(
+    "ShoppingListRow",
+    {
+        "Origin": str,
+        "Category": str,
+        "Part": str,
+        "BOM Qty": int,
+        "In Stock": NotRequired[int],
+        "Net Need": NotRequired[int],
+        "Buy Qty": int,
+        "Notes": str,
+        "Search Term": str,
+        "Tayda_Link": str,
+    },
+)
+
+
 class Inventory(UserDict[str, PartData]):
     """Concrete class for managing component inventory.
 
@@ -113,6 +163,8 @@ class Inventory(UserDict[str, PartData]):
             if " | " in key:
                 cat_str, val_str = key.split(" | ", 1)
                 try:
+                    from src.bom_lib.classifier import normalize_value_to_quantity
+
                     cat = ComponentCategory(cat_str)
                     part["val_qty"] = normalize_value_to_quantity(cat, val_str)
                 except ValueError:
