@@ -4,7 +4,7 @@ import os
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -157,7 +157,7 @@ class TestCSVParserStrategy:
     def test_parse_unsupported_type_raises(self) -> None:
         strategy = CSVParserStrategy()
         with pytest.raises(ValueError, match="Unsupported data type"):
-            strategy.parse(12345, source_name="Invalid")
+            strategy.parse(cast(Any, 12345), source_name="Invalid")
 
 
 class TestPDFParserStrategy:
@@ -241,7 +241,7 @@ class TestPDFParserStrategy:
     def test_parse_unsupported_type_raises(self) -> None:
         strategy = PDFParserStrategy()
         with pytest.raises(ValueError, match="Unsupported data type"):
-            strategy.parse(12345, source_name="Invalid")
+            strategy.parse(cast(Any, 12345), source_name="Invalid")
 
 
 class TestBOMParserContext:

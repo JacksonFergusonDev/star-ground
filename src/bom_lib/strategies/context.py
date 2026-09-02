@@ -1,7 +1,6 @@
 """Context orchestrator for BOM parsing strategies."""
 
 import logging
-from typing import Any
 
 import requests
 
@@ -10,7 +9,7 @@ from src.bom_lib.strategies.base import BOMParserStrategy, ParseResult
 from src.bom_lib.strategies.csv import CSVParserStrategy
 from src.bom_lib.strategies.manual import ManualInputStrategy
 from src.bom_lib.strategies.pdf import PDFParserStrategy
-from src.bom_lib.types import create_empty_inventory, create_empty_stats
+from src.bom_lib.types import RawBOMData, create_empty_inventory, create_empty_stats
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +41,9 @@ class BOMParserContext:
         """
         self.strategies.append(strategy)
 
-    def process(self, method: InputMethod, data: Any, source_name: str) -> ParseResult:
+    def process(
+        self, method: InputMethod, data: RawBOMData, source_name: str
+    ) -> ParseResult:
         """Unified handler for processing Text, File, and URL inputs.
 
         Args:
