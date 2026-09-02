@@ -236,7 +236,7 @@ We utilize `Streamlit.AppTest` to run headless simulations of the user interface
 │   │   ├── manager.py     <-- Logic: Inventory mutation & net needs calculation
 │   │   ├── parser.py      <-- Logic: PDF/CSV ingestion engines
 │   │   ├── presets.py     <-- Data: Library of known pedal circuits
-│   │   ├── sourcing.py    <-- Logic: Purchasing rules & hardware injection
+│   │   ├── sourcing.py    <-- Logic: Purchasing rules, shopping list assembly & hardware injection
 │   │   ├── strategies/    <-- Logic: Strategy pattern for multi-format ingestion
 │   │   ├── types.py       <-- Data: Type definitions (TypedDicts, NamedTuples, boundary models)
 │   │   └── utils.py       <-- Logic: String parsing & normalization
