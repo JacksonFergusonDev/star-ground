@@ -1,9 +1,12 @@
 default_install_hook_types:
   - pre-commit
   - commit-msg
+  - pre-push
 
 default_stages:
   - pre-commit
+
+fail_fast: true
 
 repos:
   # Generic hooks (configured to IGNORE Python)
@@ -68,6 +71,13 @@ repos:
         types: [markdown]
         require_serial: true
 
+      - id: pytest
+        name: pytest
+        entry: uv run pytest
+        language: system
+        pass_filenames: false
+        stages: [pre-push]
+
   # Check for accidental commits of secrets
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.30.1
@@ -88,3 +98,9 @@ repos:
     hooks:
       - id: renovate-config-validator
         files: '.github/renovate.json'
+
+  # GitHub Actions workflow validation
+  - repo: https://github.com/rhysd/actionlint
+    rev: v1.7.12
+    hooks:
+      - id: actionlint
