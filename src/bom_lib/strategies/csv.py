@@ -43,8 +43,7 @@ class CSVParserStrategy(BOMParserStrategy):
         """
         # If data is an existing file path, parse directly without temp file creation
         if isinstance(data, str) and os.path.isfile(data):
-            inventory, stats = parse_csv_bom(data, source_name=source_name)
-            return ParseResult(inventory=inventory, stats=stats)
+            return parse_csv_bom(data, source_name=source_name)
 
         ext = ".csv"
         name = getattr(data, "name", None)
@@ -56,5 +55,4 @@ class CSVParserStrategy(BOMParserStrategy):
 
         raw_content = self._read_to_bytes(data, "CSVParserStrategy")
         with self._temp_file_from_bytes(raw_content, ext) as tmp_path:
-            inventory, stats = parse_csv_bom(tmp_path, source_name=source_name)
-            return ParseResult(inventory=inventory, stats=stats)
+            return parse_csv_bom(tmp_path, source_name=source_name)

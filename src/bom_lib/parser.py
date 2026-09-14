@@ -15,6 +15,7 @@ from src.bom_lib.classifier import categorize_part, normalize_value_by_category
 from src.bom_lib.enums import ComponentCategory
 from src.bom_lib.types import (
     Inventory,
+    ParseResult,
     PDFPageExtraction,
     StatsDict,
     create_empty_inventory,
@@ -106,7 +107,7 @@ def _record_pcb(
 
 def parse_with_verification(
     bom_list: list[str], source_name: str = "Manual Input"
-) -> tuple[Inventory, StatsDict]:
+) -> ParseResult:
     """Parses a list of raw text strings (Manual BOM Input).
 
     Handles standard formats like "R1 10k" and special cases like "PCB Name".
@@ -116,7 +117,7 @@ def parse_with_verification(
         source_name: Label for the source of these parts.
 
     Returns:
-        A tuple of (Updated Inventory, Parsing Statistics).
+        A ParseResult containing updated inventory and parsing statistics.
     """
     inventory = create_empty_inventory()
     stats: StatsDict = create_empty_stats()
@@ -162,10 +163,10 @@ def parse_with_verification(
                 else:
                     stats["residuals"].append(line)
 
-    return inventory, stats
+    return ParseResult(inventory=inventory, stats=stats)
 
 
-def parse_csv_bom(filepath: str, source_name: str) -> tuple[Inventory, StatsDict]:
+def parse_csv_bom(filepath: str, source_name: str) -> ParseResult:
     """Parses a CSV BOM file.
 
     Attempts to intelligently guess columns ('Ref', 'Value') or falls back
@@ -176,7 +177,7 @@ def parse_csv_bom(filepath: str, source_name: str) -> tuple[Inventory, StatsDict
         source_name: Label for the source.
 
     Returns:
-        A tuple of (Updated Inventory, Parsing Statistics).
+        A ParseResult containing updated inventory and parsing statistics.
     """
     inventory = create_empty_inventory()
     stats: StatsDict = create_empty_stats()
@@ -216,7 +217,7 @@ def parse_csv_bom(filepath: str, source_name: str) -> tuple[Inventory, StatsDict
             if not success:
                 stats["residuals"].append(str(row))
 
-    return inventory, stats
+    return ParseResult(inventory=inventory, stats=stats)
 
 
 def parse_user_inventory(filepath: str) -> Inventory:
@@ -440,7 +441,7 @@ def _parse_via_regex(
                 stats["parts_found"] += c
 
 
-def parse_pedalpcb_pdf(filepath: str, source_name: str) -> tuple[Inventory, StatsDict]:
+def parse_pedalpcb_pdf(filepath: str, source_name: str) -> ParseResult:
     """Parses a PedalPCB Build Document (PDF).
 
     Uses a multi-stage strategy:
@@ -452,7 +453,7 @@ def parse_pedalpcb_pdf(filepath: str, source_name: str) -> tuple[Inventory, Stat
         source_name: Label for the source.
 
     Returns:
-        A tuple of (Updated Inventory, Parsing Statistics).
+        A ParseResult containing updated inventory, parsing statistics, and extracted title.
     """
     # Lazy import to avoid loading heavy PDF libraries unless needed
     try:
@@ -461,7 +462,7 @@ def parse_pedalpcb_pdf(filepath: str, source_name: str) -> tuple[Inventory, Stat
         logger.error("pdfplumber not installed.")
         err_stats = create_empty_stats()
         err_stats["errors"].append("Missing dependency: pdfplumber")
-        return create_empty_inventory(), err_stats
+        return ParseResult(inventory=create_empty_inventory(), stats=err_stats)
 
     inventory = create_empty_inventory()
     stats: StatsDict = create_empty_stats()
@@ -475,7 +476,7 @@ def parse_pedalpcb_pdf(filepath: str, source_name: str) -> tuple[Inventory, Stat
         except Exception as e:
             logger.error(f"Failed to open PDF {source_name}: {e}")
             stats["errors"].append(f"File Error: {e!s}")
-            return inventory, stats
+            return ParseResult(inventory=inventory, stats=stats)
 
         # Phase 2: Extraction
         try:
@@ -533,4 +534,6 @@ def parse_pedalpcb_pdf(filepath: str, source_name: str) -> tuple[Inventory, Stat
         if pdf:
             pdf.close()
 
-    return inventory, stats
+    return ParseResult(
+        inventory=inventory, stats=stats, title=stats.get("extracted_title")
+    )

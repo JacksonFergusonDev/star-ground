@@ -37,20 +37,20 @@ class PDFParserStrategy(BOMParserStrategy):
         if isinstance(data, str) and os.path.isfile(data):
             with open(data, "rb") as f:
                 raw_bytes = f.read()
-            inventory, stats = parse_pedalpcb_pdf(data, source_name=source_name)
+            res = parse_pedalpcb_pdf(data, source_name=source_name)
             return ParseResult(
-                inventory=inventory,
-                stats=stats,
-                title=stats.get("extracted_title"),
+                inventory=res.inventory,
+                stats=res.stats,
+                title=res.title,
                 raw_content=raw_bytes,
             )
 
         raw_content = self._read_to_bytes(data, "PDFParserStrategy")
         with self._temp_file_from_bytes(raw_content, ".pdf") as tmp_path:
-            inventory, stats = parse_pedalpcb_pdf(tmp_path, source_name=source_name)
+            res = parse_pedalpcb_pdf(tmp_path, source_name=source_name)
             return ParseResult(
-                inventory=inventory,
-                stats=stats,
-                title=stats.get("extracted_title"),
+                inventory=res.inventory,
+                stats=res.stats,
+                title=res.title,
                 raw_content=raw_content,
             )

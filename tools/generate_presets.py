@@ -76,8 +76,8 @@ def main() -> None:
                 # We parse the PDF into an inventory, then serialize it back to standardized text.
                 print(f"   ⚙️ Parsing PDF: {file}")
                 try:
-                    # Pass a temporary source name; we will refine the key later based on extraction
-                    inv, stats = parse_pedalpcb_pdf(file_path, source_name=project_name)
+                    res = parse_pedalpcb_pdf(file_path, source_name=project_name)
+                    inv, stats = res.inventory, res.stats
 
                     if stats["parts_found"] > 0:
                         # Use extracted title from PDF metadata if available

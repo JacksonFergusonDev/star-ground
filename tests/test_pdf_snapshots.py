@@ -119,7 +119,8 @@ def test_pdf_parsing_regression(pdf_rel_path, snapshot_update):
     snapshot_filename = pdf_rel_path.replace(os.sep, "__") + ".json"
 
     # 1. Run the Real Code
-    inventory, stats = parse_pedalpcb_pdf(pdf_path, source_name="SnapshotTest")
+    res = parse_pedalpcb_pdf(pdf_path, source_name="SnapshotTest")
+    inventory, stats = res.inventory, res.stats
 
     # 2. Stabilize Data for Comparison
     current_result = {

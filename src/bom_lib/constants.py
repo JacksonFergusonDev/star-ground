@@ -10,8 +10,11 @@ This module serves as the central repository for:
 5.  **Purchasing Rules:** Configuration for safe buy quantities (buffers) and round-up logic.
 """
 
+from dataclasses import dataclass
 from decimal import Decimal
 from typing import Any
+
+import pint
 
 from src.bom_lib.enums import ComponentCategory
 from src.bom_lib.grammar.value_parser import SI_MULTIPLIERS
@@ -38,27 +41,79 @@ POT_TAPER_MAP = {
     "G": "Graphic",
 }
 
-# --- Purchasing & Sourcing Rules ---
 
-PURCHASING_CONFIG: dict[str, dict[str, Any]] = {
-    ComponentCategory.RESISTORS.value: {
-        "buffer_add": 5,
-        "round_to": 10,
-        "note": "Use 1/4W Metal Film (1%)",
-        "suspicious_threshold_low": Decimal("1.0") * ureg.ohm,  # Ohms
-    },
-    ComponentCategory.CAPACITORS.value: {
-        "bulk_threshold": Decimal("1.0e-7") * ureg.farad,  # 100nF
-        "bulk_buffer": 10,
-        "standard_buffer": 5,
-        "large_threshold": Decimal("1.0e-6") * ureg.farad,  # 1uF
-        "large_buffer": 1,
-        "suspicious_threshold_high": Decimal("0.01") * ureg.farad,  # 10mF
-    },
-    ComponentCategory.DIODES.value: {
-        "min_buy": 10,
-        "buffer_add": 5,
-    },
+@dataclass(frozen=True, slots=True)
+class ResistorPurchasingRule:
+    """Purchasing rules and buffers for resistor components.
+
+    Attributes:
+        buffer_add: Raw quantity to add before rounding.
+        round_to: Lot size to round up to (e.g., 10 for decade packs).
+        note: Default component recommendation note.
+        suspicious_threshold_low: Lower bound threshold for suspicious resistor values.
+    """
+
+    buffer_add: int
+    round_to: int
+    note: str
+    suspicious_threshold_low: pint.Quantity[Any]
+
+
+@dataclass(frozen=True, slots=True)
+class CapacitorPurchasingRule:
+    """Purchasing rules and buffers for capacitor components.
+
+    Attributes:
+        bulk_threshold: Physical capacitance value for high-volume power bypass caps.
+        bulk_buffer: Buffer quantity added for bulk caps.
+        standard_buffer: Default buffer quantity added for small signal caps.
+        large_threshold: Physical capacitance value above which capacitors are bulk/large.
+        large_buffer: Buffer quantity added for expensive/large caps.
+        suspicious_threshold_high: Upper bound threshold for suspicious capacitor values.
+    """
+
+    bulk_threshold: pint.Quantity[Any]
+    bulk_buffer: int
+    standard_buffer: int
+    large_threshold: pint.Quantity[Any]
+    large_buffer: int
+    suspicious_threshold_high: pint.Quantity[Any]
+
+
+@dataclass(frozen=True, slots=True)
+class DiodePurchasingRule:
+    """Purchasing rules and buffers for diode components.
+
+    Attributes:
+        min_buy: Minimum quantity to purchase.
+        buffer_add: Buffer quantity added to net demand.
+    """
+
+    min_buy: int
+    buffer_add: int
+
+
+PurchasingRule = ResistorPurchasingRule | CapacitorPurchasingRule | DiodePurchasingRule
+
+PURCHASING_CONFIG: dict[ComponentCategory, PurchasingRule] = {
+    ComponentCategory.RESISTORS: ResistorPurchasingRule(
+        buffer_add=5,
+        round_to=10,
+        note="Use 1/4W Metal Film (1%)",
+        suspicious_threshold_low=Decimal("1.0") * ureg.ohm,  # Ohms
+    ),
+    ComponentCategory.CAPACITORS: CapacitorPurchasingRule(
+        bulk_threshold=Decimal("1.0e-7") * ureg.farad,  # 100nF
+        bulk_buffer=10,
+        standard_buffer=5,
+        large_threshold=Decimal("1.0e-6") * ureg.farad,  # 1uF
+        large_buffer=1,
+        suspicious_threshold_high=Decimal("0.01") * ureg.farad,  # 10mF
+    ),
+    ComponentCategory.DIODES: DiodePurchasingRule(
+        min_buy=10,
+        buffer_add=5,
+    ),
 }
 
 # --- Expert System Data (The "Silicon Sommelier") ---

@@ -14,16 +14,22 @@ import os
 import re
 import zipfile
 from collections import defaultdict
+from dataclasses import dataclass
+from decimal import Decimal
+from typing import Any
 
+import pint
 from fpdf import FPDF
 from fpdf.enums import XPos, YPos
 
 from src.bom_lib import (
     ChecklistPart,
     ComponentCategory,
+    ComponentSpec,
     Inventory,
     ProjectSlot,
     deduplicate_refs,
+    get_spec_type,
 )
 from src.bom_lib.types import parse_component_key
 
@@ -381,37 +387,14 @@ def sort_by_z_height(part_list: list[ChecklistPart]) -> list[ChecklistPart]:
         # 2. Capacitor Check (Electro vs Ceramic)
         if cat == ComponentCategory.CAPACITORS:
             # Electros are tall -> Late build
-            if _is_microfarad_cap(val):
+            spec = item.get("spec_type") or get_spec_type(cat, val)
+            if spec == ComponentSpec.ELECTROLYTIC:
                 return 60  # Electrolytics rank
             return 40  # Small caps
 
         return z_map.get(cat, 99)
 
     return sorted(part_list, key=get_rank)
-
-
-def _is_microfarad_cap(val_str: str) -> bool:
-    """Heuristic to detect bulk/polarized capacitance (Electrolytics).
-
-    Args:
-        val_str (str): The component value (e.g., '100uF', '47µ').
-
-    Returns:
-        bool: True if likely an electrolytic capacitor, False otherwise.
-    """
-    return bool(val_str and ("u" in val_str or "µ" in val_str))
-
-
-def float_val_check(val_str: str) -> float:
-    """Heuristic to detect bulk capacitance (Electrolytics).
-
-    Args:
-        val_str (str): The component value (e.g., "100uF").
-
-    Returns:
-        float: 1.0 if likely electrolytic, 0.0 otherwise.
-    """
-    return 1.0 if _is_microfarad_cap(val_str) else 0.0
 
 
 def _sanitize_filename(name: str) -> str:
@@ -431,18 +414,45 @@ def _get_unique_projects(slots: list[ProjectSlot]) -> list[tuple[str, ProjectSlo
     return unique
 
 
+@dataclass(frozen=True, slots=True)
+class ProjectPartItem:
+    """A component entry extracted from inventory for a specific project.
+
+    Attributes:
+        key: Standardized component key (e.g. 'Resistors | 10k').
+        category: The determined component category enum.
+        value: The normalized component value string.
+        unique_refs: Deduplicated designator references in the project.
+        val_qty: The cached physical quantity or Decimal value, if available.
+    """
+
+    key: str
+    category: ComponentCategory
+    value: str
+    unique_refs: list[str]
+    val_qty: pint.Quantity[Any] | Decimal | None = None
+
+
 def _get_project_parts(
     inventory: Inventory, project_name: str
-) -> list[tuple[str, ComponentCategory, str, list[str]]]:
-    """Extracts (key, category, val, unique_refs) for a project from inventory."""
-    results: list[tuple[str, ComponentCategory, str, list[str]]] = []
+) -> list[ProjectPartItem]:
+    """Extracts ProjectPartItems for a project from inventory."""
+    results: list[ProjectPartItem] = []
     for key, data in inventory.items():
         sources = data["sources"]
         if project_name in sources:
             unique_refs = deduplicate_refs(sources[project_name])
             if unique_refs:
                 cat_enum, val = parse_component_key(key)
-                results.append((key, cat_enum, val, unique_refs))
+                results.append(
+                    ProjectPartItem(
+                        key=key,
+                        category=cat_enum,
+                        value=val,
+                        unique_refs=unique_refs,
+                        val_qty=data.get("val_qty"),
+                    )
+                )
     return results
 
 
@@ -454,22 +464,27 @@ def _write_field_manuals(
         pdf = FieldManual()
         project_parts: list[ChecklistPart] = []
 
-        for _key, cat, val, unique_refs in _get_project_parts(inventory, project_name):
-            row_notes = "[!] Check Size" if "DIP SOCKET" in val else ""
-            is_polarized = cat in (
+        for item in _get_project_parts(inventory, project_name):
+            row_notes = "[!] Check Size" if "DIP SOCKET" in item.value else ""
+            spec = get_spec_type(item.category, item.value, val_qty=item.val_qty)
+            is_polarized = item.category in (
                 ComponentCategory.DIODES,
                 ComponentCategory.TRANSISTORS,
                 ComponentCategory.ICS,
-            ) or (cat == ComponentCategory.CAPACITORS and _is_microfarad_cap(val))
+            ) or (
+                item.category == ComponentCategory.CAPACITORS
+                and spec == ComponentSpec.ELECTROLYTIC
+            )
 
             project_parts.append(
                 {
-                    "category": cat,
-                    "value": val,
-                    "qty": len(unique_refs),
-                    "refs": unique_refs,
+                    "category": item.category,
+                    "value": item.value,
+                    "qty": len(item.unique_refs),
+                    "refs": item.unique_refs,
                     "notes": row_notes,
                     "polarized": is_polarized,
+                    "spec_type": spec,
                 }
             )
 
@@ -490,10 +505,8 @@ def _write_stickers(
     """Helper: Generates Sticker Sheet PDFs and writes them to the ZIP archive."""
     for project_name, _slot in _get_unique_projects(slots):
         project_parts = [
-            (val, unique_refs)
-            for _key, _cat, val, unique_refs in _get_project_parts(
-                inventory, project_name
-            )
+            (item.value, item.unique_refs)
+            for item in _get_project_parts(inventory, project_name)
         ]
 
         if not project_parts:

@@ -16,6 +16,7 @@ from urllib.parse import quote_plus
 import pint
 
 from src.bom_lib import constants
+from src.bom_lib.classifier import normalize_value_to_quantity
 from src.bom_lib.constants import AUTO_INJECT_SOURCE
 from src.bom_lib.enums import ComponentCategory, ComponentOrigin, ComponentSpec
 from src.bom_lib.manager import calculate_net_needs, sort_inventory
@@ -125,6 +126,8 @@ def get_spec_type(
         or ComponentSpec.NONE if not applicable.
     """
     if category == ComponentCategory.CAPACITORS:
+        if val_qty is None:
+            val_qty = normalize_value_to_quantity(category, val)
         if val_qty is None:
             return ComponentSpec.NONE
 
@@ -256,35 +259,36 @@ def get_buy_details(
     buy = count
     note = ""
 
-    # Pre-fetch rules if they exist for this category
-    rules = constants.PURCHASING_CONFIG.get(category.value, {})
-
     if category == ComponentCategory.RESISTORS:
-        buffered_qty = count + rules["buffer_add"]
-        round_step = rules["round_to"]
+        resistor_rule = constants.PURCHASING_CONFIG.get(ComponentCategory.RESISTORS)
+        assert isinstance(resistor_rule, constants.ResistorPurchasingRule)
+        buffered_qty = count + resistor_rule.buffer_add
+        round_step = resistor_rule.round_to
         buy = math.ceil(buffered_qty / round_step) * round_step
 
-        note = rules["note"]
-        if val_qty is not None and val_qty < rules["suspicious_threshold_low"]:
+        note = resistor_rule.note
+        if val_qty is not None and val_qty < resistor_rule.suspicious_threshold_low:
             note = "⚠️ Suspicious Value (< 1Ω). Verify BOM."
 
     elif category == ComponentCategory.OPTOELECTRONICS:
         buy = count + 1  # Fragile legs
 
     elif category == ComponentCategory.CAPACITORS:
+        cap_rule = constants.PURCHASING_CONFIG.get(ComponentCategory.CAPACITORS)
+        assert isinstance(cap_rule, constants.CapacitorPurchasingRule)
         note_parts: list[str] = []
-        buffer = rules["standard_buffer"]
+        buffer = cap_rule.standard_buffer
 
         # Bypass caps (100nF) -> Bulk buy
-        if val_qty is not None and val_qty == rules["bulk_threshold"]:
-            buffer = rules["bulk_buffer"]
+        if val_qty is not None and val_qty == cap_rule.bulk_threshold:
+            buffer = cap_rule.bulk_buffer
             note_parts.append("Power filtering (buy bulk).")
         # Large caps (>= 1uF) -> Low buffer
-        elif val_qty is not None and val_qty >= rules["large_threshold"]:
-            buffer = rules["large_buffer"]
+        elif val_qty is not None and val_qty >= cap_rule.large_threshold:
+            buffer = cap_rule.large_buffer
 
         buy = count + buffer
-        if val_qty is not None and val_qty > rules["suspicious_threshold_high"]:
+        if val_qty is not None and val_qty > cap_rule.suspicious_threshold_high:
             note_parts.append("⚠️ Suspicious Value (> 10mF).")
 
         spec_type = get_spec_type(category, val, val_qty=val_qty)
@@ -292,7 +296,7 @@ def get_buy_details(
             if (
                 spec_type == ComponentSpec.BOX_FILM
                 and val_qty is not None
-                and val_qty == rules["large_threshold"]
+                and val_qty == cap_rule.large_threshold
             ):
                 note_parts.append("Rec: Box Film (Check BOM: Could be Electrolytic)")
             elif spec_type == ComponentSpec.MLCC:
@@ -302,7 +306,9 @@ def get_buy_details(
         note = " | ".join(note_parts)
 
     elif category == ComponentCategory.DIODES:
-        buy = max(10, count + 5)
+        diode_rule = constants.PURCHASING_CONFIG.get(ComponentCategory.DIODES)
+        assert isinstance(diode_rule, constants.DiodePurchasingRule)
+        buy = max(diode_rule.min_buy, count + diode_rule.buffer_add)
         # Check substitutions
         if val in constants.DIODE_ALTS:
             alts = constants.DIODE_ALTS[val]
