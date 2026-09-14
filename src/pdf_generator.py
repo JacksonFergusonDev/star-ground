@@ -18,7 +18,13 @@ from collections import defaultdict
 from fpdf import FPDF
 from fpdf.enums import XPos, YPos
 
-from src.bom_lib import ChecklistPart, Inventory, ProjectSlot, deduplicate_refs
+from src.bom_lib import (
+    ChecklistPart,
+    ComponentCategory,
+    Inventory,
+    ProjectSlot,
+    deduplicate_refs,
+)
 from src.bom_lib.types import parse_component_key
 
 
@@ -348,19 +354,19 @@ def sort_by_z_height(part_list: list[ChecklistPart]) -> list[ChecklistPart]:
         list[ChecklistPart]: The sorted list.
     """
     # Mapping Categories to Rank (Lower number = Earlier in build)
-    z_map = {
-        "PCB": 0,  # First
-        "Resistors": 10,
-        "Diodes": 15,
+    z_map: dict[ComponentCategory, int] = {
+        ComponentCategory.PCB: 0,  # First
+        ComponentCategory.RESISTORS: 10,
+        ComponentCategory.DIODES: 15,
         # Sockets will be injected at 18
-        "Crystals/Oscillators": 30,
-        "Capacitors": 40,  # Default (Small)
-        "Transistors": 50,
+        ComponentCategory.CRYSTALS_OSCILLATORS: 30,
+        ComponentCategory.CAPACITORS: 40,  # Default (Small)
+        ComponentCategory.TRANSISTORS: 50,
         # Electros will be injected at 60
-        "Switches": 70,
-        "Potentiometers": 80,  # "Second Last" (Mechanicals)
-        "Hardware/Misc": 85,  # Jacks, etc.
-        "ICs": 90,  # "Last" (Chip Insertion)
+        ComponentCategory.SWITCHES: 70,
+        ComponentCategory.POTENTIOMETERS: 80,  # "Second Last" (Mechanicals)
+        ComponentCategory.HARDWARE_MISC: 85,  # Jacks, etc.
+        ComponentCategory.ICS: 90,  # "Last" (Chip Insertion)
     }
 
     def get_rank(item: ChecklistPart) -> int:
@@ -373,7 +379,7 @@ def sort_by_z_height(part_list: list[ChecklistPart]) -> list[ChecklistPart]:
             return 18
 
         # 2. Capacitor Check (Electro vs Ceramic)
-        if cat == "Capacitors":
+        if cat == ComponentCategory.CAPACITORS:
             # Electros are tall -> Late build
             if _is_microfarad_cap(val):
                 return 60  # Electrolytics rank
@@ -427,16 +433,16 @@ def _get_unique_projects(slots: list[ProjectSlot]) -> list[tuple[str, ProjectSlo
 
 def _get_project_parts(
     inventory: Inventory, project_name: str
-) -> list[tuple[str, str, str, list[str]]]:
+) -> list[tuple[str, ComponentCategory, str, list[str]]]:
     """Extracts (key, category, val, unique_refs) for a project from inventory."""
-    results: list[tuple[str, str, str, list[str]]] = []
+    results: list[tuple[str, ComponentCategory, str, list[str]]] = []
     for key, data in inventory.items():
         sources = data["sources"]
         if project_name in sources:
             unique_refs = deduplicate_refs(sources[project_name])
             if unique_refs:
                 cat_enum, val = parse_component_key(key)
-                results.append((key, cat_enum.value, val, unique_refs))
+                results.append((key, cat_enum, val, unique_refs))
     return results
 
 
@@ -450,9 +456,11 @@ def _write_field_manuals(
 
         for _key, cat, val, unique_refs in _get_project_parts(inventory, project_name):
             row_notes = "[!] Check Size" if "DIP SOCKET" in val else ""
-            is_polarized = cat in ["Diodes", "Transistors", "ICs"] or (
-                cat == "Capacitors" and _is_microfarad_cap(val)
-            )
+            is_polarized = cat in (
+                ComponentCategory.DIODES,
+                ComponentCategory.TRANSISTORS,
+                ComponentCategory.ICS,
+            ) or (cat == ComponentCategory.CAPACITORS and _is_microfarad_cap(val))
 
             project_parts.append(
                 {

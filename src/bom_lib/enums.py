@@ -1,6 +1,6 @@
 """Domain enums for the BOM library."""
 
-from enum import Enum
+from enum import Enum, StrEnum
 
 
 class ComponentCategory(Enum):
@@ -18,6 +18,14 @@ class ComponentCategory(Enum):
     OPTOELECTRONICS = "Optoelectronics"
     UNKNOWN = "Unknown"
     PCB = "PCB"
+
+
+class ComponentOrigin(StrEnum):
+    """Purchasing origins for bill-of-materials components."""
+
+    CIRCUIT_BOARD = "Circuit Board"
+    HARDWARE_KIT = "Hardware Kit"
+    EXTRAS = "Extras"
 
 
 class ComponentSpec(Enum):

@@ -9,7 +9,13 @@ from .classifier import (
     normalize_value_by_category,
     normalize_value_to_quantity,
 )
-from .enums import ComponentCategory, ComponentSpec, FeedbackRating, InputMethod
+from .enums import (
+    ComponentCategory,
+    ComponentOrigin,
+    ComponentSpec,
+    FeedbackRating,
+    InputMethod,
+)
 from .manager import (
     calculate_net_needs,
     rename_source_in_inventory,
@@ -54,11 +60,13 @@ from .strategies import (
 )
 from .types import (
     AlternativeSpec,
+    CategorizationResult,
     ChecklistPart,
     Inventory,
     PartData,
     PDFPageExtraction,
     ProjectSlot,
+    PurchaseRecommendation,
     RawBOMData,
     ResolvedPartSourcing,
     ShoppingListRow,
@@ -86,8 +94,10 @@ __all__ = [
     "BOMParserContext",
     "BOMParserStrategy",
     "CSVParserStrategy",
+    "CategorizationResult",
     "ChecklistPart",
     "ComponentCategory",
+    "ComponentOrigin",
     "ComponentSpec",
     "FeedbackRating",
     "InputMethod",
@@ -101,6 +111,7 @@ __all__ = [
     "PresetData",
     "PresetLookupEntry",
     "ProjectSlot",
+    "PurchaseRecommendation",
     "RawBOMData",
     "ResolvedPartSourcing",
     "ShoppingListRow",

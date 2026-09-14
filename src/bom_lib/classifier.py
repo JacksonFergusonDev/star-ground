@@ -13,6 +13,7 @@ import pint
 
 from src.bom_lib import constants
 from src.bom_lib.enums import ComponentCategory
+from src.bom_lib.types import CategorizationResult
 from src.bom_lib.units import ureg
 from src.bom_lib.utils import (
     float_to_search_string,
@@ -77,9 +78,7 @@ def normalize_value_by_category(category: ComponentCategory, val_raw: str) -> st
     return clean_val
 
 
-def categorize_part(
-    ref: str, val: str
-) -> tuple[ComponentCategory | None, str | None, str | None]:
+def categorize_part(ref: str, val: str) -> CategorizationResult | None:
     """Classifies a component based on its Reference Designator and Value.
 
     This function acts as a rules engine. It checks standard prefixes (R, C, Q),
@@ -91,12 +90,8 @@ def categorize_part(
         val: The component value (e.g., "10k", "TL072").
 
     Returns:
-        A tuple containing:
-            - category: The standardized ComponentCategory (e.g., ComponentCategory.RESISTORS).
-            - clean_val: The normalized value string.
-            - injection: An optional string describing a secondary part to
-              inject (e.g., "Hardware/Misc | DIP SOCKET").
-        Returns (None, None, None) if the part is invalid or ignored.
+        CategorizationResult with standardized category, normalized value,
+        and optional secondary injected part key; or None if invalid or ignored.
     """
     ref_up = ref.upper().strip()
     val_clean = val.strip()  # Keep original case for display
@@ -131,7 +126,7 @@ def categorize_part(
     )
 
     if not is_valid:
-        return None, None, None
+        return None
 
     # 4. Classification Logic
     category = ComponentCategory.UNKNOWN
@@ -139,7 +134,11 @@ def categorize_part(
 
     # LDR Exception (Light Dependent Resistor)
     if ref_up.startswith("LDR"):
-        return ComponentCategory.OPTOELECTRONICS, val_clean, None
+        return CategorizationResult(
+            category=ComponentCategory.OPTOELECTRONICS,
+            clean_value=val_clean,
+            injected_key=None,
+        )
 
     # Potentiometers (Priority over Resistors to catch 'RANGE')
     if (
@@ -190,4 +189,8 @@ def categorize_part(
     # Final Normalization
     val_clean = normalize_value_by_category(category, val_clean)
 
-    return category, val_clean, injection
+    return CategorizationResult(
+        category=category,
+        clean_value=val_clean,
+        injected_key=injection,
+    )

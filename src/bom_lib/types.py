@@ -12,7 +12,12 @@ from typing import Any, NamedTuple, NotRequired, Protocol, TypedDict, runtime_ch
 
 import pint
 
-from src.bom_lib.enums import ComponentCategory, ComponentSpec, InputMethod
+from src.bom_lib.enums import (
+    ComponentCategory,
+    ComponentOrigin,
+    ComponentSpec,
+    InputMethod,
+)
 
 
 @runtime_checkable
@@ -95,6 +100,34 @@ class PartData(TypedDict):
     sources: dict[str, list[str]]
 
 
+@dataclass(frozen=True, slots=True)
+class CategorizationResult:
+    """Result of classifying a component designator and value.
+
+    Attributes:
+        category: The standardized ComponentCategory enum.
+        clean_value: The normalized component value string.
+        injected_key: Optional secondary part key to inject (e.g. DIP socket).
+    """
+
+    category: ComponentCategory
+    clean_value: str
+    injected_key: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class PurchaseRecommendation:
+    """Recommended purchase quantity and sourcing guidance.
+
+    Attributes:
+        buy_qty: Recommended purchase quantity with buffer applied.
+        note: Sourcing notes, package warnings, or alternatives.
+    """
+
+    buy_qty: int
+    note: str
+
+
 class AlternativeSpec(NamedTuple):
     """Specification for component substitutions and tonal alternatives.
 
@@ -113,7 +146,7 @@ class ResolvedPartSourcing(NamedTuple):
     """Resolved purchasing and supplier details for a component.
 
     Attributes:
-        origin: Sourcing origin ('Circuit Board', 'Hardware Kit', 'Extras').
+        origin: Sourcing origin (Circuit Board, Hardware Kit, Extras).
         buy_qty: Recommended purchase quantity with buffer applied.
         notes: Sourcing notes, package warnings, or Silicon Sommelier recommendations.
         spec_type: Physical material/dielectric specification.
@@ -121,7 +154,7 @@ class ResolvedPartSourcing(NamedTuple):
         supplier_url: Direct link to supplier product page or catalog search.
     """
 
-    origin: str
+    origin: ComponentOrigin
     buy_qty: int
     notes: str
     spec_type: ComponentSpec
@@ -133,7 +166,7 @@ class ChecklistPart(TypedDict):
     """Component checklist item for PDF Field Manual generation.
 
     Attributes:
-        category: Component category name (e.g., 'Resistors', 'Capacitors').
+        category: Component category enum (e.g., ComponentCategory.RESISTORS).
         value: Cleaned component value string (e.g., '10k', 'TL072').
         qty: Total count of this part in the project.
         refs: List of designators for this component (e.g., ['R1', 'R2']).
@@ -141,7 +174,7 @@ class ChecklistPart(TypedDict):
         polarized: True if component requires orientation verification.
     """
 
-    category: str
+    category: ComponentCategory
     value: str
     qty: int
     refs: list[str]
@@ -164,7 +197,7 @@ class PDFPageExtraction(TypedDict):
 ShoppingListRow = TypedDict(
     "ShoppingListRow",
     {
-        "Origin": str,
+        "Origin": ComponentOrigin,
         "Category": str,
         "Part": str,
         "BOM Qty": int,
