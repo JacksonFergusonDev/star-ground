@@ -14,6 +14,26 @@ BASE_SHOPPING_LIST_COLS = [
 ]
 
 
+def get_shopping_list_columns(
+    has_stock: bool = False, include_search_term: bool = False
+) -> list[str]:
+    """Returns the ordered column names for shopping list display and export.
+
+    Args:
+        has_stock: If True, includes 'In Stock' and 'Net Need' columns.
+        include_search_term: If True, includes the 'Search Term' column.
+
+    Returns:
+        List of column name strings in canonical order.
+    """
+    cols = BASE_SHOPPING_LIST_COLS.copy()
+    if include_search_term:
+        cols.insert(5, "Search Term")
+    if has_stock:
+        cols[3:3] = ["In Stock", "Net Need"]
+    return cols
+
+
 def generate_shopping_list_csv(
     data: list[ShoppingListRow], use_excel_formulas: bool = False
 ) -> bytes:
@@ -34,12 +54,10 @@ def generate_shopping_list_csv(
     csv_buf = io.StringIO()
 
     # Define columns based on data presence
-    fields = BASE_SHOPPING_LIST_COLS.copy()
-    fields.insert(5, "Search Term")
-
-    # Inject Stock columns if they exist in the dataset
-    if data and "Net Need" in data[0]:
-        fields[3:3] = ["In Stock", "Net Need"]
+    fields = get_shopping_list_columns(
+        has_stock=bool(data and "Net Need" in data[0]),
+        include_search_term=True,
+    )
 
     writer = csv.DictWriter(csv_buf, fieldnames=fields, extrasaction="ignore")
     writer.writeheader()
