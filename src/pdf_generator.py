@@ -375,13 +375,25 @@ def sort_by_z_height(part_list: list[ChecklistPart]) -> list[ChecklistPart]:
         # 2. Capacitor Check (Electro vs Ceramic)
         if cat == "Capacitors":
             # Electros are tall -> Late build
-            if ("u" in val or "µ" in val) and float_val_check(val) >= 1.0:
+            if _is_microfarad_cap(val):
                 return 60  # Electrolytics rank
             return 40  # Small caps
 
         return z_map.get(cat, 99)
 
     return sorted(part_list, key=get_rank)
+
+
+def _is_microfarad_cap(val_str: str) -> bool:
+    """Heuristic to detect bulk/polarized capacitance (Electrolytics).
+
+    Args:
+        val_str (str): The component value (e.g., '100uF', '47µ').
+
+    Returns:
+        bool: True if likely an electrolytic capacitor, False otherwise.
+    """
+    return bool(val_str and ("u" in val_str or "µ" in val_str))
 
 
 def float_val_check(val_str: str) -> float:
@@ -393,13 +405,7 @@ def float_val_check(val_str: str) -> float:
     Returns:
         float: 1.0 if likely electrolytic, 0.0 otherwise.
     """
-    if not val_str:
-        return 0.0
-
-    if "u" in val_str or "µ" in val_str:
-        return 1.0
-
-    return 0.0
+    return 1.0 if _is_microfarad_cap(val_str) else 0.0
 
 
 def _write_field_manuals(
@@ -435,7 +441,7 @@ def _write_field_manuals(
                     if "DIP SOCKET" in val:
                         row_notes = "[!] Check Size"
                     is_polarized = cat in ["Diodes", "Transistors", "ICs"] or (
-                        cat == "Capacitors" and ("u" in val or "µ" in val)
+                        cat == "Capacitors" and _is_microfarad_cap(val)
                     )
 
                     project_parts.append(
