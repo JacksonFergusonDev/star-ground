@@ -408,59 +408,69 @@ def float_val_check(val_str: str) -> float:
     return 1.0 if _is_microfarad_cap(val_str) else 0.0
 
 
+def _sanitize_filename(name: str) -> str:
+    """Removes invalid filesystem characters from project/file names."""
+    return re.sub(r'[<>:"/\\|?*]', "", name).strip()
+
+
+def _get_unique_projects(slots: list[ProjectSlot]) -> list[tuple[str, ProjectSlot]]:
+    """Returns unique (project_name, slot) pairs, preserving first-seen order."""
+    seen: set[str] = set()
+    unique: list[tuple[str, ProjectSlot]] = []
+    for slot in slots:
+        name = slot.locked_name or slot.name
+        if name and name not in seen:
+            seen.add(name)
+            unique.append((name, slot))
+    return unique
+
+
+def _get_project_parts(
+    inventory: Inventory, project_name: str
+) -> list[tuple[str, str, str, list[str]]]:
+    """Extracts (key, category, val, unique_refs) for a project from inventory."""
+    results: list[tuple[str, str, str, list[str]]] = []
+    for key, data in inventory.items():
+        sources = data["sources"]
+        if project_name in sources:
+            unique_refs = deduplicate_refs(sources[project_name])
+            if unique_refs:
+                cat_enum, val = parse_component_key(key)
+                results.append((key, cat_enum.value, val, unique_refs))
+    return results
+
+
 def _write_field_manuals(
     zf: zipfile.ZipFile, inventory: Inventory, slots: list[ProjectSlot]
 ) -> None:
     """Helper: Generates Field Manual PDFs and writes them to the ZIP archive."""
-    processed_projects = set()
-
-    for slot in slots:
-        project_name = slot.locked_name or slot.name
-        if not project_name:
-            continue
-
-        # Prevent duplicates if multiple slots have the same project name
-        if project_name in processed_projects:
-            continue
-        processed_projects.add(project_name)
-
+    for project_name, _slot in _get_unique_projects(slots):
         pdf = FieldManual()
         project_parts: list[ChecklistPart] = []
 
-        # Filter Global Inventory for this specific Project
-        for key, data in inventory.items():
-            sources = data["sources"]
-            if project_name in sources:
-                unique_refs = deduplicate_refs(sources[project_name])
-                if unique_refs:
-                    cat_enum, val = parse_component_key(key)
-                    cat = cat_enum.value
+        for _key, cat, val, unique_refs in _get_project_parts(inventory, project_name):
+            row_notes = "[!] Check Size" if "DIP SOCKET" in val else ""
+            is_polarized = cat in ["Diodes", "Transistors", "ICs"] or (
+                cat == "Capacitors" and _is_microfarad_cap(val)
+            )
 
-                    # Annotations Logic
-                    row_notes = ""
-                    if "DIP SOCKET" in val:
-                        row_notes = "[!] Check Size"
-                    is_polarized = cat in ["Diodes", "Transistors", "ICs"] or (
-                        cat == "Capacitors" and _is_microfarad_cap(val)
-                    )
-
-                    project_parts.append(
-                        {
-                            "category": cat,
-                            "value": val,
-                            "qty": len(unique_refs),
-                            "refs": unique_refs,
-                            "notes": row_notes,
-                            "polarized": is_polarized,
-                        }
-                    )
+            project_parts.append(
+                {
+                    "category": cat,
+                    "value": val,
+                    "qty": len(unique_refs),
+                    "refs": unique_refs,
+                    "notes": row_notes,
+                    "polarized": is_polarized,
+                }
+            )
 
         if project_parts:
             # Sort parts by Z-Height for the manual
             sorted_parts = sort_by_z_height(project_parts)
             pdf.add_project(project_name, sorted_parts)
 
-            safe_name = re.sub(r'[<>:"/\\|?*]', "", project_name).strip()
+            safe_name = _sanitize_filename(project_name)
             zf.writestr(
                 f"Field Manuals/{safe_name} Field Manual.pdf", bytes(pdf.output())
             )
@@ -470,26 +480,13 @@ def _write_stickers(
     zf: zipfile.ZipFile, inventory: Inventory, slots: list[ProjectSlot]
 ) -> None:
     """Helper: Generates Sticker Sheet PDFs and writes them to the ZIP archive."""
-    processed_projects = set()
-
-    for slot in slots:
-        project_name = slot.locked_name or slot.name
-        if not project_name:
-            continue
-
-        # Prevent duplicates
-        if project_name in processed_projects:
-            continue
-        processed_projects.add(project_name)
-
-        project_parts = []
-        for key, data in inventory.items():
-            sources = data["sources"]
-            if project_name in sources:
-                unique_refs = deduplicate_refs(sources[project_name])
-                if unique_refs:
-                    val = parse_component_key(key)[1]
-                    project_parts.append((val, unique_refs))
+    for project_name, _slot in _get_unique_projects(slots):
+        project_parts = [
+            (val, unique_refs)
+            for _key, _cat, val, unique_refs in _get_project_parts(
+                inventory, project_name
+            )
+        ]
 
         if not project_parts:
             continue
@@ -502,7 +499,7 @@ def _write_stickers(
         for val, refs in project_parts:
             pdf.add_sticker(code, val, refs, len(refs))
 
-        safe_name = re.sub(r'[<>:"/\\|?*]', "", project_name).strip()
+        safe_name = _sanitize_filename(project_name)
         zf.writestr(
             f"Sticker Sheets/{safe_name} Sticker Sheet.pdf", bytes(pdf.output())
         )
@@ -577,12 +574,8 @@ def generate_master_zip(
         # 3. Source Documents (Preservation Logic)
         used_filenames = set()
 
-        for slot in slots:
-            project_name = slot.locked_name or slot.name
-            if not project_name:
-                continue
-
-            safe_name = re.sub(r'[<>:"/\\|?*]', "", project_name).strip()
+        for project_name, slot in _get_unique_projects(slots):
+            safe_name = _sanitize_filename(project_name)
 
             file_content = None
             dest_name = ""
