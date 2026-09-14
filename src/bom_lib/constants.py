@@ -14,25 +14,15 @@ from decimal import Decimal
 from typing import Any
 
 from src.bom_lib.enums import ComponentCategory
+from src.bom_lib.grammar.value_parser import SI_MULTIPLIERS
 from src.bom_lib.types import AlternativeSpec
 from src.bom_lib.units import ureg
 
 # --- Physics & Standards ---
 
 # SI Prefix Multipliers
-# Maps shorthand prefixes to their Decimal multipliers.
-# Includes 'u' (legacy) and 'µ' (correct) for micro-farads.
-MULTIPLIERS: dict[str, Decimal] = {
-    "p": Decimal("1e-12"),  # pico
-    "n": Decimal("1e-9"),  # nano
-    "u": Decimal("1e-6"),  # micro (standard text)
-    "µ": Decimal("1e-6"),  # micro (alt/unicode)
-    "m": Decimal("1e-3"),  # milli
-    "k": Decimal("1e3"),  # kilo
-    "K": Decimal("1e3"),  # kilo (uppercase tolerance)
-    "M": Decimal("1e6"),  # Mega
-    "G": Decimal("1e9"),  # Giga
-}
+# Re-exported from the grammar value parser engine to ensure a single source of truth.
+MULTIPLIERS: dict[str, Decimal] = SI_MULTIPLIERS
 
 # Core Component Designators (IPC Standard)
 # Used to validate if a text token is likely a component reference (e.g., "R1", "C10").
