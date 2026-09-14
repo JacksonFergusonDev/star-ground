@@ -49,7 +49,8 @@ def test_basic_resistor_parsing():
     the inventory structure with the right quantity and source mapping.
     """
     raw_text = "R1 10k"
-    inventory, stats = parse_with_verification([raw_text], source_name="Test Bench")
+    res = parse_with_verification([raw_text], source_name="Test Bench")
+    inventory, stats = res.inventory, res.stats
 
     assert inventory["Resistors | 10k"]["qty"] == 1
     assert "R1" in inventory["Resistors | 10k"]["refs"]
@@ -67,7 +68,7 @@ def test_source_tracking_logic():
     we must track exactly which project requested which specific references.
     """
     raw_text = "R1 10k"
-    inventory, _ = parse_with_verification([raw_text], source_name="Big Muff")
+    inventory = parse_with_verification([raw_text], source_name="Big Muff").inventory
 
     # Simulate a merge operation (manually adding a second source)
     inventory["Resistors | 10k"]["qty"] += 1
@@ -87,7 +88,7 @@ def test_pcb_trap():
     anywhere in the text, handling permissive formatting (e.g., project titles).
     """
     raw_text = "BIG MUFF DIY PCB GUITAR EFFECT"
-    inventory, _ = parse_with_verification([raw_text], source_name="My Build")
+    inventory = parse_with_verification([raw_text], source_name="My Build").inventory
 
     key = "PCB | BIG MUFF DIY PCB GUITAR EFFECT"
     assert inventory[key]["qty"] == 1
@@ -104,7 +105,7 @@ def test_2n5457_behavior():
     """
     # Case 1: Vintage THT Part
     raw_text = "Q1 2N5457"
-    inventory, _ = parse_with_verification([raw_text])
+    inventory = parse_with_verification([raw_text]).inventory
 
     # Should stay as 2N5457
     assert inventory["Transistors | 2N5457"]["qty"] == 1
@@ -114,7 +115,7 @@ def test_2n5457_behavior():
 
     # Case 2: Modern SMD Part
     raw_text_2 = "Q2 MMBF5457"
-    inventory_2, _ = parse_with_verification([raw_text_2])
+    inventory_2 = parse_with_verification([raw_text_2]).inventory
 
     # Should stay as MMBF5457
     assert inventory_2["Transistors | MMBF5457"]["qty"] == 1
@@ -162,7 +163,8 @@ def test_parser_never_crashes(garbage_string):
     the application logic.
     """
     try:
-        inventory, stats = parse_with_verification([garbage_string])
+        res = parse_with_verification([garbage_string])
+        inventory, stats = res.inventory, res.stats
 
         assert isinstance(inventory, MutableMapping)
         assert isinstance(stats, dict)
@@ -598,7 +600,7 @@ def test_ref_expansion_integrity():
     Integration Test: Verifies that the parser actually invokes expansion logic.
     """
     raw_text = "R1-R3 10k"
-    inventory, _ = parse_with_verification([raw_text], source_name="Range Test")
+    inventory = parse_with_verification([raw_text], source_name="Range Test").inventory
 
     item = inventory["Resistors | 10k"]
 
@@ -725,7 +727,7 @@ def test_preset_integrity():
         assert raw_text.strip(), f"Preset '{name}' is empty!"
 
         # Parse check
-        _, stats = parse_with_verification([raw_text], source_name=name)
+        stats = parse_with_verification([raw_text], source_name=name).stats
 
         # Must find parts
         assert stats["parts_found"] > 0, f"Preset '{name}' yielded 0 parts!"

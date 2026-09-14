@@ -30,5 +30,4 @@ class ManualInputStrategy(BOMParserStrategy):
         else:
             bom_list = [str(data)]
 
-        inventory, stats = parse_with_verification(bom_list, source_name=source_name)
-        return ParseResult(inventory=inventory, stats=stats)
+        return parse_with_verification(bom_list, source_name=source_name)

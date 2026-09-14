@@ -172,6 +172,7 @@ class ChecklistPart(TypedDict):
         refs: List of designators for this component (e.g., ['R1', 'R2']).
         notes: Build annotations (e.g. '[!] Check Size').
         polarized: True if component requires orientation verification.
+        spec_type: Optional physical component specification (e.g. ComponentSpec.ELECTROLYTIC).
     """
 
     category: ComponentCategory
@@ -180,6 +181,7 @@ class ChecklistPart(TypedDict):
     refs: list[str]
     notes: str
     polarized: bool
+    spec_type: NotRequired[ComponentSpec]
 
 
 class PDFPageExtraction(TypedDict):
@@ -329,3 +331,20 @@ def create_empty_stats() -> StatsDict:
 def create_empty_inventory() -> Inventory:
     """Factory function to return new Inventory instance."""
     return Inventory()
+
+
+@dataclass(frozen=True, slots=True)
+class ParseResult:
+    """The structured result of parsing a BOM source.
+
+    Attributes:
+        inventory: Populated Inventory mapping component keys to PartData.
+        stats: Parsing statistics, errors, and metadata.
+        title: Optional extracted project or document title.
+        raw_content: Optional raw document bytes or content representation.
+    """
+
+    inventory: Inventory
+    stats: StatsDict
+    title: str | None = None
+    raw_content: bytes | None = None
