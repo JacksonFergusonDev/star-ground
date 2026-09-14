@@ -13,6 +13,7 @@ from src.bom_lib import (
     get_preset_metadata,
     make_component_key,
     parse_component_key,
+    parse_preset_key,
 )
 from src.bom_lib.enums import InputMethod
 from src.bom_lib.strategies.context import BOMParserContext
@@ -50,6 +51,21 @@ def test_parse_component_key_unknown_or_missing_delimiter() -> None:
     cat_raw, val_raw = parse_component_key("JustAPartName")
     assert cat_raw == ComponentCategory.UNKNOWN
     assert val_raw == "JustAPartName"
+
+
+def test_parse_preset_key() -> None:
+    """Verifies parse_preset_key parses 3-part and 2-part preset keys, and handles invalid keys."""
+    # Standard format: [Source] [Category] Name
+    result = parse_preset_key("[PedalPCB] [Boost] Triangulum Boost")
+    assert result == ("PedalPCB", "Boost", "Triangulum Boost")
+
+    # 2-part format without category: [Source] Name
+    result_2part = parse_preset_key("[PedalPCB] Simple Fuzz")
+    assert result_2part == ("PedalPCB", "Misc", "Simple Fuzz")
+
+    # Invalid / empty formats
+    assert parse_preset_key("") is None
+    assert parse_preset_key("Plain String") is None
 
 
 def test_supports_read_and_getvalue_protocols() -> None:
