@@ -1,13 +1,17 @@
 """Tests for boundary models, typed structures, and sort utilities."""
 
+from pathlib import Path
+
 from src.bom_lib import constants
 from src.bom_lib.enums import ComponentCategory, ComponentOrigin, ComponentSpec
+from src.bom_lib.parser import parse_csv_bom, parse_with_verification
 from src.bom_lib.presets import PresetCatalog, PresetLookupEntry, get_preset_metadata
 from src.bom_lib.sourcing import _format_alts, get_spec_type
 from src.bom_lib.types import (
     AlternativeSpec,
     CategorizationResult,
     ChecklistPart,
+    ParseResult,
     PurchaseRecommendation,
 )
 from src.bom_lib.utils import natural_sort_key
@@ -197,3 +201,20 @@ def test_get_spec_type_derivation_without_val_qty() -> None:
     assert get_spec_type(ComponentCategory.CAPACITORS, "100n") == ComponentSpec.BOX_FILM
     assert get_spec_type(ComponentCategory.CAPACITORS, "47p") == ComponentSpec.MLCC
     assert get_spec_type(ComponentCategory.RESISTORS, "10k") == ComponentSpec.NONE
+
+
+def test_parser_functions_return_parse_result(tmp_path: Path) -> None:
+    """Verifies that parse_with_verification and parse_csv_bom return ParseResult."""
+    # parse_with_verification
+    res_text = parse_with_verification(["R1 10k"], source_name="Manual")
+    assert isinstance(res_text, ParseResult)
+    assert res_text.stats["parts_found"] == 1
+    assert "Resistors | 10k" in res_text.inventory
+
+    # parse_csv_bom
+    csv_file = tmp_path / "test_bom.csv"
+    csv_file.write_text("Designator,Value\nR1,10k\nC1,100n\n", encoding="utf-8")
+    res_csv = parse_csv_bom(str(csv_file), source_name="CSV Test")
+    assert isinstance(res_csv, ParseResult)
+    assert res_csv.stats["parts_found"] == 2
+    assert "Resistors | 10k" in res_csv.inventory
