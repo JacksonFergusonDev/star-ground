@@ -12,7 +12,11 @@ from typing import Any, NamedTuple, NotRequired, Protocol, TypedDict, runtime_ch
 
 import pint
 
-from src.bom_lib.enums import ComponentCategory, ComponentSpec, InputMethod
+from src.bom_lib.enums import (
+    ComponentCategory,
+    ComponentSpec,
+    InputMethod,
+)
 
 
 @runtime_checkable
@@ -93,6 +97,34 @@ class PartData(TypedDict):
     val_qty: pint.Quantity[Any] | Decimal | None
     refs: list[str]
     sources: dict[str, list[str]]
+
+
+@dataclass(frozen=True, slots=True)
+class CategorizationResult:
+    """Result of classifying a component designator and value.
+
+    Attributes:
+        category: The standardized ComponentCategory enum.
+        clean_value: The normalized component value string.
+        injected_key: Optional secondary part key to inject (e.g. DIP socket).
+    """
+
+    category: ComponentCategory
+    clean_value: str
+    injected_key: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class PurchaseRecommendation:
+    """Recommended purchase quantity and sourcing guidance.
+
+    Attributes:
+        buy_qty: Recommended purchase quantity with buffer applied.
+        note: Sourcing notes, package warnings, or alternatives.
+    """
+
+    buy_qty: int
+    note: str
 
 
 class AlternativeSpec(NamedTuple):

@@ -54,6 +54,7 @@ from .strategies import (
 )
 from .types import (
     AlternativeSpec,
+    CategorizationResult,
     ChecklistPart,
     Inventory,
     PartData,
@@ -86,6 +87,7 @@ __all__ = [
     "BOMParserContext",
     "BOMParserStrategy",
     "CSVParserStrategy",
+    "CategorizationResult",
     "ChecklistPart",
     "ComponentCategory",
     "ComponentSpec",
