@@ -14,6 +14,7 @@ import pint
 
 from src.bom_lib.enums import (
     ComponentCategory,
+    ComponentOrigin,
     ComponentSpec,
     InputMethod,
 )
@@ -145,7 +146,7 @@ class ResolvedPartSourcing(NamedTuple):
     """Resolved purchasing and supplier details for a component.
 
     Attributes:
-        origin: Sourcing origin ('Circuit Board', 'Hardware Kit', 'Extras').
+        origin: Sourcing origin (Circuit Board, Hardware Kit, Extras).
         buy_qty: Recommended purchase quantity with buffer applied.
         notes: Sourcing notes, package warnings, or Silicon Sommelier recommendations.
         spec_type: Physical material/dielectric specification.
@@ -153,7 +154,7 @@ class ResolvedPartSourcing(NamedTuple):
         supplier_url: Direct link to supplier product page or catalog search.
     """
 
-    origin: str
+    origin: ComponentOrigin
     buy_qty: int
     notes: str
     spec_type: ComponentSpec
@@ -196,7 +197,7 @@ class PDFPageExtraction(TypedDict):
 ShoppingListRow = TypedDict(
     "ShoppingListRow",
     {
-        "Origin": str,
+        "Origin": ComponentOrigin,
         "Category": str,
         "Part": str,
         "BOM Qty": int,

@@ -406,21 +406,21 @@ def test_get_spec_type_exact() -> None:
 def test_get_buy_details_exact_quantities() -> None:
     """Verifies get_buy_details exact matching on bulk and large capacitor thresholds."""
     # 100nF bulk buy
-    buy, note = get_buy_details(
+    rec_bulk = get_buy_details(
         ComponentCategory.CAPACITORS,
         "100n",
         1,
         val_qty=normalize_value_to_quantity(ComponentCategory.CAPACITORS, "100n"),
     )
-    assert buy == 11  # 1 + bulk_buffer (10)
-    assert "Power filtering (buy bulk)." in note
+    assert rec_bulk.buy_qty == 11  # 1 + bulk_buffer (10)
+    assert "Power filtering (buy bulk)." in rec_bulk.note
 
     # 1uF large cap low buffer
-    buy_1u, note_1u = get_buy_details(
+    rec_1u = get_buy_details(
         ComponentCategory.CAPACITORS,
         "1u",
         1,
         val_qty=normalize_value_to_quantity(ComponentCategory.CAPACITORS, "1u"),
     )
-    assert buy_1u == 2  # 1 + large_buffer (1)
-    assert "Rec: Box Film (Check BOM: Could be Electrolytic)" in note_1u
+    assert rec_1u.buy_qty == 2  # 1 + large_buffer (1)
+    assert "Rec: Box Film (Check BOM: Could be Electrolytic)" in rec_1u.note

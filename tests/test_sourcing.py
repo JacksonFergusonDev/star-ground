@@ -3,7 +3,7 @@
 from decimal import Decimal
 
 from src.bom_lib.constants import AUTO_INJECT_SOURCE
-from src.bom_lib.enums import ComponentCategory
+from src.bom_lib.enums import ComponentCategory, ComponentOrigin
 from src.bom_lib.sourcing import (
     build_shopping_list,
     determine_origin,
@@ -35,14 +35,19 @@ def test_determine_origin() -> None:
     # Pure hardware
     assert (
         determine_origin("1590B Enclosure", {AUTO_INJECT_SOURCE: ["HW"]})
-        == "Hardware Kit"
+        == ComponentOrigin.HARDWARE_KIT
     )
 
     # Extras
-    assert determine_origin("8 PIN DIP SOCKET", {"Project A": ["U1 (Inj)"]}) == "Extras"
+    assert (
+        determine_origin("8 PIN DIP SOCKET", {"Project A": ["U1 (Inj)"]})
+        == ComponentOrigin.EXTRAS
+    )
 
     # Circuit board components
-    assert determine_origin("10k", {"Project A": ["R1"]}) == "Circuit Board"
+    assert (
+        determine_origin("10k", {"Project A": ["R1"]}) == ComponentOrigin.CIRCUIT_BOARD
+    )
 
 
 def test_resolve_part_sourcing_circuit_part() -> None:
@@ -57,7 +62,7 @@ def test_resolve_part_sourcing_circuit_part() -> None:
     )
 
     assert isinstance(resolved, ResolvedPartSourcing)
-    assert resolved.origin == "Circuit Board"
+    assert resolved.origin == ComponentOrigin.CIRCUIT_BOARD
     assert resolved.buy_qty == 10  # 4 rounded up with buffer
     assert resolved.search_term == "10k ohm 1/4w metal film"
     assert "https://www.taydaelectronics.com" in resolved.supplier_url
@@ -137,14 +142,14 @@ def test_build_shopping_list_filtering() -> None:
     # Hide hardware
     no_hw_rows = build_shopping_list(inventory, show_hardware=False, show_extras=True)
     assert len(no_hw_rows) == 2
-    assert not any(r["Origin"] == "Hardware Kit" for r in no_hw_rows)
+    assert not any(r["Origin"] == ComponentOrigin.HARDWARE_KIT for r in no_hw_rows)
 
     # Hide extras
     no_extras_rows = build_shopping_list(
         inventory, show_hardware=True, show_extras=False
     )
     assert len(no_extras_rows) == 2
-    assert not any(r["Origin"] == "Extras" for r in no_extras_rows)
+    assert not any(r["Origin"] == ComponentOrigin.EXTRAS for r in no_extras_rows)
 
     # Hide both
     circuit_only = build_shopping_list(
