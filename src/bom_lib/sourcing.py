@@ -17,11 +17,12 @@ import pint
 
 from src.bom_lib import constants
 from src.bom_lib.constants import AUTO_INJECT_SOURCE
-from src.bom_lib.enums import ComponentCategory, ComponentSpec
+from src.bom_lib.enums import ComponentCategory, ComponentOrigin, ComponentSpec
 from src.bom_lib.manager import calculate_net_needs, sort_inventory
 from src.bom_lib.types import (
     AlternativeSpec,
     Inventory,
+    PurchaseRecommendation,
     ResolvedPartSourcing,
     ShoppingListRow,
     StatsDict,
@@ -234,7 +235,7 @@ def get_buy_details(
     val: str,
     count: int,
     val_qty: pint.Quantity[Any] | Decimal | None = None,
-) -> tuple[int, str]:
+) -> PurchaseRecommendation:
     """Calculates the purchase quantity and notes based on 'Nerd Economics'.
 
     Applies logic to buffer small parts (resistors), enforce exact counts
@@ -247,12 +248,10 @@ def get_buy_details(
         val_qty: Pre-computed quantity or Decimal value of the component, if available.
 
     Returns:
-        A tuple containing:
-            - buy: The integer quantity to purchase.
-            - note: A string containing warnings, recommendations, or subs.
+        PurchaseRecommendation containing buy_qty and notes.
     """
     if count <= 0:
-        return 0, ""
+        return PurchaseRecommendation(buy_qty=0, note="")
 
     buy = count
     note = ""
@@ -342,7 +341,7 @@ def get_buy_details(
     elif category == ComponentCategory.PCB:
         note = "Main Board"
 
-    return buy, note
+    return PurchaseRecommendation(buy_qty=buy, note=note)
 
 
 def get_standard_hardware(inventory: Inventory, pedal_count: int = 1) -> None:
@@ -427,13 +426,13 @@ def is_extra_part(val: str) -> bool:
     return "SOCKET" in val_upper or "ADAPTER" in val_upper
 
 
-def determine_origin(val: str, sources: dict[str, list[str]]) -> str:
-    """Classifies component origin as 'Hardware Kit', 'Extras', or 'Circuit Board'."""
+def determine_origin(val: str, sources: dict[str, list[str]]) -> ComponentOrigin:
+    """Classifies component origin as Hardware Kit, Extras, or Circuit Board."""
     if is_pure_hardware(sources):
-        return "Hardware Kit"
+        return ComponentOrigin.HARDWARE_KIT
     if is_extra_part(val):
-        return "Extras"
-    return "Circuit Board"
+        return ComponentOrigin.EXTRAS
+    return ComponentOrigin.CIRCUIT_BOARD
 
 
 def resolve_part_sourcing(
@@ -460,10 +459,12 @@ def resolve_part_sourcing(
     """
     origin = determine_origin(val, sources)
 
-    buy_qty, note = get_buy_details(category, val, net_qty, val_qty=val_qty)
+    advice = get_buy_details(category, val, net_qty, val_qty=val_qty)
+    buy_qty = advice.buy_qty
+    note = advice.note
 
     auto_inject_notes = sources.get(AUTO_INJECT_SOURCE, [])
-    if auto_inject_notes and origin != "Hardware Kit":
+    if auto_inject_notes and origin != ComponentOrigin.HARDWARE_KIT:
         formatted_notes = ", ".join(auto_inject_notes)
         note += f" | 🤖 Standard Part: {formatted_notes}"
 

@@ -76,19 +76,20 @@ def ingest_bom_line(
                 continue
             stats["seen_refs"].add(r)
 
-        cat, clean_val, inj = categorize_part(r, val_raw)
+        result = categorize_part(r, val_raw)
+        if result is None:
+            continue
 
-        if cat:
-            parts_found += 1
-            main_key = make_component_key(cat, clean_val or "")
+        parts_found += 1
+        main_key = make_component_key(result.category, result.clean_value)
 
-            # 1. Record Main Part
-            inventory.add_part(source, main_key, r)
+        # 1. Record Main Part
+        inventory.add_part(source, main_key, r)
 
-            # 2. Handle Auto-Injection (e.g., Sockets)
-            if inj:
-                # inj is pre-formatted as "Category | Value"
-                inventory.add_part(source, inj, f"{r} (Inj)")
+        # 2. Handle Auto-Injection (e.g., Sockets)
+        if result.injected_key:
+            # injected_key is pre-formatted as "Category | Value"
+            inventory.add_part(source, result.injected_key, f"{r} (Inj)")
 
     return parts_found
 

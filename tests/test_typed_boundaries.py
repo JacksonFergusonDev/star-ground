@@ -1,8 +1,14 @@
 """Tests for boundary models, typed structures, and sort utilities."""
 
+from src.bom_lib.enums import ComponentCategory, ComponentOrigin
 from src.bom_lib.presets import PresetCatalog, PresetLookupEntry, get_preset_metadata
 from src.bom_lib.sourcing import _format_alts
-from src.bom_lib.types import AlternativeSpec, ChecklistPart
+from src.bom_lib.types import (
+    AlternativeSpec,
+    CategorizationResult,
+    ChecklistPart,
+    PurchaseRecommendation,
+)
 from src.bom_lib.utils import natural_sort_key
 from src.pdf_generator import sort_by_z_height
 
@@ -35,8 +41,6 @@ def test_preset_catalog_structure() -> None:
     assert isinstance(catalog.categories, dict)
     assert isinstance(catalog.lookup, list)
 
-    # Tuple unpacking backward compatibility removed
-
     if catalog.lookup:
         entry: PresetLookupEntry = catalog.lookup[0]
         assert "full_key" in entry
@@ -49,7 +53,7 @@ def test_checklist_part_z_height_sorting() -> None:
     """Sorts ChecklistPart items according to hardware assembly sequence."""
     parts: list[ChecklistPart] = [
         {
-            "category": "ICs",
+            "category": ComponentCategory.ICS,
             "value": "TL072",
             "qty": 1,
             "refs": ["U1"],
@@ -57,7 +61,7 @@ def test_checklist_part_z_height_sorting() -> None:
             "polarized": True,
         },
         {
-            "category": "Resistors",
+            "category": ComponentCategory.RESISTORS,
             "value": "10k",
             "qty": 2,
             "refs": ["R1", "R2"],
@@ -65,7 +69,7 @@ def test_checklist_part_z_height_sorting() -> None:
             "polarized": False,
         },
         {
-            "category": "PCB",
+            "category": ComponentCategory.PCB,
             "value": "Triangulum",
             "qty": 1,
             "refs": ["PCB"],
@@ -73,7 +77,7 @@ def test_checklist_part_z_height_sorting() -> None:
             "polarized": False,
         },
         {
-            "category": "Hardware/Misc",
+            "category": ComponentCategory.HARDWARE_MISC,
             "value": "8 PIN DIP SOCKET",
             "qty": 1,
             "refs": ["U1 (Inj)"],
@@ -86,7 +90,37 @@ def test_checklist_part_z_height_sorting() -> None:
     categories_in_order = [p["category"] for p in sorted_parts]
 
     # PCB (0) -> Resistors (10) -> Sockets (18) -> ICs (90)
-    assert categories_in_order == ["PCB", "Resistors", "Hardware/Misc", "ICs"]
+    assert categories_in_order == [
+        ComponentCategory.PCB,
+        ComponentCategory.RESISTORS,
+        ComponentCategory.HARDWARE_MISC,
+        ComponentCategory.ICS,
+    ]
+
+
+def test_phase1_boundary_models() -> None:
+    """Verifies immutability and behavior of Phase 1 typed boundary models."""
+    # ComponentOrigin is a StrEnum
+    assert isinstance(ComponentOrigin.CIRCUIT_BOARD, str)
+    assert ComponentOrigin.CIRCUIT_BOARD.value == "Circuit Board"
+    assert ComponentOrigin.HARDWARE_KIT.value == "Hardware Kit"
+    assert ComponentOrigin.EXTRAS.value == "Extras"
+    assert ComponentOrigin("Circuit Board") is ComponentOrigin.CIRCUIT_BOARD
+
+    # CategorizationResult
+    cat_res = CategorizationResult(
+        category=ComponentCategory.RESISTORS,
+        clean_value="10k",
+        injected_key=None,
+    )
+    assert cat_res.category == ComponentCategory.RESISTORS
+    assert cat_res.clean_value == "10k"
+    assert cat_res.injected_key is None
+
+    # PurchaseRecommendation
+    rec = PurchaseRecommendation(buy_qty=10, note="Buffer added")
+    assert rec.buy_qty == 10
+    assert rec.note == "Buffer added"
 
 
 def test_natural_sort_key_types() -> None:
