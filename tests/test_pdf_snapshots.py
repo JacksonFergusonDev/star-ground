@@ -49,7 +49,7 @@ def stabilize_inventory(inventory):
     stable = {}
     for key in sorted(inventory.keys()):
         data = inventory[key]
-        stable[key] = {
+        stable[str(key)] = {
             "qty": data["qty"],
             "refs": sorted(data["refs"]),
             "sources": {k: sorted(v) for k, v in data["sources"].items()},

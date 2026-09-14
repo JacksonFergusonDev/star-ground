@@ -36,7 +36,7 @@ from src.bom_lib import (
 )
 from src.bom_lib.classifier import normalize_value_to_quantity
 from src.bom_lib.enums import ComponentCategory, ComponentSpec
-from src.bom_lib.types import Inventory
+from src.bom_lib.types import ComponentKey, Inventory
 
 # --- Standard Unit Tests ---
 
@@ -374,10 +374,7 @@ def test_hardware_injection_and_smart_merge():
     """
     # Setup: Inventory has 2 existing 3.3k resistors (for the circuit)
     # and 3 Pots (which implies we need 3 Knobs)
-    inventory = cast(
-        Inventory,
-        defaultdict(lambda: {"qty": 0, "refs": [], "sources": defaultdict(list)}),
-    )
+    inventory = Inventory()
     inventory["Resistors | 3.3k"]["qty"] = 2
     inventory["Potentiometers | 100k-B"]["qty"] = 3
 
@@ -489,16 +486,13 @@ def test_fuzz_germanium_trigger():
     of Germanium Transistors into the shopping list.
     """
     # Setup inventory with a Fuzz PCB
-    inventory = cast(
-        Inventory,
-        defaultdict(lambda: {"qty": 0, "refs": [], "sources": defaultdict(list)}),
-    )
+    inventory = Inventory()
     inventory["PCB | Fuzz Face"]["qty"] = 1
 
     get_standard_hardware(inventory, pedal_count=1)
 
     # Check for Ge Transistors in the dictionary
-    ge_key = "Transistors | Germanium PNP"
+    ge_key = ComponentKey(ComponentCategory.TRANSISTORS, "Germanium PNP")
     assert ge_key in inventory
     assert inventory[ge_key]["qty"] == 0
 
@@ -551,22 +545,15 @@ def test_hardware_search_term_validity():
 
     (Simulates usage pattern in app.py).
     """
-    # Fix: Must use defaultdict to prevent KeyError during injection
-    inventory = cast(
-        Inventory,
-        defaultdict(lambda: {"qty": 0, "refs": [], "sources": defaultdict(list)}),
-    )
+    inventory = Inventory()
 
     get_standard_hardware(inventory, pedal_count=1)
 
     # Grab the Enclosure Key
-    target_key = "Hardware/Misc | 1590B Enclosure"
+    target_key = ComponentKey(ComponentCategory.HARDWARE_MISC, "1590B Enclosure")
     assert target_key in inventory
 
-    # Simulate App Logic: specific -> generate -> url
-    category, val = target_key.split(" | ", 1)
-
-    term = generate_search_term(ComponentCategory(category), val)
+    term = generate_search_term(target_key.category, target_key.value)
     url = generate_tayda_url(term)
 
     # Verify content

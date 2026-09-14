@@ -11,7 +11,12 @@ from decimal import Decimal
 
 import pint
 
-from src.bom_lib.types import Inventory, PartData, parse_component_key
+from src.bom_lib.enums import ComponentCategory
+from src.bom_lib.types import (
+    ComponentKey,
+    Inventory,
+    PartData,
+)
 
 
 def calculate_net_needs(bom: Inventory, stock: Inventory) -> Inventory:
@@ -44,7 +49,7 @@ def calculate_net_needs(bom: Inventory, stock: Inventory) -> Inventory:
     return net_inv
 
 
-def sort_inventory(inventory: Inventory) -> list[tuple[str, PartData]]:
+def sort_inventory(inventory: Inventory) -> list[tuple[ComponentKey, PartData]]:
     """Sorts the inventory for display.
 
     Sorting hierarchy:
@@ -59,28 +64,26 @@ def sort_inventory(inventory: Inventory) -> list[tuple[str, PartData]]:
         A list of (key, data) tuples sorted by category and value.
     """
     order = [
-        "PCB",
-        "ICs",
-        "Crystals/Oscillators",
-        "Optoelectronics",
-        "Transistors",
-        "Diodes",
-        "Potentiometers",
-        "Switches",
-        "Capacitors",
-        "Resistors",
-        "Hardware/Misc",
+        ComponentCategory.PCB,
+        ComponentCategory.ICS,
+        ComponentCategory.CRYSTALS_OSCILLATORS,
+        ComponentCategory.OPTOELECTRONICS,
+        ComponentCategory.TRANSISTORS,
+        ComponentCategory.DIODES,
+        ComponentCategory.POTENTIOMETERS,
+        ComponentCategory.SWITCHES,
+        ComponentCategory.CAPACITORS,
+        ComponentCategory.RESISTORS,
+        ComponentCategory.HARDWARE_MISC,
     ]
-    # Map name to index for sorting efficiency
-    pmap = {name: i for i, name in enumerate(order)}
+    # Map category to index for sorting efficiency
+    pmap = {cat: i for i, cat in enumerate(order)}
 
-    def sort_key(item: tuple[str, PartData]) -> tuple[int, Decimal, str]:
+    def sort_key(
+        item: tuple[ComponentKey, PartData],
+    ) -> tuple[int, Decimal, str]:
         key, data = item
-        if " | " not in key:
-            return (999, Decimal(0), key)
-
-        cat_enum, val = parse_component_key(key)
-        rank = pmap.get(cat_enum.value, 100)
+        rank = pmap.get(key.category, 100)
 
         val_qty = data.get("val_qty")
         if isinstance(val_qty, pint.Quantity):
@@ -90,7 +93,7 @@ def sort_inventory(inventory: Inventory) -> list[tuple[str, PartData]]:
         else:
             mag = Decimal(0)
 
-        return (rank, mag, val)
+        return (rank, mag, key.value)
 
     return sorted(inventory.items(), key=sort_key)
 
@@ -130,7 +133,7 @@ def serialize_inventory(inventory: Inventory) -> str:
     sorted_items = sort_inventory(inventory)
 
     for key, data in sorted_items:
-        clean_val = parse_component_key(key)[1]
+        clean_val = key.value
 
         # If we have specific refs (R1, C1), list them individually
         if data["refs"]:

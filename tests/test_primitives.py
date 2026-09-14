@@ -19,7 +19,11 @@ from src.bom_lib.classifier import categorize_part, normalize_value_to_quantity
 from src.bom_lib.enums import ComponentCategory, ComponentSpec
 from src.bom_lib.manager import sort_inventory
 from src.bom_lib.sourcing import get_buy_details, get_spec_type
-from src.bom_lib.types import CategorizationResult, Inventory
+from src.bom_lib.types import (
+    CategorizationResult,
+    ComponentKey,
+    Inventory,
+)
 from src.bom_lib.units import ureg
 from src.bom_lib.utils import (
     expand_refs,
@@ -196,7 +200,9 @@ def test_categorize_part_switch_ambiguity() -> None:
 
 def test_categorize_part_ic_with_socket() -> None:
     """Verifies IC classification with automatic DIP socket injection."""
-    expected_injection = "Hardware/Misc | DIP SOCKET (Check Size)"
+    expected_injection = ComponentKey(
+        ComponentCategory.HARDWARE_MISC, "DIP SOCKET (Check Size)"
+    )
     assert categorize_part("IC1", "TL072") == CategorizationResult(
         ComponentCategory.ICS, "TL072", expected_injection
     )
@@ -340,6 +346,12 @@ def test_sort_inventory_numerical_order() -> None:
 
     sorted_parts = [key for key, _ in sort_inventory(inv)]
     assert sorted_parts == [
+        ComponentKey(ComponentCategory.RESISTORS, "1k"),
+        ComponentKey(ComponentCategory.RESISTORS, "10k"),
+        ComponentKey(ComponentCategory.RESISTORS, "100k"),
+        ComponentKey(ComponentCategory.RESISTORS, "1M"),
+    ]
+    assert [str(k) for k in sorted_parts] == [
         "Resistors | 1k",
         "Resistors | 10k",
         "Resistors | 100k",
@@ -357,6 +369,12 @@ def test_sort_inventory_capacitors_order() -> None:
 
     sorted_parts = [key for key, _ in sort_inventory(inv)]
     assert sorted_parts == [
+        ComponentKey(ComponentCategory.CAPACITORS, "100p"),
+        ComponentKey(ComponentCategory.CAPACITORS, "100n"),
+        ComponentKey(ComponentCategory.CAPACITORS, "1u"),
+        ComponentKey(ComponentCategory.CAPACITORS, "100u"),
+    ]
+    assert [str(k) for k in sorted_parts] == [
         "Capacitors | 100p",
         "Capacitors | 100n",
         "Capacitors | 1u",

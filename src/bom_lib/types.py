@@ -101,18 +101,63 @@ class PartData(TypedDict):
 
 
 @dataclass(frozen=True, slots=True)
+class ComponentKey:
+    """Strongly-typed identity for an electronic component in inventory.
+
+    Attributes:
+        category: The standardized ComponentCategory enum.
+        value: The normalized component value or description string.
+    """
+
+    category: ComponentCategory
+    value: str
+
+    def __str__(self) -> str:
+        """Returns formatted string representation formatted as 'Category | Value'."""
+        return f"{self.category.value} | {self.value}"
+
+    def __lt__(self, other: object) -> bool:
+        """Orders component keys by category value followed by part value."""
+        if not isinstance(other, ComponentKey):
+            return NotImplemented
+        return (self.category.value, self.value) < (
+            other.category.value,
+            other.value,
+        )
+
+    @classmethod
+    def from_string(cls, raw: str) -> ComponentKey:
+        """Parses a formatted string key (e.g., 'Resistors | 10k') into a ComponentKey.
+
+        Args:
+            raw: Formatted string key.
+
+        Returns:
+            A strongly-typed ComponentKey instance.
+        """
+        if " | " not in raw:
+            return cls(ComponentCategory.UNKNOWN, raw)
+        cat_str, val = raw.split(" | ", 1)
+        try:
+            category = ComponentCategory(cat_str)
+        except ValueError:
+            category = ComponentCategory.UNKNOWN
+        return cls(category, val)
+
+
+@dataclass(frozen=True, slots=True)
 class CategorizationResult:
     """Result of classifying a component designator and value.
 
     Attributes:
         category: The standardized ComponentCategory enum.
         clean_value: The normalized component value string.
-        injected_key: Optional secondary part key to inject (e.g. DIP socket).
+        injected_key: Optional secondary component key to inject (e.g. DIP socket).
     """
 
     category: ComponentCategory
     clean_value: str
-    injected_key: str | None = None
+    injected_key: ComponentKey | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -213,55 +258,81 @@ ShoppingListRow = TypedDict(
 )
 
 
-def make_component_key(category: ComponentCategory, val: str) -> str:
-    """Creates a standardized string key for inventory dictionaries.
+def make_component_key(category: ComponentCategory, val: str) -> ComponentKey:
+    """Creates a standardized component key for inventory dictionaries.
 
     Args:
         category: Component category enum.
         val: Component value or part name string.
 
     Returns:
-        Standardized string key formatted as 'Category | Value'.
+        Standardized ComponentKey instance.
     """
-    return f"{category.value} | {val}"
+    return ComponentKey(category=category, value=val)
 
 
-def parse_component_key(key: str) -> tuple[ComponentCategory, str]:
-    """Parses a standardized component key into (ComponentCategory, value).
+def parse_component_key(
+    key: ComponentKey | str,
+) -> tuple[ComponentCategory, str]:
+    """Parses a component key or string into (ComponentCategory, value).
 
     If the key does not contain the ' | ' delimiter or has an unrecognized
     category, returns (ComponentCategory.UNKNOWN, key).
 
     Args:
-        key: Standardized inventory key string.
+        key: A ComponentKey instance or standardized inventory key string.
 
     Returns:
         Tuple of (ComponentCategory, value_string).
     """
-    if " | " not in key:
-        return ComponentCategory.UNKNOWN, key
-    cat_str, val = key.split(" | ", 1)
-    try:
-        category = ComponentCategory(cat_str)
-    except ValueError:
-        category = ComponentCategory.UNKNOWN
-    return category, val
+    if isinstance(key, ComponentKey):
+        return key.category, key.value
+    k = ComponentKey.from_string(key)
+    return k.category, k.value
 
 
-class Inventory(UserDict[str, PartData]):
+class Inventory(UserDict[ComponentKey, PartData]):
     """Stateful domain model for tracking aggregated BOM components.
 
     Encapsulates storage, mutation, and aggregation logic to prevent
     invalid state transitions (e.g., assigning string to quantity).
     """
 
-    def __init__(self, data: dict[str, PartData] | None = None) -> None:
+    def __init__(self, data: dict[ComponentKey, PartData] | None = None) -> None:
         super().__init__(data)
         # Ensure default factory behavior for new keys
         if self.data is None:
             self.data = {}
 
-    def __missing__(self, key: str) -> PartData:
+    @staticmethod
+    def _coerce_key(key: ComponentKey | str) -> ComponentKey:
+        if isinstance(key, ComponentKey):
+            return key
+        return ComponentKey.from_string(key)
+
+    def __getitem__(self, key: ComponentKey | str) -> PartData:
+        """Retrieves part data by ComponentKey or coerced string key."""
+        return super().__getitem__(self._coerce_key(key))
+
+    def __setitem__(self, key: ComponentKey | str, item: PartData) -> None:
+        """Assigns part data by ComponentKey or coerced string key."""
+        super().__setitem__(self._coerce_key(key), item)
+
+    def __delitem__(self, key: ComponentKey | str) -> None:
+        """Deletes part data by ComponentKey or coerced string key."""
+        super().__delitem__(self._coerce_key(key))
+
+    def __contains__(self, key: object) -> bool:
+        """Checks whether a ComponentKey or string key exists in inventory."""
+        if isinstance(key, (ComponentKey, str)):
+            return super().__contains__(self._coerce_key(key))
+        return False
+
+    def get(self, key: ComponentKey | str, default: Any = None) -> Any:
+        """Gets part data by ComponentKey or coerced string key with fallback."""
+        return super().get(self._coerce_key(key), default)
+
+    def __missing__(self, key: ComponentKey) -> PartData:
         """Default factory for new parts."""
         value: PartData = {
             "qty": 0,
@@ -272,25 +343,27 @@ class Inventory(UserDict[str, PartData]):
         self.data[key] = value
         return value
 
-    def add_part(self, source: str, key: str, ref: str, qty: int = 1) -> None:
+    def add_part(
+        self, source: str, key: ComponentKey | str, ref: str, qty: int = 1
+    ) -> None:
         """Records a part in the inventory.
 
         Args:
             source: Source identifier (e.g., "Big Muff").
-            key: The unique component key (e.g., "Resistors | 10k").
+            key: The unique component key or formatted key string.
             ref: The reference designator (e.g., "R1").
             qty: Quantity to add.
         """
-        part = self[key]
+        k = self._coerce_key(key)
+        part = self[k]
 
         # Initialize cached quantity if this is a new part entry
         if part["qty"] == 0:
-            cat, val_str = parse_component_key(key)
-            if cat != ComponentCategory.UNKNOWN:
+            if k.category != ComponentCategory.UNKNOWN:
                 try:
                     from src.bom_lib.classifier import normalize_value_to_quantity
 
-                    part["val_qty"] = normalize_value_to_quantity(cat, val_str)
+                    part["val_qty"] = normalize_value_to_quantity(k.category, k.value)
                 except ValueError:
                     part["val_qty"] = None
             else:
@@ -310,10 +383,11 @@ class Inventory(UserDict[str, PartData]):
             multiplier: Multiplication factor for the incoming inventory quantities.
         """
         for key, data in other.items():
-            self[key]["qty"] += data["qty"] * multiplier
-            self[key]["refs"].extend(data["refs"])
+            k = self._coerce_key(key)
+            self[k]["qty"] += data["qty"] * multiplier
+            self[k]["refs"].extend(data["refs"])
             for src, refs in data["sources"].items():
-                self[key]["sources"][src].extend(refs * multiplier)
+                self[k]["sources"][src].extend(refs * multiplier)
 
 
 def create_empty_stats() -> StatsDict:

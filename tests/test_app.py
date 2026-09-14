@@ -1,6 +1,4 @@
 import uuid
-from collections import defaultdict
-from typing import cast
 
 import pytest
 from streamlit.testing.v1 import AppTest
@@ -80,10 +78,7 @@ def test_csv_processing_via_state_injection(app):
     session_state. It ensures that if data *is* loaded, the UI reacts correctly.
     """
     # 1. Mock the inventory structure that the CSV parser WOULD have produced
-    mock_inventory = cast(
-        Inventory,
-        defaultdict(lambda: {"qty": 0, "refs": [], "sources": defaultdict(list)}),
-    )
+    mock_inventory = Inventory()
     mock_inventory["Resistors | 10k"]["qty"] = 5
     mock_inventory["Resistors | 10k"]["sources"]["Mock Project"] = ["R1-R5"]
 
@@ -91,10 +86,7 @@ def test_csv_processing_via_state_injection(app):
     mock_inventory["Capacitors | 22n"]["sources"]["Mock Project"] = ["C1", "C2"]
 
     # Mock Stock (User already has 2x 10k resistors)
-    mock_stock = cast(
-        Inventory,
-        defaultdict(lambda: {"qty": 0, "refs": [], "sources": defaultdict(list)}),
-    )
+    mock_stock = Inventory()
     mock_stock["Resistors | 10k"]["qty"] = 2
 
     mock_stats = {"lines_read": 7, "parts_found": 7, "residuals": []}

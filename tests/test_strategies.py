@@ -10,7 +10,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 import requests
 
-from src.bom_lib.enums import InputMethod
+from src.bom_lib.enums import ComponentCategory, InputMethod
 from src.bom_lib.strategies import (
     BOMParserContext,
     CSVParserStrategy,
@@ -18,6 +18,7 @@ from src.bom_lib.strategies import (
     ParseResult,
     PDFParserStrategy,
 )
+from src.bom_lib.types import ComponentKey
 
 
 @dataclass
@@ -55,7 +56,7 @@ class TestManualInputStrategy:
         assert isinstance(result, ParseResult)
         assert result.stats["parts_found"] == 3
         assert result.stats["lines_read"] == 3
-        assert "Resistors | 10k" in result.inventory
+        assert ComponentKey(ComponentCategory.RESISTORS, "10k") in result.inventory
         assert result.inventory["Resistors | 10k"]["qty"] == 1
         assert "R1" in result.inventory["Resistors | 10k"]["refs"]
         assert result.title is None
@@ -69,8 +70,8 @@ class TestManualInputStrategy:
 
         assert isinstance(result, ParseResult)
         assert result.stats["parts_found"] == 2
-        assert "Resistors | 10k" in result.inventory
-        assert "Resistors | 100k" in result.inventory
+        assert ComponentKey(ComponentCategory.RESISTORS, "10k") in result.inventory
+        assert ComponentKey(ComponentCategory.RESISTORS, "100k") in result.inventory
 
 
 class TestCSVParserStrategy:
@@ -110,7 +111,7 @@ class TestCSVParserStrategy:
 
         assert isinstance(result, ParseResult)
         assert result.stats["parts_found"] == 3
-        assert "Resistors | 10k" in result.inventory
+        assert ComponentKey(ComponentCategory.RESISTORS, "10k") in result.inventory
         assert result.inventory["Resistors | 10k"]["qty"] == 1
         assert "R1" in result.inventory["Resistors | 10k"]["refs"]
 
@@ -122,7 +123,7 @@ class TestCSVParserStrategy:
 
         assert isinstance(result, ParseResult)
         assert result.stats["parts_found"] == 1
-        assert "Resistors | 10k" in result.inventory
+        assert ComponentKey(ComponentCategory.RESISTORS, "10k") in result.inventory
 
     def test_parse_file_path(self, tmp_path: Any) -> None:
         strategy = CSVParserStrategy()
@@ -133,7 +134,7 @@ class TestCSVParserStrategy:
 
         assert isinstance(result, ParseResult)
         assert result.stats["parts_found"] == 1
-        assert "Resistors | 10k" in result.inventory
+        assert ComponentKey(ComponentCategory.RESISTORS, "10k") in result.inventory
 
     def test_parse_temp_file_cleanup(self) -> None:
         strategy = CSVParserStrategy()
@@ -284,8 +285,8 @@ class TestBOMParserContext:
 
         assert isinstance(result, ParseResult)
         assert result.stats["parts_found"] == 2
-        assert "Resistors | 10k" in result.inventory
-        assert "Capacitors | 100n" in result.inventory
+        assert ComponentKey(ComponentCategory.RESISTORS, "10k") in result.inventory
+        assert ComponentKey(ComponentCategory.CAPACITORS, "100n") in result.inventory
 
     def test_process_preset(self) -> None:
         context = BOMParserContext()
@@ -293,7 +294,7 @@ class TestBOMParserContext:
 
         assert isinstance(result, ParseResult)
         assert result.stats["parts_found"] == 1
-        assert "Resistors | 10k" in result.inventory
+        assert ComponentKey(ComponentCategory.RESISTORS, "10k") in result.inventory
 
     def test_process_upload_file_csv(self) -> None:
         context = BOMParserContext()
@@ -304,7 +305,7 @@ class TestBOMParserContext:
 
         assert isinstance(result, ParseResult)
         assert result.stats["parts_found"] == 1
-        assert "Resistors | 10k" in result.inventory
+        assert ComponentKey(ComponentCategory.RESISTORS, "10k") in result.inventory
 
     def test_process_upload_file_pdf(self, sample_pdf_bytes: bytes) -> None:
         context = BOMParserContext()
@@ -348,7 +349,7 @@ class TestBOMParserContext:
 
         assert isinstance(result, ParseResult)
         assert result.stats["parts_found"] == 2
-        assert "Resistors | 10k" in result.inventory
+        assert ComponentKey(ComponentCategory.RESISTORS, "10k") in result.inventory
 
     def test_process_from_url_network_error(self) -> None:
         context = BOMParserContext()

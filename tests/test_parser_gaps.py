@@ -1,6 +1,10 @@
 import pytest
 
-from src.bom_lib import parse_with_verification
+from src.bom_lib import (
+    ComponentCategory,
+    ComponentKey,
+    parse_with_verification,
+)
 
 
 @pytest.mark.xfail(reason="Regex drops parenthetical state modifiers, see Milestone 2")
@@ -12,7 +16,7 @@ def test_gap_truncated_switch_states() -> None:
 
     # The parser currently grabs "SPDT" and discards the rest.
     # The grammar rewrite must capture the full string.
-    assert "Switches | SPDT (On/Off/On)" in inventory
+    assert ComponentKey(ComponentCategory.SWITCHES, "SPDT (On/Off/On)") in inventory
     assert stats["parts_found"] == 1
 
 
@@ -23,7 +27,7 @@ def test_gap_bs1852_notation() -> None:
     res = parse_with_verification([raw_bom], source_name="Test")
     inventory, stats = res.inventory, res.stats
 
-    assert "Resistors | 4.7k" in inventory
+    assert ComponentKey(ComponentCategory.RESISTORS, "4.7k") in inventory
     assert stats["parts_found"] == 1
 
 
@@ -37,8 +41,10 @@ def test_gap_switch_miscategorization() -> None:
 
     # Because the designator is "GAIN", the current classifier heuristic
     # assumes it's a Potentiometer. The grammar needs stronger type inference.
-    assert "Switches | SPDT On - On" in inventory
-    assert "Potentiometers | SPDT On - On" not in inventory
+    assert ComponentKey(ComponentCategory.SWITCHES, "SPDT On - On") in inventory
+    assert (
+        ComponentKey(ComponentCategory.POTENTIOMETERS, "SPDT On - On") not in inventory
+    )
 
 
 @pytest.mark.xfail(
@@ -50,8 +56,8 @@ def test_gap_value_extraction_anchoring() -> None:
     inventory = parse_with_verification([raw_bom], source_name="Test").inventory
 
     # Current regex captures "9v1" and misses the actual part number "1N4739A".
-    assert "Diodes | 1N4739A" in inventory
-    assert "Diodes | 9v1" not in inventory
+    assert ComponentKey(ComponentCategory.DIODES, "1N4739A") in inventory
+    assert ComponentKey(ComponentCategory.DIODES, "9v1") not in inventory
 
 
 @pytest.mark.xfail(
@@ -63,4 +69,4 @@ def test_gap_dropped_dielectrics() -> None:
     inventory = parse_with_verification([raw_bom], source_name="Test").inventory
 
     # Current regex collapses this into generic "1u", dropping the critical MLCC tag.
-    assert "Capacitors | 1u MLCC" in inventory
+    assert ComponentKey(ComponentCategory.CAPACITORS, "1u MLCC") in inventory

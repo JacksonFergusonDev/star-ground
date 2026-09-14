@@ -25,13 +25,13 @@ from fpdf.enums import XPos, YPos
 from src.bom_lib import (
     ChecklistPart,
     ComponentCategory,
+    ComponentKey,
     ComponentSpec,
     Inventory,
     ProjectSlot,
     deduplicate_refs,
     get_spec_type,
 )
-from src.bom_lib.types import parse_component_key
 
 
 def condense_refs(refs: list[str]) -> str:
@@ -419,14 +419,14 @@ class ProjectPartItem:
     """A component entry extracted from inventory for a specific project.
 
     Attributes:
-        key: Standardized component key (e.g. 'Resistors | 10k').
+        key: Standardized ComponentKey instance.
         category: The determined component category enum.
         value: The normalized component value string.
         unique_refs: Deduplicated designator references in the project.
         val_qty: The cached physical quantity or Decimal value, if available.
     """
 
-    key: str
+    key: ComponentKey
     category: ComponentCategory
     value: str
     unique_refs: list[str]
@@ -443,12 +443,11 @@ def _get_project_parts(
         if project_name in sources:
             unique_refs = deduplicate_refs(sources[project_name])
             if unique_refs:
-                cat_enum, val = parse_component_key(key)
                 results.append(
                     ProjectPartItem(
                         key=key,
-                        category=cat_enum,
-                        value=val,
+                        category=key.category,
+                        value=key.value,
                         unique_refs=unique_refs,
                         val_qty=data.get("val_qty"),
                     )
