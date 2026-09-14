@@ -182,9 +182,10 @@ def get_clean_name(raw_key: str) -> str:
     """Parses '[Source] [Category] Name' into 'Name - Source'."""
     if not raw_key:
         return ""
-    match = re.match(r"^\[(.*?)\] (?:\[(.*?)\] )?(.*)$", raw_key)
-    if match:
-        src = match.group(1)
-        name = match.group(3)
+    from src.bom_lib.presets import parse_preset_key
+
+    parsed = parse_preset_key(raw_key)
+    if parsed:
+        src, _cat, name = parsed
         return f"{name} - {src}"
     return raw_key

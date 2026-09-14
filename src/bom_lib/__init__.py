@@ -28,6 +28,7 @@ from .presets import (
     PresetData,
     PresetLookupEntry,
     get_preset_metadata,
+    parse_preset_key,
 )
 from .sourcing import (
     build_shopping_list,
@@ -133,6 +134,7 @@ __all__ = [
     "parse_component_key",
     "parse_csv_bom",
     "parse_pedalpcb_pdf",
+    "parse_preset_key",
     "parse_user_inventory",
     "parse_value_to_decimal",
     "parse_with_verification",
