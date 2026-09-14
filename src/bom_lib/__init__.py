@@ -55,7 +55,6 @@ from .strategies import (
     BOMParserStrategy,
     CSVParserStrategy,
     ManualInputStrategy,
-    ParseResult,
     PDFParserStrategy,
 )
 from .types import (
@@ -63,6 +62,7 @@ from .types import (
     CategorizationResult,
     ChecklistPart,
     Inventory,
+    ParseResult,
     PartData,
     PDFPageExtraction,
     ProjectSlot,

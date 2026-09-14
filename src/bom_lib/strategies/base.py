@@ -5,20 +5,11 @@ import tempfile
 from abc import ABC, abstractmethod
 from collections.abc import Generator
 from contextlib import contextmanager
-from dataclasses import dataclass
 
 from src.bom_lib.enums import InputMethod
-from src.bom_lib.types import Inventory, RawBOMData, StatsDict
+from src.bom_lib.types import ParseResult, RawBOMData
 
-
-@dataclass
-class ParseResult:
-    """The result of parsing a BOM source."""
-
-    inventory: Inventory
-    stats: StatsDict
-    title: str | None = None
-    raw_content: bytes | None = None
+__all__ = ["BOMParserStrategy", "ParseResult"]
 
 
 class BOMParserStrategy(ABC):
