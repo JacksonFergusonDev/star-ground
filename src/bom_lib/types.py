@@ -166,7 +166,7 @@ class ChecklistPart(TypedDict):
     """Component checklist item for PDF Field Manual generation.
 
     Attributes:
-        category: Component category name (e.g., 'Resistors', 'Capacitors').
+        category: Component category enum (e.g., ComponentCategory.RESISTORS).
         value: Cleaned component value string (e.g., '10k', 'TL072').
         qty: Total count of this part in the project.
         refs: List of designators for this component (e.g., ['R1', 'R2']).
@@ -174,7 +174,7 @@ class ChecklistPart(TypedDict):
         polarized: True if component requires orientation verification.
     """
 
-    category: str
+    category: ComponentCategory
     value: str
     qty: int
     refs: list[str]
