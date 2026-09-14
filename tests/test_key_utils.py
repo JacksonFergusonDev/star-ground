@@ -5,6 +5,7 @@ import io
 from src.bom_lib import (
     BOM_PRESETS,
     ComponentCategory,
+    ComponentKey,
     PDFPageExtraction,
     PresetCatalog,
     ProjectSlot,
@@ -20,20 +21,28 @@ from src.bom_lib.strategies.context import BOMParserContext
 
 
 def test_make_component_key() -> None:
-    """Verifies that make_component_key constructs consistent formatted strings."""
-    # With Enum
-    assert make_component_key(ComponentCategory.RESISTORS, "10k") == "Resistors | 10k"
-    assert make_component_key(ComponentCategory.PCB, "Big Muff") == "PCB | Big Muff"
+    """Verifies that make_component_key constructs a strongly typed ComponentKey."""
+    key = make_component_key(ComponentCategory.RESISTORS, "10k")
+    assert isinstance(key, ComponentKey)
+    assert key.category == ComponentCategory.RESISTORS
+    assert key.value == "10k"
+    assert str(key) == "Resistors | 10k"
 
-    # With Raw String (Removed backwards compatibility)
-    # Testing only enum now
+    key_pcb = make_component_key(ComponentCategory.PCB, "Big Muff")
+    assert key_pcb == ComponentKey(ComponentCategory.PCB, "Big Muff")
+    assert str(key_pcb) == "PCB | Big Muff"
 
 
 def test_parse_component_key_valid() -> None:
-    """Verifies parse_component_key parses standard formatted keys."""
+    """Verifies parse_component_key parses standard formatted keys and ComponentKey objects."""
     cat, val = parse_component_key("Resistors | 10k")
     assert cat == ComponentCategory.RESISTORS
     assert val == "10k"
+
+    key_obj = ComponentKey(ComponentCategory.RESISTORS, "10k")
+    cat_direct, val_direct = parse_component_key(key_obj)
+    assert cat_direct == ComponentCategory.RESISTORS
+    assert val_direct == "10k"
 
     cat_pcb, val_pcb = parse_component_key("PCB | Triangulum Boost")
     assert cat_pcb == ComponentCategory.PCB
@@ -104,12 +113,12 @@ def test_parser_context_with_raw_bom_data() -> None:
 
     # Str
     res_str = context.process(InputMethod.PASTE_TEXT, "R1 10k", "Manual")
-    assert "Resistors | 10k" in res_str.inventory
+    assert ComponentKey(ComponentCategory.RESISTORS, "10k") in res_str.inventory
 
     # List of str
     res_list = context.process(InputMethod.PASTE_TEXT, ["R1 10k", "R2 4.7k"], "Manual")
-    assert "Resistors | 10k" in res_list.inventory
-    assert "Resistors | 4.7k" in res_list.inventory
+    assert ComponentKey(ComponentCategory.RESISTORS, "10k") in res_list.inventory
+    assert ComponentKey(ComponentCategory.RESISTORS, "4.7k") in res_list.inventory
 
     # None / Empty
     res_empty = context.process(InputMethod.PASTE_TEXT, None, "Empty")

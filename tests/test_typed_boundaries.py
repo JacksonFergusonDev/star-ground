@@ -2,6 +2,8 @@
 
 from pathlib import Path
 
+import pytest
+
 from src.bom_lib import constants
 from src.bom_lib.enums import ComponentCategory, ComponentOrigin, ComponentSpec
 from src.bom_lib.parser import parse_csv_bom, parse_with_verification
@@ -11,6 +13,8 @@ from src.bom_lib.types import (
     AlternativeSpec,
     CategorizationResult,
     ChecklistPart,
+    ComponentKey,
+    Inventory,
     ParseResult,
     PurchaseRecommendation,
 )
@@ -209,7 +213,7 @@ def test_parser_functions_return_parse_result(tmp_path: Path) -> None:
     res_text = parse_with_verification(["R1 10k"], source_name="Manual")
     assert isinstance(res_text, ParseResult)
     assert res_text.stats["parts_found"] == 1
-    assert "Resistors | 10k" in res_text.inventory
+    assert ComponentKey(ComponentCategory.RESISTORS, "10k") in res_text.inventory
 
     # parse_csv_bom
     csv_file = tmp_path / "test_bom.csv"
@@ -217,4 +221,81 @@ def test_parser_functions_return_parse_result(tmp_path: Path) -> None:
     res_csv = parse_csv_bom(str(csv_file), source_name="CSV Test")
     assert isinstance(res_csv, ParseResult)
     assert res_csv.stats["parts_found"] == 2
-    assert "Resistors | 10k" in res_csv.inventory
+    assert ComponentKey(ComponentCategory.RESISTORS, "10k") in res_csv.inventory
+
+
+def test_component_key_domain_model() -> None:
+    """Verifies ComponentKey equality, immutability, ordering, and string parsing."""
+    import dataclasses
+
+    k1 = ComponentKey(ComponentCategory.RESISTORS, "10k")
+    k2 = ComponentKey(ComponentCategory.RESISTORS, "10k")
+    k3 = ComponentKey(ComponentCategory.CAPACITORS, "100n")
+
+    # Equality & Hashing
+    assert k1 == k2
+    assert hash(k1) == hash(k2)
+    assert k1 != k3
+
+    # String representation & round-trip
+    assert str(k1) == "Resistors | 10k"
+    parsed_k1 = ComponentKey.from_string("Resistors | 10k")
+    assert parsed_k1 == k1
+
+    # Immutability
+    with pytest.raises(dataclasses.FrozenInstanceError):
+        k1.value = "20k"  # type: ignore[misc]
+
+    # Fallback for unrecognized categories
+    fallback = ComponentKey.from_string("UnknownCat | 123")
+    assert fallback.category == ComponentCategory.UNKNOWN
+    assert fallback.value == "123"
+
+    raw_single = ComponentKey.from_string("BareValue")
+    assert raw_single.category == ComponentCategory.UNKNOWN
+    assert raw_single.value == "BareValue"
+
+    # Ordering
+    sorted_keys = sorted([k1, k3])
+    assert sorted_keys == [k3, k1]  # "Capacitors" < "Resistors"
+
+
+def test_typed_inventory_coercion_and_operations() -> None:
+    """Verifies Inventory operations across ComponentKey and legacy string coercion."""
+    inv = Inventory()
+    key_r = ComponentKey(ComponentCategory.RESISTORS, "10k")
+
+    # Add parts using both ComponentKey and string
+    inv.add_part("ProjectA", key_r, "R1")
+    inv.add_part("ProjectA", "Resistors | 10k", "R2")
+    inv.add_part("ProjectB", "Capacitors | 100n", "C1")
+
+    # Quantities and metadata
+    assert inv[key_r]["qty"] == 2
+    assert inv["Resistors | 10k"]["qty"] == 2
+    assert key_r in inv
+    str_key: object = "Resistors | 10k"
+    assert str_key in inv
+    str_cap: object = "Capacitors | 100n"
+    assert str_cap in inv
+
+    # Key iteration yields ComponentKey instances
+    all_keys = list(inv.keys())
+    assert all(isinstance(k, ComponentKey) for k in all_keys)
+
+    # Dictionary get with coercion
+    assert inv.get(key_r) is not None
+    assert inv.get("Resistors | 10k") is not None
+    assert inv.get("NonExistentKey") is None
+
+    # Deletion with coercion
+    del inv["Capacitors | 100n"]
+    assert str_cap not in inv
+    assert ComponentKey(ComponentCategory.CAPACITORS, "100n") not in inv
+
+    # Inventory merge
+    inv2 = Inventory()
+    inv2.add_part("ProjectC", key_r, "R3")
+    inv.merge(inv2, multiplier=2)
+    assert inv[key_r]["qty"] == 4  # 2 original + 2 * 1
+    assert inv[key_r]["sources"]["ProjectC"] == ["R3", "R3"]
