@@ -13,7 +13,7 @@ import pint
 
 from src.bom_lib import constants
 from src.bom_lib.enums import ComponentCategory
-from src.bom_lib.types import CategorizationResult
+from src.bom_lib.types import CategorizationResult, ComponentKey
 from src.bom_lib.units import ureg
 from src.bom_lib.utils import (
     float_to_search_string,
@@ -130,7 +130,7 @@ def categorize_part(ref: str, val: str) -> CategorizationResult | None:
 
     # 4. Classification Logic
     category = ComponentCategory.UNKNOWN
-    injection: str | None = None
+    injection: ComponentKey | None = None
 
     # LDR Exception (Light Dependent Resistor)
     if ref_up.startswith("LDR"):
@@ -182,8 +182,8 @@ def categorize_part(ref: str, val: str) -> CategorizationResult | None:
         # (e.g., Regulators, Reverb Bricks)
         skip_injection_keywords = ["REGULATOR", "L78L", "MODULE", "BTDR", "REVERB"]
         if not any(k in val_up for k in skip_injection_keywords):
-            injection = (
-                f"{ComponentCategory.HARDWARE_MISC.value} | DIP SOCKET (Check Size)"
+            injection = ComponentKey(
+                ComponentCategory.HARDWARE_MISC, "DIP SOCKET (Check Size)"
             )
 
     # Final Normalization

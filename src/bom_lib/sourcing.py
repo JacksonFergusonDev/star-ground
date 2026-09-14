@@ -22,12 +22,12 @@ from src.bom_lib.enums import ComponentCategory, ComponentOrigin, ComponentSpec
 from src.bom_lib.manager import calculate_net_needs, sort_inventory
 from src.bom_lib.types import (
     AlternativeSpec,
+    ComponentKey,
     Inventory,
     PurchaseRecommendation,
     ResolvedPartSourcing,
     ShoppingListRow,
     StatsDict,
-    parse_component_key,
 )
 from src.bom_lib.units import ureg
 from src.bom_lib.utils import (
@@ -95,11 +95,13 @@ def get_injection_warnings(inventory: Inventory) -> list[str]:
         A list of warning strings (e.g., checking SMD adapters).
     """
     warnings = []
-    if inventory["Hardware/Misc | SMD_ADAPTER_BOARD"]["qty"] > 0:
+    smd_key = ComponentKey(ComponentCategory.HARDWARE_MISC, "SMD_ADAPTER_BOARD")
+    if inventory[smd_key]["qty"] > 0:
         warnings.append(
             "⚠️  SMD ADAPTERS: Added for MMBF5457. Check if your PCB has SOT-23 pads first."
         )
-    if inventory["Hardware/Misc | 8 PIN DIP SOCKET"]["qty"] > 0:
+    dip_key = ComponentKey(ComponentCategory.HARDWARE_MISC, "8 PIN DIP SOCKET")
+    if inventory[dip_key]["qty"] > 0:
         warnings.append(
             "ℹ️  IC SOCKETS: Added sockets for chips. Optional but recommended."  # noqa: RUF001
         )
@@ -368,7 +370,7 @@ def get_standard_hardware(inventory: Inventory, pedal_count: int = 1) -> None:
         note: str,
         qty_override: int | None = None,
     ) -> None:
-        key = f"{category.value} | {val}"
+        key = ComponentKey(category=category, value=val)
         total_qty = (
             qty_override if qty_override is not None else (qty_per_pedal * pedal_count)
         )
@@ -382,7 +384,11 @@ def get_standard_hardware(inventory: Inventory, pedal_count: int = 1) -> None:
     inject(ComponentCategory.DIODES, "LED", 1, "Status Light")
 
     # 2. Germanium Heuristic (Fuzz check)
-    if any("FUZZ" in k.upper() for k in inventory if k.startswith("PCB")):
+    if any(
+        "FUZZ" in k.value.upper()
+        for k in inventory
+        if k.category == ComponentCategory.PCB
+    ):
         inject(ComponentCategory.TRANSISTORS, "Germanium PNP", 0, "Vintage Option")
 
     # 3. Standard Enclosure Hardware
@@ -402,7 +408,9 @@ def get_standard_hardware(inventory: Inventory, pedal_count: int = 1) -> None:
 
     # 4. Potentiometer Hardware (Knobs/Seals)
     total_pots = sum(
-        d["qty"] for k, d in inventory.items() if k.startswith("Potentiometers")
+        d["qty"]
+        for k, d in inventory.items()
+        if k.category == ComponentCategory.POTENTIOMETERS
     )
     if total_pots > 0:
         inject(
@@ -529,10 +537,7 @@ def build_shopping_list(
     shopping_list: list[ShoppingListRow] = []
 
     for part_key, item in sorted_parts:
-        if " | " not in part_key:
-            continue
-
-        category, value = parse_component_key(part_key)
+        category, value = part_key.category, part_key.value
         sources = item["sources"]
 
         if is_pure_hardware(sources) and not show_hardware:
