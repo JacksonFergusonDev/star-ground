@@ -1,5 +1,6 @@
 """Tests for CSV exporters using typed ShoppingListRow."""
 
+from src.bom_lib.enums import ComponentOrigin
 from src.bom_lib.types import ShoppingListRow
 from src.exporters import (
     BASE_SHOPPING_LIST_COLS,
@@ -32,7 +33,7 @@ def test_generate_shopping_list_csv_standard() -> None:
     """Generates standard CSV without formulas and without stock columns."""
     rows: list[ShoppingListRow] = [
         {
-            "Origin": "Circuit Board",
+            "Origin": ComponentOrigin.CIRCUIT_BOARD,
             "Category": "Resistors",
             "Part": "10k",
             "BOM Qty": 4,
@@ -59,7 +60,7 @@ def test_generate_shopping_list_csv_with_stock_and_formula() -> None:
     """Generates CSV with stock columns and Excel HYPERLINK formulas."""
     rows: list[ShoppingListRow] = [
         {
-            "Origin": "Circuit Board",
+            "Origin": ComponentOrigin.CIRCUIT_BOARD,
             "Category": "Capacitors",
             "Part": "100n",
             "BOM Qty": 5,
@@ -95,7 +96,7 @@ def test_generate_stock_update_csv() -> None:
     """Calculates remaining stock and excludes non-positive remainder rows."""
     rows: list[ShoppingListRow] = [
         {
-            "Origin": "Circuit Board",
+            "Origin": ComponentOrigin.CIRCUIT_BOARD,
             "Category": "Resistors",
             "Part": "10k",
             "BOM Qty": 4,
@@ -107,7 +108,7 @@ def test_generate_stock_update_csv() -> None:
             "Tayda_Link": "",
         },
         {
-            "Origin": "Circuit Board",
+            "Origin": ComponentOrigin.CIRCUIT_BOARD,
             "Category": "ICs",
             "Part": "TL072",
             "BOM Qty": 2,
