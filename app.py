@@ -27,9 +27,9 @@ from src.bom_lib import (
     sort_inventory,
 )
 from src.exporters import (
-    BASE_SHOPPING_LIST_COLS,
     generate_shopping_list_csv,
     generate_stock_update_csv,
+    get_shopping_list_columns,
 )
 from src.feedback import save_feedback
 from src.pdf_generator import generate_master_zip, generate_pdf_bundle
@@ -607,12 +607,7 @@ if st.session_state.inventory and st.session_state.stats:
     st.subheader("🛒 Master Shopping List")
 
     # Dynamic Columns (Conditionally add stock columns)
-    display_cols = BASE_SHOPPING_LIST_COLS.copy()
-
-    # Only add Stock columns if stock was actually provided
-    if stock:
-        # Insert them after BOM Qty
-        display_cols[3:3] = ["In Stock", "Net Need"]
+    display_cols = get_shopping_list_columns(has_stock=bool(stock))
 
     # Configure the dataframe
     st.dataframe(

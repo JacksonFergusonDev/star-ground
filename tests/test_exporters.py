@@ -1,7 +1,31 @@
 """Tests for CSV exporters using typed ShoppingListRow."""
 
 from src.bom_lib.types import ShoppingListRow
-from src.exporters import generate_shopping_list_csv, generate_stock_update_csv
+from src.exporters import (
+    BASE_SHOPPING_LIST_COLS,
+    generate_shopping_list_csv,
+    generate_stock_update_csv,
+    get_shopping_list_columns,
+)
+
+
+def test_get_shopping_list_columns() -> None:
+    """Verifies column ordering for base, with stock, and with search term."""
+    # Base layout
+    base_cols = get_shopping_list_columns(has_stock=False, include_search_term=False)
+    assert base_cols == BASE_SHOPPING_LIST_COLS
+    assert "In Stock" not in base_cols
+    assert "Search Term" not in base_cols
+
+    # With stock
+    stock_cols = get_shopping_list_columns(has_stock=True, include_search_term=False)
+    assert stock_cols[3:5] == ["In Stock", "Net Need"]
+    assert "Search Term" not in stock_cols
+
+    # With search term and stock
+    full_cols = get_shopping_list_columns(has_stock=True, include_search_term=True)
+    assert full_cols[3:5] == ["In Stock", "Net Need"]
+    assert "Search Term" in full_cols
 
 
 def test_generate_shopping_list_csv_standard() -> None:

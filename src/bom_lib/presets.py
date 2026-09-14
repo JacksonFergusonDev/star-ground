@@ -65,7 +65,30 @@ __all__ = [
     "PresetData",
     "PresetLookupEntry",
     "get_preset_metadata",
+    "parse_preset_key",
 ]
+
+PRESET_KEY_PATTERN = re.compile(r"^\[(.*?)\] (?:\[(.*?)\] )?(.*)$")
+
+
+def parse_preset_key(raw_key: str) -> tuple[str, str, str] | None:
+    """Parses '[Source] [Category] Name' or '[Source] Name' into (source, category, name).
+
+    Args:
+        raw_key: The preset key string (e.g. '[PedalPCB] [Boost] Triangulum Boost').
+
+    Returns:
+        A tuple of (source, category, name), or None if the key does not match.
+    """
+    if not raw_key:
+        return None
+    match = PRESET_KEY_PATTERN.match(raw_key)
+    if match:
+        src = match.group(1)
+        cat = match.group(2) or "Misc"
+        name = match.group(3)
+        return src, cat, name
+    return None
 
 
 def get_preset_metadata() -> PresetCatalog:
@@ -78,16 +101,10 @@ def get_preset_metadata() -> PresetCatalog:
     sources = set()
     categories = defaultdict(set)
 
-    # Regex to handle "[Source] [Category] Name" or "[Source] Name"
-    pattern = re.compile(r"^\[(.*?)\] (?:\[(.*?)\] )?(.*)$")
-
     for key in BOM_PRESETS:
-        match = pattern.match(key)
-        if match:
-            src = match.group(1)
-            cat = match.group(2) or "Misc"
-            name = match.group(3)
-
+        parsed = parse_preset_key(key)
+        if parsed:
+            src, cat, name = parsed
             sources.add(src)
             categories[src].add(cat)
 
