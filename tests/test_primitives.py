@@ -320,17 +320,22 @@ def test_normalize_value_to_quantity_invalid() -> None:
 def test_inventory_add_part_val_qty() -> None:
     """Verifies that Inventory.add_part populates val_qty correctly."""
     inv = Inventory()
-    inv.add_part("Test", "Resistors | 10k", "R1")
-    assert inv["Resistors | 10k"]["val_qty"] == Decimal("10000") * ureg.ohm
+    k_res = ComponentKey(ComponentCategory.RESISTORS, "10k")
+    k_cap = ComponentKey(ComponentCategory.CAPACITORS, "100n")
+    k_ic = ComponentKey(ComponentCategory.ICS, "TL072")
+    k_unk = ComponentKey(ComponentCategory.UNKNOWN, "RawPart")
 
-    inv.add_part("Test", "Capacitors | 100n", "C1")
-    assert inv["Capacitors | 100n"]["val_qty"] == Decimal("1e-7") * ureg.farad
+    inv.add_part("Test", k_res, "R1")
+    assert inv[k_res]["val_qty"] == Decimal("10000") * ureg.ohm
 
-    inv.add_part("Test", "ICs | TL072", "U1")
-    assert inv["ICs | TL072"]["val_qty"] is None
+    inv.add_part("Test", k_cap, "C1")
+    assert inv[k_cap]["val_qty"] == Decimal("1e-7") * ureg.farad
 
-    inv.add_part("Test", "RawKeyWithoutPipe", "")
-    assert inv["RawKeyWithoutPipe"]["val_qty"] is None
+    inv.add_part("Test", k_ic, "U1")
+    assert inv[k_ic]["val_qty"] is None
+
+    inv.add_part("Test", k_unk, "")
+    assert inv[k_unk]["val_qty"] is None
 
 
 # --- sort_inventory Tests ---
@@ -339,18 +344,18 @@ def test_inventory_add_part_val_qty() -> None:
 def test_sort_inventory_numerical_order() -> None:
     """Verifies that sort_inventory sorts component values by their exact numeric magnitude."""
     inv = Inventory()
-    inv.add_part("P1", "Resistors | 100k", "R3")
-    inv.add_part("P1", "Resistors | 1k", "R1")
-    inv.add_part("P1", "Resistors | 10k", "R2")
-    inv.add_part("P1", "Resistors | 1M", "R4")
+    k_100k = ComponentKey(ComponentCategory.RESISTORS, "100k")
+    k_1k = ComponentKey(ComponentCategory.RESISTORS, "1k")
+    k_10k = ComponentKey(ComponentCategory.RESISTORS, "10k")
+    k_1m = ComponentKey(ComponentCategory.RESISTORS, "1M")
+
+    inv.add_part("P1", k_100k, "R3")
+    inv.add_part("P1", k_1k, "R1")
+    inv.add_part("P1", k_10k, "R2")
+    inv.add_part("P1", k_1m, "R4")
 
     sorted_parts = [key for key, _ in sort_inventory(inv)]
-    assert sorted_parts == [
-        ComponentKey(ComponentCategory.RESISTORS, "1k"),
-        ComponentKey(ComponentCategory.RESISTORS, "10k"),
-        ComponentKey(ComponentCategory.RESISTORS, "100k"),
-        ComponentKey(ComponentCategory.RESISTORS, "1M"),
-    ]
+    assert sorted_parts == [k_1k, k_10k, k_100k, k_1m]
     assert [str(k) for k in sorted_parts] == [
         "Resistors | 1k",
         "Resistors | 10k",
@@ -362,18 +367,18 @@ def test_sort_inventory_numerical_order() -> None:
 def test_sort_inventory_capacitors_order() -> None:
     """Verifies capacitor sorting across sub-microfarad ranges."""
     inv = Inventory()
-    inv.add_part("P1", "Capacitors | 100u", "C4")
-    inv.add_part("P1", "Capacitors | 100p", "C1")
-    inv.add_part("P1", "Capacitors | 1u", "C3")
-    inv.add_part("P1", "Capacitors | 100n", "C2")
+    k_100u = ComponentKey(ComponentCategory.CAPACITORS, "100u")
+    k_100p = ComponentKey(ComponentCategory.CAPACITORS, "100p")
+    k_1u = ComponentKey(ComponentCategory.CAPACITORS, "1u")
+    k_100n = ComponentKey(ComponentCategory.CAPACITORS, "100n")
+
+    inv.add_part("P1", k_100u, "C4")
+    inv.add_part("P1", k_100p, "C1")
+    inv.add_part("P1", k_1u, "C3")
+    inv.add_part("P1", k_100n, "C2")
 
     sorted_parts = [key for key, _ in sort_inventory(inv)]
-    assert sorted_parts == [
-        ComponentKey(ComponentCategory.CAPACITORS, "100p"),
-        ComponentKey(ComponentCategory.CAPACITORS, "100n"),
-        ComponentKey(ComponentCategory.CAPACITORS, "1u"),
-        ComponentKey(ComponentCategory.CAPACITORS, "100u"),
-    ]
+    assert sorted_parts == [k_100p, k_100n, k_1u, k_100u]
     assert [str(k) for k in sorted_parts] == [
         "Capacitors | 100p",
         "Capacitors | 100n",

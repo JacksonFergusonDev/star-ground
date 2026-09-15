@@ -11,7 +11,7 @@ from src.bom_lib.sourcing import (
     is_pure_hardware,
     resolve_part_sourcing,
 )
-from src.bom_lib.types import Inventory, ResolvedPartSourcing
+from src.bom_lib.types import ComponentKey, Inventory, ResolvedPartSourcing
 from src.bom_lib.units import ureg
 
 
@@ -100,14 +100,15 @@ def test_resolve_part_sourcing_auto_inject_notes() -> None:
 
 def test_build_shopping_list_gross_and_net() -> None:
     """Builds shopping list correctly calculating gross vs net needs against stock."""
+    key_r = ComponentKey(ComponentCategory.RESISTORS, "10k")
+    key_c = ComponentKey(ComponentCategory.CAPACITORS, "100n")
+
     inventory = Inventory()
-    inventory.add_part("Project A", "Resistors | 10k", "R1", qty=5)
-    inventory.add_part("Project A", "Capacitors | 100n", "C1", qty=2)
+    inventory.add_part("Project A", key_r, "R1", qty=5)
+    inventory.add_part("Project A", key_c, "C1", qty=2)
 
     stock = Inventory()
-    stock.add_part(
-        "User Stock", "Resistors | 10k", "", qty=3
-    )  # 5 needed, 3 owned -> net 2
+    stock.add_part("User Stock", key_r, "", qty=3)  # 5 needed, 3 owned -> net 2
 
     shopping_list = build_shopping_list(inventory, stock=stock)
     assert len(shopping_list) == 2
@@ -126,14 +127,14 @@ def test_build_shopping_list_gross_and_net() -> None:
 
 def test_build_shopping_list_filtering() -> None:
     """Filters hardware kits and extras according to boolean flags."""
+    key_r = ComponentKey(ComponentCategory.RESISTORS, "10k")
+    key_hw = ComponentKey(ComponentCategory.HARDWARE_MISC, "1590B Enclosure")
+    key_dip = ComponentKey(ComponentCategory.HARDWARE_MISC, "8 PIN DIP SOCKET")
+
     inventory = Inventory()
-    inventory.add_part("Project A", "Resistors | 10k", "R1", qty=1)
-    inventory.add_part(
-        AUTO_INJECT_SOURCE, "Hardware/Misc | 1590B Enclosure", "HW", qty=1
-    )
-    inventory.add_part(
-        "Project A", "Hardware/Misc | 8 PIN DIP SOCKET", "U1 (Inj)", qty=1
-    )
+    inventory.add_part("Project A", key_r, "R1", qty=1)
+    inventory.add_part(AUTO_INJECT_SOURCE, key_hw, "HW", qty=1)
+    inventory.add_part("Project A", key_dip, "U1 (Inj)", qty=1)
 
     # All included
     all_rows = build_shopping_list(inventory, show_hardware=True, show_extras=True)
