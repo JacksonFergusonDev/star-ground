@@ -173,7 +173,7 @@ PDF parsing is inherently fragile. To ensure that updates to the parser do not s
 
 - **Methodology:** The test suite parses a library of "Golden Master" PDFs (real-world build docs).
 - **Verification:** The resulting object model is serialized to JSON and diffed against a stored "Truth" file.
-- **Outcome:** Any deviation in the parsing logic—even a single changed resistor value—triggers a CI failure, guaranteeing 100% backward compatibility.
+- **Outcome:** Any deviation in the parsing logic—even a single changed resistor value—triggers a CI failure, guaranteeing 100% snapshot fidelity and regression prevention.
 
 ### 2. Property-Based Testing (Hypothesis)
 

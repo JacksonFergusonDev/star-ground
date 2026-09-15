@@ -8,7 +8,6 @@ from src.bom_lib.grammar.value_parser import (
     MULTIPLIER,
     UNIT,
     build_value_parser,
-    parse_si_value,
     parse_value_to_decimal,
 )
 
@@ -17,6 +16,5 @@ __all__ = [
     "MULTIPLIER",
     "UNIT",
     "build_value_parser",
-    "parse_si_value",
     "parse_value_to_decimal",
 ]

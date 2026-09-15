@@ -239,61 +239,50 @@ def test_component_key_domain_model() -> None:
     assert hash(k1) == hash(k2)
     assert k1 != k3
 
-    # String representation & round-trip
+    # String representation
     assert str(k1) == "Resistors | 10k"
-    parsed_k1 = ComponentKey.from_string("Resistors | 10k")
-    assert parsed_k1 == k1
 
     # Immutability
     with pytest.raises(dataclasses.FrozenInstanceError):
         k1.value = "20k"  # type: ignore[misc]
-
-    # Fallback for unrecognized categories
-    fallback = ComponentKey.from_string("UnknownCat | 123")
-    assert fallback.category == ComponentCategory.UNKNOWN
-    assert fallback.value == "123"
-
-    raw_single = ComponentKey.from_string("BareValue")
-    assert raw_single.category == ComponentCategory.UNKNOWN
-    assert raw_single.value == "BareValue"
 
     # Ordering
     sorted_keys = sorted([k1, k3])
     assert sorted_keys == [k3, k1]  # "Capacitors" < "Resistors"
 
 
-def test_typed_inventory_coercion_and_operations() -> None:
-    """Verifies Inventory operations across ComponentKey and legacy string coercion."""
+def test_typed_inventory_operations() -> None:
+    """Verifies Inventory operations across strictly typed ComponentKey instances."""
     inv = Inventory()
     key_r = ComponentKey(ComponentCategory.RESISTORS, "10k")
+    key_c = ComponentKey(ComponentCategory.CAPACITORS, "100n")
 
-    # Add parts using both ComponentKey and string
+    # Add parts using ComponentKey
     inv.add_part("ProjectA", key_r, "R1")
-    inv.add_part("ProjectA", "Resistors | 10k", "R2")
-    inv.add_part("ProjectB", "Capacitors | 100n", "C1")
+    inv.add_part("ProjectA", key_r, "R2")
+    inv.add_part("ProjectB", key_c, "C1")
 
     # Quantities and metadata
     assert inv[key_r]["qty"] == 2
-    assert inv["Resistors | 10k"]["qty"] == 2
     assert key_r in inv
+    # Non-ComponentKey objects return False for contains
     str_key: object = "Resistors | 10k"
-    assert str_key in inv
+    assert str_key not in inv
     str_cap: object = "Capacitors | 100n"
-    assert str_cap in inv
+    assert str_cap not in inv
 
     # Key iteration yields ComponentKey instances
     all_keys = list(inv.keys())
     assert all(isinstance(k, ComponentKey) for k in all_keys)
 
-    # Dictionary get with coercion
+    # Dictionary get
     assert inv.get(key_r) is not None
-    assert inv.get("Resistors | 10k") is not None
-    assert inv.get("NonExistentKey") is None
+    non_existent = ComponentKey(ComponentCategory.ICS, "TL072")
+    assert inv.get(non_existent) is None
 
-    # Deletion with coercion
-    del inv["Capacitors | 100n"]
-    assert str_cap not in inv
-    assert ComponentKey(ComponentCategory.CAPACITORS, "100n") not in inv
+    # Deletion with ComponentKey
+    del inv[key_c]
+    assert key_c not in inv
 
     # Inventory merge
     inv2 = Inventory()

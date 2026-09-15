@@ -140,25 +140,6 @@ class ComponentKey:
             other.value,
         )
 
-    @classmethod
-    def from_string(cls, raw: str) -> ComponentKey:
-        """Parses a formatted string key (e.g., 'Resistors | 10k') into a ComponentKey.
-
-        Args:
-            raw: Formatted string key.
-
-        Returns:
-            A strongly-typed ComponentKey instance.
-        """
-        if " | " not in raw:
-            return cls(ComponentCategory.UNKNOWN, raw)
-        cat_str, val = raw.split(" | ", 1)
-        try:
-            category = ComponentCategory(cat_str)
-        except ValueError:
-            category = ComponentCategory.UNKNOWN
-        return cls(category, val)
-
 
 @dataclass(frozen=True, slots=True)
 class RefDesignator:
@@ -360,26 +341,6 @@ def make_component_key(category: ComponentCategory, val: str) -> ComponentKey:
     return ComponentKey(category=category, value=val)
 
 
-def parse_component_key(
-    key: ComponentKey | str,
-) -> tuple[ComponentCategory, str]:
-    """Parses a component key or string into (ComponentCategory, value).
-
-    If the key does not contain the ' | ' delimiter or has an unrecognized
-    category, returns (ComponentCategory.UNKNOWN, key).
-
-    Args:
-        key: A ComponentKey instance or standardized inventory key string.
-
-    Returns:
-        Tuple of (ComponentCategory, value_string).
-    """
-    if isinstance(key, ComponentKey):
-        return key.category, key.value
-    k = ComponentKey.from_string(key)
-    return k.category, k.value
-
-
 class Inventory(UserDict[ComponentKey, PartData]):
     """Stateful domain model for tracking aggregated BOM components.
 
@@ -393,33 +354,27 @@ class Inventory(UserDict[ComponentKey, PartData]):
         if self.data is None:
             self.data = {}
 
-    @staticmethod
-    def _coerce_key(key: ComponentKey | str) -> ComponentKey:
-        if isinstance(key, ComponentKey):
-            return key
-        return ComponentKey.from_string(key)
+    def __getitem__(self, key: ComponentKey) -> PartData:
+        """Retrieves part data by ComponentKey."""
+        return super().__getitem__(key)
 
-    def __getitem__(self, key: ComponentKey | str) -> PartData:
-        """Retrieves part data by ComponentKey or coerced string key."""
-        return super().__getitem__(self._coerce_key(key))
+    def __setitem__(self, key: ComponentKey, item: PartData) -> None:
+        """Assigns part data by ComponentKey."""
+        super().__setitem__(key, item)
 
-    def __setitem__(self, key: ComponentKey | str, item: PartData) -> None:
-        """Assigns part data by ComponentKey or coerced string key."""
-        super().__setitem__(self._coerce_key(key), item)
-
-    def __delitem__(self, key: ComponentKey | str) -> None:
-        """Deletes part data by ComponentKey or coerced string key."""
-        super().__delitem__(self._coerce_key(key))
+    def __delitem__(self, key: ComponentKey) -> None:
+        """Deletes part data by ComponentKey."""
+        super().__delitem__(key)
 
     def __contains__(self, key: object) -> bool:
-        """Checks whether a ComponentKey or string key exists in inventory."""
-        if isinstance(key, (ComponentKey, str)):
-            return super().__contains__(self._coerce_key(key))
+        """Checks whether a ComponentKey exists in inventory."""
+        if isinstance(key, ComponentKey):
+            return super().__contains__(key)
         return False
 
-    def get(self, key: ComponentKey | str, default: Any = None) -> Any:
-        """Gets part data by ComponentKey or coerced string key with fallback."""
-        return super().get(self._coerce_key(key), default)
+    def get(self, key: ComponentKey, default: Any = None) -> Any:
+        """Gets part data by ComponentKey with default fallback."""
+        return super().get(key, default)
 
     def __missing__(self, key: ComponentKey) -> PartData:
         """Default factory for new parts."""
@@ -432,27 +387,26 @@ class Inventory(UserDict[ComponentKey, PartData]):
         self.data[key] = value
         return value
 
-    def add_part(
-        self, source: str, key: ComponentKey | str, ref: str, qty: int = 1
-    ) -> None:
+    def add_part(self, source: str, key: ComponentKey, ref: str, qty: int = 1) -> None:
         """Records a part in the inventory.
 
         Args:
             source: Source identifier (e.g., "Big Muff").
-            key: The unique component key or formatted key string.
+            key: The unique component key.
             ref: The reference designator (e.g., "R1").
             qty: Quantity to add.
         """
-        k = self._coerce_key(key)
-        part = self[k]
+        part = self[key]
 
         # Initialize cached quantity if this is a new part entry
         if part["qty"] == 0:
-            if k.category != ComponentCategory.UNKNOWN:
+            if key.category != ComponentCategory.UNKNOWN:
                 try:
                     from src.bom_lib.classifier import normalize_value_to_quantity
 
-                    part["val_qty"] = normalize_value_to_quantity(k.category, k.value)
+                    part["val_qty"] = normalize_value_to_quantity(
+                        key.category, key.value
+                    )
                 except ValueError:
                     part["val_qty"] = None
             else:
@@ -472,11 +426,10 @@ class Inventory(UserDict[ComponentKey, PartData]):
             multiplier: Multiplication factor for the incoming inventory quantities.
         """
         for key, data in other.items():
-            k = self._coerce_key(key)
-            self[k]["qty"] += data["qty"] * multiplier
-            self[k]["refs"].extend(data["refs"])
+            self[key]["qty"] += data["qty"] * multiplier
+            self[key]["refs"].extend(data["refs"])
             for src, refs in data["sources"].items():
-                self[k]["sources"][src].extend(refs * multiplier)
+                self[key]["sources"][src].extend(refs * multiplier)
 
 
 def create_empty_stats() -> StatsDict:

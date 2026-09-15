@@ -13,7 +13,6 @@ from src.bom_lib import (
     SupportsRead,
     get_preset_metadata,
     make_component_key,
-    parse_component_key,
     parse_preset_key,
 )
 from src.bom_lib.enums import InputMethod
@@ -31,35 +30,6 @@ def test_make_component_key() -> None:
     key_pcb = make_component_key(ComponentCategory.PCB, "Big Muff")
     assert key_pcb == ComponentKey(ComponentCategory.PCB, "Big Muff")
     assert str(key_pcb) == "PCB | Big Muff"
-
-
-def test_parse_component_key_valid() -> None:
-    """Verifies parse_component_key parses standard formatted keys and ComponentKey objects."""
-    cat, val = parse_component_key("Resistors | 10k")
-    assert cat == ComponentCategory.RESISTORS
-    assert val == "10k"
-
-    key_obj = ComponentKey(ComponentCategory.RESISTORS, "10k")
-    cat_direct, val_direct = parse_component_key(key_obj)
-    assert cat_direct == ComponentCategory.RESISTORS
-    assert val_direct == "10k"
-
-    cat_pcb, val_pcb = parse_component_key("PCB | Triangulum Boost")
-    assert cat_pcb == ComponentCategory.PCB
-    assert val_pcb == "Triangulum Boost"
-
-
-def test_parse_component_key_unknown_or_missing_delimiter() -> None:
-    """Verifies fallback behavior for unrecognized categories or raw strings."""
-    # Unknown category string
-    cat_unk, val_unk = parse_component_key("NonExistentCategory | PartX")
-    assert cat_unk == ComponentCategory.UNKNOWN
-    assert val_unk == "PartX"
-
-    # Missing delimiter
-    cat_raw, val_raw = parse_component_key("JustAPartName")
-    assert cat_raw == ComponentCategory.UNKNOWN
-    assert val_raw == "JustAPartName"
 
 
 def test_parse_preset_key() -> None:

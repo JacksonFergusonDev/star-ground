@@ -10,7 +10,6 @@ from src.bom_lib.grammar import (
     MULTIPLIER,
     UNIT,
     build_value_parser,
-    parse_si_value,
     parse_value_to_decimal,
 )
 
@@ -56,9 +55,6 @@ def test_parse_value_to_decimal_valid(val_str: str, expected: Decimal) -> None:
     assert result is not None
     assert result == expected
 
-    # Also check alias parse_si_value
-    assert parse_si_value(val_str) == expected
-
 
 @pytest.mark.parametrize(
     "val_str",
@@ -75,13 +71,11 @@ def test_parse_value_to_decimal_valid(val_str: str, expected: Decimal) -> None:
 def test_parse_value_to_decimal_none_returns(val_str: str) -> None:
     """Verifies that invalid or empty strings return None."""
     assert parse_value_to_decimal(val_str) is None
-    assert parse_si_value(val_str) is None
 
 
 def test_parse_value_to_decimal_falsy_none() -> None:
     """Verifies that None input safely returns None."""
     assert parse_value_to_decimal(cast(str, None)) is None
-    assert parse_si_value(cast(str, None)) is None
 
 
 def test_grammar_primitives() -> None:

@@ -3,7 +3,13 @@ import uuid
 import pytest
 from streamlit.testing.v1 import AppTest
 
-from src.bom_lib import BOM_PRESETS, InputMethod, ProjectSlot
+from src.bom_lib import (
+    BOM_PRESETS,
+    ComponentCategory,
+    ComponentKey,
+    InputMethod,
+    ProjectSlot,
+)
 from src.bom_lib.types import Inventory
 
 
@@ -78,16 +84,19 @@ def test_csv_processing_via_state_injection(app):
     session_state. It ensures that if data *is* loaded, the UI reacts correctly.
     """
     # 1. Mock the inventory structure that the CSV parser WOULD have produced
-    mock_inventory = Inventory()
-    mock_inventory["Resistors | 10k"]["qty"] = 5
-    mock_inventory["Resistors | 10k"]["sources"]["Mock Project"] = ["R1-R5"]
+    k_res = ComponentKey(ComponentCategory.RESISTORS, "10k")
+    k_cap = ComponentKey(ComponentCategory.CAPACITORS, "22n")
 
-    mock_inventory["Capacitors | 22n"]["qty"] = 2
-    mock_inventory["Capacitors | 22n"]["sources"]["Mock Project"] = ["C1", "C2"]
+    mock_inventory = Inventory()
+    mock_inventory[k_res]["qty"] = 5
+    mock_inventory[k_res]["sources"]["Mock Project"] = ["R1-R5"]
+
+    mock_inventory[k_cap]["qty"] = 2
+    mock_inventory[k_cap]["sources"]["Mock Project"] = ["C1", "C2"]
 
     # Mock Stock (User already has 2x 10k resistors)
     mock_stock = Inventory()
-    mock_stock["Resistors | 10k"]["qty"] = 2
+    mock_stock[k_res]["qty"] = 2
 
     mock_stats = {"lines_read": 7, "parts_found": 7, "residuals": []}
 
@@ -162,7 +171,8 @@ def test_source_ref_duplication_on_merge(app):
     inventory = app.session_state["inventory"]
 
     # We expect the source list to be ['R1', 'R1'] because count was 2
-    refs = inventory["Resistors | 10k"]["sources"]["DupeTest"]
+    k_res = ComponentKey(ComponentCategory.RESISTORS, "10k")
+    refs = inventory[k_res]["sources"]["DupeTest"]
 
     assert len(refs) == 2
     assert refs == ["R1", "R1"]
