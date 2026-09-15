@@ -110,7 +110,3 @@ def parse_value_to_decimal(val_str: str | None) -> Decimal | None:
         return None
     except pp.ParseException, InvalidOperation:
         return None
-
-
-# Alias for explicit grammar-specific naming
-parse_si_value = parse_value_to_decimal

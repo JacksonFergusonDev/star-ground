@@ -8,28 +8,36 @@ This module handles the low-level formatting logic, including:
 """
 
 import re
-from decimal import Decimal
 
-from src.bom_lib.grammar import parse_si_value
+from src.bom_lib.grammar import parse_value_to_decimal
 from src.bom_lib.types import RefDesignator
 
+__all__ = [
+    "deduplicate_refs",
+    "expand_refs",
+    "float_to_display_string",
+    "float_to_search_string",
+    "get_clean_name",
+    "natural_sort_key",
+    "parse_value_to_decimal",
+]
 
-def natural_sort_key(ref: str | RefDesignator) -> list[int | str]:
+
+def natural_sort_key(ref: str) -> list[int | str]:
     """Generates a sort key for natural alphanumeric sorting.
 
     Splits strings into text and numeric chunks so that 'R10' comes
     after 'R2', rather than 'R1'.
 
     Args:
-        ref: The reference designator string or RefDesignator instance.
+        ref: The reference designator string.
 
     Returns:
         A list of mixed types (int/str) suitable for sort keys.
     """
-    raw = str(ref)
     return [
         int(text) if text.isdigit() else text.upper()
-        for text in re.split(r"(\d+)", raw)
+        for text in re.split(r"(\d+)", ref)
     ]
 
 
@@ -89,21 +97,6 @@ def expand_refs(ref_raw: str) -> list[str]:
         pass
 
     return [ref_raw]
-
-
-def parse_value_to_decimal(val_str: str) -> Decimal | None:
-    """Reduces component values to their base SI unit as an exact Decimal.
-
-    Handles standard notation ('10k', '4.7u') and BS 1852 "sandwich"
-    notation ('1k5').
-
-    Args:
-        val_str: The raw value string (e.g., "4k7").
-
-    Returns:
-        The Decimal value in base units (e.g., Decimal("4700.0")), or None if parsing fails.
-    """
-    return parse_si_value(val_str)
 
 
 def float_to_search_string(val: float | None) -> str:
