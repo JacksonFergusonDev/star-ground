@@ -29,6 +29,7 @@ from src.bom_lib import (
     ComponentSpec,
     Inventory,
     ProjectSlot,
+    RefDesignator,
     deduplicate_refs,
     get_spec_type,
 )
@@ -50,32 +51,31 @@ def condense_refs(refs: list[str]) -> str:
     if not refs:
         return ""
 
-    # 1. Parse into (Prefix, Number) tuples
-    parsed = []
-    pattern = re.compile(r"([a-zA-Z]+)(\d+)")
-
-    unparseable = []
+    # 1. Parse into structured RefDesignators
+    parsed: list[RefDesignator] = []
+    unparseable: list[str] = []
 
     for r in refs:
-        m = pattern.match(r)
-        if m:
-            parsed.append((m.group(1), int(m.group(2))))
+        des = RefDesignator.from_string(r)
+        if des.number is not None and not des.suffix and des.prefix.isalpha():
+            parsed.append(des)
         else:
             unparseable.append(r)
 
-    # 2. Sort primarily by Prefix (C, R, U), secondarily by Number (1, 2, 10)
-    parsed.sort(key=lambda x: (x[0], x[1]))
+    # 2. Sort primarily by Prefix, secondarily by Number
+    parsed.sort(key=lambda d: (d.prefix.upper(), d.number or 0))
 
     # 3. Group by Prefix
-    groups = defaultdict(list)
-    for p, n in parsed:
-        groups[p].append(n)
+    groups: dict[str, list[int]] = defaultdict(list)
+    for d in parsed:
+        if d.number is not None:
+            groups[d.prefix].append(d.number)
 
     result_parts = sorted(unparseable)
 
     # 4. Range Finding Algorithm
     for prefix in sorted(groups.keys()):
-        nums = groups[prefix]
+        nums = sorted(set(groups[prefix]))
         if not nums:
             continue
 

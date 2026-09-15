@@ -7,7 +7,12 @@ from collections.abc import Generator
 from contextlib import contextmanager
 
 from src.bom_lib.enums import InputMethod
-from src.bom_lib.types import ParseResult, RawBOMData
+from src.bom_lib.types import (
+    ParseResult,
+    RawBOMData,
+    SupportsGetValue,
+    SupportsRead,
+)
 
 __all__ = ["BOMParserStrategy", "ParseResult"]
 
@@ -28,13 +33,23 @@ class BOMParserStrategy(ABC):
             raw = bytes(data)
         elif isinstance(data, str):
             raw = data.encode("utf-8")
-        elif hasattr(data, "getvalue"):
-            raw = data.getvalue()
-        elif hasattr(data, "read"):
-            raw = data.read()
+        elif isinstance(data, SupportsGetValue):
+            val = data.getvalue()
+            raw = (
+                bytes(val)
+                if isinstance(val, (bytes, bytearray))
+                else str(val).encode("utf-8")
+            )
+        elif isinstance(data, SupportsRead):
+            val = data.read()
+            raw = (
+                bytes(val)
+                if isinstance(val, (bytes, bytearray))
+                else str(val).encode("utf-8")
+            )
         else:
             raise ValueError(f"Unsupported data type for {strategy_name}: {type(data)}")
-        return raw if isinstance(raw, bytes) else raw.encode("utf-8")
+        return raw
 
     @staticmethod
     @contextmanager

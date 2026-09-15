@@ -5,7 +5,7 @@ import os
 from src.bom_lib.enums import InputMethod
 from src.bom_lib.parser import parse_csv_bom
 from src.bom_lib.strategies.base import BOMParserStrategy, ParseResult
-from src.bom_lib.types import RawBOMData
+from src.bom_lib.types import RawBOMData, SupportsName
 
 
 class CSVParserStrategy(BOMParserStrategy):
@@ -13,9 +13,8 @@ class CSVParserStrategy(BOMParserStrategy):
 
     def can_handle(self, method: InputMethod, data: RawBOMData) -> bool:
         """Determine if this strategy can handle the given CSV/tabular input."""
-        name = getattr(data, "name", None)
-        if name:
-            filename = str(name).lower()
+        if isinstance(data, SupportsName):
+            filename = str(data.name).lower()
             ext = os.path.splitext(filename)[1]
             if ext in [".csv", ".tsv", ".txt"]:
                 return True
@@ -46,9 +45,8 @@ class CSVParserStrategy(BOMParserStrategy):
             return parse_csv_bom(data, source_name=source_name)
 
         ext = ".csv"
-        name = getattr(data, "name", None)
-        if name:
-            filename = str(name)
+        if isinstance(data, SupportsName):
+            filename = str(data.name)
             detected_ext = os.path.splitext(filename)[1]
             if detected_ext:
                 ext = detected_ext.lower()

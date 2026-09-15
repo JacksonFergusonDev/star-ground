@@ -4,6 +4,7 @@ This module contains the TypedDicts and type aliases used throughout the
 parsing and sourcing pipeline to ensure consistent data passing.
 """
 
+import re
 import uuid
 from collections import UserDict, defaultdict
 from dataclasses import dataclass, field
@@ -38,8 +39,22 @@ class SupportsGetValue(Protocol):
         ...
 
 
+@runtime_checkable
+class SupportsName(Protocol):
+    """Protocol for objects exposing a name attribute (e.g. UploadedFile, Path, File)."""
+
+    name: str
+
+
 RawBOMData = (
-    str | bytes | bytearray | list[str] | SupportsRead | SupportsGetValue | None
+    str
+    | bytes
+    | bytearray
+    | list[str]
+    | SupportsRead
+    | SupportsGetValue
+    | SupportsName
+    | None
 )
 
 
@@ -143,6 +158,80 @@ class ComponentKey:
         except ValueError:
             category = ComponentCategory.UNKNOWN
         return cls(category, val)
+
+
+@dataclass(frozen=True, slots=True)
+class RefDesignator:
+    """Strongly-typed reference designator (e.g., 'R1', 'C12', 'SW1', 'HW').
+
+    Attributes:
+        prefix: Component prefix (e.g., 'R', 'C', 'IC', 'SW', 'HW').
+        number: Numerical index, or None if unnumbered.
+        suffix: Optional qualifier or note (e.g., 'A', '(Inj)').
+    """
+
+    prefix: str
+    number: int | None = None
+    suffix: str = ""
+
+    def __str__(self) -> str:
+        """Returns the canonical string representation of the reference designator."""
+        num_part = str(self.number) if self.number is not None else ""
+        if self.suffix:
+            if self.suffix.startswith("(") or " " in self.suffix:
+                return f"{self.prefix}{num_part} {self.suffix}".strip()
+            return f"{self.prefix}{num_part}{self.suffix}"
+        return f"{self.prefix}{num_part}"
+
+    @property
+    def sort_key(self) -> tuple[str, int, str]:
+        """Provides consistent alphanumeric ordering tuple (prefix, number, suffix)."""
+        return (
+            self.prefix.upper(),
+            self.number if self.number is not None else -1,
+            self.suffix,
+        )
+
+    def __lt__(self, other: object) -> bool:
+        """Compares reference designators by alphanumeric sort key."""
+        if not isinstance(other, RefDesignator):
+            return NotImplemented
+        return self.sort_key < other.sort_key
+
+    @classmethod
+    def from_string(cls, raw: str) -> RefDesignator:
+        """Parses a reference designator string into structured components.
+
+        Examples:
+            'R1' -> RefDesignator('R', 1, '')
+            'C10' -> RefDesignator('C', 10, '')
+            'SW10' -> RefDesignator('SW', 10, '')
+            'HW' -> RefDesignator('HW', None, '')
+            'VOLUME' -> RefDesignator('VOLUME', None, '')
+            'U1 (Inj)' -> RefDesignator('U', 1, '(Inj)')
+            'Q1A' -> RefDesignator('Q', 1, 'A')
+
+        Args:
+            raw: Raw designator string.
+
+        Returns:
+            Structured RefDesignator instance.
+        """
+        cleaned = raw.strip()
+        if not cleaned:
+            return cls(prefix="")
+
+        # Match pattern: letter prefix, optional digits, optional suffix
+        m = re.match(r"^([a-zA-Z]+)(?:(\d+))?(?:\s*(.*))?$", cleaned)
+        if m:
+            prefix = m.group(1)
+            num_str = m.group(2)
+            suffix = (m.group(3) or "").strip()
+            num = int(num_str) if num_str is not None else None
+            return cls(prefix=prefix, number=num, suffix=suffix)
+
+        # Fallback for strings starting with digits or special characters
+        return cls(prefix=cleaned, number=None, suffix="")
 
 
 @dataclass(frozen=True, slots=True)
