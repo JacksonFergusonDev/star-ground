@@ -17,9 +17,11 @@ from src.bom_lib.types import (
     Inventory,
     ParseResult,
     PurchaseRecommendation,
+    RefDesignator,
+    SupportsName,
 )
 from src.bom_lib.utils import natural_sort_key
-from src.pdf_generator import sort_by_z_height
+from src.pdf_generator import condense_refs, sort_by_z_height
 
 
 def test_alternative_spec_formatting() -> None:
@@ -299,3 +301,101 @@ def test_typed_inventory_coercion_and_operations() -> None:
     inv.merge(inv2, multiplier=2)
     assert inv[key_r]["qty"] == 4  # 2 original + 2 * 1
     assert inv[key_r]["sources"]["ProjectC"] == ["R3", "R3"]
+
+
+def test_ref_designator_value_object() -> None:
+    """Verifies RefDesignator parsing, immutability, formatting, and natural comparison."""
+    import dataclasses
+
+    # Standard numbered designators
+    r1 = RefDesignator.from_string("R1")
+    assert r1.prefix == "R"
+    assert r1.number == 1
+    assert r1.suffix == ""
+    assert str(r1) == "R1"
+
+    c10 = RefDesignator.from_string("C10")
+    assert c10.prefix == "C"
+    assert c10.number == 10
+    assert str(c10) == "C10"
+
+    # Multi-letter prefix
+    sw2 = RefDesignator.from_string("SW2")
+    assert sw2.prefix == "SW"
+    assert sw2.number == 2
+    assert str(sw2) == "SW2"
+
+    # Suffixes
+    u1_inj = RefDesignator.from_string("U1 (Inj)")
+    assert u1_inj.prefix == "U"
+    assert u1_inj.number == 1
+    assert u1_inj.suffix == "(Inj)"
+    assert str(u1_inj) == "U1 (Inj)"
+
+    q1a = RefDesignator.from_string("Q1A")
+    assert q1a.prefix == "Q"
+    assert q1a.number == 1
+    assert q1a.suffix == "A"
+    assert str(q1a) == "Q1A"
+
+    # Unnumbered keywords
+    hw = RefDesignator.from_string("HW")
+    assert hw.prefix == "HW"
+    assert hw.number is None
+    assert str(hw) == "HW"
+
+    vol = RefDesignator.from_string("VOLUME")
+    assert vol.prefix == "VOLUME"
+    assert vol.number is None
+    assert str(vol) == "VOLUME"
+
+    # Empty string fallback
+    empty = RefDesignator.from_string("")
+    assert empty.prefix == ""
+    assert empty.number is None
+
+    # Natural ordering
+    r2 = RefDesignator.from_string("R2")
+    r10 = RefDesignator.from_string("R10")
+    assert r1 < r2 < r10
+    assert c10 < r1
+
+    # Immutability & Hashing
+    with pytest.raises(dataclasses.FrozenInstanceError):
+        r1.number = 5  # type: ignore[misc]
+
+    assert hash(RefDesignator("R", 1)) == hash(r1)
+    ref_set = {r1, r2, r10}
+    assert r1 in ref_set
+
+
+def test_condense_refs_behavior() -> None:
+    """Verifies condense_refs properly collapses consecutive runs and handles unnumbered parts."""
+    # Standard consecutive collapse across prefixes
+    refs = ["R1", "R2", "R3", "C1", "Q3", "Q4"]
+    assert condense_refs(refs) == "C1, Q3-Q4, R1-R3"
+
+    # Non-consecutive numbers
+    assert condense_refs(["R1", "R3", "R5"]) == "R1, R3, R5"
+
+    # Unnumbered and mixed items
+    assert condense_refs(["HW", "R1", "R2"]) == "HW, R1-R2"
+
+    # Single item and empty
+    assert condense_refs(["R1"]) == "R1"
+    assert condense_refs([]) == ""
+
+
+def test_supports_name_protocol() -> None:
+    """Verifies SupportsName runtime protocol matching."""
+
+    class NamedItem:
+        def __init__(self, name: str) -> None:
+            self.name = name
+
+    class UnnamedItem:
+        pass
+
+    assert isinstance(NamedItem("test.csv"), SupportsName)
+    assert not isinstance(UnnamedItem(), SupportsName)
+    assert not isinstance("raw_string", SupportsName)

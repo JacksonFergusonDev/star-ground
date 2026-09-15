@@ -11,23 +11,25 @@ import re
 from decimal import Decimal
 
 from src.bom_lib.grammar import parse_si_value
+from src.bom_lib.types import RefDesignator
 
 
-def natural_sort_key(ref: str) -> list[int | str]:
+def natural_sort_key(ref: str | RefDesignator) -> list[int | str]:
     """Generates a sort key for natural alphanumeric sorting.
 
     Splits strings into text and numeric chunks so that 'R10' comes
     after 'R2', rather than 'R1'.
 
     Args:
-        ref: The reference designator string (e.g., "R10").
+        ref: The reference designator string or RefDesignator instance.
 
     Returns:
         A list of mixed types (int/str) suitable for sort keys.
     """
+    raw = str(ref)
     return [
         int(text) if text.isdigit() else text.upper()
-        for text in re.split(r"(\d+)", ref)
+        for text in re.split(r"(\d+)", raw)
     ]
 
 
@@ -50,7 +52,7 @@ def deduplicate_refs(refs: list[str]) -> list[str]:
 def expand_refs(ref_raw: str) -> list[str]:
     """Explodes range strings into individual references.
 
-    Handles formats like 'R1-R4' or 'R1-4'. Includes a sanity check
+    Handles formats like 'R1-R4' or 'C1-3'. Includes a sanity check
     to prevent exploding massive invalid ranges (limit 50).
 
     Args:
@@ -60,33 +62,33 @@ def expand_refs(ref_raw: str) -> list[str]:
         A list of individual references (e.g., ['R1', 'R2', 'R3', 'R4']).
         Returns the original string as a single-item list if expansion fails.
     """
-    refs = []
     ref_raw = ref_raw.strip()
+    if "-" not in ref_raw:
+        return [ref_raw]
 
-    if "-" in ref_raw:
-        try:
-            # Captures: Prefix1, StartNum, Prefix2(Optional), EndNum
-            m = re.match(r"([A-Z]+)(\d+)-([A-Z]+)?(\d+)", ref_raw)
-            if m:
-                prefix = m.group(1)
-                start = int(m.group(2))
-                end = int(m.group(4))
+    try:
+        # Match pattern: Prefix1, StartNum, optional Prefix2, EndNum
+        m = re.match(r"^([a-zA-Z]+)(\d+)-([a-zA-Z]+)?(\d+)$", ref_raw)
+        if m:
+            prefix1 = m.group(1)
+            start = int(m.group(2))
+            prefix2 = m.group(3)
+            end = int(m.group(4))
 
-                # Sanity check: Avoid accidental explosion of "1990-2000" dates
-                if (end - start) < 50:
-                    for i in range(start, end + 1):
-                        refs.append(f"{prefix}{i}")
-                else:
-                    refs.append(ref_raw)
-            else:
-                refs.append(ref_raw)
-        except Exception:
-            # On any regex/parsing error, treat as a literal string
-            refs.append(ref_raw)
-    else:
-        refs.append(ref_raw)
+            # If a second prefix is provided, it must match the first prefix
+            if prefix2 and prefix2.upper() != prefix1.upper():
+                return [ref_raw]
 
-    return refs
+            # Sanity check: Avoid accidental explosion of massive numbers
+            if 0 <= (end - start) < 50:
+                return [
+                    str(RefDesignator(prefix=prefix1, number=i))
+                    for i in range(start, end + 1)
+                ]
+    except Exception:
+        pass
+
+    return [ref_raw]
 
 
 def parse_value_to_decimal(val_str: str) -> Decimal | None:
