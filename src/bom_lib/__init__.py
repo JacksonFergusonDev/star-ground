@@ -79,7 +79,6 @@ from .types import (
     create_empty_inventory,
     create_empty_stats,
     make_component_key,
-    parse_component_key,
 )
 from .units import ureg
 from .utils import (
@@ -148,7 +147,6 @@ __all__ = [
     "make_component_key",
     "normalize_value_by_category",
     "normalize_value_to_quantity",
-    "parse_component_key",
     "parse_csv_bom",
     "parse_pedalpcb_pdf",
     "parse_preset_key",

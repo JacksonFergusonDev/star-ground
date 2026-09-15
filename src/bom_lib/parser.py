@@ -89,7 +89,7 @@ def ingest_bom_line(
 
         # 2. Handle Auto-Injection (e.g., Sockets)
         if result.injected_key:
-            # injected_key is pre-formatted as "Category | Value"
+            # Record auto-injected component key (e.g. IC socket)
             inventory.add_part(source, result.injected_key, f"{r} (Inj)")
 
     return parts_found

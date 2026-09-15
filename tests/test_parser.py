@@ -9,10 +9,8 @@ This suite covers:
 5. Property-based stress testing using Hypothesis.
 """
 
-from collections import defaultdict
 from collections.abc import MutableMapping
 from decimal import Decimal
-from typing import cast
 
 import pytest
 from hypothesis import given
@@ -52,9 +50,10 @@ def test_basic_resistor_parsing():
     res = parse_with_verification([raw_text], source_name="Test Bench")
     inventory, stats = res.inventory, res.stats
 
-    assert inventory["Resistors | 10k"]["qty"] == 1
-    assert "R1" in inventory["Resistors | 10k"]["refs"]
-    assert "R1" in inventory["Resistors | 10k"]["sources"]["Test Bench"]
+    key_r = ComponentKey(ComponentCategory.RESISTORS, "10k")
+    assert inventory[key_r]["qty"] == 1
+    assert "R1" in inventory[key_r]["refs"]
+    assert "R1" in inventory[key_r]["sources"]["Test Bench"]
 
     assert stats["parts_found"] == 1
     assert len(stats["residuals"]) == 0
@@ -71,10 +70,11 @@ def test_source_tracking_logic():
     inventory = parse_with_verification([raw_text], source_name="Big Muff").inventory
 
     # Simulate a merge operation (manually adding a second source)
-    inventory["Resistors | 10k"]["qty"] += 1
-    inventory["Resistors | 10k"]["sources"]["Tube Screamer"].append("R5")
+    key_r = ComponentKey(ComponentCategory.RESISTORS, "10k")
+    inventory[key_r]["qty"] += 1
+    inventory[key_r]["sources"]["Tube Screamer"].append("R5")
 
-    item = inventory["Resistors | 10k"]
+    item = inventory[key_r]
     assert item["qty"] == 2
     assert item["sources"]["Big Muff"] == ["R1"]
     assert item["sources"]["Tube Screamer"] == ["R5"]
@@ -90,7 +90,7 @@ def test_pcb_trap():
     raw_text = "BIG MUFF DIY PCB GUITAR EFFECT"
     inventory = parse_with_verification([raw_text], source_name="My Build").inventory
 
-    key = "PCB | BIG MUFF DIY PCB GUITAR EFFECT"
+    key = ComponentKey(ComponentCategory.PCB, "BIG MUFF DIY PCB GUITAR EFFECT")
     assert inventory[key]["qty"] == 1
     assert "PCB" in inventory[key]["sources"]["My Build"]
 
@@ -108,9 +108,11 @@ def test_2n5457_behavior():
     inventory = parse_with_verification([raw_text]).inventory
 
     # Should stay as 2N5457
-    assert inventory["Transistors | 2N5457"]["qty"] == 1
+    key_2n = ComponentKey(ComponentCategory.TRANSISTORS, "2N5457")
+    assert inventory[key_2n]["qty"] == 1
     # Should NOT inject adapter
-    adapter = inventory.get("Hardware/Misc | SMD_ADAPTER_BOARD")
+    key_adapter = ComponentKey(ComponentCategory.HARDWARE_MISC, "SMD_ADAPTER_BOARD")
+    adapter = inventory.get(key_adapter)
     assert adapter is None or adapter["qty"] == 0
 
     # Case 2: Modern SMD Part
@@ -118,9 +120,10 @@ def test_2n5457_behavior():
     inventory_2 = parse_with_verification([raw_text_2]).inventory
 
     # Should stay as MMBF5457
-    assert inventory_2["Transistors | MMBF5457"]["qty"] == 1
+    key_mmbf = ComponentKey(ComponentCategory.TRANSISTORS, "MMBF5457")
+    assert inventory_2[key_mmbf]["qty"] == 1
     # Should NOT inject adapter (User might have SOT-23 pads on PCB)
-    adapter_2 = inventory_2.get("Hardware/Misc | SMD_ADAPTER_BOARD")
+    adapter_2 = inventory_2.get(key_adapter)
     assert adapter_2 is None or adapter_2["qty"] == 0
 
 
@@ -375,28 +378,30 @@ def test_hardware_injection_and_smart_merge():
     # Setup: Inventory has 2 existing 3.3k resistors (for the circuit)
     # and 3 Pots (which implies we need 3 Knobs)
     inventory = Inventory()
-    inventory["Resistors | 3.3k"]["qty"] = 2
-    inventory["Potentiometers | 100k-B"]["qty"] = 3
+    key_3k3 = ComponentKey(ComponentCategory.RESISTORS, "3.3k")
+    key_pot = ComponentKey(ComponentCategory.POTENTIOMETERS, "100k-B")
+    inventory[key_3k3]["qty"] = 2
+    inventory[key_pot]["qty"] = 3
 
     # Run injection for 1 pedal (Mutates in-place)
     get_standard_hardware(inventory, pedal_count=1)
 
     # CHECK 1: Smart Merge
     # The function should have found "Resistors | 3.3k" and incremented it by 1 (for the LED).
-    assert inventory["Resistors | 3.3k"]["qty"] == 3  # 2 original + 1 injected
+    assert inventory[key_3k3]["qty"] == 3  # 2 original + 1 injected
 
     # Verify the source tag was added
-    assert "Auto-Inject" in inventory["Resistors | 3.3k"]["sources"]
+    assert "Auto-Inject" in inventory[key_3k3]["sources"]
 
     # CHECK 2: Forced Injection
     # Enclosures should be injected directly into inventory
-    enc_key = "Hardware/Misc | 1590B Enclosure"
+    enc_key = ComponentKey(ComponentCategory.HARDWARE_MISC, "1590B Enclosure")
     assert inventory[enc_key]["qty"] == 1
     assert "Auto-Inject" in inventory[enc_key]["sources"]
 
     # CHECK 3: Dynamic Knob Count
     # 3 Pots -> 3 Knobs injected
-    knob_key = "Hardware/Misc | Knob"
+    knob_key = ComponentKey(ComponentCategory.HARDWARE_MISC, "Knob")
     assert inventory[knob_key]["qty"] == 3
 
 
@@ -487,7 +492,8 @@ def test_fuzz_germanium_trigger():
     """
     # Setup inventory with a Fuzz PCB
     inventory = Inventory()
-    inventory["PCB | Fuzz Face"]["qty"] = 1
+    pcb_key = ComponentKey(ComponentCategory.PCB, "Fuzz Face")
+    inventory[pcb_key]["qty"] = 1
 
     get_standard_hardware(inventory, pedal_count=1)
 
@@ -589,7 +595,8 @@ def test_ref_expansion_integrity():
     raw_text = "R1-R3 10k"
     inventory = parse_with_verification([raw_text], source_name="Range Test").inventory
 
-    item = inventory["Resistors | 10k"]
+    key_r = ComponentKey(ComponentCategory.RESISTORS, "10k")
+    item = inventory[key_r]
 
     # Qty check
     assert item["qty"] == 3
@@ -655,11 +662,14 @@ Resistors,1k5,20
         stock = parse_user_inventory(tmp_path)
 
         # 1. Check Normalization (1k5 -> 1.5k)
-        assert stock["Resistors | 1.5k"]["qty"] == 20
+        k_1k5 = ComponentKey(ComponentCategory.RESISTORS, "1.5k")
+        assert stock[k_1k5]["qty"] == 20
 
         # 2. Check Basic Ingestion
-        assert stock["Resistors | 10k"]["qty"] == 100
-        assert stock["Capacitors | 100n"]["qty"] == 50
+        k_10k = ComponentKey(ComponentCategory.RESISTORS, "10k")
+        k_100n = ComponentKey(ComponentCategory.CAPACITORS, "100n")
+        assert stock[k_10k]["qty"] == 100
+        assert stock[k_100n]["qty"] == 50
 
     finally:
         os.remove(tmp_path)
@@ -672,29 +682,26 @@ def test_net_needs_calculation():
     Formula: Net = Max(0, BOM_Needed - Stock_Available)
     """
     # 1. Setup BOM
-    bom = cast(
-        Inventory,
-        defaultdict(lambda: {"qty": 0, "refs": [], "sources": defaultdict(list)}),
-    )
-    bom["Resistors | 10k"]["qty"] = 10  # Need 10
-    bom["Capacitors | 100n"]["qty"] = 5  # Need 5
+    key_r = ComponentKey(ComponentCategory.RESISTORS, "10k")
+    key_c = ComponentKey(ComponentCategory.CAPACITORS, "100n")
+
+    bom = Inventory()
+    bom[key_r]["qty"] = 10  # Need 10
+    bom[key_c]["qty"] = 5  # Need 5
 
     # 2. Setup Stock
-    stock = cast(
-        Inventory,
-        defaultdict(lambda: {"qty": 0, "refs": [], "sources": defaultdict(list)}),
-    )
-    stock["Resistors | 10k"]["qty"] = 4  # Have 4 (Deficit 6)
-    stock["Capacitors | 100n"]["qty"] = 10  # Have 10 (Surplus 5)
+    stock = Inventory()
+    stock[key_r]["qty"] = 4  # Have 4 (Deficit 6)
+    stock[key_c]["qty"] = 10  # Have 10 (Surplus 5)
 
     # 3. Calculate
     net_inv = calculate_net_needs(bom, stock)
 
     # 4. Verify Deficit (10 - 4 = 6)
-    assert net_inv["Resistors | 10k"]["qty"] == 6
+    assert net_inv[key_r]["qty"] == 6
 
     # 5. Verify Surplus (5 - 10 = -5 -> Floor at 0)
-    assert net_inv["Capacitors | 100n"]["qty"] == 0
+    assert net_inv[key_c]["qty"] == 0
 
 
 def test_preset_integrity():

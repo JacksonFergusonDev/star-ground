@@ -56,9 +56,10 @@ class TestManualInputStrategy:
         assert isinstance(result, ParseResult)
         assert result.stats["parts_found"] == 3
         assert result.stats["lines_read"] == 3
-        assert ComponentKey(ComponentCategory.RESISTORS, "10k") in result.inventory
-        assert result.inventory["Resistors | 10k"]["qty"] == 1
-        assert "R1" in result.inventory["Resistors | 10k"]["refs"]
+        k_10k = ComponentKey(ComponentCategory.RESISTORS, "10k")
+        assert k_10k in result.inventory
+        assert result.inventory[k_10k]["qty"] == 1
+        assert "R1" in result.inventory[k_10k]["refs"]
         assert result.title is None
         assert result.raw_content is None
 
@@ -111,9 +112,10 @@ class TestCSVParserStrategy:
 
         assert isinstance(result, ParseResult)
         assert result.stats["parts_found"] == 3
-        assert ComponentKey(ComponentCategory.RESISTORS, "10k") in result.inventory
-        assert result.inventory["Resistors | 10k"]["qty"] == 1
-        assert "R1" in result.inventory["Resistors | 10k"]["refs"]
+        k_10k = ComponentKey(ComponentCategory.RESISTORS, "10k")
+        assert k_10k in result.inventory
+        assert result.inventory[k_10k]["qty"] == 1
+        assert "R1" in result.inventory[k_10k]["refs"]
 
     def test_parse_raw_bytes(self) -> None:
         strategy = CSVParserStrategy()

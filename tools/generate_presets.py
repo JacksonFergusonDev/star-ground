@@ -11,7 +11,12 @@ needing to parse files on-the-fly during runtime.
 
 import os
 
-from src.bom_lib import parse_pedalpcb_pdf, serialize_inventory
+from src.bom_lib import (
+    ComponentCategory,
+    ComponentKey,
+    parse_pedalpcb_pdf,
+    serialize_inventory,
+)
 
 INPUT_DIR = "raw_boms"
 OUTPUT_FILE = "src/bom_lib/_presets_data.py"
@@ -92,10 +97,11 @@ def main() -> None:
                         # in the final text preset, even if the PDF didn't explicitly list it
                         # in the BOM table.
                         if source == "PedalPCB":
-                            pcb_val = f"{project_name} PCB"
-                            key = f"PCB | {pcb_val}"
-                            inv[key]["qty"] += 1
-                            inv[key]["refs"].append("PCB")
+                            pcb_key = ComponentKey(
+                                ComponentCategory.PCB, f"{project_name} PCB"
+                            )
+                            inv[pcb_key]["qty"] += 1
+                            inv[pcb_key]["refs"].append("PCB")
 
                         # Use the shared library function to format the output string
                         final_text = serialize_inventory(inv)
