@@ -317,13 +317,13 @@ We welcome contributions! Please see **[CONTRIBUTING.md](CONTRIBUTING.md)** for 
 
 ---
 
-## 📧 Contact
+## Contact
 
-### Jackson Ferguson
+[![GitHub](https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white)](https://github.com/JacksonFergusonDev)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/jackson--ferguson/)
+[![Email](https://img.shields.io/badge/Email-D14836?style=for-the-badge&logo=gmail&logoColor=white)](mailto:jackson.ferguson0@gmail.com)
 
-- **GitHub:** [@JacksonFergusonDev](https://github.com/JacksonFergusonDev)
-- **LinkedIn:** [Jackson Ferguson](https://www.linkedin.com/in/jackson--ferguson/)
-- **Email:** <jackson.ferguson0@gmail.com>
+[![Website](https://raw.githubusercontent.com/JacksonFergusonDev/JacksonFergusonDev.github.io/refs/heads/main/.github/assets/badge.svg)](https://jacksonferguson.me)
 
 ---
 
