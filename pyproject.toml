@@ -17,6 +17,9 @@ dependencies = [
     "streamlit==1.61.1",
 ]
 
+[project.urls]
+Author = "https://jacksonferguson.me"
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
