@@ -20,6 +20,9 @@ from src.bom_lib.utils import (
     parse_value_to_decimal,
 )
 
+_SIZED_LED = re.compile(r"\d+(?:\.\d+)?mm(?:\s+[A-Za-z]+)?", re.IGNORECASE)
+_STANDARD_REF = re.compile(r"(?:R|C|D|Q|IC|U|LED|X|Y|J|SW)\d+")
+
 
 def normalize_value_to_quantity(
     category: ComponentCategory, val_raw: str
@@ -38,7 +41,10 @@ def normalize_value_to_quantity(
     if "mm" in clean_val.lower():
         return None
 
-    dec = parse_value_to_decimal(clean_val)
+    # Qualifiers after the number ('1u MLCC', '10u (25V or higher)') do not
+    # change the nominal value.
+    head = clean_val.split()[0] if clean_val else clean_val
+    dec = parse_value_to_decimal(head)
     if dec is None:
         return None
 
@@ -53,7 +59,8 @@ def normalize_value_by_category(category: ComponentCategory, val_raw: str) -> st
     """Standardizes component values for consistent string matching.
 
     For passives (Resistors/Caps), this converts raw strings like "10,000" or
-    "10K" into a canonical format "10k" using the utility parser.
+    "10K" into a canonical format "10k" using the utility parser. Qualifiers
+    after the number are kept ('1uF MLCC' -> '1u MLCC').
 
     Args:
         category: The determined component category.
@@ -71,9 +78,16 @@ def normalize_value_by_category(category: ComponentCategory, val_raw: str) -> st
         if "mm" in clean_val.lower():
             return clean_val
 
-        dec = parse_value_to_decimal(clean_val)
+        head, _, rest = clean_val.partition(" ")
+        dec = parse_value_to_decimal(head)
         if dec is not None:
-            clean_val = float_to_search_string(float(dec))
+            clean_val = " ".join(
+                p for p in (float_to_search_string(float(dec)), rest.strip()) if p
+            )
+
+    # A diode specified only by size and color ('5mm Yellow') is an LED.
+    if category == ComponentCategory.DIODES and _SIZED_LED.fullmatch(clean_val):
+        clean_val = f"{clean_val} LED"
 
     return clean_val
 
@@ -104,10 +118,21 @@ def categorize_part(ref: str, val: str) -> CategorizationResult | None:
     # Named controls (VOLUME, SW_BRIGHT) do not.
     has_digit = any(char.isdigit() for char in ref_up)
 
+    # A numbered standard designator (R1, D4, IC2) states its own category;
+    # value-shape heuristics must never override it ('1N34A' is not an A-taper
+    # pot, '1u MLCC' is not a C-taper pot).
+    is_standard_ref = _STANDARD_REF.fullmatch(ref_up) is not None
+
+    # Named controls whose value is a switch spec (GAIN 'SPDT On-On',
+    # MODE '1P8T Mini Rotary') are switches, whatever their name suggests.
+    is_switch_value = not is_standard_ref and bool(
+        constants.SWITCH_VALUE_PATTERN.search(val_up)
+    )
+
     # 2. Taper Check (Potentiometer Heuristic)
     # Detects pots by value style (e.g., "B100k", "10k-A") if the ref isn't obviously a chip.
     is_pot_value = False
-    if not ref_up.startswith(("IC", "U", "Q", "OP", "TL")):
+    if not is_standard_ref and not ref_up.startswith(("IC", "U", "Q", "OP", "TL")):
         taper_chars = "".join(constants.POT_TAPER_MAP.keys())
         # Matches "B100k" or "100k-B"
         if re.search(rf"[0-9]+.*[{taper_chars}]$", val_up) or re.search(
@@ -122,7 +147,8 @@ def categorize_part(ref: str, val: str) -> CategorizationResult | None:
         or ref_up in constants.SWITCH_LABELS
         or any(ref_up.startswith(label) for label in constants.POT_LABELS)
         or is_pot_value
-        or ref_up == "CLR"
+        or is_switch_value
+        or ref_up in constants.BARE_DESIGNATORS
     )
 
     if not is_valid:
@@ -140,8 +166,11 @@ def categorize_part(ref: str, val: str) -> CategorizationResult | None:
             injected_key=None,
         )
 
+    if is_switch_value:
+        category = ComponentCategory.SWITCHES
+
     # Potentiometers (Priority over Resistors to catch 'RANGE')
-    if (
+    elif (
         ref_up in constants.POT_LABELS
         or any(ref_up.startswith(label) for label in constants.POT_LABELS)
         or is_pot_value

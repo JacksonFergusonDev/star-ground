@@ -131,7 +131,18 @@
         ]
       }
     },
-    "Diodes | 5mm": {
+    "Diodes | 3mm Red LED": {
+      "qty": 1,
+      "refs": [
+        "LED"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "LED"
+        ]
+      }
+    },
+    "Diodes | 5mm Yellow LED": {
       "qty": 1,
       "refs": [
         "D2"
@@ -418,6 +429,6 @@
   },
   "metadata": {
     "extracted_title": "The Abyss",
-    "parts_found": 57
+    "parts_found": 58
   }
 }

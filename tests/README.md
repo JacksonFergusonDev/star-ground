@@ -16,7 +16,24 @@ PDF parsing is inherently fragile. A minor update to a regex pattern could silen
 - **Mechanism:** Every CI run parses the raw PDFs and diffs the output against the stored JSON.
 - **The Guarantee:** Zero regression. If a single resistor value changes in the output, the build fails immediately.
 
-### 2. Property-Based Fuzzing (`Hypothesis`)
+### 2. Ground-Truth Accuracy (The "Answer Key")
+
+**Files:** `tests/test_parser_accuracy.py`, `tests/accuracy.py`, `tests/golden/`
+
+Snapshots prove the output did not *change*; they cannot prove it is *correct*,
+because they are generated from the parser itself. The golden files are
+hand-verified transcriptions of each sample PDF's parts list, so they can.
+
+- **Strategy:** Every designator is graded against the golden file (correct,
+  missing, extra, wrong category, wrong value), and every failure is checked
+  for a matching parser warning.
+- **Mechanism:** `tests/golden/baseline.json` records the accepted failures. CI
+  fails on any new failure, any failure that loses its warning, any false
+  alarm, and any improvement that has not been locked in.
+- **The Guarantee:** Accuracy and warning coverage only ratchet upward. See
+  `tests/golden/README.md` for the workflow and labeling rules.
+
+### 3. Property-Based Fuzzing (`Hypothesis`)
 
 **File:** `tests/test_parser.py`
 
@@ -26,7 +43,7 @@ Standard unit tests often suffer from "tester bias"—we only test the inputs we
 - **Mechanism:** Instead of manually typing test cases, we define **invariants** (e.g., `net_needs` must never be negative). Hypothesis generates thousands of random, chaotic inputs (Unicode injection, edge-case floats, massive integers) to try and break these rules.
 - **The Guarantee:** The math holds true even when the input data is garbage.
 
-### 3. Headless Integration
+### 4. Headless Integration
 
 **File:** `tests/test_app.py`
 
@@ -35,7 +52,7 @@ To ensure the UI is decoupled from the browser state, we run headless simulation
 - **Mechanism:** The test runner instantiates the full application kernel in memory, simulates user interactions (clicks, uploads, form submissions), and asserts the state of the dataframes.
 - **Coverage:** Verifies the full "Paste → Parse → Download" lifecycle without requiring a browser driver (Selenium/Puppeteer).
 
-### 4. Package Integrity
+### 5. Package Integrity
 
 **File:** `tests/test_package.py`
 
@@ -62,6 +79,14 @@ uv run pytest --snapshot-update
 ```
 
 *Note: This command will overwrite the JSON files in `tests/snapshots/`. Always review the `git diff` of the snapshots before committing to ensure the changes are correct.*
+
+### Accuracy Scorecard
+
+Print per-document accuracy, with every failure and whether it was warned:
+
+```bash
+just accuracy
+```
 
 ### Targeted Testing
 

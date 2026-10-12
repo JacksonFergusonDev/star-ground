@@ -78,7 +78,7 @@
         ]
       }
     },
-    "Diodes | 3mm": {
+    "Diodes | 3mm Red LED": {
       "qty": 1,
       "refs": [
         "D2"
@@ -86,17 +86,6 @@
       "sources": {
         "SnapshotTest": [
           "D2"
-        ]
-      }
-    },
-    "Diodes | N/A": {
-      "qty": 1,
-      "refs": [
-        "D3"
-      ],
-      "sources": {
-        "SnapshotTest": [
-          "D3"
         ]
       }
     },
@@ -181,23 +170,29 @@
       }
     },
     "Resistors | 220": {
-      "qty": 1,
+      "qty": 2,
       "refs": [
+        "R19",
         "R6"
       ],
       "sources": {
         "SnapshotTest": [
+          "R19",
           "R6"
         ]
       }
     },
     "Resistors | 390": {
-      "qty": 1,
+      "qty": 3,
       "refs": [
+        "R10",
+        "R14",
         "R5"
       ],
       "sources": {
         "SnapshotTest": [
+          "R10",
+          "R14",
           "R5"
         ]
       }
@@ -250,6 +245,6 @@
   },
   "metadata": {
     "extracted_title": "Raincoat",
-    "parts_found": 38
+    "parts_found": 40
   }
 }

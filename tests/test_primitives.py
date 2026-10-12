@@ -156,8 +156,16 @@ def test_categorize_part_potentiometer_via_taper() -> None:
     assert categorize_part("VR1", "B100k") == CategorizationResult(
         ComponentCategory.POTENTIOMETERS, "B100k", None
     )
-    assert categorize_part("R1", "10k-A") == CategorizationResult(
+    assert categorize_part("RV1", "10k-A") == CategorizationResult(
         ComponentCategory.POTENTIOMETERS, "10k-A", None
+    )
+    # A numbered standard designator outranks the value-shape heuristic:
+    # '1N34A' ends in a taper letter but D1 is a diode.
+    assert categorize_part("D1", "1N34A") == CategorizationResult(
+        ComponentCategory.DIODES, "1N34A", None
+    )
+    assert categorize_part("C3", "1u MLCC") == CategorizationResult(
+        ComponentCategory.CAPACITORS, "1u MLCC", None
     )
     assert categorize_part("POT1", "A100k") == CategorizationResult(
         ComponentCategory.POTENTIOMETERS, "A100k", None
@@ -246,7 +254,7 @@ def test_categorize_part_other_branches() -> None:
         ComponentCategory.DIODES, "1N4148", None
     )
     assert categorize_part("LED1", "3mm Red") == CategorizationResult(
-        ComponentCategory.DIODES, "3mm Red", None
+        ComponentCategory.DIODES, "3mm Red LED", None
     )
     assert categorize_part("Q1", "2N3904") == CategorizationResult(
         ComponentCategory.TRANSISTORS, "2N3904", None

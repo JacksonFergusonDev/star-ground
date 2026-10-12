@@ -10,6 +10,7 @@ This module serves as the central repository for:
 5.  **Purchasing Rules:** Configuration for safe buy quantities (buffers) and round-up logic.
 """
 
+import re
 from dataclasses import dataclass
 from decimal import Decimal
 from typing import Any
@@ -308,6 +309,19 @@ KEYWORD_EXTRAS = {
 # Combines all functional names and extra descriptive terms.
 # Sorted list used for deterministic Regex generation in the PDF parser.
 KEYWORDS = sorted(POT_NAMES | SWITCH_LABELS | KEYWORD_EXTRAS)
+
+# Designators printed without a number (e.g. Ungula's 'LED' and 'RLED').
+BARE_DESIGNATORS = frozenset({"LED", "RLED", "CLR", "TRIM"})
+
+# Values that mark a listed designator as intentionally not populated.
+NOT_POPULATED_VALUES = frozenset(
+    {"N/A", "NA", "OMIT", "DNP", "DNI", "NC", "NO POP", "DO NOT POPULATE"}
+)
+
+# Switch specifications: pole/throw codes (SPDT, 1P8T) and positions (ON/OFF/ON).
+SWITCH_VALUE_PATTERN = re.compile(
+    r"\b(?:[SD34]P[DS]T|\dP\dT|ON\s*[/-]\s*(?:OFF\s*[/-]\s*)?ON)\b"
+)
 
 # Manufacturing Artifact Exclusion List
 # These tokens indicate lines in a BOM that describe non-purchasable items

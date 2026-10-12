@@ -45,6 +45,10 @@ test: sync
     uv run pytest
     @printf "{{ green }}✔ All tests passed{{ nc }}\n"
 
+# Print the parser accuracy scorecard against the golden parts lists
+accuracy *args: sync
+    uv run python -m tests.accuracy -v {{ args }}
+
 # Run tests with coverage
 test-cov: sync
     @printf "\n{{ blue }}=== Running Tests with Coverage ==={{ nc }}\n"

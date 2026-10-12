@@ -98,6 +98,17 @@
         ]
       }
     },
+    "Potentiometers | B25K": {
+      "qty": 1,
+      "refs": [
+        "TRIM"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "TRIM"
+        ]
+      }
+    },
     "Potentiometers | B500K": {
       "qty": 1,
       "refs": [
@@ -190,6 +201,6 @@
   },
   "metadata": {
     "extracted_title": "B-Side Fuzz",
-    "parts_found": 25
+    "parts_found": 26
   }
 }

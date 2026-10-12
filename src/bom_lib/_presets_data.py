@@ -8,15 +8,15 @@ BOM_PRESETS = {
             IC100 TC1044SCPA
             IC1 TL071
             Q1 BC550C
-            Q2 BC550C*
+            Q2 BC550C
             D101 1N4001
             D102 1N4001
             D103 1N4001
             D104 1N4001
             D105 1N4001
             D106 1N4001
-            D1 1N4148*
-            D2 1N4148*
+            D1 1N4148
+            D2 1N4148
             D100 1N5817
             LEVEL A5K
             C8 100p
@@ -28,12 +28,12 @@ BOM_PRESETS = {
             C12 1u
             C9 4.7u
             C11 4.7u
-            C102 10u
-            C103 10u
-            C104 10u
-            C105 10u
-            C106 10u
-            C107 100u
+            C102 10u (25V or higher)
+            C103 10u (25V or higher)
+            C104 10u (35V or higher)
+            C105 10u (35V or higher)
+            C106 10u (35V or higher)
+            C107 100u (35V or higher)
             R15 47
             R2 120
             R13 220
@@ -130,28 +130,28 @@ BOM_PRESETS = {
         "bom_text": """
             PCB Parentheses Fuzz PCB
             IC1 LM308
-            Q6 BS170
-            Q1 PF5102
-            Q5 PF5102
             Q3 2N5087
             Q2 2N5089
             Q4 2N5089
-            D1 GE
-            D2 GE
-            D8 GE
-            D9 GE
-            D4 3mm
+            Q6 BS170
+            Q1 PF5102
+            Q5 PF5102
             D3 1N4148
             D5 1N4148
             D6 1N4148
             D7 1N4148
             D100 1N5817
+            D4 3mm Red LED
+            D1 GE
+            D2 GE
+            D8 GE
+            D9 GE
             DISTORTION A100K
             FILTER A100K
             AMPLITUDE A100K
             BOOST A100K
             OCTAVE B50K
-            SW1 2P4T
+            SW1 2P4T Mini Rotary
             C15 30p
             C1 100p
             C14 100p
@@ -329,11 +329,11 @@ BOM_PRESETS = {
             IC5 MCP602
             IC2 RANDOMIZER
             IC7 V3207D
-            Q4 J201
             Q2 2N3904
             Q3 2N3904
             Q5 2N3904
             Q1 2SK208-Y
+            Q4 J201
             D1 BAT48
             D2 BAT48
             D3 BAT48
@@ -481,8 +481,9 @@ BOM_PRESETS = {
             LDR4 5mm Radial LDR (KE-10720)
             Q1 MPSA18
             Q2 MPSA18
-            D2 5mm
             D1 1N5817
+            LED 3mm Red LED
+            D2 5mm Yellow LED
             LEVEL A100K
             RATE B100K (Dual)
             VOICE B10K
@@ -542,8 +543,8 @@ BOM_PRESETS = {
             IC3 TC1044SCPA
             IC1 TL072
             IC2 TL072
-            D1 GE
-            D2 GE
+            D1 1N34A
+            D2 1N34A
             D4 1N4001
             D5 1N4001
             D3 1N4742
@@ -613,10 +614,10 @@ BOM_PRESETS = {
     "[PedalPCB] [Time] Arachnid v2": {
         "bom_text": """
             PCB Arachnid v2 PCB
+            IC2 24LC32A
             IC3 FV1
             IC6 L78L33
             IC1 TL074
-            IC2 24LC32A
             X1 AB38T-32.768KHZ
             D1 1N5817
             D2 1N914
@@ -640,12 +641,12 @@ BOM_PRESETS = {
             C4 1n
             C12 2.2n
             C1 100n
-            C3 1u
-            C6 1u
-            C8 1u
-            C10 1u
-            C11 1u
-            C15 1u
+            C3 1u MLCC
+            C6 1u MLCC
+            C8 1u MLCC
+            C10 1u MLCC
+            C11 1u MLCC
+            C15 1u MLCC
             C5 10u
             C17 47u
             C18 47u
@@ -682,9 +683,9 @@ BOM_PRESETS = {
     "[PedalPCB] [Time] Cataclysm Delay": {
         "bom_text": """
             PCB Cataclysm Delay PCB
+            IC3 78L05
             IC1 PT2399
             IC2 TL072
-            IC3 78L05
             D1 1N4148
             D2 1N4148
             D3 1N5817
@@ -759,7 +760,7 @@ BOM_PRESETS = {
             DECAY B25K
             TONE B25K
             ATMOSPHERE B50K
-            LENGTH ON/ON
+            LENGTH SPDT ON/ON
             C10 100p
             C5 1n
             C7 1n

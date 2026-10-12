@@ -13,32 +13,27 @@ import traceback
 from src.bom_lib import constants
 from src.bom_lib.classifier import categorize_part, normalize_value_by_category
 from src.bom_lib.enums import ComponentCategory
+from src.bom_lib.layout import find_listings
 from src.bom_lib.types import (
     Inventory,
     ParseResult,
     PDFPageExtraction,
+    PDFWord,
     StatsDict,
     create_empty_inventory,
     create_empty_stats,
     make_component_key,
 )
 from src.bom_lib.utils import expand_refs
+from src.bom_lib.verification import (
+    check_bom_reconciliation,
+    check_classification,
+    check_duplicate,
+    check_unextracted_refs,
+)
 
 # Initialize Logger
 logger = logging.getLogger(__name__)
-
-# 1. Base Keyword Pattern: Matches any Control/Pot/Switch label (e.g., "VOLUME", "SPDT")
-_KW_REGEX_STR = "|".join([rf"\b{k}\b" for k in constants.KEYWORDS])
-
-# 2. Strict Pattern (Keywords Only)
-# Used when tables have already populated the BOM, restricting regex to just Controls.
-_REF_PATTERN_STRICT = rf"(?P<ref>{_KW_REGEX_STR})"
-_REGEX_STRICT = re.compile(rf"{_REF_PATTERN_STRICT}\s+(?P<val>[^\s]+)", re.IGNORECASE)
-
-# 3. Loose Pattern (Standard Refs + Keywords)
-# Used as a fallback if table extraction failed completely. Matches "R1", "C1", etc.
-_REF_PATTERN_LOOSE = rf"(?P<ref>\b[A-Z]{{1,4}}\d+\b|{_KW_REGEX_STR})"
-_REGEX_LOOSE = re.compile(rf"{_REF_PATTERN_LOOSE}\s+(?P<val>[^\s]+)", re.IGNORECASE)
 
 
 def ingest_bom_line(
@@ -74,12 +69,16 @@ def ingest_bom_line(
         # De-dupe Check
         if stats is not None and "seen_refs" in stats:
             if r in stats["seen_refs"]:
+                check_duplicate(stats, r, stats["seen_refs"][r], val_raw)
                 continue
-            stats["seen_refs"].add(r)
+            stats["seen_refs"][r] = val_raw
 
         result = categorize_part(r, val_raw)
         if result is None:
             continue
+
+        if stats is not None:
+            check_classification(stats, r, val_raw, result.category, result.clean_value)
 
         parts_found += 1
         main_key = make_component_key(result.category, result.clean_value)
@@ -123,7 +122,7 @@ def parse_with_verification(
     stats: StatsDict = create_empty_stats()
 
     # Regex: Matches Ref + Separator + Value.
-    pattern = re.compile(r"^([a-zA-Z0-9_\-]+)[\s,]+([0-9a-zA-Z\.\-\/]+).*")
+    pattern = re.compile(r"^([a-zA-Z0-9_\-]+)[\s,]+(\S.*?)\s*$")
 
     for raw_text in bom_list:
         lines = raw_text.strip().split("\n")
@@ -263,6 +262,39 @@ def parse_user_inventory(filepath: str) -> Inventory:
     return stock
 
 
+_PART_NUMBER = re.compile(r"\b\d?[A-Z]{1,4}\d{2,5}[A-Z]{0,2}\b")
+_POLE_THROW = re.compile(r"\b(?:[SD34]P[DS]T|\dP\dT)\b")
+
+
+def enrich_value_from_type(value: str, type_text: str) -> str:
+    """Fills in a generic VALUE cell from the row's TYPE description.
+
+    Some parts lists put a shorthand in VALUE and the purchasable detail in
+    TYPE (Kliche: 'GE' / 'Germanium diode, 1N34A'; Gravitation: 'ON/ON' /
+    'Toggle switch, SPDT 2-position (ON/ON)').
+
+    Args:
+        value: The VALUE cell.
+        type_text: The TYPE cell of the same row.
+
+    Returns:
+        The value, completed with a part number or pole/throw code when the
+        VALUE cell lacks one and the TYPE cell provides it.
+    """
+    type_text = type_text.replace("\n", " ")
+    if not any(ch.isdigit() for ch in value):
+        part = _PART_NUMBER.search(type_text)
+        if part:
+            return part.group(0)
+    if constants.SWITCH_VALUE_PATTERN.search(value.upper()) and not _POLE_THROW.search(
+        value.upper()
+    ):
+        pole = _POLE_THROW.search(type_text.upper())
+        if pole:
+            return f"{pole.group(0)} {value}"
+    return value
+
+
 def _parse_via_tables(
     pages_data: list[PDFPageExtraction],
     inventory: Inventory,
@@ -290,6 +322,7 @@ def _parse_via_tables(
             headers = [str(h).upper().strip() for h in table[0] if h]
             loc_idx = -1
             val_idx = -1
+            type_idx = -1
             start_row_idx = 1
 
             for i, h in enumerate(headers):
@@ -297,6 +330,8 @@ def _parse_via_tables(
                     loc_idx = i
                 elif h in ("VALUE", "VAL", "DESCRIPTION"):
                     val_idx = i
+                elif h == "TYPE":
+                    type_idx = i
 
             # Fallback mapping
             if loc_idx == -1 or val_idx == -1:
@@ -317,6 +352,8 @@ def _parse_via_tables(
                 if len(row_safe) > max(loc_idx, val_idx):
                     ref_raw = row_safe[loc_idx].replace("\n", " ").strip()
                     val_raw = row_safe[val_idx].replace("\n", " ").strip()
+                    if 0 <= type_idx < len(row_safe):
+                        val_raw = enrich_value_from_type(val_raw, row_safe[type_idx])
                 elif len(row_safe) == 1 and row_safe[0]:
                     parts = row_safe[0].strip().split(None, 1)
                     if len(parts) == 2:
@@ -330,113 +367,58 @@ def _parse_via_tables(
                         stats["parts_found"] += count
 
 
-def _parse_via_regex(
+def _is_not_populated(value: str) -> bool:
+    return value.upper() in constants.NOT_POPULATED_VALUES
+
+
+def _is_ignored(value: str) -> bool:
+    words = set(re.findall(r"[A-Z]+", value.upper()))
+    phrase = " ".join(value.upper().split())
+    return any(
+        bad in words if " " not in bad else bad in phrase
+        for bad in constants.IGNORE_VALUES
+    )
+
+
+def _parse_via_layout(
     pages_data: list[PDFPageExtraction],
     inventory: Inventory,
     source_name: str,
     stats: StatsDict,
 ) -> None:
-    """Strategy 2: Fallback extraction using regex pattern matching.
+    """Strategy 2: Extract designator/value pairs from the page layout.
 
-    Scans the raw text of the PDF for component patterns (e.g., "R1 10k",
-    "VOLUME 100kB"). It dynamically adjusts its strictness based on whether
-    parts were already found by the table strategy.
+    Reads word positions to pair each designator with the value printed in the
+    neighboring column (see `layout.py`). When the table strategy already
+    populated the inventory, only designators it missed are added, so the two
+    strategies never disagree about a part.
 
     Args:
-        pages_data: Pre-extracted list of dicts containing 'tables' and 'text'.
+        pages_data: Pre-extracted page data including word positions.
         inventory: The inventory dictionary to update.
         source_name: The name of the source file.
         stats: The statistics dictionary for tracking progress.
     """
-    # Scope: If nothing found yet, match everything.
-    # If parts found, restrict to Keywords (controls) to avoid noise.
-    regex = _REGEX_LOOSE if stats["parts_found"] == 0 else _REGEX_STRICT
+    tables_found = stats["parts_found"] > 0
 
     for data in pages_data:
-        text = data["text"]
-        if not text:
-            continue
+        for listing in find_listings(data["words"]):
+            ref, value = listing.ref, listing.value
+            stats["lines_read"] += 1
 
-        matches = list(regex.finditer(text))
-
-        for i, match in enumerate(matches):
-            ref_str = match.group("ref").upper()
-            val_str = match.group("val")
-            val_start = match.start("val")
-
-            # Lookahead safely
-            next_match_start = (
-                matches[i + 1].start() if i + 1 < len(matches) else len(text)
-            )
-
-            # Expand value capture for multi-word items (Switches, Pots)
-            if (
-                ref_str.startswith("LDR")
-                or ref_str in constants.KEYWORDS
-                or ref_str.startswith(("POT", "VR"))
-            ):
-                line_end = text.find("\n", val_start)
-                if line_end == -1:
-                    line_end = len(text)
-                cutoff = min(line_end, next_match_start)
-                val_str = text[val_start:cutoff].strip()
-
-            # Clean brackets
-            if (val_str.startswith("(") and val_str.endswith(")")) or (
-                val_str.startswith("[") and val_str.endswith("]")
-            ):
-                val_str = val_str[1:-1].strip()
-
-            # Filters
-            if len(val_str) > 50 or len(val_str) < 1:
+            if tables_found and ref in stats["seen_refs"]:
                 continue
-            if any(bad in val_str.upper() for bad in constants.IGNORE_VALUES):
+            if _is_not_populated(value) or _is_ignored(value) or len(value) > 50:
                 continue
-            if re.match(r"^(is|see|note)\s", val_str, re.IGNORECASE):
-                continue
-            if re.match(r"^\d{1,2}[\.\-\/]\d{1,2}[\.\-\/]\d{2,4}", val_str):
-                continue
-
-            # Validation
-            is_keyword = ref_str in constants.KEYWORDS
-            if not is_keyword:
-                # Must start with valid prefix
-                valid_prefixes = (*constants.CORE_PREFIXES, "POT", "VR", "L", "LD")
-                if not any(ref_str.startswith(p) for p in valid_prefixes):
-                    continue
-                # "Ghost Data" check (Qty Part reversed)
-                if len(ref_str) >= 3 and re.match(r"^\d+$", val_str):
-                    continue
-            else:
-                # Keyword validation
-                has_digit = any(char.isdigit() for char in val_str)
-                is_switch = any(
-                    x in val_str.upper()
-                    for x in ["SPDT", "DPDT", "3PDT", "ON/ON", "ON/OFF"]
-                )
-                if not has_digit and not is_switch:
-                    continue
-
-                # Semantic Check (e.g., prevent "LOOP" -> "IC")
-                val_up = val_str.upper()
-                bad_starts = (
-                    "IC",
-                    "DIP",
-                    "SOIC",
-                    "PKG",
-                    "MODULE",
-                    "PCB",
-                    "TL",
-                    "OP",
-                    "NE5",
-                )
-                is_package = "DIP" in val_up or "SOIC" in val_up
-                if any(val_up.startswith(x) for x in bad_starts) or (
-                    is_package and not has_digit
+            if ref in constants.KEYWORDS:
+                # Named controls must carry a real value (B100K, SPDT ...).
+                has_digit = any(ch.isdigit() for ch in value)
+                if not has_digit and not constants.SWITCH_VALUE_PATTERN.search(
+                    value.upper()
                 ):
                     continue
 
-            c = ingest_bom_line(inventory, source_name, ref_str, val_str, stats)
+            c = ingest_bom_line(inventory, source_name, ref, value, stats)
             if c > 0:
                 stats["parts_found"] += c
 
@@ -446,7 +428,7 @@ def parse_pedalpcb_pdf(filepath: str, source_name: str) -> ParseResult:
 
     Uses a multi-stage strategy:
     1. Visual Table Extraction (via pdfplumber lines).
-    2. Text-based heuristic layout analysis (Regex fallback).
+    2. Layout analysis of word positions (column-aware text fallback).
 
     Args:
         filepath: Path to the PDF file.
@@ -484,7 +466,20 @@ def parse_pedalpcb_pdf(filepath: str, source_name: str) -> ParseResult:
             pages_data: list[PDFPageExtraction] = []
             for page in pdf.pages:
                 pages_data.append(
-                    {"tables": page.extract_tables(), "text": page.extract_text()}
+                    {
+                        "tables": page.extract_tables(),
+                        "text": page.extract_text(),
+                        "words": [
+                            PDFWord(
+                                text=w["text"],
+                                x0=w["x0"],
+                                x1=w["x1"],
+                                top=w["top"],
+                                size=w["size"],
+                            )
+                            for w in page.extract_words(extra_attrs=["size"])
+                        ],
+                    }
                 )
 
             # --- PHASE 2: TITLE EXTRACTION ---
@@ -519,9 +514,15 @@ def parse_pedalpcb_pdf(filepath: str, source_name: str) -> ParseResult:
             # --- STRATEGY 1: TABLE EXTRACTION ---
             _parse_via_tables(pages_data, inventory, source_name, stats)
 
-            # --- STRATEGY 2: REGEX FALLBACK ---
-            # Automatically adjusts strictness based on whether tables were found
-            _parse_via_regex(pages_data, inventory, source_name, stats)
+            # --- STRATEGY 2: LAYOUT ANALYSIS ---
+            # Recovers anything the tables missed (or everything, for column layouts)
+            _parse_via_layout(pages_data, inventory, source_name, stats)
+
+            # --- SELF-CHECK ---
+            # Every designator listed in the document must be accounted for.
+            page_texts = [data["text"] or "" for data in pages_data]
+            check_unextracted_refs(page_texts, inventory, stats)
+            check_bom_reconciliation(page_texts, inventory, stats)
 
         except Exception as e:
             # Capture internal parsing errors (logic bugs, layout changes)

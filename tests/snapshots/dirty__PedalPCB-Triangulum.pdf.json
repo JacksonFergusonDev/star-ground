@@ -22,7 +22,7 @@
         ]
       }
     },
-    "Capacitors | 100u": {
+    "Capacitors | 100u (35V or higher)": {
       "qty": 1,
       "refs": [
         "C107"
@@ -44,19 +44,28 @@
         ]
       }
     },
-    "Capacitors | 10u": {
-      "qty": 5,
+    "Capacitors | 10u (25V or higher)": {
+      "qty": 2,
       "refs": [
         "C102",
-        "C103",
+        "C103"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C102",
+          "C103"
+        ]
+      }
+    },
+    "Capacitors | 10u (35V or higher)": {
+      "qty": 3,
+      "refs": [
         "C104",
         "C105",
         "C106"
       ],
       "sources": {
         "SnapshotTest": [
-          "C102",
-          "C103",
           "C104",
           "C105",
           "C106"
@@ -132,7 +141,7 @@
         ]
       }
     },
-    "Diodes | 1N4148*": {
+    "Diodes | 1N4148": {
       "qty": 2,
       "refs": [
         "D1",
@@ -262,24 +271,15 @@
       }
     },
     "Resistors | 1M": {
-      "qty": 1,
+      "qty": 2,
       "refs": [
+        "R10",
         "R5"
       ],
       "sources": {
         "SnapshotTest": [
+          "R10",
           "R5"
-        ]
-      }
-    },
-    "Resistors | 1M*": {
-      "qty": 1,
-      "refs": [
-        "R10"
-      ],
-      "sources": {
-        "SnapshotTest": [
-          "R10"
         ]
       }
     },
@@ -338,7 +338,7 @@
         ]
       }
     },
-    "Resistors | 22K*": {
+    "Resistors | 22k": {
       "qty": 1,
       "refs": [
         "R9"
@@ -409,23 +409,14 @@
       }
     },
     "Transistors | BC550C": {
-      "qty": 1,
+      "qty": 2,
       "refs": [
-        "Q1"
-      ],
-      "sources": {
-        "SnapshotTest": [
-          "Q1"
-        ]
-      }
-    },
-    "Transistors | BC550C*": {
-      "qty": 1,
-      "refs": [
+        "Q1",
         "Q2"
       ],
       "sources": {
         "SnapshotTest": [
+          "Q1",
           "Q2"
         ]
       }
