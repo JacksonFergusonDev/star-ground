@@ -323,7 +323,7 @@
         ]
       }
     },
-    "Switches | ON/ON": {
+    "Switches | SPDT ON/ON": {
       "qty": 1,
       "refs": [
         "LENGTH"

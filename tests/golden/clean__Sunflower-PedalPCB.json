@@ -1,0 +1,25 @@
+{
+  "pdf": "clean/Sunflower-PedalPCB.pdf",
+  "title": "Sunflower Fuzz",
+  "parts": {
+    "R1": {"category": "Resistors", "value": "100K"},
+    "R2": {"category": "Resistors", "value": "33K"},
+    "R3": {"category": "Resistors", "value": "1K"},
+    "R4": {"category": "Resistors", "value": "470R"},
+    "CLR": {"category": "Resistors", "value": "4K7"},
+    "C1": {"category": "Capacitors", "value": "1u"},
+    "C2": {"category": "Capacitors", "value": "22u"},
+    "C3": {"category": "Capacitors", "value": "10n"},
+    "C100": {"category": "Capacitors", "value": "10u"},
+    "C101": {"category": "Capacitors", "value": "47u"},
+    "D100": {"category": "Diodes", "value": "1N5817"},
+    "Q1": {"category": "Transistors", "value": "NKT275"},
+    "Q2": {"category": "Transistors", "value": "NKT275"},
+    "IC1": {"category": "ICs", "value": "TC1044SCPA"},
+    "BIAS": {"category": "Potentiometers", "value": "5K"},
+    "CLEAN": {"category": "Potentiometers", "value": "50K"},
+    "VOLUME": {"category": "Potentiometers", "value": "A250K"},
+    "FUZZ": {"category": "Potentiometers", "value": "B1K"},
+    "SUNDIAL": {"category": "Potentiometers", "value": "B5K"}
+  }
+}

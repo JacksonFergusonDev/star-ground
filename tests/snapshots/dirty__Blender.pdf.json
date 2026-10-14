@@ -77,31 +77,7 @@
         ]
       }
     },
-    "Diodes | 1N5817": {
-      "qty": 1,
-      "refs": [
-        "D5"
-      ],
-      "sources": {
-        "SnapshotTest": [
-          "D5"
-        ]
-      }
-    },
-    "Diodes | 3mm": {
-      "qty": 2,
-      "refs": [
-        "LED1",
-        "LED2"
-      ],
-      "sources": {
-        "SnapshotTest": [
-          "LED1",
-          "LED2"
-        ]
-      }
-    },
-    "Potentiometers | 1N34A": {
+    "Diodes | 1N34A": {
       "qty": 4,
       "refs": [
         "D1",
@@ -115,6 +91,30 @@
           "D2",
           "D3",
           "D4"
+        ]
+      }
+    },
+    "Diodes | 1N5817": {
+      "qty": 1,
+      "refs": [
+        "D5"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "D5"
+        ]
+      }
+    },
+    "Diodes | 3mm Red LED": {
+      "qty": 2,
+      "refs": [
+        "LED1",
+        "LED2"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "LED1",
+          "LED2"
         ]
       }
     },
@@ -351,6 +351,19 @@
         ]
       }
     },
+    "Resistors | 820": {
+      "qty": 2,
+      "refs": [
+        "R16",
+        "R25"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R16",
+          "R25"
+        ]
+      }
+    },
     "Transistors | 2N5088": {
       "qty": 5,
       "refs": [
@@ -373,6 +386,6 @@
   },
   "metadata": {
     "extracted_title": "Blender",
-    "parts_found": 59
+    "parts_found": 61
   }
 }

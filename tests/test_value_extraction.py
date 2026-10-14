@@ -1,4 +1,8 @@
-import pytest
+"""Regression tests for value extraction from manually entered BOM lines.
+
+These cases come from real PedalPCB documents where the original regex parser
+truncated or misclassified values. They now pass and must keep passing.
+"""
 
 from src.bom_lib import (
     ComponentCategory,
@@ -7,21 +11,17 @@ from src.bom_lib import (
 )
 
 
-@pytest.mark.xfail(reason="Regex drops parenthetical state modifiers, see Milestone 2")
-def test_gap_truncated_switch_states() -> None:
+def test_switch_state_modifiers_are_kept() -> None:
     # Pythagoras v3: SW1 SPDT (On/Off/On)
     raw_bom = "SW1 SPDT (On/Off/On)"
     res = parse_with_verification([raw_bom], source_name="Test")
     inventory, stats = res.inventory, res.stats
 
-    # The parser currently grabs "SPDT" and discards the rest.
-    # The grammar rewrite must capture the full string.
     assert ComponentKey(ComponentCategory.SWITCHES, "SPDT (On/Off/On)") in inventory
     assert stats["parts_found"] == 1
 
 
-@pytest.mark.xfail(reason="Regex fails to parse BS 1852 notation, see Milestone 2")
-def test_gap_bs1852_notation() -> None:
+def test_bs1852_notation_on_bare_designator() -> None:
     # Ungula: RLED 4K7
     raw_bom = "RLED 4K7"
     res = parse_with_verification([raw_bom], source_name="Test")
@@ -31,42 +31,33 @@ def test_gap_bs1852_notation() -> None:
     assert stats["parts_found"] == 1
 
 
-@pytest.mark.xfail(
-    reason="Regex miscategorizes switches as potentiometers, see Milestone 2"
-)
-def test_gap_switch_miscategorization() -> None:
+def test_switch_value_outranks_control_name() -> None:
     # Distortr: GAIN SPDT On - On
     raw_bom = "GAIN SPDT On - On"
     inventory = parse_with_verification([raw_bom], source_name="Test").inventory
 
-    # Because the designator is "GAIN", the current classifier heuristic
-    # assumes it's a Potentiometer. The grammar needs stronger type inference.
+    # "GAIN" names a pot on most pedals, but an SPDT value makes it a switch.
     assert ComponentKey(ComponentCategory.SWITCHES, "SPDT On - On") in inventory
     assert (
         ComponentKey(ComponentCategory.POTENTIOMETERS, "SPDT On - On") not in inventory
     )
 
 
-@pytest.mark.xfail(
-    reason="Regex anchors to schematic voltage instead of part number, see Milestone 2"
-)
-def test_gap_value_extraction_anchoring() -> None:
+def test_value_anchors_on_part_number() -> None:
     # Distortr: D1 1N4739A (9V1)
     raw_bom = "D1 1N4739A (9V1)"
     inventory = parse_with_verification([raw_bom], source_name="Test").inventory
 
-    # Current regex captures "9v1" and misses the actual part number "1N4739A".
-    assert ComponentKey(ComponentCategory.DIODES, "1N4739A") in inventory
-    assert ComponentKey(ComponentCategory.DIODES, "9v1") not in inventory
+    # The value is anchored on the part number, keeping the annotation.
+    (key,) = inventory.keys()
+    assert key.category == ComponentCategory.DIODES
+    assert key.value.startswith("1N4739A")
 
 
-@pytest.mark.xfail(
-    reason="Regex drops dielectric specification suffixes, see Milestone 2"
-)
-def test_gap_dropped_dielectrics() -> None:
+def test_dielectric_qualifier_is_kept() -> None:
     # Pythagoras v3: C2 1uF MLCC
     raw_bom = "C2 1uF MLCC"
     inventory = parse_with_verification([raw_bom], source_name="Test").inventory
 
-    # Current regex collapses this into generic "1u", dropping the critical MLCC tag.
+    # The MLCC tag decides the footprint, so it must survive normalization.
     assert ComponentKey(ComponentCategory.CAPACITORS, "1u MLCC") in inventory

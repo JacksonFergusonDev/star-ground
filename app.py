@@ -13,6 +13,7 @@ from src.bom_lib import (
     BOMParserContext,
     FeedbackRating,
     InputMethod,
+    ParseWarning,
     ProjectSlot,
     StatsDict,
     build_shopping_list,
@@ -99,6 +100,8 @@ if "inventory" not in st.session_state:
     st.session_state.inventory = None
 if "stats" not in st.session_state:
     st.session_state.stats = None
+if "parse_warnings" not in st.session_state:
+    st.session_state.parse_warnings = {}
 
 # Initialize session state for pedal slots
 if "pedal_slots" not in st.session_state:
@@ -473,6 +476,7 @@ if st.button("Generate Master List", type="primary", width="stretch"):
     inventory = create_empty_inventory()
 
     stats: StatsDict = create_empty_stats()
+    parse_warnings: dict[str, list[ParseWarning]] = {}
 
     # Process Each Slot
     parser_context = BOMParserContext()
@@ -511,6 +515,10 @@ if st.button("Generate Master List", type="primary", width="stretch"):
         if not slot.name.strip():
             slot.name = source
 
+        if p_stats.get("warnings"):
+            parse_warnings[slot.name] = p_stats["warnings"]
+            stats["warnings"].extend(p_stats["warnings"])
+
         # Save the final resolved name
         slot.locked_name = slot.name
 
@@ -531,6 +539,7 @@ if st.button("Generate Master List", type="primary", width="stretch"):
     st.session_state.inventory = inventory
     st.session_state.stock = stock_inventory  # Save to session
     st.session_state.stats = stats
+    st.session_state.parse_warnings = parse_warnings
 
     # Validation Logic
     if stats["parts_found"] == 0:
@@ -568,6 +577,22 @@ if st.session_state.inventory and st.session_state.stats:
     if stats["parts_found"] == 0:
         st.stop()
 
+    # Parser self-checks: places where the output may disagree with the source.
+    parse_warnings = cast(
+        dict[str, list[ParseWarning]], st.session_state.parse_warnings
+    )
+    if parse_warnings:
+        total = sum(len(ws) for ws in parse_warnings.values())
+        st.warning(
+            f"⚠️ {total} part(s) need review. The parser's self-checks found "
+            "places where this list may not match your document. Compare "
+            "these against the original before ordering."
+        )
+        for project, warnings in parse_warnings.items():
+            with st.expander(f"{project}: {len(warnings)} to review"):
+                for w in warnings:
+                    st.markdown(f"- **{w.kind.value}**: {w.message}")
+
     # Check for junk / parsing residuals
     suspicious = get_residual_report(stats)
     if suspicious:
@@ -575,8 +600,8 @@ if st.session_state.inventory and st.session_state.stats:
         with st.expander("Show ignored lines"):
             for line in suspicious:
                 st.code(line)
-    else:
-        st.success("✅ Clean parse. No weird leftovers.")
+    elif not parse_warnings:
+        st.success("✅ Clean parse. All self-checks passed.")
 
     # Phase 1.5 Refactor Filters
     with st.expander("⚙️ Advanced Options", expanded=False):
