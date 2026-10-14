@@ -173,7 +173,7 @@
         ]
       }
     },
-    "Diodes | 3mm": {
+    "Diodes | 3mm Red LED": {
       "qty": 1,
       "refs": [
         "D4"
@@ -436,7 +436,7 @@
         ]
       }
     },
-    "Switches | 2P4T": {
+    "Switches | 2P4T Mini Rotary": {
       "qty": 1,
       "refs": [
         "SW1"

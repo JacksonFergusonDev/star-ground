@@ -55,7 +55,7 @@
         ]
       }
     },
-    "Capacitors | 1u": {
+    "Capacitors | 1u MLCC": {
       "qty": 6,
       "refs": [
         "C10",
@@ -230,17 +230,6 @@
         ]
       }
     },
-    "Potentiometers | 1P8T Mini Rotary": {
-      "qty": 1,
-      "refs": [
-        "MODE"
-      ],
-      "sources": {
-        "SnapshotTest": [
-          "MODE"
-        ]
-      }
-    },
     "Potentiometers | B100K": {
       "qty": 4,
       "refs": [
@@ -373,6 +362,17 @@
       "sources": {
         "SnapshotTest": [
           "R13"
+        ]
+      }
+    },
+    "Switches | 1P8T Mini Rotary": {
+      "qty": 1,
+      "refs": [
+        "MODE"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "MODE"
         ]
       }
     }

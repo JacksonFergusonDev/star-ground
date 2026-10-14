@@ -1,0 +1,29 @@
+{
+  "pdf": "dirty/PedalPCB-ToneVendorMKI.pdf",
+  "title": "Tone Vendor MKI",
+  "parts": {
+    "R1": {"category": "Resistors", "value": "1M"},
+    "R2": {"category": "Resistors", "value": "8K2"},
+    "R3": {"category": "Resistors", "value": "470K"},
+    "R4": {"category": "Resistors", "value": "1K8"},
+    "R5": {"category": "Resistors", "value": "2K2"},
+    "R6": {"category": "Resistors", "value": "8K2"},
+    "R7": {"category": "Resistors", "value": "15K"},
+    "R8": {"category": "Resistors", "value": "47K"},
+    "R9": {"category": "Resistors", "value": "2M2"},
+    "R10": {"category": "Resistors", "value": "4K7"},
+    "C1": {"category": "Capacitors", "value": "10n"},
+    "C2": {"category": "Capacitors", "value": "25u"},
+    "C3": {"category": "Capacitors", "value": "100n"},
+    "C4": {"category": "Capacitors", "value": "100n"},
+    "C5": {"category": "Capacitors", "value": "10u"},
+    "C6": {"category": "Capacitors", "value": "47u"},
+    "D1": {"category": "Diodes", "value": "1N5817"},
+    "IC1": {"category": "ICs", "value": "TC1044SCPA"},
+    "Q1": {"category": "Transistors", "value": "OC75"},
+    "Q2": {"category": "Transistors", "value": "2G381"},
+    "Q3": {"category": "Transistors", "value": "2G381"},
+    "LEVEL": {"category": "Potentiometers", "value": "A500K"},
+    "ATTACK": {"category": "Potentiometers", "value": "B50K"}
+  }
+}

@@ -56,14 +56,24 @@
       }
     },
     "Capacitors | 1u": {
-      "qty": 6,
+      "qty": 1,
+      "refs": [
+        "C9"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "C9"
+        ]
+      }
+    },
+    "Capacitors | 1u MLCC": {
+      "qty": 5,
       "refs": [
         "C10",
         "C2",
         "C3",
         "C6",
-        "C8",
-        "C9"
+        "C8"
       ],
       "sources": {
         "SnapshotTest": [
@@ -71,8 +81,7 @@
           "C2",
           "C3",
           "C6",
-          "C8",
-          "C9"
+          "C8"
         ]
       }
     },
@@ -347,7 +356,7 @@
         ]
       }
     },
-    "Switches | SPDT": {
+    "Switches | SPDT (On/Off/On)": {
       "qty": 1,
       "refs": [
         "SW1"

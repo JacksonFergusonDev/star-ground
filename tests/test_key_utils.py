@@ -112,6 +112,7 @@ def test_pdf_page_extraction_type() -> None:
     extraction: PDFPageExtraction = {
         "tables": [[["R1", "10k"]]],
         "text": "R1 10k",
+        "words": [],
     }
     assert extraction["tables"][0][0] == ["R1", "10k"]
     assert extraction["text"] == "R1 10k"

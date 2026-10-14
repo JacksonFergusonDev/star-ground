@@ -116,7 +116,7 @@
         ]
       }
     },
-    "Diodes | 9v1": {
+    "Diodes | 9v1 Zener": {
       "qty": 1,
       "refs": [
         "D1"
@@ -171,17 +171,6 @@
         ]
       }
     },
-    "Potentiometers | SPDT (On - On)": {
-      "qty": 1,
-      "refs": [
-        "GAIN"
-      ],
-      "sources": {
-        "SnapshotTest": [
-          "GAIN"
-        ]
-      }
-    },
     "Resistors | 10k": {
       "qty": 2,
       "refs": [
@@ -226,6 +215,17 @@
           "R3",
           "R6",
           "R7"
+        ]
+      }
+    },
+    "Resistors | 330": {
+      "qty": 1,
+      "refs": [
+        "R13"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R13"
         ]
       }
     },
@@ -277,6 +277,17 @@
         ]
       }
     },
+    "Resistors | 82": {
+      "qty": 1,
+      "refs": [
+        "R18"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "R18"
+        ]
+      }
+    },
     "Resistors | 82k": {
       "qty": 1,
       "refs": [
@@ -285,6 +296,28 @@
       "sources": {
         "SnapshotTest": [
           "R15"
+        ]
+      }
+    },
+    "Switches | SPDT (On - Off - On)": {
+      "qty": 1,
+      "refs": [
+        "SUBS"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "SUBS"
+        ]
+      }
+    },
+    "Switches | SPDT (On - On)": {
+      "qty": 1,
+      "refs": [
+        "GAIN"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "GAIN"
         ]
       }
     },
@@ -306,6 +339,6 @@
   },
   "metadata": {
     "extracted_title": "Distortr",
-    "parts_found": 39
+    "parts_found": 42
   }
 }

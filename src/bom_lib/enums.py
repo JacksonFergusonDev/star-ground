@@ -28,6 +28,16 @@ class ComponentOrigin(StrEnum):
     EXTRAS = "Extras"
 
 
+class ParseWarningKind(StrEnum):
+    """Categories of parser self-check failures surfaced to the user."""
+
+    UNEXTRACTED_REF = "Unextracted designator"
+    CONFLICTING_DUPLICATE = "Conflicting duplicate"
+    CATEGORY_CONFLICT = "Category conflict"
+    UNPARSED_VALUE = "Unparsed value"
+    BOM_MISMATCH = "Bill of materials mismatch"
+
+
 class ComponentSpec(Enum):
     """Specific sub-specifications for components."""
 

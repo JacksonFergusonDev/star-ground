@@ -152,6 +152,19 @@
         ]
       }
     },
+    "Diodes | 1N34A": {
+      "qty": 2,
+      "refs": [
+        "D1",
+        "D2"
+      ],
+      "sources": {
+        "SnapshotTest": [
+          "D1",
+          "D2"
+        ]
+      }
+    },
     "Diodes | 1N4001": {
       "qty": 2,
       "refs": [
@@ -173,19 +186,6 @@
       "sources": {
         "SnapshotTest": [
           "D3"
-        ]
-      }
-    },
-    "Diodes | GE": {
-      "qty": 2,
-      "refs": [
-        "D1",
-        "D2"
-      ],
-      "sources": {
-        "SnapshotTest": [
-          "D1",
-          "D2"
         ]
       }
     },

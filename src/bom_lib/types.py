@@ -18,6 +18,7 @@ from src.bom_lib.enums import (
     ComponentOrigin,
     ComponentSpec,
     InputMethod,
+    ParseWarningKind,
 )
 
 
@@ -78,6 +79,29 @@ class ProjectSlot:
     locked_name: str | None = None
 
 
+@dataclass(frozen=True, slots=True)
+class ParseWarning:
+    """A parser self-check failure that the user must review.
+
+    Warnings mark places where the output may silently disagree with the
+    source document, e.g. a designator printed in the PDF that never made it
+    into the inventory.
+
+    Attributes:
+        kind: The self-check that failed.
+        ref: The designator concerned.
+        message: Human-readable explanation.
+    """
+
+    kind: ParseWarningKind
+    ref: str
+    message: str
+
+    def __str__(self) -> str:
+        """Returns the warning formatted for display."""
+        return f"{self.kind.value}: {self.message}"
+
+
 class StatsDict(TypedDict):
     """Tracking metrics and errors for a single ingestion session.
 
@@ -86,15 +110,19 @@ class StatsDict(TypedDict):
         parts_found: Number of valid component matches extracted.
         residuals: Lines that were rejected/skipped during parsing.
         extracted_title: Heuristic guess at the project title (PDF only).
-        seen_refs: Set of references seen so far to prevent duplicate counting.
+        seen_refs: Raw value recorded for each reference seen so far, used to
+            prevent duplicate counting and to detect conflicting duplicates.
+        errors: Fatal problems that aborted all or part of the parse.
+        warnings: Self-check failures where the output may be incomplete.
     """
 
     lines_read: int
     parts_found: int
     residuals: list[str]
     extracted_title: str | None
-    seen_refs: set[str]
+    seen_refs: dict[str, str]
     errors: list[str]
+    warnings: list[ParseWarning]
 
 
 class PartData(TypedDict):
@@ -299,16 +327,36 @@ class ChecklistPart(TypedDict):
     spec_type: NotRequired[ComponentSpec]
 
 
+class PDFWord(TypedDict):
+    """A positioned word extracted from a PDF page (pdfplumber word dict subset).
+
+    Attributes:
+        text: The word text.
+        x0: Left edge, in points.
+        x1: Right edge, in points.
+        top: Top edge, in points from the top of the page.
+        size: Font size, in points.
+    """
+
+    text: str
+    x0: float
+    x1: float
+    top: float
+    size: float
+
+
 class PDFPageExtraction(TypedDict):
     """Extracted text and tabular layout from a single PDF page.
 
     Attributes:
         tables: List of extracted tables (each table is rows of string cells or None).
         text: Raw extracted text string from the page.
+        words: Positioned words, used for column-aware layout analysis.
     """
 
     tables: list[list[list[str | None]]]
     text: str | None
+    words: list[PDFWord]
 
 
 ShoppingListRow = TypedDict(
@@ -439,8 +487,9 @@ def create_empty_stats() -> StatsDict:
         "parts_found": 0,
         "residuals": [],
         "extracted_title": None,
-        "seen_refs": set(),
+        "seen_refs": {},
         "errors": [],
+        "warnings": [],
     }
 
 

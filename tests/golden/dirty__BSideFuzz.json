@@ -1,0 +1,32 @@
+{
+  "pdf": "dirty/BSideFuzz.pdf",
+  "title": "B-Side Fuzz",
+  "parts": {
+    "R1": {"category": "Resistors", "value": "100K"},
+    "R2": {"category": "Resistors", "value": "100K"},
+    "R3": {"category": "Resistors", "value": "10K"},
+    "R4": {"category": "Resistors", "value": "10K"},
+    "R5": {"category": "Resistors", "value": "470K"},
+    "R6": {"category": "Resistors", "value": "470"},
+    "R7": {"category": "Resistors", "value": "10K"},
+    "R8": {"category": "Resistors", "value": "3K6"},
+    "R9": {"category": "Resistors", "value": "10K"},
+    "R10": {"category": "Resistors", "value": "10K"},
+    "R11": {"category": "Resistors", "value": "3K6"},
+    "R12": {"category": "Resistors", "value": "4K7"},
+    "C1": {"category": "Capacitors", "value": "1uF"},
+    "C2": {"category": "Capacitors", "value": "1uF"},
+    "C3": {"category": "Capacitors", "value": "1uF"},
+    "C4": {"category": "Capacitors", "value": "47nF"},
+    "C5": {"category": "Capacitors", "value": "47nF"},
+    "C6": {"category": "Capacitors", "value": "4.7nF"},
+    "C7": {"category": "Capacitors", "value": "47uF"},
+    "C8": {"category": "Capacitors", "value": "47uF"},
+    "IC1": {"category": "ICs", "value": "JRC4558"},
+    "D1": {"category": "Diodes", "value": "1N5817"},
+    "VOLUME": {"category": "Potentiometers", "value": "B100K"},
+    "TRIM": {"category": "Potentiometers", "value": "B25K"},
+    "BASS": {"category": "Potentiometers", "value": "B100K"},
+    "TREBLE": {"category": "Potentiometers", "value": "B500K"}
+  }
+}

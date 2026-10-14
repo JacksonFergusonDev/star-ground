@@ -11,7 +11,11 @@ The system enforces strict separation between **Ingestion**, **Normalization**, 
 ### 1. Ingestion Layer (The Senses)
 
 - **`bom_lib/parser.py`**: The entry point for dynamic data.
-  - **Strategy:** Implements a **Hybrid Strategy**. It attempts to map PDF table vectors using `pdfplumber` (Spatial Analysis) but falls back to a deterministic Regex scanner if the visual layout is ambiguous.
+  - **Strategy:** Implements a **Hybrid Strategy**. It maps ruled PDF tables using `pdfplumber`, then runs a column-aware layout pass to recover everything the tables missed (or everything, for borderless multi-column parts lists).
+- **`bom_lib/layout.py`**: The layout reader.
+  - **Role:** Groups positioned words into lines and *cells* (split at column-sized gaps), then pairs each designator cell with its value cell. This keeps multi-word values whole (`3mm Red LED`, `10u (25V or higher)`) without bleeding into the neighboring column.
+- **`bom_lib/verification.py`**: The self-checks.
+  - **Role:** Independently re-reads the document and reports every place the output may disagree with it (unextracted designators, conflicting duplicates, category contradictions, unparseable values, bill-of-materials mismatches). The invariant: the parser may be wrong, but never *silently*.
 - **`bom_lib/presets.py`**: The entry point for static data.
   - **Role:** Acts as the "Reference Library." It allows users to load pre-verified BOMs for known circuits (e.g., PedalPCB projects) without parsing a file.
 - **`bom_lib/_presets_data.py`**: The static database.

@@ -1,0 +1,30 @@
+{
+  "clean__Cataclysm-PedalPCB": {},
+  "clean__Gravitation-PedalPCB": {},
+  "clean__Kliche-PedalPCB": {},
+  "clean__LowTide-PedalPCB": {},
+  "clean__PaperScratcher-PedalPCB": {},
+  "clean__Sunflower-PedalPCB": {},
+  "dirty__Abyss": {},
+  "dirty__Arachnid": {},
+  "dirty__BSideFuzz": {},
+  "dirty__Blender": {},
+  "dirty__CelestialDrive": {},
+  "dirty__Circulator": {},
+  "dirty__Distortr": {
+    "D1": {
+      "issue": "value: expected '1N4739A', got '9v1 Zener'",
+      "warned": true
+    },
+    "D3": {
+      "issue": "value: expected '3mm Red LED', got 'LED'",
+      "warned": false
+    }
+  },
+  "dirty__Parentheses": {},
+  "dirty__PedalPCB-ToneVendorMKI": {},
+  "dirty__PedalPCB-Triangulum": {},
+  "dirty__Pythagoras": {},
+  "dirty__Raincoat": {},
+  "dirty__Ungula": {}
+}
