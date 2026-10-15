@@ -75,6 +75,20 @@ class TestUnextractedRefs:
             (ParseWarningKind.UNEXTRACTED_REF, "R13")
         ]
 
+    def test_lowercase_suffix_matches_extracted_ref(self) -> None:
+        # Shindig lists 'D10a'; the inventory may hold it in either case.
+        inventory = create_empty_inventory()
+        inventory.add_part(
+            "T", make_component_key(ComponentCategory.DIODES, "1N4007"), "D10A"
+        )
+        stats = create_empty_stats()
+
+        check_unextracted_refs(
+            ["D10a 1N4007 Standard recovery diode"], inventory, stats
+        )
+
+        assert stats["warnings"] == []
+
     def test_injected_refs_do_not_count_as_extracted(self) -> None:
         inventory = create_empty_inventory()
         key = make_component_key(ComponentCategory.HARDWARE_MISC, "DIP SOCKET")

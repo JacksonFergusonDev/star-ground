@@ -37,7 +37,10 @@ _MULTIWORD_NAME = re.compile(r"[A-Z]{2,}(?: [A-Z]{2,}){1,2}")
 # A whole-cell parenthetical on the next line, aligned with a value above it,
 # continues that value ('SPDT Toggle' / '(On/On)').
 _CONTINUATION = re.compile(r"\(.*\)")
+# A pot value or switch spec, optionally led by a marker or qualifier:
+# 'Dual B10K', 'Latching 3PDT Footswitch', 'On/OFF/On DPDT Toggle', '*DPDT'.
 _CONTROL_VALUE = re.compile(
+    r"\*?(?:(?i:dual|latching|momentary|on(?:\s*[/-]\s*(?:on|off))+)\s+)?"
     r"(?:[ABCWG]\d+(?:\.\d+)?[KM]\b|\d+(?:\.\d+)?[KM][ABC]?\b|[SD34]P[DS]T\b|\dP\dT\b)"
 )
 
@@ -182,6 +185,8 @@ def _has_digit(cell: str | None) -> bool:
 
 
 def _is_ref_cell(cell: str, next_cell: str | None) -> bool:
+    # An optional-part marker is not part of the name: 'TREBLE*' (Fuchsia).
+    cell = _unmarked(cell)
     if cell in _LAYOUT_WORDS:
         return False
     if cell in constants.BARE_DESIGNATORS:
@@ -199,6 +204,11 @@ def _is_ref_cell(cell: str, next_cell: str | None) -> bool:
     return (
         next_cell is not None and named and _CONTROL_VALUE.match(next_cell) is not None
     )
+
+
+def _unmarked(cell: str) -> str:
+    """A designator without a trailing optional-part asterisk."""
+    return cell.rstrip("*") or cell
 
 
 def _starts_listing(cell: str, next_cell: str | None) -> bool:
@@ -353,7 +363,12 @@ def find_listings(words: list[PDFWord]) -> list[Listing]:
             if value:
                 current.append((cells[i + 1].x0, cells[i + 1].size, len(listings)))
                 listings.append(
-                    Listing(ref=texts[i], value=value, line=line_no, x0=cells[i].x0)
+                    Listing(
+                        ref=_unmarked(texts[i]),
+                        value=value,
+                        line=line_no,
+                        x0=cells[i].x0,
+                    )
                 )
             i = j
         above = current

@@ -28,6 +28,7 @@ _TRIM_NOTE = re.compile(
     r"\([^()]*\b(?:3362P|TRIM(?:MER)?)\b[^()]*\)|\b3362P\b|\bTRIM(?:MER)?\b",
     re.IGNORECASE,
 )
+_MILLIAMPS = re.compile(r"\dmA\b")
 _POT_VALUE = re.compile(
     r"(?<![\w.])(?:[ABCWG]\d+(?:\.\d+)?[KM]|\d+(?:\.\d+)?[KM][ABCWG]?)(?![\w.])"
 )
@@ -109,11 +110,14 @@ def normalize_value_by_category(category: ComponentCategory, val_raw: str) -> st
     return clean_val
 
 
-def _named_control_category(name: str, val_up: str) -> ComponentCategory | None:
+def _named_control_category(
+    name: str, val_up: str, val: str
+) -> ComponentCategory | None:
     """Category of a named control (VOLUME, SHIFT, OSC-SW), decided by its value."""
     if constants.SWITCH_VALUE_PATTERN.search(val_up):
         return ComponentCategory.SWITCHES
-    if _POT_VALUE.search(val_up):
+    # '250mA' is a current rating, not a 250M audio-taper pot.
+    if _POT_VALUE.search(val_up) and not _MILLIAMPS.search(val):
         return ComponentCategory.POTENTIOMETERS
     if name in constants.SWITCH_LABELS and any(
         x in val_up for x in ("ON", "SW", "SP", "DP")
@@ -157,7 +161,7 @@ def categorize_part(
             else ComponentCategory.HARDWARE_MISC
         )
     else:
-        named = _named_control_category(ref_up, val_up) or category_hint
+        named = _named_control_category(ref_up, val_up, val_clean) or category_hint
         if named is None:
             return None
         category = named
