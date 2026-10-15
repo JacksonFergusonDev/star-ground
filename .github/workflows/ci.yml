@@ -37,7 +37,7 @@ jobs:
       run: uv run rumdl fmt --check --output-format github .
 
     - name: Type check with mypy
-      run: uv run mypy .
+      run: uv run mypy
 
     - name: Test with pytest
       run: uv run pytest
