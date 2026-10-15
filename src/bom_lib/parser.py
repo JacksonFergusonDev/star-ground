@@ -296,6 +296,7 @@ _TYPE_HINTS: tuple[tuple[str, ComponentCategory], ...] = (
 )
 _LED_DESCRIPTION = re.compile(r"[^,]*\bLED\b", re.IGNORECASE)
 _ACTUATION = re.compile(r"\b(momentary|latching)\b", re.IGNORECASE)
+_DUAL_GANG = re.compile(r"\bDUAL[- ]?GANG")
 _POSITIONS = re.compile(r"\b(?:ON|OFF)(?:/(?:ON|OFF)){1,2}\b")
 # Capacitor constructions a TYPE cell may name that the VALUE cell omits.
 _DIELECTRICS = (("TANTALUM", "Tantalum"), ("MLCC", "MLCC"))
@@ -349,8 +350,8 @@ def enrich_value_from_type(value: str, type_text: str, notes: str = "") -> str:
 
     Returns:
         The value, completed with a part number, LED description, pole/throw
-        code, switch positions, momentary/latching actuation, or capacitor
-        construction (tantalum, MLCC) when the VALUE cell lacks one and the
+        code, switch positions, momentary/latching actuation, dual-gang pot,
+        or capacitor construction (tantalum, MLCC) when the VALUE cell lacks one and the
         TYPE or NOTES cell provides it.
     """
     type_text = " ".join(type_text.split())
@@ -376,6 +377,8 @@ def enrich_value_from_type(value: str, type_text: str, notes: str = "") -> str:
         positions = _POSITIONS.search(detail)
         if positions:
             return f"{value} {positions.group(0)}"
+    if _DUAL_GANG.search(detail) and "DUAL" not in value.upper():
+        return f"{value} Dual"
     if "CAPACITOR" in detail and any(ch.isdigit() for ch in value):
         for keyword, name in _DIELECTRICS:
             if keyword in detail and keyword not in value.upper():
