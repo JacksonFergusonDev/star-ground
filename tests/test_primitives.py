@@ -265,7 +265,12 @@ def test_categorize_part_other_branches() -> None:
     assert categorize_part("J1", "1/4 Mono Jack") == CategorizationResult(
         ComponentCategory.HARDWARE_MISC, "1/4 Mono Jack", None
     )
-    assert categorize_part("INVALID_PREFIX", "100k") is None
+    # Unknown labels are rejected unless the value marks them as a control...
+    assert categorize_part("INVALID_PREFIX", "TL072") is None
+    # ...in which case a resistance makes them a pot or trimmer (INT_BIAS 50K).
+    assert categorize_part("INT_BIAS", "50K") == CategorizationResult(
+        ComponentCategory.POTENTIOMETERS, "50K", None
+    )
 
 
 # --- natural_sort_key Tests ---

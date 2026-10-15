@@ -11,6 +11,8 @@ the user by a parse warning or slipped through silently.
 
 Run ``uv run python -m tests.accuracy`` for a scorecard, or
 ``uv run python -m tests.accuracy --update-baseline`` to lock in improvements.
+``--golden DIR --samples DIR`` scores an external corpus (e.g. a local,
+uncommitted one) with the same machinery.
 """
 
 import argparse
@@ -23,7 +25,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 from enum import StrEnum
 from pathlib import Path
-from typing import TypedDict
+from typing import Any, TypedDict
 
 from src.bom_lib import ComponentCategory, parse_pedalpcb_pdf
 from src.bom_lib.utils import parse_value_to_decimal
@@ -71,6 +73,54 @@ class ActualPart:
     value: str
 
 
+DEFAULT_VARIANT = "default"
+
+
+@dataclass(frozen=True)
+class OptionGroup:
+    """Interchangeable ways to fill the same spot on the board.
+
+    Unlike variants, options do not change the circuit: through-hole or SMD
+    transistors, a bridge rectifier or four discrete diodes. Choices may use
+    different designators (D10 vs D10a-D10d), so they cannot be expressed as
+    ``accept`` alternatives on a single designator. The first choice is the
+    document's default.
+
+    Attributes:
+        name: Short label for the group (e.g. 'D10').
+        choices: Choice name to the parts that choice requires, in document order.
+    """
+
+    name: str
+    choices: dict[str, dict[str, ExpectedPart]]
+
+    @property
+    def refs(self) -> frozenset[str]:
+        """Every designator used by any choice."""
+        return frozenset(ref for parts in self.choices.values() for ref in parts)
+
+
+@dataclass(frozen=True)
+class Variant:
+    """One buildable circuit described by a document.
+
+    Most documents describe exactly one circuit. Some list several versions
+    side by side (e.g. Muffin Fuzz), each with its own parts list.
+
+    Attributes:
+        name: Variant name as printed ('default' for single-circuit documents).
+        parts: Expected parts keyed by upper-cased designator, excluding options.
+        absent: Designators listed but marked as not populated.
+        options: Groups of interchangeable choices; exactly one choice per group
+            belongs in a correct parts list.
+    """
+
+    name: str
+    parts: dict[str, ExpectedPart]
+    absent: frozenset[str]
+    options: tuple[OptionGroup, ...] = ()
+
+
 @dataclass(frozen=True)
 class GoldenDoc:
     """Ground truth for one sample PDF.
@@ -79,15 +129,35 @@ class GoldenDoc:
         name: Golden file stem (e.g. 'dirty__Distortr').
         pdf: Path to the sample PDF.
         title: The project title printed on the document.
-        parts: Expected parts keyed by upper-cased designator.
-        absent: Designators the document lists but marks as not populated.
+        variants: Every circuit the document describes, in document order.
     """
 
     name: str
     pdf: Path
     title: str
-    parts: dict[str, ExpectedPart]
-    absent: frozenset[str]
+    variants: tuple[Variant, ...]
+
+    @property
+    def ambiguous_refs(self) -> frozenset[str]:
+        """Designators whose correct value is a choice the builder makes.
+
+        Includes documented alternates (``accept``), option choices, and
+        designators whose value differs between variants. Warning about these
+        is correct behavior.
+        """
+        refs = {
+            ref for v in self.variants for ref, part in v.parts.items() if part.accept
+        }
+        refs |= {ref for v in self.variants for g in v.options for ref in g.refs}
+        all_refs = {ref for v in self.variants for ref in v.parts}
+        for ref in all_refs:
+            seen = {
+                (v.parts[ref].category, v.parts[ref].value) if ref in v.parts else None
+                for v in self.variants
+            }
+            if len(seen) > 1:
+                refs.add(ref)
+        return frozenset(refs)
 
 
 @dataclass(frozen=True)
@@ -123,6 +193,9 @@ class DocScore:
     title_expected: str
     title_actual: str | None
     warned_refs: frozenset[str]
+    ambiguous_refs: frozenset[str] = frozenset()
+    variant: str = DEFAULT_VARIANT
+    variant_count: int = 1
 
     @property
     def expected_count(self) -> int:
@@ -153,11 +226,11 @@ class DocScore:
     def false_alarms(self) -> frozenset[str]:
         """Designators the parser warned about that were unambiguously correct.
 
-        Warnings on parts with documented alternates (``accept``) are not false
-        alarms: telling the user about the alternative is the right behavior.
+        Warnings on ambiguous parts (documented alternates, or values that
+        differ between variants) are not false alarms: telling the user about
+        the choice is the right behavior.
         """
-        ambiguous = {r.ref for r in self.results if r.expected and r.expected.accept}
-        return self.warned_refs - {r.ref for r in self.failures} - ambiguous
+        return self.warned_refs - {r.ref for r in self.failures} - self.ambiguous_refs
 
     @property
     def title_ok(self) -> bool:
@@ -176,10 +249,28 @@ def _split_head(value: str) -> tuple[str, str]:
     return head, rest
 
 
-def _passive_key(value: str) -> tuple[Decimal | str, str]:
+_VOLTAGE = re.compile(r"(\d+(?:\.\d+)?)\s*V\b", re.IGNORECASE)
+# Words that phrase a voltage rating without changing it:
+# '(25V or higher)', '(25V minimum)', '25V min' all mean a 25V-rated part.
+_RATING_FILLER = frozenset(
+    {"OR", "HIGHER", "MINIMUM", "MIN", "VOLTAGE", "RATED", "AT", "LEAST"}
+)
+
+
+def _qualifiers(rest: str) -> tuple[frozenset[Decimal], str]:
+    """Splits trailing qualifiers into voltage ratings and the remaining text."""
+    folded = unicodedata.normalize("NFKC", rest).upper()
+    volts = frozenset(Decimal(v) for v in _VOLTAGE.findall(folded))
+    words = [w for w in re.split(r"[^A-Z0-9.]+", _VOLTAGE.sub(" ", folded)) if w]
+    if volts:
+        words = [w for w in words if w not in _RATING_FILLER]
+    return volts, "".join(words)
+
+
+def _passive_key(value: str) -> tuple[Decimal | str, frozenset[Decimal], str]:
     head, rest = _split_head(value)
     dec = parse_value_to_decimal(head)
-    return (dec if dec is not None else _text_key(head), _text_key(rest))
+    return (dec if dec is not None else _text_key(head), *_qualifiers(rest))
 
 
 def _pot_key(value: str) -> tuple[str, Decimal | str, str]:
@@ -220,37 +311,75 @@ def values_match(category: ComponentCategory, expected: str, actual: str) -> boo
     return _text_key(expected) == _text_key(actual)
 
 
-def load_golden(path: Path) -> GoldenDoc:
+def _load_parts(raw: dict[str, dict[str, object]]) -> dict[str, ExpectedPart]:
+    return {
+        ref.upper(): ExpectedPart(
+            category=ComponentCategory(str(spec["category"])),
+            value=str(spec["value"]),
+            accept=tuple(str(a) for a in spec.get("accept", ())),  # type: ignore[attr-defined]
+        )
+        for ref, spec in raw.items()
+    }
+
+
+def _load_options(
+    raw: dict[str, dict[str, dict[str, dict[str, object]]]],
+) -> tuple[OptionGroup, ...]:
+    return tuple(
+        OptionGroup(
+            name=name,
+            choices={choice: _load_parts(parts) for choice, parts in choices.items()},
+        )
+        for name, choices in raw.items()
+    )
+
+
+def _load_variant(name: str, spec: dict[str, Any]) -> Variant:
+    return Variant(
+        name=name,
+        parts=_load_parts(spec["parts"]),
+        absent=frozenset(r.upper() for r in spec.get("absent", ())),
+        options=_load_options(spec.get("options", {})),
+    )
+
+
+def load_golden(path: Path, samples_dir: Path = SAMPLES_DIR) -> GoldenDoc:
     """Loads one golden file.
 
+    A file holds either ``parts`` (one circuit) or ``variants`` (a mapping of
+    variant name to ``{"parts": ..., "absent": [...], "options": ...}``).
+    ``options`` maps a group name to its choices, each a parts mapping.
+
     Args:
-        path: Path to a ``tests/golden/*.json`` file.
+        path: Path to a golden ``*.json`` file.
+        samples_dir: Directory the file's ``pdf`` path is relative to.
 
     Returns:
         The parsed GoldenDoc.
     """
     raw = json.loads(path.read_text(encoding="utf-8"))
-    parts = {
-        ref.upper(): ExpectedPart(
-            category=ComponentCategory(spec["category"]),
-            value=spec["value"],
-            accept=tuple(spec.get("accept", ())),
+    if "variants" in raw:
+        variants = tuple(
+            _load_variant(name, spec) for name, spec in raw["variants"].items()
         )
-        for ref, spec in raw["parts"].items()
-    }
+    else:
+        variants = (_load_variant(DEFAULT_VARIANT, raw),)
     return GoldenDoc(
         name=path.stem,
-        pdf=SAMPLES_DIR / raw["pdf"],
+        pdf=samples_dir / raw["pdf"],
         title=raw["title"],
-        parts=parts,
-        absent=frozenset(r.upper() for r in raw.get("absent", ())),
+        variants=variants,
     )
 
 
-def golden_docs() -> list[GoldenDoc]:
-    """Loads every golden file, sorted by name."""
+def golden_docs(
+    golden_dir: Path = GOLDEN_DIR, samples_dir: Path = SAMPLES_DIR
+) -> list[GoldenDoc]:
+    """Loads every golden file in a directory, sorted by name."""
     return [
-        load_golden(p) for p in sorted(GOLDEN_DIR.glob("*.json")) if p != BASELINE_PATH
+        load_golden(p, samples_dir)
+        for p in sorted(golden_dir.glob("*.json"))
+        if p.name != BASELINE_PATH.name
     ]
 
 
@@ -285,22 +414,64 @@ def score_doc(doc: GoldenDoc) -> DocScore:
 
     flagged = {w.ref.upper() for w in res.stats["warnings"] if w.ref}
 
+    # The parser emits a single parts list. Until it understands variants,
+    # grade it against the variant it matches best.
+    graded = [
+        (variant, _grade_variant(variant, actual, flagged)) for variant in doc.variants
+    ]
+    variant, results = max(
+        graded,
+        key=lambda vr: sum(1 for r in vr[1] if r.outcome == Outcome.CORRECT),
+    )
+
+    return DocScore(
+        name=doc.name,
+        results=results,
+        title_expected=doc.title,
+        title_actual=res.title,
+        warned_refs=frozenset(flagged),
+        ambiguous_refs=doc.ambiguous_refs,
+        variant=variant.name,
+        variant_count=len(doc.variants),
+    )
+
+
+def _resolve_options(
+    variant: Variant, actual: dict[str, ActualPart]
+) -> dict[str, ExpectedPart]:
+    """Expected parts with each option group resolved to the choice the output matches.
+
+    Ties go to the first (default) choice. Parts from unchosen choices are not
+    expected, so emitting them as well is graded as extra.
+    """
+    expected = dict(variant.parts)
+    for group in variant.options:
+
+        def matched(parts: dict[str, ExpectedPart]) -> int:
+            return sum(
+                1
+                for ref, exp in parts.items()
+                if ref in actual and _grade(exp, actual[ref]) == Outcome.CORRECT
+            )
+
+        best = max(group.choices.values(), key=matched)  # max keeps the first on ties
+        expected |= best
+    return expected
+
+
+def _grade_variant(
+    variant: Variant, actual: dict[str, ActualPart], flagged: set[str]
+) -> tuple[RefResult, ...]:
+    expected = _resolve_options(variant, actual)
     results: list[RefResult] = []
-    for ref, exp in doc.parts.items():
+    for ref, exp in expected.items():
         act = actual.get(ref)
         outcome = Outcome.MISSING if act is None else _grade(exp, act)
         results.append(RefResult(ref, outcome, exp, act, ref in flagged))
     for ref, act in actual.items():
-        if ref not in doc.parts:
+        if ref not in expected:
             results.append(RefResult(ref, Outcome.EXTRA, None, act, ref in flagged))
-
-    return DocScore(
-        name=doc.name,
-        results=tuple(results),
-        title_expected=doc.title,
-        title_actual=res.title,
-        warned_refs=frozenset(flagged),
-    )
+    return tuple(results)
 
 
 class BaselineEntry(TypedDict):
@@ -370,6 +541,11 @@ def render_scorecard(scores: list[DocScore], verbose: bool) -> str:
             f"{recall:>9.1%}{precision:>11.1%}{len(s.silent_failures):>8}"
             f"{len(s.false_alarms):>14}  "
             f"{'ok' if s.title_ok else f'got {s.title_actual!r}'}"
+            + (
+                f"  [best of {s.variant_count} variants: {s.variant}]"
+                if s.variant_count > 1
+                else ""
+            )
         )
         if verbose:
             for r in s.failures:
@@ -413,20 +589,32 @@ def main(argv: list[str] | None = None) -> int:
         help=f"write current failures to {BASELINE_PATH.relative_to(TESTS_DIR.parent)}",
     )
     parser.add_argument(
+        "--golden", type=Path, default=GOLDEN_DIR, help="golden file directory"
+    )
+    parser.add_argument(
+        "--samples",
+        type=Path,
+        default=SAMPLES_DIR,
+        help="directory the golden files' pdf paths are relative to",
+    )
+    parser.add_argument(
         "docs", nargs="*", help="limit to golden files containing these substrings"
     )
     args = parser.parse_args(argv)
 
     logging.getLogger("pdfminer").setLevel(logging.ERROR)
-    docs = golden_docs()
+    docs = golden_docs(args.golden, args.samples)
     if args.docs:
         docs = [d for d in docs if any(s.lower() in d.name.lower() for s in args.docs)]
     scores = [score_doc(d) for d in docs]
     print(render_scorecard(scores, verbose=args.verbose))
 
     if args.update_baseline:
-        if args.docs:
-            print("refusing to update baseline from a filtered run", file=sys.stderr)
+        if args.docs or args.golden != GOLDEN_DIR:
+            print(
+                "refusing to update baseline from a filtered or external run",
+                file=sys.stderr,
+            )
             return 1
         write_baseline(scores)
         print(f"\nbaseline written to {BASELINE_PATH}")

@@ -178,3 +178,18 @@ def test_ingestion_records_conflicting_duplicates() -> None:
     assert [(w.kind, w.ref) for w in res.stats["warnings"]] == [
         (ParseWarningKind.CONFLICTING_DUPLICATE, "SW1")
     ]
+
+
+class TestDesignatorShapes:
+    """The self-check's own designator rules (kept independent of the parser)."""
+
+    def test_suffixed_and_named_designators_are_listings(self) -> None:
+        assert find_listed_refs("R1A 390K C10A 6n8 IC_A MCP41010") == {
+            "R1A",
+            "C10A",
+            "IC_A",
+        }
+
+    def test_c_taper_values_and_jumper_pads_are_not_designators(self) -> None:
+        assert find_listed_refs("PRES B10K * C10K recommended") == {"PRES"}
+        assert find_listed_refs("JP01 SOLDER") == set()

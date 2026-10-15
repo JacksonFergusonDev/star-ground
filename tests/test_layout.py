@@ -39,7 +39,7 @@ class TestGrouping:
 
     def test_cells_split_on_column_gaps_only(self) -> None:
         (line,) = group_lines(_line("D2", "5mm Yellow", "C8", "1uF"))
-        assert split_cells(line) == ["D2", "5mm Yellow", "C8", "1uF"]
+        assert [c.text for c in split_cells(line)] == ["D2", "5mm Yellow", "C8", "1uF"]
 
     def test_nearby_footnote_line_is_separate(self) -> None:
         # The Abyss: a footnote sits 2.2pt above a parts row.
@@ -140,3 +140,59 @@ def test_clean_value(raw: str, clean: str) -> None:
 )
 def test_enrich_value_from_type(value: str, type_text: str, expected: str) -> None:
     assert enrich_value_from_type(value, type_text) == expected
+
+
+class TestCellRepairs:
+    """Merged cells, function labels, wrapped values, and prose."""
+
+    def test_name_merged_with_its_value_is_split(self) -> None:
+        # Tab-aligned columns: 'BLEND' ends within a word space of 'B10K'.
+        words = _line("R22", "10K", "BLEND B10K")
+        assert find_listings(words) == [Listing("R22", "10K"), Listing("BLEND", "B10K")]
+
+    def test_function_label_is_skipped(self) -> None:
+        assert find_listings(_line("SW1 (Power) SPDT Toggle")) == [
+            Listing("SW1", "SPDT Toggle")
+        ]
+        assert find_listings(_line("SW1", "(Voltage) SPDT Toggle (On/On)")) == [
+            Listing("SW1", "SPDT Toggle (On/On)")
+        ]
+
+    def test_long_switch_spec_merged_cell(self) -> None:
+        assert find_listings(_line("SW1 DPDT (On / Off / On)")) == [
+            Listing("SW1", "DPDT (On / Off / On)")
+        ]
+
+    def test_wrapped_parenthetical_continues_the_value_above(self) -> None:
+        above = _line("VOICE", "SPDT Toggle", top=100)
+        value_x0 = next(w["x0"] for w in above if w["text"] == "SPDT")
+        # Next line: '(On/On)' under VOICE's value; R21 sits in a column further right.
+        below = [
+            PDFWord(text="(On/On)", x0=value_x0, x1=value_x0 + 40, top=114, size=SIZE),
+            PDFWord(text="R21", x0=300, x1=318, top=114, size=SIZE),
+            PDFWord(text="33K", x0=340, x1=358, top=114, size=SIZE),
+        ]
+        assert find_listings([*above, *below]) == [
+            Listing("VOICE", "SPDT Toggle (On/On)"),
+            Listing("R21", "33K"),
+        ]
+
+    def test_prose_is_not_appended_to_a_value(self) -> None:
+        words = _line("C7", "2u2", "Choose between Through-Hole or SMD")
+        assert find_listings(words) == [Listing("C7", "2u2")]
+
+    def test_section_headers_are_not_appended(self) -> None:
+        assert find_listings(_line("R25", "4K7", "TRIM POTS")) == [
+            Listing("R25", "4K7")
+        ]
+
+    def test_multiword_control_name(self) -> None:
+        assert find_listings(_line("TONE BYPASS SWITCH", "DPDT ON/ON")) == [
+            Listing("TONE BYPASS SWITCH", "DPDT ON/ON")
+        ]
+
+    def test_c_taper_value_is_not_a_designator(self) -> None:
+        assert find_listings(_line("RATE", "C1M", "RES", "C1M")) == [
+            Listing("RATE", "C1M"),
+            Listing("RES", "C1M"),
+        ]

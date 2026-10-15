@@ -2,10 +2,21 @@
   "pdf": "dirty/Parentheses.pdf",
   "title": "Parentheses Fuzz",
   "notes": [
-    "SW1 is either a 2P4T mini rotary or an SPDT ON/OFF/ON toggle.",
-    "D8/D9 are only needed with the rotary clipping switch.",
+    "Clipping switch option: SW1 2P4T mini rotary with D8/D9, or SW1 SPDT ON/OFF/ON toggle without them.",
     "D1/D2/D8/D9 are unspecified germanium diodes ('GE')."
   ],
+  "options": {
+    "Clipping switch": {
+      "Rotary": {
+        "SW1": {"category": "Switches", "value": "2P4T Mini Rotary"},
+        "D8": {"category": "Diodes", "value": "GE"},
+        "D9": {"category": "Diodes", "value": "GE"}
+      },
+      "Toggle": {
+        "SW1": {"category": "Switches", "value": "SPDT ON/OFF/ON"}
+      }
+    }
+  },
   "parts": {
     "R1": {"category": "Resistors", "value": "1M"},
     "R2": {"category": "Resistors", "value": "1K"},
@@ -78,10 +89,7 @@
     "D5": {"category": "Diodes", "value": "1N4148"},
     "D6": {"category": "Diodes", "value": "1N4148"},
     "D7": {"category": "Diodes", "value": "1N4148"},
-    "D8": {"category": "Diodes", "value": "GE"},
-    "D9": {"category": "Diodes", "value": "GE"},
     "D100": {"category": "Diodes", "value": "1N5817"},
-    "SW1": {"category": "Switches", "value": "2P4T Mini Rotary", "accept": ["SPDT ON/OFF/ON"]},
     "DISTORTION": {"category": "Potentiometers", "value": "A100K"},
     "FILTER": {"category": "Potentiometers", "value": "A100K"},
     "AMPLITUDE": {"category": "Potentiometers", "value": "A100K"},
