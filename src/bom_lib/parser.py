@@ -286,6 +286,7 @@ _TYPE_HINTS: tuple[tuple[str, ComponentCategory], ...] = (
     ("relay", ComponentCategory.HARDWARE_MISC),
     ("transformer", ComponentCategory.HARDWARE_MISC),
     ("inductor", ComponentCategory.HARDWARE_MISC),
+    ("fuse", ComponentCategory.HARDWARE_MISC),
     ("switch", ComponentCategory.SWITCHES),
     ("trimmer", ComponentCategory.POTENTIOMETERS),
     ("pot", ComponentCategory.POTENTIOMETERS),
@@ -295,7 +296,8 @@ _TYPE_HINTS: tuple[tuple[str, ComponentCategory], ...] = (
     ("mosfet", ComponentCategory.TRANSISTORS),
 )
 _LED_DESCRIPTION = re.compile(r"[^,]*\bLED\b", re.IGNORECASE)
-_ACTUATION = re.compile(r"\b(momentary|latching)\b", re.IGNORECASE)
+# Not preceded by "non-": a "Non-latching relay" is not latching.
+_ACTUATION = re.compile(r"(?<!non-)(?<!non )\b(momentary|latching)\b", re.IGNORECASE)
 _DUAL_GANG = re.compile(r"\bDUAL[- ]?GANG")
 _POSITIONS = re.compile(r"\b(?:ON|OFF)(?:/(?:ON|OFF)){1,2}\b")
 # Capacitor constructions a TYPE cell may name that the VALUE cell omits.
@@ -428,9 +430,15 @@ def _table_entries(
             if loc_idx == -1 or val_idx == -1:
                 loc_idx, val_idx, start_row_idx = 0, 1, 0
 
+            follows_or = False
             for row in table[start_row_idx:]:
                 stats["lines_read"] += 1
                 row_safe = [str(cell) if cell else "" for cell in row]
+                filled = [c.strip() for c in row_safe if c.strip()]
+                if filled and all(c.upper() == "OR" for c in filled):
+                    # Shindig: an 'OR' row between two alternatives for one spot.
+                    follows_or = True
+                    continue
 
                 # Skip Summary lines (e.g., "1 x 100k")
                 first_content = next((c for c in row_safe if c), "")
@@ -474,8 +482,16 @@ def _table_entries(
 
                 if ref_raw and val_raw:
                     entries.append(
-                        Entry(ref_raw, val_raw, page_no, table=table_no, hint=hint)
+                        Entry(
+                            ref_raw,
+                            val_raw,
+                            page_no,
+                            table=table_no,
+                            hint=hint,
+                            follows_or=follows_or,
+                        )
                     )
+                    follows_or = False
     return entries
 
 

@@ -202,6 +202,35 @@ class TestCellRepairs:
         ]
         assert find_listings(_line("C12", "120p", "LEDs")) == [Listing("C12", "120p")]
 
+    def test_control_values_with_a_leading_qualifier(self) -> None:
+        # Arkaim, Pro-Filter, Super Heterodyne Receiver.
+        assert find_listings(_line("HEAVY", "Latching 3PDT Footswitch")) == [
+            Listing("HEAVY", "Latching 3PDT Footswitch")
+        ]
+        assert find_listings(_line("SHIFT", "On/OFF/On DPDT Toggle")) == [
+            Listing("SHIFT", "On/OFF/On DPDT Toggle")
+        ]
+        assert find_listings(_line("OSC-ROOT", "*DPDT On/On/On")) == [
+            Listing("OSC-ROOT", "DPDT On/On/On")
+        ]
+        assert find_listings(
+            _line("SW1", "SPDT Toggle (On/On)", "FREQ", "Dual B10K")
+        ) == [
+            Listing("SW1", "SPDT Toggle (On/On)"),
+            Listing("FREQ", "Dual B10K"),
+        ]
+        # A name merged with its qualified value.
+        assert find_listings(_line("BYPASS Latching 3PDT Footswitch")) == [
+            Listing("BYPASS", "Latching 3PDT Footswitch")
+        ]
+
+    def test_optional_part_marker_is_not_part_of_the_name(self) -> None:
+        # Fuchsia: 'TREBLE*' marks a control installed only in one build.
+        assert find_listings(_line("C100", "100u", "TREBLE*", "A25K")) == [
+            Listing("C100", "100u"),
+            Listing("TREBLE", "A25K"),
+        ]
+
     def test_multiword_control_name(self) -> None:
         assert find_listings(_line("TONE BYPASS SWITCH", "DPDT ON/ON")) == [
             Listing("TONE BYPASS SWITCH", "DPDT ON/ON")

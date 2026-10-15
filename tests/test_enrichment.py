@@ -20,6 +20,7 @@ from src.bom_lib.utils import float_to_search_string
         ("SPST", "SPST Momentary Footswitch (Normally Open)", "SPST Momentary"),
         ("ON/ON", "Toggle switch, SPDT 2-position (ON/ON)", "SPDT ON/ON"),
         ("GE", "Germanium diode, 1N34A", "1N34A"),
+        ("A-4.5W-K", "Non-latching 4.5V relay", "A-4.5W-K"),
         ("10K", "Resistor, 1/4W", "10K"),
     ],
 )
@@ -54,6 +55,14 @@ def test_enrich_value_from_type_and_notes(
     value: str, type_text: str, notes: str, expected: str
 ) -> None:
     assert enrich_value_from_type(value, type_text, notes) == expected
+
+
+def test_current_rating_is_not_a_pot_value() -> None:
+    # Auditorium: a 250mA poly fuse is not a 250M audio-taper pot.
+    fuse = "Resettable Poly Fuse (250mA)"
+    result = categorize_part("POLYFUSE", fuse, category_from_type(fuse))
+    assert result is not None
+    assert result.category == ComponentCategory.HARDWARE_MISC
 
 
 def test_category_from_type() -> None:
@@ -106,3 +115,20 @@ def test_table_values_drop_optional_markers_but_keep_placeholders() -> None:
     page = {"tables": [table], "text": "", "words": []}
     entries = _table_entries([page], create_empty_stats())  # type: ignore[list-item]
     assert [(e.ref, e.value) for e in entries] == [("R24", "27K"), ("D101", "**")]
+
+
+def test_table_or_row_marks_the_next_entry() -> None:
+    table = [
+        ["LOCATION", "VALUE", "TYPE", "NOTES"],
+        ["D10", "DI1510", "Full-wave bridge rectifier", ""],
+        ["", "", "OR", ""],
+        ["D10a", "1N4007", "Standard recovery diode, DO-41", ""],
+        ["D10b", "1N4007", "Standard recovery diode, DO-41", ""],
+    ]
+    page = {"tables": [table], "text": "", "words": []}
+    entries = _table_entries([page], create_empty_stats())  # type: ignore[list-item]
+    assert [(e.ref, e.follows_or) for e in entries] == [
+        ("D10", False),
+        ("D10a", True),
+        ("D10b", False),
+    ]

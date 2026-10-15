@@ -18,6 +18,7 @@ layout is never silently merged into one build.
 
 import re
 from collections import Counter
+from collections.abc import Iterable
 from dataclasses import dataclass
 from itertools import pairwise
 
@@ -36,6 +37,12 @@ _MOD_HEADING = re.compile(
     r"[^A-Za-z]*(?P<name>[A-Za-z][A-Za-z ]*\bmod(?:ification)?)\W*", re.I
 )
 _CHOOSE_BETWEEN = re.compile(r"choose between (?P<a>.+?) or (?P<b>.+?)\W*$", re.I)
+# 'designed for either Nature control, or Treble + Bass controls' (Fuchsia).
+_EITHER_OR = re.compile(
+    r"\beither\s+(?:the\s+)?(?P<a>.+?)\s+controls?,?\s+or\s+(?:the\s+)?(?P<b>.+?)\s+controls?\b",
+    re.I,
+)
+_NAME_LIST = re.compile(r"\s*(?:\+|,|&|\band\b)\s*", re.I)
 _SUBTITLE = re.compile(r"^\((?P<name>[^()]+)\)$|^(?P<plain>.*\bversion\b.*)$", re.I)
 
 
@@ -51,6 +58,8 @@ class Entry:
         x0: Left edge of the designator, in points (layout entries).
         table: Index of the source table (table rows); None for layout entries.
         hint: Category suggested by a TYPE column.
+        follows_or: Whether an 'OR' row separates this table row from the
+            row above it.
     """
 
     ref: str
@@ -60,6 +69,7 @@ class Entry:
     x0: float = 0.0
     table: int | None = None
     hint: ComponentCategory | None = None
+    follows_or: bool = False
 
     @property
     def not_populated(self) -> bool:
@@ -134,6 +144,7 @@ def plan_builds(entries: list[Entry], pages: list[PageContext]) -> BuildPlan:
         _grid_variants(entries, pages)
         or _table_variants(entries, pages)
         or _mod_variants(entries, pages)
+        or _either_or_variants(entries, pages)
     )
     in_variants = {id(e) for v in variants for e in v.entries}
     variant_refs = {e.ref for v in variants for e in v.entries}
@@ -142,7 +153,11 @@ def plan_builds(entries: list[Entry], pages: list[PageContext]) -> BuildPlan:
         e for e in entries if id(e) not in in_variants and e.ref not in variant_refs
     ]
 
-    options = _or_options(common, pages) + _choose_between_options(common, pages)
+    options = (
+        _or_options(common, pages)
+        + _table_or_options(common)
+        + _choose_between_options(common, pages)
+    )
     in_options = {id(e) for o in options for _, c in o.choices for e in c}
     common = [e for e in common if id(e) not in in_options]
     return BuildPlan(tuple(common), tuple(variants), tuple(options))
@@ -277,6 +292,37 @@ def _mod_variants(
     return []
 
 
+def _either_or_variants(
+    entries: list[Entry], pages: list[PageContext]
+) -> list[PlannedVariant]:
+    """A note offering alternative controls: 'either Nature control, or Treble + Bass controls'.
+
+    Each side names controls listed in the parts list; a builder installs one
+    side or the other. The note is trusted only when every name it gives is a
+    listed designator, and no name appears on both sides.
+    """
+    by_ref: dict[str, list[Entry]] = {}
+    for e in entries:
+        by_ref.setdefault(e.ref.upper(), []).append(e)
+    for page in pages:
+        text = " ".join(page.text.split())
+        for m in _EITHER_OR.finditer(text):
+            sides = [m.group("a"), m.group("b")]
+            names = [[n for n in _NAME_LIST.split(side) if n] for side in sides]
+            refs = [[n.upper() for n in side] for side in names]
+            flat = [r for side in refs for r in side]
+            if len(set(flat)) != len(flat) or not all(r in by_ref for r in flat):
+                continue
+            return [
+                PlannedVariant(
+                    " + ".join(n.title() for n in side_names),
+                    tuple(e for r in side_refs for e in by_ref[r]),
+                )
+                for side_names, side_refs in zip(names, refs, strict=True)
+            ]
+    return []
+
+
 def _column_entries_below(
     entries: list[Entry], page: int, line: int, x0: float
 ) -> list[Entry]:
@@ -317,6 +363,49 @@ def _or_options(entries: list[Entry], pages: list[PageContext]) -> list[PlannedO
                         )
                     )
     return options
+
+
+def _table_or_options(entries: list[Entry]) -> list[PlannedOption]:
+    """An 'OR' row inside a ruled table between alternatives for one position.
+
+    Shindig: 'D10  DI1510  Full-wave bridge rectifier' / 'OR' / 'D10a'-'D10d'
+    1N4007. The rows on each side of the OR that share the designator's base
+    (D10, D10a) are the two choices.
+    """
+    options = []
+    for k, entry in enumerate(entries):
+        if not entry.follows_or or k == 0:
+            continue
+        base = _base_ref(entry.ref)
+        same_table = [e for e in entries if e.table == entry.table]
+        at = same_table.index(entry)
+        before = _run_with_base(reversed(same_table[:at]), base)[::-1]
+        after = _run_with_base(same_table[at:], base)
+        if before and after:
+            options.append(
+                PlannedOption(
+                    base,
+                    (
+                        (before[0].value, tuple(before)),
+                        (after[0].value, tuple(after)),
+                    ),
+                )
+            )
+    return options
+
+
+def _base_ref(ref: str) -> str:
+    """'D10a' -> 'D10': a designator without its channel-letter suffix."""
+    return re.sub(r"(?<=\d)[A-Ha-h]$", "", ref)
+
+
+def _run_with_base(entries: Iterable[Entry], base: str) -> list[Entry]:
+    run = []
+    for e in entries:
+        if _base_ref(e.ref) != base:
+            break
+        run.append(e)
+    return run
 
 
 def _choose_between_options(
