@@ -74,12 +74,14 @@ _HEADER_WORDS = _LAYOUT_WORDS | {
     "MODIFICATIONS",
     "SMD",
     "THROUGH-HOLE",
+    "DIP",
 }
 # A merged 'NAME value' cell is split only when the value is short
 # ('DPDT (On / Off / On)' is six words).
 _MAX_MERGED_VALUE_WORDS = 6
 # A function label printed between a designator and its value: 'SW1 (Power) SPDT'.
 _LABEL = re.compile(r"\([^()\d]*\)")
+_LED_WORD = re.compile(r"\bLED\b", re.IGNORECASE)
 # Two or more lowercase words mark a sentence ('Choose between ... or SMD').
 _LOWERCASE_WORD = re.compile(r"[a-z][a-z'-]*[.,;:]?")
 _ASIDE = re.compile(r"\(see notes?\)", re.IGNORECASE)
@@ -182,9 +184,7 @@ def _is_ref_cell(cell: str, next_cell: str | None) -> bool:
     if cell in _LAYOUT_WORDS:
         return False
     if cell in constants.BARE_DESIGNATORS:
-        # 'LED' is also an ordinary value ('D3  LED'); as a designator it is
-        # followed by a numeric value ('LED  3mm Red LED').
-        return _has_digit(next_cell)
+        return _is_bare_value(next_cell)
     if is_designator(cell) or _NUMBERED_LABEL.fullmatch(cell):
         return True
     if cell in constants.KEYWORDS:
@@ -204,7 +204,23 @@ def _starts_listing(cell: str, next_cell: str | None) -> bool:
     """Whether a cell in value position is really the next designator."""
     if BOARD_REF.fullmatch(cell):
         return True
+    # Directly after a designator a bare 'LED' is that designator's value
+    # ('LED_A  LED  Indicator LED'), unless a numeric value follows it.
     return cell in constants.BARE_DESIGNATORS and _has_digit(next_cell)
+
+
+def _is_bare_value(cell: str | None) -> bool:
+    """Whether a cell can be the value of a bare designator ('LED', 'CLR').
+
+    'LED' is also an ordinary value ('D3  LED'); as a designator it is followed
+    by a numeric value ('LED  3mm Red LED') or an LED description that does
+    not repeat it on its own ('LED  Indicator LED').
+    """
+    if cell is None:
+        return False
+    return _has_digit(cell) or (
+        cell.upper() != "LED" and _LED_WORD.search(cell) is not None
+    )
 
 
 def _is_prose(cell: str) -> bool:
