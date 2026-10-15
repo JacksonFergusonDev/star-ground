@@ -18,6 +18,7 @@ from hypothesis import strategies as st
 
 from src.bom_lib import (
     BOM_PRESETS,
+    BuildHardware,
     calculate_net_needs,
     deduplicate_refs,
     expand_refs,
@@ -384,7 +385,7 @@ def test_hardware_injection_and_smart_merge():
     inventory[key_pot]["qty"] = 3
 
     # Run injection for 1 pedal (Mutates in-place)
-    get_standard_hardware(inventory, pedal_count=1)
+    get_standard_hardware(inventory, [BuildHardware(1)])
 
     # CHECK 1: Smart Merge
     # The function should have found "Resistors | 3.3k" and incremented it by 1 (for the LED).
@@ -495,7 +496,7 @@ def test_fuzz_germanium_trigger():
     pcb_key = ComponentKey(ComponentCategory.PCB, "Fuzz Face")
     inventory[pcb_key]["qty"] = 1
 
-    get_standard_hardware(inventory, pedal_count=1)
+    get_standard_hardware(inventory, [BuildHardware(1)])
 
     # Check for Ge Transistors in the dictionary
     ge_key = ComponentKey(ComponentCategory.TRANSISTORS, "Germanium PNP")
@@ -553,7 +554,7 @@ def test_hardware_search_term_validity():
     """
     inventory = Inventory()
 
-    get_standard_hardware(inventory, pedal_count=1)
+    get_standard_hardware(inventory, [BuildHardware(1)])
 
     # Grab the Enclosure Key
     target_key = ComponentKey(ComponentCategory.HARDWARE_MISC, "1590B Enclosure")

@@ -25,6 +25,7 @@ from src.bom_lib.enums import (
     ComponentCategory,
     ComponentOrigin,
     ComponentSpec,
+    HardwareRole,
     InputMethod,
     ParseWarningKind,
 )
@@ -91,6 +92,19 @@ class ProjectSlot:
     parsed: ParseResult | None = None
     parsed_key: str | None = None
     variant: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class BuildHardware:
+    """What one project needs from the app's standard hardware kit.
+
+    Attributes:
+        count: Number of pedals of this project being built.
+        provided: Hardware the project's own parts list already includes.
+    """
+
+    count: int
+    provided: frozenset[HardwareRole] = frozenset()
 
 
 @dataclass(frozen=True, slots=True)
