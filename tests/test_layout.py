@@ -200,6 +200,7 @@ class TestCellRepairs:
         assert find_listings(_line("R31", "100K", "DIP SWITCHES")) == [
             Listing("R31", "100K")
         ]
+        assert find_listings(_line("C12", "120p", "LEDs")) == [Listing("C12", "120p")]
 
     def test_multiword_control_name(self) -> None:
         assert find_listings(_line("TONE BYPASS SWITCH", "DPDT ON/ON")) == [
