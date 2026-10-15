@@ -11,6 +11,7 @@ import streamlit as st
 from src.bom_lib import (
     BOM_PRESETS,
     BOMParserContext,
+    BuildHardware,
     FeedbackRating,
     InputMethod,
     ParseResult,
@@ -25,6 +26,7 @@ from src.bom_lib import (
     get_residual_report,
     get_standard_hardware,
     parse_user_inventory,
+    provided_hardware,
     rename_source_in_inventory,
     sort_inventory,
 )
@@ -105,6 +107,8 @@ if "parse_warnings" not in st.session_state:
     st.session_state.parse_warnings = {}
 if "option_notes" not in st.session_state:
     st.session_state.option_notes = {}
+if "build_hardware" not in st.session_state:
+    st.session_state.build_hardware = []
 
 # Initialize session state for pedal slots
 if "pedal_slots" not in st.session_state:
@@ -568,6 +572,7 @@ if generate:
     stats: StatsDict = create_empty_stats()
     parse_warnings: dict[str, list[ParseWarning]] = {}
     option_notes: dict[str, list[str]] = {}
+    build_hardware: list[BuildHardware] = []
 
     # Process Each Slot
     parser_context = BOMParserContext()
@@ -606,6 +611,9 @@ if generate:
             label = f"{label} ({slot.variant})"
         if label != source:
             rename_source_in_inventory(p_inv, source, label)
+
+        # Standard hardware is skipped for pedals whose document lists its own.
+        build_hardware.append(BuildHardware(slot.count, provided_hardware(p_inv)))
 
         # REFACTOR: Use the .merge() method of the Inventory class
         inventory.merge(p_inv, qty_multiplier)
@@ -646,6 +654,7 @@ if generate:
     st.session_state.stats = stats
     st.session_state.parse_warnings = parse_warnings
     st.session_state.option_notes = option_notes
+    st.session_state.build_hardware = build_hardware
 
     # Validation Logic
     if stats["parts_found"] == 0:
@@ -735,8 +744,9 @@ if st.session_state.inventory and st.session_state.stats:
     """)
 
     # 2. Build the Shopping List
-    calc_pedal_count = sum(slot.count for slot in st.session_state.pedal_slots)
-    get_standard_hardware(inventory, calc_pedal_count)
+    get_standard_hardware(
+        inventory, cast(list[BuildHardware], st.session_state.build_hardware)
+    )
 
     stock = st.session_state.get("stock")
     final_data = build_shopping_list(

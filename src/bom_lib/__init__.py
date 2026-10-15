@@ -14,6 +14,7 @@ from .enums import (
     ComponentOrigin,
     ComponentSpec,
     FeedbackRating,
+    HardwareRole,
     InputMethod,
     ParseWarningKind,
 )
@@ -49,6 +50,7 @@ from .sourcing import (
     get_standard_hardware,
     is_extra_part,
     is_pure_hardware,
+    provided_hardware,
     resolve_part_sourcing,
 )
 from .strategies import (
@@ -60,6 +62,7 @@ from .strategies import (
 )
 from .types import (
     AlternativeSpec,
+    BuildHardware,
     BuildVariant,
     CategorizationResult,
     ChecklistPart,
@@ -100,6 +103,7 @@ __all__ = [
     "AlternativeSpec",
     "BOMParserContext",
     "BOMParserStrategy",
+    "BuildHardware",
     "BuildVariant",
     "CSVParserStrategy",
     "CategorizationResult",
@@ -109,6 +113,7 @@ __all__ = [
     "ComponentOrigin",
     "ComponentSpec",
     "FeedbackRating",
+    "HardwareRole",
     "InputMethod",
     "Inventory",
     "ManualInputStrategy",
@@ -163,6 +168,7 @@ __all__ = [
     "parse_user_inventory",
     "parse_value_to_decimal",
     "parse_with_verification",
+    "provided_hardware",
     "rename_source_in_inventory",
     "resolve_part_sourcing",
     "serialize_inventory",
