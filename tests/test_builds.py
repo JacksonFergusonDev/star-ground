@@ -105,6 +105,32 @@ def test_modification_block_becomes_a_variant() -> None:
     assert {e.value for e in mod.entries} == {"2N5089", "Not Populated"}
 
 
+def test_either_or_note_makes_variants() -> None:
+    page = _page(
+        text="NOTE: PCB is designed for either Nature control, or Treble + Bass"
+        " controls, do not install all three."
+    )
+    entries = [
+        Entry("R1", "1M", 0, line=0, x0=40),
+        Entry("TREBLE", "A25K", 0, line=1, x0=560),
+        Entry("BASS", "C10K", 0, line=2, x0=560),
+        Entry("NATURE", "W20K", 0, line=3, x0=560),
+    ]
+    plan = plan_builds(entries, [page])
+    assert _names(plan) == ["Nature", "Treble + Bass"]
+    assert [e.ref for e in plan.build_entries(plan.variants[1])] == [
+        "R1",
+        "TREBLE",
+        "BASS",
+    ]
+
+
+def test_either_or_note_naming_unlisted_parts_is_ignored() -> None:
+    page = _page(text="Use either the stock control, or the mod controls.")
+    plan = plan_builds([Entry("R1", "1M", 0, line=0, x0=40)], [page])
+    assert plan.variants == ()
+
+
 class TestOptions:
     """Interchangeable choices: the first is used by default."""
 
@@ -125,6 +151,24 @@ class TestOptions:
             "SPDT ON/OFF/ON",
         ]
         assert [e.value for e in plan.build_entries()] == ["2P4T Mini Rotary"]
+
+    def test_or_row_in_a_ruled_table(self) -> None:
+        # Shindig: a bridge rectifier OR four discrete diodes.
+        entries = [
+            Entry("D4", "1N4148", 0, table=0),
+            Entry("D10", "DI1510", 0, table=0),
+            Entry("D10a", "1N4007", 0, table=0, follows_or=True),
+            Entry("D10b", "1N4007", 0, table=0),
+            Entry("DRIVE", "A1M", 0, table=0),
+        ]
+        plan = plan_builds(entries, [_page()])
+        (option,) = plan.options
+        assert option.group == "D10"
+        assert [[e.ref for e in c] for _, c in option.choices] == [
+            ["D10"],
+            ["D10a", "D10b"],
+        ]
+        assert [e.ref for e in plan.build_entries()] == ["D4", "DRIVE", "D10"]
 
     def test_choose_between_with_sub_headings(self) -> None:
         page = _page(

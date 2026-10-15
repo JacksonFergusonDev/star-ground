@@ -157,7 +157,7 @@ def check_unextracted_refs(
     for text in page_texts:
         listed |= find_listed_refs(text)
 
-    for ref in sorted(listed - extracted):
+    for ref in sorted(r for r in listed if r.upper() not in extracted):
         _warn(
             stats,
             ParseWarningKind.UNEXTRACTED_REF,
