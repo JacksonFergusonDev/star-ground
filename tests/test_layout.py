@@ -106,6 +106,18 @@ class TestFindListings:
         # 'LED' as a value, not a designator.
         assert find_listings(_line("D3", "LED")) == [Listing("D3", "LED")]
 
+    def test_bare_led_after_a_value_starts_a_new_listing(self) -> None:
+        # Pitch Witch: a bare 'LED' row shares a line with a capacitor.
+        assert find_listings(_line("C12", "1nF", "LED", "Indicator LED")) == [
+            Listing("C12", "1nF"),
+            Listing("LED", "Indicator LED"),
+        ]
+
+    def test_bare_led_directly_after_a_designator_is_its_value(self) -> None:
+        # Expresso: 'LED' is LED_A's value and 'Indicator LED' its TYPE.
+        refs = [x.ref for x in find_listings(_line("LED_A", "LED", "Indicator LED"))]
+        assert refs == ["LED_A"]
+
     def test_prose_is_one_cell_and_never_a_listing(self) -> None:
         words = _line("D8 and D9 are only needed when using Rotary clipping switch.")
         assert find_listings(words) == []
@@ -184,6 +196,9 @@ class TestCellRepairs:
     def test_section_headers_are_not_appended(self) -> None:
         assert find_listings(_line("R25", "4K7", "TRIM POTS")) == [
             Listing("R25", "4K7")
+        ]
+        assert find_listings(_line("R31", "100K", "DIP SWITCHES")) == [
+            Listing("R31", "100K")
         ]
 
     def test_multiword_control_name(self) -> None:

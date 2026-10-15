@@ -35,6 +35,11 @@ _CONTROL_VALUE = re.compile(
     r"|\dP\dT\b)"
 )
 
+_LED_DESCRIPTOR = re.compile(
+    r"\d+(?:\.\d+)?mm|RED|GREEN|BLUE|YELLOW|WHITE|ORANGE|AMBER|PURPLE|PINK",
+    re.IGNORECASE,
+)
+
 _DATE = re.compile(r"\d{1,2}[./-]\d{1,2}[./-]\d{2,4}")
 
 # Designator prefixes whose category is unambiguous.
@@ -81,7 +86,8 @@ def _listing_at(tokens: list[str], i: int) -> bool:
         # Bare designators (LED, TRIM) are also ordinary words, so demand a
         # numeric value after them. Numbered ones only need a word-like value.
         if not any(ch.isdigit() for ch in tok):
-            return any(ch.isdigit() for ch in nxt)
+            # 'TRIM (3362P)' describes a trimmer; it is not a listing.
+            return any(ch.isdigit() for ch in nxt) and not nxt.startswith("(")
         return nxt[0].isalnum() or nxt[0] == "("
     return (
         _CONTROL_NAME.fullmatch(tok) is not None
@@ -105,13 +111,27 @@ def find_listed_refs(text: str) -> set[str]:
     for line in unicodedata.normalize("NFKC", text).splitlines():
         tokens = line.split()
         i = 0
+        # Index just past the last listing's value: where a new listing in
+        # the next column may start.
+        boundary = 0
         while i < len(tokens):
             # 'Q4 J201 JFET': a designator-shaped token right after a
             # designator is that designator's value, not a listing of its own.
             after_ref = i > 0 and _is_ref(tokens[i - 1])
-            if not after_ref and _listing_at(tokens, i):
+            # A bare designator is also an ordinary word ('3mm Red LED 3mm',
+            # '• LED 1'), so it only counts where a listing can begin.
+            bare = _is_ref(tokens[i]) and not any(ch.isdigit() for ch in tokens[i])
+            # 'D1 3mm LED 3mm Red LED': an LED after a size or colour finishes
+            # that description.
+            describes = i > 0 and _LED_DESCRIPTOR.fullmatch(tokens[i - 1]) is not None
+            if (
+                not after_ref
+                and not (bare and (i != boundary or describes))
+                and _listing_at(tokens, i)
+            ):
                 found.add(tokens[i])
                 i += 2  # the value is never itself a designator
+                boundary = i
             else:
                 i += 1
     return found
@@ -182,6 +202,17 @@ def check_classification(
         category: The category the classifier chose.
         value: The normalized value the classifier produced.
     """
+    if not any(ch.isalnum() for ch in raw_value):
+        # A placeholder ('***' with "Refer to Page 3") names no part at all.
+        _warn(
+            stats,
+            ParseWarningKind.UNPARSED_VALUE,
+            ref,
+            f"{ref} value '{raw_value}' is a placeholder, not a part; "
+            "check the document for what to use.",
+        )
+        return
+
     m = _NUMBERED_REF.match(ref.upper())
     if m:
         prefix = m.group("prefix")
