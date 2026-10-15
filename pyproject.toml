@@ -103,6 +103,7 @@ section-order = [
 # ---- mypy ---- #
 
 [tool.mypy]
+files = ["app.py", "src", "tests", "tools"]
 mypy_path = "."
 python_version = "3.14"
 strict=true
