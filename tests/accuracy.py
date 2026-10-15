@@ -21,13 +21,13 @@ import logging
 import re
 import sys
 import unicodedata
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from decimal import Decimal
 from enum import StrEnum
 from pathlib import Path
 from typing import Any, TypedDict
 
-from src.bom_lib import ComponentCategory, parse_pedalpcb_pdf
+from src.bom_lib import ComponentCategory, Inventory, parse_pedalpcb_pdf
 from src.bom_lib.utils import parse_value_to_decimal
 
 TESTS_DIR = Path(__file__).parent
@@ -162,13 +162,24 @@ class GoldenDoc:
 
 @dataclass(frozen=True)
 class RefResult:
-    """Grade for one designator, plus whether the parser warned about it."""
+    """Grade for one designator, plus whether the parser warned about it.
+
+    Attributes:
+        build: The golden variant this grade belongs to ('' for single-circuit
+            documents).
+    """
 
     ref: str
     outcome: Outcome
     expected: ExpectedPart | None
     actual: ActualPart | None
     flagged: bool
+    build: str = ""
+
+    @property
+    def key(self) -> str:
+        """Unique label within a document: 'REF', or 'Build/REF' for variants."""
+        return f"{self.build}/{self.ref}" if self.build else self.ref
 
     def describe(self) -> str:
         """Returns a one-line human-readable explanation of the mismatch."""
@@ -194,8 +205,8 @@ class DocScore:
     title_actual: str | None
     warned_refs: frozenset[str]
     ambiguous_refs: frozenset[str] = frozenset()
-    variant: str = DEFAULT_VARIANT
     variant_count: int = 1
+    builds_found: int = 1
 
     @property
     def expected_count(self) -> int:
@@ -392,8 +403,64 @@ def _grade(expected: ExpectedPart, actual: ActualPart) -> Outcome:
     return Outcome.WRONG_VALUE
 
 
+def _actual_parts(inventory: Inventory) -> dict[str, ActualPart]:
+    actual: dict[str, ActualPart] = {}
+    for key, data in inventory.items():
+        if key.category == ComponentCategory.PCB:
+            continue
+        for ref in data["refs"]:
+            if "(Inj)" in ref:
+                continue
+            actual[ref.upper()] = ActualPart(category=key.category, value=key.value)
+    return actual
+
+
+def _pair_builds(
+    golden: tuple[Variant, ...], builds: list[dict[str, ActualPart]], flagged: set[str]
+) -> tuple[list[tuple[Variant, dict[str, ActualPart]]], list[dict[str, ActualPart]]]:
+    """Pairs each golden variant with the parser build it agrees with most.
+
+    Pairing is one-to-one and greedy on the number of correct parts. A golden
+    variant left without a build is paired with an empty one (everything
+    missing); builds left without a golden variant are returned separately.
+    When the parser produced a single build, every golden variant is graded
+    against it: that is the list a builder of any variant would receive.
+    """
+    if len(builds) == 1:
+        return [(v, builds[0]) for v in golden], []
+
+    def correct(v: Variant, b: dict[str, ActualPart]) -> int:
+        return sum(
+            1 for r in _grade_variant(v, b, flagged) if r.outcome == Outcome.CORRECT
+        )
+
+    # Most correct parts first; ties go to document order.
+    scored = sorted(
+        (
+            (-correct(v, b), gi, bi)
+            for gi, v in enumerate(golden)
+            for bi, b in enumerate(builds)
+        )
+    )
+    golden_to_build: dict[int, int] = {}
+    used: set[int] = set()
+    for _, gi, bi in scored:
+        if gi not in golden_to_build and bi not in used:
+            golden_to_build[gi] = bi
+            used.add(bi)
+    pairs = [
+        (v, builds[golden_to_build[gi]] if gi in golden_to_build else {})
+        for gi, v in enumerate(golden)
+    ]
+    return pairs, [b for bi, b in enumerate(builds) if bi not in used]
+
+
 def score_doc(doc: GoldenDoc) -> DocScore:
-    """Runs the parser on one document and grades every designator.
+    """Runs the parser on one document and grades every designator of every build.
+
+    For a multi-circuit document each golden variant is graded against the
+    parser build it corresponds to (see `_pair_builds`), so the score says
+    whether a builder of *each* variant would get the right parts.
 
     Args:
         doc: The ground truth to grade against.
@@ -402,37 +469,35 @@ def score_doc(doc: GoldenDoc) -> DocScore:
         A DocScore covering every expected and every emitted designator.
     """
     res = parse_pedalpcb_pdf(str(doc.pdf), source_name="Accuracy")
-
-    actual: dict[str, ActualPart] = {}
-    for key, data in res.inventory.items():
-        if key.category == ComponentCategory.PCB:
-            continue
-        for ref in data["refs"]:
-            if "(Inj)" in ref:
-                continue
-            actual[ref.upper()] = ActualPart(category=key.category, value=key.value)
-
     flagged = {w.ref.upper() for w in res.stats["warnings"] if w.ref}
 
-    # The parser emits a single parts list. Until it understands variants,
-    # grade it against the variant it matches best.
-    graded = [
-        (variant, _grade_variant(variant, actual, flagged)) for variant in doc.variants
+    builds = [_actual_parts(v.inventory) for v in res.variants] or [
+        _actual_parts(res.inventory)
     ]
-    variant, results = max(
-        graded,
-        key=lambda vr: sum(1 for r in vr[1] if r.outcome == Outcome.CORRECT),
-    )
+    pairs, unmatched = _pair_builds(doc.variants, builds, flagged)
+    labeled = len(doc.variants) > 1 or len(builds) > 1
+
+    results: list[RefResult] = []
+    for variant, actual in pairs:
+        label = variant.name if labeled else ""
+        results += [
+            replace(r, build=label) for r in _grade_variant(variant, actual, flagged)
+        ]
+    for k, actual in enumerate(unmatched, start=1):
+        results += [
+            RefResult(ref, Outcome.EXTRA, None, act, ref in flagged, f"extra build {k}")
+            for ref, act in actual.items()
+        ]
 
     return DocScore(
         name=doc.name,
-        results=results,
+        results=tuple(results),
         title_expected=doc.title,
         title_actual=res.title,
         warned_refs=frozenset(flagged),
         ambiguous_refs=doc.ambiguous_refs,
-        variant=variant.name,
         variant_count=len(doc.variants),
+        builds_found=len(res.variants) or 1,
     )
 
 
@@ -486,7 +551,7 @@ Baseline = dict[str, dict[str, BaselineEntry]]
 
 def failure_map(score: DocScore) -> dict[str, BaselineEntry]:
     """Maps each failing designator to its description and warning status."""
-    return {r.ref: {"issue": r.describe(), "warned": r.flagged} for r in score.failures}
+    return {r.key: {"issue": r.describe(), "warned": r.flagged} for r in score.failures}
 
 
 def compare_to_baseline(score: DocScore, baseline: Baseline) -> list[str]:
@@ -542,15 +607,15 @@ def render_scorecard(scores: list[DocScore], verbose: bool) -> str:
             f"{len(s.false_alarms):>14}  "
             f"{'ok' if s.title_ok else f'got {s.title_actual!r}'}"
             + (
-                f"  [best of {s.variant_count} variants: {s.variant}]"
-                if s.variant_count > 1
+                f"  [{s.variant_count} builds, parser found {s.builds_found}]"
+                if s.variant_count > 1 or s.builds_found > 1
                 else ""
             )
         )
         if verbose:
             for r in s.failures:
                 mark = "warned" if r.flagged else "SILENT"
-                lines.append(f"    [{mark:>6}] {r.ref:<12} {r.describe()}")
+                lines.append(f"    [{mark:>6}] {r.key:<12} {r.describe()}")
             for ref in sorted(s.false_alarms):
                 lines.append(f"    [ false] {ref:<12} warned, but parsed correctly")
     lines.append("-" * len(header))

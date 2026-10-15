@@ -499,5 +499,8 @@
   "metadata": {
     "extracted_title": "Parentheses Fuzz",
     "parts_found": 80
-  }
+  },
+  "options": [
+    "SW1: using 2P4T Mini Rotary; alternatively SPDT ON/OFF/ON"
+  ]
 }

@@ -9,6 +9,7 @@ from tests.accuracy import (
     ActualPart,
     Outcome,
     _grade_variant,
+    _pair_builds,
     load_golden,
     values_match,
 )
@@ -122,3 +123,57 @@ def test_values_match_normalizes_notation() -> None:
     assert not values_match(ComponentCategory.CAPACITORS, "1u MLCC", "1u")
     assert values_match(ComponentCategory.POTENTIOMETERS, "A100K", "100KA")
     assert values_match(ComponentCategory.SWITCHES, "SPDT (On - On)", "SPDT On/On")
+
+
+class TestBuildPairing:
+    """Each golden variant is graded against the parser build it corresponds to."""
+
+    def _golden(self, tmp_path: Path):
+        return load_golden(
+            _write(
+                tmp_path,
+                {
+                    "variants": {
+                        "Stock": {"parts": {"Q1": _part(Q, "2N3904")}},
+                        "Cleft": {"parts": {"Q1": _part(Q, "2N5089")}},
+                    }
+                },
+            ),
+            tmp_path,
+        ).variants
+
+    def test_builds_pair_regardless_of_order(self, tmp_path: Path) -> None:
+        golden = self._golden(tmp_path)
+        builds = [{"Q1": ActualPart(Q, "2N5089")}, {"Q1": ActualPart(Q, "2N3904")}]
+        pairs, unmatched = _pair_builds(golden, builds, set())
+        assert [(v.name, b["Q1"].value) for v, b in pairs] == [
+            ("Stock", "2N3904"),
+            ("Cleft", "2N5089"),
+        ]
+        assert unmatched == []
+
+    def test_a_wrong_build_still_counts_against_its_variant(
+        self, tmp_path: Path
+    ) -> None:
+        golden = self._golden(tmp_path)
+        stock = {"Q1": ActualPart(Q, "2N3904")}
+        wrong = {"R1": ActualPart(R, "10k")}
+        pairs, unmatched = _pair_builds(golden, [stock, wrong], set())
+        assert {v.name: b for v, b in pairs} == {"Stock": stock, "Cleft": wrong}
+        assert unmatched == []
+
+    def test_a_missing_build_is_graded_as_empty(self, tmp_path: Path) -> None:
+        golden = self._golden(tmp_path)
+        builds = [{"Q1": ActualPart(Q, "2N3904")}, {"Q1": ActualPart(Q, "2N5089")}]
+        three = (*golden, golden[0])  # a third golden variant the parser never produced
+        pairs, _ = _pair_builds(three, builds, set())
+        assert pairs[2][1] == {}
+
+    def test_a_single_build_is_graded_against_every_variant(
+        self, tmp_path: Path
+    ) -> None:
+        golden = self._golden(tmp_path)
+        only = {"Q1": ActualPart(Q, "2N3904")}
+        pairs, unmatched = _pair_builds(golden, [only], set())
+        assert [b for _, b in pairs] == [only, only]
+        assert unmatched == []

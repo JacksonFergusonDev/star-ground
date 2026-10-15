@@ -16,7 +16,7 @@ words are separated by ordinary spaces and so form a single cell.
 """
 
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from src.bom_lib import constants
 from src.bom_lib.designators import BOARD_REF, is_designator
@@ -117,13 +117,20 @@ class Cell:
 class Listing:
     """A designator and the value printed beside it.
 
+    Position fields locate the listing for build analysis (variant grids,
+    option groups) and do not take part in equality.
+
     Attributes:
         ref: The designator (e.g. 'R1', 'VOLUME').
         value: The full value, including qualifiers (e.g. '1u MLCC').
+        line: Index of the visual line on the page (see `page_lines`).
+        x0: Left edge of the designator, in points.
     """
 
     ref: str
     value: str
+    line: int = field(default=0, compare=False)
+    x0: float = field(default=0.0, compare=False)
 
 
 def group_lines(words: list[PDFWord]) -> list[list[PDFWord]]:
@@ -259,10 +266,19 @@ def _split_merged(cell: Cell) -> list[Cell]:
         ),
         None,
     )
+    if label is not None and label + 1 == len(words) and is_designator(name):
+        # 'SW1 (Power)' | 'SPDT Toggle': the label belongs to the designator's
+        # cell and the value is the next cell.
+        return [Cell(cell.words[:1])]
     if label is not None and label + 1 < len(words):
         start = label + 1
     rest = " ".join(words[start:])
-    value_like = _has_digit(words[start]) or _CONTROL_VALUE.match(rest) is not None
+    value_like = (
+        _has_digit(words[start])
+        or _CONTROL_VALUE.match(rest) is not None
+        # 'C16 Not Populated' in a modification list.
+        or rest.upper() in constants.NOT_POPULATED_VALUES
+    )
     if not value_like:
         return [cell]
     split = [Cell(cell.words[:1]), Cell(cell.words[start:])]
@@ -273,6 +289,11 @@ def _split_merged(cell: Cell) -> list[Cell]:
     ):
         return split
     return [cell]
+
+
+def page_lines(words: list[PDFWord]) -> list[list[Cell]]:
+    """The cells of every visual line on a page, numbered as `find_listings` numbers them."""
+    return [split_cells(line) for line in group_lines(words)]
 
 
 def find_listings(words: list[PDFWord]) -> list[Listing]:
@@ -287,7 +308,7 @@ def find_listings(words: list[PDFWord]) -> list[Listing]:
     listings: list[Listing] = []
     # (value x-position, font size, index into listings) for the previous line.
     above: list[tuple[float, float, int]] = []
-    for line in group_lines(words):
+    for line_no, line in enumerate(group_lines(words)):
         cells = [part for cell in split_cells(line) for part in _split_merged(cell)]
         cells = _absorb_continuations(cells, above, listings)
         texts = [c.text for c in cells]
@@ -314,7 +335,9 @@ def find_listings(words: list[PDFWord]) -> list[Listing]:
             value = clean_value(" ".join(parts))
             if value:
                 current.append((cells[i + 1].x0, cells[i + 1].size, len(listings)))
-                listings.append(Listing(ref=texts[i], value=value))
+                listings.append(
+                    Listing(ref=texts[i], value=value, line=line_no, x0=cells[i].x0)
+                )
             i = j
         above = current
     return listings
@@ -347,7 +370,7 @@ def _absorb_continuations(
         if target is not None and _CONTINUATION.fullmatch(cell.text):
             prev = listings[target]
             listings[target] = Listing(
-                prev.ref, clean_value(f"{prev.value} {cell.text}")
+                prev.ref, clean_value(f"{prev.value} {cell.text}"), prev.line, prev.x0
             )
         else:
             remaining.append(cell)

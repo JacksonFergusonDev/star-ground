@@ -65,7 +65,9 @@ def main() -> None:
             category = path_parts[1].capitalize() if len(path_parts) > 1 else ""
 
             # 2. Process File & Determine Name
-            final_text = ""
+            # A file yields one preset per build: multi-circuit PDFs (e.g. Muffin
+            # Fuzz's versions) become "Title: Build" presets.
+            builds: list[tuple[str, str]] = []
             # Clean up the filename: "big_muff" -> "Big Muff"
             project_name = filename_no_ext.replace("_", " ").replace("-", " ").title()
 
@@ -73,7 +75,7 @@ def main() -> None:
                 # CASE A: Tayda / Raw Text
                 # We trust the user's formatting here (app.py verification handles validaty later)
                 with open(file_path, encoding="utf-8") as f:
-                    final_text = f.read()
+                    builds.append((project_name, f.read()))
                     print(f"   📄 Read Text: {file}")
 
             elif file.lower().endswith(".pdf"):
@@ -82,20 +84,22 @@ def main() -> None:
                 print(f"   ⚙️ Parsing PDF: {file}")
                 try:
                     res = parse_pedalpcb_pdf(file_path, source_name=project_name)
-                    inv, stats = res.inventory, res.stats
+                    # Use extracted title from PDF metadata if available
+                    extracted = res.stats.get("extracted_title")
+                    if extracted:
+                        project_name = extracted.strip()
+                        print(f"      ↳ Found Title: {project_name}")
 
-                    if stats["parts_found"] > 0:
-                        # Use extracted title from PDF metadata if available
-                        extracted = stats.get("extracted_title")
-                        if extracted:
-                            project_name = extracted.strip()
-                            print(f"      ↳ Found Title: {project_name}")
+                    inventories = [
+                        (f"{project_name}: {v.name}", v.inventory) for v in res.variants
+                    ] or [(project_name, res.inventory)]
 
+                    for build_name, inv in inventories:
+                        if not inv:
+                            continue
                         # Special Handling: PedalPCB logic
-                        # If this is a PedalPCB project, we manually inject the PCB part into the
-                        # inventory BEFORE serialization. This ensures the "PCB" line appears
-                        # in the final text preset, even if the PDF didn't explicitly list it
-                        # in the BOM table.
+                        # Inject the PCB part BEFORE serialization so the "PCB" line
+                        # appears in the preset even if the BOM table omits it.
                         if source == "PedalPCB":
                             pcb_key = ComponentKey(
                                 ComponentCategory.PCB, f"{project_name} PCB"
@@ -104,8 +108,8 @@ def main() -> None:
                             inv[pcb_key]["refs"].append("PCB")
 
                         # Use the shared library function to format the output string
-                        final_text = serialize_inventory(inv)
-                    else:
+                        builds.append((build_name, serialize_inventory(inv)))
+                    if not builds:
                         print(f"   ⚠️ Skipping {file}: No parts found.")
                         continue
                 except Exception as e:
@@ -113,11 +117,11 @@ def main() -> None:
                     continue
 
             # 3. Build Final Key and Add to Dict
-            if final_text:
+            for build_name, final_text in builds:
                 if category:
-                    key = f"[{source}] [{category}] {project_name}"
+                    key = f"[{source}] [{category}] {build_name}"
                 else:
-                    key = f"[{source}] {project_name}"
+                    key = f"[{source}] {build_name}"
 
                 # Store metadata structure
                 presets[key] = {

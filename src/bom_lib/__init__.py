@@ -60,10 +60,12 @@ from .strategies import (
 )
 from .types import (
     AlternativeSpec,
+    BuildVariant,
     CategorizationResult,
     ChecklistPart,
     ComponentKey,
     Inventory,
+    OptionNote,
     ParseResult,
     ParseWarning,
     PartData,
@@ -98,6 +100,7 @@ __all__ = [
     "AlternativeSpec",
     "BOMParserContext",
     "BOMParserStrategy",
+    "BuildVariant",
     "CSVParserStrategy",
     "CategorizationResult",
     "ChecklistPart",
@@ -109,6 +112,7 @@ __all__ = [
     "InputMethod",
     "Inventory",
     "ManualInputStrategy",
+    "OptionNote",
     "PDFPageExtraction",
     "PDFParserStrategy",
     "PDFWord",
