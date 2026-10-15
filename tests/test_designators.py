@@ -1,0 +1,67 @@
+"""Unit tests for the reference designator grammar in `src/bom_lib/designators.py`."""
+
+import pytest
+
+from src.bom_lib.designators import BOARD_REF, is_designator, parse_designator
+from src.bom_lib.enums import ComponentCategory as Cat
+
+
+@pytest.mark.parametrize(
+    ("ref", "category"),
+    [
+        ("R1", Cat.RESISTORS),
+        ("R1A", Cat.RESISTORS),  # channel suffix (Duo-Phase)
+        ("D10a", Cat.DIODES),  # lowercase channel suffix (Shindig)
+        ("IC_A", Cat.ICS),  # underscore name (Expresso)
+        ("JACK_IN", Cat.HARDWARE_MISC),
+        ("LED", Cat.DIODES),
+        ("LEDA", Cat.DIODES),  # bare designator with channel letter
+        ("CLR1", Cat.RESISTORS),  # not a capacitor
+        ("TRIM1A", Cat.POTENTIOMETERS),
+        ("TR1", Cat.POTENTIOMETERS),
+        ("LDR1A", Cat.OPTOELECTRONICS),
+        ("SW_C", Cat.SWITCHES),
+        ("T1", Cat.HARDWARE_MISC),  # transformer
+        ("K1", Cat.HARDWARE_MISC),  # relay
+        ("r1", Cat.RESISTORS),
+    ],
+)
+def test_designators_and_their_categories(ref: str, category: Cat) -> None:
+    designator = parse_designator(ref)
+    assert designator is not None
+    assert designator.category == category
+
+
+def test_l_prefix_is_decided_by_value() -> None:
+    designator = parse_designator("L1")
+    assert designator is not None
+    assert designator.category is None
+
+
+@pytest.mark.parametrize(
+    "token",
+    [
+        "VOLUME",
+        "TREBLE",
+        "OSC-SW",
+        "INT_BIAS",
+        "CTRL1",
+        "RATEA",
+        "TL072",
+        "2N3904",
+        "C10K",
+        "C1M",
+    ],
+)
+def test_control_names_and_values_are_not_designators(token: str) -> None:
+    assert not is_designator(token)
+
+
+@pytest.mark.parametrize("token", ["R13", "C4", "IC_A", "LED2", "R1A"])
+def test_board_refs(token: str) -> None:
+    assert BOARD_REF.fullmatch(token)
+
+
+@pytest.mark.parametrize("token", ["TL072", "BS170", "J201", "C10K", "MPSA18"])
+def test_part_numbers_are_not_board_refs(token: str) -> None:
+    assert not BOARD_REF.fullmatch(token)

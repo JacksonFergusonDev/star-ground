@@ -19,6 +19,7 @@ import re
 from dataclasses import dataclass
 
 from src.bom_lib import constants
+from src.bom_lib.designators import BOARD_REF, is_designator
 from src.bom_lib.types import PDFWord
 
 # Gaps wider than this fraction of the font size separate cells. Measured on
@@ -29,12 +30,13 @@ _CELL_GAP_EM = 0.45
 # The Abyss sits only 0.19em away.
 _LINE_TOLERANCE_EM = 0.15
 
-_NUMBERED_REF = re.compile(r"[A-Z]{1,5}\d{1,3}")
-# Designators that can never be a part number. Part numbers share the
-# letters-then-digits shape (TL072, BS170, J201), so only these short board
-# prefixes are trusted to start a new listing in the value position.
-_BOARD_REF = re.compile(r"(?:R|C|D|Q|IC|U|SW|LED|LDR|X|Y|VR|TRIM)\d{1,3}")
-_CONTROL_NAME = re.compile(r"[A-Z][A-Z0-9]{1,11}")
+# Unfamiliar numbered labels (CTRL1, FUZZ2) that are not standard designators.
+_NUMBERED_LABEL = re.compile(r"[A-Z]{1,5}\d{1,3}")
+_CONTROL_NAME = re.compile(r"[A-Z][A-Z0-9_-]{1,11}")
+_MULTIWORD_NAME = re.compile(r"[A-Z]{2,}(?: [A-Z]{2,}){1,2}")
+# A whole-cell parenthetical on the next line, aligned with a value above it,
+# continues that value ('SPDT Toggle' / '(On/On)').
+_CONTINUATION = re.compile(r"\(.*\)")
 _CONTROL_VALUE = re.compile(
     r"(?:[ABCWG]\d+(?:\.\d+)?[KM]\b|\d+(?:\.\d+)?[KM][ABC]?\b|[SD34]P[DS]T\b|\dP\dT\b)"
 )
@@ -59,9 +61,56 @@ _LAYOUT_WORDS = frozenset(
         "OR",
     }
 )
+# Section headers that also appear beside values. Used only to stop a value
+# from absorbing them; 'TRIM' alone is still a designator.
+_HEADER_WORDS = _LAYOUT_WORDS | {
+    "TRIM",
+    "POTS",
+    "(3362P)",
+    "(3362P",
+    "TYPE)",
+    "TRANSFORMERS",
+    "OPTICAL",
+    "MODIFICATIONS",
+    "SMD",
+    "THROUGH-HOLE",
+}
+# A merged 'NAME value' cell is split only when the value is short
+# ('DPDT (On / Off / On)' is six words).
+_MAX_MERGED_VALUE_WORDS = 6
+# A function label printed between a designator and its value: 'SW1 (Power) SPDT'.
+_LABEL = re.compile(r"\([^()\d]*\)")
+# Two or more lowercase words mark a sentence ('Choose between ... or SMD').
+_LOWERCASE_WORD = re.compile(r"[a-z][a-z'-]*[.,;:]?")
 _ASIDE = re.compile(r"\(see notes?\)", re.IGNORECASE)
 # Trailing words that only restate the component type.
 _REDUNDANT_SUFFIX = re.compile(r"\s+(?:Crystal|Switch)$", re.IGNORECASE)
+
+
+@dataclass(frozen=True, slots=True)
+class Cell:
+    """A run of words separated from its neighbours by a column-sized gap.
+
+    Attributes:
+        words: The words in the cell, left to right.
+    """
+
+    words: tuple[PDFWord, ...]
+
+    @property
+    def text(self) -> str:
+        """The cell's text, words joined by single spaces."""
+        return " ".join(w["text"] for w in self.words)
+
+    @property
+    def x0(self) -> float:
+        """Left edge of the cell, in points."""
+        return self.words[0]["x0"]
+
+    @property
+    def size(self) -> float:
+        """Font size of the cell's first word, in points."""
+        return self.words[0]["size"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -97,25 +146,25 @@ def group_lines(words: list[PDFWord]) -> list[list[PDFWord]]:
     return [sorted(line, key=lambda w: w["x0"]) for line in lines]
 
 
-def split_cells(line: list[PDFWord]) -> list[str]:
+def split_cells(line: list[PDFWord]) -> list[Cell]:
     """Splits one line into cells at column-sized gaps.
 
     Args:
         line: Words on one line, sorted left to right.
 
     Returns:
-        The text of each cell.
+        The cells, left to right.
     """
-    cells: list[list[str]] = []
+    cells: list[list[PDFWord]] = []
     prev: PDFWord | None = None
     for word in line:
         gap = word["x0"] - prev["x1"] if prev else 0.0
         if prev is None or gap > _CELL_GAP_EM * max(word["size"], prev["size"]):
-            cells.append([word["text"]])
+            cells.append([word])
         else:
-            cells[-1].append(word["text"])
+            cells[-1].append(word)
         prev = word
-    return [" ".join(c) for c in cells]
+    return [Cell(tuple(c)) for c in cells]
 
 
 def _has_digit(cell: str | None) -> bool:
@@ -125,35 +174,45 @@ def _has_digit(cell: str | None) -> bool:
 def _is_ref_cell(cell: str, next_cell: str | None) -> bool:
     if cell in _LAYOUT_WORDS:
         return False
-    if _NUMBERED_REF.fullmatch(cell):
-        return True
     if cell in constants.BARE_DESIGNATORS:
         # 'LED' is also an ordinary value ('D3  LED'); as a designator it is
         # followed by a numeric value ('LED  3mm Red LED').
         return _has_digit(next_cell)
+    if is_designator(cell) or _NUMBERED_LABEL.fullmatch(cell):
+        return True
     if cell in constants.KEYWORDS:
         return True
-    # Unfamiliar control names (SHIFT, SUBS) are recognized by their value.
+    # Unfamiliar control names (SHIFT, SUBS, TONE BYPASS SWITCH) are recognized
+    # by their value.
+    named = _CONTROL_NAME.fullmatch(cell) is not None or (
+        _MULTIWORD_NAME.fullmatch(cell) is not None
+        and not set(cell.split()) <= _HEADER_WORDS  # 'TOGGLE SWITCHES' is a header
+    )
     return (
-        next_cell is not None
-        and _CONTROL_NAME.fullmatch(cell) is not None
-        and _CONTROL_VALUE.match(next_cell) is not None
+        next_cell is not None and named and _CONTROL_VALUE.match(next_cell) is not None
     )
 
 
 def _starts_listing(cell: str, next_cell: str | None) -> bool:
     """Whether a cell in value position is really the next designator."""
-    if _BOARD_REF.fullmatch(cell):
+    if BOARD_REF.fullmatch(cell):
         return True
     return cell in constants.BARE_DESIGNATORS and _has_digit(next_cell)
+
+
+def _is_prose(cell: str) -> bool:
+    words = cell.split()
+    lowercase = sum(1 for w in words if _LOWERCASE_WORD.fullmatch(w))
+    return not cell.startswith("(") and lowercase >= 2
 
 
 def _is_annotation(cell: str) -> bool:
     words = cell.split()
     return not (
         cell.startswith("*")
-        or all(w.upper() in _LAYOUT_WORDS for w in words)
-        or _BOARD_REF.fullmatch(words[0]) is not None
+        or _is_prose(cell)
+        or all(w.upper() in _HEADER_WORDS for w in words)
+        or BOARD_REF.fullmatch(words[0]) is not None
     )
 
 
@@ -171,7 +230,49 @@ def clean_value(value: str) -> str:
     """
     value = _ASIDE.sub("", value).replace("*", " ")
     value = " ".join(value.split())
+    # A leading function label is not part of the value: '(Voltage) SPDT Toggle'.
+    label = _LABEL.match(value)
+    if label and label.end() < len(value):
+        value = value[label.end() :].strip()
     return _REDUNDANT_SUFFIX.sub("", value)
+
+
+def _split_merged(cell: Cell) -> list[Cell]:
+    """Splits a 'NAME value' cell that a narrow gap failed to separate.
+
+    In tab-aligned columns a long control name can end within an ordinary
+    word space of its value ('BLEND B10K'), so both land in one cell. Such a
+    cell is split when its first word is a designator or control name and the
+    rest is a short value; prose ('D8 and D9 are only needed...') is left whole.
+    """
+    words = cell.text.split()
+    if len(words) < 2 or len(words) > _MAX_MERGED_VALUE_WORDS + 1:
+        return [cell]
+    name = words[0]
+    # Skip a function label: 'SW1 (Power) SPDT Toggle' -> 'SPDT Toggle'.
+    start = 1
+    label = next(
+        (
+            k
+            for k in range(1, len(words))
+            if _LABEL.fullmatch(" ".join(words[1 : k + 1]))
+        ),
+        None,
+    )
+    if label is not None and label + 1 < len(words):
+        start = label + 1
+    rest = " ".join(words[start:])
+    value_like = _has_digit(words[start]) or _CONTROL_VALUE.match(rest) is not None
+    if not value_like:
+        return [cell]
+    split = [Cell(cell.words[:1]), Cell(cell.words[start:])]
+    if is_designator(name) and name not in constants.BARE_DESIGNATORS:
+        return split
+    if name in constants.KEYWORDS or (
+        _CONTROL_NAME.fullmatch(name) and _CONTROL_VALUE.match(rest)
+    ):
+        return split
+    return [cell]
 
 
 def find_listings(words: list[PDFWord]) -> list[Listing]:
@@ -184,29 +285,70 @@ def find_listings(words: list[PDFWord]) -> list[Listing]:
         Listings in reading order (top to bottom, left to right).
     """
     listings: list[Listing] = []
+    # (value x-position, font size, index into listings) for the previous line.
+    above: list[tuple[float, float, int]] = []
     for line in group_lines(words):
-        cells = split_cells(line)
+        cells = [part for cell in split_cells(line) for part in _split_merged(cell)]
+        cells = _absorb_continuations(cells, above, listings)
+        texts = [c.text for c in cells]
+        current: list[tuple[float, float, int]] = []
         i = 0
-        while i < len(cells):
-            nxt = cells[i + 1] if i + 1 < len(cells) else None
-            after = cells[i + 2] if i + 2 < len(cells) else None
+        while i < len(texts):
+            nxt = texts[i + 1] if i + 1 < len(texts) else None
+            after = texts[i + 2] if i + 2 < len(texts) else None
             if (
                 nxt is None
-                or not _is_ref_cell(cells[i], nxt)
+                or not _is_ref_cell(texts[i], nxt)
                 or _starts_listing(nxt, after)
             ):
                 i += 1
                 continue
             parts = [nxt]
             j = i + 2
-            while j < len(cells):
-                following = cells[j + 1] if j + 1 < len(cells) else None
-                if _is_ref_cell(cells[j], following) or not _is_annotation(cells[j]):
+            while j < len(texts):
+                following = texts[j + 1] if j + 1 < len(texts) else None
+                if _is_ref_cell(texts[j], following) or not _is_annotation(texts[j]):
                     break
-                parts.append(cells[j])
+                parts.append(texts[j])
                 j += 1
             value = clean_value(" ".join(parts))
             if value:
-                listings.append(Listing(ref=cells[i], value=value))
+                current.append((cells[i + 1].x0, cells[i + 1].size, len(listings)))
+                listings.append(Listing(ref=texts[i], value=value))
             i = j
+        above = current
     return listings
+
+
+def _absorb_continuations(
+    cells: list[Cell],
+    above: list[tuple[float, float, int]],
+    listings: list[Listing],
+) -> list[Cell]:
+    """Appends wrapped parentheticals to the value they continue.
+
+    A cell that is entirely parenthetical and starts at the same x-position as
+    a value on the line above ('SPDT Toggle' / '(On/On)') is the rest of that
+    value, not a new entry.
+
+    Returns:
+        The cells that remain after continuations are absorbed.
+    """
+    remaining: list[Cell] = []
+    for cell in cells:
+        target = next(
+            (
+                idx
+                for x0, size, idx in above
+                if abs(cell.x0 - x0) <= _LINE_TOLERANCE_EM * size
+            ),
+            None,
+        )
+        if target is not None and _CONTINUATION.fullmatch(cell.text):
+            prev = listings[target]
+            listings[target] = Listing(
+                prev.ref, clean_value(f"{prev.value} {cell.text}")
+            )
+        else:
+            remaining.append(cell)
+    return remaining

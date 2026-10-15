@@ -12,6 +12,7 @@ from typing import Any, cast
 import pint
 
 from src.bom_lib import constants
+from src.bom_lib.designators import parse_designator
 from src.bom_lib.enums import ComponentCategory
 from src.bom_lib.types import CategorizationResult, ComponentKey
 from src.bom_lib.units import ureg
@@ -21,7 +22,15 @@ from src.bom_lib.utils import (
 )
 
 _SIZED_LED = re.compile(r"\d+(?:\.\d+)?mm(?:\s+[A-Za-z]+)?", re.IGNORECASE)
-_STANDARD_REF = re.compile(r"(?:R|C|D|Q|IC|U|LED|X|Y|J|SW)\d+")
+# A resistance, with or without a pot taper: B100K, 100KA, 50K, B10K DUAL, Dual B10K.
+# '(3362P Trim)', 'Trim (3362P)', '(3362P)': package notes, not part of the value.
+_TRIM_NOTE = re.compile(
+    r"\([^()]*\b(?:3362P|TRIM(?:MER)?)\b[^()]*\)|\b3362P\b|\bTRIM(?:MER)?\b",
+    re.IGNORECASE,
+)
+_POT_VALUE = re.compile(
+    r"(?<![\w.])(?:[ABCWG]\d+(?:\.\d+)?[KM]|\d+(?:\.\d+)?[KM][ABCWG]?)(?![\w.])"
+)
 
 
 def normalize_value_to_quantity(
@@ -86,22 +95,50 @@ def normalize_value_by_category(category: ComponentCategory, val_raw: str) -> st
             )
 
     # A diode specified only by size and color ('5mm Yellow') is an LED.
-    if category == ComponentCategory.DIODES and _SIZED_LED.fullmatch(clean_val):
+    if (
+        category == ComponentCategory.DIODES
+        and _SIZED_LED.fullmatch(clean_val)
+        and "LED" not in clean_val.upper()
+    ):
         clean_val = f"{clean_val} LED"
+
+    # A trimmer's package note is not part of its value ('10K Trim (3362P)').
+    if category == ComponentCategory.POTENTIOMETERS:
+        clean_val = " ".join(_TRIM_NOTE.sub(" ", clean_val).split()) or clean_val
 
     return clean_val
 
 
-def categorize_part(ref: str, val: str) -> CategorizationResult | None:
+def _named_control_category(name: str, val_up: str) -> ComponentCategory | None:
+    """Category of a named control (VOLUME, SHIFT, OSC-SW), decided by its value."""
+    if constants.SWITCH_VALUE_PATTERN.search(val_up):
+        return ComponentCategory.SWITCHES
+    if _POT_VALUE.search(val_up):
+        return ComponentCategory.POTENTIOMETERS
+    if name in constants.SWITCH_LABELS and any(
+        x in val_up for x in ("ON", "SW", "SP", "DP")
+    ):
+        return ComponentCategory.SWITCHES
+    if name in constants.POT_LABELS:
+        return ComponentCategory.POTENTIOMETERS
+    return None
+
+
+def categorize_part(
+    ref: str, val: str, category_hint: ComponentCategory | None = None
+) -> CategorizationResult | None:
     """Classifies a component based on its Reference Designator and Value.
 
-    This function acts as a rules engine. It checks standard prefixes (R, C, Q),
-    identifies potentiometers by known names (VOL, GAIN) or taper markings
-    (A100k), and handles special cases like LDRs.
+    A recognized designator (R1, IC_A, CLR1, JACK_IN; see `designators.py`)
+    states its own category. A named control (VOLUME, SHIFT, OSC-SW, INT_BIAS)
+    is classified by its value: a switch spec makes it a switch, a resistance
+    (with or without a taper) makes it a potentiometer or trimmer.
 
     Args:
         ref: The reference designator (e.g., "R1", "VOLUME", "IC1").
         val: The component value (e.g., "10k", "TL072").
+        category_hint: Category suggested by a TYPE column, used only when
+            neither the designator nor the value decides (RECV / 'Stereo Jack').
 
     Returns:
         CategorizationResult with standardized category, normalized value,
@@ -111,102 +148,29 @@ def categorize_part(ref: str, val: str) -> CategorizationResult | None:
     val_clean = val.strip()  # Keep original case for display
     val_up = val_clean.upper()  # Use this for internal logic
 
-    # 1. Validate Prefix / Structure
-    valid_prefixes = (*constants.CORE_PREFIXES, "OP", "TL", "LDR", "LED")
+    designator = parse_designator(ref.strip())
+    if designator is not None:
+        # L is an inductor, except where a document numbers its LEDs L1-L4.
+        category = designator.category or (
+            ComponentCategory.DIODES
+            if "LED" in val_up
+            else ComponentCategory.HARDWARE_MISC
+        )
+    else:
+        named = _named_control_category(ref_up, val_up) or category_hint
+        if named is None:
+            return None
+        category = named
 
-    # Standard components (R1, C1) usually require a digit.
-    # Named controls (VOLUME, SW_BRIGHT) do not.
-    has_digit = any(char.isdigit() for char in ref_up)
-
-    # A numbered standard designator (R1, D4, IC2) states its own category;
-    # value-shape heuristics must never override it ('1N34A' is not an A-taper
-    # pot, '1u MLCC' is not a C-taper pot).
-    is_standard_ref = _STANDARD_REF.fullmatch(ref_up) is not None
-
-    # Named controls whose value is a switch spec (GAIN 'SPDT On-On',
-    # MODE '1P8T Mini Rotary') are switches, whatever their name suggests.
-    is_switch_value = not is_standard_ref and bool(
-        constants.SWITCH_VALUE_PATTERN.search(val_up)
-    )
-
-    # 2. Taper Check (Potentiometer Heuristic)
-    # Detects pots by value style (e.g., "B100k", "10k-A") if the ref isn't obviously a chip.
-    is_pot_value = False
-    if not is_standard_ref and not ref_up.startswith(("IC", "U", "Q", "OP", "TL")):
-        taper_chars = "".join(constants.POT_TAPER_MAP.keys())
-        # Matches "B100k" or "100k-B"
-        if re.search(rf"[0-9]+.*[{taper_chars}]$", val_up) or re.search(
-            rf"^[{taper_chars}][0-9]+", val_up
-        ):
-            is_pot_value = True
-
-    # 3. Validity Check
-    is_valid = (
-        (any(ref_up.startswith(p) for p in valid_prefixes) and has_digit)
-        or ref_up in constants.POT_LABELS
-        or ref_up in constants.SWITCH_LABELS
-        or any(ref_up.startswith(label) for label in constants.POT_LABELS)
-        or is_pot_value
-        or is_switch_value
-        or ref_up in constants.BARE_DESIGNATORS
-    )
-
-    if not is_valid:
-        return None
-
-    # 4. Classification Logic
-    category = ComponentCategory.UNKNOWN
     injection: ComponentKey | None = None
 
-    # LDR Exception (Light Dependent Resistor)
-    if ref_up.startswith("LDR"):
+    if category == ComponentCategory.OPTOELECTRONICS:
         return CategorizationResult(
-            category=ComponentCategory.OPTOELECTRONICS,
-            clean_value=val_clean,
-            injected_key=None,
+            category=category, clean_value=val_clean, injected_key=None
         )
 
-    if is_switch_value:
-        category = ComponentCategory.SWITCHES
-
-    # Potentiometers (Priority over Resistors to catch 'RANGE')
-    elif (
-        ref_up in constants.POT_LABELS
-        or any(ref_up.startswith(label) for label in constants.POT_LABELS)
-        or is_pot_value
-    ):
-        category = ComponentCategory.POTENTIOMETERS
-
-    # Switches
-    elif ref_up in constants.SWITCH_LABELS:
-        # Ambiguity check: "LENGTH" could be a switch or a pot.
-        if any(x in val_up for x in ["ON", "SW", "SP", "DP"]):
-            category = ComponentCategory.SWITCHES
-        else:
-            category = ComponentCategory.POTENTIOMETERS  # Fallback
-
-    # Standard Components
-    elif ref_up == "CLR" or (ref_up.startswith("R") and not ref_up.startswith("RANGE")):
-        category = ComponentCategory.RESISTORS
-    elif ref_up.startswith("C"):
-        category = ComponentCategory.CAPACITORS
-    elif ref_up.startswith("D"):
-        category = ComponentCategory.DIODES
-    elif ref_up.startswith("Q"):
-        category = ComponentCategory.TRANSISTORS
-    elif ref_up.startswith("SW"):
-        category = ComponentCategory.SWITCHES
-    elif ref_up.startswith("LED"):
-        category = ComponentCategory.DIODES
-    elif ref_up.startswith(("X", "Y")):
-        category = ComponentCategory.CRYSTALS_OSCILLATORS
-    elif ref_up.startswith("J"):
-        category = ComponentCategory.HARDWARE_MISC
-
     # ICs & Socket Injection
-    elif ref_up.startswith(("U", "IC", "OP", "TL")):
-        category = ComponentCategory.ICS
-
+    if category == ComponentCategory.ICS:
         # Don't inject sockets for things that aren't DIP chips
         # (e.g., Regulators, Reverb Bricks)
         skip_injection_keywords = ["REGULATOR", "L78L", "MODULE", "BTDR", "REVERB"]
