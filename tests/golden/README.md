@@ -91,10 +91,15 @@ first choice is the document's default:
 }
 ```
 
-Scoring: a variant document is graded against the variant the output matches
-best. An option group is satisfied by any one choice; emitting parts from two
-choices counts the second as extra, because the shopping list would buy both.
-Warnings on any of these designators are correct behavior, not false alarms.
+Scoring: every variant is graded as its own build, so the score says whether a
+builder of *each* variant gets the right parts. Golden variants are paired
+one-to-one with the parser's builds by agreement (ties in document order); a
+variant the parser did not produce is graded against an empty build, and if the
+parser produced a single build, every variant is graded against it. Failures
+are keyed `Build/REF`. An option group is satisfied by any one choice; emitting
+parts from two choices counts the second as extra, because the shopping list
+would buy both. Warnings on any of these designators are correct behavior, not
+false alarms.
 
 ## Labeling Rules
 

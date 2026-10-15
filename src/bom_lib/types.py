@@ -7,9 +7,17 @@ parsing and sourcing pipeline to ensure consistent data passing.
 import re
 import uuid
 from collections import UserDict, defaultdict
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from decimal import Decimal
-from typing import Any, NamedTuple, NotRequired, Protocol, TypedDict, runtime_checkable
+from typing import (
+    Any,
+    NamedTuple,
+    NotRequired,
+    Protocol,
+    TypedDict,
+    cast,
+    runtime_checkable,
+)
 
 import pint
 
@@ -77,6 +85,12 @@ class ProjectSlot:
     cached_pdf_bytes: bytes | None = None
     source_path: str | None = None
     locked_name: str | None = None
+
+    # Parsed as soon as the input arrives, so a multi-circuit document can ask
+    # which build before the master list is generated.
+    parsed: ParseResult | None = None
+    parsed_key: str | None = None
+    variant: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -499,17 +513,93 @@ def create_empty_inventory() -> Inventory:
 
 
 @dataclass(frozen=True, slots=True)
+class BuildVariant:
+    """One circuit described by a multi-circuit document (e.g. a Muffin version).
+
+    Attributes:
+        name: The variant name as printed (e.g. 'Civil War', 'Germanium Version').
+        inventory: The complete parts list for this build.
+        parts_found: Number of parts in the build.
+    """
+
+    name: str
+    inventory: Inventory
+    parts_found: int
+
+
+@dataclass(frozen=True, slots=True)
+class OptionNote:
+    """An interchangeable choice the parser resolved to the document's default.
+
+    Options do not change the circuit (through-hole or SMD transistors, a bridge
+    rectifier or four diodes), so the first choice is used and the builder is
+    told about the alternative.
+
+    Attributes:
+        group: What the choice is about (e.g. 'SW1', 'Transistors').
+        chosen: The choice used (e.g. 'Through-Hole').
+        alternatives: The other choices, as printed.
+    """
+
+    group: str
+    chosen: str
+    alternatives: tuple[str, ...]
+
+    def __str__(self) -> str:
+        """Returns the note formatted for display."""
+        return f"{self.group}: using {self.chosen}; alternatively {' or '.join(self.alternatives)}"
+
+
+@dataclass(frozen=True, slots=True)
 class ParseResult:
     """The structured result of parsing a BOM source.
+
+    A document that describes several circuits yields ``variants`` and an
+    *empty* ``inventory``: nothing may be bought until a build is chosen with
+    `select`, so no variant is ever used by default.
 
     Attributes:
         inventory: Populated Inventory mapping component keys to PartData.
         stats: Parsing statistics, errors, and metadata.
         title: Optional extracted project or document title.
         raw_content: Optional raw document bytes or content representation.
+        variants: Every build of a multi-circuit document; empty otherwise.
+        options: Interchangeable choices resolved to the document's default.
     """
 
     inventory: Inventory
     stats: StatsDict
     title: str | None = None
     raw_content: bytes | None = None
+    variants: tuple[BuildVariant, ...] = ()
+    options: tuple[OptionNote, ...] = ()
+
+    @property
+    def requires_choice(self) -> bool:
+        """Whether a build must be chosen before the parts list can be used."""
+        return bool(self.variants)
+
+    @property
+    def variant_names(self) -> tuple[str, ...]:
+        """The names of the available builds, in document order."""
+        return tuple(v.name for v in self.variants)
+
+    def select(self, name: str) -> ParseResult:
+        """Returns the result for one build of a multi-circuit document.
+
+        Args:
+            name: One of `variant_names`.
+
+        Returns:
+            A single-build ParseResult with that variant's parts list.
+
+        Raises:
+            KeyError: If the document has no variant with that name.
+        """
+        variant = next((v for v in self.variants if v.name == name), None)
+        if variant is None:
+            raise KeyError(
+                f"No build named {name!r}; choose one of {self.variant_names}"
+            )
+        stats = cast(StatsDict, {**self.stats, "parts_found": variant.parts_found})
+        return replace(self, inventory=variant.inventory, stats=stats, variants=())

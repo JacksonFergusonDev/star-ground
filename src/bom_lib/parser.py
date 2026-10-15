@@ -11,12 +11,15 @@ import re
 import traceback
 
 from src.bom_lib import constants
+from src.bom_lib.builds import BuildPlan, Entry, PageContext, plan_builds
 from src.bom_lib.classifier import categorize_part, normalize_value_by_category
 from src.bom_lib.designators import parse_designator
 from src.bom_lib.enums import ComponentCategory
-from src.bom_lib.layout import find_listings
+from src.bom_lib.layout import find_listings, page_lines
 from src.bom_lib.types import (
+    BuildVariant,
     Inventory,
+    OptionNote,
     ParseResult,
     PDFPageExtraction,
     PDFWord,
@@ -365,28 +368,25 @@ def enrich_value_from_type(value: str, type_text: str) -> str:
     return value
 
 
-def _parse_via_tables(
-    pages_data: list[PDFPageExtraction],
-    inventory: Inventory,
-    source_name: str,
-    stats: StatsDict,
-) -> None:
-    """Strategy 1: Extract data using visual table boundaries.
-
-    Iterates through recognized tables in the PDF, heuristically identifying
-    header columns (Location, Value) to extract component data.
+def _table_entries(
+    pages_data: list[PDFPageExtraction], stats: StatsDict
+) -> list[Entry]:
+    """Strategy 1: Extract entries from ruled tables (LOCATION / VALUE / TYPE / NOTES).
 
     Args:
-        pages_data: Pre-extracted list of dicts containing 'tables' and 'text'.
-        inventory: The inventory dictionary to update.
-        source_name: The name of the source file.
+        pages_data: Pre-extracted page data.
         stats: The statistics dictionary for tracking progress.
+
+    Returns:
+        One entry per table row that names a designator and a value.
     """
-    for data in pages_data:
-        tables = data["tables"]
-        for table in tables:
+    entries: list[Entry] = []
+    table_no = -1
+    for page_no, data in enumerate(pages_data):
+        for table in data["tables"]:
             if not table:
                 continue
+            table_no += 1
 
             # Header mapping
             headers = [str(h).upper().strip() for h in table[0] if h]
@@ -442,14 +442,11 @@ def _parse_via_tables(
                     if len(parts) == 2:
                         ref_raw, val_raw = parts[0].strip(), parts[1].strip()
 
-                if ref_raw and val_raw and _is_not_populated(val_raw):
-                    _record_not_populated(stats, ref_raw, val_raw)
-                elif ref_raw and val_raw:
-                    count = ingest_bom_line(
-                        inventory, source_name, ref_raw, val_raw, stats, hint
+                if ref_raw and val_raw:
+                    entries.append(
+                        Entry(ref_raw, val_raw, page_no, table=table_no, hint=hint)
                     )
-                    if count > 0:
-                        stats["parts_found"] += count
+    return entries
 
 
 def _is_not_populated(value: str) -> bool:
@@ -476,50 +473,116 @@ def _is_ignored(value: str) -> bool:
     )
 
 
-def _parse_via_layout(
-    pages_data: list[PDFPageExtraction],
-    inventory: Inventory,
-    source_name: str,
-    stats: StatsDict,
-) -> None:
-    """Strategy 2: Extract designator/value pairs from the page layout.
+def _layout_entries(
+    pages_data: list[PDFPageExtraction], stats: StatsDict, table_refs: set[str]
+) -> list[Entry]:
+    """Strategy 2: Extract entries from the page layout.
 
     Reads word positions to pair each designator with the value printed in the
-    neighboring column (see `layout.py`). When the table strategy already
-    populated the inventory, only designators it missed are added, so the two
-    strategies never disagree about a part.
+    neighboring column (see `layout.py`). Designators the table strategy already
+    found are skipped, so the two strategies never disagree about a part.
 
     Args:
         pages_data: Pre-extracted page data including word positions.
-        inventory: The inventory dictionary to update.
-        source_name: The name of the source file.
         stats: The statistics dictionary for tracking progress.
-    """
-    tables_found = stats["parts_found"] > 0
+        table_refs: Designators already extracted from ruled tables.
 
-    for data in pages_data:
+    Returns:
+        One entry per listing, with its page position.
+    """
+    entries: list[Entry] = []
+    for page_no, data in enumerate(pages_data):
         for listing in find_listings(data["words"]):
             ref, value = listing.ref, listing.value
             stats["lines_read"] += 1
 
-            if tables_found and ref in stats["seen_refs"]:
+            if ref in table_refs:
                 continue
-            if _is_not_populated(value):
-                _record_not_populated(stats, ref, value)
+            entry = Entry(ref, value, page_no, line=listing.line, x0=listing.x0)
+            if not entry.not_populated and (_is_ignored(value) or len(value) > 50):
                 continue
-            if _is_ignored(value) or len(value) > 50:
-                continue
-            if ref in constants.KEYWORDS:
+            if ref in constants.KEYWORDS and not entry.not_populated:
                 # Named controls must carry a real value (B100K, SPDT ...).
                 has_digit = any(ch.isdigit() for ch in value)
                 if not has_digit and not constants.SWITCH_VALUE_PATTERN.search(
                     value.upper()
                 ):
                     continue
+            entries.append(entry)
+    return entries
 
-            c = ingest_bom_line(inventory, source_name, ref, value, stats)
-            if c > 0:
-                stats["parts_found"] += c
+
+def _ingest_entries(
+    entries: list[Entry], source_name: str
+) -> tuple[Inventory, StatsDict]:
+    """Ingests one build's entries into a fresh inventory.
+
+    Each build gets its own duplicate tracking, so two variants listing the
+    same designator are not conflicts, while a conflict inside one build is.
+    """
+    inventory = create_empty_inventory()
+    stats = create_empty_stats()
+    for entry in entries:
+        if entry.not_populated:
+            _record_not_populated(stats, entry.ref, entry.value)
+            continue
+        stats["parts_found"] += ingest_bom_line(
+            inventory, source_name, entry.ref, entry.value, stats, entry.hint
+        )
+    return inventory, stats
+
+
+def _merge_warnings(target: StatsDict, source: StatsDict) -> None:
+    for warning in source["warnings"]:
+        if warning not in target["warnings"]:
+            target["warnings"].append(warning)
+
+
+def _assemble_builds(
+    plan: BuildPlan, source_name: str, stats: StatsDict
+) -> tuple[Inventory, tuple[BuildVariant, ...], tuple[OptionNote, ...], Inventory]:
+    """Ingests every build in a plan.
+
+    Returns:
+        The single-build inventory (empty when the document has variants), the
+        variants, the option notes, and the union of every build and option
+        choice (for the self-checks, which must see everything the document lists).
+    """
+    options = tuple(
+        OptionNote(
+            group=o.group,
+            chosen=o.choices[0][0],
+            alternatives=tuple(name for name, _ in o.choices[1:]),
+        )
+        for o in plan.options
+    )
+    # Merge each build and option choice separately: one variant's OMIT must not
+    # hide another variant's part for the same designator.
+    union = create_empty_inventory()
+    builds = [plan.build_entries(v) for v in plan.variants] or [plan.build_entries()]
+    builds += [list(choice) for o in plan.options for _, choice in o.choices[1:]]
+    for entries in builds:
+        union.merge(_ingest_entries(entries, source_name)[0])
+
+    if len(plan.variants) < 2:
+        variant = plan.variants[0] if plan.variants else None
+        inventory, build_stats = _ingest_entries(
+            plan.build_entries(variant), source_name
+        )
+        _merge_warnings(stats, build_stats)
+        stats["parts_found"] += build_stats["parts_found"]
+        return inventory, (), options, union
+
+    variants = []
+    for planned in plan.variants:
+        inventory, build_stats = _ingest_entries(
+            plan.build_entries(planned), source_name
+        )
+        _merge_warnings(stats, build_stats)
+        variants.append(
+            BuildVariant(planned.name, inventory, build_stats["parts_found"])
+        )
+    return create_empty_inventory(), tuple(variants), options, union
 
 
 def parse_pedalpcb_pdf(filepath: str, source_name: str) -> ParseResult:
@@ -528,6 +591,8 @@ def parse_pedalpcb_pdf(filepath: str, source_name: str) -> ParseResult:
     Uses a multi-stage strategy:
     1. Visual Table Extraction (via pdfplumber lines).
     2. Layout analysis of word positions (column-aware text fallback).
+    3. Build planning: variants (the builder must choose) and options (the
+       document's first choice is used and the alternative noted).
 
     Args:
         filepath: Path to the PDF file.
@@ -547,6 +612,8 @@ def parse_pedalpcb_pdf(filepath: str, source_name: str) -> ParseResult:
 
     inventory = create_empty_inventory()
     stats: StatsDict = create_empty_stats()
+    variants: tuple[BuildVariant, ...] = ()
+    options: tuple[OptionNote, ...] = ()
 
     pdf = None
     try:
@@ -613,17 +680,28 @@ def parse_pedalpcb_pdf(filepath: str, source_name: str) -> ParseResult:
                 pass
 
             # --- STRATEGY 1: TABLE EXTRACTION ---
-            _parse_via_tables(pages_data, inventory, source_name, stats)
+            entries = _table_entries(pages_data, stats)
 
             # --- STRATEGY 2: LAYOUT ANALYSIS ---
             # Recovers anything the tables missed (or everything, for column layouts)
-            _parse_via_layout(pages_data, inventory, source_name, stats)
+            entries += _layout_entries(pages_data, stats, {e.ref for e in entries})
+
+            # --- BUILDS: variants and options ---
+            pages = [
+                PageContext(page_lines(data["words"]), data["text"] or "")
+                for data in pages_data
+            ]
+            plan = plan_builds(entries, pages)
+            inventory, variants, options, union = _assemble_builds(
+                plan, source_name, stats
+            )
 
             # --- SELF-CHECK ---
-            # Every designator listed in the document must be accounted for.
+            # Every designator listed in the document must be accounted for, in
+            # some build or option.
             page_texts = [data["text"] or "" for data in pages_data]
-            check_unextracted_refs(page_texts, inventory, stats)
-            check_bom_reconciliation(page_texts, inventory, stats)
+            check_unextracted_refs(page_texts, union, stats)
+            check_bom_reconciliation(page_texts, union, stats)
 
         except Exception as e:
             # Capture internal parsing errors (logic bugs, layout changes)
@@ -637,5 +715,9 @@ def parse_pedalpcb_pdf(filepath: str, source_name: str) -> ParseResult:
             pdf.close()
 
     return ParseResult(
-        inventory=inventory, stats=stats, title=stats.get("extracted_title")
+        inventory=inventory,
+        stats=stats,
+        title=stats.get("extracted_title"),
+        variants=variants,
+        options=options,
     )
