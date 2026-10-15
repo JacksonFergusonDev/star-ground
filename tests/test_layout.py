@@ -4,8 +4,10 @@ import pytest
 
 from src.bom_lib import PDFWord
 from src.bom_lib.layout import (
+    BomRow,
     Listing,
     clean_value,
+    find_bom_rows,
     find_listings,
     group_lines,
     split_cells,
@@ -241,3 +243,46 @@ class TestCellRepairs:
             Listing("RATE", "C1M"),
             Listing("RES", "C1M"),
         ]
+
+
+class TestTextBillOfMaterials:
+    """Unruled 'Reference | Value | Quantity | Notes' tables (Sheepylove)."""
+
+    @staticmethod
+    def _row(top: float, *cells: tuple[str, float]) -> list[PDFWord]:
+        """Words placed at explicit column positions, as in a tab-aligned table."""
+        words: list[PDFWord] = []
+        for text, x in cells:
+            for word in text.split():
+                words.append(
+                    PDFWord(text=word, x0=x, x1=x + 6 * len(word), top=top, size=SIZE)
+                )
+                x += 6 * len(word) + SPACE
+        return words
+
+    def test_rows_are_read_by_header_column(self) -> None:
+        cols = (50.0, 150.0, 220.0, 300.0)
+        words = (
+            self._row(
+                100,
+                *zip(("Reference", "Value", "Quantity", "Notes"), cols, strict=True),
+            )
+            + self._row(120, ("R10-R12,R18", cols[0]), ("47k", cols[1]), ("4", cols[2]))
+            + self._row(
+                140,
+                ("D3,D4", cols[0]),
+                ("Ge", cols[1]),
+                ("2", cols[2]),
+                ("Any Ge diodes will work.", cols[3]),
+            )
+            + self._row(160, ("Copyright: Sheepylove.com 2026-03-18", cols[0]))
+        )
+        rows = find_bom_rows(words)
+        assert [(r.refs, r.value, r.quantity) for r in rows] == [
+            ("R10-R12,R18", "47k", 4),
+            ("D3,D4", "Ge", 2),
+        ]
+        assert isinstance(rows[0], BomRow)
+
+    def test_no_header_no_rows(self) -> None:
+        assert find_bom_rows(_line("R1", "10K", "C1", "100n")) == []

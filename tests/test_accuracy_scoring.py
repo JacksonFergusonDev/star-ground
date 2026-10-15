@@ -89,6 +89,22 @@ class TestOptions:
         assert {"D10", "D10A", "D10D"} <= self._doc(tmp_path).ambiguous_refs
 
 
+def test_unspecified_values_are_ambiguous(tmp_path: Path) -> None:
+    doc = load_golden(
+        _write(
+            tmp_path,
+            {
+                "parts": {
+                    "R1": {**_part(R, "CLR"), "unspecified": True},
+                    "R2": _part(R, "1K"),
+                }
+            },
+        ),
+        tmp_path,
+    )
+    assert doc.ambiguous_refs == {"R1"}
+
+
 class TestVariants:
     """Variants: separate circuits, each with a complete parts list."""
 
