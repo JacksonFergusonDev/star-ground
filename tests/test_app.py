@@ -1,4 +1,6 @@
+import os
 import uuid
+from unittest import mock
 
 import pytest
 from streamlit.testing.v1 import AppTest
@@ -237,3 +239,43 @@ def test_input_method_state_clearing(app):
 
     # 5. Verify data re-loaded (Auto-load logic worked)
     assert app.text_area[0].value != ""
+
+
+def test_multi_circuit_pdf_requires_a_build_choice(app, monkeypatch):
+    """A multi-circuit PDF asks which build, blocks Generate until chosen, and
+    then builds exactly the chosen variant, labeled with its name."""
+    samples = os.path.join(os.path.dirname(__file__), "samples", "dirty")
+
+    def fake_get(url, timeout=10):
+        response = mock.Mock()
+        with open(os.path.join(samples, url.rsplit("/", 1)[-1]), "rb") as f:
+            response.content = f.read()
+        response.raise_for_status = lambda: None
+        return response
+
+    monkeypatch.setattr("requests.get", fake_get)
+    slot = ProjectSlot(method=InputMethod.FROM_URL)
+    app.session_state.pedal_slots = [slot]
+    app.session_state[f"method_{slot.id}"] = InputMethod.FROM_URL
+    app.session_state[f"url_{slot.id}"] = "https://example.test/Ungula.pdf"
+    app.run()
+
+    (picker,) = [sb for sb in app.selectbox if sb.label == "Build"]
+    assert picker.options == ["Stock", "Cleft Mod"]
+    assert picker.value is None  # no default build
+
+    generate = next(b for b in app.button if b.label == "Generate Master List")
+    generate.click().run()
+    assert any("Choose which build" in e.value for e in app.error)
+    assert not app.session_state.inventory
+
+    picker.select("Cleft Mod").run()
+    next(b for b in app.button if b.label == "Generate Master List").click().run()
+    assert not app.error
+    inventory = app.session_state.inventory
+    cleft_q1 = ComponentKey(ComponentCategory.TRANSISTORS, "2N5089")
+    assert "Q1" in inventory[cleft_q1]["sources"]["Ungula (Cleft Mod)"]
+    # The Cleft mod omits C6.
+    assert not any(
+        "C6" in refs for d in inventory.values() for refs in d["sources"].values()
+    )

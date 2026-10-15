@@ -1,6 +1,7 @@
 """Strategy for parsing PedalPCB PDF build documents."""
 
 import os
+from dataclasses import replace
 
 from src.bom_lib.enums import InputMethod
 from src.bom_lib.parser import parse_pedalpcb_pdf
@@ -37,19 +38,9 @@ class PDFParserStrategy(BOMParserStrategy):
             with open(data, "rb") as f:
                 raw_bytes = f.read()
             res = parse_pedalpcb_pdf(data, source_name=source_name)
-            return ParseResult(
-                inventory=res.inventory,
-                stats=res.stats,
-                title=res.title,
-                raw_content=raw_bytes,
-            )
+            return replace(res, raw_content=raw_bytes)
 
         raw_content = self._read_to_bytes(data, "PDFParserStrategy")
         with self._temp_file_from_bytes(raw_content, ".pdf") as tmp_path:
             res = parse_pedalpcb_pdf(tmp_path, source_name=source_name)
-            return ParseResult(
-                inventory=res.inventory,
-                stats=res.stats,
-                title=res.title,
-                raw_content=raw_content,
-            )
+            return replace(res, raw_content=raw_content)

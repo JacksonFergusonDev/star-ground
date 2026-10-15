@@ -315,7 +315,17 @@ BARE_DESIGNATORS = frozenset({"LED", "RLED", "CLR", "TRIM"})
 
 # Values that mark a listed designator as intentionally not populated.
 NOT_POPULATED_VALUES = frozenset(
-    {"N/A", "NA", "OMIT", "DNP", "DNI", "NC", "NO POP", "DO NOT POPULATE"}
+    {
+        "N/A",
+        "NA",
+        "OMIT",
+        "DNP",
+        "DNI",
+        "NC",
+        "NO POP",
+        "DO NOT POPULATE",
+        "NOT POPULATED",
+    }
 )
 
 # Switch specifications: pole/throw codes (SPDT, 1P8T) and positions (ON/OFF/ON).

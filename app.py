@@ -13,6 +13,7 @@ from src.bom_lib import (
     BOMParserContext,
     FeedbackRating,
     InputMethod,
+    ParseResult,
     ParseWarning,
     ProjectSlot,
     StatsDict,
@@ -102,6 +103,8 @@ if "stats" not in st.session_state:
     st.session_state.stats = None
 if "parse_warnings" not in st.session_state:
     st.session_state.parse_warnings = {}
+if "option_notes" not in st.session_state:
+    st.session_state.option_notes = {}
 
 # Initialize session state for pedal slots
 if "pedal_slots" not in st.session_state:
@@ -292,6 +295,9 @@ def _reset_slot_state(slot: ProjectSlot, new_method: InputMethod) -> None:
     slot.source_path = None
     slot.cached_pdf_bytes = None
     slot.last_loaded_preset = None
+    slot.parsed = None
+    slot.parsed_key = None
+    slot.variant = None
 
     # 3. Clear Streamlit Session Keys
     # We clear the UI widgets so they don't retain old values
@@ -303,6 +309,7 @@ def _reset_slot_state(slot: ProjectSlot, new_method: InputMethod) -> None:
         f"preset_select_{slot_id}",
         f"filter_src_{slot_id}",
         f"filter_cat_{slot_id}",
+        f"variant_{slot_id}",
     ]
     for k in keys_to_clear:
         if k in st.session_state:
@@ -310,6 +317,67 @@ def _reset_slot_state(slot: ProjectSlot, new_method: InputMethod) -> None:
 
     # 4. Update Method Tracker
     slot.method = new_method
+
+
+# Source label used while a document is parsed ahead of Generate; replaced by the
+# project's final name when the master list is built.
+PENDING_SOURCE = "__pending__"
+
+
+def input_key(slot: ProjectSlot) -> str | None:
+    """Identifies the slot's current input, for caching its parse result.
+
+    Only uploads and URLs are parsed ahead of time: they are the inputs that
+    can be multi-circuit PDFs. Pasted text and presets are parsed on Generate.
+    """
+    if slot.method == InputMethod.UPLOAD_FILE and isinstance(slot.data, str):
+        return f"file:{slot.data}"  # a path (strategies accept paths as uploads)
+    if slot.method == InputMethod.UPLOAD_FILE and slot.data is not None:
+        name = getattr(slot.data, "name", "")
+        file_id = getattr(slot.data, "file_id", None)
+        size = getattr(slot.data, "size", None)
+        return f"file:{file_id or name}:{size}"
+    if slot.method == InputMethod.FROM_URL and slot.data:
+        return f"url:{str(slot.data).strip()}"
+    return None
+
+
+def ensure_parsed(slot: ProjectSlot) -> ParseResult | None:
+    """Parses the slot's input once and caches the result on the slot."""
+    key = input_key(slot)
+    if key is None:
+        slot.parsed, slot.parsed_key, slot.variant = None, None, None
+        return None
+    if slot.parsed_key != key:
+        slot.parsed = BOMParserContext().process(
+            slot.method, slot.data, source_name=PENDING_SOURCE
+        )
+        slot.parsed_key = key
+        slot.variant = None
+    return slot.parsed
+
+
+def render_build_picker(slot: ProjectSlot, result: ParseResult) -> None:
+    """Asks which build of a multi-circuit document this project is.
+
+    There is deliberately no default: building the wrong variant buys the
+    wrong parts, so Generate is blocked until a build is chosen.
+    """
+    names = list(result.variant_names)
+    choice = st.selectbox(
+        "Build",
+        names,
+        index=names.index(slot.variant) if slot.variant in names else None,
+        placeholder="Choose a build…",
+        key=f"variant_{slot.id}",
+        help="This document describes several circuits; each needs different parts.",
+    )
+    slot.variant = choice
+    if choice is None:
+        st.caption(
+            f"This document describes {len(names)} circuits. "
+            "Choose which one you are building."
+        )
 
 
 def on_method_change(slot_id: uuid.UUID) -> None:
@@ -450,6 +518,13 @@ for i, slot in enumerate(st.session_state.pedal_slots):
                 label_visibility="collapsed",
             )
 
+        parsed = ensure_parsed(slot)
+        if parsed is not None:
+            if parsed.requires_choice:
+                render_build_picker(slot, parsed)
+            for note in parsed.options:
+                st.caption(f"Option: {note}")
+
         st.divider()
 
 st.button("➕ Add Another Pedal", on_click=add_slot)  # noqa: RUF001
@@ -469,7 +544,22 @@ if len(active_names) != len(set(active_names)):
         "⚠️ Duplicate projects detected. Quantities will be summed, but source documents will only be included once."
     )
 
-if st.button("Generate Master List", type="primary", width="stretch"):
+generate = st.button("Generate Master List", type="primary", width="stretch")
+if generate:
+    unchosen = [
+        str(slot.name or slot.parsed.title or f"Project #{i + 1}")
+        for i, slot in enumerate(st.session_state.pedal_slots)
+        if slot.parsed is not None and slot.parsed.requires_choice and not slot.variant
+    ]
+    if unchosen:
+        st.error(
+            "Choose which build before generating: "
+            + ", ".join(unchosen)
+            + ". Each build of these documents needs different parts."
+        )
+        generate = False
+
+if generate:
     # REFACTOR: Use the factory to get the new Inventory Class
     from src.bom_lib.types import create_empty_inventory
 
@@ -477,6 +567,7 @@ if st.button("Generate Master List", type="primary", width="stretch"):
 
     stats: StatsDict = create_empty_stats()
     parse_warnings: dict[str, list[ParseWarning]] = {}
+    option_notes: dict[str, list[str]] = {}
 
     # Process Each Slot
     parser_context = BOMParserContext()
@@ -486,8 +577,15 @@ if st.button("Generate Master List", type="primary", width="stretch"):
         source = current_name if current_name.strip() else f"Project #{i + 1}"
         qty_multiplier = slot.count
 
-        # Unified Processing via Strategy Pattern
-        result = parser_context.process(slot.method, slot.data, source_name=source)
+        # Unified Processing via Strategy Pattern. Uploads and URLs were parsed
+        # when they arrived; work on a copy so the cached result stays pristine.
+        if slot.parsed is not None and slot.parsed_key == input_key(slot):
+            result = copy.deepcopy(slot.parsed)
+            if result.requires_choice and slot.variant:
+                result = result.select(slot.variant)
+            rename_source_in_inventory(result.inventory, PENDING_SOURCE, source)
+        else:
+            result = parser_context.process(slot.method, slot.data, source_name=source)
         p_inv = result.inventory
         p_stats = result.stats
         detected_title = result.title
@@ -498,11 +596,16 @@ if st.button("Generate Master List", type="primary", width="stretch"):
             slot.cached_pdf_bytes = raw_content
 
         # Auto-Rename Logic
+        label = source
         if detected_title and not current_name.strip():
             # Update Slot Name
             slot.name = str(detected_title)
-            # Remap Inventory Keys
-            rename_source_in_inventory(p_inv, source, str(detected_title))
+            label = str(detected_title)
+        # Name the build in every output: 'Muffin Fuzz (Civil War)'.
+        if slot.variant and slot.parsed is not None and slot.parsed.requires_choice:
+            label = f"{label} ({slot.variant})"
+        if label != source:
+            rename_source_in_inventory(p_inv, source, label)
 
         # REFACTOR: Use the .merge() method of the Inventory class
         inventory.merge(p_inv, qty_multiplier)
@@ -516,11 +619,13 @@ if st.button("Generate Master List", type="primary", width="stretch"):
             slot.name = source
 
         if p_stats.get("warnings"):
-            parse_warnings[slot.name] = p_stats["warnings"]
+            parse_warnings[label] = p_stats["warnings"]
             stats["warnings"].extend(p_stats["warnings"])
+        if result.options:
+            option_notes[label] = [str(o) for o in result.options]
 
-        # Save the final resolved name
-        slot.locked_name = slot.name
+        # Save the final resolved name (including the chosen build)
+        slot.locked_name = label
 
     # Process Stock if uploaded
     stock_inventory = None
@@ -540,6 +645,7 @@ if st.button("Generate Master List", type="primary", width="stretch"):
     st.session_state.stock = stock_inventory  # Save to session
     st.session_state.stats = stats
     st.session_state.parse_warnings = parse_warnings
+    st.session_state.option_notes = option_notes
 
     # Validation Logic
     if stats["parts_found"] == 0:
@@ -592,6 +698,18 @@ if st.session_state.inventory and st.session_state.stats:
             with st.expander(f"{project}: {len(warnings)} to review"):
                 for w in warnings:
                     st.markdown(f"- **{w.kind.value}**: {w.message}")
+
+    # Interchangeable choices the parser resolved to the document's default.
+    option_notes = cast(dict[str, list[str]], st.session_state.option_notes)
+    if option_notes:
+        st.info(
+            "Some documents offer interchangeable parts. The first option "
+            "listed was used; the alternatives are below."
+        )
+        for project, notes in option_notes.items():
+            with st.expander(f"{project}: {len(notes)} option(s)"):
+                for text in notes:
+                    st.markdown(f"- {text}")
 
     # Check for junk / parsing residuals
     suspicious = get_residual_report(stats)

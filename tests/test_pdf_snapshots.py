@@ -83,6 +83,7 @@ def save_snapshot(filename, data):
     path = os.path.join(SNAPSHOTS_DIR, filename)
     with open(path, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2, sort_keys=True)
+        f.write("\n")  # end-of-file-fixer expects a trailing newline
 
 
 # --- Test Discovery ---
@@ -130,6 +131,17 @@ def test_pdf_parsing_regression(pdf_rel_path, snapshot_update):
         },
         "inventory": stabilize_inventory(inventory),
     }
+    # Multi-circuit documents have no default build: record every build.
+    if res.variants:
+        current_result["variants"] = {
+            v.name: {
+                "parts_found": v.parts_found,
+                "inventory": stabilize_inventory(v.inventory),
+            }
+            for v in res.variants
+        }
+    if res.options:
+        current_result["options"] = [str(o) for o in res.options]
 
     # 3. Handle Updates vs Comparison
     if snapshot_update:
