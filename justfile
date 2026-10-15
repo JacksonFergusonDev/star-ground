@@ -36,7 +36,7 @@ lint: sync
 # Run static type checking with Mypy
 typecheck: sync
     @printf "\n{{ blue }}=== Running Type Checks ==={{ nc }}\n"
-    uv run mypy .
+    uv run mypy
     @printf "{{ green }}✔ Type checking passed{{ nc }}\n"
 
 # Run the full automated testing matrix
