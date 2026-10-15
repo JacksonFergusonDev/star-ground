@@ -9,6 +9,7 @@ This module contains the "Nerd Economics" logic, which includes:
 
 import math
 import re
+from collections.abc import Sequence
 from decimal import Decimal
 from typing import Any
 from urllib.parse import quote_plus
@@ -18,10 +19,16 @@ import pint
 from src.bom_lib import constants
 from src.bom_lib.classifier import normalize_value_to_quantity
 from src.bom_lib.constants import AUTO_INJECT_SOURCE
-from src.bom_lib.enums import ComponentCategory, ComponentOrigin, ComponentSpec
+from src.bom_lib.enums import (
+    ComponentCategory,
+    ComponentOrigin,
+    ComponentSpec,
+    HardwareRole,
+)
 from src.bom_lib.manager import calculate_net_needs, sort_inventory
 from src.bom_lib.types import (
     AlternativeSpec,
+    BuildHardware,
     ComponentKey,
     Inventory,
     PurchaseRecommendation,
@@ -352,16 +359,57 @@ def get_buy_details(
     return PurchaseRecommendation(buy_qty=buy, note=note)
 
 
-def get_standard_hardware(inventory: Inventory, pedal_count: int = 1) -> None:
+def provided_hardware(inventory: Inventory) -> frozenset[HardwareRole]:
+    """Off-board hardware a project's own parts list already includes.
+
+    Only explicit mentions count (a part described as a jack, a DC jack, a 3PDT
+    footswitch, or an enclosure), so standard hardware is skipped only when the
+    document clearly supplies it.
+
+    Args:
+        inventory: One project's parsed inventory (before standard hardware).
+
+    Returns:
+        The roles the document covers.
+    """
+    roles: set[HardwareRole] = set()
+    for key, data in inventory.items():
+        text = " ".join([key.value, *data["refs"]]).upper()
+        if "ENCLOSURE" in text:
+            roles.add(HardwareRole.ENCLOSURE)
+        if "JACK" in text:
+            roles.add(
+                HardwareRole.DC_JACK if "DC" in text else HardwareRole.AUDIO_JACKS
+            )
+        if (
+            key.category == ComponentCategory.SWITCHES
+            and "3PDT" in text
+            and ("FOOTSWITCH" in text or any(r.startswith("FS") for r in data["refs"]))
+        ):
+            roles.add(HardwareRole.FOOTSWITCH)
+    return frozenset(roles)
+
+
+def get_standard_hardware(
+    inventory: Inventory, builds: Sequence[BuildHardware]
+) -> None:
     """Injects standard enclosure hardware into the inventory.
 
     Adds items like jacks, switches, DC sockets, and wiring that are almost
-    never listed on the PCB BOM but are required to build the pedal.
+    never listed on the PCB BOM but are required to build the pedal. Hardware a
+    project's document already lists (see `provided_hardware`) is supplied
+    only for the other projects' pedals, so nothing is bought twice.
 
     Args:
         inventory: The inventory dictionary to mutate in-place.
-        pedal_count: Number of pedals being built (multiplier for hardware).
+        builds: Each project's pedal count and the hardware it provides.
     """
+    pedal_count = sum(b.count for b in builds)
+
+    def needing(role: HardwareRole | None) -> int:
+        if role is None:
+            return pedal_count
+        return sum(b.count for b in builds if role not in b.provided)
 
     def inject(
         category: ComponentCategory,
@@ -369,10 +417,16 @@ def get_standard_hardware(inventory: Inventory, pedal_count: int = 1) -> None:
         qty_per_pedal: int,
         note: str,
         qty_override: int | None = None,
+        role: HardwareRole | None = None,
     ) -> None:
+        pedals = needing(role)
+        if role is not None and pedals == 0:
+            return  # every project lists its own
+        if role is not None and pedals < pedal_count:
+            note = f"{note}; {pedal_count - pedals} pedal(s) list their own"
         key = ComponentKey(category=category, value=val)
         total_qty = (
-            qty_override if qty_override is not None else (qty_per_pedal * pedal_count)
+            qty_override if qty_override is not None else (qty_per_pedal * pedals)
         )
 
         inventory[key]["qty"] += total_qty
@@ -392,14 +446,50 @@ def get_standard_hardware(inventory: Inventory, pedal_count: int = 1) -> None:
         inject(ComponentCategory.TRANSISTORS, "Germanium PNP", 0, "Vintage Option")
 
     # 3. Standard Enclosure Hardware
-    inject(ComponentCategory.HARDWARE_MISC, "1590B Enclosure", 1, "Verify PCB fit")
-    inject(ComponentCategory.HARDWARE_MISC, "3PDT FOOTSWITCH PCB", 1, "Wiring Board")
-    inject(ComponentCategory.HARDWARE_MISC, "3PDT STOMP SWITCH", 1, "Blue/Standard")
-    inject(ComponentCategory.HARDWARE_MISC, "6.35MM JACK (STEREO)", 1, "Input")
-    inject(ComponentCategory.HARDWARE_MISC, "6.35MM JACK (MONO)", 1, "Output")
-    inject(ComponentCategory.HARDWARE_MISC, "DC POWER JACK 2.1MM", 1, "Center Negative")
+    enclosure, footswitch = HardwareRole.ENCLOSURE, HardwareRole.FOOTSWITCH
+    jacks, dc = HardwareRole.AUDIO_JACKS, HardwareRole.DC_JACK
+    inject(
+        ComponentCategory.HARDWARE_MISC,
+        "1590B Enclosure",
+        1,
+        "Verify PCB fit",
+        role=enclosure,
+    )
+    inject(
+        ComponentCategory.HARDWARE_MISC,
+        "3PDT FOOTSWITCH PCB",
+        1,
+        "Wiring Board",
+        role=footswitch,
+    )
+    inject(
+        ComponentCategory.HARDWARE_MISC,
+        "3PDT STOMP SWITCH",
+        1,
+        "Blue/Standard",
+        role=footswitch,
+    )
+    inject(
+        ComponentCategory.HARDWARE_MISC, "6.35MM JACK (STEREO)", 1, "Input", role=jacks
+    )
+    inject(
+        ComponentCategory.HARDWARE_MISC, "6.35MM JACK (MONO)", 1, "Output", role=jacks
+    )
+    inject(
+        ComponentCategory.HARDWARE_MISC,
+        "DC POWER JACK 2.1MM",
+        1,
+        "Center Negative",
+        role=dc,
+    )
     inject(ComponentCategory.HARDWARE_MISC, "Bezel LED Holder", 1, "3mm Metal")
-    inject(ComponentCategory.HARDWARE_MISC, "Rubber Feet (Black)", 4, "Enclosure Feet")
+    inject(
+        ComponentCategory.HARDWARE_MISC,
+        "Rubber Feet (Black)",
+        4,
+        "Enclosure Feet",
+        role=enclosure,
+    )
     inject(
         ComponentCategory.HARDWARE_MISC, "AWG 24 Hook-Up Wire", 3, "Approx 1ft/pedal"
     )

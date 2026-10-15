@@ -28,6 +28,15 @@ class ComponentOrigin(StrEnum):
     EXTRAS = "Extras"
 
 
+class HardwareRole(StrEnum):
+    """Off-board hardware the app supplies unless a document lists its own."""
+
+    AUDIO_JACKS = "Audio jacks"
+    DC_JACK = "DC jack"
+    FOOTSWITCH = "Footswitch"
+    ENCLOSURE = "Enclosure"
+
+
 class ParseWarningKind(StrEnum):
     """Categories of parser self-check failures surfaced to the user."""
 
