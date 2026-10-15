@@ -16,8 +16,13 @@ from src.bom_lib.types import Inventory, ParseWarning, StatsDict
 from src.bom_lib.utils import parse_value_to_decimal
 
 # Numbered designators (R1, IC10, LED2) and the bare ones PedalPCB uses (LED, CLR).
+# Suffixes are channel letters (R1A, D10a) or names (IC_A); K/M/R are excluded so
+# a C-taper pot value (C10K) is not read as a designator. JP (jumper pads) is
+# deliberately absent: a solder jumper setting is not a part.
 _REF_TOKEN = re.compile(
-    r"(?:(?:R|C|D|Q|U|IC|SW|LED|LDR|X|Y|J|VR|TRIM|L)\d+[A-Z]?|LED|RLED|CLR|TRIM)"
+    r"(?:(?:R|C|D|Q|U|IC|SW|LED|LDR|X|Y|J|VR|TRIM|TR|CLR|L|T|K)\d+[A-Ha-h]?"
+    r"|(?:IC|LED|JACK|SW)_[A-Za-z0-9]+"
+    r"|LED[A-H]?|RLED|CLR|TRIM)"
 )
 
 # A value that can only belong to a potentiometer or a switch. Lets us spot

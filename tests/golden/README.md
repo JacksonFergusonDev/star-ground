@@ -12,6 +12,9 @@ uv run python -m tests.accuracy            # scorecard
 uv run python -m tests.accuracy -v         # every failure, warned or silent
 uv run python -m tests.accuracy Distortr   # filter by document name
 uv run python -m tests.accuracy --update-baseline
+
+# score an external (e.g. local, uncommitted) corpus with the same machinery
+uv run python -m tests.accuracy --golden path/to/golden --samples path/to/pdfs
 ```
 
 `baseline.json` records every known failure and whether the parser warned about
@@ -49,10 +52,49 @@ it. `tests/test_parser_accuracy.py` fails on any difference from it:
 ```
 
 - `parts`: every designator in the document's parts list.
-- `accept`: alternatives the document explicitly allows (an "OR" row, a
-  substitute in the notes column, a mod variant).
+- `accept`: alternative values for the same designator that the document
+  allows (a substitute in the notes column, a "recommended" taper).
 - `absent`: designators the document lists but marks as not populated (`N/A`,
-  `OMIT`). Emitting one counts as an extra part.
+  `OMIT`, a wire jumper). Emitting one counts as an extra part.
+- `options`: interchangeable choices that use different designators (see below).
+- `variants`: replaces `parts` when the document describes several circuits:
+
+```json
+{
+  "variants": {
+    "Germanium": {"parts": {...}, "absent": ["R6", "D3"]},
+    "Silicon": {"parts": {...}, "absent": ["D2"]}
+  }
+}
+```
+
+### Variants, Options, and Alternate Values
+
+Documents offer the builder three kinds of choice. They are recorded differently
+because the app must handle them differently:
+
+| Kind | Example | App behavior | Golden format |
+|---|---|---|---|
+| **Variant**: a different circuit (changes sound or controls) | Muffin Fuzz's eight versions; Fuchsia Fuzz's Nature *or* Treble+Bass; a "Cleft mod" | Ask the builder which one | `variants` |
+| **Option**: interchangeable parts filling the same spot | Through-hole Q1-Q6 *or* SMD Q7-Q12; a bridge rectifier *or* four diodes | Use the first choice, note the alternative | `options` |
+| **Alternate value**: same designator, another acceptable value | `B1M` (A1M recommended); OPA1678 or OPA2134 | Use the listed value, note the alternative | `accept` |
+
+An option group maps a group name to its choices, each a parts mapping; the
+first choice is the document's default:
+
+```json
+"options": {
+  "D10": {
+    "Bridge rectifier": {"D10": {"category": "Diodes", "value": "DI1510"}},
+    "Discrete diodes": {"D10a": {...}, "D10b": {...}, "D10c": {...}, "D10d": {...}}
+  }
+}
+```
+
+Scoring: a variant document is graded against the variant the output matches
+best. An option group is satisfied by any one choice; emitting parts from two
+choices counts the second as extra, because the shopping list would buy both.
+Warnings on any of these designators are correct behavior, not false alarms.
 
 ## Labeling Rules
 
@@ -66,9 +108,20 @@ it. `tests/test_parser_accuracy.py` fails on any difference from it:
    are not part of the value (optional-part asterisks).
 1. **Follow the parts list over the schematic** when they conflict, and write
    the conflict in `notes`.
-1. **Off-board hardware is out of scope** (enclosure, jacks, footswitch, DC
-   jack). PedalPCB documents generally do not list it.
+1. **Scope is exactly the document's parts list.** Anything it lists is a part,
+   including jacks, footswitches, and DC jacks when they appear (Expresso,
+   Arkaim). Anything it does not list is out of scope; most documents state
+   "common offboard components are not listed".
 1. **LEDs are Diodes; LDRs are Optoelectronics; trimmers are Potentiometers.**
+   Parts with no matching category (transformers, inductors, relays, jacks)
+   are Hardware/Misc.
+1. **Trimmers record the resistance only** (`10K`, not `10K (3362P Trim)`).
+1. **Switches record poles/throws and positions** (`SPDT (On/On)`), completing a
+   bare position value from the TYPE column; the printed form (`SPDT Toggle
+   (On/On)`) goes in `accept`.
+1. **Generic values stay as printed** when the document names no specific part
+   (`GE`, `Indicator LED`, `LDR`, `5V1 Zener`).
+1. **The title is the document's own title** (page 1), never the filename.
 
 ## Adding a Document
 

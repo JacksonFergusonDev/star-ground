@@ -125,7 +125,8 @@ def float_to_search_string(val: float | None) -> str:
 
             if reduced.is_integer():
                 return f"{int(reduced)}{suffix}"
-            return f"{reduced:.1f}{suffix}"
+            # Keep every significant digit: 4K65 is 4.65k, not 4.7k.
+            return f"{reduced:g}{suffix}"
 
     # Capacitor/Inductor values (u, n, p)
     # Applied primarily for values < 1.0 (assuming base unit is Farads/Henries)
@@ -136,7 +137,7 @@ def float_to_search_string(val: float | None) -> str:
                 reduced = round(reduced, 6)
                 if reduced.is_integer():
                     return f"{int(reduced)}{suffix}"
-                return f"{reduced:.1f}{suffix}"
+                return f"{reduced:g}{suffix}"
 
     # Fallback for plain numbers (e.g. 100R)
     val = round(val, 6)
