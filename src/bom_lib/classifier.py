@@ -7,7 +7,7 @@ values to ensure consistent matching between BOMs and Inventory.
 
 import re
 from decimal import Decimal
-from typing import Any, cast
+from typing import Any
 
 import pint
 
@@ -58,9 +58,9 @@ def normalize_value_to_quantity(
         return None
 
     if category == ComponentCategory.RESISTORS:
-        return cast(pint.Quantity[Any], dec * ureg.ohm)
+        return ureg.Quantity(dec, ureg.ohm)
     if category == ComponentCategory.CAPACITORS:
-        return cast(pint.Quantity[Any], dec * ureg.farad)
+        return ureg.Quantity(dec, ureg.farad)
     return dec
 
 
