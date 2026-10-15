@@ -60,6 +60,7 @@ class Entry:
         hint: Category suggested by a TYPE column.
         follows_or: Whether an 'OR' row separates this table row from the
             row above it.
+        qty: How many of each designator to buy ('TERMINAL BLOCK (Qty 3)').
     """
 
     ref: str
@@ -70,6 +71,7 @@ class Entry:
     table: int | None = None
     hint: ComponentCategory | None = None
     follows_or: bool = False
+    qty: int = 1
 
     @property
     def not_populated(self) -> bool:

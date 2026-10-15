@@ -14,6 +14,7 @@ from src.bom_lib.verification import (
     check_bom_reconciliation,
     check_classification,
     check_duplicate,
+    check_footnotes,
     check_unextracted_refs,
     find_bom_entries,
     find_listed_refs,
@@ -224,3 +225,24 @@ class TestDesignatorShapes:
     def test_c_taper_values_and_jumper_pads_are_not_designators(self) -> None:
         assert find_listed_refs("PRES B10K * C10K recommended") == {"PRES"}
         assert find_listed_refs("JP01 SOLDER") == set()
+
+
+class TestFootnotes:
+    """A value marked with an asterisk whose note sits below the parts list."""
+
+    def test_footnote_is_surfaced(self) -> None:
+        text = (
+            "GLIDE SPDT On/On\nOSC-ROOT *DPDT On/On/On\n1P8T Rotary\n"
+            "*DPDT On/On/On\nThis switch MUST be a Type-2 DPDT On/On/On toggle switch."
+        )
+        stats = create_empty_stats()
+        check_footnotes([text], stats)
+        (warning,) = stats["warnings"]
+        assert warning.kind == ParseWarningKind.FOOTNOTE
+        assert warning.ref == "OSC-ROOT"
+        assert "Type-2" in warning.message
+
+    def test_asterisk_without_a_matching_value_is_ignored(self) -> None:
+        stats = create_empty_stats()
+        check_footnotes(["R24 27K\n* Omitted in some units\nmore text"], stats)
+        assert stats["warnings"] == []
