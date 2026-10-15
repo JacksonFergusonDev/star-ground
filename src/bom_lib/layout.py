@@ -75,6 +75,7 @@ _HEADER_WORDS = _LAYOUT_WORDS | {
     "SMD",
     "THROUGH-HOLE",
     "DIP",
+    "LEDS",
 }
 # A merged 'NAME value' cell is split only when the value is short
 # ('DPDT (On / Off / On)' is six words).

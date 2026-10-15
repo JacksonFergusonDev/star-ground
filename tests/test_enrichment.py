@@ -36,6 +36,18 @@ def test_enrich_value_from_type(value: str, type_text: str, expected: str) -> No
         ("10u", "Ceramic capacitor, MLCC", "", "10u MLCC"),
         ("1u MLCC", "MLCC capacitor, 7.2 x 2.5mm", "", "1u MLCC"),
         ("10K", "Resistor, 1/4W", "* LED current limiting resistor", "10K"),
+        (
+            "B50K",
+            "16mm right-angle PCB mount pot",
+            "* Dual gang potentiometer",
+            "B50K Dual",
+        ),
+        (
+            "B100K DUAL",
+            "16mm right-angle PCB mount pot",
+            "*Dual gang potentiometer",
+            "B100K DUAL",
+        ),
     ],
 )
 def test_enrich_value_from_type_and_notes(
