@@ -106,7 +106,8 @@ false alarms.
 1. **Record what the builder must buy.** When the document gives a more specific
    part elsewhere (a TYPE column, a page-5 BOM), use it: Kliche's `GE` diodes
    are `1N34A` because its TYPE column says so.
-1. **Keep purchase-relevant qualifiers in the value:** dielectric (`1u MLCC`),
+1. **Keep purchase-relevant qualifiers in the value:** dielectric (`1u MLCC`,
+   or `220n Tantalum` when only the TYPE column names it),
    voltage rating (`10u (25V or higher)`), LED size and color, dual-gang pots,
    and switch throw (`SPDT (On/Off/On)`).
 1. **Drop words that only restate the category** (`Crystal`) and markers that

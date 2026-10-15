@@ -42,6 +42,15 @@ class TestFindListedRefs:
         assert find_listed_refs("LED 3mm Red LED") == {"LED"}
         assert find_listed_refs("LED F O") == set()
 
+    def test_bare_designator_only_where_a_listing_can_begin(self) -> None:
+        # After another listing's value, as in a column layout.
+        assert find_listed_refs("R7 4K7 LED 3mm") == {"R7", "LED"}
+        # Inside a value or description, a bullet list, or before a parenthetical.
+        assert find_listed_refs("LED1 3mm Red LED 3mm Red LED, Diffused") == {"LED1"}
+        assert find_listed_refs("D1 3mm LED 3mm Red LED, Diffused") == {"D1"}
+        assert find_listed_refs("• Toggle Switch 1 • LED 1") == set()
+        assert find_listed_refs("TRIMA 100K TRIM (3362P)") == {"TRIMA"}
+
     def test_designator_shaped_value_is_not_a_listing(self) -> None:
         assert find_listed_refs("Q4 J201 JFET transistor") == {"Q4"}
 
@@ -116,6 +125,14 @@ class TestCheckClassification:
     def test_unparseable_passive_value(self) -> None:
         stats = create_empty_stats()
         check_classification(stats, "R9", "22K*", ComponentCategory.RESISTORS, "22K*")
+        assert _kinds(stats) == [ParseWarningKind.UNPARSED_VALUE]
+
+    def test_placeholder_value_warns(self) -> None:
+        # Son of Ben: 'BASS | *** | *** | * Refer to Page 3'.
+        stats = create_empty_stats()
+        check_classification(
+            stats, "BASS", "***", ComponentCategory.POTENTIOMETERS, "***"
+        )
         assert _kinds(stats) == [ParseWarningKind.UNPARSED_VALUE]
 
     def test_consistent_part_does_not_warn(self) -> None:

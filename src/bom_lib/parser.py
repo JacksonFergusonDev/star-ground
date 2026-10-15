@@ -296,6 +296,9 @@ _TYPE_HINTS: tuple[tuple[str, ComponentCategory], ...] = (
 )
 _LED_DESCRIPTION = re.compile(r"[^,]*\bLED\b", re.IGNORECASE)
 _ACTUATION = re.compile(r"\b(momentary|latching)\b", re.IGNORECASE)
+_POSITIONS = re.compile(r"\b(?:ON|OFF)(?:/(?:ON|OFF)){1,2}\b")
+# Capacitor constructions a TYPE cell may name that the VALUE cell omits.
+_DIELECTRICS = (("TANTALUM", "Tantalum"), ("MLCC", "MLCC"))
 
 
 _VOLTAGE = re.compile(r"\b(\d+(?:\.\d+)?)\s*V\b", re.IGNORECASE)
@@ -331,23 +334,27 @@ def category_from_type(type_text: str) -> ComponentCategory | None:
     return next((cat for word, cat in _TYPE_HINTS if word in low), None)
 
 
-def enrich_value_from_type(value: str, type_text: str) -> str:
-    """Fills in a generic VALUE cell from the row's TYPE description.
+def enrich_value_from_type(value: str, type_text: str, notes: str = "") -> str:
+    """Fills in a generic VALUE cell from the row's TYPE and NOTES descriptions.
 
     Some parts lists put a shorthand in VALUE and the purchasable detail in
     TYPE (Kliche: 'GE' / 'Germanium diode, 1N34A'; Gravitation: 'ON/ON' /
-    'Toggle switch, SPDT 2-position (ON/ON)').
+    'Toggle switch, SPDT 2-position (ON/ON)') or in NOTES (Liquid Crystal:
+    'DPDT' / 'Toggle switch, DPDT' / '2-position (ON/ON)').
 
     Args:
         value: The VALUE cell.
         type_text: The TYPE cell of the same row.
+        notes: The NOTES cell of the same row, if the table has one.
 
     Returns:
         The value, completed with a part number, LED description, pole/throw
-        code, or momentary/latching actuation when the VALUE cell lacks one
-        and the TYPE cell provides it.
+        code, switch positions, momentary/latching actuation, or capacitor
+        construction (tantalum, MLCC) when the VALUE cell lacks one and the
+        TYPE or NOTES cell provides it.
     """
     type_text = " ".join(type_text.split())
+    detail = f"{type_text} {' '.join(notes.split())}".upper()
     if not any(ch.isdigit() for ch in value):
         part = _PART_NUMBER.search(type_text)
         if part:
@@ -365,6 +372,14 @@ def enrich_value_from_type(value: str, type_text: str) -> str:
         pole = _POLE_THROW.search(type_text.upper())
         if pole:
             return f"{pole.group(0)} {value}"
+    if _POLE_THROW.fullmatch(value.upper()):
+        positions = _POSITIONS.search(detail)
+        if positions:
+            return f"{value} {positions.group(0)}"
+    if "CAPACITOR" in detail and any(ch.isdigit() for ch in value):
+        for keyword, name in _DIELECTRICS:
+            if keyword in detail and keyword not in value.upper():
+                return f"{value} {name}"
     return value
 
 
@@ -425,13 +440,25 @@ def _table_entries(
 
                 if len(row_safe) > max(loc_idx, val_idx):
                     ref_raw = row_safe[loc_idx].replace("\n", " ").strip()
-                    val_raw = row_safe[val_idx].replace("\n", " ").strip()
+                    val_raw = " ".join(row_safe[val_idx].split())
+                    # Optional-part markers are not part of the value ('*27K*'),
+                    # but a value of only markers is a placeholder and stays one.
+                    unmarked = " ".join(val_raw.replace("*", " ").split())
+                    if unmarked:
+                        val_raw = unmarked
                     if 0 <= type_idx < len(row_safe):
                         type_text = " ".join(row_safe[type_idx].split())
                         # Kickstart: 'SW1 | (blank) | 6mm x 6mm Push Button Switch'.
                         if not val_raw and type_text:
                             val_raw = type_text
-                        val_raw = enrich_value_from_type(val_raw, row_safe[type_idx])
+                        notes = (
+                            row_safe[notes_idx]
+                            if 0 <= notes_idx < len(row_safe)
+                            else ""
+                        )
+                        val_raw = enrich_value_from_type(
+                            val_raw, row_safe[type_idx], notes
+                        )
                         hint = category_from_type(row_safe[type_idx])
                     if 0 <= notes_idx < len(row_safe):
                         val_raw = rating_from_notes(
@@ -633,7 +660,11 @@ def parse_pedalpcb_pdf(filepath: str, source_name: str) -> ParseResult:
             for page in pdf.pages:
                 pages_data.append(
                     {
-                        "tables": page.extract_tables(),
+                        # Same word gap as the layout reader: kerned cells
+                        # otherwise run together ('3mmRedLED,Diffused').
+                        "tables": page.extract_tables(
+                            {"text_x_tolerance": _WORD_GAP_PT}
+                        ),
                         "text": page.extract_text(),
                         "words": [
                             PDFWord(
@@ -657,7 +688,6 @@ def parse_pedalpcb_pdf(filepath: str, source_name: str) -> ParseResult:
                 ignore = {
                     "PEDALPCB",
                     "CONTROLS",
-                    "REVISION",
                     "COPYRIGHT",
                     "WWW.PEDALPCB.COM",
                     "LEVEL",

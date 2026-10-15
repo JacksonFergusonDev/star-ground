@@ -2,8 +2,9 @@
 
 import pytest
 
-from src.bom_lib import ComponentCategory, categorize_part
+from src.bom_lib import ComponentCategory, categorize_part, create_empty_stats
 from src.bom_lib.parser import (
+    _table_entries,
     category_from_type,
     enrich_value_from_type,
     rating_from_notes,
@@ -24,6 +25,23 @@ from src.bom_lib.utils import float_to_search_string
 )
 def test_enrich_value_from_type(value: str, type_text: str, expected: str) -> None:
     assert enrich_value_from_type(value, type_text) == expected
+
+
+@pytest.mark.parametrize(
+    ("value", "type_text", "notes", "expected"),
+    [
+        ("DPDT", "Toggle switch, DPDT", "2-position (ON/ON)", "DPDT ON/ON"),
+        ("SPDT", "Toggle switch, SPDT", "3-position (ON/OFF/ON)", "SPDT ON/OFF/ON"),
+        ("220n", "Tantalum capacitor, 5mm", "", "220n Tantalum"),
+        ("10u", "Ceramic capacitor, MLCC", "", "10u MLCC"),
+        ("1u MLCC", "MLCC capacitor, 7.2 x 2.5mm", "", "1u MLCC"),
+        ("10K", "Resistor, 1/4W", "* LED current limiting resistor", "10K"),
+    ],
+)
+def test_enrich_value_from_type_and_notes(
+    value: str, type_text: str, notes: str, expected: str
+) -> None:
+    assert enrich_value_from_type(value, type_text, notes) == expected
 
 
 def test_category_from_type() -> None:
@@ -65,3 +83,14 @@ def test_search_strings_keep_significant_digits() -> None:
     assert float_to_search_string(68100.0) == "68.1k"
     assert float_to_search_string(4700.0) == "4.7k"
     assert float_to_search_string(2.2e-9) == "2.2n"
+
+
+def test_table_values_drop_optional_markers_but_keep_placeholders() -> None:
+    table = [
+        ["LOCATION", "VALUE", "TYPE", "NOTES"],
+        ["R24", "*27K*", "Resistor, 1/4W", "* Omitted in some units"],
+        ["D101", "**", "Zener diode", "** Refer to page 2 **"],
+    ]
+    page = {"tables": [table], "text": "", "words": []}
+    entries = _table_entries([page], create_empty_stats())  # type: ignore[list-item]
+    assert [(e.ref, e.value) for e in entries] == [("R24", "27K"), ("D101", "**")]
