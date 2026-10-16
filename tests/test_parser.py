@@ -762,3 +762,21 @@ def test_ref_deduplication_and_sorting():
 
     # 4. Empty Safety
     assert deduplicate_refs([]) == []
+
+
+def test_a_designator_repeated_in_another_table_is_another_board() -> None:
+    # EV Mini: the LFO and Audio PCBs both list Q1 2N5088; a repeat in the same
+    # table (Genmaicha's doubled R102 row) is one part.
+    from src.bom_lib.builds import Entry
+    from src.bom_lib.parser import _ingest_entries
+
+    entries = [
+        Entry("Q1", "2N5088", 1, table=0),
+        Entry("R102", "100K", 1, table=0),
+        Entry("R102", "100K", 1, table=0),
+        Entry("Q1", "2N5088", 3, table=1),
+    ]
+    inventory, _ = _ingest_entries(entries, "T")
+    q1 = inventory[ComponentKey(ComponentCategory.TRANSISTORS, "2N5088")]
+    r102 = inventory[ComponentKey(ComponentCategory.RESISTORS, "100k")]
+    assert (q1["qty"], r102["qty"]) == (2, 1)
