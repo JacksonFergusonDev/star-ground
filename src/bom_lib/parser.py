@@ -39,6 +39,7 @@ from src.bom_lib.verification import (
     check_row_quantity,
     check_unclassified_row,
     check_unextracted_refs,
+    check_version_note,
 )
 
 # Characters further apart than this start a new word. pdfplumber's 3pt default
@@ -518,6 +519,11 @@ def _table_entries(
                         choice = _NOTES_CHOICE.match(notes.strip())
                         if not val_raw and choice:
                             val_raw = choice.group(1)
+                        # Lone King: 'VOICE | (blank) | Toggle switch, SPDT | 3-position
+                        # (ON/OFF/ON)'; enrichment then adds the positions.
+                        pole = _POLE_THROW.search(type_text.upper())
+                        if not val_raw and pole:
+                            val_raw = pole.group(0)
                         # Kickstart: 'SW1 | (blank) | 6mm x 6mm Push Button Switch'.
                         if not val_raw and type_text:
                             val_raw = type_text
@@ -538,6 +544,8 @@ def _table_entries(
                         val_raw = rating_from_notes(
                             ref_raw, val_raw, row_safe[notes_idx]
                         )
+                        if not _is_not_populated(val_raw):
+                            check_version_note(stats, ref_raw, row_safe[notes_idx])
                 elif len(row_safe) == 1 and row_safe[0]:
                     parts = row_safe[0].strip().split(None, 1)
                     if len(parts) == 2:

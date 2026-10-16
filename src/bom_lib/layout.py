@@ -33,7 +33,8 @@ _LINE_TOLERANCE_EM = 0.15
 
 # Unfamiliar numbered labels (CTRL1, FUZZ2) that are not standard designators.
 _NUMBERED_LABEL = re.compile(r"[A-Z]{1,5}\d{1,3}")
-_CONTROL_NAME = re.compile(r"[A-Z][A-Z0-9_-]{1,11}")
+# Single letters (Blue Waffle's 'V  B500K') and slashes ('BASS/MIDS') occur.
+_CONTROL_NAME = re.compile(r"[A-Z](?:[A-Z0-9_/-]{1,11})?")
 _MULTIWORD_NAME = re.compile(r"[A-Z]{2,}(?: [A-Z]{2,}){1,2}")
 # A whole-cell parenthetical on the next line, aligned with a value above it,
 # continues that value ('SPDT Toggle' / '(On/On)').
@@ -83,6 +84,7 @@ _HEADER_WORDS = _LAYOUT_WORDS | {
     "DIP",
     "LEDS",
     "OPTOISOLATORS",
+    "FOOTSWITCHES",
 }
 # A merged 'NAME value' cell is split only when the value is short
 # ('DPDT (On / Off / On)' is six words).
