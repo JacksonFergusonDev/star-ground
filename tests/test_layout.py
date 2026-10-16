@@ -308,6 +308,18 @@ class TestCellRepairs:
         ]
         assert Listing("R4", "1n") in find_listings(words)
 
+    def test_listings_under_a_trim_pots_heading_are_trimmers(self) -> None:
+        # CDXL Reissue: R23 and R20 sit in the column under 'TRIM POTS (3362P Type)'.
+        words = [
+            *_line("R16", "15K", "TRIM POTS (3362P Type)", top=100),
+            *_line("R17", "470K", "R23", "10K", top=120),
+        ]
+        assert find_listings(words) == [
+            Listing("R16", "15K"),
+            Listing("R17", "470K"),
+            Listing("R23", "10K TRIM"),
+        ]
+
     def test_c_taper_value_is_not_a_designator(self) -> None:
         assert find_listings(_line("RATE", "C1M", "RES", "C1M")) == [
             Listing("RATE", "C1M"),

@@ -226,6 +226,15 @@ class TestBomReconciliation:
         check_bom_reconciliation([self.BOM_PAGE], inventory, stats)
         assert stats["warnings"] == []
 
+    def test_bare_led_warns_when_the_bom_names_the_led(self) -> None:
+        # Distortr: 'D3  LED' beside a BOM entry '1 x 3mm Red LED'.
+        inventory = self._inventory([(ComponentCategory.DIODES, "LED", "D3")])
+        stats = create_empty_stats()
+        check_bom_reconciliation([self.BOM_PAGE], inventory, stats)
+        assert [(w.kind, w.ref) for w in stats["warnings"]] == [
+            (ParseWarningKind.BOM_MISMATCH, "D3")
+        ]
+
     def test_dimensions_outside_a_bom_page_are_not_entries(self) -> None:
         text = "C8 22n Film capacitor, 7.2 x 2.5mm\n" * 10
         assert find_bom_entries([text]) == []
