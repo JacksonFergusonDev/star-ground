@@ -211,6 +211,9 @@ class TestCellRepairs:
             Listing("R43", "10K")
         ]
         assert find_listings(_line("R22", "1M", "TUBES")) == [Listing("R22", "1M")]
+        assert find_listings(_line("R25", "33K", "PIN HEADERS")) == [
+            Listing("R25", "33K")
+        ]
 
     def test_control_values_with_a_leading_qualifier(self) -> None:
         # Arkaim, Pro-Filter, Super Heterodyne Receiver.
