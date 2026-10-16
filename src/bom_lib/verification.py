@@ -166,6 +166,37 @@ def check_unextracted_refs(
         )
 
 
+def check_footnotes(page_texts: list[str], stats: StatsDict) -> None:
+    """Surfaces a footnote attached to a listed value with an asterisk.
+
+    Super Heterodyne lists 'OSC-ROOT *DPDT On/On/On' and repeats '*DPDT On/On/On'
+    below the parts list as the heading of a note: 'This switch MUST be a Type-2
+    DPDT On/On/On toggle switch.' The note changes what must be bought but is
+    prose, so it is shown to the builder rather than folded into the value.
+
+    Args:
+        page_texts: Raw text of every page.
+        stats: Stats object that receives the warnings.
+    """
+    for text in page_texts:
+        lines = [" ".join(line.split()) for line in text.splitlines()]
+        for k, heading in enumerate(lines):
+            if not heading.startswith("*") or k + 1 >= len(lines):
+                continue
+            body = heading.lstrip("*").strip()
+            if not body:
+                continue
+            for line in lines:
+                m = re.match(rf"(\S+) \*{re.escape(body)}$", line)
+                if m and line != heading:
+                    _warn(
+                        stats,
+                        ParseWarningKind.FOOTNOTE,
+                        m.group(1),
+                        f"{m.group(1)} ({body}) has a note: {lines[k + 1]}",
+                    )
+
+
 def check_duplicate(
     stats: StatsDict, ref: str, first_value: str, new_value: str
 ) -> None:
