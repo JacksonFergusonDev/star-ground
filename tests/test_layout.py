@@ -135,6 +135,7 @@ class TestFindListings:
         ("GE (see notes)", "GE"),
         ("AB38T-32.768KHZ Crystal", "AB38T-32.768KHZ"),
         ("2P4T Mini Rotary Switch", "2P4T Mini Rotary"),
+        ("DIP-5 Dip Switch", "DIP-5"),
         ("3mm Red LED", "3mm Red LED"),
         ("24LC32A *Included", "24LC32A"),  # Deflector: supplied with the PCB
         # Mini Heterodyne: a trailing link or remark.

@@ -104,6 +104,8 @@ def test_current_rating_is_not_a_pot_value() -> None:
             ComponentCategory.HARDWARE_MISC,
         ),
         ("U1", "VTL5C10", None, ComponentCategory.OPTOELECTRONICS),  # Constrictor
+        ("HARD", "W20KC", None, ComponentCategory.POTENTIOMETERS),  # Dingo
+        ("DIP1", "DIP-5", None, ComponentCategory.SWITCHES),  # Muffin Factory
         ("SIDECHAIN", '1/4" Switching TRS', None, ComponentCategory.HARDWARE_MISC),
     ],
 )
@@ -254,4 +256,24 @@ def test_version_notes_warn() -> None:
     assert [(w.kind, w.ref) for w in stats["warnings"]] == [
         (ParseWarningKind.FOOTNOTE, "C3"),
         (ParseWarningKind.FOOTNOTE, "BALANCE"),
+    ]
+
+
+def test_choose_between_row_marks_the_next_entry() -> None:
+    table = [
+        ["LOCATION", "VALUE", "TYPE", "NOTES"],
+        ["GAIN_TRIM", "250K", "Trimmer potentiometer, 3362P type", ""],
+        [
+            "Choose between internal trimpot or external potentiometer, do not install both",
+            "",
+            "",
+            "",
+        ],
+        ["GAIN", "C250K", "16mm right-angle PCB mount pot", ""],
+    ]
+    page = {"tables": [table], "text": "", "words": []}
+    entries = _table_entries([page], create_empty_stats())  # type: ignore[list-item]
+    assert [(e.ref, e.follows_or) for e in entries] == [
+        ("GAIN_TRIM", False),
+        ("GAIN", True),
     ]

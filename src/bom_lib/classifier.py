@@ -30,9 +30,11 @@ _TRIM_NOTE = re.compile(
 )
 _MILLIAMPS = re.compile(r"\dmA\b")
 _VACTROL = re.compile(r"VTL\d")
+# A DIP switch, written with a dash ('DIP-5'), unlike socket sizes ('DIP8').
+DIP_SWITCH = re.compile(r"\bDIP-\d+\b|\bDIP[- ]?\d+\b.*\bSWITCH|\bDIP SWITCH")
 _JACK_VALUE = re.compile(r"\b(?:TRS|JACK)\b")
 _POT_VALUE = re.compile(
-    r"(?<![\w.])(?:[ABCWG]\d+(?:\.\d+)?[KM]|\d+(?:\.\d+)?[KM][ABCWG]?)(?![\w.])"
+    r"(?<![\w.])(?:[ABCWG]\d+(?:\.\d+)?[KM][ABC]?|\d+(?:\.\d+)?[KM][ABCWG]?)(?![\w.])"
 )
 
 
@@ -124,6 +126,9 @@ def _named_control_category(
     # A vactrol on an unfamiliar designator: CDXL's 'OC1  VTL5C4/2'.
     if _VACTROL.match(val_up):
         return ComponentCategory.OPTOELECTRONICS
+    # Muffin Factory: 'DIP1  DIP-5 Dip Switch'.
+    if DIP_SWITCH.search(val_up):
+        return ComponentCategory.SWITCHES
     # Muzzle: 'SIDECHAIN  1/4" Switching TRS'.
     if _JACK_VALUE.search(val_up):
         return ComponentCategory.HARDWARE_MISC

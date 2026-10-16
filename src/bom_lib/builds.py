@@ -372,7 +372,8 @@ def _table_or_options(entries: list[Entry]) -> list[PlannedOption]:
 
     Shindig: 'D10  DI1510  Full-wave bridge rectifier' / 'OR' / 'D10a'-'D10d'
     1N4007. The rows on each side of the OR that share the designator's base
-    (D10, D10a) are the two choices.
+    (D10, D10a) are the two choices; when the two sides name different parts
+    (Spelunker's GAIN_TRIM or GAIN), the single rows beside the OR are.
     """
     options = []
     for k, entry in enumerate(entries):
@@ -383,6 +384,10 @@ def _table_or_options(entries: list[Entry]) -> list[PlannedOption]:
         at = same_table.index(entry)
         before = _run_with_base(reversed(same_table[:at]), base)[::-1]
         after = _run_with_base(same_table[at:], base)
+        if not before and at > 0:
+            # Spelunker: 'GAIN_TRIM' / 'Choose between ... or ...' / 'GAIN'
+            # names two different parts; the rows beside the note are the choices.
+            before, after = [same_table[at - 1]], [entry]
         if before and after:
             options.append(
                 PlannedOption(

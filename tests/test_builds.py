@@ -227,3 +227,17 @@ class TestParseResultSelect:
     def test_unknown_build_raises(self) -> None:
         with pytest.raises(KeyError):
             self._result().select("Ram's Head")
+
+
+def test_choose_between_row_offers_the_rows_beside_it() -> None:
+    # Spelunker: 'GAIN_TRIM 250K' / 'Choose between internal trimpot or external
+    # potentiometer, do not install both' / 'GAIN C250K'.
+    entries = [
+        Entry("R1", "10K", 0, table=0),
+        Entry("GAIN_TRIM", "250K", 0, table=0),
+        Entry("GAIN", "C250K", 0, table=0, follows_or=True),
+    ]
+    plan = plan_builds(entries, [])
+    assert [e.ref for e in plan.common] == ["R1"]
+    (option,) = plan.options
+    assert [[e.ref for e in c] for _, c in option.choices] == [["GAIN_TRIM"], ["GAIN"]]

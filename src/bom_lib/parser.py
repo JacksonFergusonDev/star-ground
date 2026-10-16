@@ -13,7 +13,11 @@ from dataclasses import replace
 
 from src.bom_lib import constants
 from src.bom_lib.builds import BuildPlan, Entry, PageContext, plan_builds
-from src.bom_lib.classifier import categorize_part, normalize_value_by_category
+from src.bom_lib.classifier import (
+    DIP_SWITCH,
+    categorize_part,
+    normalize_value_by_category,
+)
 from src.bom_lib.designators import is_designator, parse_designator
 from src.bom_lib.enums import ComponentCategory
 from src.bom_lib.layout import find_bom_rows, find_listings, page_lines
@@ -310,6 +314,7 @@ _TYPE_HINTS: tuple[tuple[str, ComponentCategory], ...] = (
     ("transistor", ComponentCategory.TRANSISTORS),
     ("mosfet", ComponentCategory.TRANSISTORS),
 )
+_CHOOSE_ROW = re.compile(r"\s*choose between .+ or ", re.IGNORECASE)
 _NUMBERED_NAME = re.compile(r"[A-Z]{1,3}\d{1,3}")
 _TABLE_HEADERS = frozenset({"LOCATION", "QUANTITY", "VALUE", "TYPE"})
 _LED_DESCRIPTION = re.compile(r"[^,]*\bLED\b", re.IGNORECASE)
@@ -507,7 +512,12 @@ def _table_entries(
                 stats["lines_read"] += 1
                 row_safe = [str(cell) if cell else "" for cell in row]
                 filled = [c.strip() for c in row_safe if c.strip()]
-                if filled and all(c.upper() == "OR" for c in filled):
+                if filled and (
+                    all(c.upper() == "OR" for c in filled)
+                    # Spelunker: 'Choose between internal trimpot or external
+                    # potentiometer, do not install both'.
+                    or (len(filled) == 1 and _CHOOSE_ROW.match(filled[0]))
+                ):
                     # Shindig: an 'OR' row between two alternatives for one spot.
                     follows_or = True
                     continue
@@ -656,6 +666,8 @@ def _record_not_populated(stats: StatsDict, ref: str, value: str) -> None:
 
 
 def _is_ignored(value: str) -> bool:
+    if DIP_SWITCH.search(value.upper()):
+        return False  # a DIP switch is a part; a DIP socket line is not
     words = set(re.findall(r"[A-Z]+", value.upper()))
     phrase = " ".join(value.upper().split())
     return any(
