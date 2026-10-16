@@ -137,6 +137,9 @@ class TestFindListings:
         ("2P4T Mini Rotary Switch", "2P4T Mini Rotary"),
         ("3mm Red LED", "3mm Red LED"),
         ("24LC32A *Included", "24LC32A"),  # Deflector: supplied with the PCB
+        # Mini Heterodyne: a trailing link or remark.
+        ("Mini 1P8T - https://www.pedalpcb.com/product/mini-1p8t/", "Mini 1P8T"),
+        ("SPDT (On/On) - Short shaft toggle recommended", "SPDT (On/On)"),
     ],
 )
 def test_clean_value(raw: str, clean: str) -> None:
@@ -240,6 +243,15 @@ class TestCellRepairs:
             Listing("MODE", "1P8T Mini Rotary")
         ]
 
+    def test_designator_in_parentheses_is_the_ref(self) -> None:
+        # Muzzle: 'RANGE (SW1) - Mini Slide SPDT' and a labeled jack.
+        assert find_listings(_line("RANGE (SW1) - Mini Slide SPDT")) == [
+            Listing("SW1", "Mini Slide SPDT")
+        ]
+        assert find_listings(_line("SIDECHAIN (Key) - 1/4in Switching TRS")) == [
+            Listing("SIDECHAIN", "1/4in Switching TRS")
+        ]
+
     def test_dashed_ranges_are_not_name_and_value(self) -> None:
         assert find_listings(_line("D21 - D28", "8")) == []
         assert find_listings(_line("POT1 - 6", "B50K")) == []
@@ -294,6 +306,33 @@ class TestTextBillOfMaterials:
             ("D3,D4", "Ge", 2),
         ]
         assert isinstance(rows[0], BomRow)
+
+    def test_side_by_side_centered_tables(self) -> None:
+        # Q-Tune: two 'Value | Name | Qty' tables per line, cells centered under
+        # their headers, spaced designator lists, and a marking after the value.
+        header = self._row(
+            100,
+            ("Value", 67),
+            ("Name", 175),
+            ("Qty", 259),
+            ("Value", 343),
+            ("Name", 461),
+            ("Qty", 549),
+        )
+        row = self._row(
+            120,
+            ("100n (104)", 53),
+            ("C12, 15, 16", 160),
+            ("3", 266),
+            ("47R", 347),
+            ("R11, R13", 450),
+            ("2", 556),
+        )
+        rows = find_bom_rows(header + row)
+        assert [(r.refs, r.value, r.quantity, r.marking) for r in rows] == [
+            ("C12,15,16", "100n", 3, "104"),
+            ("R11,R13", "47R", 2, ""),
+        ]
 
     def test_no_header_no_rows(self) -> None:
         assert find_bom_rows(_line("R1", "10K", "C1", "100n")) == []

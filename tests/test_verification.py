@@ -15,6 +15,7 @@ from src.bom_lib.verification import (
     check_classification,
     check_duplicate,
     check_footnotes,
+    check_marking_code,
     check_row_quantity,
     check_unextracted_refs,
     find_bom_entries,
@@ -273,3 +274,30 @@ def test_row_quantity_must_match_its_designators() -> None:
     assert [(w.kind, w.ref) for w in stats["warnings"]] == [
         (ParseWarningKind.BOM_MISMATCH, "C9,C12")
     ]
+
+
+@pytest.mark.parametrize(
+    ("value", "marking", "warns"),
+    [
+        ("330", "334", True),  # Q-Tune: 330pF printed, 330nF marked
+        ("100n", "104", False),
+        ("470n", "474", False),
+        ("1u", "105", False),
+        ("100p", "101", False),
+    ],
+)
+def test_marking_code_must_match_the_value(
+    value: str, marking: str, warns: bool
+) -> None:
+    stats = create_empty_stats()
+    check_marking_code(stats, "C3", value, marking)
+    assert (_kinds(stats) == [ParseWarningKind.BOM_MISMATCH]) is warns
+
+
+def test_vactrol_on_an_ic_designator_is_not_a_conflict() -> None:
+    # Constrictor: 'U1  VTL5C10' under OPTOISOLATORS.
+    stats = create_empty_stats()
+    check_classification(
+        stats, "U1", "VTL5C10", ComponentCategory.OPTOELECTRONICS, "VTL5C10"
+    )
+    assert stats["warnings"] == []

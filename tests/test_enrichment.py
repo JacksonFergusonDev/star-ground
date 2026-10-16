@@ -28,6 +28,8 @@ from src.bom_lib.utils import float_to_search_string
         ("A-4.5W-K", "Non-latching 4.5V relay", "A-4.5W-K"),
         ("10K", "Resistor, 1/4W", "10K"),
         ("2P4T", "16mm Mini Rotary switch, 2P4T", "2P4T Mini Rotary"),
+        ("Red 3mm", "3mm Red LED, Diffused", "3mm Red LED"),  # Motorizer
+        ("BLUE", "3mm LED, Blue", "3mm Blue LED"),  # Bolide
     ],
 )
 def test_enrich_value_from_type(value: str, type_text: str, expected: str) -> None:
@@ -43,6 +45,7 @@ def test_enrich_value_from_type(value: str, type_text: str, expected: str) -> No
         ("10u", "Ceramic capacitor, MLCC", "", "10u MLCC"),
         ("1u MLCC", "MLCC capacitor, 7.2 x 2.5mm", "", "1u MLCC"),
         ("10K", "Resistor, 1/4W", "* LED current limiting resistor", "10K"),
+        ("SPST", "Foot switch, SPST", "Momentary SPST", "SPST Momentary"),  # Terrarium
         (
             "B50K",
             "16mm right-angle PCB mount pot",
@@ -98,6 +101,8 @@ def test_current_rating_is_not_a_pot_value() -> None:
             category_from_type("Ferrite Bead"),
             ComponentCategory.HARDWARE_MISC,
         ),
+        ("U1", "VTL5C10", None, ComponentCategory.OPTOELECTRONICS),  # Constrictor
+        ("SIDECHAIN", '1/4" Switching TRS', None, ComponentCategory.HARDWARE_MISC),
     ],
 )
 def test_parts_named_by_value_or_type(
@@ -127,6 +132,7 @@ def test_named_part_uses_type_hint() -> None:
     [
         ("C102", "10u", "25V Minimum Voltage", "10u (25V minimum)"),
         ("C102", "10u (35V or higher)", "25V", "10u (35V or higher)"),
+        ("C1", "1u", "25VDC minimum", "1u (25V minimum)"),  # EV Preamp
         ("R1", "10K", "25V", "10K"),
         ("C1", "100n", "", "100n"),
     ],
