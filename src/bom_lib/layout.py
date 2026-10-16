@@ -43,7 +43,7 @@ _CONTINUATION = re.compile(r"\(.*\)")
 # 'Dual B10K', 'Latching 3PDT Footswitch', 'On/OFF/On DPDT Toggle', '*DPDT'.
 _CONTROL_VALUE = re.compile(
     r"\*?(?:(?i:dual|latching|momentary|mini|slide|type-?2|on(?:\s*[/-]\s*(?:on|off))+)\s+)*"
-    r"(?:[ABCWG]\d+(?:\.\d+)?[KM]\b|\d+(?:\.\d+)?[KM][ABC]?\b|[SD34]P[DS]T\b|\dP\dT\b"
+    r"(?:[ABCWG]\d+(?:\.\d+)?[KM][ABC]?\b|\d+(?:\.\d+)?[KM][ABC]?\b|[SD34]P[DS]T\b|\dP\dT\b"
     # A jack: 'SIDECHAIN  1/4" Switching TRS' (Muzzle).
     r"|(?=\S*\d.*\b(?i:trs|jack)\b))"
 )
@@ -86,6 +86,9 @@ _HEADER_WORDS = _LAYOUT_WORDS | {
     "OPTOISOLATORS",
     "FOOTSWITCHES",
     "TUBES",
+    "NUTUBE",
+    "PIN",
+    "HEADERS",
 }
 # A merged 'NAME value' cell is split only when the value is short
 # ('DPDT (On / Off / On)' is six words).
@@ -101,7 +104,7 @@ _ASIDE = re.compile(r"\(see notes?\)", re.IGNORECASE)
 # Trailing words that only restate the component type.
 # A part supplied with the PCB is still a part: '24LC32A *Included' (Deflector).
 _INCLUDED = re.compile(r"\s*\*\s*Included(?: with (?:the )?PCB)?\s*$", re.IGNORECASE)
-_REDUNDANT_SUFFIX = re.compile(r"\s+(?:Crystal|Switch)$", re.IGNORECASE)
+_REDUNDANT_SUFFIX = re.compile(r"\s+(?:Crystal|(?:Dip\s+)?Switch)$", re.IGNORECASE)
 
 
 @dataclass(frozen=True, slots=True)

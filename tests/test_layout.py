@@ -135,6 +135,7 @@ class TestFindListings:
         ("GE (see notes)", "GE"),
         ("AB38T-32.768KHZ Crystal", "AB38T-32.768KHZ"),
         ("2P4T Mini Rotary Switch", "2P4T Mini Rotary"),
+        ("DIP-5 Dip Switch", "DIP-5"),
         ("3mm Red LED", "3mm Red LED"),
         ("24LC32A *Included", "24LC32A"),  # Deflector: supplied with the PCB
         # Mini Heterodyne: a trailing link or remark.
@@ -211,6 +212,9 @@ class TestCellRepairs:
             Listing("R43", "10K")
         ]
         assert find_listings(_line("R22", "1M", "TUBES")) == [Listing("R22", "1M")]
+        assert find_listings(_line("R25", "33K", "PIN HEADERS")) == [
+            Listing("R25", "33K")
+        ]
 
     def test_control_values_with_a_leading_qualifier(self) -> None:
         # Arkaim, Pro-Filter, Super Heterodyne Receiver.
