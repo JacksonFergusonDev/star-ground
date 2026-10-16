@@ -36,6 +36,7 @@ from src.bom_lib.verification import (
     check_duplicate,
     check_footnotes,
     check_row_quantity,
+    check_unclassified_row,
     check_unextracted_refs,
 )
 
@@ -284,6 +285,8 @@ def parse_user_inventory(filepath: str) -> Inventory:
 _REF_QUANTITY = re.compile(r"\s*\(\s*qty\.?\s*(\d+)\s*\)\s*$", re.IGNORECASE)
 _PART_NUMBER = re.compile(r"\b\d?[A-Z]{1,4}\d{2,5}[A-Z]{0,2}\b")
 _POLE_THROW = re.compile(r"\b(?:[SD34]P[DS]T|\dP\dT)\b")
+# The first of a list of interchangeable parts: '(7530, 7532, 9203, or similar)'.
+_NOTES_CHOICE = re.compile(r"\(?\s*([A-Z]*\d[\w./-]*)\s*,")
 
 
 _TYPE_HINTS: tuple[tuple[str, ComponentCategory], ...] = (
@@ -293,6 +296,9 @@ _TYPE_HINTS: tuple[tuple[str, ComponentCategory], ...] = (
     ("transformer", ComponentCategory.HARDWARE_MISC),
     ("inductor", ComponentCategory.HARDWARE_MISC),
     ("fuse", ComponentCategory.HARDWARE_MISC),
+    ("lamp", ComponentCategory.HARDWARE_MISC),
+    ("ferrite", ComponentCategory.HARDWARE_MISC),
+    ("light depend", ComponentCategory.OPTOELECTRONICS),
     ("terminal block", ComponentCategory.HARDWARE_MISC),
     ("switch", ComponentCategory.SWITCHES),
     ("trimmer", ComponentCategory.POTENTIOMETERS),
@@ -302,6 +308,7 @@ _TYPE_HINTS: tuple[tuple[str, ComponentCategory], ...] = (
     ("transistor", ComponentCategory.TRANSISTORS),
     ("mosfet", ComponentCategory.TRANSISTORS),
 )
+_TABLE_HEADERS = frozenset({"LOCATION", "QUANTITY", "VALUE", "TYPE"})
 _LED_DESCRIPTION = re.compile(r"[^,]*\bLED\b", re.IGNORECASE)
 # Not preceded by "non-": a "Non-latching relay" is not latching.
 _ACTUATION = re.compile(r"(?<!non-)(?<!non )\b(momentary|latching)\b", re.IGNORECASE)
@@ -359,7 +366,7 @@ def enrich_value_from_type(value: str, type_text: str, notes: str = "") -> str:
 
     Returns:
         The value, completed with a part number, LED description, pole/throw
-        code, switch positions, momentary/latching actuation, dual-gang pot,
+        code, rotary switch, switch positions, momentary/latching actuation, dual-gang pot,
         or capacitor construction (tantalum, MLCC) when the VALUE cell lacks one and the
         TYPE or NOTES cell provides it.
     """
@@ -384,6 +391,9 @@ def enrich_value_from_type(value: str, type_text: str, notes: str = "") -> str:
         pole = _POLE_THROW.search(type_text.upper())
         if pole:
             return f"{pole.group(0)} {value}"
+    if _POLE_THROW.fullmatch(value.upper()) and "ROTARY" in detail:
+        # '2P4T' / '16mm Mini Rotary switch, 2P4T' (Hwut Fuzz).
+        return f"{value} {'Mini Rotary' if 'MINI ROTARY' in detail else 'Rotary'}"
     if _POLE_THROW.fullmatch(value.upper()):
         positions = _POSITIONS.search(detail)
         if positions:
@@ -473,18 +483,32 @@ def _table_entries(
                         val_raw = unmarked
                     if 0 <= type_idx < len(row_safe):
                         type_text = " ".join(row_safe[type_idx].split())
-                        # Kickstart: 'SW1 | (blank) | 6mm x 6mm Push Button Switch'.
-                        if not val_raw and type_text:
-                            val_raw = type_text
                         notes = (
                             row_safe[notes_idx]
                             if 0 <= notes_idx < len(row_safe)
                             else ""
                         )
+                        # ElectroVibe: 'LDR1 | (blank) | Light Dependent Resistor |
+                        # (7530, 7532, 9203, or similar)' names the part in NOTES.
+                        choice = _NOTES_CHOICE.match(notes.strip())
+                        if not val_raw and choice:
+                            val_raw = choice.group(1)
+                        # Kickstart: 'SW1 | (blank) | 6mm x 6mm Push Button Switch'.
+                        if not val_raw and type_text:
+                            val_raw = type_text
                         val_raw = enrich_value_from_type(
                             val_raw, row_safe[type_idx], notes
                         )
                         hint = category_from_type(row_safe[type_idx])
+                        if (
+                            ref_raw[:1].isalpha()
+                            and val_raw
+                            and val_raw.upper() not in constants.NOT_POPULATED_VALUES
+                            # A repeated or garbled header row is not a part.
+                            and not {ref_raw.upper(), val_raw.upper()} & _TABLE_HEADERS
+                            and categorize_part(ref_raw, val_raw, hint) is None
+                        ):
+                            check_unclassified_row(stats, ref_raw, val_raw)
                     if 0 <= notes_idx < len(row_safe):
                         val_raw = rating_from_notes(
                             ref_raw, val_raw, row_safe[notes_idx]
