@@ -23,6 +23,7 @@ from src.bom_lib.enums import ComponentCategory as Cat
         ("SW_C", Cat.SWITCHES),
         ("T1", Cat.HARDWARE_MISC),  # transformer
         ("K1", Cat.HARDWARE_MISC),  # relay
+        ("V1", Cat.HARDWARE_MISC),  # vacuum tube
         ("r1", Cat.RESISTORS),
     ],
 )

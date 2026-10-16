@@ -207,6 +207,10 @@ class TestCellRepairs:
             Listing("R31", "100K")
         ]
         assert find_listings(_line("C12", "120p", "LEDs")) == [Listing("C12", "120p")]
+        assert find_listings(_line("R43", "10K", "FOOTSWITCHES")) == [
+            Listing("R43", "10K")
+        ]
+        assert find_listings(_line("R22", "1M", "TUBES")) == [Listing("R22", "1M")]
 
     def test_control_values_with_a_leading_qualifier(self) -> None:
         # Arkaim, Pro-Filter, Super Heterodyne Receiver.
@@ -250,6 +254,25 @@ class TestCellRepairs:
         ]
         assert find_listings(_line("SIDECHAIN (Key) - 1/4in Switching TRS")) == [
             Listing("SIDECHAIN", "1/4in Switching TRS")
+        ]
+
+    def test_short_and_slashed_control_names(self) -> None:
+        # Blue Waffle's 'V  B500K'; Provocateur's 'BASS/MIDS  B100K'.
+        assert find_listings(_line("R13", "1K5", "V", "B500K")) == [
+            Listing("R13", "1K5"),
+            Listing("V", "B500K"),
+        ]
+        assert find_listings(_line("R17", "1K", "BASS/MIDS", "B100K")) == [
+            Listing("R17", "1K"),
+            Listing("BASS/MIDS", "B100K"),
+        ]
+
+    def test_designator_without_a_value_at_the_end_of_a_listing_line(self) -> None:
+        # SuperNuva: 'R16  10K  C12  100u  D1' lists D1 with no value.
+        assert find_listings(_line("R16", "10K", "C12", "100u", "D1")) == [
+            Listing("R16", "10K"),
+            Listing("C12", "100u"),
+            Listing("D1", ""),
         ]
 
     def test_dashed_ranges_are_not_name_and_value(self) -> None:

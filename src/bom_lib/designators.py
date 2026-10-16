@@ -42,6 +42,7 @@ _PREFIXES: tuple[tuple[str, ComponentCategory | None], ...] = (
     ("Y", _CAT.CRYSTALS_OSCILLATORS),
     ("J", _CAT.HARDWARE_MISC),
     ("T", _CAT.HARDWARE_MISC),  # transformers
+    ("V", _CAT.HARDWARE_MISC),  # vacuum tubes (SuperNuva: 'V1  Korg Nutube')
     ("K", _CAT.HARDWARE_MISC),  # relays
     ("L", None),  # inductors, but some documents number LEDs L1-L4
 )
