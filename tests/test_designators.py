@@ -24,6 +24,9 @@ from src.bom_lib.enums import ComponentCategory as Cat
         ("T1", Cat.HARDWARE_MISC),  # transformer
         ("K1", Cat.HARDWARE_MISC),  # relay
         ("V1", Cat.HARDWARE_MISC),  # vacuum tube
+        ("RV1", Cat.POTENTIOMETERS),  # KiCad variable resistor (Sheepylove)
+        ("PNP1", Cat.TRANSISTORS),  # Twin Face
+        ("NPN2", Cat.TRANSISTORS),
         ("r1", Cat.RESISTORS),
     ],
 )

@@ -84,6 +84,16 @@ class TestUnextractedRefs:
         check_unextracted_refs([page], create_empty_inventory(), stats)
         assert stats["warnings"] == []
 
+    def test_part_number_shaped_like_a_designator(self) -> None:
+        # Golden Falk: 'Q1-Q5  J201  JFET transistor' lists J201 as a value.
+        inventory = create_empty_inventory()
+        inventory.add_part(
+            "T", make_component_key(ComponentCategory.TRANSISTORS, "J201"), "Q1"
+        )
+        stats = create_empty_stats()
+        check_unextracted_refs(["Q1-Q5 J201 JFET transistor"], inventory, stats)
+        assert stats["warnings"] == []
+
     def test_op_amp_sections_of_an_extracted_chip(self) -> None:
         inventory = create_empty_inventory()
         inventory.add_part(

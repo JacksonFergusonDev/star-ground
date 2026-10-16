@@ -16,6 +16,7 @@ words are separated by ordinary spaces and so form a single cell.
 """
 
 import re
+from collections import Counter
 from dataclasses import dataclass, field
 
 from src.bom_lib import constants
@@ -43,9 +44,11 @@ _CONTINUATION = re.compile(r"\(.*\)")
 # 'Dual B10K', 'Latching 3PDT Footswitch', 'On/OFF/On DPDT Toggle', '*DPDT'.
 _CONTROL_VALUE = re.compile(
     r"\*?(?:(?i:dual|latching|momentary|mini|slide|type-?2|on(?:\s*[/-]\s*(?:on|off))+)\s+)*"
-    r"(?:[ABCWG]\d+(?:\.\d+)?[KM][ABC]?\b|\d+(?:\.\d+)?[KM][ABC]?\b|[SD34]P[DS]T\b|\dP\dT\b"
+    r"(?:[ABCWG]\d+(?:\.\d+)?[KM][ABC]?\b|\d+(?:\.\d+)?[KMR][ABC]?\b|[SD34]P[DS]T\b|\dP\dT\b"
     # A jack: 'SIDECHAIN  1/4" Switching TRS' (Muzzle).
-    r"|(?=\S*\d.*\b(?i:trs|jack)\b))"
+    r"|(?=\S*\d.*\b(?i:trs|jack)\b)"
+    # Toggle positions alone: 'SLA  ON/OFF/ON' (Trojan Horse).
+    r"|(?i:\(?on(?:\s*[/-]\s*(?:on|off))+\)?)$)"
 )
 
 # Column headers and connective words in multi-column parts lists.
@@ -93,6 +96,9 @@ _HEADER_WORDS = _LAYOUT_WORDS | {
 # A merged 'NAME value' cell is split only when the value is short
 # ('DPDT (On / Off / On)' is six words).
 _MAX_MERGED_VALUE_WORDS = 6
+# A designator column is an x-position where at least this many listings start.
+_MIN_COLUMN_REFS = 3
+_COLUMN_TOLERANCE_EM = 0.5
 _PAREN_LABEL = re.compile(r"\((\w+)\)")
 _DASHES = frozenset({"-", "\u2013", "\u2014"})
 # A function label printed between a designator and its value: 'SW1 (Power) SPDT'.
@@ -100,11 +106,12 @@ _LABEL = re.compile(r"\([^()\d]*\)")
 _LED_WORD = re.compile(r"\bLED\b", re.IGNORECASE)
 # Two or more lowercase words mark a sentence ('Choose between ... or SMD').
 _LOWERCASE_WORD = re.compile(r"[a-z][a-z'-]*[.,;:]?")
-_ASIDE = re.compile(r"\(see notes?\)", re.IGNORECASE)
+_ASIDE = re.compile(r"\((?:see notes?|or equivalent)\)", re.IGNORECASE)
 # Trailing words that only restate the component type.
 # A part supplied with the PCB is still a part: '24LC32A *Included' (Deflector).
 _INCLUDED = re.compile(r"\s*\*\s*Included(?: with (?:the )?PCB)?\s*$", re.IGNORECASE)
-_REDUNDANT_SUFFIX = re.compile(r"\s+(?:Crystal|(?:Dip\s+)?Switch)$", re.IGNORECASE)
+# 'Dip Switch' stays: a bare 'DIP2' would read as an IC package size.
+_REDUNDANT_SUFFIX = re.compile(r"(?<!\bDIP)\s+(?:Crystal|Switch)$", re.IGNORECASE)
 
 
 @dataclass(frozen=True, slots=True)
@@ -211,7 +218,11 @@ def _is_ref_cell(cell: str, next_cell: str | None) -> bool:
         return True
     # Unfamiliar control names (SHIFT, SUBS, TONE BYPASS SWITCH) are recognized
     # by their value.
-    named = _CONTROL_NAME.fullmatch(cell) is not None or (
+    named = (
+        _CONTROL_NAME.fullmatch(cell) is not None
+        # A pole/throw code is a value: 'DPDT  On-On-On' (Minidrive).
+        and constants.SWITCH_VALUE_PATTERN.fullmatch(cell) is None
+    ) or (
         _MULTIWORD_NAME.fullmatch(cell) is not None
         and not set(cell.split()) <= _HEADER_WORDS  # 'TOGGLE SWITCHES' is a header
     )
@@ -267,9 +278,9 @@ def _is_annotation(cell: str) -> bool:
 def clean_value(value: str) -> str:
     """Strips markers that are not part of a purchasable value.
 
-    Removes optional-part asterisks, '(see notes)' asides, '*Included' markers,
-    and trailing words that only restate the component type ('AB38T Crystal'
-    -> 'AB38T').
+    Removes optional-part asterisks, '(see notes)' and '(or equivalent)' asides,
+    '*Included' markers, and trailing words that only restate the component
+    type ('AB38T Crystal' -> 'AB38T').
 
     Args:
         value: The raw value text.
@@ -324,6 +335,8 @@ def _split_merged(cell: Cell) -> list[Cell]:
     if len(words) < 2 or len(words) > _MAX_MERGED_VALUE_WORDS + 1:
         return [cell]
     name = words[0]
+    if constants.SWITCH_VALUE_PATTERN.fullmatch(name):
+        return [cell]  # 'DPDT On-On-On' is one value (Minidrive)
     # Skip a function label: 'SW1 (Power) SPDT Toggle' -> 'SPDT Toggle'.
     start = 1
     label = next(
@@ -373,6 +386,20 @@ def find_listings(words: list[PDFWord]) -> list[Listing]:
     Returns:
         Listings in reading order (top to bottom, left to right).
     """
+    # A first pass finds where designator columns start, so a value does not
+    # absorb text that sits in the next column ('C24  10n | 6 x 5-pin Male
+    # Pinheader' under a PIN HEADERS heading, Emu Amp Simulator).
+    starts = Counter(round(listing.x0) for listing in _scan(words, frozenset()))
+    columns = frozenset(x for x, n in starts.items() if n >= _MIN_COLUMN_REFS)
+    return _scan(words, columns)
+
+
+def _in_column(x0: float, size: float, columns: frozenset[int]) -> bool:
+    return any(abs(x0 - x) <= _COLUMN_TOLERANCE_EM * size for x in columns)
+
+
+def _scan(words: list[PDFWord], columns: frozenset[int]) -> list[Listing]:
+    """One listing pass; annotations never extend into a designator column."""
     listings: list[Listing] = []
     # (value x-position, font size, index into listings) for the previous line.
     above: list[tuple[float, float, int]] = []
@@ -404,7 +431,15 @@ def find_listings(words: list[PDFWord]) -> list[Listing]:
             j = i + 2
             while j < len(texts):
                 following = texts[j + 1] if j + 1 < len(texts) else None
-                if _is_ref_cell(texts[j], following) or not _is_annotation(texts[j]):
+                # Only a value that already has its part stops at the next
+                # column: 'SW1  (FM/CC/Vintage)  DPDT On-On-On' (Minidrive) runs
+                # its value under the pots column.
+                complete = not _LABEL.fullmatch(" ".join(parts))
+                if (
+                    _is_ref_cell(texts[j], following)
+                    or not _is_annotation(texts[j])
+                    or (complete and _in_column(cells[j].x0, cells[j].size, columns))
+                ):
                     break
                 parts.append(texts[j])
                 j += 1

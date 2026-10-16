@@ -165,7 +165,12 @@ def check_unextracted_refs(
         if not _SCHEMATIC_PAGE.search(text):
             listed |= find_listed_refs(text)
 
+    # A part number shaped like a designator is a value, not a listing:
+    # 'Q1-Q5  J201  JFET transistor' (Golden Falk).
+    values = {key.value.split()[0].upper() for key in inventory if key.value.split()}
     for ref in sorted(r for r in listed if r.upper() not in extracted):
+        if ref.upper() in values:
+            continue
         section = _IC_SECTION.fullmatch(ref.upper())
         if section and section.group("chip") in extracted:
             # 'IC2A' on a schematic is one half of the dual op-amp IC2.
