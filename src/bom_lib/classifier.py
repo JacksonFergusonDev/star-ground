@@ -180,6 +180,9 @@ def categorize_part(
         if category == ComponentCategory.ICS and _VACTROL.match(val_up):
             # Constrictor: 'U1  VTL5C10' is an optoisolator, not a chip.
             category = ComponentCategory.OPTOELECTRONICS
+        if category == ComponentCategory.RESISTORS and _TRIM_NOTE.search(val_clean):
+            # CDXL Reissue lists trimmers R20/R23 under 'TRIM POTS (3362P Type)'.
+            category = ComponentCategory.POTENTIOMETERS
     else:
         named = _named_control_category(ref_up, val_up, val_clean) or category_hint
         if named is None:
@@ -197,7 +200,14 @@ def categorize_part(
     if category == ComponentCategory.ICS:
         # Don't inject sockets for things that aren't DIP chips
         # (e.g., Regulators, Reverb Bricks)
-        skip_injection_keywords = ["REGULATOR", "L78L", "MODULE", "BTDR", "REVERB"]
+        skip_injection_keywords = [
+            "REGULATOR",
+            "L78L",
+            "MODULE",
+            "BTDR",
+            "REVERB",
+            "ESP32",
+        ]
         if not any(k in val_up for k in skip_injection_keywords):
             injection = ComponentKey(
                 ComponentCategory.HARDWARE_MISC, "DIP SOCKET (Check Size)"

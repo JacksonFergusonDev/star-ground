@@ -111,6 +111,7 @@ def test_current_rating_is_not_a_pot_value() -> None:
         ("DIP1", "DIP-5", None, ComponentCategory.SWITCHES),  # Muffin Factory
         ("SIDECHAIN", '1/4" Switching TRS', None, ComponentCategory.HARDWARE_MISC),
         ("FREQ", "500R TRIM", None, ComponentCategory.POTENTIOMETERS),  # Frost Drive
+        ("R20", "10K TRIM", None, ComponentCategory.POTENTIOMETERS),  # CDXL Reissue
     ],
 )
 def test_parts_named_by_value_or_type(
