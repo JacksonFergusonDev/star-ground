@@ -9,6 +9,7 @@ the parser may be wrong, but it must never be wrong *silently*.
 
 import re
 import unicodedata
+from decimal import Decimal
 
 from src.bom_lib import constants
 from src.bom_lib.enums import ComponentCategory, ParseWarningKind
@@ -197,6 +198,39 @@ def check_row_quantity(
         )
 
 
+_CAPACITOR_CODE = re.compile(r"(\d{2})(\d)")
+
+
+def check_marking_code(stats: StatsDict, ref: str, value: str, marking: str) -> None:
+    """Warns when a capacitor's printed value disagrees with its marking code.
+
+    Q-Tune lists C3 as '330 (334)': a bare 330 is 330pF, but code 334 is
+    33 x 10^4 pF = 330nF. One of the two is a misprint, and the builder must
+    know which part to use.
+
+    Args:
+        stats: Stats object that receives the warning.
+        ref: The capacitor's designator.
+        value: The printed value ('330', '100n').
+        marking: The marking printed beside it ('334').
+    """
+    code = _CAPACITOR_CODE.fullmatch(marking)
+    farads = parse_value_to_decimal(value)
+    if code is None or farads is None:
+        return
+    if not any(ch.isalpha() for ch in value):
+        farads *= Decimal("1e-12")  # a bare capacitor value is in picofarads
+    coded = int(code.group(1)) * Decimal(10) ** int(code.group(2)) * Decimal("1e-12")
+    if abs(farads - coded) > coded * Decimal("0.01"):
+        _warn(
+            stats,
+            ParseWarningKind.BOM_MISMATCH,
+            ref,
+            f"{ref} is listed as '{value}' but marked '{marking}' "
+            f"({float(coded):.3g} F); check which value to use.",
+        )
+
+
 def check_footnotes(page_texts: list[str], stats: StatsDict) -> None:
     """Surfaces a footnote attached to a listed value with an asterisk.
 
@@ -253,11 +287,12 @@ def check_duplicate(
 
 
 def check_unclassified_row(stats: StatsDict, ref: str, value: str) -> None:
-    """Warns about a parts-table row that no category fits.
+    """Warns about a listed part that no category fits.
 
-    A ruled table lists only parts, so a row the classifier cannot place
+    A parts table lists only parts, so a row the classifier cannot place
     (ElectroVibe's 'LMP1 | 2174 | Incandescent lamp') must not vanish from
-    the shopping list unnoticed.
+    the shopping list unnoticed; nor may a numbered label beside a part
+    number (Trumpeter's 'IQ1  2N5088').
 
     Args:
         stats: Stats object that receives the warning.
@@ -268,8 +303,7 @@ def check_unclassified_row(stats: StatsDict, ref: str, value: str) -> None:
         stats,
         ParseWarningKind.UNPARSED_VALUE,
         ref,
-        f"{ref} '{value}' is in the parts table but was not recognized as a part; "
-        "add it by hand.",
+        f"{ref} '{value}' is listed but was not recognized as a part; add it by hand.",
     )
 
 
@@ -300,7 +334,12 @@ def check_classification(
     if m:
         prefix = m.group("prefix")
         expected = next((cat for p, cat in _PREFIX_CATEGORIES if prefix == p), None)
-        if expected is not None and category != expected:
+        # An optoisolator may carry an IC designator (Constrictor: 'U1  VTL5C10').
+        vactrol = (
+            expected == ComponentCategory.ICS
+            and category == ComponentCategory.OPTOELECTRONICS
+        )
+        if expected is not None and category != expected and not vactrol:
             _warn(
                 stats,
                 ParseWarningKind.CATEGORY_CONFLICT,

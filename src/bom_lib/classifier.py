@@ -30,6 +30,7 @@ _TRIM_NOTE = re.compile(
 )
 _MILLIAMPS = re.compile(r"\dmA\b")
 _VACTROL = re.compile(r"VTL\d")
+_JACK_VALUE = re.compile(r"\b(?:TRS|JACK)\b")
 _POT_VALUE = re.compile(
     r"(?<![\w.])(?:[ABCWG]\d+(?:\.\d+)?[KM]|\d+(?:\.\d+)?[KM][ABCWG]?)(?![\w.])"
 )
@@ -123,6 +124,9 @@ def _named_control_category(
     # A vactrol on an unfamiliar designator: CDXL's 'OC1  VTL5C4/2'.
     if _VACTROL.match(val_up):
         return ComponentCategory.OPTOELECTRONICS
+    # Muzzle: 'SIDECHAIN  1/4" Switching TRS'.
+    if _JACK_VALUE.search(val_up):
+        return ComponentCategory.HARDWARE_MISC
     if name in constants.SWITCH_LABELS and any(
         x in val_up for x in ("ON", "SW", "SP", "DP")
     ):
@@ -164,6 +168,9 @@ def categorize_part(
             if "LED" in val_up
             else ComponentCategory.HARDWARE_MISC
         )
+        if category == ComponentCategory.ICS and _VACTROL.match(val_up):
+            # Constrictor: 'U1  VTL5C10' is an optoisolator, not a chip.
+            category = ComponentCategory.OPTOELECTRONICS
     else:
         named = _named_control_category(ref_up, val_up, val_clean) or category_hint
         if named is None:

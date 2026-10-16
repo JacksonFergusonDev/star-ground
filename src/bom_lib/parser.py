@@ -14,7 +14,7 @@ from dataclasses import replace
 from src.bom_lib import constants
 from src.bom_lib.builds import BuildPlan, Entry, PageContext, plan_builds
 from src.bom_lib.classifier import categorize_part, normalize_value_by_category
-from src.bom_lib.designators import parse_designator
+from src.bom_lib.designators import is_designator, parse_designator
 from src.bom_lib.enums import ComponentCategory
 from src.bom_lib.layout import find_bom_rows, find_listings, page_lines
 from src.bom_lib.types import (
@@ -35,6 +35,7 @@ from src.bom_lib.verification import (
     check_classification,
     check_duplicate,
     check_footnotes,
+    check_marking_code,
     check_row_quantity,
     check_unclassified_row,
     check_unextracted_refs,
@@ -308,8 +309,17 @@ _TYPE_HINTS: tuple[tuple[str, ComponentCategory], ...] = (
     ("transistor", ComponentCategory.TRANSISTORS),
     ("mosfet", ComponentCategory.TRANSISTORS),
 )
+_NUMBERED_NAME = re.compile(r"[A-Z]{1,3}\d{1,3}")
 _TABLE_HEADERS = frozenset({"LOCATION", "QUANTITY", "VALUE", "TYPE"})
 _LED_DESCRIPTION = re.compile(r"[^,]*\bLED\b", re.IGNORECASE)
+_LED_COLOR = re.compile(
+    r"\b(?:red|green|blue|yellow|white|orange|amber|purple|pink|uv)\b", re.IGNORECASE
+)
+# A VALUE cell that only abbreviates an LED: 'RED', 'Red 3mm', '3mm Red', 'LED'.
+_LED_SHORTHAND = re.compile(
+    r"(?i)(?:\d+(?:\.\d+)?mm\s*)?(?:(?:red|green|blue|yellow|white|orange|amber|purple|pink|uv)"
+    r"\s*)?(?:LED\s*)?(?:\d+(?:\.\d+)?mm)?"
+)
 # Not preceded by "non-": a "Non-latching relay" is not latching.
 _ACTUATION = re.compile(r"(?<!non-)(?<!non )\b(momentary|latching)\b", re.IGNORECASE)
 _DUAL_GANG = re.compile(r"\bDUAL[- ]?GANG")
@@ -318,7 +328,7 @@ _POSITIONS = re.compile(r"\b(?:ON|OFF)(?:/(?:ON|OFF)){1,2}\b")
 _DIELECTRICS = (("TANTALUM", "Tantalum"), ("MLCC", "MLCC"))
 
 
-_VOLTAGE = re.compile(r"\b(\d+(?:\.\d+)?)\s*V\b", re.IGNORECASE)
+_VOLTAGE = re.compile(r"\b(\d+(?:\.\d+)?)\s*V(?:DC)?\b", re.IGNORECASE)
 
 
 def rating_from_notes(ref: str, value: str, notes: str) -> str:
@@ -372,6 +382,17 @@ def enrich_value_from_type(value: str, type_text: str, notes: str = "") -> str:
     """
     type_text = " ".join(type_text.split())
     detail = f"{type_text} {' '.join(notes.split())}".upper()
+    led = _LED_DESCRIPTION.match(type_text)
+    if led and _LED_SHORTHAND.fullmatch(value):
+        # 'Red 3mm' / '3mm Red LED, Diffused' (Motorizer); 'RED' / '3mm LED, Red'
+        # (Bolide) names the color only after the comma.
+        description = led.group(0).strip()
+        color = _LED_COLOR.search(value)
+        if color and color.group(0).lower() not in description.lower():
+            description = re.sub(
+                r"\bLED\b", f"{color.group(0).capitalize()} LED", description, count=1
+            )
+        return description
     if not any(ch.isdigit() for ch in value):
         # TYPE first ('Germanium diode, 1N34A'), then NOTES ('SANDED' /
         # '(JRC4558, etc)', Revision Overdrive).
@@ -382,7 +403,7 @@ def enrich_value_from_type(value: str, type_text: str, notes: str = "") -> str:
         led = _LED_DESCRIPTION.match(type_text)
         if led:
             return led.group(0).strip()
-    actuation = _ACTUATION.search(type_text)
+    actuation = _ACTUATION.search(f"{type_text} {notes}")
     if actuation and actuation.group(1).lower() not in value.lower():
         value = f"{value} {actuation.group(1).capitalize()}"
     if constants.SWITCH_VALUE_PATTERN.search(value.upper()) and not _POLE_THROW.search(
@@ -449,6 +470,10 @@ def _table_entries(
                     type_idx = i
                 elif h == "NOTES":
                     notes_idx = i
+
+            if loc_idx == -1 and {"QTY", "QUANTITY"} & set(headers):
+                # ProtoBoard: 'QTY | PART NUMBER | DESCRIPTION' lists no designators.
+                continue
 
             # Fallback mapping
             if loc_idx == -1 or val_idx == -1:
@@ -563,6 +588,13 @@ def _text_table_entries(
             stats["lines_read"] += 1
             refs = expand_refs(row.refs)
             check_row_quantity(stats, row.refs, len(refs), row.quantity)
+            for odd in [ref for ref in refs if not is_designator(ref)]:
+                check_unclassified_row(stats, odd, row.value)
+            refs = [ref for ref in refs if is_designator(ref)]
+            for ref in refs:
+                designator = parse_designator(ref)
+                if designator and designator.category == ComponentCategory.CAPACITORS:
+                    check_marking_code(stats, ref, row.value, row.marking)
             entries += [
                 Entry(
                     ref,
@@ -628,11 +660,22 @@ def _layout_entries(
     for page_no, data in enumerate(pages_data):
         if only_pages is not None and page_no not in only_pages:
             continue
+        # A ruled table's rows are read by the table strategy; read as layout,
+        # 'D1 | LED | 3mm Red LED' looks like a bare 'LED' listing (Bad Mamma Jamma).
+        table_lines = {
+            k
+            for k, cells in enumerate(page_lines(data["words"]))
+            if table_refs and cells and cells[0].text in table_refs
+        }
         for listing in find_listings(data["words"]):
             ref, value = listing.ref, listing.value
             stats["lines_read"] += 1
 
-            if ref in table_refs or (page_no, listing.line) in (skip_lines or set()):
+            if (
+                ref in table_refs
+                or listing.line in table_lines
+                or (page_no, listing.line) in (skip_lines or set())
+            ):
                 continue
             entry = Entry(ref, value, page_no, line=listing.line, x0=listing.x0)
             if not entry.not_populated and (_is_ignored(value) or len(value) > 50):
@@ -644,6 +687,17 @@ def _layout_entries(
                     value.upper()
                 ):
                     continue
+            if (
+                _NUMBERED_NAME.fullmatch(ref)
+                and not is_designator(ref)
+                and any(ch.isdigit() for ch in value)
+                and any(ch.isalpha() for ch in value)  # not a bare quantity
+                and categorize_part(ref, value) is None
+            ):
+                # Trumpeter's 'IQ1  2N5088' (a typo for Q1) is no known part,
+                # but is plainly listed as one.
+                check_unclassified_row(stats, ref, value)
+                continue
             entries.append(entry)
     return entries
 
@@ -858,7 +912,13 @@ def parse_pedalpcb_pdf(filepath: str, source_name: str) -> ParseResult:
             # Every designator listed in the document must be accounted for, in
             # some build or option.
             page_texts = [data["text"] or "" for data in pages_data]
-            check_unextracted_refs(page_texts, union, stats)
+            # Like the readers, a text bill of materials bounds where parts are
+            # listed: Q-Tune's build steps mention 'the X1 connector area'.
+            listed_texts = [
+                text if bom_pages is None or k in bom_pages else ""
+                for k, text in enumerate(page_texts)
+            ]
+            check_unextracted_refs(listed_texts, union, stats)
             check_footnotes(page_texts, stats)
             check_bom_reconciliation(page_texts, union, stats)
 

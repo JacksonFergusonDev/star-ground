@@ -41,8 +41,10 @@ _CONTINUATION = re.compile(r"\(.*\)")
 # A pot value or switch spec, optionally led by a marker or qualifier:
 # 'Dual B10K', 'Latching 3PDT Footswitch', 'On/OFF/On DPDT Toggle', '*DPDT'.
 _CONTROL_VALUE = re.compile(
-    r"\*?(?:(?i:dual|latching|momentary|on(?:\s*[/-]\s*(?:on|off))+)\s+)?"
-    r"(?:[ABCWG]\d+(?:\.\d+)?[KM]\b|\d+(?:\.\d+)?[KM][ABC]?\b|[SD34]P[DS]T\b|\dP\dT\b)"
+    r"\*?(?:(?i:dual|latching|momentary|mini|slide|type-?2|on(?:\s*[/-]\s*(?:on|off))+)\s+)*"
+    r"(?:[ABCWG]\d+(?:\.\d+)?[KM]\b|\d+(?:\.\d+)?[KM][ABC]?\b|[SD34]P[DS]T\b|\dP\dT\b"
+    # A jack: 'SIDECHAIN  1/4" Switching TRS' (Muzzle).
+    r"|(?=\S*\d.*\b(?i:trs|jack)\b))"
 )
 
 # Column headers and connective words in multi-column parts lists.
@@ -80,10 +82,12 @@ _HEADER_WORDS = _LAYOUT_WORDS | {
     "THROUGH-HOLE",
     "DIP",
     "LEDS",
+    "OPTOISOLATORS",
 }
 # A merged 'NAME value' cell is split only when the value is short
 # ('DPDT (On / Off / On)' is six words).
 _MAX_MERGED_VALUE_WORDS = 6
+_PAREN_LABEL = re.compile(r"\((\w+)\)")
 _DASHES = frozenset({"-", "\u2013", "\u2014"})
 # A function label printed between a designator and its value: 'SW1 (Power) SPDT'.
 _LABEL = re.compile(r"\([^()\d]*\)")
@@ -269,6 +273,11 @@ def clean_value(value: str) -> str:
     """
     value = _INCLUDED.sub("", _ASIDE.sub("", value)).replace("*", " ")
     value = " ".join(value.split())
+    # A trailing link or remark is not the value: 'Mini 1P8T - https://...',
+    # 'SPDT (On/On) - Short shaft toggle recommended' (Mini Heterodyne).
+    head, dash, tail = value.rpartition(" - ")
+    if dash and head and (tail.startswith("http") or _is_prose(tail)):
+        value = head
     # A leading function label is not part of the value: '(Voltage) SPDT Toggle'.
     label = _LABEL.match(value)
     if label and label.end() < len(value):
@@ -285,6 +294,17 @@ def _split_merged(cell: Cell) -> list[Cell]:
     rest is a short value; prose ('D8 and D9 are only needed...') is left whole.
     """
     words = cell.text.split()
+    dashed = False
+    paren = _PAREN_LABEL.fullmatch(words[1]) if len(words) > 2 else None
+    if paren and is_designator(paren.group(1)):
+        # 'RANGE (SW1) - Mini Slide SPDT' (Muzzle): the board designator is the ref.
+        cell = Cell(({**cell.words[1], "text": paren.group(1)}, *cell.words[2:]))
+        words = cell.text.split()
+    elif paren and words[2] in _DASHES:
+        # 'SIDECHAIN (Key) - 1/4" Switching TRS': a function label, then the value.
+        cell = Cell((cell.words[0], *cell.words[3:]))
+        words = cell.text.split()
+        dashed = True
     if (
         len(words) > 2
         and words[1] in _DASHES
@@ -294,6 +314,7 @@ def _split_merged(cell: Cell) -> list[Cell]:
         # 'MODE - 1P8T Mini Rotary' (HAARP): a dash separates name and value.
         cell = Cell((cell.words[0], *cell.words[2:]))
         words = cell.text.split()
+        dashed = True
     if len(words) < 2 or len(words) > _MAX_MERGED_VALUE_WORDS + 1:
         return [cell]
     name = words[0]
@@ -326,7 +347,7 @@ def _split_merged(cell: Cell) -> list[Cell]:
     if is_designator(name) and name not in constants.BARE_DESIGNATORS:
         return split
     if name in constants.KEYWORDS or (
-        _CONTROL_NAME.fullmatch(name) and _CONTROL_VALUE.match(rest)
+        _CONTROL_NAME.fullmatch(name) and (dashed or _CONTROL_VALUE.match(rest))
     ):
         return split
     return [cell]
@@ -425,7 +446,25 @@ def _absorb_continuations(
 
 # Column headers of a text bill of materials ('Reference  Value  Quantity  Notes').
 _REF_HEADERS = frozenset({"REFERENCE", "REFERENCES", "REF", "REFS", "DESIGNATOR"})
-_BOM_COLUMNS = {"VALUE": "value", "QUANTITY": "qty", "QTY": "qty", "NOTES": "notes"}
+# 'Name' heads the designator column only beside a 'Value' column (Q-Tune's
+# 'Value | Name | Qty' packing list).
+_NAME_HEADER = "NAME"
+_BOM_COLUMNS = {
+    "VALUE": "value",
+    "QUANTITY": "qty",
+    "QTY": "qty",
+    "QT": "qty",  # 'Qt' / 'y' wrapped in a narrow column (Q-Tune)
+    "NOTES": "notes",
+    "TYPE": "type",
+}
+# A wrapped value loses its closing parenthesis: '1N5226 (1N5' / '226)'.
+_UNCLOSED_ASIDE = re.compile(r"\s*\([^)]*$")
+# A part's printed marking is not its value: '100n (104)', '1N4148 (41 48)',
+# '100n (.100J63)'. Words in parentheses ('(low ESR)', '(KY5050)') stay.
+_MARKING = re.compile(r"\s*\(\s*(\.?\d[\d .]*(?:[JKM]\d+)?)\s*\)$")
+# Separators inside a printed designator list: 'R11, R13', 'D21 - D28'.
+_DESIGNATOR_SHAPE = re.compile(r"[A-Za-z]{1,6}\d*[A-Za-z]{0,3}")
+_LIST_SPACING = re.compile(r"\s*([,-])\s*")
 
 
 @dataclass(frozen=True, slots=True)
@@ -433,11 +472,13 @@ class BomRow:
     """One row of a text bill of materials with grouped designators.
 
     Attributes:
-        refs: The designator cell as printed ('C4,C5', 'R10-R12,R18').
+        refs: The designator cell, separators unspaced ('C4,C5', 'R10-R12,R18').
         value: The value cell.
         quantity: The quantity cell, if the table has one and it is a number.
         line: Index of the visual line on the page.
         x0: Left edge of the designator cell, in points.
+        marking: The part marking printed after the value ('104' for
+            '100n (104)'), if any.
     """
 
     refs: str
@@ -445,15 +486,69 @@ class BomRow:
     quantity: int | None
     line: int
     x0: float
+    marking: str = ""
+
+
+@dataclass(frozen=True, slots=True)
+class _Column:
+    field: str
+    x0: float
+    x1: float
+
+    @property
+    def center(self) -> float:
+        return (self.x0 + self.x1) / 2
+
+
+def _header_sections(cells: list[Cell]) -> list[list[_Column]]:
+    """The 'Reference | Value | Quantity' header groups on one line, left to right.
+
+    A line can carry several tables side by side (Q-Tune: 'Value Name Qty
+    Value Name Qty'); a repeated field starts the next group.
+    """
+    has_value = any(c.text.upper() == "VALUE" for c in cells)
+    sections: list[list[_Column]] = []
+    current: list[_Column] = []
+    for cell in cells:
+        name = cell.text.upper()
+        if name in _REF_HEADERS or (name == _NAME_HEADER and has_value):
+            field_name = "refs"
+        elif name in _BOM_COLUMNS:
+            field_name = _BOM_COLUMNS[name]
+        else:
+            continue
+        if any(col.field == field_name for col in current):
+            sections.append(current)
+            current = []
+        current.append(_Column(field_name, cell.x0, cell.words[-1]["x1"]))
+    sections.append(current)
+    return [sec for sec in sections if {"refs", "value"} <= {col.field for col in sec}]
+
+
+def _column_for(cell: Cell, sections: list[list[_Column]]) -> tuple[int, str]:
+    """The section and field a cell belongs to.
+
+    A cell that starts at a header belongs to it (left-aligned tables); any
+    other cell goes to the header nearest its center (Q-Tune centers its cells).
+    """
+    center = (cell.x0 + cell.words[-1]["x1"]) / 2
+    tolerance = _LINE_TOLERANCE_EM * cell.size
+    columns = [(k, col) for k, sec in enumerate(sections) for col in sec]
+    for k, col in columns:
+        if abs(cell.x0 - col.x0) <= tolerance:
+            return k, col.field
+    k, col = min(columns, key=lambda kc: abs(center - kc[1].center))
+    return k, col.field
 
 
 def find_bom_rows(words: list[PDFWord]) -> list[BomRow]:
-    """Reads a text table headed 'Reference | Value | Quantity | Notes'.
+    """Reads text tables headed 'Reference | Value | Quantity | Notes'.
 
     Unlike a ruled table, nothing but alignment marks the columns, and one row
-    lists several designators (Sheepylove: 'R10-R12,R18  47k  4'). Cells are
-    assigned to the header column they start under. Rows whose first column is
-    not a list of designators (titles, footers) are skipped.
+    lists several designators (Sheepylove: 'R10-R12,R18  47k  4'). Several
+    tables may sit side by side under one header line, and a later header
+    line replaces only the tables it overlaps. Rows whose designator cell is
+    not a list of designators (titles, footers, hardware) are skipped.
 
     Args:
         words: Words extracted from one page.
@@ -462,48 +557,60 @@ def find_bom_rows(words: list[PDFWord]) -> list[BomRow]:
         The rows under every such header on the page, top to bottom.
     """
     rows: list[BomRow] = []
-    columns: list[tuple[float, str]] = []
+    sections: list[list[_Column]] = []
     for line_no, cells in enumerate(page_lines(words)):
-        headers = {c.text.upper(): c for c in cells}
-        ref_header = next((c for c in cells if c.text.upper() in _REF_HEADERS), None)
-        if ref_header is not None and "VALUE" in headers:
-            columns = sorted(
-                [(ref_header.x0, "refs")]
-                + [
-                    (c.x0, _BOM_COLUMNS[name])
-                    for name, c in headers.items()
-                    if name in _BOM_COLUMNS
-                ]
-            )
-            continue
-        if not columns:
-            continue
-        fields: dict[str, str] = {}
-        for cell in cells:
-            under = [
-                name
-                for x0, name in columns
-                if x0 <= cell.x0 + _LINE_TOLERANCE_EM * cell.size
+        found = _header_sections(cells)
+        if found:
+            lo = min(col.x0 for sec in found for col in sec)
+            hi = max(col.x1 for sec in found for col in sec)
+            kept = [
+                sec
+                for sec in sections
+                if max(c.x1 for c in sec) < lo or min(c.x0 for c in sec) > hi
             ]
-            if under:
-                fields[under[-1]] = f"{fields.get(under[-1], '')} {cell.text}".strip()
-        refs, value = fields.get("refs", ""), fields.get("value", "")
-        if not value or not _is_ref_list(refs):
+            sections = sorted(kept + found, key=lambda sec: sec[0].x0)
+            # The rest of the line is a row of the tables beside the new header.
+            cells = [c for c in cells if c.x0 < lo or c.x0 > hi]
+        if not sections:
             continue
-        qty = fields.get("qty", "")
-        rows.append(
-            BomRow(
-                refs=refs,
-                value=value,
-                quantity=int(qty) if qty.isdigit() else None,
-                line=line_no,
-                x0=cells[0].x0,
+        fields: dict[tuple[int, str], str] = {}
+        first_x0: dict[int, float] = {}
+        for cell in cells:
+            target = _column_for(cell, sections)
+            fields[target] = f"{fields.get(target, '')} {cell.text}".strip()
+            if target[1] == "refs":
+                first_x0.setdefault(target[0], cell.x0)
+        for k in range(len(sections)):
+            refs = _LIST_SPACING.sub(r"\1", fields.get((k, "refs"), ""))
+            value = _UNCLOSED_ASIDE.sub("", fields.get((k, "value"), ""))
+            marking = _MARKING.search(value)
+            if marking:
+                value = value[: marking.start()]
+            if not value or not _is_ref_list(refs):
+                continue
+            qty = fields.get((k, "qty"), "")
+            rows.append(
+                BomRow(
+                    refs=refs,
+                    value=value,
+                    quantity=int(qty) if qty.isdigit() else None,
+                    line=line_no,
+                    x0=first_x0[k],
+                    marking=marking.group(1) if marking else "",
+                )
             )
-        )
     return rows
 
 
 def _is_ref_list(cell: str) -> bool:
+    """Whether a cell lists designators.
+
+    One odd name among real designators ('R8, RPDo' in Q-Tune) still makes a
+    list, so the row is read and the odd name can be reported.
+    """
     if not cell or " " in cell:
         return False
-    return all(is_designator(ref) for ref in expand_refs(cell))
+    refs = expand_refs(cell)
+    return any(is_designator(ref) for ref in refs) and all(
+        _DESIGNATOR_SHAPE.fullmatch(ref) for ref in refs
+    )

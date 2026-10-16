@@ -592,6 +592,12 @@ def test_range_expansion_logic():
     assert expand_refs("R10-R12,R18") == ["R10", "R11", "R12", "R18"]
     assert expand_refs("C4, C5") == ["C4", "C5"]
 
+    # 6. A spaced dash (6 Band EQ: 'POT1 - 6')
+    assert expand_refs("POT1 - 6") == ["POT1", "POT2", "POT3", "POT4", "POT5", "POT6"]
+
+    # 7. A bare number reuses the previous prefix (Q-Tune: 'C12, 15, 16')
+    assert expand_refs("C12,15,16") == ["C12", "C15", "C16"]
+
 
 def test_ref_expansion_integrity():
     """
