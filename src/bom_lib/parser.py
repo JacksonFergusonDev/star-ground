@@ -310,6 +310,14 @@ _TYPE_HINTS: tuple[tuple[str, ComponentCategory], ...] = (
 )
 _TABLE_HEADERS = frozenset({"LOCATION", "QUANTITY", "VALUE", "TYPE"})
 _LED_DESCRIPTION = re.compile(r"[^,]*\bLED\b", re.IGNORECASE)
+_LED_COLOR = re.compile(
+    r"\b(?:red|green|blue|yellow|white|orange|amber|purple|pink|uv)\b", re.IGNORECASE
+)
+# A VALUE cell that only abbreviates an LED: 'RED', 'Red 3mm', '3mm Red', 'LED'.
+_LED_SHORTHAND = re.compile(
+    r"(?i)(?:\d+(?:\.\d+)?mm\s*)?(?:(?:red|green|blue|yellow|white|orange|amber|purple|pink|uv)"
+    r"\s*)?(?:LED\s*)?(?:\d+(?:\.\d+)?mm)?"
+)
 # Not preceded by "non-": a "Non-latching relay" is not latching.
 _ACTUATION = re.compile(r"(?<!non-)(?<!non )\b(momentary|latching)\b", re.IGNORECASE)
 _DUAL_GANG = re.compile(r"\bDUAL[- ]?GANG")
@@ -372,6 +380,17 @@ def enrich_value_from_type(value: str, type_text: str, notes: str = "") -> str:
     """
     type_text = " ".join(type_text.split())
     detail = f"{type_text} {' '.join(notes.split())}".upper()
+    led = _LED_DESCRIPTION.match(type_text)
+    if led and _LED_SHORTHAND.fullmatch(value):
+        # 'Red 3mm' / '3mm Red LED, Diffused' (Motorizer); 'RED' / '3mm LED, Red'
+        # (Bolide) names the color only after the comma.
+        description = led.group(0).strip()
+        color = _LED_COLOR.search(value)
+        if color and color.group(0).lower() not in description.lower():
+            description = re.sub(
+                r"\bLED\b", f"{color.group(0).capitalize()} LED", description, count=1
+            )
+        return description
     if not any(ch.isdigit() for ch in value):
         # TYPE first ('Germanium diode, 1N34A'), then NOTES ('SANDED' /
         # '(JRC4558, etc)', Revision Overdrive).

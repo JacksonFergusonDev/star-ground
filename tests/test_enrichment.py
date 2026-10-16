@@ -28,6 +28,8 @@ from src.bom_lib.utils import float_to_search_string
         ("A-4.5W-K", "Non-latching 4.5V relay", "A-4.5W-K"),
         ("10K", "Resistor, 1/4W", "10K"),
         ("2P4T", "16mm Mini Rotary switch, 2P4T", "2P4T Mini Rotary"),
+        ("Red 3mm", "3mm Red LED, Diffused", "3mm Red LED"),  # Motorizer
+        ("BLUE", "3mm LED, Blue", "3mm Blue LED"),  # Bolide
     ],
 )
 def test_enrich_value_from_type(value: str, type_text: str, expected: str) -> None:

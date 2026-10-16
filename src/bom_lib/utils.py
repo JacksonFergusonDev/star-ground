@@ -84,7 +84,8 @@ def _expand_range(ref_raw: str) -> list[str]:
 
     try:
         # Match pattern: Prefix1, StartNum, optional Prefix2, EndNum
-        m = re.match(r"^([a-zA-Z]+)(\d+)-([a-zA-Z]+)?(\d+)$", ref_raw)
+        # 'POT1 - 6' (6 Band EQ) spaces the dash.
+        m = re.match(r"^([a-zA-Z]+)(\d+)\s*-\s*([a-zA-Z]+)?(\d+)$", ref_raw)
         if m:
             prefix1 = m.group(1)
             start = int(m.group(2))
