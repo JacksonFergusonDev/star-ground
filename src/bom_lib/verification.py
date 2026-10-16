@@ -252,6 +252,27 @@ def check_duplicate(
         )
 
 
+def check_unclassified_row(stats: StatsDict, ref: str, value: str) -> None:
+    """Warns about a parts-table row that no category fits.
+
+    A ruled table lists only parts, so a row the classifier cannot place
+    (ElectroVibe's 'LMP1 | 2174 | Incandescent lamp') must not vanish from
+    the shopping list unnoticed.
+
+    Args:
+        stats: Stats object that receives the warning.
+        ref: The row's designator.
+        value: The row's value.
+    """
+    _warn(
+        stats,
+        ParseWarningKind.UNPARSED_VALUE,
+        ref,
+        f"{ref} '{value}' is in the parts table but was not recognized as a part; "
+        "add it by hand.",
+    )
+
+
 def check_classification(
     stats: StatsDict, ref: str, raw_value: str, category: ComponentCategory, value: str
 ) -> None:

@@ -2,7 +2,12 @@
 
 import pytest
 
-from src.bom_lib import ComponentCategory, categorize_part, create_empty_stats
+from src.bom_lib import (
+    ComponentCategory,
+    ParseWarningKind,
+    categorize_part,
+    create_empty_stats,
+)
 from src.bom_lib.parser import (
     _table_entries,
     category_from_type,
@@ -22,6 +27,7 @@ from src.bom_lib.utils import float_to_search_string
         ("GE", "Germanium diode, 1N34A", "1N34A"),
         ("A-4.5W-K", "Non-latching 4.5V relay", "A-4.5W-K"),
         ("10K", "Resistor, 1/4W", "10K"),
+        ("2P4T", "16mm Mini Rotary switch, 2P4T", "2P4T Mini Rotary"),
     ],
 )
 def test_enrich_value_from_type(value: str, type_text: str, expected: str) -> None:
@@ -66,6 +72,40 @@ def test_current_rating_is_not_a_pot_value() -> None:
     result = categorize_part("POLYFUSE", fuse, category_from_type(fuse))
     assert result is not None
     assert result.category == ComponentCategory.HARDWARE_MISC
+
+
+@pytest.mark.parametrize(
+    ("ref", "value", "hint", "category"),
+    [
+        # CDXL: a vactrol on an unfamiliar designator.
+        ("OC1", "VTL5C4/2", None, ComponentCategory.OPTOELECTRONICS),
+        # Nutty Fuzz: a bare 'LDR' with its TYPE cell.
+        (
+            "LDR",
+            "9203",
+            category_from_type("Light dependant resistor"),
+            ComponentCategory.OPTOELECTRONICS,
+        ),
+        (
+            "LMP1",
+            "2174",
+            category_from_type("Incandescent lamp (12V, 40mA)"),
+            ComponentCategory.HARDWARE_MISC,
+        ),
+        (
+            "FB1",
+            "FB",
+            category_from_type("Ferrite Bead"),
+            ComponentCategory.HARDWARE_MISC,
+        ),
+    ],
+)
+def test_parts_named_by_value_or_type(
+    ref: str, value: str, hint: ComponentCategory | None, category: ComponentCategory
+) -> None:
+    result = categorize_part(ref, value, hint)
+    assert result is not None
+    assert result.category == category
 
 
 def test_category_from_type() -> None:
@@ -145,3 +185,33 @@ def test_table_designator_quantity() -> None:
     page = {"tables": [table], "text": "", "words": []}
     entries = _table_entries([page], create_empty_stats())  # type: ignore[list-item]
     assert ("TERMINAL BLOCK", 3) in [(e.ref, e.qty) for e in entries]
+
+
+def test_blank_value_takes_the_first_choice_in_notes() -> None:
+    # ElectroVibe: the LDR's VALUE cell is empty; NOTES lists the choices.
+    table = [
+        ["LOCATION", "VALUE", "TYPE", "NOTES"],
+        ["LDR1", "", "Light Dependent Resistor", "(7530, 7532, 9203, or similar)"],
+        ["SW1", "", "6mm x 6mm Push Button Switch", "[Link]"],
+    ]
+    page = {"tables": [table], "text": "", "words": []}
+    entries = _table_entries([page], create_empty_stats())  # type: ignore[list-item]
+    assert [(e.ref, e.value) for e in entries] == [
+        ("LDR1", "7530"),
+        ("SW1", "6mm x 6mm Push Button Switch"),
+    ]
+
+
+def test_unrecognized_table_row_warns() -> None:
+    table = [
+        ["LOCATION", "VALUE", "TYPE", "NOTES"],
+        ["LOCATION", "VALUE", "TYPE", "NOTES"],  # a repeated header is not a part
+        ["USB", "USB PORT", "Type-B, Female", "(Link)"],
+        ["C9", "", "OMIT", ""],
+    ]
+    page = {"tables": [table], "text": "", "words": []}
+    stats = create_empty_stats()
+    _table_entries([page], stats)  # type: ignore[list-item]
+    assert [(w.kind, w.ref) for w in stats["warnings"]] == [
+        (ParseWarningKind.UNPARSED_VALUE, "USB")
+    ]
