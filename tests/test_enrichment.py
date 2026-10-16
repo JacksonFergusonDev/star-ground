@@ -10,9 +10,9 @@ from src.bom_lib import (
 )
 from src.bom_lib.parser import (
     _table_entries,
+    capacitor_notes,
     category_from_type,
     enrich_value_from_type,
-    rating_from_notes,
 )
 from src.bom_lib.utils import float_to_search_string
 
@@ -30,6 +30,9 @@ from src.bom_lib.utils import float_to_search_string
         ("2P4T", "16mm Mini Rotary switch, 2P4T", "2P4T Mini Rotary"),
         ("Red 3mm", "3mm Red LED, Diffused", "3mm Red LED"),  # Motorizer
         ("BLUE", "3mm LED, Blue", "3mm Blue LED"),  # Bolide
+        ("MOMENTARY", "Momentary SPST Footswitch", "SPST MOMENTARY"),  # Fornicus
+        ("SPDT", "Toggle switch, 2-position (SPDT)", "SPDT ON/ON"),  # Maleficent Mids
+        ("SPDT", "Toggle switch, 3-position (SPDT)", "SPDT"),  # positions not guessed
     ],
 )
 def test_enrich_value_from_type(value: str, type_text: str, expected: str) -> None:
@@ -107,6 +110,7 @@ def test_current_rating_is_not_a_pot_value() -> None:
         ("HARD", "W20KC", None, ComponentCategory.POTENTIOMETERS),  # Dingo
         ("DIP1", "DIP-5", None, ComponentCategory.SWITCHES),  # Muffin Factory
         ("SIDECHAIN", '1/4" Switching TRS', None, ComponentCategory.HARDWARE_MISC),
+        ("FREQ", "500R TRIM", None, ComponentCategory.POTENTIOMETERS),  # Frost Drive
     ],
 )
 def test_parts_named_by_value_or_type(
@@ -139,10 +143,13 @@ def test_named_part_uses_type_hint() -> None:
         ("C1", "1u", "25VDC minimum", "1u (25V minimum)"),  # EV Preamp
         ("R1", "10K", "25V", "10K"),
         ("C1", "100n", "", "100n"),
+        # Polar Cap: polarity is part of the purchase.
+        ("C6", "4u7", "* 50V minimum, Non-Polar", "4u7 NP (50V minimum)"),
+        ("C4", "10u NP", "Non-polar", "10u NP"),
     ],
 )
-def test_rating_from_notes(ref: str, value: str, notes: str, expected: str) -> None:
-    assert rating_from_notes(ref, value, notes) == expected
+def test_capacitor_notes(ref: str, value: str, notes: str, expected: str) -> None:
+    assert capacitor_notes(ref, value, notes) == expected
 
 
 def test_trimmer_notes_are_not_part_of_the_value() -> None:

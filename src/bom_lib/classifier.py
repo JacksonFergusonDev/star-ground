@@ -29,6 +29,7 @@ _TRIM_NOTE = re.compile(
     re.IGNORECASE,
 )
 _MILLIAMPS = re.compile(r"\dmA\b")
+_OHMS = re.compile(r"(?<![\w.])\d+(?:\.\d+)?R\d*(?![\w.])")
 _VACTROL = re.compile(r"VTL\d")
 # A DIP switch, written with a dash ('DIP-5'), unlike socket sizes ('DIP8').
 DIP_SWITCH = re.compile(r"\bDIP-\d+\b|\bDIP[- ]?\d+\b.*\bSWITCH|\bDIP SWITCH")
@@ -122,6 +123,9 @@ def _named_control_category(
         return ComponentCategory.SWITCHES
     # '250mA' is a current rating, not a 250M audio-taper pot.
     if _POT_VALUE.search(val_up) and not _MILLIAMPS.search(val):
+        return ComponentCategory.POTENTIOMETERS
+    # An ohms trimmer: Frost Drive's 'FREQ  500R TRIM'.
+    if _OHMS.search(val_up) and _TRIM_NOTE.search(val):
         return ComponentCategory.POTENTIOMETERS
     # A vactrol on an unfamiliar designator: CDXL's 'OC1  VTL5C4/2'.
     if _VACTROL.match(val_up):

@@ -195,6 +195,13 @@ def _grid_variants(
             names = _column_names(
                 page.lines[line - 1] if line else [], starts, by_line, line - 1
             )
+            # No header: name each column by its first listing ('MID C10K Dual'
+            # / 'MID C100K Dual', Frost Drive's alternate pot).
+            first = sorted((e for e in row if e.ref == ref), key=lambda e: e.x0)
+            names = [
+                f"{e.ref} {e.value}" if name == f"Variant {k + 1}" else name
+                for k, (name, e) in enumerate(zip(names, first, strict=True))
+            ]
             groups: list[list[Entry]] = [[] for _ in starts]
             while by_line.get(line):
                 for e in by_line[line]:
@@ -224,7 +231,8 @@ def _column_names(
         return names
     for k in range(len(starts)):
         text = " ".join(c.text for c in header if _column_of(c.x0, starts) == k)
-        if text:
+        # The end of a sentence is not a name ('... scaled accordingly.').
+        if text and not text.endswith(".") and not text[0].islower():
             names[k] = text
     return names
 

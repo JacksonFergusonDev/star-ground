@@ -49,6 +49,22 @@ class TestGrids:
         assert [e.value for e in plan.variants[1].entries] == ["39K", "82K"]
         assert plan.common == ()
 
+    def test_grid_without_a_header_is_named_by_its_first_row(self) -> None:
+        # Frost Drive: an alternate-pot table under a sentence ending '... accordingly.'
+        page = _page(
+            [("accordingly.", 40)],
+            [("MID", 40), ("C10K Dual", 80), ("MID", 280), ("C100K Dual", 320)],
+            [("R4", 40), ("1K", 80), ("R4", 280), ("10K", 320)],
+        )
+        entries = [
+            Entry("MID", "C10K Dual", 0, line=1, x0=40),
+            Entry("MID", "C100K Dual", 0, line=1, x0=280),
+            Entry("R4", "1K", 0, line=2, x0=40),
+            Entry("R4", "10K", 0, line=2, x0=280),
+        ]
+        plan = plan_builds(entries, [page])
+        assert _names(plan) == ["MID C10K Dual", "MID C100K Dual"]
+
     def test_see_below_placeholders_are_replaced_by_the_grid(self) -> None:
         page = _page(
             [("R1", 40), ("1M", 80), ("IC1", 280), ("SEE BELOW", 320)],

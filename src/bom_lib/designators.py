@@ -28,11 +28,14 @@ _PREFIXES: tuple[tuple[str, ComponentCategory | None], ...] = (
     ("LED", _CAT.DIODES),
     ("CLR", _CAT.RESISTORS),
     ("POT", _CAT.POTENTIOMETERS),
+    ("PNP", _CAT.TRANSISTORS),  # Twin Face: 'PNP1  AC128'
+    ("NPN", _CAT.TRANSISTORS),
     ("SW", _CAT.SWITCHES),
     ("IC", _CAT.ICS),
     ("OP", _CAT.ICS),
     ("TR", _CAT.POTENTIOMETERS),
     ("VR", _CAT.POTENTIOMETERS),
+    ("RV", _CAT.POTENTIOMETERS),  # KiCad variable resistor (Sheepylove: 'RV1  50k')
     ("R", _CAT.RESISTORS),
     ("C", _CAT.CAPACITORS),
     ("D", _CAT.DIODES),

@@ -135,7 +135,10 @@ class TestFindListings:
         ("GE (see notes)", "GE"),
         ("AB38T-32.768KHZ Crystal", "AB38T-32.768KHZ"),
         ("2P4T Mini Rotary Switch", "2P4T Mini Rotary"),
-        ("DIP-5 Dip Switch", "DIP-5"),
+        # A bare 'DIP2' would read as an IC package size (Frost Drive).
+        ("DIP-5 Dip Switch", "DIP-5 Dip Switch"),
+        ("DIP2 Dip Switch", "DIP2 Dip Switch"),
+        ("AC128 (or equivalent)", "AC128"),  # Twin Face
         ("3mm Red LED", "3mm Red LED"),
         ("24LC32A *Included", "24LC32A"),  # Deflector: supplied with the PCB
         # Mini Heterodyne: a trailing link or remark.
@@ -287,6 +290,23 @@ class TestCellRepairs:
         assert find_listings(_line("TONE BYPASS SWITCH", "DPDT ON/ON")) == [
             Listing("TONE BYPASS SWITCH", "DPDT ON/ON")
         ]
+
+    def test_bare_toggle_positions_are_a_control_value(self) -> None:
+        # Trojan Horse: 'SLA  ON/OFF/ON'; Minidrive: 'DPDT On-On-On' stays one value.
+        assert find_listings(_line("SLA", "ON/OFF/ON")) == [Listing("SLA", "ON/OFF/ON")]
+        assert find_listings(_line("SW1", "DPDT On-On-On")) == [
+            Listing("SW1", "DPDT On-On-On")
+        ]
+
+    def test_value_stops_at_the_next_designator_column(self) -> None:
+        # Emu Amp Simulator: a pin-header note sits in the IC column.
+        words = [
+            *_line("R1", "1M", "IC1", "TL072", top=100),
+            *_line("R2", "1M", "IC2", "TL072", top=120),
+            *_line("R3", "1M", "IC3", "TL072", top=140),
+            *_line("R4", "1n", "Pinheader", top=160),  # note starts at the IC column
+        ]
+        assert Listing("R4", "1n") in find_listings(words)
 
     def test_c_taper_value_is_not_a_designator(self) -> None:
         assert find_listings(_line("RATE", "C1M", "RES", "C1M")) == [
