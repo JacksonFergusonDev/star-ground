@@ -84,6 +84,7 @@ _HEADER_WORDS = _LAYOUT_WORDS | {
 # A merged 'NAME value' cell is split only when the value is short
 # ('DPDT (On / Off / On)' is six words).
 _MAX_MERGED_VALUE_WORDS = 6
+_DASHES = frozenset({"-", "\u2013", "\u2014"})
 # A function label printed between a designator and its value: 'SW1 (Power) SPDT'.
 _LABEL = re.compile(r"\([^()\d]*\)")
 _LED_WORD = re.compile(r"\bLED\b", re.IGNORECASE)
@@ -91,6 +92,8 @@ _LED_WORD = re.compile(r"\bLED\b", re.IGNORECASE)
 _LOWERCASE_WORD = re.compile(r"[a-z][a-z'-]*[.,;:]?")
 _ASIDE = re.compile(r"\(see notes?\)", re.IGNORECASE)
 # Trailing words that only restate the component type.
+# A part supplied with the PCB is still a part: '24LC32A *Included' (Deflector).
+_INCLUDED = re.compile(r"\s*\*\s*Included(?: with (?:the )?PCB)?\s*$", re.IGNORECASE)
 _REDUNDANT_SUFFIX = re.compile(r"\s+(?:Crystal|Switch)$", re.IGNORECASE)
 
 
@@ -254,8 +257,9 @@ def _is_annotation(cell: str) -> bool:
 def clean_value(value: str) -> str:
     """Strips markers that are not part of a purchasable value.
 
-    Removes optional-part asterisks, '(see notes)' asides, and trailing words
-    that only restate the component type ('AB38T Crystal' -> 'AB38T').
+    Removes optional-part asterisks, '(see notes)' asides, '*Included' markers,
+    and trailing words that only restate the component type ('AB38T Crystal'
+    -> 'AB38T').
 
     Args:
         value: The raw value text.
@@ -263,7 +267,7 @@ def clean_value(value: str) -> str:
     Returns:
         The cleaned value.
     """
-    value = _ASIDE.sub("", value).replace("*", " ")
+    value = _INCLUDED.sub("", _ASIDE.sub("", value)).replace("*", " ")
     value = " ".join(value.split())
     # A leading function label is not part of the value: '(Voltage) SPDT Toggle'.
     label = _LABEL.match(value)
@@ -281,6 +285,15 @@ def _split_merged(cell: Cell) -> list[Cell]:
     rest is a short value; prose ('D8 and D9 are only needed...') is left whole.
     """
     words = cell.text.split()
+    if (
+        len(words) > 2
+        and words[1] in _DASHES
+        # Not a range: 'D21 - D28' (Q-Tune), 'POT1 - 6' (6 Band EQ).
+        and not (words[2].isdigit() or is_designator(words[2]))
+    ):
+        # 'MODE - 1P8T Mini Rotary' (HAARP): a dash separates name and value.
+        cell = Cell((cell.words[0], *cell.words[2:]))
+        words = cell.text.split()
     if len(words) < 2 or len(words) > _MAX_MERGED_VALUE_WORDS + 1:
         return [cell]
     name = words[0]

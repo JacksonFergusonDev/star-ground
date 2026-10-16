@@ -29,6 +29,7 @@ _TRIM_NOTE = re.compile(
     re.IGNORECASE,
 )
 _MILLIAMPS = re.compile(r"\dmA\b")
+_VACTROL = re.compile(r"VTL\d")
 _POT_VALUE = re.compile(
     r"(?<![\w.])(?:[ABCWG]\d+(?:\.\d+)?[KM]|\d+(?:\.\d+)?[KM][ABCWG]?)(?![\w.])"
 )
@@ -119,6 +120,9 @@ def _named_control_category(
     # '250mA' is a current rating, not a 250M audio-taper pot.
     if _POT_VALUE.search(val_up) and not _MILLIAMPS.search(val):
         return ComponentCategory.POTENTIOMETERS
+    # A vactrol on an unfamiliar designator: CDXL's 'OC1  VTL5C4/2'.
+    if _VACTROL.match(val_up):
+        return ComponentCategory.OPTOELECTRONICS
     if name in constants.SWITCH_LABELS and any(
         x in val_up for x in ("ON", "SW", "SP", "DP")
     ):

@@ -136,6 +136,7 @@ class TestFindListings:
         ("AB38T-32.768KHZ Crystal", "AB38T-32.768KHZ"),
         ("2P4T Mini Rotary Switch", "2P4T Mini Rotary"),
         ("3mm Red LED", "3mm Red LED"),
+        ("24LC32A *Included", "24LC32A"),  # Deflector: supplied with the PCB
     ],
 )
 def test_clean_value(raw: str, clean: str) -> None:
@@ -232,6 +233,16 @@ class TestCellRepairs:
             Listing("C100", "100u"),
             Listing("TREBLE", "A25K"),
         ]
+
+    def test_dash_separates_a_name_from_its_value(self) -> None:
+        # HAARP: 'DIRECTION - SPDT On/Off/On'.
+        assert find_listings(_line("MODE - 1P8T Mini Rotary")) == [
+            Listing("MODE", "1P8T Mini Rotary")
+        ]
+
+    def test_dashed_ranges_are_not_name_and_value(self) -> None:
+        assert find_listings(_line("D21 - D28", "8")) == []
+        assert find_listings(_line("POT1 - 6", "B50K")) == []
 
     def test_multiword_control_name(self) -> None:
         assert find_listings(_line("TONE BYPASS SWITCH", "DPDT ON/ON")) == [
