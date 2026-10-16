@@ -73,6 +73,14 @@ def expand_refs(ref_raw: str) -> list[str]:
     """
     parts = [p.strip() for p in ref_raw.split(",")]
     if len(parts) > 1 and all(parts):
+        # 'C12, 15, 16' (Q-Tune): a bare number reuses the previous prefix.
+        prefix = ""
+        for k, part in enumerate(parts):
+            m = re.match(r"[A-Za-z]+", part)
+            if m:
+                prefix = m.group(0)
+            elif prefix and part.isdigit():
+                parts[k] = prefix + part
         return [ref for part in parts for ref in _expand_range(part)]
     return _expand_range(ref_raw)
 
