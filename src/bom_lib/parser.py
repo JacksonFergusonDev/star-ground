@@ -33,6 +33,7 @@ from src.bom_lib.verification import (
     check_bom_reconciliation,
     check_classification,
     check_duplicate,
+    check_footnotes,
     check_unextracted_refs,
 )
 
@@ -52,6 +53,7 @@ def ingest_bom_line(
     val_raw: str,
     stats: StatsDict | None = None,
     category_hint: ComponentCategory | None = None,
+    qty: int = 1,
 ) -> int:
     """Core ingestion kernel: Expands refs, classifies, and updates inventory.
 
@@ -70,6 +72,7 @@ def ingest_bom_line(
         stats: Optional stats object to track duplicate refs and counts.
         category_hint: Category from a TYPE column, for named parts the
             designator and value cannot classify.
+        qty: How many of each designator to buy ('TERMINAL BLOCK (Qty 3)').
 
     Returns:
         The number of valid parts successfully found and recorded.
@@ -98,7 +101,7 @@ def ingest_bom_line(
         main_key = make_component_key(result.category, result.clean_value)
 
         # 1. Record Main Part
-        inventory.add_part(source, main_key, r)
+        inventory.add_part(source, main_key, r, qty)
 
         # 2. Handle Auto-Injection (e.g., Sockets)
         if result.injected_key:
@@ -276,6 +279,7 @@ def parse_user_inventory(filepath: str) -> Inventory:
     return stock
 
 
+_REF_QUANTITY = re.compile(r"\s*\(\s*qty\.?\s*(\d+)\s*\)\s*$", re.IGNORECASE)
 _PART_NUMBER = re.compile(r"\b\d?[A-Z]{1,4}\d{2,5}[A-Z]{0,2}\b")
 _POLE_THROW = re.compile(r"\b(?:[SD34]P[DS]T|\dP\dT)\b")
 
@@ -287,6 +291,7 @@ _TYPE_HINTS: tuple[tuple[str, ComponentCategory], ...] = (
     ("transformer", ComponentCategory.HARDWARE_MISC),
     ("inductor", ComponentCategory.HARDWARE_MISC),
     ("fuse", ComponentCategory.HARDWARE_MISC),
+    ("terminal block", ComponentCategory.HARDWARE_MISC),
     ("switch", ComponentCategory.SWITCHES),
     ("trimmer", ComponentCategory.POTENTIOMETERS),
     ("pot", ComponentCategory.POTENTIOMETERS),
@@ -359,7 +364,9 @@ def enrich_value_from_type(value: str, type_text: str, notes: str = "") -> str:
     type_text = " ".join(type_text.split())
     detail = f"{type_text} {' '.join(notes.split())}".upper()
     if not any(ch.isdigit() for ch in value):
-        part = _PART_NUMBER.search(type_text)
+        # TYPE first ('Germanium diode, 1N34A'), then NOTES ('SANDED' /
+        # '(JRC4558, etc)', Revision Overdrive).
+        part = _PART_NUMBER.search(type_text) or _PART_NUMBER.search(notes)
         if part:
             return part.group(0)
         # 'RED' / '3mm Red LED, Diffused'; 'LED' / 'Indicator LED'.
@@ -480,6 +487,13 @@ def _table_entries(
                     if len(parts) == 2:
                         ref_raw, val_raw = parts[0].strip(), parts[1].strip()
 
+                # Auditorium: 'TERMINAL BLOCK (Qty 3)'.
+                qty = 1
+                quantity = _REF_QUANTITY.search(ref_raw)
+                if quantity:
+                    qty = int(quantity.group(1))
+                    ref_raw = ref_raw[: quantity.start()].strip()
+
                 if ref_raw and val_raw:
                     entries.append(
                         Entry(
@@ -489,6 +503,7 @@ def _table_entries(
                             table=table_no,
                             hint=hint,
                             follows_or=follows_or,
+                            qty=qty,
                         )
                     )
                     follows_or = False
@@ -573,7 +588,13 @@ def _ingest_entries(
             _record_not_populated(stats, entry.ref, entry.value)
             continue
         stats["parts_found"] += ingest_bom_line(
-            inventory, source_name, entry.ref, entry.value, stats, entry.hint
+            inventory,
+            source_name,
+            entry.ref,
+            entry.value,
+            stats,
+            entry.hint,
+            entry.qty,
         )
     return inventory, stats
 
@@ -750,6 +771,7 @@ def parse_pedalpcb_pdf(filepath: str, source_name: str) -> ParseResult:
             # some build or option.
             page_texts = [data["text"] or "" for data in pages_data]
             check_unextracted_refs(page_texts, union, stats)
+            check_footnotes(page_texts, stats)
             check_bom_reconciliation(page_texts, union, stats)
 
         except Exception as e:

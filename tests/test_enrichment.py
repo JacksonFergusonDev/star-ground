@@ -49,6 +49,9 @@ def test_enrich_value_from_type(value: str, type_text: str, expected: str) -> No
             "*Dual gang potentiometer",
             "B100K DUAL",
         ),
+        ("SANDED", "Dual op-amp, DIP8", "(JRC4558, etc)", "JRC4558"),
+        ("GE", "Germanium diode", "1N34A, 1N270, D9E, etc", "1N34A"),
+        ("EXPRESSO", "Expresso Microcontroller", "*Included with PCB", "EXPRESSO"),
     ],
 )
 def test_enrich_value_from_type_and_notes(
@@ -132,3 +135,13 @@ def test_table_or_row_marks_the_next_entry() -> None:
         ("D10a", True),
         ("D10b", False),
     ]
+
+
+def test_table_designator_quantity() -> None:
+    table = [
+        ["LOCATION", "TYPE", "NOTES"],
+        ["TERMINAL BLOCK (Qty 3)", "5mm Screw Terminal Block, 2 position", "[LINK]"],
+    ]
+    page = {"tables": [table], "text": "", "words": []}
+    entries = _table_entries([page], create_empty_stats())  # type: ignore[list-item]
+    assert ("TERMINAL BLOCK", 3) in [(e.ref, e.qty) for e in entries]
