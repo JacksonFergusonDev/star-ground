@@ -740,13 +740,24 @@ def _ingest_entries(
 
     Each build gets its own duplicate tracking, so two variants listing the
     same designator are not conflicts, while a conflict inside one build is.
+    A designator listed again, with the same value, in another parts table of
+    the same build belongs to another board (EV Mini's LFO and Audio PCBs
+    both have Q1-Q4), so it is bought again rather than merged.
     """
     inventory = create_empty_inventory()
     stats = create_empty_stats()
+    table_of: dict[str, int] = {}
     for entry in entries:
         if entry.not_populated:
             _record_not_populated(stats, entry.ref, entry.value)
             continue
+        if entry.table is not None:
+            first = table_of.setdefault(entry.ref, entry.table)
+            if (
+                first != entry.table
+                and stats["seen_refs"].get(entry.ref) == entry.value
+            ):
+                del stats["seen_refs"][entry.ref]
         stats["parts_found"] += ingest_bom_line(
             inventory,
             source_name,
