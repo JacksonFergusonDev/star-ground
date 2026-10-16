@@ -9,13 +9,14 @@ import csv
 import logging
 import re
 import traceback
+from dataclasses import replace
 
 from src.bom_lib import constants
 from src.bom_lib.builds import BuildPlan, Entry, PageContext, plan_builds
 from src.bom_lib.classifier import categorize_part, normalize_value_by_category
 from src.bom_lib.designators import parse_designator
 from src.bom_lib.enums import ComponentCategory
-from src.bom_lib.layout import find_listings, page_lines
+from src.bom_lib.layout import find_bom_rows, find_listings, page_lines
 from src.bom_lib.types import (
     BuildVariant,
     Inventory,
@@ -34,6 +35,7 @@ from src.bom_lib.verification import (
     check_classification,
     check_duplicate,
     check_footnotes,
+    check_row_quantity,
     check_unextracted_refs,
 )
 
@@ -396,13 +398,16 @@ def enrich_value_from_type(value: str, type_text: str, notes: str = "") -> str:
 
 
 def _table_entries(
-    pages_data: list[PDFPageExtraction], stats: StatsDict
+    pages_data: list[PDFPageExtraction],
+    stats: StatsDict,
+    only_pages: set[int] | None = None,
 ) -> list[Entry]:
     """Strategy 1: Extract entries from ruled tables (LOCATION / VALUE / TYPE / NOTES).
 
     Args:
         pages_data: Pre-extracted page data.
         stats: The statistics dictionary for tracking progress.
+        only_pages: If given, the only pages to read.
 
     Returns:
         One entry per table row that names a designator and a value.
@@ -410,6 +415,8 @@ def _table_entries(
     entries: list[Entry] = []
     table_no = -1
     for page_no, data in enumerate(pages_data):
+        if only_pages is not None and page_no not in only_pages:
+            continue
         for table in data["tables"]:
             if not table:
                 continue
@@ -510,6 +517,42 @@ def _table_entries(
     return entries
 
 
+def _text_table_entries(
+    pages_data: list[PDFPageExtraction], stats: StatsDict
+) -> list[Entry]:
+    """Strategy 1b: Extract entries from unruled 'Reference | Value | Quantity' tables.
+
+    Each row may list several designators ('R10-R12,R18'); it becomes one
+    entry per designator. A quantity that disagrees with the designator count
+    is flagged, since one of the two must be wrong.
+
+    Args:
+        pages_data: Pre-extracted page data including word positions.
+        stats: The statistics dictionary for tracking progress.
+
+    Returns:
+        One entry per designator, in reading order.
+    """
+    entries: list[Entry] = []
+    for page_no, data in enumerate(pages_data):
+        for row in find_bom_rows(data["words"]):
+            stats["lines_read"] += 1
+            refs = expand_refs(row.refs)
+            check_row_quantity(stats, row.refs, len(refs), row.quantity)
+            entries += [
+                Entry(
+                    ref,
+                    row.value,
+                    page_no,
+                    line=row.line,
+                    x0=row.x0,
+                    table=page_no,
+                )
+                for ref in refs
+            ]
+    return entries
+
+
 def _is_not_populated(value: str) -> bool:
     return value.upper() in constants.NOT_POPULATED_VALUES
 
@@ -535,7 +578,11 @@ def _is_ignored(value: str) -> bool:
 
 
 def _layout_entries(
-    pages_data: list[PDFPageExtraction], stats: StatsDict, table_refs: set[str]
+    pages_data: list[PDFPageExtraction],
+    stats: StatsDict,
+    table_refs: set[str],
+    only_pages: set[int] | None = None,
+    skip_lines: set[tuple[int, int]] | None = None,
 ) -> list[Entry]:
     """Strategy 2: Extract entries from the page layout.
 
@@ -547,17 +594,21 @@ def _layout_entries(
         pages_data: Pre-extracted page data including word positions.
         stats: The statistics dictionary for tracking progress.
         table_refs: Designators already extracted from ruled tables.
+        only_pages: If given, the only pages to read.
+        skip_lines: (page, line) pairs already read as text-table rows.
 
     Returns:
         One entry per listing, with its page position.
     """
     entries: list[Entry] = []
     for page_no, data in enumerate(pages_data):
+        if only_pages is not None and page_no not in only_pages:
+            continue
         for listing in find_listings(data["words"]):
             ref, value = listing.ref, listing.value
             stats["lines_read"] += 1
 
-            if ref in table_refs:
+            if ref in table_refs or (page_no, listing.line) in (skip_lines or set()):
                 continue
             entry = Entry(ref, value, page_no, line=listing.line, x0=listing.x0)
             if not entry.not_populated and (_is_ignored(value) or len(value) > 50):
@@ -750,11 +801,24 @@ def parse_pedalpcb_pdf(filepath: str, source_name: str) -> ParseResult:
                 pass
 
             # --- STRATEGY 1: TABLE EXTRACTION ---
-            entries = _table_entries(pages_data, stats)
+            # A text bill of materials is the document's parts list, so the
+            # other strategies only read its own pages: elsewhere (vector
+            # schematics) symbol labels look like listings and drawings like
+            # tables.
+            text_rows = _text_table_entries(pages_data, stats)
+            bom_pages = {row.page for row in text_rows} or None
+            row_lines = {(row.page, row.line) for row in text_rows}
+            entries = _table_entries(pages_data, stats, bom_pages)
+            # Number the text tables after the ruled ones.
+            entries += [
+                replace(row, table=len(entries) + row.page) for row in text_rows
+            ]
 
             # --- STRATEGY 2: LAYOUT ANALYSIS ---
             # Recovers anything the tables missed (or everything, for column layouts)
-            entries += _layout_entries(pages_data, stats, {e.ref for e in entries})
+            entries += _layout_entries(
+                pages_data, stats, {e.ref for e in entries}, bom_pages, row_lines
+            )
 
             # --- BUILDS: variants and options ---
             pages = [

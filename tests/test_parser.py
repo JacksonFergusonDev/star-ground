@@ -588,6 +588,10 @@ def test_range_expansion_logic():
     # 4. Broken/Weird input (Safety check)
     assert expand_refs("R1-") == ["R1-"]
 
+    # 5. Comma-separated lists of single refs and ranges (grouped BOMs)
+    assert expand_refs("R10-R12,R18") == ["R10", "R11", "R12", "R18"]
+    assert expand_refs("C4, C5") == ["C4", "C5"]
+
 
 def test_ref_expansion_integrity():
     """

@@ -40,6 +40,10 @@ _LED_DESCRIPTOR = re.compile(
     re.IGNORECASE,
 )
 
+# The title block of a schematic exported from an EDA tool.
+_SCHEMATIC_PAGE = re.compile(r"\bKiCad\b|\.kicad_sch\b|\bFile:\s*\S+\.sch\b", re.I)
+_IC_SECTION = re.compile(r"(?P<chip>(?:IC|U)\d+)[A-H]")
+
 _DATE = re.compile(r"\d{1,2}[./-]\d{1,2}[./-]\d{2,4}")
 
 # Designator prefixes whose category is unambiguous.
@@ -155,14 +159,41 @@ def check_unextracted_refs(
     }
     listed: set[str] = set()
     for text in page_texts:
-        listed |= find_listed_refs(text)
+        # A vector schematic labels every symbol 'REF value'; those labels are
+        # a drawing, not a parts list.
+        if not _SCHEMATIC_PAGE.search(text):
+            listed |= find_listed_refs(text)
 
     for ref in sorted(r for r in listed if r.upper() not in extracted):
+        section = _IC_SECTION.fullmatch(ref.upper())
+        if section and section.group("chip") in extracted:
+            # 'IC2A' on a schematic is one half of the dual op-amp IC2.
+            continue
         _warn(
             stats,
             ParseWarningKind.UNEXTRACTED_REF,
             ref,
             f"{ref} is listed in the document but is missing from the parts list.",
+        )
+
+
+def check_row_quantity(
+    stats: StatsDict, refs: str, ref_count: int, quantity: int | None
+) -> None:
+    """Warns when a grouped row's quantity disagrees with its designators.
+
+    Args:
+        stats: Stats object that receives the warning.
+        refs: The designator cell as printed ('R10-R12,R18').
+        ref_count: How many designators the cell expands to.
+        quantity: The row's quantity cell, if any.
+    """
+    if quantity is not None and quantity != ref_count:
+        _warn(
+            stats,
+            ParseWarningKind.BOM_MISMATCH,
+            refs,
+            f"{refs} lists {ref_count} designators but a quantity of {quantity}.",
         )
 
 
