@@ -305,6 +305,11 @@ _TYPE_HINTS: tuple[tuple[str, ComponentCategory], ...] = (
     ("lamp", ComponentCategory.HARDWARE_MISC),
     ("ferrite", ComponentCategory.HARDWARE_MISC),
     ("light depend", ComponentCategory.OPTOELECTRONICS),
+    ("display", ComponentCategory.OPTOELECTRONICS),
+    (
+        "microcontroller",
+        ComponentCategory.ICS,
+    ),  # Tuner: 'ESP200  ESP32C3'  # Tuner: '7-segment LED display'
     ("terminal block", ComponentCategory.HARDWARE_MISC),
     ("switch", ComponentCategory.SWITCHES),
     ("trimmer", ComponentCategory.POTENTIOMETERS),
@@ -330,18 +335,22 @@ _LED_SHORTHAND = re.compile(
 _ACTUATION = re.compile(r"(?<!non-)(?<!non )\b(momentary|latching)\b", re.IGNORECASE)
 _DUAL_GANG = re.compile(r"\bDUAL[- ]?GANG")
 _POSITIONS = re.compile(r"\b(?:ON|OFF)(?:/(?:ON|OFF)){1,2}\b")
+_TWO_POSITION = re.compile(r"\b2[- ]POSITION\b")
 # Capacitor constructions a TYPE cell may name that the VALUE cell omits.
 _DIELECTRICS = (("TANTALUM", "Tantalum"), ("MLCC", "MLCC"))
 
 
 _VOLTAGE = re.compile(r"\b(\d+(?:\.\d+)?)\s*V(?:DC)?\b", re.IGNORECASE)
+_NON_POLAR = re.compile(r"\bnon[- ]?polar(?:i[sz]ed)?\b|\bbi-?polar\b", re.IGNORECASE)
+_NP_MARK = re.compile(r"\b(?:NP|BP)\b|\bnon[- ]?polar|\bbi-?polar", re.IGNORECASE)
 
 
-def rating_from_notes(ref: str, value: str, notes: str) -> str:
-    """Appends a capacitor voltage rating that only appears in the NOTES column.
+def capacitor_notes(ref: str, value: str, notes: str) -> str:
+    """Appends capacitor specs that only appear in the NOTES column.
 
-    Taqueria lists C102 as '10u' with the note '25V Minimum Voltage'; the
-    rating is part of what must be bought.
+    Taqueria lists C102 as '10u' with the note '25V Minimum Voltage', and Polar
+    Cap lists C6 as '4u7' with '50V minimum, Non-Polar'; both the rating and
+    the polarity are part of what must be bought.
 
     Args:
         ref: The row's designator.
@@ -349,12 +358,15 @@ def rating_from_notes(ref: str, value: str, notes: str) -> str:
         notes: The NOTES cell of the same row.
 
     Returns:
-        The value with '(<rating> minimum)' appended for capacitors whose notes
-        give a voltage the value does not already state.
+        For capacitors, the value with ' NP' appended when the notes call it
+        non-polar, and '(<rating> minimum)' appended when the notes give a
+        voltage; specs the value already states are not repeated.
     """
     designator = parse_designator(ref)
     if designator is None or designator.category != ComponentCategory.CAPACITORS:
         return value
+    if _NON_POLAR.search(notes) and not _NP_MARK.search(value):
+        value = f"{value} NP"
     rating = _VOLTAGE.search(notes)
     if rating is None or _VOLTAGE.search(value):
         return value
@@ -434,9 +446,11 @@ def enrich_value_from_type(value: str, type_text: str, notes: str = "") -> str:
         and actuation.group(1).lower() not in value.lower()
     ):
         value = f"{value} {actuation.group(1).capitalize()}"
-    if constants.SWITCH_VALUE_PATTERN.search(value.upper()) and not _POLE_THROW.search(
-        value.upper()
-    ):
+    # 'MOMENTARY' / 'Momentary SPST Footswitch' (Fornicus) names only the action.
+    switch_value = constants.SWITCH_VALUE_PATTERN.search(value.upper()) or (
+        _ACTUATION.fullmatch(value.strip()) and "SWITCH" in detail
+    )
+    if switch_value and not _POLE_THROW.search(value.upper()):
         pole = _POLE_THROW.search(type_text.upper())
         if pole:
             return f"{pole.group(0)} {value}"
@@ -447,6 +461,10 @@ def enrich_value_from_type(value: str, type_text: str, notes: str = "") -> str:
         positions = _POSITIONS.search(detail)
         if positions:
             return f"{value} {positions.group(0)}"
+        # 'Toggle switch, 2-position (SPDT)' (Maleficent Mids): two positions
+        # are ON/ON; three could be ON/OFF/ON or ON/ON/ON, so are not guessed.
+        if "TOGGLE" in detail and _TWO_POSITION.search(detail):
+            return f"{value} ON/ON"
     if _DUAL_GANG.search(detail) and "DUAL" not in value.upper():
         return f"{value} Dual"
     if "CAPACITOR" in detail and any(ch.isdigit() for ch in value):
@@ -574,9 +592,7 @@ def _table_entries(
                             check_unclassified_row(stats, ref_raw, val_raw)
                     val_raw = _drop_restated_value(val_raw)
                     if 0 <= notes_idx < len(row_safe):
-                        val_raw = rating_from_notes(
-                            ref_raw, val_raw, row_safe[notes_idx]
-                        )
+                        val_raw = capacitor_notes(ref_raw, val_raw, row_safe[notes_idx])
                         if not _is_not_populated(val_raw):
                             check_version_note(stats, ref_raw, row_safe[notes_idx])
                 elif len(row_safe) == 1 and row_safe[0]:
