@@ -99,6 +99,8 @@ _MAX_MERGED_VALUE_WORDS = 6
 # A designator column is an x-position where at least this many listings start.
 _MIN_COLUMN_REFS = 3
 _COLUMN_TOLERANCE_EM = 0.5
+_TRIM_HEADING = re.compile(r"TRIM(?:MER)?S?(?:\s+POTS?)?\b", re.IGNORECASE)
+_TRIM_MARK = re.compile(r"\bTRIM|\b3362P?\b", re.IGNORECASE)
 _PAREN_LABEL = re.compile(r"\((\w+)\)")
 _DASHES = frozenset({"-", "\u2013", "\u2014"})
 # A function label printed between a designator and its value: 'SW1 (Power) SPDT'.
@@ -391,7 +393,37 @@ def find_listings(words: list[PDFWord]) -> list[Listing]:
     # Pinheader' under a PIN HEADERS heading, Emu Amp Simulator).
     starts = Counter(round(listing.x0) for listing in _scan(words, frozenset()))
     columns = frozenset(x for x, n in starts.items() if n >= _MIN_COLUMN_REFS)
-    return _scan(words, columns)
+    return _mark_trimmers(_scan(words, columns), page_lines(words))
+
+
+def _mark_trimmers(listings: list[Listing], lines: list[list[Cell]]) -> list[Listing]:
+    """Marks listings under a 'TRIM POTS' heading in their column as trimmers.
+
+    CDXL Reissue lists trimmers R20 and R23 under 'TRIM POTS (3362P Type)';
+    by designator alone they would be bought as fixed resistors.
+    """
+    refs = {(listing.line, round(listing.x0)) for listing in listings}
+    headings = [
+        (line_no, cell.x0, cell.size, _TRIM_HEADING.match(cell.text) is not None)
+        for line_no, cells in enumerate(lines)
+        for cell in cells
+        if cell.text.split()[0].upper() in _HEADER_WORDS
+        and (line_no, round(cell.x0)) not in refs
+    ]
+    marked = []
+    for listing in listings:
+        above = [
+            trim
+            for line_no, x0, size, trim in headings
+            if line_no < listing.line
+            and abs(x0 - listing.x0) <= _COLUMN_TOLERANCE_EM * size
+        ]
+        if above and above[-1] and not _TRIM_MARK.search(listing.value):
+            listing = Listing(
+                listing.ref, f"{listing.value} TRIM", listing.line, listing.x0
+            )
+        marked.append(listing)
+    return marked
 
 
 def _in_column(x0: float, size: float, columns: frozenset[int]) -> bool:

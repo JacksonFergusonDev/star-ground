@@ -18,7 +18,7 @@
     },
     "D3": {
       "issue": "value: expected '3mm Red LED', got 'LED'",
-      "warned": false
+      "warned": true
     }
   },
   "dirty__Parentheses": {},

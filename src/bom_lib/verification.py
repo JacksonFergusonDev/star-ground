@@ -57,6 +57,7 @@ _PREFIX_CATEGORIES: list[tuple[str, ComponentCategory]] = [
     ("Q", ComponentCategory.TRANSISTORS),
     ("U", ComponentCategory.ICS),
 ]
+_TRIM_WORD = re.compile(r"\bTRIM(?:MER)?\b", re.IGNORECASE)
 _NUMBERED_REF = re.compile(r"^(?P<prefix>[A-Z]+)\d+$")
 _SWITCH_VALUE = re.compile(
     r"\b(?:[SD3-4]P[DS]T|\dP\dT|ON\s*[/-]\s*(?:OFF\s*[/-]\s*)?ON)\b"
@@ -370,7 +371,13 @@ def check_classification(
             expected == ComponentCategory.ICS
             and category == ComponentCategory.OPTOELECTRONICS
         )
-        if expected is not None and category != expected and not vactrol:
+        # A trimmer under a resistor designator (CDXL Reissue: 'R20  10K TRIM').
+        trimmer = (
+            expected == ComponentCategory.RESISTORS
+            and category == ComponentCategory.POTENTIOMETERS
+            and _TRIM_WORD.search(raw_value) is not None
+        )
+        if expected is not None and category != expected and not (vactrol or trimmer):
             _warn(
                 stats,
                 ParseWarningKind.CATEGORY_CONFLICT,
@@ -465,6 +472,19 @@ def check_bom_reconciliation(
     for key, data in inventory.items():
         if key.category in (ComponentCategory.PCB, ComponentCategory.HARDWARE_MISC):
             continue
+        if key.value.upper() == "LED":
+            # Distortr lists 'D3  LED'; its bill of materials says '3mm Red LED'.
+            named = [e for e in entries if "LED" in e.upper() and e.upper() != "LED"]
+            if named:
+                for ref in data["refs"]:
+                    _warn(
+                        stats,
+                        ParseWarningKind.BOM_MISMATCH,
+                        ref,
+                        f"{ref} is listed only as 'LED'; the document's bill of "
+                        f"materials gives '{named[0]}'.",
+                    )
+                continue
         if any(_values_agree(key.value, entry) for entry in entries):
             continue
         for ref in data["refs"]:
