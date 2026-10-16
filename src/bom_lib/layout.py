@@ -33,7 +33,8 @@ _LINE_TOLERANCE_EM = 0.15
 
 # Unfamiliar numbered labels (CTRL1, FUZZ2) that are not standard designators.
 _NUMBERED_LABEL = re.compile(r"[A-Z]{1,5}\d{1,3}")
-_CONTROL_NAME = re.compile(r"[A-Z][A-Z0-9_-]{1,11}")
+# Single letters (Blue Waffle's 'V  B500K') and slashes ('BASS/MIDS') occur.
+_CONTROL_NAME = re.compile(r"[A-Z](?:[A-Z0-9_/-]{1,11})?")
 _MULTIWORD_NAME = re.compile(r"[A-Z]{2,}(?: [A-Z]{2,}){1,2}")
 # A whole-cell parenthetical on the next line, aligned with a value above it,
 # continues that value ('SPDT Toggle' / '(On/On)').
@@ -83,6 +84,8 @@ _HEADER_WORDS = _LAYOUT_WORDS | {
     "DIP",
     "LEDS",
     "OPTOISOLATORS",
+    "FOOTSWITCHES",
+    "TUBES",
 }
 # A merged 'NAME value' cell is split only when the value is short
 # ('DPDT (On / Off / On)' is six words).
@@ -379,6 +382,14 @@ def find_listings(words: list[PDFWord]) -> list[Listing]:
         while i < len(texts):
             nxt = texts[i + 1] if i + 1 < len(texts) else None
             after = texts[i + 2] if i + 2 < len(texts) else None
+            if nxt is None and current and BOARD_REF.fullmatch(texts[i]):
+                # SuperNuva lists 'D1' and 'D2' with no value at the end of a
+                # line of listings: a part the builder cannot buy as printed.
+                listings.append(
+                    Listing(ref=texts[i], value="", line=line_no, x0=cells[i].x0)
+                )
+                i += 1
+                continue
             if (
                 nxt is None
                 or not _is_ref_cell(texts[i], nxt)

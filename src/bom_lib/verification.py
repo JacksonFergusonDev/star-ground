@@ -286,6 +286,32 @@ def check_duplicate(
         )
 
 
+_VERSION_NOTE = re.compile(r"\bin (?:the )?[\w' -]+? version\b", re.IGNORECASE)
+
+
+def check_version_note(stats: StatsDict, ref: str, notes: str) -> None:
+    """Surfaces a parts-table note that ties a part to one version of the circuit.
+
+    Lot Lizard's NOTES say '* Omitted in Nano version' and '* C1K in Big Box
+    Version': the list is one table for two builds, and which parts to buy
+    depends on the build.
+
+    Args:
+        stats: Stats object that receives the warning.
+        ref: The row's designator.
+        notes: The row's NOTES cell.
+    """
+    note = " ".join(notes.replace("*", " ").split())
+    if _VERSION_NOTE.search(note):
+        _warn(
+            stats,
+            ParseWarningKind.FOOTNOTE,
+            ref,
+            f"{ref}: '{note}'. The document describes more than one version; "
+            "check which parts your build needs.",
+        )
+
+
 def check_unclassified_row(stats: StatsDict, ref: str, value: str) -> None:
     """Warns about a listed part that no category fits.
 

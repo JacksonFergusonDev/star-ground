@@ -29,7 +29,7 @@ from src.bom_lib.types import (
     create_empty_stats,
     make_component_key,
 )
-from src.bom_lib.utils import expand_refs
+from src.bom_lib.utils import expand_refs, parse_value_to_decimal
 from src.bom_lib.verification import (
     check_bom_reconciliation,
     check_classification,
@@ -39,6 +39,7 @@ from src.bom_lib.verification import (
     check_row_quantity,
     check_unclassified_row,
     check_unextracted_refs,
+    check_version_note,
 )
 
 # Characters further apart than this start a new word. pdfplumber's 3pt default
@@ -355,6 +356,22 @@ def rating_from_notes(ref: str, value: str, notes: str) -> str:
     return f"{value} ({rating.group(1)}V minimum)"
 
 
+_RESTATED = re.compile(r"\s*\(\s*(\d+(?:\.\d+)?\s*[pnuµ])F?\s*\)$", re.IGNORECASE)
+
+
+def _drop_restated_value(value: str) -> str:
+    """Drops a parenthetical that restates the value in other units.
+
+    Tone Zester lists C9 as '470n (0.47uF)'; the aside adds nothing to buy.
+    """
+    m = _RESTATED.search(value)
+    if m is None:
+        return value
+    head = value[: m.start()]
+    same = parse_value_to_decimal(head) == parse_value_to_decimal(m.group(1))
+    return head if same else value
+
+
 def category_from_type(type_text: str) -> ComponentCategory | None:
     """Category suggested by a TYPE column description ('Stereo Jack' -> Hardware)."""
     low = type_text.lower()
@@ -404,7 +421,13 @@ def enrich_value_from_type(value: str, type_text: str, notes: str = "") -> str:
         if led:
             return led.group(0).strip()
     actuation = _ACTUATION.search(f"{type_text} {notes}")
-    if actuation and actuation.group(1).lower() not in value.lower():
+    # Only a switch's actuation is chosen separately; a latching relay's part
+    # number already says so ('TQ2-L-5V').
+    if (
+        actuation
+        and "SWITCH" in detail
+        and actuation.group(1).lower() not in value.lower()
+    ):
         value = f"{value} {actuation.group(1).capitalize()}"
     if constants.SWITCH_VALUE_PATTERN.search(value.upper()) and not _POLE_THROW.search(
         value.upper()
@@ -518,6 +541,11 @@ def _table_entries(
                         choice = _NOTES_CHOICE.match(notes.strip())
                         if not val_raw and choice:
                             val_raw = choice.group(1)
+                        # Lone King: 'VOICE | (blank) | Toggle switch, SPDT | 3-position
+                        # (ON/OFF/ON)'; enrichment then adds the positions.
+                        pole = _POLE_THROW.search(type_text.upper())
+                        if not val_raw and pole:
+                            val_raw = pole.group(0)
                         # Kickstart: 'SW1 | (blank) | 6mm x 6mm Push Button Switch'.
                         if not val_raw and type_text:
                             val_raw = type_text
@@ -534,10 +562,13 @@ def _table_entries(
                             and categorize_part(ref_raw, val_raw, hint) is None
                         ):
                             check_unclassified_row(stats, ref_raw, val_raw)
+                    val_raw = _drop_restated_value(val_raw)
                     if 0 <= notes_idx < len(row_safe):
                         val_raw = rating_from_notes(
                             ref_raw, val_raw, row_safe[notes_idx]
                         )
+                        if not _is_not_populated(val_raw):
+                            check_version_note(stats, ref_raw, row_safe[notes_idx])
                 elif len(row_safe) == 1 and row_safe[0]:
                     parts = row_safe[0].strip().split(None, 1)
                     if len(parts) == 2:

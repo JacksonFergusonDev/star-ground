@@ -46,6 +46,8 @@ def test_enrich_value_from_type(value: str, type_text: str, expected: str) -> No
         ("1u MLCC", "MLCC capacitor, 7.2 x 2.5mm", "", "1u MLCC"),
         ("10K", "Resistor, 1/4W", "* LED current limiting resistor", "10K"),
         ("SPST", "Foot switch, SPST", "Momentary SPST", "SPST Momentary"),  # Terrarium
+        # A latching relay's part number already says so.
+        ("TQ2-L-5V", "Single-Coil Latching Relay, 5V", "", "TQ2-L-5V"),
         (
             "B50K",
             "16mm right-angle PCB mount pot",
@@ -220,4 +222,36 @@ def test_unrecognized_table_row_warns() -> None:
     _table_entries([page], stats)  # type: ignore[list-item]
     assert [(w.kind, w.ref) for w in stats["warnings"]] == [
         (ParseWarningKind.UNPARSED_VALUE, "USB")
+    ]
+
+
+def test_blank_switch_value_is_completed_from_type_and_notes() -> None:
+    # Lone King: 'VOICE | (blank) | Toggle switch, SPDT | 3-position (ON/OFF/ON)'.
+    table = [
+        ["LOCATION", "VALUE", "TYPE", "NOTES"],
+        ["VOICE", "", "Toggle switch, SPDT", "3-position (ON/OFF/ON)"],
+        ["C9", "470n (0.47uF)", "Film capacitor", ""],  # Tone Zester
+    ]
+    page = {"tables": [table], "text": "", "words": []}
+    entries = _table_entries([page], create_empty_stats())  # type: ignore[list-item]
+    assert [(e.ref, e.value) for e in entries] == [
+        ("VOICE", "SPDT ON/OFF/ON"),
+        ("C9", "470n"),
+    ]
+
+
+def test_version_notes_warn() -> None:
+    # Lot Lizard: one table for a Nano and a Big Box build.
+    table = [
+        ["LOCATION", "VALUE", "TYPE", "NOTES"],
+        ["C3", "47p", "Ceramic capacitor", "* Omitted in Nano version"],
+        ["BALANCE", "B1K", "16mm pot", "* C1K in Big Box Version"],
+        ["C4", "10u", "Electrolytic capacitor", ""],
+    ]
+    page = {"tables": [table], "text": "", "words": []}
+    stats = create_empty_stats()
+    _table_entries([page], stats)  # type: ignore[list-item]
+    assert [(w.kind, w.ref) for w in stats["warnings"]] == [
+        (ParseWarningKind.FOOTNOTE, "C3"),
+        (ParseWarningKind.FOOTNOTE, "BALANCE"),
     ]
