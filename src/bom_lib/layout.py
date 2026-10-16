@@ -21,6 +21,7 @@ from dataclasses import dataclass, field
 from src.bom_lib import constants
 from src.bom_lib.designators import BOARD_REF, is_designator
 from src.bom_lib.types import PDFWord
+from src.bom_lib.utils import expand_refs
 
 # Gaps wider than this fraction of the font size separate cells. Measured on
 # PedalPCB documents: spaces inside a value are ~0.3em, column gaps >= 0.6em.
@@ -407,3 +408,89 @@ def _absorb_continuations(
         else:
             remaining.append(cell)
     return remaining
+
+
+# Column headers of a text bill of materials ('Reference  Value  Quantity  Notes').
+_REF_HEADERS = frozenset({"REFERENCE", "REFERENCES", "REF", "REFS", "DESIGNATOR"})
+_BOM_COLUMNS = {"VALUE": "value", "QUANTITY": "qty", "QTY": "qty", "NOTES": "notes"}
+
+
+@dataclass(frozen=True, slots=True)
+class BomRow:
+    """One row of a text bill of materials with grouped designators.
+
+    Attributes:
+        refs: The designator cell as printed ('C4,C5', 'R10-R12,R18').
+        value: The value cell.
+        quantity: The quantity cell, if the table has one and it is a number.
+        line: Index of the visual line on the page.
+        x0: Left edge of the designator cell, in points.
+    """
+
+    refs: str
+    value: str
+    quantity: int | None
+    line: int
+    x0: float
+
+
+def find_bom_rows(words: list[PDFWord]) -> list[BomRow]:
+    """Reads a text table headed 'Reference | Value | Quantity | Notes'.
+
+    Unlike a ruled table, nothing but alignment marks the columns, and one row
+    lists several designators (Sheepylove: 'R10-R12,R18  47k  4'). Cells are
+    assigned to the header column they start under. Rows whose first column is
+    not a list of designators (titles, footers) are skipped.
+
+    Args:
+        words: Words extracted from one page.
+
+    Returns:
+        The rows under every such header on the page, top to bottom.
+    """
+    rows: list[BomRow] = []
+    columns: list[tuple[float, str]] = []
+    for line_no, cells in enumerate(page_lines(words)):
+        headers = {c.text.upper(): c for c in cells}
+        ref_header = next((c for c in cells if c.text.upper() in _REF_HEADERS), None)
+        if ref_header is not None and "VALUE" in headers:
+            columns = sorted(
+                [(ref_header.x0, "refs")]
+                + [
+                    (c.x0, _BOM_COLUMNS[name])
+                    for name, c in headers.items()
+                    if name in _BOM_COLUMNS
+                ]
+            )
+            continue
+        if not columns:
+            continue
+        fields: dict[str, str] = {}
+        for cell in cells:
+            under = [
+                name
+                for x0, name in columns
+                if x0 <= cell.x0 + _LINE_TOLERANCE_EM * cell.size
+            ]
+            if under:
+                fields[under[-1]] = f"{fields.get(under[-1], '')} {cell.text}".strip()
+        refs, value = fields.get("refs", ""), fields.get("value", "")
+        if not value or not _is_ref_list(refs):
+            continue
+        qty = fields.get("qty", "")
+        rows.append(
+            BomRow(
+                refs=refs,
+                value=value,
+                quantity=int(qty) if qty.isdigit() else None,
+                line=line_no,
+                x0=cells[0].x0,
+            )
+        )
+    return rows
+
+
+def _is_ref_list(cell: str) -> bool:
+    if not cell or " " in cell:
+        return False
+    return all(is_designator(ref) for ref in expand_refs(cell))

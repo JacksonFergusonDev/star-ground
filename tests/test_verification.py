@@ -15,6 +15,7 @@ from src.bom_lib.verification import (
     check_classification,
     check_duplicate,
     check_footnotes,
+    check_row_quantity,
     check_unextracted_refs,
     find_bom_entries,
     find_listed_refs,
@@ -75,6 +76,21 @@ class TestUnextractedRefs:
         assert [(w.kind, w.ref) for w in stats["warnings"]] == [
             (ParseWarningKind.UNEXTRACTED_REF, "R13")
         ]
+
+    def test_schematic_pages_are_not_parts_lists(self) -> None:
+        stats = create_empty_stats()
+        page = "CLR 2\nIC2A TL072\nSheet: /\nFile: HotTeacher.kicad_sch\nKiCad E.D.A. 9.0.7"
+        check_unextracted_refs([page], create_empty_inventory(), stats)
+        assert stats["warnings"] == []
+
+    def test_op_amp_sections_of_an_extracted_chip(self) -> None:
+        inventory = create_empty_inventory()
+        inventory.add_part(
+            "T", make_component_key(ComponentCategory.ICS, "TL072"), "IC2"
+        )
+        stats = create_empty_stats()
+        check_unextracted_refs(["IC2A TL072\nIC3B TL072"], inventory, stats)
+        assert [w.ref for w in stats["warnings"]] == ["IC3B"]
 
     def test_lowercase_suffix_matches_extracted_ref(self) -> None:
         # Shindig lists 'D10a'; the inventory may hold it in either case.
@@ -246,3 +262,14 @@ class TestFootnotes:
         stats = create_empty_stats()
         check_footnotes(["R24 27K\n* Omitted in some units\nmore text"], stats)
         assert stats["warnings"] == []
+
+
+def test_row_quantity_must_match_its_designators() -> None:
+    stats = create_empty_stats()
+    check_row_quantity(stats, "R10-R12,R18", 4, 4)
+    check_row_quantity(stats, "C4,C5", 2, None)
+    assert stats["warnings"] == []
+    check_row_quantity(stats, "C9,C12", 2, 3)
+    assert [(w.kind, w.ref) for w in stats["warnings"]] == [
+        (ParseWarningKind.BOM_MISMATCH, "C9,C12")
+    ]

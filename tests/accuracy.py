@@ -58,11 +58,14 @@ class ExpectedPart:
         category: The category the part belongs in.
         value: The value a builder must purchase.
         accept: Equivalent alternatives the document explicitly allows.
+        unspecified: The document leaves the value to the builder (Sheepylove's
+            'R1  CLR': choose an LED resistor), so warning about it is correct.
     """
 
     category: ComponentCategory
     value: str
     accept: tuple[str, ...] = ()
+    unspecified: bool = False
 
 
 @dataclass(frozen=True)
@@ -141,12 +144,16 @@ class GoldenDoc:
     def ambiguous_refs(self) -> frozenset[str]:
         """Designators whose correct value is a choice the builder makes.
 
-        Includes documented alternates (``accept``), option choices, and
+        Includes documented alternates (``accept``), values the document
+        leaves unspecified, option choices, and
         designators whose value differs between variants. Warning about these
         is correct behavior.
         """
         refs = {
-            ref for v in self.variants for ref, part in v.parts.items() if part.accept
+            ref
+            for v in self.variants
+            for ref, part in v.parts.items()
+            if part.accept or part.unspecified
         }
         refs |= {ref for v in self.variants for g in v.options for ref in g.refs}
         all_refs = {ref for v in self.variants for ref in v.parts}
@@ -328,6 +335,7 @@ def _load_parts(raw: dict[str, dict[str, object]]) -> dict[str, ExpectedPart]:
             category=ComponentCategory(str(spec["category"])),
             value=str(spec["value"]),
             accept=tuple(str(a) for a in spec.get("accept", ())),  # type: ignore[attr-defined]
+            unspecified=bool(spec.get("unspecified", False)),
         )
         for ref, spec in raw.items()
     }

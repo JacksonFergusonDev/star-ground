@@ -58,18 +58,26 @@ def deduplicate_refs(refs: list[str]) -> list[str]:
 
 
 def expand_refs(ref_raw: str) -> list[str]:
-    """Explodes range strings into individual references.
+    """Explodes range and list strings into individual references.
 
-    Handles formats like 'R1-R4' or 'C1-3'. Includes a sanity check
-    to prevent exploding massive invalid ranges (limit 50).
+    Handles ranges like 'R1-R4' or 'C1-3' and comma-separated lists of
+    either ('R10-R12,R18'). Includes a sanity check to prevent exploding
+    massive invalid ranges (limit 50).
 
     Args:
         ref_raw: The raw reference string (e.g., "R1-4").
 
     Returns:
         A list of individual references (e.g., ['R1', 'R2', 'R3', 'R4']).
-        Returns the original string as a single-item list if expansion fails.
+        A part that cannot be expanded is returned as written.
     """
+    parts = [p.strip() for p in ref_raw.split(",")]
+    if len(parts) > 1 and all(parts):
+        return [ref for part in parts for ref in _expand_range(part)]
+    return _expand_range(ref_raw)
+
+
+def _expand_range(ref_raw: str) -> list[str]:
     ref_raw = ref_raw.strip()
     if "-" not in ref_raw:
         return [ref_raw]

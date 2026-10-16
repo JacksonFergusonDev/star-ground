@@ -54,6 +54,9 @@ it. `tests/test_parser_accuracy.py` fails on any difference from it:
 - `parts`: every designator in the document's parts list.
 - `accept`: alternative values for the same designator that the document
   allows (a substitute in the notes column, a "recommended" taper).
+- `unspecified`: `true` when the document leaves the value to the builder
+  (Sheepylove's `R1  CLR`: an LED resistor of your choice). The value is
+  recorded as printed, and a warning about it is correct, not a false alarm.
 - `absent`: designators the document lists but marks as not populated (`N/A`,
   `OMIT`, a wire jumper). Emitting one counts as an extra part.
 - `options`: interchangeable choices that use different designators (see below).
