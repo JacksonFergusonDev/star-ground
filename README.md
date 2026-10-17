@@ -251,8 +251,7 @@ We utilize `Streamlit.AppTest` to run headless simulations of the user interface
 ├── CONTRIBUTING.md        <-- Dev guide
 ├── ROADMAP.md             <-- Technical architectural plans
 ├── pyproject.toml         <-- Project metadata & tool config (Ruff/Mypy/Pytest)
-├── uv.lock                <-- Exact dependency tree (Deterministic builds)
-└── requirements.txt       <-- Deployment: Generated via uv for Streamlit Cloud
+└── uv.lock                <-- Exact dependency tree (Deterministic builds; Streamlit Cloud installs from it)
 ```
 
 ---
