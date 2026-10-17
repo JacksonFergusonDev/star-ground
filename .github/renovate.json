@@ -56,7 +56,6 @@
       "description": "Group all non-major dependency updates (Python, Docker, devcontainer, pyenv) into one PR",
       "matchManagers": [
         "pep621",
-        "pip_requirements",
         "dockerfile",
         "pyenv"
       ],
