@@ -450,12 +450,47 @@ class TestTextBillOfMaterials:
             "4",
         ]
 
-    def test_untyped_table_reads_only_designators(self) -> None:
-        cols = (50.0, 150.0, 220.0)
-        words = self._row(
-            100, *zip(("Reference", "Value", "Quantity"), cols, strict=True)
-        ) + self._row(120, ("Screw", cols[0]), ("M3 x 5mm", cols[1]), ("4", cols[2]))
-        assert find_bom_rows(words) == []
+    def test_grid_labels_markers_and_counts(self) -> None:
+        # GuitarPCB 'Part | Value' grids: named controls, '*' markers on refs and
+        # values, and a 'CLR x1' count.
+        cols = (50.0, 120.0, 200.0, 270.0)
+        words = (
+            self._row(100, *zip(("Part", "Value", "Part", "Value"), cols, strict=True))
+            + self._row(
+                120,
+                ("C5", cols[0]),
+                ("*100p", cols[1]),
+                ("VOL", cols[2]),
+                ("A500K", cols[3]),
+            )
+            + self._row(
+                140,
+                ("*DRIVE", cols[0]),
+                ("A100K", cols[1]),
+                ("* CLR x1", cols[2]),
+                ("1k8 - 4k7", cols[3]),
+            )
+        )
+        rows = find_bom_rows(words)
+        assert [(r.refs, r.value, r.quantity) for r in rows] == [
+            ("C5", "100p", None),
+            ("VOL", "A500K", None),
+            ("DRIVE", "A100K", None),
+            ("CLR", "1k8 - 4k7", 1),
+        ]
+
+    def test_two_tables_on_one_page_are_numbered_apart(self) -> None:
+        cols = (50.0, 120.0)
+        words = (
+            self._row(100, ("Part", cols[0]), ("Value", cols[1]))
+            + self._row(120, ("R1", cols[0]), ("1M", cols[1]))
+            + self._row(200, ("Part", cols[0]), ("Value", cols[1]))
+            + self._row(220, ("R1", cols[0]), ("1k", cols[1]))
+        )
+        assert [(r.refs, r.value, r.table) for r in find_bom_rows(words)] == [
+            ("R1", "1M", 0),
+            ("R1", "1k", 1),
+        ]
 
 
 def test_footnote_marks() -> None:

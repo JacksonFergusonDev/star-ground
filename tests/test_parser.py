@@ -11,6 +11,7 @@ This suite covers:
 
 from collections.abc import MutableMapping
 from decimal import Decimal
+from typing import Any
 
 import pytest
 from hypothesis import given
@@ -867,3 +868,83 @@ def test_reversed_text_is_not_read(matrix: tuple[float, ...], kept: bool) -> Non
 
     assert _readable({"object_type": "char", "matrix": matrix}) is kept
     assert _readable({"object_type": "line"}) is True
+
+
+def test_untyped_grid_reads_named_controls_but_not_hardware() -> None:
+    from src.bom_lib import create_empty_stats
+    from src.bom_lib.parser import _untyped_refs
+
+    stats = create_empty_stats()
+    assert _untyped_refs(stats, ["VOL"], "A500K") == ["VOL"]
+    assert _untyped_refs(stats, ["Screw"], "M3 x 5mm") == []
+    assert _untyped_refs(stats, ["R8", "RPDo"], "10k") == ["R8"]  # odd name reported
+    assert len(stats["warnings"]) == 1
+
+
+def test_a_second_board_with_other_values_is_bought_too() -> None:
+    # Tweed Fuzztone: the Tweed and Fuzz boards both list R1, with other values;
+    # both list D1 1N5817 (bought twice under one designator).
+    from src.bom_lib.builds import Entry
+    from src.bom_lib.parser import _ingest_entries
+
+    inventory, stats = _ingest_entries(
+        [
+            Entry("R1", "1M", 0, table=0),
+            Entry("D1", "1N5817", 0, table=0),
+            Entry("R1", "1k", 0, table=1),
+            Entry("D1", "1N5817", 0, table=1),
+        ],
+        "T",
+    )
+    refs = sorted(r for data in inventory.values() for r in data["refs"])
+    assert refs == ["D1", "D1", "R1", "R1 (2)"]
+    assert [w.ref for w in stats["warnings"]] == ["R1"]
+
+
+def test_value_column_grid_is_one_variant_per_column() -> None:
+    from src.bom_lib.parser import _value_column_grid
+
+    table: list[list[str | None]] = [
+        ["", "MUFF Variant", None],
+        ["MUFF'N Part #", "Ram", "Triangle"],
+        ["R1", "1M", "1M"],
+        ["R4", "120R", "jumper"],
+        ["R24", "R24 is only available on v3", "omit"],
+        ["P1-Sus/Fuzz", "A100k", "B100k"],
+        ["R12", "1k8", "CLR"],
+        ["SW1", "SPDT", ""],
+    ]
+    entries = _value_column_grid(table, 0, 0)
+    assert entries is not None
+    assert [(e.ref, e.value, e.column) for e in entries] == [
+        ("R1", "1M", "Ram"),
+        ("R1", "1M", "Triangle"),
+        ("R4", "120R", "Ram"),
+        ("R4", "jumper", "Triangle"),
+        ("P1", "A100k", "Ram"),
+        ("P1", "B100k", "Triangle"),
+        ("R12", "1k8", "Ram"),
+        ("R12", "1k8", "Triangle"),  # 'CLR' names the role: same part
+        ("SW1", "SPDT", "Ram"),
+        ("SW1", "SPDT", "Triangle"),  # blank: same as the first column
+    ]
+    assert (
+        _value_column_grid([["LOCATION", "VALUE", "TYPE"], ["R1", "1M", "R"]], 0, 0)
+        is None
+    )
+
+
+def test_near_upright_characters_are_straightened() -> None:
+    from types import SimpleNamespace
+
+    from src.bom_lib.parser import _straighten
+
+    char: dict[str, Any] = {
+        "upright": False,
+        "matrix": (0.66, -3e-8, -4e-8, 0.66, 1.0, 2.0),
+        "size": 7.4899,
+    }
+    _straighten(SimpleNamespace(chars=[char]))  # type: ignore[arg-type]
+    assert char["upright"] is True
+    assert char["matrix"][:4] == (0.66, 0.0, 0.0, 0.66)
+    assert char["size"] == 7.49

@@ -26,11 +26,15 @@ _SIZED_LED = re.compile(r"\d+(?:\.\d+)?mm(?:\s+[A-Za-z]+)?", re.IGNORECASE)
 # '(3362P Trim)', 'Trim (3362P)', '(3362P)', '5k trimmer (3386)': package notes
 # (Bourns trimmer series), not part of the value.
 _TRIM_NOTE = re.compile(
-    r"\([^()]*\b(?:33(?:62|86)P?|3296[A-Z]?|TRIM(?:MER)?)\b[^()]*\)"
-    r"|\b3362P\b|\bTRIM(?:MER)?\b",
+    r"\([^()]*\b(?:33(?:62|86)P?|3296[A-Z]?|TRIM(?:MER|POT)?)\b[^()]*\)"
+    r"|\b3362P\b|\bTRIM(?:MER|POT)?\b",
     re.IGNORECASE,
 )
+_RESISTANCE = re.compile(r"\b\d+(?:\.\d+)?[KkMR]\d*\b")
 _MILLIAMPS = re.compile(r"\dmA\b")
+_REPEAT_SUFFIX = re.compile(r"\s+\(\d+\)$")
+_LED_VALUE = re.compile(r"\bLED\b")
+_NUMBERED_LABEL = re.compile(r"[A-Z]{2,5}\d{1,3}")
 _SLASH_RATING = re.compile(r"(?<=[\dpnuµF])/(\d+(?:\.\d+)?)\s*V\b", re.IGNORECASE)
 _OHMS = re.compile(r"(?<![\w.])\d+(?:\.\d+)?R\d*(?![\w.])")
 _VACTROL = re.compile(r"VTL\d")
@@ -149,6 +153,10 @@ def _named_control_category(
         return ComponentCategory.SWITCHES
     if name in constants.POT_LABELS:
         return ComponentCategory.POTENTIOMETERS
+    # Voodoo Redux: 'EFL1 - EFL3  Status Led' (effect-on LEDs). Only a
+    # numbered label: drill-template boxes read as 'LED FOOTSWITCH Drive'.
+    if _NUMBERED_LABEL.fullmatch(name) and _LED_VALUE.search(val_up):
+        return ComponentCategory.DIODES
     return None
 
 
@@ -177,7 +185,8 @@ def categorize_part(
     val_clean = val.strip()  # Keep original case for display
     val_up = val_clean.upper()  # Use this for internal logic
 
-    designator = parse_designator(ref.strip())
+    # 'R1 (2)' is R1's second listing (another board, or a repeated label).
+    designator = parse_designator(_REPEAT_SUFFIX.sub("", ref.strip()))
     if designator is not None:
         # L is an inductor, except where a document numbers its LEDs L1-L4.
         category = designator.category or (
@@ -188,8 +197,19 @@ def categorize_part(
         if category == ComponentCategory.ICS and _VACTROL.match(val_up):
             # Constrictor: 'U1  VTL5C10' is an optoisolator, not a chip.
             category = ComponentCategory.OPTOELECTRONICS
-        if category == ComponentCategory.RESISTORS and _TRIM_NOTE.search(val_clean):
-            # CDXL Reissue lists trimmers R20/R23 under 'TRIM POTS (3362P Type)'.
+        if (
+            category
+            in (
+                ComponentCategory.RESISTORS,
+                ComponentCategory.HARDWARE_MISC,
+                ComponentCategory.DIODES,
+            )
+            and _TRIM_NOTE.search(val_clean)
+            and _RESISTANCE.search(val_clean)
+        ):
+            # CDXL Reissue lists trimmers R20/R23 under 'TRIM POTS (3362P Type)';
+            # GuitarPCB numbers trimmers 'T1 - T2  10k Trim' and labels an LED
+            # brightness trimmer 'LED  1k Trimpot' (Voodoo Redux).
             category = ComponentCategory.POTENTIOMETERS
     else:
         # A TYPE column states the category outright; the value is only a

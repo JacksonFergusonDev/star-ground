@@ -108,7 +108,7 @@ _LABEL = re.compile(r"\([^()\d]*\)")
 _LED_WORD = re.compile(r"\bLED\b", re.IGNORECASE)
 # Two or more lowercase words mark a sentence ('Choose between ... or SMD').
 _LOWERCASE_WORD = re.compile(r"[a-z][a-z'-]*[.,;:]?")
-_ASIDE = re.compile(r"\((?:see notes?|or equivalent)\)", re.IGNORECASE)
+_ASIDE = re.compile(r"\((?:see (?:notes?|text)|or equivalent)\)", re.IGNORECASE)
 # Trailing words that only restate the component type.
 # A part supplied with the PCB is still a part: '24LC32A *Included' (Deflector).
 _INCLUDED = re.compile(r"\s*\*\s*Included(?: with (?:the )?PCB)?\s*$", re.IGNORECASE)
@@ -275,6 +275,11 @@ def _is_annotation(cell: str) -> bool:
         or all(w.upper() in _HEADER_WORDS for w in words)
         or BOARD_REF.fullmatch(words[0]) is not None
     )
+
+
+def strip_asides(value: str) -> str:
+    """Removes '(see notes)', '(see text)' and '(or equivalent)' from a value."""
+    return " ".join(_ASIDE.sub("", value).split()) or value
 
 
 def clean_value(value: str) -> str:
@@ -598,6 +603,8 @@ class BomRow:
             '100n (104)'), if any.
         type_text: The TYPE cell, if the table has one ('Metal film resistor, 1/4W').
         notes: The NOTES cell, including lines that continue it below the row.
+        table: Which header line on the page the row sits under, counting from 0
+            (a page can hold two boards' tables, GuitarPCB Tweed Fuzztone).
     """
 
     refs: str
@@ -608,6 +615,7 @@ class BomRow:
     marking: str = ""
     type_text: str = ""
     notes: str = ""
+    table: int = 0
 
 
 @dataclass(frozen=True, slots=True)
@@ -696,6 +704,7 @@ def _read_bom(words: list[PDFWord]) -> tuple[list[BomRow], list[Cell]]:
     sections: list[list[_Column]] = []
     # Per table section, the index in `rows` of its latest row.
     last_row: dict[int, int] = {}
+    header_no = -1
     for line_no, cells in enumerate(page_lines(words)):
         found = _header_sections(cells)
         if found:
@@ -708,6 +717,7 @@ def _read_bom(words: list[PDFWord]) -> tuple[list[BomRow], list[Cell]]:
             ]
             sections = sorted(kept + found, key=lambda sec: sec[0].x0)
             last_row = {}
+            header_no += 1
             # The rest of the line is a row of the tables beside the new header.
             cells = [c for c in cells if c.x0 < lo or c.x0 > hi]
         if not sections:
@@ -726,7 +736,15 @@ def _read_bom(words: list[PDFWord]) -> tuple[list[BomRow], list[Cell]]:
         for k, section in enumerate(sections):
             typed = any(col.field == "type" for col in section)
             refs = _LIST_SPACING.sub(r"\1", fields.get((k, "refs"), ""))
-            value = _UNCLOSED_ASIDE.sub("", fields.get((k, "value"), ""))
+            # GuitarPCB: '* CLR x1', 'CLR x 2', '*DRIVE', 'ORDER switch'.
+            refs = " ".join(refs.replace("*", " ").split())
+            count = _REF_COUNT.search(refs)
+            if count:
+                refs = refs[: count.start()]
+            refs = _LABEL_NOUN.sub("", refs)
+            value = _UNCLOSED_ASIDE.sub(
+                "", _ASIDE.sub("", fields.get((k, "value"), ""))
+            )
             notes = fields.get((k, "notes"), "")
             last = last_row.get(k)
             if typed and not refs and notes and last is not None:
@@ -736,10 +754,14 @@ def _read_bom(words: list[PDFWord]) -> tuple[list[BomRow], list[Cell]]:
             marking = _MARKING.search(value)
             if marking:
                 value = value[: marking.start()]
-            labeled = typed and fields.get((k, "type")) and _is_label(refs)
+            # A typed table's TYPE explains any label; an untyped grid's label
+            # ('Part | Value' grids: 'VOL | A100k') is judged by its value later.
+            labeled = _is_label(refs) and (not typed or fields.get((k, "type")))
             if not value or not (_is_ref_list(refs) or labeled):
                 continue
-            qty = fields.get((k, "qty"), "")
+            # Optional-part markers are not part of the value ('*100p', '330k*').
+            value = " ".join(value.replace("*", " ").split()) or value
+            qty = fields.get((k, "qty"), "") or (count.group(1) if count else "")
             last_row[k] = len(rows)
             rows.append(
                 BomRow(
@@ -751,13 +773,18 @@ def _read_bom(words: list[PDFWord]) -> tuple[list[BomRow], list[Cell]]:
                     marking=marking.group(1) if marking else "",
                     type_text=fields.get((k, "type"), ""),
                     notes=notes,
+                    table=header_no,
                 )
             )
     return rows, note_cells
 
 
+# 'CLR x1', 'CLR x 2': how many of the part to buy.
+_REF_COUNT = re.compile(r"\s+x\s*(\d+)$")
+# 'ORDER switch', 'DEEP switch': the noun restates the category.
+_LABEL_NOUN = re.compile(r"(?<=[A-Z0-9]) (?:switch|pot|trimmer)$")
 # A part label in a typed table: 'VOL.', 'HI-MID FREQ', 'IC1-S', 'PRE-V. SEND'.
-_PART_LABEL = re.compile(r"[A-Z0-9][A-Za-z0-9_./+-]*(?: [A-Za-z0-9_./+-]+){0,2}")
+_PART_LABEL = re.compile(r"[A-Z][A-Za-z0-9_./+-]*(?: [A-Za-z0-9_./+-]+){0,2}")
 
 
 def _is_label(cell: str) -> bool:

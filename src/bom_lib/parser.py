@@ -31,6 +31,7 @@ from src.bom_lib.layout import (
     find_listings,
     footnote_marks,
     page_lines,
+    strip_asides,
 )
 from src.bom_lib.types import (
     BuildVariant,
@@ -51,7 +52,9 @@ from src.bom_lib.verification import (
     check_duplicate,
     check_footnotes,
     check_marking_code,
+    check_parts_found,
     check_row_quantity,
+    check_second_board,
     check_unclassified_row,
     check_unextracted_refs,
     check_version_note,
@@ -352,6 +355,13 @@ _TYPE_HINTS: tuple[tuple[str, ComponentCategory], ...] = (
     ("resistor", ComponentCategory.RESISTORS),
     ("capacitor", ComponentCategory.CAPACITORS),
 )
+# A named control in a grid: 'VOL', 'HI/LO', 'VOL 1', 'CLN_LVL'.
+_CONTROL_LABEL = re.compile(r"[A-Z][A-Z0-9_/-]*(?: [A-Z0-9]+)?")
+# Text tables are numbered page * this + header line, so two tables on one
+# page stay apart.
+_TABLES_PER_PAGE = 100
+# Longer than any value: a headerless 'table' cell holding prose.
+_PROSE_CHARS = 60
 _SOCKET = re.compile(r"\bsocket\b", re.IGNORECASE)
 _CHOOSE_ROW = re.compile(r"\s*choose between .+ or ", re.IGNORECASE)
 _NUMBERED_NAME = re.compile(r"[A-Z]{1,3}\d{1,3}")
@@ -552,6 +562,11 @@ def _table_entries(
                 continue
             table_no += 1
 
+            grid = _value_column_grid(table, page_no, table_no)
+            if grid is not None:
+                entries += grid
+                continue
+
             # Header mapping
             headers = [str(h).upper().strip() for h in table[0] if h]
             loc_idx = -1
@@ -575,7 +590,8 @@ def _table_entries(
                 continue
 
             # Fallback mapping
-            if loc_idx == -1 or val_idx == -1:
+            headerless = loc_idx == -1 or val_idx == -1
+            if headerless:
                 loc_idx, val_idx, start_row_idx = 0, 1, 0
 
             follows_or = False
@@ -619,7 +635,8 @@ def _table_entries(
                         val_raw, hint = _typed_row(
                             stats, ref_raw, val_raw, row_safe[type_idx], notes
                         )
-                    val_raw = _drop_restated_value(val_raw)
+                    # '100k (see text)' (GuitarPCB Mini-Me): the aside is no value.
+                    val_raw = _drop_restated_value(strip_asides(val_raw))
                     if 0 <= notes_idx < len(row_safe):
                         val_raw = capacitor_notes(ref_raw, val_raw, row_safe[notes_idx])
                         if not _is_not_populated(val_raw):
@@ -628,6 +645,11 @@ def _table_entries(
                     parts = row_safe[0].strip().split(None, 1)
                     if len(parts) == 2:
                         ref_raw, val_raw = parts[0].strip(), parts[1].strip()
+
+                if headerless and len(val_raw) > _PROSE_CHARS:
+                    # A page border drawn as a box reads as a one-cell 'table'
+                    # holding the page's prose (GuitarPCB): not a parts row.
+                    continue
 
                 # Auditorium: 'TERMINAL BLOCK (Qty 3)'.
                 qty = 1
@@ -649,6 +671,99 @@ def _table_entries(
                         )
                     )
                     follows_or = False
+    return entries
+
+
+# The designator column of a value-column grid: 'Part', 'Part #', "MUFF'N Part #".
+_GRID_REF_HEADER = re.compile(r"(?:^|\s)PART\s*#?$", re.IGNORECASE)
+# Headers that name a column's role, not a circuit version.
+_ROLE_HEADERS = frozenset(
+    {
+        "VALUE",
+        "VALUES",
+        "VAL",
+        "TYPE",
+        "NOTES",
+        "NOTE",
+        "QTY",
+        "QUANTITY",
+        "DESCRIPTION",
+    }
+)
+# 'P1-Sus/Fuzz': the designator, then the control's name.
+_NAMED_REF = re.compile(r"([A-Z]{1,3}\d{1,3})-(?![A-Z]{1,3}\d)[A-Za-z]")
+# A note in a value column naming the row's role ('R12 | 1k8 | CLR', RATT).
+_ROLE_CELLS = frozenset({"CLR"})
+
+
+def _grid_header_text(cell: str | None) -> str:
+    """A header cell as one line; a word wrapped mid-word ('Origina' / 'l') is rejoined."""
+    lines = [line.strip() for line in str(cell or "").splitlines() if line.strip()]
+    text = ""
+    for line in lines:
+        text += line if text and len(line) <= 2 else f" {line}"
+    return text.strip()
+
+
+def _value_column_grid(
+    table: list[list[str | None]], page_no: int, table_no: int
+) -> list[Entry] | None:
+    """Reads a parts table with one value column per circuit version.
+
+    GuitarPCB's MUFF'N prints 'MUFF'N Part # | Ram | Violet Ram | Triangle ...'
+    and RATT Deluxe 'Part # | GPCB Values | Original': each row is a designator
+    and its value in every version. An empty cell keeps the first column's
+    value (RATT's original-Rat column leaves the board's added switches blank).
+
+    Returns:
+        One entry per designator and column, tagged with the column's name, or
+        None when the table is not such a grid.
+    """
+    header_rows = [
+        (k, cells)
+        for k, row in enumerate(table[:3])
+        if (cells := [_grid_header_text(c) for c in row])
+        and _GRID_REF_HEADER.search(cells[0])
+    ]
+    if not header_rows:
+        return None
+    start, cells = header_rows[0]
+    names = cells[1:]
+    if len([n for n in names if n]) < 2 or any(
+        n.upper() in _ROLE_HEADERS for n in names
+    ):
+        return None
+    entries: list[Entry] = []
+    for row in table[start + 1 :]:
+        # 'FILTE' / 'R' is a wrapped 'FILTER' (RATT Deluxe).
+        ref = _grid_header_text(row[0]).replace("*", "")
+        named = _NAMED_REF.match(ref)
+        if named:
+            ref = named.group(1)
+        if not ref or not (
+            any(is_designator(r) for r in expand_refs(ref))
+            or _CONTROL_LABEL.fullmatch(ref)
+        ):
+            continue
+        cells = [" ".join(str(c or "").replace("*", " ").split()) for c in row[1:]]
+        if any(c.split()[:1] == [ref] for c in cells if c):
+            # A remark spanning the row: 'R24 | R24 is only available on v3 PCB
+            # or earlier | omit ...' (MUFF'N).
+            continue
+        first = ""
+        for k, name in enumerate(names):
+            if not name:
+                continue
+            cell = cells[k] if k < len(cells) else ""
+            if k == 0:
+                first = cell
+            elif not cell or cell.upper() in _ROLE_CELLS:
+                cell = first
+            if not cell or len(cell.split()) > 4:
+                # Blank, or a remark spanning the row ('R24 is only available
+                # on v3 PCB or earlier'): no part in this version.
+                continue
+            entries.append(Entry(ref, cell, page_no, table=table_no, column=name))
     return entries
 
 
@@ -759,11 +874,7 @@ def _text_table_entries(
                 refs = [_next_label(seen, ref) for ref in refs]
             check_row_quantity(stats, row.refs, len(refs), row.quantity)
             if hint is None:
-                # Without a TYPE column only designators are parts; an odd name
-                # is reported (titles, footers and hardware are skipped).
-                for odd in [ref for ref in refs if not is_designator(ref)]:
-                    check_unclassified_row(stats, odd, value)
-                refs = [ref for ref in refs if is_designator(ref)]
+                refs = _untyped_refs(stats, refs, value)
             for ref in refs:
                 designator = parse_designator(ref)
                 if designator and designator.category == ComponentCategory.CAPACITORS:
@@ -775,12 +886,31 @@ def _text_table_entries(
                     page_no,
                     line=row.line,
                     x0=row.x0,
-                    table=page_no,
+                    table=page_no * _TABLES_PER_PAGE + row.table,
                     hint=hint,
                 )
                 for ref in refs
             ]
     return entries
+
+
+def _untyped_refs(stats: StatsDict, refs: list[str], value: str) -> list[str]:
+    """The parts of an untyped table row: designators and named controls.
+
+    A 'Part | Value' grid lists controls beside designators ('VOL | A100k',
+    GuitarPCB), which their value classifies. An odd name grouped with real
+    designators ('R8, RPDo', Q-Tune) is reported; other labels (titles,
+    footers, hardware such as 'Screw') are left to the layout reader.
+    """
+    if any(is_designator(ref) for ref in refs):
+        for odd in [ref for ref in refs if not is_designator(ref)]:
+            check_unclassified_row(stats, odd, value)
+        return [ref for ref in refs if is_designator(ref)]
+    return [
+        ref
+        for ref in refs
+        if _CONTROL_LABEL.fullmatch(ref) and categorize_part(ref, value) is not None
+    ]
 
 
 def _without_note_cells(data: PDFPageExtraction, text: str) -> str:
@@ -913,17 +1043,24 @@ def _ingest_entries(
         if entry.not_populated:
             _record_not_populated(stats, entry.ref, entry.value)
             continue
+        ref = entry.ref
         if entry.table is not None:
             first = table_of.setdefault(entry.ref, entry.table)
-            if (
-                first != entry.table
-                and stats["seen_refs"].get(entry.ref) == entry.value
-            ):
+            seen = stats["seen_refs"].get(entry.ref)
+            value = resolve_value_choice(None, entry.ref, entry.value)
+            if first != entry.table and seen in (entry.value, value):
                 del stats["seen_refs"][entry.ref]
+            elif first != entry.table and seen is not None and not entry.follows_or:
+                # Another table lists the same designator with another value:
+                # another board (Tweed Fuzztone's Tweed and Fuzz boards both
+                # have R1-R7), or another version. Both are bought, and the
+                # builder is told which is which.
+                ref = _next_board_ref(stats, entry.ref)
+                check_second_board(stats, entry.ref, ref, seen, entry.value)
         stats["parts_found"] += ingest_bom_line(
             inventory,
             source_name,
-            entry.ref,
+            ref,
             entry.value,
             stats,
             entry.hint,
@@ -931,6 +1068,14 @@ def _ingest_entries(
             inject=not lists_sockets,
         )
     return inventory, stats
+
+
+def _next_board_ref(stats: StatsDict, ref: str) -> str:
+    """The first free 'R1 (2)', 'R1 (3)' ... for a designator on another board."""
+    n = 2
+    while f"{ref} ({n})" in stats["seen_refs"]:
+        n += 1
+    return f"{ref} ({n})"
 
 
 def _merge_warnings(target: StatsDict, source: StatsDict) -> None:
@@ -986,6 +1131,10 @@ def _assemble_builds(
     return create_empty_inventory(), tuple(variants), options, union
 
 
+# Rotation terms this small are a PDF writer's rounding, not a rotation.
+_SKEW_EPSILON = 1e-4
+
+
 def _readable(obj: dict[str, Any]) -> bool:
     """Whether a PDF object is kept for text extraction.
 
@@ -1000,9 +1149,11 @@ def _readable(obj: dict[str, Any]) -> bool:
     if not matrix:
         return True
     a, b, c, d = matrix[:4]
-    upside_down = a < 0 and d < 0
+    # Only exact 180 and 90 degree rotations: text set along an arc (a
+    # PedalPCB drill template's 'FOOTSWITCH') passes through every angle.
+    upside_down = a < 0 and d < 0 and abs(b) < _SKEW_EPSILON and abs(c) < _SKEW_EPSILON
     # Text running bottom to top extracts reversed too ('Fu001' for '100uF').
-    rising = a == 0 and d == 0 and b > 0 and c < 0
+    rising = abs(a) < _SKEW_EPSILON and abs(d) < _SKEW_EPSILON and b > 0 and c < 0
     return not (upside_down or rising)
 
 
@@ -1011,6 +1162,33 @@ def _page_words(page: Page) -> list[PDFWord]:
         PDFWord(text=w["text"], x0=w["x0"], x1=w["x1"], top=w["top"], size=w["size"])
         for w in page.extract_words(x_tolerance=_WORD_GAP_PT, extra_attrs=["size"])
     ]
+
+
+def _straighten(page: Page) -> Page:
+    """Marks characters with negligible rotation as upright, and rounds sizes.
+
+    Some GuitarPCB documents set every character with a rotation of about
+    3e-8 and sizes that differ in the 6th decimal; pdfplumber then splits
+    every letter into its own word and the parts list comes out letter-spaced
+    ('R 1 0  7 5 0 R').
+    """
+    for char in page.chars:
+        matrix = char.get("matrix")
+        if (
+            not char.get("upright")
+            and matrix
+            and matrix[0] > 0
+            and matrix[3] > 0
+            and abs(matrix[1]) < _SKEW_EPSILON
+            and abs(matrix[2]) < _SKEW_EPSILON
+        ):
+            char["upright"] = True
+            char["matrix"] = (matrix[0], 0.0, 0.0, *matrix[3:])
+        if char.get("upright"):
+            # Words split wherever the size differs, and sizes differ by float
+            # noise. (Rotated labels keep theirs: joining them makes nonsense.)
+            char["size"] = round(char["size"], 2)
+    return page
 
 
 def _without_marks(page: Page) -> Page:
@@ -1082,7 +1260,7 @@ def parse_pedalpcb_pdf(filepath: str, source_name: str) -> ParseResult:
             # Iterate pages once to grab expensive text/table data
             pages_data: list[PDFPageExtraction] = []
             for raw_page in pdf.pages:
-                page = _without_marks(raw_page.filter(_readable))
+                page = _without_marks(_straighten(raw_page.filter(_readable)))
                 pages_data.append(
                     {
                         # Same word gap as the layout reader: kerned cells
@@ -1132,9 +1310,15 @@ def parse_pedalpcb_pdf(filepath: str, source_name: str) -> ParseResult:
             bom_pages = {row.page for row in text_rows} or None
             row_lines = {(row.page, row.line) for row in text_rows}
             entries = _table_entries(pages_data, stats, bom_pages)
+            # A boxed 'Part | Value' grid is both a ruled table and a text table
+            # (GuitarPCB); read it once, or every part would be bought twice.
+            # The ruled cell keeps a value wrapped over two lines ('Bi-Color CA
+            # LED (see' / 'text)', Mini-Me), so the ruled reading wins.
+            ruled_refs = {(e.page, e.ref) for e in entries}
+            text_rows = [r for r in text_rows if (r.page, r.ref) not in ruled_refs]
             # Number the text tables after the ruled ones.
             entries += [
-                replace(row, table=len(entries) + row.page) for row in text_rows
+                replace(row, table=len(entries) + (row.table or 0)) for row in text_rows
             ]
 
             # --- STRATEGY 2: LAYOUT ANALYSIS ---
@@ -1167,6 +1351,7 @@ def parse_pedalpcb_pdf(filepath: str, source_name: str) -> ParseResult:
                     zip(pages_data, page_texts, strict=True)
                 )
             ]
+            check_parts_found(stats, sum(len(d["refs"]) for d in union.values()))
             check_unextracted_refs(listed_texts, union, stats)
             check_footnotes(page_texts, stats)
             check_bom_reconciliation(page_texts, union, stats)

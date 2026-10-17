@@ -55,10 +55,13 @@ _PREFIXES: tuple[tuple[str, ComponentCategory | None], ...] = (
     ("V", _CAT.HARDWARE_MISC),  # vacuum tubes (SuperNuva: 'V1  Korg Nutube')
     ("K", _CAT.HARDWARE_MISC),  # relays
     ("L", None),  # inductors, but some documents number LEDs L1-L4
+    ("P", _CAT.POTENTIOMETERS),  # GuitarPCB: 'P1  GAIN 100k Lin'
 )
 
 # Designators printed without a number or name suffix.
-_BARE = frozenset({"LED", "CLR", "RLED", "LEDR", "RPD", "TRIM"})
+# 'RX' is an optional resistor (GuitarPCB Mini-Me 'Rx  1M'), a lone 'IC' the
+# only chip besides IC1 (Tube Screaming Preamp).
+_BARE = frozenset({"LED", "CLR", "RLED", "LEDR", "RPD", "TRIM", "RX", "IC"})
 
 # A channel suffix letter (R1A/R1B, D10a-D10d). K, M and R are excluded so a
 # C-taper pot value (C10K, C1M) is never mistaken for capacitor C10.

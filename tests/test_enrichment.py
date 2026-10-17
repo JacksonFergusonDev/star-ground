@@ -159,6 +159,13 @@ def test_category_from_type() -> None:
         ("PRES", "50k trimmer", None, ComponentCategory.POTENTIOMETERS, "50k"),
         ("BIAS", "5k trimmer (3386)", None, ComponentCategory.POTENTIOMETERS, "5k"),
         ("C9", "330uF/35V", None, ComponentCategory.CAPACITORS, "330u 35V"),
+        # GuitarPCB: numbered trimmers, an LED-brightness trimmer, P-numbered
+        # pots, status LEDs under other labels, and a second board's 'R1 (2)'.
+        ("T1", "10k Trim", None, ComponentCategory.POTENTIOMETERS, "10k"),
+        ("LED", "1k Trimpot", None, ComponentCategory.POTENTIOMETERS, "1k"),
+        ("P1", "B100K", None, ComponentCategory.POTENTIOMETERS, "B100K"),
+        ("EFL1", "Status Led", None, ComponentCategory.DIODES, "Status Led"),
+        ("R1 (2)", "1k", None, ComponentCategory.RESISTORS, "1k"),
     ],
 )
 def test_aion_rows_classify(

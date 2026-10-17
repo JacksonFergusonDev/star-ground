@@ -82,6 +82,13 @@ def _listing_at(tokens: list[str], i: int) -> bool:
     if i + 1 >= len(tokens):
         return False
     tok, nxt = tokens[i], tokens[i + 1]
+    if tok == nxt:
+        # 'R24 R24 is only available on v3 PCB or earlier' (MUFF'N): a remark.
+        return False
+    if _is_ref(tok) and _is_ref(nxt) and not any(ch.isdigit() for ch in tok):
+        # 'R12 1k8* CLR TR1 100R*': a bare word naming the previous part's
+        # role, not a listing of its own.
+        return False
     if _is_ref(tok) and _is_ref(nxt):
         # 'Q4 J201 JFET' is a listing whose value looks like a designator;
         # 'R13 C4 R12' is a silkscreen run.
@@ -94,11 +101,52 @@ def _listing_at(tokens: list[str], i: int) -> bool:
         if not any(ch.isdigit() for ch in tok):
             # 'TRIM (3362P)' describes a trimmer; it is not a listing.
             return any(ch.isdigit() for ch in nxt) and not nxt.startswith("(")
-        return nxt[0].isalnum() or nxt[0] == "("
+        # 'between J3 and J4' is prose, not 'J3' listed as 'and'.
+        return (nxt[0].isalnum() or nxt[0] == "(") and nxt not in _PROSE_WORDS
     return (
         _CONTROL_NAME.fullmatch(tok) is not None
         and _CONTROL_VALUE.match(nxt) is not None
     )
+
+
+_PROSE_WORDS = frozenset(
+    {
+        "and",
+        "or",
+        "to",
+        "the",
+        "is",
+        "are",
+        "was",
+        "with",
+        "on",
+        "in",
+        "of",
+        "for",
+        "through",
+        "also",
+        "as",
+        "at",
+        "from",
+        "be",
+        "will",
+        "if",
+        "then",
+        "should",
+    }
+)
+
+
+def _is_sentence(tokens: list[str]) -> bool:
+    """Whether a line is prose: mostly lowercase words, which a parts list never is."""
+    words = [
+        w for t in tokens if (w := t.strip(".,;:!?()\"'")).isalpha() and w.islower()
+    ]
+    return len(tokens) >= _SENTENCE_TOKENS and len(words) >= 0.5 * len(tokens)
+
+
+_SENTENCE_TOKENS = 8
+_JUMPER_PROSE = re.compile(r"\bjump(?:er(?:ed)?|ing)?\b", re.IGNORECASE)
 
 
 def find_listed_refs(text: str) -> set[str]:
@@ -115,7 +163,13 @@ def find_listed_refs(text: str) -> set[str]:
     """
     found: set[str] = set()
     for line in unicodedata.normalize("NFKC", text).splitlines():
+        if _JUMPER_PROSE.search(line):
+            # 'Always jump J1 through J4': jumper pads, not parts.
+            continue
         tokens = line.split()
+        if _is_sentence(tokens):
+            # 'simply attaching J4 wiring to the Tone TwEQ Volume pad 3 instead.'
+            continue
         i = 0
         # Index just past the last listing's value: where a new listing in
         # the next column may start.
@@ -273,6 +327,31 @@ def check_footnotes(page_texts: list[str], stats: StatsDict) -> None:
                         m.group(1),
                         f"{m.group(1)} ({body}) has a note: {lines[k + 1]}",
                     )
+
+
+def check_second_board(
+    stats: StatsDict, ref: str, second: str, first_value: str, second_value: str
+) -> None:
+    """Tells the builder a designator is listed in two tables with two values.
+
+    Both parts are bought: two boards in one document repeat their
+    designators (Tweed Fuzztone), but so might two versions of one circuit.
+
+    Args:
+        stats: Stats object that receives the warning.
+        ref: The repeated designator.
+        second: The name the second listing was added under ('R1 (2)').
+        first_value: The first table's value.
+        second_value: The other table's value.
+    """
+    _warn(
+        stats,
+        ParseWarningKind.CONFLICTING_DUPLICATE,
+        ref,
+        f"{ref} is listed in two tables, as '{first_value}' and '{second_value}'; both "
+        f"were added (the second as {second}). Check whether these are two boards or "
+        "two versions of the circuit.",
+    )
 
 
 def check_duplicate(
@@ -539,6 +618,10 @@ _VALUE_RANGE = re.compile(
     r"(?P<hi>\d+(?:\.\d+)?[pnuµmkKMR]?\d*[FΩ]?)(?P<rest>(?:\s.*)?)",
     re.IGNORECASE,
 )
+# Two part numbers or switch types, either of which may be bought.
+_PART_CODE = r"(?:\d?[A-Z]{1,4}\d{2,5}[A-Z]{0,3}|[SD34]P[SDT]T)"
+_PART_PAIR = re.compile(rf"({_PART_CODE})\s*(?:/|\bor\b)\s*({_PART_CODE})")
+_VALUE_PAIR = re.compile(r"(\S+)\s+or\s+(\S+)", re.IGNORECASE)
 # An alternative printed inside the value: '51pF (or 47pF) MLCC'.
 _OR_ALTERNATIVE = re.compile(r"\s*\(\s*or\s+([^()]+?)\s*\)", re.IGNORECASE)
 
@@ -558,6 +641,32 @@ def resolve_value_choice(stats: StatsDict | None, ref: str, value: str) -> str:
     Returns:
         The value with the range or alternative reduced to its first choice.
     """
+    pair = _PART_PAIR.fullmatch(value.strip())
+    if pair:
+        # '2N5088/2N2222' (American Fuzz), 'SPST or SPDT' (RATT Deluxe).
+        if stats is not None:
+            _warn(
+                stats,
+                ParseWarningKind.VALUE_CHOICE,
+                ref,
+                f"{ref}: the document allows {pair.group(1)} or {pair.group(2)}; "
+                f"{pair.group(1)} is used.",
+            )
+        return pair.group(1)
+    either = _VALUE_PAIR.fullmatch(value.strip())
+    if either and all(
+        parse_value_to_decimal(v) is not None for v in either.group(1, 2)
+    ):
+        # '15k or 22k' (MUFF'N Creamy Dreamer).
+        if stats is not None:
+            _warn(
+                stats,
+                ParseWarningKind.VALUE_CHOICE,
+                ref,
+                f"{ref}: the document allows {either.group(1)} or {either.group(2)}; "
+                f"{either.group(1)} is used.",
+            )
+        return either.group(1)
     alternative = _OR_ALTERNATIVE.search(value)
     if alternative:
         chosen = " ".join(_OR_ALTERNATIVE.sub(" ", value).split())
@@ -574,17 +683,44 @@ def resolve_value_choice(stats: StatsDict | None, ref: str, value: str) -> str:
     if m:
         lo = parse_value_to_decimal(m.group("lo"))
         hi = parse_value_to_decimal(m.group("hi"))
-        # Both ends carry a unit: '10-30k' is 10k to 30k, not 10 ohms.
-        units = all(re.search(r"[A-Za-zµΩ]", m.group(k)) for k in ("lo", "hi"))
-        if units and lo is not None and hi is not None and lo < hi:
-            chosen = f"{m.group('lo')}{m.group('rest')}".strip()
+        lo_text = m.group("lo")
+        unit = re.search(r"[A-Za-zµΩ]+$", m.group("hi"))
+        if unit and not re.search(r"[A-Za-zµΩ]", lo_text):
+            # '22-33k' (Guitar Bass Driver) shares the upper end's unit: 22k.
+            lo_text += unit.group(0)
+            lo = parse_value_to_decimal(lo_text)
+        has_unit = re.search(r"[A-Za-zµΩ]", m.group("hi")) is not None
+        if has_unit and lo is not None and hi is not None and lo < hi:
+            chosen = f"{lo_text}{m.group('rest')}".strip()
             if stats is not None:
                 _warn(
                     stats,
                     ParseWarningKind.VALUE_CHOICE,
                     ref,
-                    f"{ref}: the document allows {m.group('lo')} to {m.group('hi')}; "
-                    f"{m.group('lo')} is used.",
+                    f"{ref}: the document allows {lo_text} to {m.group('hi')}; "
+                    f"{lo_text} is used.",
                 )
             return chosen
     return value
+
+
+def check_parts_found(stats: StatsDict, parts_found: int) -> None:
+    """Tells the builder when no parts list could be read at all.
+
+    Some GuitarPCB documents print their parts table as an image (SWAH v3,
+    DVF), and some lists name no designators (PedalPCB ProtoBoard's 'QTY |
+    PART NUMBER'): an empty shopping list must not look like a complete one.
+
+    Args:
+        stats: Stats object that receives the warning.
+        parts_found: How many parts were extracted from the document.
+    """
+    if parts_found == 0:
+        _warn(
+            stats,
+            ParseWarningKind.NO_PARTS_LIST,
+            "",
+            "No parts with designators could be read from this document: its parts "
+            "list may be printed as an image, or list parts without designators. "
+            "Enter the parts by hand.",
+        )
