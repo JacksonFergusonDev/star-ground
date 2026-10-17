@@ -7,7 +7,7 @@
         "C102"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "C1",
           "C102"
         ]
@@ -19,7 +19,7 @@
         "C8"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "C8"
         ]
       }
@@ -30,7 +30,7 @@
         "C100"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "C100"
         ]
       }
@@ -41,7 +41,7 @@
         "C101"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "C101"
         ]
       }
@@ -57,7 +57,7 @@
         "C9"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "C10",
           "C11",
           "C13",
@@ -76,7 +76,7 @@
         "C6"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "C3",
           "C4",
           "C5",
@@ -90,7 +90,7 @@
         "C14"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "C14"
         ]
       }
@@ -101,7 +101,7 @@
         "C12"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "C12"
         ]
       }
@@ -112,7 +112,7 @@
         "D100"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "D100"
         ]
       }
@@ -127,7 +127,7 @@
         "IC5 (Inj)"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "IC1 (Inj)",
           "IC2 (Inj)",
           "IC3 (Inj)",
@@ -144,7 +144,7 @@
         "IC3"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "IC1",
           "IC2",
           "IC3"
@@ -158,7 +158,7 @@
         "IC5"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "IC4",
           "IC5"
         ]
@@ -170,7 +170,7 @@
         "DEPTH"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "DEPTH"
         ]
       }
@@ -181,7 +181,7 @@
         "SWEEP"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "SWEEP"
         ]
       }
@@ -193,7 +193,7 @@
         "RES"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "RATE",
           "RES"
         ]
@@ -208,7 +208,7 @@
         "R8"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "R12",
           "R16",
           "R20",
@@ -223,7 +223,7 @@
         "R29"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "R26",
           "R29"
         ]
@@ -243,7 +243,7 @@
         "R9"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "R1",
           "R13",
           "R17",
@@ -262,7 +262,7 @@
         "R30"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "R30"
         ]
       }
@@ -274,7 +274,7 @@
         "R3"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "R2",
           "R3"
         ]
@@ -286,7 +286,7 @@
         "R28"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "R28"
         ]
       }
@@ -306,7 +306,7 @@
         "R7"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "R10",
           "R11",
           "R14",
@@ -328,7 +328,7 @@
         "R33"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "R100",
           "R32",
           "R33"
@@ -341,7 +341,7 @@
         "R25"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "R25"
         ]
       }
@@ -352,7 +352,7 @@
         "R34"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "R34"
         ]
       }
@@ -364,7 +364,7 @@
         "R102"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "R101",
           "R102"
         ]
@@ -376,7 +376,7 @@
         "R24"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "R24"
         ]
       }
@@ -387,7 +387,7 @@
         "RANGE"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "RANGE"
         ]
       }
@@ -398,7 +398,7 @@
         "PV"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "PV"
         ]
       }

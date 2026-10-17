@@ -20,7 +20,7 @@
             "C8"
           ],
           "sources": {
-            "SnapshotTest": [
+            "Sample": [
               "C1",
               "C12",
               "C13",
@@ -38,7 +38,7 @@
             "C14"
           ],
           "sources": {
-            "SnapshotTest": [
+            "Sample": [
               "C14"
             ]
           }
@@ -50,7 +50,7 @@
             "C9"
           ],
           "sources": {
-            "SnapshotTest": [
+            "Sample": [
               "C2",
               "C9"
             ]
@@ -63,7 +63,7 @@
             "C11"
           ],
           "sources": {
-            "SnapshotTest": [
+            "Sample": [
               "C10",
               "C11"
             ]
@@ -76,7 +76,7 @@
             "D2"
           ],
           "sources": {
-            "SnapshotTest": [
+            "Sample": [
               "D1",
               "D2"
             ]
@@ -88,7 +88,7 @@
             "D5"
           ],
           "sources": {
-            "SnapshotTest": [
+            "Sample": [
               "D5"
             ]
           }
@@ -101,7 +101,7 @@
             "LED"
           ],
           "sources": {
-            "SnapshotTest": [
+            "Sample": [
               "D3",
               "D4",
               "LED"
@@ -114,7 +114,7 @@
             "LEVEL"
           ],
           "sources": {
-            "SnapshotTest": [
+            "Sample": [
               "LEVEL"
             ]
           }
@@ -125,7 +125,7 @@
             "TONE"
           ],
           "sources": {
-            "SnapshotTest": [
+            "Sample": [
               "TONE"
             ]
           }
@@ -136,7 +136,7 @@
             "SHIFT"
           ],
           "sources": {
-            "SnapshotTest": [
+            "Sample": [
               "SHIFT"
             ]
           }
@@ -147,7 +147,7 @@
             "FUZZ"
           ],
           "sources": {
-            "SnapshotTest": [
+            "Sample": [
               "FUZZ"
             ]
           }
@@ -160,7 +160,7 @@
             "R5"
           ],
           "sources": {
-            "SnapshotTest": [
+            "Sample": [
               "R11",
               "R16",
               "R5"
@@ -176,7 +176,7 @@
             "R8"
           ],
           "sources": {
-            "SnapshotTest": [
+            "Sample": [
               "R13",
               "R19",
               "R2",
@@ -190,7 +190,7 @@
             "R21"
           ],
           "sources": {
-            "SnapshotTest": [
+            "Sample": [
               "R21"
             ]
           }
@@ -203,7 +203,7 @@
             "R4"
           ],
           "sources": {
-            "SnapshotTest": [
+            "Sample": [
               "R10",
               "R15",
               "R4"
@@ -216,7 +216,7 @@
             "R23"
           ],
           "sources": {
-            "SnapshotTest": [
+            "Sample": [
               "R23"
             ]
           }
@@ -229,7 +229,7 @@
             "R6"
           ],
           "sources": {
-            "SnapshotTest": [
+            "Sample": [
               "R18",
               "R22",
               "R6"
@@ -242,7 +242,7 @@
             "R20"
           ],
           "sources": {
-            "SnapshotTest": [
+            "Sample": [
               "R20"
             ]
           }
@@ -254,7 +254,7 @@
             "R17"
           ],
           "sources": {
-            "SnapshotTest": [
+            "Sample": [
               "R1",
               "R17"
             ]
@@ -266,7 +266,7 @@
             "RLED"
           ],
           "sources": {
-            "SnapshotTest": [
+            "Sample": [
               "RLED"
             ]
           }
@@ -279,7 +279,7 @@
             "R9"
           ],
           "sources": {
-            "SnapshotTest": [
+            "Sample": [
               "R14",
               "R3",
               "R9"
@@ -293,7 +293,7 @@
             "R7"
           ],
           "sources": {
-            "SnapshotTest": [
+            "Sample": [
               "R12",
               "R7"
             ]
@@ -306,7 +306,7 @@
             "Q4"
           ],
           "sources": {
-            "SnapshotTest": [
+            "Sample": [
               "Q1",
               "Q4"
             ]
@@ -319,7 +319,7 @@
             "Q3"
           ],
           "sources": {
-            "SnapshotTest": [
+            "Sample": [
               "Q2",
               "Q3"
             ]
@@ -343,7 +343,7 @@
             "C8"
           ],
           "sources": {
-            "SnapshotTest": [
+            "Sample": [
               "C1",
               "C12",
               "C13",
@@ -361,7 +361,7 @@
             "C14"
           ],
           "sources": {
-            "SnapshotTest": [
+            "Sample": [
               "C14"
             ]
           }
@@ -374,7 +374,7 @@
             "C9"
           ],
           "sources": {
-            "SnapshotTest": [
+            "Sample": [
               "C2",
               "C6",
               "C9"
@@ -388,7 +388,7 @@
             "C11"
           ],
           "sources": {
-            "SnapshotTest": [
+            "Sample": [
               "C10",
               "C11"
             ]
@@ -400,7 +400,7 @@
             "D5"
           ],
           "sources": {
-            "SnapshotTest": [
+            "Sample": [
               "D5"
             ]
           }
@@ -415,7 +415,7 @@
             "LED"
           ],
           "sources": {
-            "SnapshotTest": [
+            "Sample": [
               "D1",
               "D2",
               "D3",
@@ -430,7 +430,7 @@
             "LEVEL"
           ],
           "sources": {
-            "SnapshotTest": [
+            "Sample": [
               "LEVEL"
             ]
           }
@@ -441,7 +441,7 @@
             "TONE"
           ],
           "sources": {
-            "SnapshotTest": [
+            "Sample": [
               "TONE"
             ]
           }
@@ -452,7 +452,7 @@
             "SHIFT"
           ],
           "sources": {
-            "SnapshotTest": [
+            "Sample": [
               "SHIFT"
             ]
           }
@@ -463,7 +463,7 @@
             "FUZZ"
           ],
           "sources": {
-            "SnapshotTest": [
+            "Sample": [
               "FUZZ"
             ]
           }
@@ -476,7 +476,7 @@
             "R5"
           ],
           "sources": {
-            "SnapshotTest": [
+            "Sample": [
               "R11",
               "R16",
               "R5"
@@ -492,7 +492,7 @@
             "R8"
           ],
           "sources": {
-            "SnapshotTest": [
+            "Sample": [
               "R13",
               "R19",
               "R2",
@@ -506,7 +506,7 @@
             "R21"
           ],
           "sources": {
-            "SnapshotTest": [
+            "Sample": [
               "R21"
             ]
           }
@@ -519,7 +519,7 @@
             "R4"
           ],
           "sources": {
-            "SnapshotTest": [
+            "Sample": [
               "R10",
               "R15",
               "R4"
@@ -532,7 +532,7 @@
             "R23"
           ],
           "sources": {
-            "SnapshotTest": [
+            "Sample": [
               "R23"
             ]
           }
@@ -545,7 +545,7 @@
             "R6"
           ],
           "sources": {
-            "SnapshotTest": [
+            "Sample": [
               "R18",
               "R22",
               "R6"
@@ -558,7 +558,7 @@
             "R20"
           ],
           "sources": {
-            "SnapshotTest": [
+            "Sample": [
               "R20"
             ]
           }
@@ -570,7 +570,7 @@
             "R17"
           ],
           "sources": {
-            "SnapshotTest": [
+            "Sample": [
               "R1",
               "R17"
             ]
@@ -582,7 +582,7 @@
             "RLED"
           ],
           "sources": {
-            "SnapshotTest": [
+            "Sample": [
               "RLED"
             ]
           }
@@ -595,7 +595,7 @@
             "R9"
           ],
           "sources": {
-            "SnapshotTest": [
+            "Sample": [
               "R14",
               "R3",
               "R9"
@@ -609,7 +609,7 @@
             "R7"
           ],
           "sources": {
-            "SnapshotTest": [
+            "Sample": [
               "R12",
               "R7"
             ]
@@ -622,7 +622,7 @@
             "Q3"
           ],
           "sources": {
-            "SnapshotTest": [
+            "Sample": [
               "Q2",
               "Q3"
             ]
@@ -635,7 +635,7 @@
             "Q4"
           ],
           "sources": {
-            "SnapshotTest": [
+            "Sample": [
               "Q1",
               "Q4"
             ]

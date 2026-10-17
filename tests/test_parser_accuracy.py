@@ -19,10 +19,12 @@ import logging
 import pytest
 
 from tests.accuracy import (
+    SAMPLES_DIR,
     GoldenDoc,
     compare_to_baseline,
     golden_docs,
     load_baseline,
+    sample_group,
     score_doc,
 )
 
@@ -37,7 +39,14 @@ def baseline():
     return load_baseline()
 
 
-@pytest.mark.parametrize("doc", DOCS, ids=[d.name for d in DOCS])
+@pytest.mark.parametrize(
+    "doc",
+    [
+        pytest.param(d, marks=pytest.mark.xdist_group(sample_group(SAMPLES_DIR, d.pdf)))
+        for d in DOCS
+    ],
+    ids=[d.name for d in DOCS],
+)
 def test_accuracy_matches_baseline(doc: GoldenDoc, baseline) -> None:
     """Parser output for each golden document matches the accepted baseline."""
     diffs = compare_to_baseline(score_doc(doc), baseline)

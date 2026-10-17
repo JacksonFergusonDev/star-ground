@@ -71,9 +71,15 @@ repos:
         types: [markdown]
         require_serial: true
 
+      - id: zizmor
+        name: zizmor
+        entry: uv run zizmor
+        language: system
+        files: ^\.github/workflows/.*\.ya?ml$
+
       - id: pytest
         name: pytest
-        entry: uv run pytest
+        entry: uv run pytest -n auto
         language: system
         pass_filenames: false
         stages: [pre-push]

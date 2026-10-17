@@ -16,6 +16,7 @@ uncommitted one) with the same machinery.
 """
 
 import argparse
+import functools
 import json
 import logging
 import re
@@ -27,7 +28,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Any, TypedDict
 
-from src.bom_lib import ComponentCategory, Inventory, parse_pedalpcb_pdf
+from src.bom_lib import ComponentCategory, Inventory, ParseResult, parse_pedalpcb_pdf
 from src.bom_lib.utils import parse_value_to_decimal
 
 TESTS_DIR = Path(__file__).parent
@@ -463,6 +464,44 @@ def _pair_builds(
     return pairs, [b for bi, b in enumerate(builds) if bi not in used]
 
 
+@functools.cache
+def _parse_cached(pdf: Path) -> ParseResult:
+    return parse_pedalpcb_pdf(str(pdf), source_name="Sample")
+
+
+def parse_sample(pdf: Path) -> ParseResult:
+    """Parses a sample PDF once per process, shared by every test that reads it.
+
+    The snapshot and accuracy suites both parse each sample; caching halves that
+    work. Callers must treat the result as read-only.
+
+    Args:
+        pdf: Path to the sample PDF.
+
+    Returns:
+        The parser output for the document.
+    """
+    return _parse_cached(pdf.resolve())
+
+
+def sample_group(samples_dir: Path | str, pdf: Path | str) -> str:
+    """Names the pytest-xdist group for a sample, so tests sharing its parse share a worker.
+
+    Args:
+        samples_dir: The samples root.
+        pdf: The sample PDF, absolute or relative to `samples_dir`.
+
+    Returns:
+        The sample's path relative to `samples_dir`, in POSIX form.
+    """
+    return (
+        (Path(samples_dir) / pdf)
+        .resolve()
+        .relative_to(Path(samples_dir).resolve())
+        .as_posix()
+    )
+
+
 def score_doc(doc: GoldenDoc) -> DocScore:
     """Runs the parser on one document and grades every designator of every build.
 
@@ -476,7 +515,7 @@ def score_doc(doc: GoldenDoc) -> DocScore:
     Returns:
         A DocScore covering every expected and every emitted designator.
     """
-    res = parse_pedalpcb_pdf(str(doc.pdf), source_name="Accuracy")
+    res = parse_sample(doc.pdf)
     flagged = {w.ref.upper() for w in res.stats["warnings"] if w.ref}
 
     builds = [_actual_parts(v.inventory) for v in res.variants] or [
