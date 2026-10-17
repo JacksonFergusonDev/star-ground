@@ -37,7 +37,8 @@ _LED_VALUE = re.compile(r"\bLED\b")
 _NUMBERED_LABEL = re.compile(r"[A-Z]{2,5}\d{1,3}")
 _SLASH_RATING = re.compile(r"(?<=[\dpnuµF])/(\d+(?:\.\d+)?)\s*V\b", re.IGNORECASE)
 _OHMS = re.compile(r"(?<![\w.])\d+(?:\.\d+)?R\d*(?![\w.])")
-_VACTROL = re.compile(r"VTL\d")
+# Vactrols: VTL5C4 (Xvive/PerkinElmer), NSL-32 (Silonex).
+_VACTROL = re.compile(r"VTL\d|NSL-?\d")
 # A DIP switch, written with a dash ('DIP-5'), unlike socket sizes ('DIP8').
 DIP_SWITCH = re.compile(r"\bDIP-\d+\b|\bDIP[- ]?\d+\b.*\bSWITCH|\bDIP SWITCH")
 _JACK_VALUE = re.compile(r"\b(?:TRS|JACK)\b")

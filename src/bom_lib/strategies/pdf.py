@@ -4,9 +4,19 @@ import os
 from dataclasses import replace
 
 from src.bom_lib.enums import InputMethod
+from src.bom_lib.ocr import attempt_ocr
 from src.bom_lib.parser import parse_pedalpcb_pdf
 from src.bom_lib.strategies.base import BOMParserStrategy, ParseResult
 from src.bom_lib.types import RawBOMData, SupportsName
+
+
+def _parse(path: str, source_name: str) -> ParseResult:
+    """Parses a PDF, and reads its image pages by OCR when the parse looks incomplete.
+
+    The OCR parts are offered on the result (`ParseResult.ocr`), not added.
+    """
+    res = parse_pedalpcb_pdf(path, source_name=source_name)
+    return replace(res, ocr=attempt_ocr(path, res, source_name))
 
 
 class PDFParserStrategy(BOMParserStrategy):
@@ -37,10 +47,10 @@ class PDFParserStrategy(BOMParserStrategy):
         if isinstance(data, str) and os.path.isfile(data):
             with open(data, "rb") as f:
                 raw_bytes = f.read()
-            res = parse_pedalpcb_pdf(data, source_name=source_name)
+            res = _parse(data, source_name)
             return replace(res, raw_content=raw_bytes)
 
         raw_content = self._read_to_bytes(data, "PDFParserStrategy")
         with self._temp_file_from_bytes(raw_content, ".pdf") as tmp_path:
-            res = parse_pedalpcb_pdf(tmp_path, source_name=source_name)
+            res = _parse(tmp_path, source_name)
             return replace(res, raw_content=raw_content)

@@ -296,8 +296,33 @@ class TestCellRepairs:
         ]
 
     def test_dashed_ranges_are_not_name_and_value(self) -> None:
+        # Q-Tune's quantity column: a range is never valued by a bare count.
         assert find_listings(_line("D21 - D28", "8")) == []
-        assert find_listings(_line("POT1 - 6", "B50K")) == []
+        # The range lists all six pots (6 Band EQ), not 'POT1' valued '- 6 B50K'.
+        assert find_listings(_line("POT1 - 6", "B50K")) == [Listing("POT1 - 6", "B50K")]
+
+    def test_range_in_a_listing_grid(self) -> None:
+        # GuitarPCB SWAH: 'C9  1u  16V  D1-D2  1N4148' is two listings.
+        assert find_listings(_line("C9", "1u", "16V", "D1-D2", "1N4148")) == [
+            Listing("C9", "1u 16V"),
+            Listing("D1-D2", "1N4148"),
+        ]
+
+    def test_title_case_control_beside_a_tapered_pot(self) -> None:
+        # GuitarPCB Tone TwEQ: 'R11  10k  Volume  A100k'.
+        assert find_listings(_line("R11", "10k", "Volume", "A100k")) == [
+            Listing("R11", "10k"),
+            Listing("VOLUME", "A100k"),
+        ]
+
+    def test_leading_see_text_markers(self) -> None:
+        assert find_listings(_line("*R13", "1k8", "**D3", "1n4001")) == [
+            Listing("R13", "1k8"),
+            Listing("D3", "1n4001"),
+        ]
+
+    def test_lower_case_kilohms_name_a_control(self) -> None:
+        assert find_listings(_line("VOL", "A100k")) == [Listing("VOL", "A100k")]
 
     def test_multiword_control_name(self) -> None:
         assert find_listings(_line("TONE BYPASS SWITCH", "DPDT ON/ON")) == [

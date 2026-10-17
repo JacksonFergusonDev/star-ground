@@ -14,8 +14,11 @@ from src.bom_lib import (
     BuildHardware,
     FeedbackRating,
     InputMethod,
+    OcrAttempt,
+    OcrVerdict,
     ParseResult,
     ParseWarning,
+    ParseWarningKind,
     ProjectSlot,
     StatsDict,
     build_shopping_list,
@@ -302,6 +305,7 @@ def _reset_slot_state(slot: ProjectSlot, new_method: InputMethod) -> None:
     slot.parsed = None
     slot.parsed_key = None
     slot.variant = None
+    slot.use_ocr = False
 
     # 3. Clear Streamlit Session Keys
     # We clear the UI widgets so they don't retain old values
@@ -314,6 +318,7 @@ def _reset_slot_state(slot: ProjectSlot, new_method: InputMethod) -> None:
         f"filter_src_{slot_id}",
         f"filter_cat_{slot_id}",
         f"variant_{slot_id}",
+        f"ocr_{slot_id}",
     ]
     for k in keys_to_clear:
         if k in st.session_state:
@@ -358,6 +363,8 @@ def ensure_parsed(slot: ProjectSlot) -> ParseResult | None:
         )
         slot.parsed_key = key
         slot.variant = None
+        slot.use_ocr = False
+        st.session_state.pop(f"ocr_{slot.id}", None)
     return slot.parsed
 
 
@@ -382,6 +389,27 @@ def render_build_picker(slot: ProjectSlot, result: ParseResult) -> None:
             f"This document describes {len(names)} circuits. "
             "Choose which one you are building."
         )
+
+
+def render_ocr_offer(slot: ProjectSlot, attempt: OcrAttempt) -> None:
+    """Tells the builder their parts list is an image, and offers OCR's reading.
+
+    OCR misreads plausibly, so its parts are never used unless the builder
+    opts in, and each one is listed for review on the master list.
+    """
+    if attempt.verdict == OcrVerdict.UNUSABLE or not attempt.inventory:
+        st.warning(attempt.message, icon="🖼️")
+        slot.use_ocr = False
+        return
+    if attempt.verdict == OcrVerdict.COMPLETE:
+        st.info(attempt.message, icon="🖼️")
+    else:
+        st.warning(attempt.message, icon="🖼️")
+    slot.use_ocr = st.checkbox(
+        f"Add the {attempt.parts_read} parts read by OCR",
+        key=f"ocr_{slot.id}",
+        help="Each part read by OCR is listed for review on the master list.",
+    )
 
 
 def on_method_change(slot_id: uuid.UUID) -> None:
@@ -526,6 +554,8 @@ for i, slot in enumerate(st.session_state.pedal_slots):
         if parsed is not None:
             if parsed.requires_choice:
                 render_build_picker(slot, parsed)
+            if parsed.ocr is not None:
+                render_ocr_offer(slot, parsed.ocr)
             for note in parsed.options:
                 st.caption(f"Option: {note}")
 
@@ -588,6 +618,8 @@ if generate:
             result = copy.deepcopy(slot.parsed)
             if result.requires_choice and slot.variant:
                 result = result.select(slot.variant)
+            if slot.use_ocr and result.ocr is not None and result.ocr.inventory:
+                result = result.accept_ocr()
             rename_source_in_inventory(result.inventory, PENDING_SOURCE, source)
         else:
             result = parser_context.process(slot.method, slot.data, source_name=source)
@@ -705,8 +737,16 @@ if st.session_state.inventory and st.session_state.stats:
         )
         for project, warnings in parse_warnings.items():
             with st.expander(f"{project}: {len(warnings)} to review"):
+                ocr = [w for w in warnings if w.kind == ParseWarningKind.OCR_READ]
                 for w in warnings:
-                    st.markdown(f"- **{w.kind.value}**: {w.message}")
+                    if w.kind != ParseWarningKind.OCR_READ:
+                        st.markdown(f"- **{w.kind.value}**: {w.message}")
+                if ocr:
+                    st.markdown(
+                        f"**{len(ocr)} part(s) read by OCR.** Check each against "
+                        "the document:"
+                    )
+                    st.markdown("\n".join(f"- {w.message}" for w in ocr))
 
     # Interchangeable choices the parser resolved to the document's default.
     option_notes = cast(dict[str, list[str]], st.session_state.option_notes)
