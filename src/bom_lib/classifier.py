@@ -23,12 +23,15 @@ from src.bom_lib.utils import (
 
 _SIZED_LED = re.compile(r"\d+(?:\.\d+)?mm(?:\s+[A-Za-z]+)?", re.IGNORECASE)
 # A resistance, with or without a pot taper: B100K, 100KA, 50K, B10K DUAL, Dual B10K.
-# '(3362P Trim)', 'Trim (3362P)', '(3362P)': package notes, not part of the value.
+# '(3362P Trim)', 'Trim (3362P)', '(3362P)', '5k trimmer (3386)': package notes
+# (Bourns trimmer series), not part of the value.
 _TRIM_NOTE = re.compile(
-    r"\([^()]*\b(?:3362P|TRIM(?:MER)?)\b[^()]*\)|\b3362P\b|\bTRIM(?:MER)?\b",
+    r"\([^()]*\b(?:33(?:62|86)P?|3296[A-Z]?|TRIM(?:MER)?)\b[^()]*\)"
+    r"|\b3362P\b|\bTRIM(?:MER)?\b",
     re.IGNORECASE,
 )
 _MILLIAMPS = re.compile(r"\dmA\b")
+_SLASH_RATING = re.compile(r"(?<=[\dpnuµF])/(\d+(?:\.\d+)?)\s*V\b", re.IGNORECASE)
 _OHMS = re.compile(r"(?<![\w.])\d+(?:\.\d+)?R\d*(?![\w.])")
 _VACTROL = re.compile(r"VTL\d")
 # A DIP switch, written with a dash ('DIP-5'), unlike socket sizes ('DIP8').
@@ -86,6 +89,10 @@ def normalize_value_by_category(category: ComponentCategory, val_raw: str) -> st
         normalization isn't applicable.
     """
     clean_val = val_raw.strip()
+
+    if category == ComponentCategory.CAPACITORS:
+        # '330uF/35V' (Aion FX) gives the voltage rating with the value.
+        clean_val = _SLASH_RATING.sub(r" \1V", clean_val)
 
     # Only normalize Passives (Resistors/Caps)
     if category in (ComponentCategory.RESISTORS, ComponentCategory.CAPACITORS):
@@ -158,8 +165,9 @@ def categorize_part(
     Args:
         ref: The reference designator (e.g., "R1", "VOLUME", "IC1").
         val: The component value (e.g., "10k", "TL072").
-        category_hint: Category suggested by a TYPE column, used only when
-            neither the designator nor the value decides (RECV / 'Stereo Jack').
+        category_hint: Category named by a TYPE column; for a label that is not
+            a designator it wins over the guess from the value (RECV /
+            'Stereo Jack', LEDR / 'Metal film resistor').
 
     Returns:
         CategorizationResult with standardized category, normalized value,
@@ -184,7 +192,9 @@ def categorize_part(
             # CDXL Reissue lists trimmers R20/R23 under 'TRIM POTS (3362P Type)'.
             category = ComponentCategory.POTENTIOMETERS
     else:
-        named = _named_control_category(ref_up, val_up, val_clean) or category_hint
+        # A TYPE column states the category outright; the value is only a
+        # guess (Aion FX: 'LEDR | 10k | Metal film resistor' is no pot).
+        named = category_hint or _named_control_category(ref_up, val_up, val_clean)
         if named is None:
             return None
         category = named

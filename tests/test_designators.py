@@ -27,6 +27,14 @@ from src.bom_lib.enums import ComponentCategory as Cat
         ("RV1", Cat.POTENTIOMETERS),  # KiCad variable resistor (Sheepylove)
         ("PNP1", Cat.TRANSISTORS),  # Twin Face
         ("NPN2", Cat.TRANSISTORS),
+        ("LEDR", Cat.RESISTORS),  # Aion FX LED resistor, not an LED
+        ("LEDRB", Cat.RESISTORS),
+        ("RPD", Cat.RESISTORS),  # Aion FX input pulldown
+        ("RPD2", Cat.RESISTORS),
+        ("RX1", Cat.RESISTORS),  # Aion FX optional-mod parts
+        ("CX5", Cat.CAPACITORS),
+        ("Z1", Cat.DIODES),  # zener
+        ("XFM1", Cat.HARDWARE_MISC),  # transformer
         ("r1", Cat.RESISTORS),
     ],
 )

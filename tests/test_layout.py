@@ -6,9 +6,11 @@ from src.bom_lib import PDFWord
 from src.bom_lib.layout import (
     BomRow,
     Listing,
+    bom_note_cells,
     clean_value,
     find_bom_rows,
     find_listings,
+    footnote_marks,
     group_lines,
     split_cells,
 )
@@ -158,10 +160,21 @@ def test_clean_value(raw: str, clean: str) -> None:
         ("10K", "Resistor, 1/4W", "10K"),
         ("1N4148", "Signal diode, DO-35", "1N4148"),
         ("RANDOMIZER", "Random LFO microcontroller", "RANDOMIZER"),
+        # Aion FX lists LED specs after 'LED,' and switch positions with hyphens.
+        ("5mm", "LED, 5mm, red diffused", "5mm Red Diffused LED"),
+        ("5mm green", "LED, 5mm, green diffused", "5mm Green Diffused LED"),
+        ("100n", "MLCC capacitor, X7R", "100n MLCC"),
     ],
 )
 def test_enrich_value_from_type(value: str, type_text: str, expected: str) -> None:
     assert enrich_value_from_type(value, type_text) == expected
+
+
+def test_switch_spec_is_not_replaced_by_a_part_number() -> None:
+    # Aion FX Sentinel: 'VOLTAGE | DPDT slide | Slide switch, DPDT | E-Switch EG2207'.
+    assert enrich_value_from_type(
+        "DPDT slide", "Slide switch, DPDT", "E-Switch EG2207"
+    ) == ("DPDT slide")
 
 
 class TestCellRepairs:
@@ -395,3 +408,63 @@ class TestTextBillOfMaterials:
 
     def test_no_header_no_rows(self) -> None:
         assert find_bom_rows(_line("R1", "10K", "C1", "100n")) == []
+
+    def test_typed_part_table(self) -> None:
+        # Aion FX: 'PART | VALUE | TYPE | NOTES'. Every row with a TYPE is a part,
+        # whatever its label; a wrapped note continues its row; the page footer
+        # (no TYPE) is not a row.
+        cols = (50.0, 110.0, 200.0, 420.0)
+        words = (
+            self._row(100, *zip(("PART", "VALUE", "TYPE", "NOTES"), cols, strict=True))
+            + self._row(
+                120, ("R1", cols[0]), ("1M", cols[1]), ("Metal film resistor", cols[2])
+            )
+            + self._row(
+                140,
+                ("VOL.", cols[0]),
+                ("100kA", cols[1]),
+                ("16mm right-angle PCB mount pot", cols[2]),
+                ("Original uses 50kA,", cols[3]),
+            )
+            + self._row(160, ("but 100k gives more range.", cols[3]))
+            + self._row(
+                180,
+                ("FSW", cols[0]),
+                ("3PDT", cols[1]),
+                ("Stomp switch, 3PDT", cols[2]),
+            )
+            + self._row(
+                200, ("ACHILLES AMP", cols[0]), ("OVERDRIVE", cols[1]), ("4", cols[3])
+            )
+        )
+        rows = find_bom_rows(words)
+        assert [(r.refs, r.value, r.type_text) for r in rows] == [
+            ("R1", "1M", "Metal film resistor"),
+            ("VOL.", "100kA", "16mm right-angle PCB mount pot"),
+            ("FSW", "3PDT", "Stomp switch, 3PDT"),
+        ]
+        assert rows[1].notes == "Original uses 50kA, but 100k gives more range."
+        assert [c.text for c in bom_note_cells(words)] == [
+            "Original uses 50kA,",
+            "but 100k gives more range.",
+            "4",
+        ]
+
+    def test_untyped_table_reads_only_designators(self) -> None:
+        cols = (50.0, 150.0, 220.0)
+        words = self._row(
+            100, *zip(("Reference", "Value", "Quantity"), cols, strict=True)
+        ) + self._row(120, ("Screw", cols[0]), ("M3 x 5mm", cols[1]), ("4", cols[2]))
+        assert find_bom_rows(words) == []
+
+
+def test_footnote_marks() -> None:
+    # Aion FX legacy: 'R2  68k¹' sets the marker at about 0.6x the value's size.
+    words = [
+        PDFWord(text="R2", x0=100, x1=114, top=100.5, size=11.0),
+        PDFWord(text="68k", x0=131, x1=148, top=100.5, size=11.0),
+        PDFWord(text="1", x0=151, x1=155, top=100.0, size=6.4),
+        PDFWord(text="C2", x0=263, x1=277, top=100.5, size=11.0),
+        PDFWord(text="22", x0=294, x1=306, top=100.5, size=11.0),
+    ]
+    assert [w["text"] for w in footnote_marks(words)] == ["1"]
