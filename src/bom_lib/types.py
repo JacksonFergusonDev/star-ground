@@ -4,6 +4,7 @@ This module contains the TypedDicts and type aliases used throughout the
 parsing and sourcing pipeline to ensure consistent data passing.
 """
 
+import copy
 import re
 import uuid
 from collections import UserDict, defaultdict
@@ -27,6 +28,7 @@ from src.bom_lib.enums import (
     ComponentSpec,
     HardwareRole,
     InputMethod,
+    OcrVerdict,
     ParseWarningKind,
 )
 
@@ -92,6 +94,8 @@ class ProjectSlot:
     parsed: ParseResult | None = None
     parsed_key: str | None = None
     variant: str | None = None
+    # The builder chose to add the parts OCR read (see `ParseResult.ocr`).
+    use_ocr: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -565,6 +569,60 @@ class OptionNote:
 
 
 @dataclass(frozen=True, slots=True)
+class OcrAttempt:
+    """Parts read by OCR from a document's image pages, not yet accepted.
+
+    Attributes:
+        verdict: How far the reading can be trusted.
+        inventory: The parts OCR found that the text layer did not.
+        warnings: One 'Read by OCR' warning per part.
+        pages: The pages read (0-based).
+        parts_read: How many designators OCR found.
+        suspect: How many of them have implausible values.
+        supplements: Whether the text layer listed some parts already (so OCR
+            only fills in the rest).
+    """
+
+    verdict: OcrVerdict
+    inventory: Inventory
+    warnings: tuple[ParseWarning, ...]
+    pages: tuple[int, ...]
+    parts_read: int
+    suspect: int
+    supplements: bool
+
+    @property
+    def message(self) -> str:
+        """Plain-language explanation of the attempt, for the builder."""
+        where = (
+            "Some of this document's parts appear to be printed as an image"
+            if self.supplements
+            else "This document's parts list appears to be printed as an image"
+        )
+        if self.verdict == OcrVerdict.UNUSABLE:
+            # Bonus PCBs print values on the board and have no parts list at
+            # all: the document may simply have none.
+            return (
+                "No parts list could be read from this document, even with OCR "
+                "(text recognition). If it has one, it is likely an image OCR "
+                "could not read: enter the parts by hand."
+            )
+        found = f"OCR (text recognition) read {self.parts_read} parts from it"
+        if self.verdict == OcrVerdict.PARTIAL:
+            wrong = f", and {self.suspect} look wrong" if self.suspect else ""
+            return (
+                f"{where}. {found}{wrong}, but the reading looks incomplete, so "
+                "OCR is unlikely to be reliable here. You can add these parts, "
+                "but check every one against the document and enter any missing "
+                "parts by hand."
+            )
+        return (
+            f"{where}. {found}. OCR is less reliable than reading text: check "
+            "each part against the document before buying."
+        )
+
+
+@dataclass(frozen=True, slots=True)
 class ParseResult:
     """The structured result of parsing a BOM source.
 
@@ -579,6 +637,8 @@ class ParseResult:
         raw_content: Optional raw document bytes or content representation.
         variants: Every build of a multi-circuit document; empty otherwise.
         options: Interchangeable choices resolved to the document's default.
+        ocr: Parts OCR read from image pages, offered to the builder; they are
+            not in ``inventory`` until `accept_ocr`.
     """
 
     inventory: Inventory
@@ -587,6 +647,7 @@ class ParseResult:
     raw_content: bytes | None = None
     variants: tuple[BuildVariant, ...] = ()
     options: tuple[OptionNote, ...] = ()
+    ocr: OcrAttempt | None = None
 
     @property
     def requires_choice(self) -> bool:
@@ -617,3 +678,41 @@ class ParseResult:
             )
         stats = cast(StatsDict, {**self.stats, "parts_found": variant.parts_found})
         return replace(self, inventory=variant.inventory, stats=stats, variants=())
+
+    def accept_ocr(self) -> ParseResult:
+        """Returns the result with the parts OCR read added to the parts list.
+
+        Each added part carries a 'Read by OCR' warning, and the warnings OCR
+        answered (no parts list, designators missing from it) are dropped.
+
+        Returns:
+            The result with the OCR parts merged and no pending OCR attempt.
+
+        Raises:
+            ValueError: If there are no OCR parts to accept.
+        """
+        if self.ocr is None or not self.ocr.inventory:
+            raise ValueError("No OCR parts to accept")
+        inventory = copy.deepcopy(self.inventory)
+        for key, data in self.ocr.inventory.items():
+            if key in inventory:
+                inventory.merge(Inventory({key: data}))
+            else:
+                inventory[key] = copy.deepcopy(data)
+        read = {r for data in self.ocr.inventory.values() for r in data["refs"]}
+        warnings = [
+            w
+            for w in self.stats["warnings"]
+            if w.kind != ParseWarningKind.NO_PARTS_LIST
+            and not (w.kind == ParseWarningKind.UNEXTRACTED_REF and w.ref in read)
+        ]
+        stats = cast(
+            StatsDict,
+            {
+                **self.stats,
+                "warnings": warnings + list(self.ocr.warnings),
+                "parts_found": self.stats["parts_found"]
+                + sum(d["qty"] for d in self.ocr.inventory.values()),
+            },
+        )
+        return replace(self, inventory=inventory, stats=stats, ocr=None)

@@ -26,6 +26,7 @@ from src.bom_lib.classifier import (
 from src.bom_lib.designators import is_designator, parse_designator
 from src.bom_lib.enums import ComponentCategory
 from src.bom_lib.layout import (
+    REF_RANGE,
     bom_note_cells,
     find_bom_rows,
     find_listings,
@@ -990,37 +991,43 @@ def _layout_entries(
             if table_refs and cells and cells[0].text in table_refs
         }
         for listing in find_listings(data["words"]):
-            ref, value = listing.ref, listing.value
             stats["lines_read"] += 1
-
-            if (
-                ref in table_refs
-                or listing.line in table_lines
-                or (page_no, listing.line) in (skip_lines or set())
-            ):
-                continue
-            entry = Entry(ref, value, page_no, line=listing.line, x0=listing.x0)
-            if not entry.not_populated and (_is_ignored(value) or len(value) > 50):
-                continue
-            if ref in constants.KEYWORDS and not entry.not_populated:
-                # Named controls must carry a real value (B100K, SPDT ...).
-                has_digit = any(ch.isdigit() for ch in value)
-                if not has_digit and not constants.SWITCH_VALUE_PATTERN.search(
-                    value.upper()
+            # A range lists each of its designators: 'D1-D2  1N4148'.
+            refs = (
+                expand_refs(listing.ref)
+                if REF_RANGE.fullmatch(listing.ref)
+                else [listing.ref]
+            )
+            value = listing.value
+            for ref in refs:
+                if (
+                    ref in table_refs
+                    or listing.line in table_lines
+                    or (page_no, listing.line) in (skip_lines or set())
                 ):
                     continue
-            if (
-                _NUMBERED_NAME.fullmatch(ref)
-                and not is_designator(ref)
-                and any(ch.isdigit() for ch in value)
-                and any(ch.isalpha() for ch in value)  # not a bare quantity
-                and categorize_part(ref, value) is None
-            ):
-                # Trumpeter's 'IQ1  2N5088' (a typo for Q1) is no known part,
-                # but is plainly listed as one.
-                check_unclassified_row(stats, ref, value)
-                continue
-            entries.append(entry)
+                entry = Entry(ref, value, page_no, line=listing.line, x0=listing.x0)
+                if not entry.not_populated and (_is_ignored(value) or len(value) > 50):
+                    continue
+                if ref in constants.KEYWORDS and not entry.not_populated:
+                    # Named controls must carry a real value (B100K, SPDT ...).
+                    has_digit = any(ch.isdigit() for ch in value)
+                    if not has_digit and not constants.SWITCH_VALUE_PATTERN.search(
+                        value.upper()
+                    ):
+                        continue
+                if (
+                    _NUMBERED_NAME.fullmatch(ref)
+                    and not is_designator(ref)
+                    and any(ch.isdigit() for ch in value)
+                    and any(ch.isalpha() for ch in value)  # not a bare quantity
+                    and categorize_part(ref, value) is None
+                ):
+                    # Trumpeter's 'IQ1  2N5088' (a typo for Q1) is no known part,
+                    # but is plainly listed as one.
+                    check_unclassified_row(stats, ref, value)
+                    continue
+                entries.append(entry)
     return entries
 
 
@@ -1214,6 +1221,74 @@ def _without_marks(page: Page) -> Page:
     return page.filter(keep)
 
 
+def read_pages(
+    pages_data: list[PDFPageExtraction], source_name: str, stats: StatsDict
+) -> tuple[Inventory, tuple[BuildVariant, ...], tuple[OptionNote, ...]]:
+    """Reads the parts lists of a document's pages and checks the result.
+
+    The same readers serve a PDF's text layer and OCR'd page images (see
+    `ocr.py`): both arrive as positioned words.
+
+    Args:
+        pages_data: Every page's tables, text and words, in document order.
+        source_name: Label for the source.
+        stats: Statistics and warnings, updated in place.
+
+    Returns:
+        The single-build inventory (empty when the document has variants),
+        the variants, and the option notes.
+    """
+    # --- STRATEGY 1: TABLE EXTRACTION ---
+    # A text bill of materials is the document's parts list, so the
+    # other strategies only read its own pages: elsewhere (vector
+    # schematics) symbol labels look like listings and drawings like
+    # tables.
+    text_rows = _text_table_entries(pages_data, stats)
+    bom_pages = {row.page for row in text_rows} or None
+    row_lines = {(row.page, row.line) for row in text_rows}
+    entries = _table_entries(pages_data, stats, bom_pages)
+    # A boxed 'Part | Value' grid is both a ruled table and a text table
+    # (GuitarPCB); read it once, or every part would be bought twice.
+    # The ruled cell keeps a value wrapped over two lines ('Bi-Color CA
+    # LED (see' / 'text)', Mini-Me), so the ruled reading wins.
+    ruled_refs = {(e.page, e.ref) for e in entries}
+    text_rows = [r for r in text_rows if (r.page, r.ref) not in ruled_refs]
+    # Number the text tables after the ruled ones.
+    entries += [
+        replace(row, table=len(entries) + (row.table or 0)) for row in text_rows
+    ]
+
+    # --- STRATEGY 2: LAYOUT ANALYSIS ---
+    # Recovers anything the tables missed (or everything, for column layouts)
+    entries += _layout_entries(
+        pages_data, stats, {e.ref for e in entries}, bom_pages, row_lines
+    )
+
+    # --- BUILDS: variants and options ---
+    pages = [
+        PageContext(page_lines(data["words"]), data["text"] or "")
+        for data in pages_data
+    ]
+    plan = plan_builds(entries, pages)
+    inventory, variants, options, union = _assemble_builds(plan, source_name, stats)
+
+    # --- SELF-CHECK ---
+    # Every designator listed in the document must be accounted for, in
+    # some build or option.
+    page_texts = [data["text"] or "" for data in pages_data]
+    # Like the readers, a text bill of materials bounds where parts are
+    # listed: Q-Tune's build steps mention 'the X1 connector area'.
+    listed_texts = [
+        _without_note_cells(data, text) if bom_pages is None or k in bom_pages else ""
+        for k, (data, text) in enumerate(zip(pages_data, page_texts, strict=True))
+    ]
+    check_parts_found(stats, sum(len(d["refs"]) for d in union.values()))
+    check_unextracted_refs(listed_texts, union, stats)
+    check_footnotes(page_texts, stats)
+    check_bom_reconciliation(page_texts, union, stats)
+    return inventory, variants, options
+
+
 def parse_pedalpcb_pdf(filepath: str, source_name: str) -> ParseResult:
     """Parses a PedalPCB Build Document (PDF).
 
@@ -1301,60 +1376,7 @@ def parse_pedalpcb_pdf(filepath: str, source_name: str) -> ParseResult:
                 # Title extraction is heuristic/optional; don't fail the build if it misses.
                 pass
 
-            # --- STRATEGY 1: TABLE EXTRACTION ---
-            # A text bill of materials is the document's parts list, so the
-            # other strategies only read its own pages: elsewhere (vector
-            # schematics) symbol labels look like listings and drawings like
-            # tables.
-            text_rows = _text_table_entries(pages_data, stats)
-            bom_pages = {row.page for row in text_rows} or None
-            row_lines = {(row.page, row.line) for row in text_rows}
-            entries = _table_entries(pages_data, stats, bom_pages)
-            # A boxed 'Part | Value' grid is both a ruled table and a text table
-            # (GuitarPCB); read it once, or every part would be bought twice.
-            # The ruled cell keeps a value wrapped over two lines ('Bi-Color CA
-            # LED (see' / 'text)', Mini-Me), so the ruled reading wins.
-            ruled_refs = {(e.page, e.ref) for e in entries}
-            text_rows = [r for r in text_rows if (r.page, r.ref) not in ruled_refs]
-            # Number the text tables after the ruled ones.
-            entries += [
-                replace(row, table=len(entries) + (row.table or 0)) for row in text_rows
-            ]
-
-            # --- STRATEGY 2: LAYOUT ANALYSIS ---
-            # Recovers anything the tables missed (or everything, for column layouts)
-            entries += _layout_entries(
-                pages_data, stats, {e.ref for e in entries}, bom_pages, row_lines
-            )
-
-            # --- BUILDS: variants and options ---
-            pages = [
-                PageContext(page_lines(data["words"]), data["text"] or "")
-                for data in pages_data
-            ]
-            plan = plan_builds(entries, pages)
-            inventory, variants, options, union = _assemble_builds(
-                plan, source_name, stats
-            )
-
-            # --- SELF-CHECK ---
-            # Every designator listed in the document must be accounted for, in
-            # some build or option.
-            page_texts = [data["text"] or "" for data in pages_data]
-            # Like the readers, a text bill of materials bounds where parts are
-            # listed: Q-Tune's build steps mention 'the X1 connector area'.
-            listed_texts = [
-                _without_note_cells(data, text)
-                if bom_pages is None or k in bom_pages
-                else ""
-                for k, (data, text) in enumerate(
-                    zip(pages_data, page_texts, strict=True)
-                )
-            ]
-            check_parts_found(stats, sum(len(d["refs"]) for d in union.values()))
-            check_unextracted_refs(listed_texts, union, stats)
-            check_footnotes(page_texts, stats)
-            check_bom_reconciliation(page_texts, union, stats)
+            inventory, variants, options = read_pages(pages_data, source_name, stats)
 
         except Exception as e:
             # Capture internal parsing errors (logic bugs, layout changes)

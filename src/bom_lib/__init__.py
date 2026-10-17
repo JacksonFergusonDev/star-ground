@@ -16,6 +16,7 @@ from .enums import (
     FeedbackRating,
     HardwareRole,
     InputMethod,
+    OcrVerdict,
     ParseWarningKind,
 )
 from .manager import (
@@ -68,6 +69,7 @@ from .types import (
     ChecklistPart,
     ComponentKey,
     Inventory,
+    OcrAttempt,
     OptionNote,
     ParseResult,
     ParseWarning,
@@ -117,6 +119,8 @@ __all__ = [
     "InputMethod",
     "Inventory",
     "ManualInputStrategy",
+    "OcrAttempt",
+    "OcrVerdict",
     "OptionNote",
     "PDFPageExtraction",
     "PDFParserStrategy",
