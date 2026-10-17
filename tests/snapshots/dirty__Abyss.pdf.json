@@ -6,7 +6,7 @@
         "C1"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "C1"
         ]
       }
@@ -17,7 +17,7 @@
         "C4"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "C4"
         ]
       }
@@ -28,7 +28,7 @@
         "C9"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "C9"
         ]
       }
@@ -39,7 +39,7 @@
         "C10"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "C10"
         ]
       }
@@ -50,7 +50,7 @@
         "C2"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "C2"
         ]
       }
@@ -65,7 +65,7 @@
         "C8"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "C11",
           "C12",
           "C13",
@@ -80,7 +80,7 @@
         "C3"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "C3"
         ]
       }
@@ -91,7 +91,7 @@
         "C5"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "C5"
         ]
       }
@@ -102,7 +102,7 @@
         "C6"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "C6"
         ]
       }
@@ -114,7 +114,7 @@
         "C15"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "C14",
           "C15"
         ]
@@ -126,7 +126,7 @@
         "D1"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "D1"
         ]
       }
@@ -137,7 +137,7 @@
         "LED"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "LED"
         ]
       }
@@ -148,7 +148,7 @@
         "D2"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "D2"
         ]
       }
@@ -160,7 +160,7 @@
         "IC2 (Inj)"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "IC1 (Inj)",
           "IC2 (Inj)"
         ]
@@ -172,7 +172,7 @@
         "IC1"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "IC1"
         ]
       }
@@ -183,7 +183,7 @@
         "IC2"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "IC2"
         ]
       }
@@ -197,7 +197,7 @@
         "LDR4"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "LDR1",
           "LDR2",
           "LDR3",
@@ -211,7 +211,7 @@
         "LEVEL"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "LEVEL"
         ]
       }
@@ -222,7 +222,7 @@
         "RATE"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "RATE"
         ]
       }
@@ -233,7 +233,7 @@
         "VOICE"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "VOICE"
         ]
       }
@@ -245,7 +245,7 @@
         "THROB"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "INTENSITY",
           "THROB"
         ]
@@ -257,7 +257,7 @@
         "R26"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "R26"
         ]
       }
@@ -270,7 +270,7 @@
         "R24"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "R11",
           "R14",
           "R24"
@@ -285,7 +285,7 @@
         "R16"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "R13",
           "R15",
           "R16"
@@ -298,7 +298,7 @@
         "R22"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "R22"
         ]
       }
@@ -310,7 +310,7 @@
         "R2"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "R1",
           "R2"
         ]
@@ -322,7 +322,7 @@
         "R21"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "R21"
         ]
       }
@@ -334,7 +334,7 @@
         "R18"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "R17",
           "R18"
         ]
@@ -346,7 +346,7 @@
         "R6"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "R6"
         ]
       }
@@ -358,7 +358,7 @@
         "R20"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "R19",
           "R20"
         ]
@@ -371,7 +371,7 @@
         "R27"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "R23",
           "R27"
         ]
@@ -390,7 +390,7 @@
         "R9"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "R10",
           "R25",
           "R3",
@@ -408,7 +408,7 @@
         "R12"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "R12"
         ]
       }
@@ -420,7 +420,7 @@
         "Q2"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "Q1",
           "Q2"
         ]

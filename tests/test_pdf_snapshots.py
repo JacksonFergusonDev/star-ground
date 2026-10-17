@@ -13,10 +13,11 @@ regenerated.
 import json
 import logging
 import os
+from pathlib import Path
 
 import pytest
 
-from src.bom_lib import parse_pedalpcb_pdf
+from tests.accuracy import parse_sample, sample_group
 
 # --- Logging Config ---
 # Silence noisy third-party libraries so we can focus on our own debug logs
@@ -99,7 +100,14 @@ if os.path.exists(SAMPLES_DIR):
                 pdf_files.append(rel_path)
 
 
-@pytest.mark.parametrize("pdf_rel_path", pdf_files)
+@pytest.mark.parametrize(
+    "pdf_rel_path",
+    [
+        pytest.param(p, marks=pytest.mark.xdist_group(sample_group(SAMPLES_DIR, p)))
+        for p in pdf_files
+    ],
+    ids=pdf_files,
+)
 def test_pdf_parsing_regression(pdf_rel_path, snapshot_update):
     """Regression Test: Compares parser output against stored snapshots.
 
@@ -120,7 +128,7 @@ def test_pdf_parsing_regression(pdf_rel_path, snapshot_update):
     snapshot_filename = pdf_rel_path.replace(os.sep, "__") + ".json"
 
     # 1. Run the Real Code
-    res = parse_pedalpcb_pdf(pdf_path, source_name="SnapshotTest")
+    res = parse_sample(Path(pdf_path))
     inventory, stats = res.inventory, res.stats
 
     # 2. Stabilize Data for Comparison

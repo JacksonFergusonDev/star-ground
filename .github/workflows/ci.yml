@@ -9,35 +9,108 @@ on:
 permissions:
   contents: read
 
+# A new push to a PR cancels its in-flight run; runs on main always finish.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  UV_LOCKED: "1"
+  UV_NO_SYNC: "1"
+
 jobs:
-  build:
+  lint:
+    name: Lint
     runs-on: ubuntu-latest
-
+    timeout-minutes: 5
     steps:
-    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
 
-    - name: Install uv
-      uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+      - name: Install uv
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
 
-    - name: Install dependencies
-      run: |
-        uv sync --only-group ci --locked
-        uv pip install pytest-github-actions-annotate-failures
+      - name: Install dependencies
+        run: uv sync --only-group ci
 
-    - name: Run Ruff Linter
-      run: uv run ruff check --output-format=github .
+      - name: Ruff lint
+        run: uv run ruff check --output-format=github .
 
-    - name: Run Ruff Formatter
-      run: uv run ruff format --check --output-format=github .
+      - name: Ruff format
+        run: uv run ruff format --check --output-format=github .
 
-    - name: Lint Markdown with rumdl
-      run: uv run rumdl check --output-format github .
+      - name: Markdown lint
+        run: uv run rumdl check --output-format github .
 
-    - name: Check Markdown formatting with rumdl
-      run: uv run rumdl fmt --check --output-format github .
+      - name: Markdown format
+        run: uv run rumdl fmt --check --output-format github .
 
-    - name: Type check with mypy
-      run: uv run mypy
+      - name: Audit workflows with zizmor
+        run: uv run zizmor --format=github .github/workflows
 
-    - name: Test with pytest
-      run: uv run pytest
+  typecheck:
+    name: Typecheck
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+
+      - name: Install dependencies
+        run: uv sync --group ci --no-dev
+
+      # mypy's cache is incremental, so a stale cache from an older lockfile is
+      # still a valid starting point.
+      - name: Restore mypy cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .mypy_cache
+          key: mypy-${{ hashFiles('.python-version', 'uv.lock') }}-${{ github.sha }}
+          restore-keys: |
+            mypy-${{ hashFiles('.python-version', 'uv.lock') }}-
+            mypy-
+
+      - name: Type check with mypy
+        run: uv run mypy
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+
+      - name: Install dependencies
+        run: uv sync --group ci --no-dev
+
+      - name: Test with pytest
+        run: uv run pytest -n auto
+
+  # The single required status check: add new jobs to `needs`, not to the ruleset.
+  ci-ok:
+    name: CI OK
+    if: always()
+    needs: [lint, typecheck, test]
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Require every job to pass
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          for r in $RESULTS; do
+            if [ "$r" != "success" ]; then
+              echo "::error::A required job finished with: $r"
+              exit 1
+            fi
+          done

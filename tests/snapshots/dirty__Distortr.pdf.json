@@ -6,7 +6,7 @@
         "C1"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "C1"
         ]
       }
@@ -17,7 +17,7 @@
         "C8"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "C8"
         ]
       }
@@ -29,7 +29,7 @@
         "C11"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "C10",
           "C11"
         ]
@@ -43,7 +43,7 @@
         "C9"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "C2",
           "C4",
           "C9"
@@ -56,7 +56,7 @@
         "C3"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "C3"
         ]
       }
@@ -67,7 +67,7 @@
         "C6"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "C6"
         ]
       }
@@ -78,7 +78,7 @@
         "C12"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "C12"
         ]
       }
@@ -89,7 +89,7 @@
         "C7"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "C7"
         ]
       }
@@ -100,7 +100,7 @@
         "C5"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "C5"
         ]
       }
@@ -111,7 +111,7 @@
         "D2"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "D2"
         ]
       }
@@ -122,7 +122,7 @@
         "D1"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "D1"
         ]
       }
@@ -133,7 +133,7 @@
         "D3"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "D3"
         ]
       }
@@ -144,7 +144,7 @@
         "VOLUME"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "VOLUME"
         ]
       }
@@ -155,7 +155,7 @@
         "TONE"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "TONE"
         ]
       }
@@ -166,7 +166,7 @@
         "DRIVE"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "DRIVE"
         ]
       }
@@ -178,7 +178,7 @@
         "R17"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "R16",
           "R17"
         ]
@@ -190,7 +190,7 @@
         "R9"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "R9"
         ]
       }
@@ -207,7 +207,7 @@
         "R7"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "R1",
           "R10",
           "R11",
@@ -224,7 +224,7 @@
         "R13"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "R13"
         ]
       }
@@ -235,7 +235,7 @@
         "R19"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "R19"
         ]
       }
@@ -246,7 +246,7 @@
         "R5"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "R5"
         ]
       }
@@ -257,7 +257,7 @@
         "R14"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "R14"
         ]
       }
@@ -270,7 +270,7 @@
         "R8"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "R12",
           "R4",
           "R8"
@@ -283,7 +283,7 @@
         "R18"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "R18"
         ]
       }
@@ -294,7 +294,7 @@
         "R15"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "R15"
         ]
       }
@@ -305,7 +305,7 @@
         "SUBS"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "SUBS"
         ]
       }
@@ -316,7 +316,7 @@
         "GAIN"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "GAIN"
         ]
       }
@@ -329,7 +329,7 @@
         "Q3"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "Q1",
           "Q2",
           "Q3"

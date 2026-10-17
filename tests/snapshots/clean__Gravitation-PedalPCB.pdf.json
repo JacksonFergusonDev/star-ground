@@ -10,7 +10,7 @@
         "C17"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "C1",
           "C12",
           "C13",
@@ -25,7 +25,7 @@
         "C10"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "C10"
         ]
       }
@@ -38,7 +38,7 @@
         "C15"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "C100",
           "C14",
           "C15"
@@ -51,7 +51,7 @@
         "C4"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "C4"
         ]
       }
@@ -62,7 +62,7 @@
         "C101"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "C101"
         ]
       }
@@ -74,7 +74,7 @@
         "C7"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "C5",
           "C7"
         ]
@@ -91,7 +91,7 @@
         "C9"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "C11",
           "C2",
           "C3",
@@ -107,7 +107,7 @@
         "D100"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "D100"
         ]
       }
@@ -119,7 +119,7 @@
         "IC2 (Inj)"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "IC1 (Inj)",
           "IC2 (Inj)"
         ]
@@ -131,7 +131,7 @@
         "IC3"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "IC3"
         ]
       }
@@ -142,7 +142,7 @@
         "IC4"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "IC4"
         ]
       }
@@ -154,7 +154,7 @@
         "IC2"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "IC1",
           "IC2"
         ]
@@ -166,7 +166,7 @@
         "MIX"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "MIX"
         ]
       }
@@ -178,7 +178,7 @@
         "TONE"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "DECAY",
           "TONE"
         ]
@@ -190,7 +190,7 @@
         "ATMOSPHERE"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "ATMOSPHERE"
         ]
       }
@@ -202,7 +202,7 @@
         "R7"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "R12",
           "R7"
         ]
@@ -218,7 +218,7 @@
         "R5"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "R10",
           "R13",
           "R14",
@@ -233,7 +233,7 @@
         "R16"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "R16"
         ]
       }
@@ -245,7 +245,7 @@
         "R3"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "R1",
           "R3"
         ]
@@ -257,7 +257,7 @@
         "R15"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "R15"
         ]
       }
@@ -269,7 +269,7 @@
         "R8"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "R6",
           "R8"
         ]
@@ -282,7 +282,7 @@
         "R9"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "R4",
           "R9"
         ]
@@ -294,7 +294,7 @@
         "R17"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "R17"
         ]
       }
@@ -305,7 +305,7 @@
         "R11"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "R11"
         ]
       }
@@ -317,7 +317,7 @@
         "R102"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "R101",
           "R102"
         ]
@@ -329,7 +329,7 @@
         "LENGTH"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "LENGTH"
         ]
       }
