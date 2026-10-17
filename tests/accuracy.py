@@ -12,7 +12,8 @@ the user by a parse warning or slipped through silently.
 Run ``uv run python -m tests.accuracy`` for a scorecard, or
 ``uv run python -m tests.accuracy --update-baseline`` to lock in improvements.
 ``--golden DIR --samples DIR`` scores an external corpus (e.g. a local,
-uncommitted one) with the same machinery.
+uncommitted one) with the same machinery. ``--ocr`` scores only the documents
+OCR reads (`src/bom_lib/ocr.py`), with its parts accepted as a builder would.
 """
 
 import argparse
@@ -31,10 +32,13 @@ from typing import Any, TypedDict
 from src.bom_lib import (
     ComponentCategory,
     Inventory,
+    OcrAttempt,
+    OcrVerdict,
     ParseResult,
     ParseWarningKind,
     parse_pedalpcb_pdf,
 )
+from src.bom_lib.ocr import attempt_ocr
 from src.bom_lib.utils import parse_value_to_decimal
 
 TESTS_DIR = Path(__file__).parent
@@ -232,6 +236,9 @@ class DocScore:
     ambiguous_refs: frozenset[str] = frozenset()
     variant_count: int = 1
     builds_found: int = 1
+    # Set when OCR read part of the document (`--ocr`).
+    ocr_verdict: OcrVerdict | None = None
+    ocr_refs: frozenset[str] = frozenset()
 
     @property
     def expected_count(self) -> int:
@@ -266,7 +273,13 @@ class DocScore:
         differ between variants) are not false alarms: telling the user about
         the choice is the right behavior.
         """
-        return self.warned_refs - {r.ref for r in self.failures} - self.ambiguous_refs
+        # Every part OCR read is warned about by design: OCR is never trusted.
+        return (
+            self.warned_refs
+            - {r.ref for r in self.failures}
+            - self.ambiguous_refs
+            - self.ocr_refs
+        )
 
     @property
     def title_ok(self) -> bool:
@@ -548,7 +561,15 @@ def _is_flagged(ref: str, flagged: set[str]) -> bool:
     )
 
 
-def score_doc(doc: GoldenDoc) -> DocScore:
+def _with_ocr(pdf: Path, res: ParseResult) -> tuple[ParseResult, OcrAttempt | None]:
+    """The parse with OCR parts accepted, as a builder accepting them would get."""
+    attempt = attempt_ocr(str(pdf), res, "Sample")
+    if attempt is None or not attempt.inventory:
+        return res, attempt
+    return replace(res, ocr=attempt).accept_ocr(), attempt
+
+
+def score_doc(doc: GoldenDoc, ocr: bool = False) -> DocScore:
     """Runs the parser on one document and grades every designator of every build.
 
     For a multi-circuit document each golden variant is graded against the
@@ -557,11 +578,15 @@ def score_doc(doc: GoldenDoc) -> DocScore:
 
     Args:
         doc: The ground truth to grade against.
+        ocr: Attempt OCR where the parse looks incomplete, and accept its parts.
 
     Returns:
         A DocScore covering every expected and every emitted designator.
     """
     res = parse_sample(doc.pdf)
+    attempt = None
+    if ocr:
+        res, attempt = _with_ocr(doc.pdf, res)
     flagged = {w.ref.upper() for w in res.stats["warnings"] if w.ref}
     if any(w.kind == ParseWarningKind.NO_PARTS_LIST for w in res.stats["warnings"]):
         # The builder was told nothing could be read: every part is flagged.
@@ -601,6 +626,10 @@ def score_doc(doc: GoldenDoc) -> DocScore:
         ambiguous_refs=doc.ambiguous_refs,
         variant_count=len(doc.variants),
         builds_found=len(res.variants) or 1,
+        ocr_verdict=attempt.verdict if attempt else None,
+        ocr_refs=frozenset(w.ref.upper() for w in attempt.warnings)
+        if attempt
+        else frozenset(),
     )
 
 
@@ -716,6 +745,7 @@ def render_scorecard(scores: list[DocScore], verbose: bool) -> str:
                 if s.variant_count > 1 or s.builds_found > 1
                 else ""
             )
+            + (f"  [OCR: {s.ocr_verdict}]" if s.ocr_verdict else "")
         )
         if verbose:
             for r in s.failures:
@@ -768,6 +798,11 @@ def main(argv: list[str] | None = None) -> int:
         help="directory the golden files' pdf paths are relative to",
     )
     parser.add_argument(
+        "--ocr",
+        action="store_true",
+        help="score only documents OCR reads, with its parts accepted",
+    )
+    parser.add_argument(
         "docs", nargs="*", help="limit to golden files containing these substrings"
     )
     args = parser.parse_args(argv)
@@ -776,11 +811,13 @@ def main(argv: list[str] | None = None) -> int:
     docs = golden_docs(args.golden, args.samples)
     if args.docs:
         docs = [d for d in docs if any(s.lower() in d.name.lower() for s in args.docs)]
-    scores = [score_doc(d) for d in docs]
+    scores = [score_doc(d, ocr=args.ocr) for d in docs]
+    if args.ocr:
+        scores = [s for s in scores if s.ocr_verdict is not None]
     print(render_scorecard(scores, verbose=args.verbose))
 
     if args.update_baseline:
-        if args.docs or args.golden != GOLDEN_DIR:
+        if args.docs or args.ocr or args.golden != GOLDEN_DIR:
             print(
                 "refusing to update baseline from a filtered or external run",
                 file=sys.stderr,

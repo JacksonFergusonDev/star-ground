@@ -14,6 +14,8 @@ The system enforces strict separation between **Ingestion**, **Normalization**, 
   - **Strategy:** Implements a **Hybrid Strategy**. It maps ruled PDF tables using `pdfplumber`, then runs a column-aware layout pass to recover everything the tables missed (or everything, for borderless multi-column parts lists).
 - **`bom_lib/layout.py`**: The layout reader.
   - **Role:** Groups positioned words into lines and *cells* (split at column-sized gaps), then pairs each designator cell with its value cell. This keeps multi-word values whole (`3mm Red LED`, `10u (25V or higher)`) without bleeding into the neighboring column.
+- **`bom_lib/ocr.py`**: The OCR fallback for parts lists printed as images.
+  - **Role:** When a parse looks incomplete (no parts list, or designators missing from it), renders the candidate pages, reads them with RapidOCR, keeps only each page's parts *table* (evenly spaced rows of aligned listings), and runs the words through the same readers as a text layer. The reading is graded (`Looks complete` / `Partial` / `Unusable`) and offered on `ParseResult.ocr`; its parts join the list only through `ParseResult.accept_ocr()`, each with a `Read by OCR` warning. OCR runs one page at a time under a lock, at about 500 MB and 2.5 s a page.
 - **`bom_lib/designators.py`**: The designator grammar.
   - **Role:** Decides what is a reference designator (`R1A`, `IC_A`, `LEDA`, `CLR1`) and what category its prefix implies; anything else is a named control classified by its value. Shared by the classifier and the layout reader so they cannot disagree.
 - **`bom_lib/builds.py`**: The build planner.

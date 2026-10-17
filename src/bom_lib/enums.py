@@ -48,6 +48,15 @@ class ParseWarningKind(StrEnum):
     FOOTNOTE = "Footnote"
     VALUE_CHOICE = "Builder's choice"
     NO_PARTS_LIST = "No parts list"
+    OCR_READ = "Read by OCR"
+
+
+class OcrVerdict(StrEnum):
+    """How far an OCR reading of an image parts list can be trusted."""
+
+    COMPLETE = "Looks complete"
+    PARTIAL = "Partial"
+    UNUSABLE = "Unusable"
 
 
 class ComponentSpec(Enum):

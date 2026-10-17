@@ -34,8 +34,14 @@ _LINE_TOLERANCE_EM = 0.15
 
 # Unfamiliar numbered labels (CTRL1, FUZZ2) that are not standard designators.
 _NUMBERED_LABEL = re.compile(r"[A-Z]{1,5}\d{1,3}")
+# A designator range in a listing grid: 'D1-D2  1N4148' (GuitarPCB SWAH).
+REF_RANGE = re.compile(r"([A-Z]{1,4}\d{1,3}) ?[-\u2013] ?(?:[A-Z]{1,4})?\d{1,3}")
 # Single letters (Blue Waffle's 'V  B500K') and slashes ('BASS/MIDS') occur.
 _CONTROL_NAME = re.compile(r"[A-Z](?:[A-Z0-9_/-]{1,11})?")
+# A control name in title case, recognized only beside a tapered pot value:
+# 'Volume  A100k', 'Mid  B100k' (GuitarPCB Tone TwEQ).
+_TITLE_NAME = re.compile(r"[A-Z][a-z]{2,11}")
+_TAPERED_POT = re.compile(r"[ABCWG]\d+(?:\.\d+)?[KkM]")
 _MULTIWORD_NAME = re.compile(r"[A-Z]{2,}(?: [A-Z]{2,}){1,2}")
 # A whole-cell parenthetical on the next line, aligned with a value above it,
 # continues that value ('SPDT Toggle' / '(On/On)').
@@ -44,7 +50,8 @@ _CONTINUATION = re.compile(r"\(.*\)")
 # 'Dual B10K', 'Latching 3PDT Footswitch', 'On/OFF/On DPDT Toggle', '*DPDT'.
 _CONTROL_VALUE = re.compile(
     r"\*?(?:(?i:dual|latching|momentary|mini|slide|type-?2|on(?:\s*[/-]\s*(?:on|off))+)\s+)*"
-    r"(?:[ABCWG]\d+(?:\.\d+)?[KM][ABC]?\b|\d+(?:\.\d+)?[KMR][ABC]?\b|[SD34]P[DS]T\b|\dP\dT\b"
+    # Kilohms in either case: 'VOL  A100k' (GuitarPCB Blues Power).
+    r"(?:[ABCWG]\d+(?:\.\d+)?[KkM][ABC]?\b|\d+(?:\.\d+)?[KkMR][ABC]?\b|[SD34]P[DS]T\b|\dP\dT\b"
     # A jack: 'SIDECHAIN  1/4" Switching TRS' (Muzzle).
     r"|(?=\S*\d.*\b(?i:trs|jack)\b)"
     # Toggle positions alone: 'SLA  ON/OFF/ON' (Trojan Horse).
@@ -216,6 +223,16 @@ def _is_ref_cell(cell: str, next_cell: str | None) -> bool:
         return _is_bare_value(next_cell)
     if is_designator(cell) or _NUMBERED_LABEL.fullmatch(cell):
         return True
+    span = REF_RANGE.fullmatch(cell)
+    if span and is_designator(span.group(1)):
+        # Not before a bare count: 'D21 - D28  8' is a quantity column (Q-Tune).
+        return next_cell is not None and not next_cell.isdigit()
+    if (
+        _TITLE_NAME.fullmatch(cell)
+        and next_cell is not None
+        and _TAPERED_POT.fullmatch(next_cell)
+    ):
+        return True
     if cell in constants.KEYWORDS:
         return True
     # Unfamiliar control names (SHIFT, SUBS, TONE BYPASS SWITCH) are recognized
@@ -234,13 +251,22 @@ def _is_ref_cell(cell: str, next_cell: str | None) -> bool:
 
 
 def _unmarked(cell: str) -> str:
-    """A designator without a trailing optional-part asterisk."""
-    return cell.rstrip("*") or cell
+    """A designator without its see-text asterisks ('TREBLE*', '**D3')."""
+    return cell.strip("*") or cell
+
+
+def _ref_name(cell: str) -> str:
+    """The designator a ref cell names; control names are upper case ('Volume')."""
+    name = _unmarked(cell)
+    return name.upper() if _TITLE_NAME.fullmatch(name) else name
 
 
 def _starts_listing(cell: str, next_cell: str | None) -> bool:
     """Whether a cell in value position is really the next designator."""
     if BOARD_REF.fullmatch(cell):
+        return True
+    span = REF_RANGE.fullmatch(cell)
+    if span and is_designator(span.group(1)):
         return True
     # Directly after a designator a bare 'LED' is that designator's value
     # ('LED_A  LED  Indicator LED'), unless a numeric value follows it.
@@ -517,7 +543,7 @@ def _scan(words: list[PDFWord], columns: frozenset[int]) -> list[Listing]:
                 current.append((cells[i + 1].x0, cells[i + 1].size, len(listings)))
                 listings.append(
                     Listing(
-                        ref=_unmarked(texts[i]),
+                        ref=_ref_name(texts[i]),
                         value=value,
                         line=line_no,
                         x0=cells[i].x0,
