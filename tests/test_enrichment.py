@@ -127,7 +127,46 @@ def test_category_from_type() -> None:
         category_from_type("Neutrik 1/4in Insulated Stereo Jack")
         == ComponentCategory.HARDWARE_MISC
     )
-    assert category_from_type("Resistor, 1/4W") is None
+    assert (
+        category_from_type("Metal film resistor, 1/4W") == ComponentCategory.RESISTORS
+    )
+    # Hints match at word starts: a red diffused LED is not a fuse.
+    assert category_from_type("LED, 5mm, red diffused") == ComponentCategory.DIODES
+    assert (
+        category_from_type("Light dependent resistor")
+        == ComponentCategory.OPTOELECTRONICS
+    )
+    assert (
+        category_from_type("Vactrol, fast on/fast off")
+        == ComponentCategory.OPTOELECTRONICS
+    )
+    assert category_from_type("IC socket, DIP-8") == ComponentCategory.HARDWARE_MISC
+    assert category_from_type("DPDT slide, micro") == ComponentCategory.SWITCHES
+    assert category_from_type("Germanium") is None
+
+
+@pytest.mark.parametrize(
+    ("ref", "value", "hint", "category", "clean"),
+    [
+        # A TYPE column decides a label's category over a guess from its value.
+        (
+            "LEDR",
+            "10k",
+            ComponentCategory.RESISTORS,
+            ComponentCategory.RESISTORS,
+            "10k",
+        ),
+        ("PRES", "50k trimmer", None, ComponentCategory.POTENTIOMETERS, "50k"),
+        ("BIAS", "5k trimmer (3386)", None, ComponentCategory.POTENTIOMETERS, "5k"),
+        ("C9", "330uF/35V", None, ComponentCategory.CAPACITORS, "330u 35V"),
+    ],
+)
+def test_aion_rows_classify(
+    ref: str, value: str, hint, category: ComponentCategory, clean: str
+) -> None:
+    result = categorize_part(ref, value, hint)
+    assert result is not None
+    assert (result.category, result.clean_value) == (category, clean)
 
 
 def test_named_part_uses_type_hint() -> None:

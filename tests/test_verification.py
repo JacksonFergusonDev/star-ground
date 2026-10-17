@@ -18,8 +18,10 @@ from src.bom_lib.verification import (
     check_marking_code,
     check_row_quantity,
     check_unextracted_refs,
+    check_version_note,
     find_bom_entries,
     find_listed_refs,
+    resolve_value_choice,
 )
 
 
@@ -320,3 +322,82 @@ def test_vactrol_on_an_ic_designator_is_not_a_conflict() -> None:
         stats, "U1", "VTL5C10", ComponentCategory.OPTOELECTRONICS, "VTL5C10"
     )
     assert stats["warnings"] == []
+
+
+class TestAionChecks:
+    """Self-checks added for Aion FX parts tables."""
+
+    def test_two_word_labels_and_bare_led_account_for_their_words(self) -> None:
+        inventory = create_empty_inventory()
+        inventory.add_part(
+            "doc", make_component_key(ComponentCategory.SWITCHES, "DPDT"), "HI CUT"
+        )
+        inventory.add_part(
+            "doc", make_component_key(ComponentCategory.DIODES, "5mm LED"), "LED"
+        )
+        stats = create_empty_stats()
+        check_unextracted_refs(["HI CUT DPDT slide\nLED1 5mm\nCUT 1"], inventory, stats)
+        assert stats["warnings"] == []
+
+    @pytest.mark.parametrize(
+        ("value", "chosen"),
+        [
+            ("1M to 2M2", "1M"),
+            ("1k8 - 4k7", "1k8"),
+            ("51pF (or 47pF) MLCC", "51pF MLCC"),
+        ],
+    )
+    def test_builder_choices_use_the_first_value(self, value: str, chosen: str) -> None:
+        stats = create_empty_stats()
+        assert resolve_value_choice(stats, "RPD", value) == chosen
+        assert _kinds(stats) == [ParseWarningKind.VALUE_CHOICE]
+
+    @pytest.mark.parametrize("value", ["10-30k", "2N5088", "B100K", "1-2"])
+    def test_values_that_are_not_choices(self, value: str) -> None:
+        stats = create_empty_stats()
+        assert resolve_value_choice(stats, "R1", value) == value
+        assert stats["warnings"] == []
+
+    @pytest.mark.parametrize(
+        "note",
+        [
+            "100n in guitar version.",
+            "150k for silicon version.",
+            "Analogman version uses 1.2M here.",
+            "GC-1 uses 150k.",
+            "Early G-2 uses 620R. Later G-2 uses 1k8.",
+            "Omit (leave empty) for P-2.",
+            "Omit if using Morning Glory gain stage.",
+            "Part of the optional Morning Glory gain stage.",
+            "100pF in the SD-9M (not present in the original).",
+            "10M in Catalinbread and Orpheum.",
+            "Orpheum: 10M; Axis/Foxey: omit (leave empty)",
+            "Use a 100n film capacitor here if building a 3-transistor variant.",
+        ],
+    )
+    def test_notes_that_name_another_build(self, note: str) -> None:
+        stats = create_empty_stats()
+        check_version_note(stats, "R1", note)
+        assert _kinds(stats) == [ParseWarningKind.FOOTNOTE]
+
+    @pytest.mark.parametrize(
+        "note",
+        [
+            "Original uses MA856 diodes.",
+            "Substitute. Original uses 2N4401.",
+            "Early units used 10k here.",
+            "Most vintage units use 4k7.",
+            "1M in original RAT.",
+            "Can also use 1uF with no change in tone.",
+            "Recommended to use a lower value. See build notes.",
+            "Set to about 40% rotation (11:00) for stock circuit.",
+            "Any germanium diode should work the same in this circuit.",
+            "Alternate: 4K7",
+            "Sub: MPSA18",
+            "Quantity: 2",
+        ],
+    )
+    def test_notes_that_name_no_build(self, note: str) -> None:
+        stats = create_empty_stats()
+        check_version_note(stats, "R1", note)
+        assert stats["warnings"] == []

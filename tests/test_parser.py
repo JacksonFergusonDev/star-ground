@@ -35,7 +35,7 @@ from src.bom_lib import (
 )
 from src.bom_lib.classifier import normalize_value_to_quantity
 from src.bom_lib.enums import ComponentCategory, ComponentSpec
-from src.bom_lib.types import ComponentKey, Inventory
+from src.bom_lib.types import ComponentKey, Inventory, PDFPageExtraction
 
 # --- Standard Unit Tests ---
 
@@ -598,6 +598,9 @@ def test_range_expansion_logic():
     # 7. A bare number reuses the previous prefix (Q-Tune: 'C12, 15, 16')
     assert expand_refs("C12,15,16") == ["C12", "C15", "C16"]
 
+    # 8. A typeset en dash (Aion FX legacy docs)
+    assert expand_refs("Q1\u2013Q2") == ["Q1", "Q2"]
+
 
 def test_ref_expansion_integrity():
     """
@@ -780,3 +783,87 @@ def test_a_designator_repeated_in_another_table_is_another_board() -> None:
     q1 = inventory[ComponentKey(ComponentCategory.TRANSISTORS, "2N5088")]
     r102 = inventory[ComponentKey(ComponentCategory.RESISTORS, "100k")]
     assert (q1["qty"], r102["qty"]) == (2, 1)
+
+
+def _typed_page(rows: list[tuple[str, str, str]]) -> PDFPageExtraction:
+    """One page holding an Aion FX style 'PART | VALUE | TYPE' table."""
+    from src.bom_lib import PDFWord
+
+    cols = (50.0, 110.0, 200.0)
+    words = []
+    for k, cells in enumerate([("PART", "VALUE", "TYPE"), *rows]):
+        for text, x in zip(cells, cols, strict=True):
+            for word in text.split():
+                words.append(
+                    PDFWord(
+                        text=word,
+                        x0=x,
+                        x1=x + 6 * len(word),
+                        top=100.0 + 20 * k,
+                        size=12.0,
+                    )
+                )
+                x += 6 * len(word) + 2.7
+    return PDFPageExtraction(tables=[], text="", words=words)
+
+
+def test_typed_table_repeated_labels_are_separate_parts() -> None:
+    # Aion FX Asteria: 'GAIN | 1MA | ...pot' and 'GAIN | SPDT on-on | Toggle switch'.
+    from src.bom_lib import create_empty_stats
+    from src.bom_lib.parser import _text_table_entries
+
+    page = _typed_page(
+        [
+            ("GAIN", "1MA", "16mm right-angle PCB mount pot"),
+            ("GAIN", "SPDT", "Toggle switch, SPDT on-on"),
+            ("LEDR", "4k7", "Metal film resistor, 1/4W"),
+        ]
+    )
+    stats = create_empty_stats()
+    entries = _text_table_entries([page], stats)
+    assert [(e.ref, e.value) for e in entries] == [
+        ("GAIN", "1MA"),
+        ("GAIN (2)", "SPDT ON/ON"),
+        ("LEDR", "4k7"),
+    ]
+    assert stats["warnings"] == []
+
+
+def test_listed_sockets_are_not_injected_again() -> None:
+    # Aion FX lists 'IC1-S | DIP-8 socket'; the IC must not bring a second one.
+    from src.bom_lib.builds import Entry
+    from src.bom_lib.parser import _ingest_entries
+
+    inventory, _ = _ingest_entries(
+        [
+            Entry("IC1", "TL072", 0, table=0),
+            Entry(
+                "IC1-S",
+                "DIP-8 socket",
+                0,
+                table=0,
+                hint=ComponentCategory.HARDWARE_MISC,
+            ),
+        ],
+        "T",
+    )
+    assert sorted(ref for data in inventory.values() for ref in data["refs"]) == [
+        "IC1",
+        "IC1-S",
+    ]
+
+
+@pytest.mark.parametrize(
+    ("matrix", "kept"),
+    [
+        ((1, 0, 0, 1, 0, 0), True),
+        ((-1, 0, 0, -1, 0, 0), False),  # upside down: '10k' reads 'k01'
+        ((0, 1, -1, 0, 0, 0), False),  # bottom to top: '100uF' reads 'Fu001'
+        ((0, -1, 1, 0, 0, 0), True),  # top to bottom reads in order
+    ],
+)
+def test_reversed_text_is_not_read(matrix: tuple[float, ...], kept: bool) -> None:
+    from src.bom_lib.parser import _readable
+
+    assert _readable({"object_type": "char", "matrix": matrix}) is kept
+    assert _readable({"object_type": "line"}) is True

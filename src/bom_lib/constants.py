@@ -325,6 +325,10 @@ NOT_POPULATED_VALUES = frozenset(
         "NO POP",
         "DO NOT POPULATE",
         "NOT POPULATED",
+        "(OMIT)",
+        # A wire link is not a part to buy (Aion FX: 'R31  JUMPER', '(jumper)').
+        "JUMPER",
+        "(JUMPER)",
     }
 )
 
