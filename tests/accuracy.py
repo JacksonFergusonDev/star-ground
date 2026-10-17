@@ -28,7 +28,13 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Any, TypedDict
 
-from src.bom_lib import ComponentCategory, Inventory, ParseResult, parse_pedalpcb_pdf
+from src.bom_lib import (
+    ComponentCategory,
+    Inventory,
+    ParseResult,
+    ParseWarningKind,
+    parse_pedalpcb_pdf,
+)
 from src.bom_lib.utils import parse_value_to_decimal
 
 TESTS_DIR = Path(__file__).parent
@@ -48,6 +54,7 @@ class Outcome(StrEnum):
     MISSING = "missing"
     WRONG_CATEGORY = "wrong_category"
     WRONG_VALUE = "wrong_value"
+    WRONG_COUNT = "wrong_count"
     EXTRA = "extra"
 
 
@@ -61,12 +68,15 @@ class ExpectedPart:
         accept: Equivalent alternatives the document explicitly allows.
         unspecified: The document leaves the value to the builder (Sheepylove's
             'R1  CLR': choose an LED resistor), so warning about it is correct.
+        count: How many to buy under this designator: 2 when two boards in one
+            document both list it with the same value (EV Mini's Q1-Q4).
     """
 
     category: ComponentCategory
     value: str
     accept: tuple[str, ...] = ()
     unspecified: bool = False
+    count: int = 1
 
 
 @dataclass(frozen=True)
@@ -75,6 +85,7 @@ class ActualPart:
 
     category: ComponentCategory
     value: str
+    count: int = 1
 
 
 DEFAULT_VARIANT = "default"
@@ -158,6 +169,10 @@ class GoldenDoc:
         }
         refs |= {ref for v in self.variants for g in v.options for ref in g.refs}
         all_refs = {ref for v in self.variants for ref in v.parts}
+        # A designator listed twice ('R1' and 'R1 (2)': two boards, or one label
+        # used for two parts) is ambiguous until the builder checks the board.
+        repeated = {m.group(1) for ref in all_refs if (m := _REPEAT.match(ref))}
+        refs |= {ref for ref in all_refs if ref in repeated or _REPEAT.match(ref)}
         for ref in all_refs:
             seen = {
                 (v.parts[ref].category, v.parts[ref].value) if ref in v.parts else None
@@ -200,6 +215,8 @@ class RefResult:
             return f"category: expected {exp.category.value}, got {act.category.value}"
         if self.outcome == Outcome.WRONG_VALUE and exp and act:
             return f"value: expected {exp.value!r}, got {act.value!r}"
+        if self.outcome == Outcome.WRONG_COUNT and exp and act:
+            return f"count: expected {exp.count}, got {act.count}"
         return self.outcome.value
 
 
@@ -337,6 +354,7 @@ def _load_parts(raw: dict[str, dict[str, object]]) -> dict[str, ExpectedPart]:
             value=str(spec["value"]),
             accept=tuple(str(a) for a in spec.get("accept", ())),  # type: ignore[attr-defined]
             unspecified=bool(spec.get("unspecified", False)),
+            count=int(spec.get("count", 1)),  # type: ignore[call-overload]
         )
         for ref, spec in raw.items()
     }
@@ -407,9 +425,11 @@ def _grade(expected: ExpectedPart, actual: ActualPart) -> Outcome:
     if actual.category != expected.category:
         return Outcome.WRONG_CATEGORY
     candidates = (expected.value, *expected.accept)
-    if any(values_match(expected.category, c, actual.value) for c in candidates):
-        return Outcome.CORRECT
-    return Outcome.WRONG_VALUE
+    if not any(values_match(expected.category, c, actual.value) for c in candidates):
+        return Outcome.WRONG_VALUE
+    if actual.count != expected.count:
+        return Outcome.WRONG_COUNT
+    return Outcome.CORRECT
 
 
 def _actual_parts(inventory: Inventory) -> dict[str, ActualPart]:
@@ -420,7 +440,14 @@ def _actual_parts(inventory: Inventory) -> dict[str, ActualPart]:
         for ref in data["refs"]:
             if "(Inj)" in ref:
                 continue
-            actual[ref.upper()] = ActualPart(category=key.category, value=key.value)
+            seen = actual.get(ref.upper())
+            # A designator bought twice (two boards, or one table read twice)
+            # is graded on its count as well as its value.
+            actual[ref.upper()] = ActualPart(
+                category=key.category,
+                value=key.value,
+                count=1 if seen is None else seen.count + 1,
+            )
     return actual
 
 
@@ -502,6 +529,25 @@ def sample_group(samples_dir: Path | str, pdf: Path | str) -> str:
     )
 
 
+_REPEAT = re.compile(r"^(.*) \((\d+)\)$")
+# Stands for every designator: a document-level warning covers them all.
+_EVERYTHING = "*"
+
+
+def _is_flagged(ref: str, flagged: set[str]) -> bool:
+    """Whether a warning covers this designator.
+
+    A designator listed twice is keyed 'R1 (2)' for its second listing; the
+    parser's warning about the repeat names 'R1' and covers both.
+    """
+    repeat = _REPEAT.match(ref)
+    return (
+        _EVERYTHING in flagged
+        or ref in flagged
+        or (repeat is not None and repeat.group(1) in flagged)
+    )
+
+
 def score_doc(doc: GoldenDoc) -> DocScore:
     """Runs the parser on one document and grades every designator of every build.
 
@@ -517,6 +563,9 @@ def score_doc(doc: GoldenDoc) -> DocScore:
     """
     res = parse_sample(doc.pdf)
     flagged = {w.ref.upper() for w in res.stats["warnings"] if w.ref}
+    if any(w.kind == ParseWarningKind.NO_PARTS_LIST for w in res.stats["warnings"]):
+        # The builder was told nothing could be read: every part is flagged.
+        flagged.add(_EVERYTHING)
 
     builds = [_actual_parts(v.inventory) for v in res.variants] or [
         _actual_parts(res.inventory)
@@ -532,7 +581,14 @@ def score_doc(doc: GoldenDoc) -> DocScore:
         ]
     for k, actual in enumerate(unmatched, start=1):
         results += [
-            RefResult(ref, Outcome.EXTRA, None, act, ref in flagged, f"extra build {k}")
+            RefResult(
+                ref,
+                Outcome.EXTRA,
+                None,
+                act,
+                _is_flagged(ref, flagged),
+                f"extra build {k}",
+            )
             for ref, act in actual.items()
         ]
 
@@ -541,7 +597,7 @@ def score_doc(doc: GoldenDoc) -> DocScore:
         results=tuple(results),
         title_expected=doc.title,
         title_actual=res.title,
-        warned_refs=frozenset(flagged),
+        warned_refs=frozenset(flagged - {_EVERYTHING}),
         ambiguous_refs=doc.ambiguous_refs,
         variant_count=len(doc.variants),
         builds_found=len(res.variants) or 1,
@@ -579,10 +635,12 @@ def _grade_variant(
     for ref, exp in expected.items():
         act = actual.get(ref)
         outcome = Outcome.MISSING if act is None else _grade(exp, act)
-        results.append(RefResult(ref, outcome, exp, act, ref in flagged))
+        results.append(RefResult(ref, outcome, exp, act, _is_flagged(ref, flagged)))
     for ref, act in actual.items():
         if ref not in expected:
-            results.append(RefResult(ref, Outcome.EXTRA, None, act, ref in flagged))
+            results.append(
+                RefResult(ref, Outcome.EXTRA, None, act, _is_flagged(ref, flagged))
+            )
     return tuple(results)
 
 

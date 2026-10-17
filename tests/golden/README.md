@@ -36,6 +36,9 @@ it. `tests/test_parser_accuracy.py` fails on any difference from it:
 - **false alarms:** warnings on parts that were parsed correctly. Noisy
   warnings teach users to ignore them, so this must stay at zero.
 
+A document-level `NO_PARTS_LIST` warning (nothing with a designator could be
+read, e.g. an image-only parts table) flags every part of that document.
+
 ## File Format
 
 ```json
@@ -59,6 +62,13 @@ it. `tests/test_parser_accuracy.py` fails on any difference from it:
   recorded as printed, and a warning about it is correct, not a false alarm.
 - `absent`: designators the document lists but marks as not populated (`N/A`,
   `OMIT`, a wire jumper). Emitting one counts as an extra part.
+- `count`: how many to buy under one designator when two boards in one
+  document list it with the same value (EV Mini's Q1-Q4: `2`). Defaults to 1;
+  emitting a designator a different number of times is a `wrong_count`
+  failure, so a table read twice cannot hide.
+- `R1 (2)`: the second listing of a designator with *another* value (a second
+  board, or one label used for two parts). A warning on `R1` covers `R1 (2)`,
+  and both are ambiguous, so the warning is not a false alarm.
 - `options`: interchangeable choices that use different designators (see below).
 - `variants`: replaces `parts` when the document describes several circuits:
 
