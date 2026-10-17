@@ -14,7 +14,6 @@ pytest.ini
 
 # Testing & Dev
 tests
-requirements.txt
 .pre-commit-config.yaml
 .github
 
