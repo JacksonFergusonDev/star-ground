@@ -193,3 +193,43 @@ class TestBuildPairing:
         pairs, unmatched = _pair_builds(golden, [only], set())
         assert [b for _, b in pairs] == [only, only]
         assert unmatched == []
+
+
+class TestCountsAndRepeats:
+    """Quantities, repeated designators, and document-level warnings."""
+
+    def test_a_designator_bought_twice_is_a_wrong_count(self, tmp_path: Path) -> None:
+        # A table read twice would buy every part twice; per-designator grading
+        # must see it.
+        doc = load_golden(
+            _write(tmp_path, {"parts": {"R1": _part(R, "10K")}}), tmp_path
+        )
+        actual = {"R1": ActualPart(R, "10k", count=2)}
+        assert _outcomes(_grade_variant(doc.variants[0], actual, set())) == {
+            "R1": Outcome.WRONG_COUNT
+        }
+
+    def test_two_boards_declare_their_count(self, tmp_path: Path) -> None:
+        body = {"parts": {"Q1": {**_part(Q, "2N5088"), "count": 2}}}
+        doc = load_golden(_write(tmp_path, body), tmp_path)
+        actual = {"Q1": ActualPart(Q, "2N5088", count=2)}
+        assert _outcomes(_grade_variant(doc.variants[0], actual, set())) == {
+            "Q1": Outcome.CORRECT
+        }
+
+    def test_a_repeat_is_flagged_by_its_base_and_ambiguous(
+        self, tmp_path: Path
+    ) -> None:
+        body = {"parts": {"R1": _part(R, "1M"), "R1 (2)": _part(R, "1k")}}
+        doc = load_golden(_write(tmp_path, body), tmp_path)
+        results = _grade_variant(doc.variants[0], {"R1": ActualPart(R, "1M")}, {"R1"})
+        missing = next(r for r in results if r.ref == "R1 (2)")
+        assert missing.outcome == Outcome.MISSING
+        assert missing.flagged
+        assert {"R1", "R1 (2)"} <= doc.ambiguous_refs
+
+    def test_a_document_level_warning_flags_everything(self, tmp_path: Path) -> None:
+        doc = load_golden(_write(tmp_path, {"parts": {"R1": _part(R, "1M")}}), tmp_path)
+        (result,) = _grade_variant(doc.variants[0], {}, {"*"})
+        assert result.outcome == Outcome.MISSING
+        assert result.flagged

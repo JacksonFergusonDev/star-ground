@@ -16,6 +16,7 @@ from src.bom_lib.verification import (
     check_duplicate,
     check_footnotes,
     check_marking_code,
+    check_parts_found,
     check_row_quantity,
     check_unextracted_refs,
     check_version_note,
@@ -344,7 +345,11 @@ class TestAionChecks:
         [
             ("1M to 2M2", "1M"),
             ("1k8 - 4k7", "1k8"),
+            ("22-33k", "22k"),
             ("51pF (or 47pF) MLCC", "51pF MLCC"),
+            ("2N5088/2N2222", "2N5088"),
+            ("SPST or SPDT", "SPST"),
+            ("15k or 22k", "15k"),
         ],
     )
     def test_builder_choices_use_the_first_value(self, value: str, chosen: str) -> None:
@@ -352,7 +357,7 @@ class TestAionChecks:
         assert resolve_value_choice(stats, "RPD", value) == chosen
         assert _kinds(stats) == [ParseWarningKind.VALUE_CHOICE]
 
-    @pytest.mark.parametrize("value", ["10-30k", "2N5088", "B100K", "1-2"])
+    @pytest.mark.parametrize("value", ["2N5088", "B100K", "1-2"])
     def test_values_that_are_not_choices(self, value: str) -> None:
         stats = create_empty_stats()
         assert resolve_value_choice(stats, "R1", value) == value
@@ -401,3 +406,26 @@ class TestAionChecks:
         stats = create_empty_stats()
         check_version_note(stats, "R1", note)
         assert stats["warnings"] == []
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "Always jump J1 through J4 for a standard build.",
+        "R12 1k8* CLR TR1 100R*",
+        "R24 R24 is only available on v3 PCB or earlier",
+        "simply attaching J4 wiring to the Tone TwEQ Volume pad 3 instead. You have now",
+    ],
+)
+def test_prose_is_not_a_listing(text: str) -> None:
+    listed = find_listed_refs(text)
+    assert not listed & {"J1", "J4", "CLR", "R24"}
+
+
+def test_an_unreadable_document_says_so() -> None:
+    stats = create_empty_stats()
+    check_parts_found(stats, 0)
+    assert _kinds(stats) == [ParseWarningKind.NO_PARTS_LIST]
+    stats = create_empty_stats()
+    check_parts_found(stats, 12)
+    assert stats["warnings"] == []

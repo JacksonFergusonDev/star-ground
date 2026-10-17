@@ -61,6 +61,8 @@ class Entry:
         follows_or: Whether an 'OR' row separates this table row from the
             row above it.
         qty: How many of each designator to buy ('TERMINAL BLOCK (Qty 3)').
+        column: The version column of a value-column grid the value sits in
+            (MUFF'N's 'Ram', 'Triangle', ...); None for ordinary rows.
     """
 
     ref: str
@@ -72,6 +74,7 @@ class Entry:
     hint: ComponentCategory | None = None
     follows_or: bool = False
     qty: int = 1
+    column: str | None = None
 
     @property
     def not_populated(self) -> bool:
@@ -143,7 +146,8 @@ def plan_builds(entries: list[Entry], pages: list[PageContext]) -> BuildPlan:
         The build plan. A single-circuit document has no variants.
     """
     variants = (
-        _grid_variants(entries, pages)
+        _column_variants(entries)
+        or _grid_variants(entries, pages)
         or _table_variants(entries, pages)
         or _mod_variants(entries, pages)
         or _either_or_variants(entries, pages)
@@ -212,6 +216,21 @@ def _grid_variants(
     return [PlannedVariant(name, tuple(group)) for name, group in found.items()]
 
 
+def _column_variants(entries: list[Entry]) -> list[PlannedVariant]:
+    """One variant per value column of a value-column grid (MUFF'N, RATT Deluxe)."""
+    columns: dict[str, list[Entry]] = {}
+    names: dict[str, str] = {}
+    for e in entries:
+        if e.column is not None:
+            # RATT Deluxe's tables say 'GPCB Values' and 'GPCB Value'.
+            key = re.sub(r"s\b", "", e.column.lower())
+            names.setdefault(key, e.column)
+            columns.setdefault(key, []).append(e)
+    if len(columns) < 2:
+        return []
+    return [PlannedVariant(names[key], tuple(group)) for key, group in columns.items()]
+
+
 def _column_of(x0: float, starts: list[float]) -> int:
     return max(
         (k for k, start in enumerate(starts) if x0 >= start - _COLUMN_TOLERANCE_PT),
@@ -250,6 +269,10 @@ def _table_variants(
             tables.setdefault(e.table, []).append(e)
     candidates = [t for t in tables.values() if len(t) >= _MIN_VARIANT_TABLE_REFS]
     if len(candidates) < 2:
+        return []
+    if len({t[0].page for t in candidates}) < len(candidates):
+        # Tables side by side on one page are two boards of one build
+        # (GuitarPCB Tweed Fuzztone), not alternative versions.
         return []
     ref_sets = [{e.ref for e in t} for t in candidates]
     for a, b in pairwise(ref_sets):
