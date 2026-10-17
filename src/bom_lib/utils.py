@@ -71,6 +71,8 @@ def expand_refs(ref_raw: str) -> list[str]:
         A list of individual references (e.g., ['R1', 'R2', 'R3', 'R4']).
         A part that cannot be expanded is returned as written.
     """
+    # Typeset ranges use dashes other than '-': 'Q1<en dash>Q2' (Aion FX legacy docs).
+    ref_raw = re.sub(r"[\u2012-\u2015]", "-", ref_raw)
     parts = [p.strip() for p in ref_raw.split(",")]
     if len(parts) > 1 and all(parts):
         # 'C12, 15, 16' (Q-Tune): a bare number reuses the previous prefix.

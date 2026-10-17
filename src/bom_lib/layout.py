@@ -17,7 +17,7 @@ words are separated by ordinary spaces and so form a single cell.
 
 import re
 from collections import Counter
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 
 from src.bom_lib import constants
 from src.bom_lib.designators import BOARD_REF, is_designator
@@ -374,6 +374,38 @@ def _split_merged(cell: Cell) -> list[Cell]:
     return [cell]
 
 
+# A footnote marker is a short number set at most this fraction of the size of
+# the word it follows (Aion FX legacy: '68k' at 11pt, marker '1' at 6.4pt).
+_SUPERSCRIPT_RATIO = 0.75
+
+
+def footnote_marks(words: list[PDFWord]) -> list[PDFWord]:
+    """Superscript footnote markers printed right after a word.
+
+    'R2  68k¹' and 'IC1  LT1054CP⁵' would otherwise read as values '68k 1'
+    and 'LT1054CP 5' (Aion FX legacy documents).
+
+    Args:
+        words: Words extracted from one page.
+
+    Returns:
+        The marker words, so the caller can drop their characters.
+    """
+    return [
+        w
+        for w in words
+        if w["text"].isdigit()
+        and len(w["text"]) <= 2
+        and any(
+            v is not w
+            and w["size"] <= _SUPERSCRIPT_RATIO * v["size"]
+            and 0 <= w["x0"] - v["x1"] <= v["size"]
+            and abs((v["top"] + v["size"]) - (w["top"] + w["size"])) < v["size"]
+            for v in words
+        )
+    ]
+
+
 def page_lines(words: list[PDFWord]) -> list[list[Cell]]:
     """The cells of every visual line on a page, numbered as `find_listings` numbers them."""
     return [split_cells(line) for line in group_lines(words)]
@@ -525,8 +557,11 @@ def _absorb_continuations(
     return remaining
 
 
-# Column headers of a text bill of materials ('Reference  Value  Quantity  Notes').
-_REF_HEADERS = frozenset({"REFERENCE", "REFERENCES", "REF", "REFS", "DESIGNATOR"})
+# Column headers of a text bill of materials ('Reference  Value  Quantity  Notes',
+# Aion FX's 'PART  VALUE  TYPE  NOTES').
+_REF_HEADERS = frozenset(
+    {"REFERENCE", "REFERENCES", "REF", "REFS", "DESIGNATOR", "PART"}
+)
 # 'Name' heads the designator column only beside a 'Value' column (Q-Tune's
 # 'Value | Name | Qty' packing list).
 _NAME_HEADER = "NAME"
@@ -536,6 +571,7 @@ _BOM_COLUMNS = {
     "QTY": "qty",
     "QT": "qty",  # 'Qt' / 'y' wrapped in a narrow column (Q-Tune)
     "NOTES": "notes",
+    "COMMENTS": "notes",
     "TYPE": "type",
 }
 # A wrapped value loses its closing parenthesis: '1N5226 (1N5' / '226)'.
@@ -560,6 +596,8 @@ class BomRow:
         x0: Left edge of the designator cell, in points.
         marking: The part marking printed after the value ('104' for
             '100n (104)'), if any.
+        type_text: The TYPE cell, if the table has one ('Metal film resistor, 1/4W').
+        notes: The NOTES cell, including lines that continue it below the row.
     """
 
     refs: str
@@ -568,6 +606,8 @@ class BomRow:
     line: int
     x0: float
     marking: str = ""
+    type_text: str = ""
+    notes: str = ""
 
 
 @dataclass(frozen=True, slots=True)
@@ -637,8 +677,25 @@ def find_bom_rows(words: list[PDFWord]) -> list[BomRow]:
     Returns:
         The rows under every such header on the page, top to bottom.
     """
+    return _read_bom(words)[0]
+
+
+def bom_note_cells(words: list[PDFWord]) -> list[Cell]:
+    """The NOTES cells of typed text tables on a page.
+
+    Designators mentioned in a note ('Mistakenly labeled C19 on initial
+    release', Aion FX Fusion) are not listings, so the self-check that looks
+    for unextracted designators must not read them.
+    """
+    return _read_bom(words)[1]
+
+
+def _read_bom(words: list[PDFWord]) -> tuple[list[BomRow], list[Cell]]:
     rows: list[BomRow] = []
+    note_cells: list[Cell] = []
     sections: list[list[_Column]] = []
+    # Per table section, the index in `rows` of its latest row.
+    last_row: dict[int, int] = {}
     for line_no, cells in enumerate(page_lines(words)):
         found = _header_sections(cells)
         if found:
@@ -650,6 +707,7 @@ def find_bom_rows(words: list[PDFWord]) -> list[BomRow]:
                 if max(c.x1 for c in sec) < lo or min(c.x0 for c in sec) > hi
             ]
             sections = sorted(kept + found, key=lambda sec: sec[0].x0)
+            last_row = {}
             # The rest of the line is a row of the tables beside the new header.
             cells = [c for c in cells if c.x0 < lo or c.x0 > hi]
         if not sections:
@@ -661,15 +719,28 @@ def find_bom_rows(words: list[PDFWord]) -> list[BomRow]:
             fields[target] = f"{fields.get(target, '')} {cell.text}".strip()
             if target[1] == "refs":
                 first_x0.setdefault(target[0], cell.x0)
-        for k in range(len(sections)):
+            if target[1] == "notes" and any(
+                col.field == "type" for col in sections[target[0]]
+            ):
+                note_cells.append(cell)
+        for k, section in enumerate(sections):
+            typed = any(col.field == "type" for col in section)
             refs = _LIST_SPACING.sub(r"\1", fields.get((k, "refs"), ""))
             value = _UNCLOSED_ASIDE.sub("", fields.get((k, "value"), ""))
+            notes = fields.get((k, "notes"), "")
+            last = last_row.get(k)
+            if typed and not refs and notes and last is not None:
+                # A NOTES cell wrapped onto the next line, under its row.
+                rows[last] = replace(rows[last], notes=f"{rows[last].notes} {notes}")
+                continue
             marking = _MARKING.search(value)
             if marking:
                 value = value[: marking.start()]
-            if not value or not _is_ref_list(refs):
+            labeled = typed and fields.get((k, "type")) and _is_label(refs)
+            if not value or not (_is_ref_list(refs) or labeled):
                 continue
             qty = fields.get((k, "qty"), "")
+            last_row[k] = len(rows)
             rows.append(
                 BomRow(
                     refs=refs,
@@ -678,9 +749,25 @@ def find_bom_rows(words: list[PDFWord]) -> list[BomRow]:
                     line=line_no,
                     x0=first_x0[k],
                     marking=marking.group(1) if marking else "",
+                    type_text=fields.get((k, "type"), ""),
+                    notes=notes,
                 )
             )
-    return rows
+    return rows, note_cells
+
+
+# A part label in a typed table: 'VOL.', 'HI-MID FREQ', 'IC1-S', 'PRE-V. SEND'.
+_PART_LABEL = re.compile(r"[A-Z0-9][A-Za-z0-9_./+-]*(?: [A-Za-z0-9_./+-]+){0,2}")
+
+
+def _is_label(cell: str) -> bool:
+    """Whether a typed table's PART cell names a part (any short label).
+
+    A table with a TYPE column describes every row, so a row is a part even
+    when its label is not a standard designator (Aion FX: 'FSW | 3PDT | Stomp
+    switch'). The caller still requires the TYPE to name a category.
+    """
+    return bool(_PART_LABEL.fullmatch(cell))
 
 
 def _is_ref_list(cell: str) -> bool:

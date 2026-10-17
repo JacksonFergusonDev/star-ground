@@ -159,6 +159,9 @@ def check_unextracted_refs(
         for ref in data["refs"]
         if "(Inj)" not in ref
     }
+    # The words of a two-word label are accounted for ('HI CUT' covers 'CUT').
+    extracted |= {word for ref in extracted if " " in ref for word in ref.split()}
+
     listed: set[str] = set()
     for text in page_texts:
         # A vector schematic labels every symbol 'REF value'; those labels are
@@ -169,6 +172,10 @@ def check_unextracted_refs(
     # A part number shaped like a designator is a value, not a listing:
     # 'Q1-Q5  J201  JFET transistor' (Golden Falk).
     values = {key.value.split()[0].upper() for key in inventory if key.value.split()}
+    if "LED" in extracted and "LED2" not in {r.upper() for r in listed}:
+        # A bare 'LED' in the parts list is the schematic's only 'LED1'
+        # (Aion FX legacy documents).
+        extracted.add("LED1")
     for ref in sorted(r for r in listed if r.upper() not in extracted):
         if ref.upper() in values:
             continue
@@ -292,15 +299,44 @@ def check_duplicate(
         )
 
 
-_VERSION_NOTE = re.compile(r"\bin (?:the )?[\w' -]+? version\b", re.IGNORECASE)
+# Notes that tie a value to one named build of the circuit. Historical remarks
+# ('Original uses MA856', 'Early units used 10k') name no build to choose.
+# 'Early units used 10k' is history, but 'Early G-2 uses 620R' names a build.
+_HISTORY = (
+    r"(?!(?i:the )?(?:(?i:original|older|some|most|many|factory|can|could|may|you)\b"
+    r"|(?i:early|earlier|later)\b(?! [\w-]*\d)))"
+)
+# A build's name: words without a sentence-ending period ('TS-9', 'Tube Sound Fuzz').
+_NAME_WORD = r"(?:[\w/-]|\.(?=\w))+"
+_VERSION_NOTE = re.compile(
+    rf"\b(?i:in|for) (?:the )?{_HISTORY}(?!(?i:this|stock|standard|any|all|every)\b)"
+    r"[\w' /.-]+? (?i:version|variant|specs?|circuit)\b"
+    # 'Use a 100n film capacitor here if building a 3-transistor variant'.
+    r"|\b(?i:if building)\b"
+    # 'Analogman version uses 1.2M here', 'GC-1 uses 150k', 'G-2 uses 22uF'.
+    rf"|(?:^|[.;]\s*){_HISTORY}(?:[A-Z]{_NAME_WORD}?(?: {_NAME_WORD}){{0,3}}) uses \S"
+    # 'Omit (leave empty) for P-2', 'Jumper for GC-1', 'Omit if using Morning Glory'.
+    rf"|\b(?i:omit|jumper)\b[^.;]*?\b(?i:for|in|if using) {_HISTORY}(?:the )?[A-Z]"
+    # '100pF in the SD-9M', '10M in Catalinbread and Orpheum'.
+    rf"|\bin the {_HISTORY}[A-Z][\w-]*\d"
+    rf"|^\S*\d\S* (?:in|for) {_HISTORY}[A-Z]"
+    # 'Orpheum: 10M; Axis/Foxey: omit (leave empty)'. Not a generic label:
+    # 'Alternate: 4K7', 'Sub: MPSA18', 'Quantity: 2' (PedalPCB) name no build.
+    r"|^(?!(?i:alt(?:ernat(?:e|ive))?|sub(?:stitute)?|quantity|qty|note|notes|"
+    r"use|or|optional|alternate part|recommended|see)\s*:)"
+    r"[A-Z][\w &/'-]{1,30}: [\w.]+(?:\s*[;.]|$)"
+    # 'Part of the optional Morning Glory gain stage.'
+    r"|\b(?i:part of the optional)\b",
+)
 
 
 def check_version_note(stats: StatsDict, ref: str, notes: str) -> None:
     """Surfaces a parts-table note that ties a part to one version of the circuit.
 
     Lot Lizard's NOTES say '* Omitted in Nano version' and '* C1K in Big Box
-    Version': the list is one table for two builds, and which parts to buy
-    depends on the build.
+    Version'; Aion FX's say 'GC-1 uses 150k', '150k for silicon version' and
+    'Omit if using Morning Glory gain stage': the list is one table for several
+    builds, and which parts to buy depends on the build.
 
     Args:
         stats: Stats object that receives the warning.
@@ -495,3 +531,60 @@ def check_bom_reconciliation(
                 f"{ref} was read as '{key.value}', which does not appear in the "
                 "document's bill of materials.",
             )
+
+
+# A value given as a range: 'RPD  1M to 2M2', 'CLR  1k8 - 4k7'.
+_VALUE_RANGE = re.compile(
+    r"(?P<lo>\d+(?:\.\d+)?[pnuµmkKMR]?\d*[FΩ]?)\s*(?:to|-|\u2013)\s*"
+    r"(?P<hi>\d+(?:\.\d+)?[pnuµmkKMR]?\d*[FΩ]?)(?P<rest>(?:\s.*)?)",
+    re.IGNORECASE,
+)
+# An alternative printed inside the value: '51pF (or 47pF) MLCC'.
+_OR_ALTERNATIVE = re.compile(r"\s*\(\s*or\s+([^()]+?)\s*\)", re.IGNORECASE)
+
+
+def resolve_value_choice(stats: StatsDict | None, ref: str, value: str) -> str:
+    """Picks the first value when the document leaves the choice to the builder.
+
+    Aion FX lists 'RPD  1M to 2M2' and '51pF (or 47pF) MLCC'; GuitarPCB lists
+    'CLR  1k8 - 4k7'. The first value is bought, and the choice is surfaced so
+    the builder can pick another.
+
+    Args:
+        stats: Stats object that receives the warning, if any.
+        ref: The designator.
+        value: The listed value.
+
+    Returns:
+        The value with the range or alternative reduced to its first choice.
+    """
+    alternative = _OR_ALTERNATIVE.search(value)
+    if alternative:
+        chosen = " ".join(_OR_ALTERNATIVE.sub(" ", value).split())
+        if stats is not None:
+            _warn(
+                stats,
+                ParseWarningKind.VALUE_CHOICE,
+                ref,
+                f"{ref}: the document also allows {alternative.group(1)}; "
+                f"{chosen} is used.",
+            )
+        return chosen
+    m = _VALUE_RANGE.fullmatch(value.strip())
+    if m:
+        lo = parse_value_to_decimal(m.group("lo"))
+        hi = parse_value_to_decimal(m.group("hi"))
+        # Both ends carry a unit: '10-30k' is 10k to 30k, not 10 ohms.
+        units = all(re.search(r"[A-Za-zµΩ]", m.group(k)) for k in ("lo", "hi"))
+        if units and lo is not None and hi is not None and lo < hi:
+            chosen = f"{m.group('lo')}{m.group('rest')}".strip()
+            if stats is not None:
+                _warn(
+                    stats,
+                    ParseWarningKind.VALUE_CHOICE,
+                    ref,
+                    f"{ref}: the document allows {m.group('lo')} to {m.group('hi')}; "
+                    f"{m.group('lo')} is used.",
+                )
+            return chosen
+    return value

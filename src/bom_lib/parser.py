@@ -9,9 +9,14 @@ import csv
 import logging
 import re
 import traceback
+from collections import Counter
 from dataclasses import replace
+from typing import TYPE_CHECKING, Any
 
 from src.bom_lib import constants
+
+if TYPE_CHECKING:
+    from pdfplumber.page import Page
 from src.bom_lib.builds import BuildPlan, Entry, PageContext, plan_builds
 from src.bom_lib.classifier import (
     DIP_SWITCH,
@@ -20,7 +25,13 @@ from src.bom_lib.classifier import (
 )
 from src.bom_lib.designators import is_designator, parse_designator
 from src.bom_lib.enums import ComponentCategory
-from src.bom_lib.layout import find_bom_rows, find_listings, page_lines
+from src.bom_lib.layout import (
+    bom_note_cells,
+    find_bom_rows,
+    find_listings,
+    footnote_marks,
+    page_lines,
+)
 from src.bom_lib.types import (
     BuildVariant,
     Inventory,
@@ -44,6 +55,7 @@ from src.bom_lib.verification import (
     check_unclassified_row,
     check_unextracted_refs,
     check_version_note,
+    resolve_value_choice,
 )
 
 # Characters further apart than this start a new word. pdfplumber's 3pt default
@@ -63,6 +75,7 @@ def ingest_bom_line(
     stats: StatsDict | None = None,
     category_hint: ComponentCategory | None = None,
     qty: int = 1,
+    inject: bool = True,
 ) -> int:
     """Core ingestion kernel: Expands refs, classifies, and updates inventory.
 
@@ -82,12 +95,15 @@ def ingest_bom_line(
         category_hint: Category from a TYPE column, for named parts the
             designator and value cannot classify.
         qty: How many of each designator to buy ('TERMINAL BLOCK (Qty 3)').
+        inject: Whether to add implied parts (IC sockets); off when the
+            document lists its own sockets (Aion FX: 'IC1-S | DIP-8 socket').
 
     Returns:
         The number of valid parts successfully found and recorded.
     """
     parts_found = 0
     expanded_refs = expand_refs(ref_raw)
+    val_raw = resolve_value_choice(stats, ref_raw, val_raw)
 
     for r in expanded_refs:
         result = categorize_part(r, val_raw, category_hint)
@@ -113,7 +129,7 @@ def ingest_bom_line(
         inventory.add_part(source, main_key, r, qty)
 
         # 2. Handle Auto-Injection (e.g., Sockets)
-        if result.injected_key:
+        if result.injected_key and inject:
             # Record auto-injected component key (e.g. IC socket)
             inventory.add_part(source, result.injected_key, f"{r} (Inj)")
 
@@ -297,6 +313,16 @@ _NOTES_CHOICE = re.compile(r"\(?\s*([A-Z]*\d[\w./-]*)\s*,")
 
 _TYPE_HINTS: tuple[tuple[str, ComponentCategory], ...] = (
     ("footswitch", ComponentCategory.SWITCHES),
+    # Aion FX names every row's construction: 'Metal film resistor, 1/4W',
+    # 'IC socket, DIP-8', 'Enclosure, die-cast aluminum', '9V battery snap'.
+    ("socket", ComponentCategory.HARDWARE_MISC),
+    ("enclosure", ComponentCategory.HARDWARE_MISC),
+    ("battery", ComponentCategory.HARDWARE_MISC),
+    ("dc-dc converter", ComponentCategory.HARDWARE_MISC),
+    ("photocoupler", ComponentCategory.OPTOELECTRONICS),
+    ("vactrol", ComponentCategory.OPTOELECTRONICS),
+    ("optocoupler", ComponentCategory.OPTOELECTRONICS),
+    ("ldr", ComponentCategory.OPTOELECTRONICS),
     ("jack", ComponentCategory.HARDWARE_MISC),
     ("relay", ComponentCategory.HARDWARE_MISC),
     ("transformer", ComponentCategory.HARDWARE_MISC),
@@ -312,17 +338,26 @@ _TYPE_HINTS: tuple[tuple[str, ComponentCategory], ...] = (
     ),  # Tuner: 'ESP200  ESP32C3'  # Tuner: '7-segment LED display'
     ("terminal block", ComponentCategory.HARDWARE_MISC),
     ("switch", ComponentCategory.SWITCHES),
+    ("slide", ComponentCategory.SWITCHES),  # 'DPDT slide, micro' (Aion FX Fusion)
     ("trimmer", ComponentCategory.POTENTIOMETERS),
     ("pot", ComponentCategory.POTENTIOMETERS),
     ("led", ComponentCategory.DIODES),
     ("diode", ComponentCategory.DIODES),
     ("transistor", ComponentCategory.TRANSISTORS),
     ("mosfet", ComponentCategory.TRANSISTORS),
+    ("jfet", ComponentCategory.TRANSISTORS),
+    ("operational amplifier", ComponentCategory.ICS),
+    ("regulator", ComponentCategory.ICS),
+    # Last: 'Light dependent resistor' is an LDR, 'Trimmer resistor' a pot.
+    ("resistor", ComponentCategory.RESISTORS),
+    ("capacitor", ComponentCategory.CAPACITORS),
 )
+_SOCKET = re.compile(r"\bsocket\b", re.IGNORECASE)
 _CHOOSE_ROW = re.compile(r"\s*choose between .+ or ", re.IGNORECASE)
 _NUMBERED_NAME = re.compile(r"[A-Z]{1,3}\d{1,3}")
 _TABLE_HEADERS = frozenset({"LOCATION", "QUANTITY", "VALUE", "TYPE"})
 _LED_DESCRIPTION = re.compile(r"[^,]*\bLED\b", re.IGNORECASE)
+_LED_SPECS = re.compile(r"LED\s*,\s*(.+)$", re.IGNORECASE)
 _LED_COLOR = re.compile(
     r"\b(?:red|green|blue|yellow|white|orange|amber|purple|pink|uv)\b", re.IGNORECASE
 )
@@ -334,7 +369,9 @@ _LED_SHORTHAND = re.compile(
 # Not preceded by "non-": a "Non-latching relay" is not latching.
 _ACTUATION = re.compile(r"(?<!non-)(?<!non )\b(momentary|latching)\b", re.IGNORECASE)
 _DUAL_GANG = re.compile(r"\bDUAL[- ]?GANG")
-_POSITIONS = re.compile(r"\b(?:ON|OFF)(?:/(?:ON|OFF)){1,2}\b")
+# 'ON/OFF/ON', or Aion FX's 'on-off-on' (normalized to slashes).
+_POSITIONS = re.compile(r"\b(?:ON|OFF)(?:[/-](?:ON|OFF)){1,2}\b")
+_CENTER_OFF = re.compile(r"\b(?:CENTER|CENTRE|CNTR\.?)[ -]OFF\b")
 _TWO_POSITION = re.compile(r"\b2[- ]POSITION\b")
 # Capacitor constructions a TYPE cell may name that the VALUE cell omits.
 _DIELECTRICS = (("TANTALUM", "Tantalum"), ("MLCC", "MLCC"))
@@ -390,9 +427,15 @@ def _drop_restated_value(value: str) -> str:
 
 
 def category_from_type(type_text: str) -> ComponentCategory | None:
-    """Category suggested by a TYPE column description ('Stereo Jack' -> Hardware)."""
+    """Category suggested by a TYPE column description ('Stereo Jack' -> Hardware).
+
+    Hints match at word starts: 'red diffused' is not a fuse.
+    """
     low = type_text.lower()
-    return next((cat for word, cat in _TYPE_HINTS if word in low), None)
+    return next(
+        (cat for word, cat in _TYPE_HINTS if re.search(rf"\b{re.escape(word)}", low)),
+        None,
+    )
 
 
 def enrich_value_from_type(value: str, type_text: str, notes: str = "") -> str:
@@ -416,6 +459,13 @@ def enrich_value_from_type(value: str, type_text: str, notes: str = "") -> str:
     """
     type_text = " ".join(type_text.split())
     detail = f"{type_text} {' '.join(notes.split())}".upper()
+    specs = _LED_SPECS.match(type_text)
+    if specs and _LED_SHORTHAND.fullmatch(value):
+        # Aion FX: '5mm' / 'LED, 5mm, red diffused' lists the specs after 'LED,'.
+        words = [w.strip() for w in specs.group(1).split(",") if w.strip()]
+        sizes = [w for w in words if re.fullmatch(r"\d+(?:\.\d+)?mm", w)]
+        rest = [w.title() for w in words if w not in sizes]
+        return " ".join([*sizes, *rest, "LED"])
     led = _LED_DESCRIPTION.match(type_text)
     if led and _LED_SHORTHAND.fullmatch(value):
         # 'Red 3mm' / '3mm Red LED, Diffused' (Motorizer); 'RED' / '3mm LED, Red'
@@ -427,7 +477,7 @@ def enrich_value_from_type(value: str, type_text: str, notes: str = "") -> str:
                 r"\bLED\b", f"{color.group(0).capitalize()} LED", description, count=1
             )
         return description
-    if not any(ch.isdigit() for ch in value):
+    if not any(ch.isdigit() for ch in value) and not _POLE_THROW.search(value.upper()):
         # TYPE first ('Germanium diode, 1N34A'), then NOTES ('SANDED' /
         # '(JRC4558, etc)', Revision Overdrive).
         part = _PART_NUMBER.search(type_text) or _PART_NUMBER.search(notes)
@@ -460,7 +510,10 @@ def enrich_value_from_type(value: str, type_text: str, notes: str = "") -> str:
     if _POLE_THROW.fullmatch(value.upper()):
         positions = _POSITIONS.search(detail)
         if positions:
-            return f"{value} {positions.group(0)}"
+            return f"{value} {positions.group(0).replace('-', '/')}"
+        if _CENTER_OFF.search(detail):
+            # 'SPDT' / 'Toggle switch, SPDT center off' (Aion FX Ephemeris).
+            return f"{value} ON/OFF/ON"
         # 'Toggle switch, 2-position (SPDT)' (Maleficent Mids): two positions
         # are ON/ON; three could be ON/OFF/ON or ON/ON/ON, so are not guessed.
         if "TOGGLE" in detail and _TWO_POSITION.search(detail):
@@ -558,38 +611,14 @@ def _table_entries(
                     if unmarked:
                         val_raw = unmarked
                     if 0 <= type_idx < len(row_safe):
-                        type_text = " ".join(row_safe[type_idx].split())
                         notes = (
                             row_safe[notes_idx]
                             if 0 <= notes_idx < len(row_safe)
                             else ""
                         )
-                        # ElectroVibe: 'LDR1 | (blank) | Light Dependent Resistor |
-                        # (7530, 7532, 9203, or similar)' names the part in NOTES.
-                        choice = _NOTES_CHOICE.match(notes.strip())
-                        if not val_raw and choice:
-                            val_raw = choice.group(1)
-                        # Lone King: 'VOICE | (blank) | Toggle switch, SPDT | 3-position
-                        # (ON/OFF/ON)'; enrichment then adds the positions.
-                        pole = _POLE_THROW.search(type_text.upper())
-                        if not val_raw and pole:
-                            val_raw = pole.group(0)
-                        # Kickstart: 'SW1 | (blank) | 6mm x 6mm Push Button Switch'.
-                        if not val_raw and type_text:
-                            val_raw = type_text
-                        val_raw = enrich_value_from_type(
-                            val_raw, row_safe[type_idx], notes
+                        val_raw, hint = _typed_row(
+                            stats, ref_raw, val_raw, row_safe[type_idx], notes
                         )
-                        hint = category_from_type(row_safe[type_idx])
-                        if (
-                            ref_raw[:1].isalpha()
-                            and val_raw
-                            and val_raw.upper() not in constants.NOT_POPULATED_VALUES
-                            # A repeated or garbled header row is not a part.
-                            and not {ref_raw.upper(), val_raw.upper()} & _TABLE_HEADERS
-                            and categorize_part(ref_raw, val_raw, hint) is None
-                        ):
-                            check_unclassified_row(stats, ref_raw, val_raw)
                     val_raw = _drop_restated_value(val_raw)
                     if 0 <= notes_idx < len(row_safe):
                         val_raw = capacitor_notes(ref_raw, val_raw, row_safe[notes_idx])
@@ -623,6 +652,68 @@ def _table_entries(
     return entries
 
 
+def _typed_row(
+    stats: StatsDict,
+    ref: str,
+    value: str,
+    type_text: str,
+    notes: str,
+    *,
+    check: bool = True,
+) -> tuple[str, ComponentCategory | None]:
+    """Completes a typed table row's value from its TYPE and NOTES cells.
+
+    Shared by ruled and text tables (PedalPCB's 'LOCATION | VALUE | TYPE |
+    NOTES', Aion FX's 'PART | VALUE | TYPE | NOTES').
+
+    Args:
+        stats: Stats object that receives warnings.
+        ref: The designator cell.
+        value: The VALUE cell.
+        type_text: The TYPE cell.
+        notes: The NOTES cell, if the table has one.
+        check: Whether to report a row no category fits; text tables check
+            each designator of a grouped cell themselves.
+
+    Returns:
+        The enriched value and the category the TYPE cell names, if any.
+    """
+    type_text = " ".join(type_text.split())
+    # ElectroVibe: 'LDR1 | (blank) | Light Dependent Resistor |
+    # (7530, 7532, 9203, or similar)' names the part in NOTES.
+    choice = _NOTES_CHOICE.match(notes.strip())
+    if not value and choice:
+        value = choice.group(1)
+    # Lone King: 'VOICE | (blank) | Toggle switch, SPDT | 3-position
+    # (ON/OFF/ON)'; enrichment then adds the positions.
+    pole = _POLE_THROW.search(type_text.upper())
+    if not value and pole:
+        value = pole.group(0)
+    # Kickstart: 'SW1 | (blank) | 6mm x 6mm Push Button Switch'.
+    if not value and type_text:
+        value = type_text
+    value = enrich_value_from_type(value, type_text, notes)
+    hint = category_from_type(type_text)
+    if check:
+        _check_typed_row(stats, ref, value, hint)
+    return value, hint
+
+
+def _check_typed_row(
+    stats: StatsDict, ref: str, value: str, hint: ComponentCategory | None
+) -> None:
+    """Reports a typed table row that no category fits (it must not vanish)."""
+    if (
+        ref[:1].isalpha()
+        and value
+        and value.upper() not in constants.NOT_POPULATED_VALUES
+        # A repeated or garbled header row is not a part.
+        and not {ref.upper(), value.upper()} & _TABLE_HEADERS
+        and categorize_part(ref, value, hint) is None
+    ):
+        check_unclassified_row(stats, ref, value)
+
+
 def _text_table_entries(
     pages_data: list[PDFPageExtraction], stats: StatsDict
 ) -> list[Entry]:
@@ -640,30 +731,72 @@ def _text_table_entries(
         One entry per designator, in reading order.
     """
     entries: list[Entry] = []
+    seen: Counter[str] = Counter()
     for page_no, data in enumerate(pages_data):
         for row in find_bom_rows(data["words"]):
             stats["lines_read"] += 1
-            refs = expand_refs(row.refs)
+            value, hint = row.value, None
+            refs = expand_refs(row.refs) if " " not in row.refs else [row.refs]
+            if row.type_text:
+                value, hint = _typed_row(
+                    stats, row.refs, row.value, row.type_text, row.notes, check=False
+                )
+                if hint is None and not all(is_designator(ref) for ref in refs):
+                    # A label the TYPE does not explain ('Screw | M3 x 5mm | For
+                    # Nylon', Q-Tune's packing list) is left to the layout reader.
+                    continue
+                value = _drop_restated_value(value)
+                value = capacitor_notes(row.refs, value, row.notes)
+                # An empty spot can be filled in another build ('(omit) |
+                # 100n for bass'), so its note matters too.
+                check_version_note(stats, row.refs, row.notes)
+                for ref in refs:
+                    _check_typed_row(stats, ref, value, hint)
+            if hint is not None:
+                # A typed table describes every row, so a repeated label is
+                # another part (Aion FX: GAIN pot and GAIN switch, Vulcan's
+                # two R9s); it is bought too, under 'GAIN (2)'.
+                refs = [_next_label(seen, ref) for ref in refs]
             check_row_quantity(stats, row.refs, len(refs), row.quantity)
-            for odd in [ref for ref in refs if not is_designator(ref)]:
-                check_unclassified_row(stats, odd, row.value)
-            refs = [ref for ref in refs if is_designator(ref)]
+            if hint is None:
+                # Without a TYPE column only designators are parts; an odd name
+                # is reported (titles, footers and hardware are skipped).
+                for odd in [ref for ref in refs if not is_designator(ref)]:
+                    check_unclassified_row(stats, odd, value)
+                refs = [ref for ref in refs if is_designator(ref)]
             for ref in refs:
                 designator = parse_designator(ref)
                 if designator and designator.category == ComponentCategory.CAPACITORS:
-                    check_marking_code(stats, ref, row.value, row.marking)
+                    check_marking_code(stats, ref, value, row.marking)
             entries += [
                 Entry(
                     ref,
-                    row.value,
+                    value,
                     page_no,
                     line=row.line,
                     x0=row.x0,
                     table=page_no,
+                    hint=hint,
                 )
                 for ref in refs
             ]
     return entries
+
+
+def _without_note_cells(data: PDFPageExtraction, text: str) -> str:
+    """Page text with typed tables' NOTES cells removed (see `bom_note_cells`)."""
+    for cell in bom_note_cells(data["words"]):
+        text = text.replace(cell.text, " ", 1)
+    return text
+
+
+def _next_label(seen: Counter[str], ref: str) -> str:
+    """The designator for a typed-table row, numbering repeats ('GAIN (2)').
+
+    Repeats are counted per document: the tables continue across pages.
+    """
+    seen[ref.upper()] += 1
+    return ref if seen[ref.upper()] == 1 else f"{ref} ({seen[ref.upper()]})"
 
 
 def _is_not_populated(value: str) -> bool:
@@ -775,6 +908,7 @@ def _ingest_entries(
     inventory = create_empty_inventory()
     stats = create_empty_stats()
     table_of: dict[str, int] = {}
+    lists_sockets = any(_SOCKET.search(entry.value) for entry in entries)
     for entry in entries:
         if entry.not_populated:
             _record_not_populated(stats, entry.ref, entry.value)
@@ -794,6 +928,7 @@ def _ingest_entries(
             stats,
             entry.hint,
             entry.qty,
+            inject=not lists_sockets,
         )
     return inventory, stats
 
@@ -851,6 +986,56 @@ def _assemble_builds(
     return create_empty_inventory(), tuple(variants), options, union
 
 
+def _readable(obj: dict[str, Any]) -> bool:
+    """Whether a PDF object is kept for text extraction.
+
+    Characters printed upside down, or running bottom to top, extract in
+    reverse: a vector schematic's '10k' reads 'k01' and '100uF' reads 'Fu001',
+    which then look like parts lists (Aion FX legacy schematics). Nothing else
+    is dropped.
+    """
+    if obj.get("object_type") != "char":
+        return True
+    matrix = obj.get("matrix")
+    if not matrix:
+        return True
+    a, b, c, d = matrix[:4]
+    upside_down = a < 0 and d < 0
+    # Text running bottom to top extracts reversed too ('Fu001' for '100uF').
+    rising = a == 0 and d == 0 and b > 0 and c < 0
+    return not (upside_down or rising)
+
+
+def _page_words(page: Page) -> list[PDFWord]:
+    return [
+        PDFWord(text=w["text"], x0=w["x0"], x1=w["x1"], top=w["top"], size=w["size"])
+        for w in page.extract_words(x_tolerance=_WORD_GAP_PT, extra_attrs=["size"])
+    ]
+
+
+def _without_marks(page: Page) -> Page:
+    """The page without superscript footnote markers (see `footnote_marks`).
+
+    Characters are dropped, not words, so ruled tables and page text lose the
+    markers too.
+    """
+    marks = footnote_marks(_page_words(page))
+    if not marks:
+        return page
+
+    def keep(obj: dict[str, Any]) -> bool:
+        if obj.get("object_type") != "char":
+            return True
+        center = (obj["x0"] + obj["x1"]) / 2
+        return not any(
+            m["x0"] <= center <= m["x1"]
+            and m["top"] <= obj["top"] + 0.5 <= m["top"] + m["size"]
+            for m in marks
+        )
+
+    return page.filter(keep)
+
+
 def parse_pedalpcb_pdf(filepath: str, source_name: str) -> ParseResult:
     """Parses a PedalPCB Build Document (PDF).
 
@@ -896,7 +1081,8 @@ def parse_pedalpcb_pdf(filepath: str, source_name: str) -> ParseResult:
         try:
             # Iterate pages once to grab expensive text/table data
             pages_data: list[PDFPageExtraction] = []
-            for page in pdf.pages:
+            for raw_page in pdf.pages:
+                page = _without_marks(raw_page.filter(_readable))
                 pages_data.append(
                     {
                         # Same word gap as the layout reader: kerned cells
@@ -905,18 +1091,7 @@ def parse_pedalpcb_pdf(filepath: str, source_name: str) -> ParseResult:
                             {"text_x_tolerance": _WORD_GAP_PT}
                         ),
                         "text": page.extract_text(),
-                        "words": [
-                            PDFWord(
-                                text=w["text"],
-                                x0=w["x0"],
-                                x1=w["x1"],
-                                top=w["top"],
-                                size=w["size"],
-                            )
-                            for w in page.extract_words(
-                                x_tolerance=_WORD_GAP_PT, extra_attrs=["size"]
-                            )
-                        ],
+                        "words": _page_words(page),
                     }
                 )
 
@@ -985,8 +1160,12 @@ def parse_pedalpcb_pdf(filepath: str, source_name: str) -> ParseResult:
             # Like the readers, a text bill of materials bounds where parts are
             # listed: Q-Tune's build steps mention 'the X1 connector area'.
             listed_texts = [
-                text if bom_pages is None or k in bom_pages else ""
-                for k, text in enumerate(page_texts)
+                _without_note_cells(data, text)
+                if bom_pages is None or k in bom_pages
+                else ""
+                for k, (data, text) in enumerate(
+                    zip(pages_data, page_texts, strict=True)
+                )
             ]
             check_unextracted_refs(listed_texts, union, stats)
             check_footnotes(page_texts, stats)

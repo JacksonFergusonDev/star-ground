@@ -46,6 +46,7 @@ class ParseWarningKind(StrEnum):
     UNPARSED_VALUE = "Unparsed value"
     BOM_MISMATCH = "Bill of materials mismatch"
     FOOTNOTE = "Footnote"
+    VALUE_CHOICE = "Builder's choice"
 
 
 class ComponentSpec(Enum):

@@ -23,7 +23,13 @@ _CAT = ComponentCategory
 _PREFIXES: tuple[tuple[str, ComponentCategory | None], ...] = (
     ("JACK", _CAT.HARDWARE_MISC),
     ("TRIM", _CAT.POTENTIOMETERS),
+    ("XFMR", _CAT.HARDWARE_MISC),  # transformers (Aion FX: 'XFM1  42TM018')
+    ("XFM", _CAT.HARDWARE_MISC),
     ("RLED", _CAT.RESISTORS),
+    ("LEDR", _CAT.RESISTORS),  # Aion FX: LED current-limiting resistor
+    ("RPD", _CAT.RESISTORS),  # Aion FX: input pulldown resistor
+    ("RX", _CAT.RESISTORS),  # Aion FX: optional-mod resistors RX1, RX2
+    ("CX", _CAT.CAPACITORS),
     ("LDR", _CAT.OPTOELECTRONICS),
     ("LED", _CAT.DIODES),
     ("CLR", _CAT.RESISTORS),
@@ -40,6 +46,7 @@ _PREFIXES: tuple[tuple[str, ComponentCategory | None], ...] = (
     ("C", _CAT.CAPACITORS),
     ("D", _CAT.DIODES),
     ("Q", _CAT.TRANSISTORS),
+    ("Z", _CAT.DIODES),  # zener diodes (Aion FX: 'Z1  1N4742A')
     ("U", _CAT.ICS),
     ("X", _CAT.CRYSTALS_OSCILLATORS),
     ("Y", _CAT.CRYSTALS_OSCILLATORS),
@@ -51,7 +58,7 @@ _PREFIXES: tuple[tuple[str, ComponentCategory | None], ...] = (
 )
 
 # Designators printed without a number or name suffix.
-_BARE = frozenset({"LED", "CLR", "RLED", "TRIM"})
+_BARE = frozenset({"LED", "CLR", "RLED", "LEDR", "RPD", "TRIM"})
 
 # A channel suffix letter (R1A/R1B, D10a-D10d). K, M and R are excluded so a
 # C-taper pot value (C10K, C1M) is never mistaken for capacitor C10.
