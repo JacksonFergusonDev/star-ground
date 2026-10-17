@@ -42,7 +42,7 @@ typecheck: sync
 # Run the full automated testing matrix
 test: sync
     @printf "\n{{ blue }}=== Running Tests ==={{ nc }}\n"
-    uv run pytest
+    uv run pytest -n auto
     @printf "{{ green }}✔ All tests passed{{ nc }}\n"
 
 # Print the parser accuracy scorecard against the golden parts lists

@@ -7,7 +7,7 @@
         "C4"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "C3",
           "C4"
         ]
@@ -19,7 +19,7 @@
         "C1"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "C1"
         ]
       }
@@ -30,7 +30,7 @@
         "C5"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "C5"
         ]
       }
@@ -41,7 +41,7 @@
         "C2"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "C2"
         ]
       }
@@ -52,7 +52,7 @@
         "C6"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "C6"
         ]
       }
@@ -63,7 +63,7 @@
         "D1"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "D1"
         ]
       }
@@ -74,7 +74,7 @@
         "IC1 (Inj)"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "IC1 (Inj)"
         ]
       }
@@ -85,7 +85,7 @@
         "IC1"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "IC1"
         ]
       }
@@ -96,7 +96,7 @@
         "LEVEL"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "LEVEL"
         ]
       }
@@ -107,7 +107,7 @@
         "ATTACK"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "ATTACK"
         ]
       }
@@ -118,7 +118,7 @@
         "R4"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "R4"
         ]
       }
@@ -129,7 +129,7 @@
         "R7"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "R7"
         ]
       }
@@ -140,7 +140,7 @@
         "R1"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "R1"
         ]
       }
@@ -151,7 +151,7 @@
         "R9"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "R9"
         ]
       }
@@ -162,7 +162,7 @@
         "R5"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "R5"
         ]
       }
@@ -173,7 +173,7 @@
         "R10"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "R10"
         ]
       }
@@ -184,7 +184,7 @@
         "R3"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "R3"
         ]
       }
@@ -195,7 +195,7 @@
         "R8"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "R8"
         ]
       }
@@ -207,7 +207,7 @@
         "R6"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "R2",
           "R6"
         ]
@@ -220,7 +220,7 @@
         "Q3"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "Q2",
           "Q3"
         ]
@@ -232,7 +232,7 @@
         "Q1"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "Q1"
         ]
       }

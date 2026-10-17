@@ -7,7 +7,7 @@
         "C5"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "C1",
           "C5"
         ]
@@ -19,7 +19,7 @@
         "C10"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "C10"
         ]
       }
@@ -30,7 +30,7 @@
         "C8"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "C8"
         ]
       }
@@ -41,7 +41,7 @@
         "C7"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "C7"
         ]
       }
@@ -52,7 +52,7 @@
         "C3"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "C3"
         ]
       }
@@ -63,7 +63,7 @@
         "C4"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "C4"
         ]
       }
@@ -74,7 +74,7 @@
         "C6"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "C6"
         ]
       }
@@ -85,7 +85,7 @@
         "C9"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "C9"
         ]
       }
@@ -96,7 +96,7 @@
         "C2"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "C2"
         ]
       }
@@ -107,7 +107,7 @@
         "D3"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "D3"
         ]
       }
@@ -120,7 +120,7 @@
         "D4"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "D1",
           "D2",
           "D4"
@@ -133,7 +133,7 @@
         "IC1 (Inj)"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "IC1 (Inj)"
         ]
       }
@@ -144,7 +144,7 @@
         "IC1"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "IC1"
         ]
       }
@@ -155,7 +155,7 @@
         "VOLUME"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "VOLUME"
         ]
       }
@@ -166,7 +166,7 @@
         "GAIN"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "GAIN"
         ]
       }
@@ -177,7 +177,7 @@
         "TONE"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "TONE"
         ]
       }
@@ -188,7 +188,7 @@
         "R3"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "R3"
         ]
       }
@@ -200,7 +200,7 @@
         "R8"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "R5",
           "R8"
         ]
@@ -213,7 +213,7 @@
         "R6"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "R1",
           "R6"
         ]
@@ -225,7 +225,7 @@
         "R7"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "R7"
         ]
       }
@@ -236,7 +236,7 @@
         "R9"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "R9"
         ]
       }
@@ -248,7 +248,7 @@
         "R4"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "R2",
           "R4"
         ]
@@ -260,7 +260,7 @@
         "Q1"
       ],
       "sources": {
-        "SnapshotTest": [
+        "Sample": [
           "Q1"
         ]
       }
