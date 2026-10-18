@@ -402,8 +402,12 @@ _SECTION_WORDS = frozenset(
         "HARDWARE",
     }
 )
+# Words around the name: 'Variant: Red Army', 'Power Boost Parts List',
+# 'Bill of Materials - FUZZ GOD:', 'Parts (Stock Circuit)'.
 _HEADING_WORDS = re.compile(
-    r"^\s*variant\s*:\s*|\s*\bparts(?:\s+list)?\s*$", re.IGNORECASE
+    r"^\s*(?:variant|bill of materials)\s*[:\u2013-]\s*|^\s*parts\b\s*"
+    r"|\s*\bparts(?:\s+list)?\s*$|\s*:\s*$",
+    re.IGNORECASE,
 )
 
 
@@ -425,6 +429,8 @@ def _heading_label(group: list[Entry], pages: list[PageContext]) -> str | None:
         if {t.strip(",").upper() for t in text.split()} <= _SECTION_WORDS | {"CONT"}:
             continue
         name = _HEADING_WORDS.sub("", text).strip()
+        if name.startswith("(") and name.endswith(")"):
+            name = name[1:-1].strip()
         return name or None
     return None
 
