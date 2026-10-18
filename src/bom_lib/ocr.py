@@ -924,8 +924,8 @@ def _gap_share(refs: set[str]) -> float:
 def _unlisted(pages_data: list[PDFPageExtraction], listed: set[str]) -> set[str]:
     """Labels in a table's designator columns that were read as no part.
 
-    A row whose value the readers reject ('CLIP1 | SW_SPDT', 'R10A1 |
-    JUMPER', 'PWR1 | Barrel_Jack') would otherwise vanish without a trace.
+    A row whose value the readers reject ('R10A1 | JUMPER', 'PWR1 |
+    Barrel_Jack') would otherwise vanish without a trace.
 
     Args:
         pages_data: The table blocks OCR read.

@@ -400,6 +400,19 @@ class TestCellRepairs:
             ("POT1", "B100K"),
         ]
 
+    def test_a_part_number_stops_at_its_description(self) -> None:
+        # Five Cats Clanger: 'T1 | 42TM002 | 6 Pin Audio Transformer 10K / 2K'.
+        words = self._typed_table(
+            ("R1", "910K", "1/4 Watt Resistor"),
+            ("R2", "62K", "1/4 Watt Resistor"),
+            ("C1", "1nF", "Box/MLCC Capacitor"),
+            ("T1", "42TM002", "6 Pin Audio Transformer 10K / 2K"),
+        )
+        assert [(lst.ref, lst.value) for lst in find_listings(words)][-1] == (
+            "T1",
+            "42TM002",
+        )
+
     def test_a_switch_symbol_is_a_value(self) -> None:
         # Five Cats Five Zero: 'CLIP1 | SW_SPDT | Toggle - ON/ON'.
         assert find_listings(_line("CLIP1", "SW_SPDT")) == [Listing("CLIP1", "SW_SPDT")]
