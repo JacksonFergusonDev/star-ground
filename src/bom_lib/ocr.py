@@ -73,7 +73,7 @@ _IMAGE_SHARE = 0.02
 _FEW_CHARS = 50
 # Recognized boxes taller than they are wide (by this factor) are vertical
 # labels on PCB renders, never parts-list cells.
-_VERTICAL = 1.1
+_VERTICAL = 1.2
 # A box's height includes padding around the glyphs.
 _GLYPH_SHARE = 0.75
 # A box's cell neighbour lies within this many box heights of it.
@@ -356,7 +356,7 @@ def page_words(boxes: list[OcrBox]) -> PDFPageExtraction:
         b
         for b in boxes
         if b.text.strip()
-        and not (len(b.text) > 1 and b.bottom - b.top > _VERTICAL * (b.x1 - b.x0))
+        and not (len(b.text) > 2 and b.bottom - b.top > _VERTICAL * (b.x1 - b.x0))
     ]
     flat.sort(key=lambda b: (b.top + b.bottom) / 2)
     rows: list[list[OcrBox]] = []

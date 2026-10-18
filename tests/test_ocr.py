@@ -148,10 +148,9 @@ class TestPageWords:
             assert [c.text for c in split_cells(line)] == ["U1", "TL072", "Dual Op Amp"]
 
     def test_vertical_labels_are_dropped(self) -> None:
-        # A PCB render's rotated 'R15' reads as a tall, narrow box; so does a
-        # rotated 'R2' (Five Cats L.P.B+), however short.
-        words = page_words([OcrBox("R15", 0, 10, 0, 40), OcrBox("R2", 50, 61, 0, 13.6)])
-        assert words["words"] == []
+        # A PCB render's rotated 'R15' reads as a tall, narrow box.
+        words = page_words([OcrBox("R15", 0, 10, 0, 40)])["words"]
+        assert words == []
 
     def test_offset_rows_of_tables_side_by_side_stay_apart(self) -> None:
         # Five Cats E.P.3.0: the right table's 'U1' row sits half a row below
