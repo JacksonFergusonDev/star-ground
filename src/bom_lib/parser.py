@@ -34,6 +34,7 @@ from src.bom_lib.layout import (
     find_bom_rows,
     find_listings,
     footnote_marks,
+    names_control,
     page_lines,
     strip_asides,
     valueless_refs,
@@ -58,10 +59,12 @@ from src.bom_lib.verification import (
     check_footnotes,
     check_marking_code,
     check_misread_text,
+    check_numbering_gaps,
     check_parts_found,
     check_prose_pots,
     check_row_quantity,
     check_second_board,
+    check_two_values,
     check_unclassified_row,
     check_unextracted_refs,
     check_value_assignments,
@@ -365,7 +368,8 @@ _TYPE_HINTS: tuple[tuple[str, ComponentCategory], ...] = (
     ("capacitor", ComponentCategory.CAPACITORS),
 )
 # A named control in a grid: 'VOL', 'HI/LO', 'VOL 1', 'CLN_LVL'.
-_CONTROL_LABEL = re.compile(r"[A-Z][A-Z0-9_/-]*(?: [A-Z0-9]+)?")
+# 'VOL', 'GAIN 2'; title case too ('Input', 'Bias Trim', GuitarPCB DumbleTone).
+_CONTROL_LABEL = re.compile(r"[A-Z][A-Za-z0-9_/-]*(?: [A-Za-z0-9]+)?")
 # Text tables are numbered page * this + header line, so two tables on one
 # page stay apart.
 _TABLES_PER_PAGE = 100
@@ -632,7 +636,9 @@ def _table_entries(
                 hint: ComponentCategory | None = None
 
                 if len(row_safe) > max(loc_idx, val_idx):
+                    # A footnote marker is no part of the designator ('*BOOST').
                     ref_raw = row_safe[loc_idx].replace("\n", " ").strip()
+                    ref_raw = ref_raw.lstrip("*").strip() or ref_raw
                     val_raw = " ".join(row_safe[val_idx].split())
                     # Optional-part markers are not part of the value ('*27K*'),
                     # but a value of only markers is a placeholder and stays one.
@@ -1060,7 +1066,13 @@ def _layout_entries(
                     or (
                         row_value is not None
                         and (
-                            not is_designator(ref)
+                            # A known control name is no wrapped cell ('SPEED |
+                            # *500k' in a cell the table merged over two lines,
+                            # GuitarPCB Dr Phybes).
+                            (
+                                not is_designator(ref)
+                                and ref.upper() not in constants.KEYWORDS
+                            )
                             or ref.upper() in row_value
                             or not _cell_value(lines[listing.line], listing)
                         )
@@ -1109,6 +1121,8 @@ def _cell_value(cells: list[Cell], listing: Listing) -> bool:
     readings = [after[:1]]
     if len(after) == 2 and _RATING_CELL.fullmatch(after[1]):
         readings.append(after)
+    if len(after) == 2 and names_control(after[0]):
+        readings.append(after[1:])  # 'P1 | VOL 1 | 100k Log' (XX Double Shot)
     return any(clean_value(" ".join(r)) == listing.value for r in readings if r)
 
 
@@ -1136,7 +1150,9 @@ def _ingest_entries(
             first = table_of.setdefault(entry.ref, entry.table)
             seen = stats["seen_refs"].get(entry.ref)
             value = resolve_value_choice(None, entry.ref, entry.value)
-            if first != entry.table and seen in (entry.value, value):
+            if first != entry.table and any(
+                _same_value(seen, v) for v in (entry.value, value)
+            ):
                 del stats["seen_refs"][entry.ref]
             elif first != entry.table and seen is not None and not entry.follows_or:
                 # Another table lists the same designator with another value:
@@ -1156,6 +1172,19 @@ def _ingest_entries(
             inject=not lists_sockets,
         )
     return inventory, stats
+
+
+def _same_value(seen: str | None, value: str) -> bool:
+    """Whether two listings give one value: '100p' and '100pF', '1K8' and '1k8'."""
+    if seen is None:
+        return False
+    if seen.upper() == value.upper():
+        return True
+    a, b = seen.split(), value.split()
+    if not a or not b or [w.upper() for w in a[1:]] != [w.upper() for w in b[1:]]:
+        return False
+    da, db = parse_value_to_decimal(a[0]), parse_value_to_decimal(b[0])
+    return da is not None and da == db
 
 
 def _next_board_ref(stats: StatsDict, ref: str) -> str:
@@ -1341,11 +1370,24 @@ def read_pages(
     # LED (see' / 'text)', Mini-Me), so the ruled reading wins.
     # A repeated label is numbered by the text reading only ('MIX (2)',
     # Cataclysm lists MIX twice), so rows are matched by their label.
-    ruled_refs = {(e.page, e.ref) for e in entries}
+    # Another board's table on the page can list the same designator with its
+    # own value (GuitarPCB Skyn-Tone: a ruled Compressor table above a text
+    # WattAmp table); only the same row read twice is dropped.
+    ruled: dict[tuple[int, str], list[str]] = {}
+    for e in entries:
+        ruled.setdefault((e.page, e.ref), []).append(e.value)
     text_rows = [
-        r for r in text_rows if (r.page, _REPEAT.sub("", r.ref)) not in ruled_refs
+        r
+        for r in text_rows
+        if not any(
+            _same_value(v, r.value)
+            for v in ruled.get((r.page, _REPEAT.sub("", r.ref)), ())
+        )
     ]
-    # Number the text tables after the ruled ones.
+    # Number the text tables after the ruled ones. A table's rows come
+    # together, so the first board keeps its designators ('R1' before 'R1 (2)')
+    # however the boards' rows interleave on the page (GuitarPCB DumbleTone).
+    text_rows.sort(key=lambda row: (row.page, row.table or 0))
     entries += [
         replace(row, table=len(entries) + (row.table or 0)) for row in text_rows
     ]
@@ -1393,6 +1435,8 @@ def read_pages(
     check_footnotes(page_texts, stats)
     check_value_assignments(page_texts, union, stats)
     check_prose_pots(page_texts, union, stats)
+    check_numbering_gaps(union, stats)
+    check_two_values(union, stats)
     check_bom_reconciliation(page_texts, union, stats)
     return inventory, variants, options
 

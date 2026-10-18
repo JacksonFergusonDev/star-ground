@@ -339,6 +339,9 @@ def strip_asides(value: str) -> str:
     return " ".join(_ASIDE.sub("", value).split()) or value
 
 
+_LEADING_DASH = re.compile(r"^[-\u2013]\s*(?=\d)")
+
+
 def clean_value(value: str) -> str:
     """Strips markers that are not part of a purchasable value.
 
@@ -354,6 +357,8 @@ def clean_value(value: str) -> str:
     """
     value = _INCLUDED.sub("", _ASIDE.sub("", value)).replace("*", " ")
     value = " ".join(value.split())
+    # 'C3 -10n' (GuitarPCB Dr Phybes): the dash separates the designator.
+    value = _LEADING_DASH.sub("", value)
     # A trailing link or remark is not the value: 'Mini 1P8T - https://...',
     # 'SPDT (On/On) - Short shaft toggle recommended' (Mini Heterodyne).
     head, dash, tail = value.rpartition(" - ")
@@ -449,6 +454,10 @@ def _split_merged(cell: Cell) -> list[Cell]:
         or rest.upper() in constants.NOT_POPULATED_VALUES
     )
     if not value_like:
+        if dashed and is_designator(name) and _has_digit(name) and rest.isalpha():
+            # 'TR1 - BIAS' | '100k' (GuitarPCB PURP): the control's name labels
+            # the board designator, and the value is the next cell.
+            return [Cell(cell.words[:1])]
         return [cell]
     split = [Cell(cell.words[:1]), Cell(cell.words[start:])]
     if is_designator(name) and name not in constants.BARE_DESIGNATORS:
@@ -749,6 +758,15 @@ def _scan(
                     break
                 parts.append(texts[j])
                 j += 1
+            if (
+                len(parts) > 1
+                and is_designator(texts[i])
+                and names_control(parts[0])
+                and _VALUE_SHAPE.match(parts[1])
+            ):
+                # 'P1 | VOL 1 | 100k Log' (GuitarPCB XX Double Shot): the
+                # control's name labels the board designator.
+                parts = parts[1:]
             value = clean_value(" ".join(parts))
             if value:
                 current.append((cells[i + 1].x0, cells[i + 1].size, len(listings)))
@@ -774,6 +792,14 @@ def _scan(
             i = j
         above = current
     return listings
+
+
+def names_control(text: str) -> bool:
+    """Whether a cell is a control's name, perhaps numbered: 'VOL 1', 'GAIN'."""
+    name, *rest = text.upper().split()
+    return (name in constants.POT_LABELS or name in constants.KEYWORDS) and all(
+        w.isdigit() for w in rest
+    )
 
 
 def _text_at(texts: list[str], k: int) -> str | None:
@@ -859,7 +885,7 @@ _UNCLOSED_ASIDE = re.compile(r"\s*\([^)]*$")
 _MARKING = re.compile(r"\s*\(\s*(\.?\d[\d .]*(?:[JKM]\d+)?)\s*\)$")
 # Separators inside a printed designator list: 'R11, R13', 'D21 - D28'.
 _DESIGNATOR_SHAPE = re.compile(r"[A-Za-z]{1,6}\d*[A-Za-z]{0,3}")
-_LIST_SPACING = re.compile(r"\s*([,-])\s*")
+_LIST_SPACING = re.compile(r"\s*([,\-\u2013])\s*")
 
 
 @dataclass(frozen=True, slots=True)
@@ -937,6 +963,37 @@ def _header_sections(cells: list[Cell]) -> list[list[_Column]]:
     return [sec for sec in sections if {"refs", "value"} <= {col.field for col in sec}]
 
 
+def _board_groups(sections: list[list[_Column]], above: list[Cell]) -> list[int]:
+    """Which board's table each header section belongs to, from the headings above.
+
+    One header line can head two boards' tables side by side, each under its
+    own heading ('FrontStage' and 'DumbleTone', GuitarPCB DumbleTone Deluxe):
+    a section belongs to the nearest heading. Without such headings, all
+    sections are one table.
+    """
+    headings = [c for c in above if not _has_digit(c.text) and len(c.text.split()) <= 3]
+    if (
+        len(headings) < 2
+        or len(headings) != len(above)
+        or len(headings) > len(sections)
+    ):
+        return [0] * len(sections)
+
+    def center(x0: float, x1: float) -> float:
+        return (x0 + x1) / 2
+
+    return [
+        min(
+            range(len(headings)),
+            key=lambda h: abs(
+                center(sec[0].x0, sec[-1].x1)
+                - center(headings[h].x0, headings[h].words[-1]["x1"])
+            ),
+        )
+        for sec in sections
+    ]
+
+
 def _column_for(cell: Cell, sections: list[list[_Column]]) -> tuple[int, str]:
     """The section and field a cell belongs to.
 
@@ -987,8 +1044,11 @@ def _read_bom(words: list[PDFWord]) -> tuple[list[BomRow], list[Cell]]:
     sections: list[list[_Column]] = []
     # Per table section, the index in `rows` of its latest row.
     last_row: dict[int, int] = {}
+    # The table each section belongs to, keyed by its first column's x0.
+    table_of: dict[float, int] = {}
     header_no = -1
-    for line_no, cells in enumerate(page_lines(words)):
+    lines = page_lines(words)
+    for line_no, cells in enumerate(lines):
         found = _header_sections(cells)
         if found:
             lo = min(col.x0 for sec in found for col in sec)
@@ -1001,6 +1061,12 @@ def _read_bom(words: list[PDFWord]) -> tuple[list[BomRow], list[Cell]]:
             sections = sorted(kept + found, key=lambda sec: sec[0].x0)
             last_row = {}
             header_no += 1
+            for sec, group in zip(
+                found,
+                _board_groups(found, lines[line_no - 1] if line_no else []),
+                strict=True,
+            ):
+                table_of[sec[0].x0] = header_no + group
             # The rest of the line is a row of the tables beside the new header.
             cells = [c for c in cells if c.x0 < lo or c.x0 > hi]
         if not sections:
@@ -1045,6 +1111,16 @@ def _read_bom(words: list[PDFWord]) -> tuple[list[BomRow], list[Cell]]:
             if count:
                 refs = refs[: count.start()]
             refs = _LABEL_NOUN.sub("", refs)
+            # 'TR1 - BIAS' (GuitarPCB PURP): the control's name labels the
+            # board designator.
+            named = _NAMED_DESIGNATOR.fullmatch(refs)
+            if named and is_designator(named.group(1)):
+                refs = named.group(1)
+            # 'SW1 Tap Tempo', 'S3 Tempo Scale' (GuitarPCB D'Lay): the part's
+            # role after its designator.
+            role = _DESIGNATOR_ROLE.fullmatch(refs)
+            if role:
+                refs = role.group(1)
             value = _UNCLOSED_ASIDE.sub(
                 "", _ASIDE.sub("", fields.get((k, "value"), ""))
             )
@@ -1057,6 +1133,13 @@ def _read_bom(words: list[PDFWord]) -> tuple[list[BomRow], list[Cell]]:
             marking = _MARKING.search(value)
             if marking:
                 value = value[: marking.start()]
+            for size in (2, 1):
+                head = " ".join(value.split()[:size])
+                tail = " ".join(value.split()[size:])
+                if tail and names_control(head) and _VALUE_SHAPE.match(tail):
+                    # 'P1 | VOL 1 | 100k Log' (GuitarPCB XX Double Shot).
+                    value = tail
+                    break
             # A typed table's TYPE explains any label; an untyped grid's label
             # ('Part | Value' grids: 'VOL | A100k') is judged by its value later.
             labeled = _is_label(refs) and (not typed or fields.get((k, "type")))
@@ -1076,7 +1159,7 @@ def _read_bom(words: list[PDFWord]) -> tuple[list[BomRow], list[Cell]]:
                     marking=marking.group(1) if marking else "",
                     type_text=fields.get((k, "type"), ""),
                     notes=notes,
-                    table=header_no,
+                    table=table_of.get(sections[k][0].x0, header_no),
                     end=end,
                 )
             )
@@ -1087,6 +1170,8 @@ def _read_bom(words: list[PDFWord]) -> tuple[list[BomRow], list[Cell]]:
 _REF_COUNT = re.compile(r"\s+x\s*(\d+)$")
 # 'ORDER switch', 'DEEP switch': the noun restates the category.
 _LABEL_NOUN = re.compile(r"(?<=[A-Z0-9]) (?:switch|pot|trimmer)$")
+_NAMED_DESIGNATOR = re.compile(r"([A-Z]{1,4}\d{1,3})-[A-Za-z]{3,}")
+_DESIGNATOR_ROLE = re.compile(r"([A-Z]{1,3}\d{1,3}) [A-Z][a-z]+(?: [A-Z][a-z]+)*")
 # A part label in a typed table: 'VOL.', 'HI-MID FREQ', 'IC1-S', 'PRE-V. SEND'.
 _PART_LABEL = re.compile(r"[A-Z][A-Za-z0-9_./+-]*(?: [A-Za-z0-9_./+-]+){0,2}")
 

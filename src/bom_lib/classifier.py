@@ -78,6 +78,9 @@ def normalize_value_to_quantity(
     return dec
 
 
+_OHM_WORD = re.compile(r"^(\d+(?:\.\d+)?[kKM]?)\s*ohms?\b", re.IGNORECASE)
+
+
 def normalize_value_by_category(category: ComponentCategory, val_raw: str) -> str:
     """Standardizes component values for consistent string matching.
 
@@ -105,6 +108,8 @@ def normalize_value_by_category(category: ComponentCategory, val_raw: str) -> st
         if "mm" in clean_val.lower():
             return clean_val
 
+        # 'R31  47 ohm' (GuitarPCB Mini-Me): the unit spelled out.
+        clean_val = _OHM_WORD.sub(r"\1", clean_val)
         head, _, rest = clean_val.partition(" ")
         dec = parse_value_to_decimal(head)
         if dec is not None:
@@ -168,6 +173,9 @@ def _named_control_category(
     return None
 
 
+_BARE_RESISTANCE = re.compile(r"\d+(?:\.\d+)?[kKM]\d*|\d+[kKM]?\d*R\d*")
+
+
 def categorize_part(
     ref: str, val: str, category_hint: ComponentCategory | None = None
 ) -> CategorizationResult | None:
@@ -218,6 +226,10 @@ def categorize_part(
             # CDXL Reissue lists trimmers R20/R23 under 'TRIM POTS (3362P Type)';
             # GuitarPCB numbers trimmers 'T1 - T2  10k Trim' and labels an LED
             # brightness trimmer 'LED  1k Trimpot' (Voodoo Redux).
+            category = ComponentCategory.POTENTIOMETERS
+        elif designator.prefix == "T" and _BARE_RESISTANCE.fullmatch(val_clean):
+            # A transformer is no bare resistance: GuitarPCB numbers trimmers
+            # 'T1  5k' (ColorTone Bass Fuzz).
             category = ComponentCategory.POTENTIOMETERS
     else:
         # A TYPE column states the category outright; the value is only a

@@ -268,6 +268,77 @@ def check_valueless_refs(
             )
 
 
+# A series ('R1' ... 'R43') listed this sparsely is a list read in part, or not
+# the parts list at all (GuitarPCB G2 Animal's text layer holds only a table
+# of substitute values; the parts list is an image).
+_SERIES_REF = re.compile(r"([A-Z]{1,3})(\d{1,3})")
+_SPARSE_SHARE = 0.5
+_SPARSE_MIN = 8
+_SERIES = 100
+
+
+def check_numbering_gaps(inventory: Inventory, stats: StatsDict) -> None:
+    """Warns about the numbers missing from a designator series listed sparsely.
+
+    Args:
+        inventory: The finished inventory for this document.
+        stats: Stats object that receives the warnings.
+    """
+    numbers: dict[tuple[str, int], set[int]] = {}
+    for data in inventory.values():
+        for ref in data["refs"]:
+            m = _SERIES_REF.fullmatch(ref)
+            if m:
+                n = int(m.group(2))
+                numbers.setdefault((m.group(1), n // _SERIES), set()).add(n)
+    for (prefix, hundred), ns in sorted(numbers.items()):
+        first = hundred * _SERIES or 1
+        span = max(ns) - first + 1
+        if span < _SPARSE_MIN or len(ns) >= _SPARSE_SHARE * span:
+            continue
+        for n in range(first, max(ns)):
+            if n not in ns:
+                _warn(
+                    stats,
+                    ParseWarningKind.UNEXTRACTED_REF,
+                    f"{prefix}{n}",
+                    f"{prefix}{n} may be missing: the parts list numbers its "
+                    f"{prefix} parts up to {prefix}{max(ns)} but lists only {len(ns)}.",
+                )
+
+
+def check_two_values(inventory: Inventory, stats: StatsDict) -> None:
+    """Warns about a resistor or capacitor whose value is two values side by side.
+
+    'R6  7k5  8k2' is a part and its substitute (GuitarPCB G2 Animal's table of
+    suggested values); read as one value, it is neither. A voltage rating
+    ('22n 63V') is no second value.
+
+    Args:
+        inventory: The finished inventory for this document.
+        stats: Stats object that receives the warnings.
+    """
+    for key, data in inventory.items():
+        if key.category not in (
+            ComponentCategory.RESISTORS,
+            ComponentCategory.CAPACITORS,
+        ):
+            continue
+        tokens = key.value.split()
+        if len(tokens) < 2 or tokens[1][-1:].upper() in ("V", "%"):
+            continue
+        first, second = (parse_value_to_decimal(t) for t in tokens[:2])
+        if first is None or second is None or first == second:
+            continue
+        for ref in data["refs"]:
+            _warn(
+                stats,
+                ParseWarningKind.VALUE_CHOICE,
+                ref,
+                f"{ref} lists two values ('{key.value}'): check which one to use.",
+            )
+
+
 def check_row_quantity(
     stats: StatsDict, refs: str, ref_count: int, quantity: int | None
 ) -> None:
