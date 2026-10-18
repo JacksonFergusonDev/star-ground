@@ -131,6 +131,7 @@ _QUALIFIERS = {
         r"16mm|9mm|right-?angle)\)?"
     ),
 }
+_VOLTS = re.compile(r"\d+(?:\.\d+)?V", re.IGNORECASE)
 _PROSE_WORD = re.compile(r"[a-z]{2,}[.,;:]?")
 _VALUE_CHARS = re.compile(r"[\x20-\x7e\u00b5\u03a9\u2126]*")
 # A part label in a designator column: 'CLIP1', 'GAIN-TOG1', 'RELAX/PUSH',
@@ -685,7 +686,8 @@ def _unread(listed: dict[str, ComponentKey], mentioned: set[str]) -> set[str]:
 
 def _several_values(value: str) -> bool:
     """Whether a value is several resistor or capacitor values ('68K 43K 47K')."""
-    words = value.split()
+    # A voltage rating is no second value: '22n 63V' (GuitarPCB SWAH).
+    words = [w for w in value.split() if not _VOLTS.fullmatch(w)]
     return len(words) > 1 and all(parse_value_to_decimal(w) is not None for w in words)
 
 

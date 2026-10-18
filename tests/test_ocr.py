@@ -20,6 +20,7 @@ from src.bom_lib import (
 from src.bom_lib.ocr import (
     OcrBox,
     _plausible,
+    _several_values,
     _unlisted,
     _unread,
     _verdict,
@@ -278,6 +279,14 @@ class TestUnread:
         # DVF names its pots ('GAIN'); its render's 'P1' is one of them.
         listed = self._listed(GAIN=(ComponentCategory.POTENTIOMETERS, "B1M"))
         assert _unread(listed, {"P1"}) == set()
+
+
+@pytest.mark.parametrize(
+    ("value", "several"),
+    [("68k 43k", True), ("470n 220nF 47nF", True), ("22n 63V", False), ("10k", False)],
+)
+def test_several_values(value: str, several: bool) -> None:
+    assert _several_values(value) is several
 
 
 class TestVerdict:
