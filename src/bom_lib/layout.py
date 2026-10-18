@@ -43,7 +43,8 @@ _CONTROL_NAME = re.compile(r"[A-Z](?:[A-Z0-9_/-]{1,11})?")
 # 'Volume  A100k', 'Mid  B100k' (GuitarPCB Tone TwEQ).
 _TITLE_NAME = re.compile(r"[A-Z][a-z]{2,11}")
 _TAPERED_POT = re.compile(r"[ABCWG]\d+(?:\.\d+)?[KkM]")
-_MULTIWORD_NAME = re.compile(r"[A-Z]{2,}(?: [A-Z]{2,}){1,2}")
+_MULTIWORD_NAME = re.compile(r"[A-Z]{2,}(?: [A-Z]{2,}){1,2}|[A-Z]{3,} \d{1,2}")
+_NUMBERED_NAME_HEAD = re.compile(r"[A-Z]{3,}")
 # A whole-cell parenthetical on the next line, aligned with a value above it,
 # continues that value ('SPDT Toggle' / '(On/On)').
 _CONTINUATION = re.compile(r"\(.*\)")
@@ -131,9 +132,11 @@ _DASHES = frozenset({"-", "\u2013", "\u2014"})
 _SPACED_REF = re.compile(r"(?:SW|IC|LED|Q|D|C|R) \d{1,3}")
 # A function label printed between a designator and its value: 'SW1 (Power) SPDT'.
 _LABEL = re.compile(r"\([^()\d]*\)")
+# The number of a control name set apart from it: 'CRACKLE | 1 | C5K'.
+_NAME_NUMBER = re.compile(r"\d{1,2}")
 _LED_WORD = re.compile(r"\bLED\b", re.IGNORECASE)
 # An LED's size, which starts its description: '3MM LED', '3mm Red LED'.
-_LED_SIZE = re.compile(r"\d+(?:\.\d+)?\s*mm\b", re.IGNORECASE)
+_LED_SIZE = re.compile(r"\d+(?:[./]\d+)?\s*mm\b", re.IGNORECASE)
 # Two or more lowercase words mark a sentence ('Choose between ... or SMD').
 _LOWERCASE_WORD = re.compile(r"[a-z][a-z'-]*[.,;:]?")
 _ASIDE = re.compile(r"\((?:see (?:notes?|text)|or equivalent)\)", re.IGNORECASE)
@@ -360,6 +363,28 @@ def clean_value(value: str) -> str:
     if label and label.end() < len(value):
         value = value[label.end() :].strip()
     return _REDUNDANT_SUFFIX.sub("", value)
+
+
+def _join_numbered_names(cells: list[Cell]) -> list[Cell]:
+    """Rejoins a control name and its number set a cell gap apart.
+
+    OCR reads 'CRACKLE 1 | C5K' (Five Cats Double SHO-MON) as 'CRACKLE | 1 |
+    C5K': without its number the name is no listing, and the part vanishes.
+    """
+    joined: list[Cell] = []
+    for k, cell in enumerate(cells):
+        nxt = cells[k + 1].text if k + 1 < len(cells) else None
+        if (
+            joined
+            and _NAME_NUMBER.fullmatch(cell.text)
+            and _NUMBERED_NAME_HEAD.fullmatch(joined[-1].text) is not None
+            and nxt is not None
+            and _CONTROL_VALUE.match(nxt) is not None
+        ):
+            joined[-1] = Cell(joined[-1].words + cell.words)
+        else:
+            joined.append(cell)
+    return joined
 
 
 def _split_merged(cell: Cell) -> list[Cell]:
@@ -601,7 +626,9 @@ def _scan(
     # (value x-position, font size, index into listings) for the previous line.
     above: list[tuple[float, float, int]] = []
     for line_no, line in enumerate(group_lines(words)):
-        cells = [part for cell in split_cells(line) for part in _split_merged(cell)]
+        cells = _join_numbered_names(
+            [part for cell in split_cells(line) for part in _split_merged(cell)]
+        )
         cells = _absorb_continuations(cells, above, listings)
         texts = [c.text for c in cells]
         current: list[tuple[float, float, int]] = []
@@ -806,6 +833,12 @@ class _Column:
     @property
     def center(self) -> float:
         return (self.x0 + self.x1) / 2
+
+
+def heads_table(words: list[PDFWord]) -> bool:
+    """Whether a line of words heads a text table ('Ref | Value | Footprint')."""
+    names = {w["text"].upper() for w in words}
+    return bool(names & _REF_HEADERS) and "VALUE" in names
 
 
 def _header_sections(cells: list[Cell]) -> list[list[_Column]]:

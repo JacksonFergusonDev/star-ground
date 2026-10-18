@@ -19,12 +19,13 @@ layout is never silently merged into one build.
 import re
 from collections import Counter
 from collections.abc import Iterable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from itertools import pairwise
 
 from src.bom_lib import constants
 from src.bom_lib.enums import ComponentCategory
 from src.bom_lib.layout import Cell
+from src.bom_lib.types import PDFWord
 
 # Entries this close to a column's left edge (points) belong to that column.
 _COLUMN_TOLERANCE_PT = 25.0
@@ -32,6 +33,10 @@ _COLUMN_TOLERANCE_PT = 25.0
 # of its designators with another table on a different page.
 _VARIANT_TABLE_OVERLAP = 0.6
 _MIN_VARIANT_TABLE_REFS = 8
+# Repeated parts lists (see `_repeat_variants`): the share of labels that must
+# repeat the same number of times.
+_REPEAT_SHARE = 0.7
+_REPEAT_SUFFIX = re.compile(r" \(\d+\)$")
 
 _MOD_HEADING = re.compile(
     r"[^A-Za-z]*(?P<name>[A-Za-z][A-Za-z ]*\bmod(?:ification)?)\W*", re.I
@@ -96,10 +101,13 @@ class PageContext:
     Attributes:
         lines: The cells of each visual line (see `layout.page_lines`).
         text: The page's extracted text.
+        labels: Margin labels beside the page's tables (see
+            `PDFPageExtraction`).
     """
 
     lines: list[list[Cell]]
     text: str
+    labels: tuple[PDFWord, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -153,7 +161,8 @@ def plan_builds(entries: list[Entry], pages: list[PageContext]) -> BuildPlan:
         The build plan. A single-circuit document has no variants.
     """
     variants = (
-        _column_variants(entries)
+        _repeat_variants(entries, pages)
+        or _column_variants(entries)
         # Before grids: a mod table beside the parts list shares its lines.
         or _mod_variants(entries, pages)
         or _grid_variants(entries, pages)
@@ -163,8 +172,12 @@ def plan_builds(entries: list[Entry], pages: list[PageContext]) -> BuildPlan:
     in_variants = {id(e) for v in variants for e in v.entries}
     variant_refs = {e.ref for v in variants for e in v.entries}
     # Drop common entries a variant redefines ('IC1  ** SEE BELOW **').
+    # A repeated label is the same designator ('R1 (2)', `_repeat_variants`).
     common = [
-        e for e in entries if id(e) not in in_variants and e.ref not in variant_refs
+        e
+        for e in entries
+        if id(e) not in in_variants
+        and _REPEAT_SUFFIX.sub("", e.ref) not in variant_refs
     ]
 
     options = (
@@ -262,6 +275,73 @@ def _column_names(
         if text and not text.endswith(".") and not text[0].islower():
             names[k] = text
     return names
+
+
+# ---------------------------------------------------------- repeated lists
+
+
+def _repeat_variants(
+    entries: list[Entry], pages: list[PageContext]
+) -> list[PlannedVariant]:
+    """Whole parts lists printed one after another, one per build.
+
+    Five Cats Rat King lists every part four times, once per RAT version, in
+    typed tables that number a repeated label ('R1 (2)'). When nearly every
+    label repeats the same number of times, each repeat is a build, named by
+    the margin label beside its rows ('Standard RAT', 'Dirty RAT').
+    """
+    occurrences: dict[str, list[Entry]] = {}
+    for e in entries:
+        base = _REPEAT_SUFFIX.sub("", e.ref).upper()
+        occurrences.setdefault(base, []).append(e)
+    counts = Counter(len(es) for es in occurrences.values())
+    builds, labels = counts.most_common(1)[0] if counts else (0, 0)
+    if (
+        builds < 2
+        or labels < _MIN_VARIANT_TABLE_REFS
+        or labels < _REPEAT_SHARE * len(occurrences)
+    ):
+        return []
+    # Each build spans the rows its labels' k-th listings cover; a label OCR
+    # misread ('C33' for 'C3') falls in the span it was printed in.
+    complete = [es for es in occurrences.values() if len(es) == builds]
+    spans = [
+        (
+            min(_position(es[k]) for es in complete),
+            max(_position(es[k]) for es in complete),
+        )
+        for k in range(builds)
+    ]
+    groups: list[list[Entry]] = [[] for _ in range(builds)]
+    for e in entries:
+        at = _position(e)
+        k = next((k for k, (lo, hi) in enumerate(spans) if lo <= at <= hi), None)
+        if k is not None:
+            groups[k].append(replace(e, ref=_REPEAT_SUFFIX.sub("", e.ref)))
+    return [
+        PlannedVariant(_margin_label(group, pages) or f"Version {k + 1}", tuple(group))
+        for k, group in enumerate(groups)
+    ]
+
+
+def _position(e: Entry) -> tuple[int, int]:
+    return (e.page, e.line)
+
+
+def _margin_label(group: list[Entry], pages: list[PageContext]) -> str | None:
+    """The margin label beside a build's rows, if exactly one sits there."""
+    page_no = Counter(e.page for e in group).most_common(1)[0][0]
+    page = pages[page_no]
+    rows = [e for e in group if e.page == page_no and 0 <= e.line < len(page.lines)]
+    if not rows or not page.labels:
+        return None
+    tops = [page.lines[e.line][0].words[0]["top"] for e in rows]
+    lo, hi = min(tops), max(tops)
+    lines: dict[float, list[str]] = {}
+    for w in sorted(page.labels, key=lambda w: w["x0"]):
+        if lo <= w["top"] <= hi:
+            lines.setdefault(w["top"], []).append(w["text"])
+    return " ".join(next(iter(lines.values()))) if len(lines) == 1 else None
 
 
 # ----------------------------------------------------------- variant tables

@@ -29,6 +29,7 @@ from src.bom_lib.layout import (
     REF_RANGE,
     find_listings,
     group_lines,
+    heads_table,
     page_lines,
     split_cells,
     starts_description,
@@ -96,6 +97,8 @@ _TRAILING_ROW = 1.5
 # span holds its centre.
 _GRID_COLUMNS = 2
 _GRID_SHARE = 0.5
+# Rows a separate block needs to continue the table (see `table_block`).
+_CONTINUED_ROWS = 2
 # Cells a row above the table must align with the table's (see `_rows_above`).
 _ABOVE_CELLS = 3
 # Extra character widths set before a designator found inside an OCR box.
@@ -165,6 +168,7 @@ _HEADERS = frozenset(
         "UNIQUE",
     }
 )
+_NAME_ON_VALUE = re.compile(r"\b([A-Z]{3,}\d{1,2})([ABCW]\d+(?:\.\d+)?[KkM])\b")
 _SERIAL_REF = re.compile(r"([A-Z]{1,3})(\d{1,3})")
 _DASHES = "-\u2013\u2014"
 # 'TR1 -TR3' read as one box: the range's spaces would split it in two.
@@ -228,8 +232,9 @@ def recognize(image: Image, scale: float) -> list[OcrBox]:
 def needs_ocr(result: ParseResult) -> bool:
     """Whether a parse looks incomplete in a way OCR might fix.
 
-    Either no parts list was read at all, or the document names designators
-    that are missing from the parts list. A document with several builds was
+    Either no parts list was read at all, the document names designators
+    that are missing from the parts list, or a page's text was set aside as
+    another program's misread OCR. A document with several builds was
     read well enough to find them, and is left alone.
 
     Args:
@@ -241,7 +246,12 @@ def needs_ocr(result: ParseResult) -> bool:
     if result.requires_choice:
         return False
     return any(
-        w.kind in (ParseWarningKind.NO_PARTS_LIST, ParseWarningKind.UNEXTRACTED_REF)
+        w.kind
+        in (
+            ParseWarningKind.NO_PARTS_LIST,
+            ParseWarningKind.UNEXTRACTED_REF,
+            ParseWarningKind.MISREAD_TEXT,
+        )
         for w in result.stats["warnings"]
     )
 
@@ -334,6 +344,8 @@ def page_words(boxes: list[OcrBox]) -> PDFPageExtraction:
         for box in _join_ranges(row):
             # OCR reads the micro sign as Greek mu ('1μ'); values use 'µ'.
             text = _SPACED_RANGE.sub(r"\1\2", box.text.replace("μ", "µ"))
+            # A name printed against its value: 'DISTORTION1A100K' (Rat King).
+            text = _NAME_ON_VALUE.sub(r"\1 \2", text)
             tokens = text.split()
             width = (box.x1 - box.x0) / len(" ".join(tokens))
             pos = 0.0
@@ -378,18 +390,34 @@ def _clusters(values: list[float], tolerance: float) -> list[list[float]]:
     return groups
 
 
-def _regular(rows: list[float]) -> bool:
-    """Whether rows are evenly spaced, as a table's are (blank rows allowed)."""
-    gaps = [b - a for a, b in pairwise(rows)]
-    if len(gaps) < 2:
-        return False
-    pitch = median(gaps)
+def _even(gaps: list[float], pitch: float) -> bool:
+    """Whether most gaps are whole multiples of a pitch."""
     even = sum(
         1 <= round(gap / pitch) <= _BLOCK_GAP
         and abs(gap - round(gap / pitch) * pitch) <= _PITCH_TOLERANCE * pitch
         for gap in gaps
     )
     return even >= _MIN_EVEN_ROWS * len(gaps)
+
+
+def _pitch(rows: list[float]) -> float | None:
+    """The row pitch of evenly spaced rows (blank rows allowed), or None.
+
+    The median gap is the pitch unless most rows sit a blank row apart:
+    M-Drive's rows alternate gaps of one and two pitches, so the median is two
+    and the rows one pitch apart look irregular. Half the median is tried
+    then.
+    """
+    gaps = [b - a for a, b in pairwise(rows)]
+    if len(gaps) < 2:
+        return None
+    pitch = median(gaps)
+    return next((p for p in (pitch, pitch / 2) if _even(gaps, p)), None)
+
+
+def _regular(rows: list[float]) -> bool:
+    """Whether rows are evenly spaced, as a table's are (blank rows allowed)."""
+    return _pitch(rows) is not None
 
 
 def table_block(data: PDFPageExtraction) -> PDFPageExtraction:
@@ -421,9 +449,11 @@ def table_block(data: PDFPageExtraction) -> PDFPageExtraction:
     # A row that read as no listing leaves a gap of one more pitch.
     blocks = _clusters(tops, (_BLOCK_GAP + 1 + _PITCH_TOLERANCE) * pitch)
     rows = max(blocks, key=len)
-    if not _regular(rows):
+    row_pitch = _pitch(rows)
+    if row_pitch is None:
         # Aligned labels on a schematic (Apollo Tremolo's) are no table.
         return {"tables": [], "text": "", "words": []}
+    pitch = min(pitch, row_pitch)
     # Rows that read as no listing can split one table in two ('LED | LED'
     # rows, Tone Monarch's daughterboard): a later block in the same
     # designator columns, at the same pitch, continues it.
@@ -431,17 +461,20 @@ def table_block(data: PDFPageExtraction) -> PDFPageExtraction:
     main_columns = [
         c for c in columns if any(c[0] <= starts_at[top] <= c[-1] for top in rows)
     ]
+    # So can a block above it: Rat King prints two builds' tables, one over
+    # the other, in the same columns.
+    main = rows
     for block in blocks:
         if (
-            block[0] > rows[-1]
-            and len(block) >= 2
+            block is not main
+            and len(block) >= _CONTINUED_ROWS
             and _regular([*block, block[-1] + pitch])
             and all(
                 any(c[0] <= starts_at[top] <= c[-1] for c in main_columns)
                 for top in block
             )
         ):
-            rows = rows + block
+            rows = sorted(rows + block)
     # A row that read as no listing ('SUBS | SDPT Toggle', WoollyTron) still
     # belongs to the table when it continues the table's rows from one of
     # its designator columns, so the reading can say it was not read.
@@ -459,6 +492,13 @@ def table_block(data: PDFPageExtraction) -> PDFPageExtraction:
             left = min(left, x0)
     listed = {lines[lst.line][0]["top"] for lst in listings}
     rows = _rows_above(lines, rows, pitch, listed)
+    # The table's own header row, just above it (Rat King's first build).
+    header = [
+        line[0]["top"]
+        for line in lines
+        if 0 < rows[0] - line[0]["top"] <= _TRAILING_ROW * pitch and heads_table(line)
+    ]
+    rows = header[-1:] + rows
     margin = pitch / 2
     kept = [
         w
@@ -467,7 +507,19 @@ def table_block(data: PDFPageExtraction) -> PDFPageExtraction:
     ]
     text = "\n".join(" ".join(w["text"] for w in line) for line in group_lines(kept))
     grid = _build_grid(lines, rows, pitch)
-    return {"tables": [grid] if grid else [], "text": text, "words": kept}
+    # Words left of the table on its rows name parts of it ('Standard RAT'
+    # beside one build's rows, Five Cats Rat King).
+    labels = [
+        w
+        for w in words
+        if rows[0] - margin <= w["top"] <= rows[-1] + margin and w["x1"] < left - 1
+    ]
+    return {
+        "tables": [grid] if grid else [],
+        "text": text,
+        "words": kept,
+        "labels": labels,
+    }
 
 
 def _build_grid(

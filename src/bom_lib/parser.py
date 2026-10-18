@@ -56,6 +56,7 @@ from src.bom_lib.verification import (
     check_duplicate,
     check_footnotes,
     check_marking_code,
+    check_misread_text,
     check_parts_found,
     check_row_quantity,
     check_second_board,
@@ -1353,7 +1354,11 @@ def read_pages(
 
     # --- BUILDS: variants and options ---
     pages = [
-        PageContext(page_lines(data["words"]), data["text"] or "")
+        PageContext(
+            page_lines(data["words"]),
+            data["text"] or "",
+            tuple(data.get("labels", [])),
+        )
         for data in pages_data
     ]
     plan = plan_builds(entries, pages)
@@ -1374,6 +1379,32 @@ def read_pages(
     check_footnotes(page_texts, stats)
     check_bom_reconciliation(page_texts, union, stats)
     return inventory, variants, options
+
+
+# Another program's OCR, drawn as text over a scanned parts list (Five Cats
+# Echoes, Funk Machine), confuses digits with letters: a designator 'Rl',
+# 'RS', 'Ql' and values 'lOK', 'SOnF', 'lOuF'. Such text looks right on the
+# page, so it is read wrong without a trace.
+_MISREAD_REF = re.compile(r"(?:R|C|Q|U|D|IC)[lIOSG]{1,2}")
+_MISREAD_VALUE = re.compile(
+    r"(?=[\dlIOS.]*[lIOS])(?=[\dlIOS.]*\d|[lIOS]{2})[\dlIOS.]+(?:[kKMR]|[pnuµ]F?)"
+)
+_MISREAD_MIN = 3
+
+
+def _misread(words: list[PDFWord]) -> bool:
+    """Whether a page's text is another program's OCR, full of misreads.
+
+    Both misread designators and misread values must recur: a real document
+    can name a part 'RS' or 'DSS', but never prints '10K' as 'lOK'.
+    """
+    texts = [w["text"] for w in words]
+    values = sum(
+        bool(_MISREAD_VALUE.fullmatch(t)) and any(ch in "lIOS" for ch in t)
+        for t in texts
+    )
+    refs = sum(bool(_MISREAD_REF.fullmatch(t)) for t in texts)
+    return values >= _MISREAD_MIN and refs >= _MISREAD_MIN
 
 
 # A footer sentence is no title: 'Don't forget to grab a copy of our general
@@ -1432,8 +1463,16 @@ def parse_pedalpcb_pdf(filepath: str, source_name: str) -> ParseResult:
         try:
             # Iterate pages once to grab expensive text/table data
             pages_data: list[PDFPageExtraction] = []
-            for raw_page in pdf.pages:
+            misread: set[int] = set()
+            for number, raw_page in enumerate(pdf.pages):
                 page = _without_marks(_straighten(raw_page.filter(_readable)))
+                page_words = _page_words(page)
+                if _misread(page_words):
+                    # Read as an image page instead (see `ocr.py`).
+                    check_misread_text(stats, number)
+                    misread.add(number)
+                    pages_data.append({"tables": [], "text": "", "words": []})
+                    continue
                 pages_data.append(
                     {
                         # Same word gap as the layout reader: kerned cells
@@ -1442,12 +1481,14 @@ def parse_pedalpcb_pdf(filepath: str, source_name: str) -> ParseResult:
                             {"text_x_tolerance": _WORD_GAP_PT}
                         ),
                         "text": page.extract_text(),
-                        "words": _page_words(page),
+                        "words": page_words,
                     }
                 )
 
             # --- PHASE 2: TITLE EXTRACTION ---
             try:
+                if 0 in misread:
+                    raise ValueError("the first page's text is misread OCR")
                 p1 = pdf.pages[0]
                 words = p1.extract_words(extra_attrs=["size"])
                 ignore = {

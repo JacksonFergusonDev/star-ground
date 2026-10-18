@@ -384,11 +384,15 @@ class PDFPageExtraction(TypedDict):
         tables: List of extracted tables (each table is rows of string cells or None).
         text: Raw extracted text string from the page.
         words: Positioned words, used for column-aware layout analysis.
+        labels: Words printed in the margin beside a table, which name parts
+            of it ('Standard RAT' beside one build's rows); OCR keeps them
+            apart from the table's words.
     """
 
     tables: list[list[list[str | None]]]
     text: str | None
     words: list[PDFWord]
+    labels: NotRequired[list[PDFWord]]
 
 
 ShoppingListRow = TypedDict(
