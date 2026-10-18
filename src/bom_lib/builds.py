@@ -19,12 +19,13 @@ layout is never silently merged into one build.
 import re
 from collections import Counter
 from collections.abc import Iterable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from itertools import pairwise
 
 from src.bom_lib import constants
 from src.bom_lib.enums import ComponentCategory
 from src.bom_lib.layout import Cell
+from src.bom_lib.types import PDFWord
 
 # Entries this close to a column's left edge (points) belong to that column.
 _COLUMN_TOLERANCE_PT = 25.0
@@ -32,9 +33,18 @@ _COLUMN_TOLERANCE_PT = 25.0
 # of its designators with another table on a different page.
 _VARIANT_TABLE_OVERLAP = 0.6
 _MIN_VARIANT_TABLE_REFS = 8
+# Repeated parts lists (see `_repeat_variants`): the share of labels that must
+# repeat the same number of times.
+_REPEAT_SHARE = 0.7
+_REPEAT_SUFFIX = re.compile(r" \(\d+\)$")
 
 _MOD_HEADING = re.compile(
     r"[^A-Za-z]*(?P<name>[A-Za-z][A-Za-z ]*\bmod(?:ification)?)\W*", re.I
+)
+# 'To build the vintage Octavia, with no tone pot' (Five Cats): the parts
+# below build that version.
+_BUILD_HEADING = re.compile(
+    r"to build (?:the |an? )?(?P<name>[A-Za-z][A-Za-z0-9' -]*?)\s*(?:[,(:]|$)", re.I
 )
 _CHOOSE_BETWEEN = re.compile(r"choose between (?P<a>.+?) or (?P<b>.+?)\W*$", re.I)
 # 'designed for either Nature control, or Treble + Bass controls' (Fuchsia).
@@ -79,7 +89,9 @@ class Entry:
     @property
     def not_populated(self) -> bool:
         """Whether the document marks this designator as deliberately empty."""
-        return self.value.upper() in constants.NOT_POPULATED_VALUES
+        return self.value.upper() in constants.NOT_POPULATED_VALUES or bool(
+            constants.NOT_POPULATED_REMARK.match(self.value)
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -89,10 +101,13 @@ class PageContext:
     Attributes:
         lines: The cells of each visual line (see `layout.page_lines`).
         text: The page's extracted text.
+        labels: Margin labels beside the page's tables (see
+            `PDFPageExtraction`).
     """
 
     lines: list[list[Cell]]
     text: str
+    labels: tuple[PDFWord, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -147,16 +162,22 @@ def plan_builds(entries: list[Entry], pages: list[PageContext]) -> BuildPlan:
     """
     variants = (
         _column_variants(entries)
+        # Before grids: a mod table beside the parts list shares its lines.
+        or _mod_variants(entries, pages)
         or _grid_variants(entries, pages)
         or _table_variants(entries, pages)
-        or _mod_variants(entries, pages)
+        or _repeat_variants(entries, pages)
         or _either_or_variants(entries, pages)
     )
     in_variants = {id(e) for v in variants for e in v.entries}
     variant_refs = {e.ref for v in variants for e in v.entries}
     # Drop common entries a variant redefines ('IC1  ** SEE BELOW **').
+    # A repeated label is the same designator ('R1 (2)', `_repeat_variants`).
     common = [
-        e for e in entries if id(e) not in in_variants and e.ref not in variant_refs
+        e
+        for e in entries
+        if id(e) not in in_variants
+        and _REPEAT_SUFFIX.sub("", e.ref) not in variant_refs
     ]
 
     options = (
@@ -256,6 +277,81 @@ def _column_names(
     return names
 
 
+# ---------------------------------------------------------- repeated lists
+
+
+def _repeat_variants(
+    entries: list[Entry], pages: list[PageContext]
+) -> list[PlannedVariant]:
+    """Whole parts lists printed one after another, one per build.
+
+    Five Cats Rat King lists every part four times, once per RAT version, in
+    typed tables that number a repeated label ('R1 (2)'). When nearly every
+    label repeats the same number of times, each repeat is a build, named by
+    the margin label beside its rows ('Standard RAT', 'Dirty RAT'), which
+    every build must have.
+    """
+    occurrences: dict[str, list[Entry]] = {}
+    for e in entries:
+        base = _REPEAT_SUFFIX.sub("", e.ref).upper()
+        occurrences.setdefault(base, []).append(e)
+    counts = Counter(len(es) for es in occurrences.values())
+    builds, labels = counts.most_common(1)[0] if counts else (0, 0)
+    if (
+        builds < 2
+        or labels < _MIN_VARIANT_TABLE_REFS
+        or labels < _REPEAT_SHARE * len(occurrences)
+    ):
+        return []
+    # Each build spans the rows its labels' k-th listings cover; a label OCR
+    # misread ('C33' for 'C3') falls in the span it was printed in.
+    complete = [es for es in occurrences.values() if len(es) == builds]
+    spans = [
+        (
+            min(_position(es[k]) for es in complete),
+            max(_position(es[k]) for es in complete),
+        )
+        for k in range(builds)
+    ]
+    groups: list[list[Entry]] = [[] for _ in range(builds)]
+    for e in entries:
+        at = _position(e)
+        k = next((k for k, (lo, hi) in enumerate(spans) if lo <= at <= hi), None)
+        if k is not None:
+            groups[k].append(replace(e, ref=_REPEAT_SUFFIX.sub("", e.ref)))
+    # Only named builds: unnamed repeats are as likely a second board (GuitarPCB
+    # Fuzz God) or a schematic beside the list (Aion FX legacy).
+    names = [_margin_label(group, pages) for group in groups]
+    if None in names or len(set(names)) < len(names):
+        return []
+    return [
+        PlannedVariant(str(name), tuple(group))
+        for name, group in zip(names, groups, strict=True)
+    ]
+
+
+def _position(e: Entry) -> tuple[int, int]:
+    return (e.page, e.line)
+
+
+def _margin_label(group: list[Entry], pages: list[PageContext]) -> str | None:
+    """The margin label beside a build's rows, if exactly one sits there."""
+    if not group:
+        return None
+    page_no = Counter(e.page for e in group).most_common(1)[0][0]
+    page = pages[page_no]
+    rows = [e for e in group if e.page == page_no and 0 <= e.line < len(page.lines)]
+    if not rows or not page.labels:
+        return None
+    tops = [page.lines[e.line][0].words[0]["top"] for e in rows]
+    lo, hi = min(tops), max(tops)
+    lines: dict[float, list[str]] = {}
+    for w in sorted(page.labels, key=lambda w: w["x0"]):
+        if lo <= w["top"] <= hi:
+            lines.setdefault(w["top"], []).append(w["text"])
+    return " ".join(next(iter(lines.values()))) if len(lines) == 1 else None
+
+
 # ----------------------------------------------------------- variant tables
 
 
@@ -301,13 +397,23 @@ def _page_subtitle(text: str) -> str | None:
 def _mod_variants(
     entries: list[Entry], pages: list[PageContext]
 ) -> list[PlannedVariant]:
-    """A '... Mod' heading followed by re-listed designators in its column."""
+    """A '... Mod' heading followed by re-listed designators in its column.
+
+    A 'To build the ...' heading names a version the same way; its table can
+    also add parts the main list lacks ('Volume | A1M', Octavia), and the
+    heading can be split into a cell per word (OCR).
+    """
     for page_no, page in enumerate(pages):
         for line_no, cells in enumerate(page.lines):
-            for cell in cells:
+            for k, cell in enumerate(cells):
                 m = _MOD_HEADING.fullmatch(cell.text)
-                if not m or len(cell.text.split()) > 4:
-                    continue
+                if m and len(cell.text.split()) <= 4:
+                    name, additions = m.group("name"), False
+                else:
+                    b = _BUILD_HEADING.match(" ".join(c.text for c in cells[k:]))
+                    if b is None:
+                        continue
+                    name, additions = b.group("name"), True
                 block = _column_entries_below(entries, page_no, line_no, cell.x0)
                 outside = {e.ref for e in entries if e not in block}
                 overrides = [e for e in block if e.ref in outside]
@@ -317,10 +423,10 @@ def _mod_variants(
                 stock = tuple(
                     e for e in entries if e.ref in overridden and e not in block
                 )
-                mod_name = " ".join(m.group("name").split()).title()
+                mod = block if additions else overrides
                 return [
                     PlannedVariant("Stock", stock),
-                    PlannedVariant(mod_name, tuple(overrides)),
+                    PlannedVariant(" ".join(name.split()).title(), tuple(mod)),
                 ]
     return []
 

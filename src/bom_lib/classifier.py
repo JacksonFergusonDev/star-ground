@@ -127,6 +127,9 @@ def normalize_value_by_category(category: ComponentCategory, val_raw: str) -> st
     return clean_val
 
 
+_FARADS = re.compile(r"\d+(?:\.\d+)?\s*[PNUµ]F")
+
+
 def _named_control_category(
     name: str, val_up: str, val: str
 ) -> ComponentCategory | None:
@@ -158,6 +161,10 @@ def _named_control_category(
     # numbered label: drill-template boxes read as 'LED FOOTSWITCH Drive'.
     if _NUMBERED_LABEL.fullmatch(name) and _LED_VALUE.search(val_up):
         return ComponentCategory.DIODES
+    # Five Cats Custom Ranger: 'CR1  2.2nF', a rotary switch's capacitors.
+    # Only a value in farads says capacitor; '10K' could be a pot.
+    if _NUMBERED_LABEL.fullmatch(name) and _FARADS.fullmatch(val_up):
+        return ComponentCategory.CAPACITORS
     return None
 
 

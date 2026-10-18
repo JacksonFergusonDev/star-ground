@@ -56,6 +56,7 @@ from src.bom_lib.verification import (
     check_duplicate,
     check_footnotes,
     check_marking_code,
+    check_misread_text,
     check_parts_found,
     check_row_quantity,
     check_second_board,
@@ -682,8 +683,9 @@ def _table_entries(
     return entries
 
 
-# The designator column of a value-column grid: 'Part', 'Part #', "MUFF'N Part #".
-_GRID_REF_HEADER = re.compile(r"(?:^|\s)PART\s*#?$", re.IGNORECASE)
+# The designator column of a value-column grid: 'Part', 'Part #', "MUFF'N Part #",
+# 'Component' (Five Cats OKS Fuzz).
+_GRID_REF_HEADER = re.compile(r"(?:^|\s)(?:PART\s*#?|COMPONENT)$", re.IGNORECASE)
 # Headers that name a column's role, not a circuit version.
 _ROLE_HEADERS = frozenset(
     {
@@ -696,6 +698,7 @@ _ROLE_HEADERS = frozenset(
         "QTY",
         "QUANTITY",
         "DESCRIPTION",
+        "FOOTPRINT",
     }
 )
 # 'P1-Sus/Fuzz': the designator, then the control's name.
@@ -711,6 +714,21 @@ def _grid_header_text(cell: str | None) -> str:
     for line in lines:
         text += line if text and len(line) <= 2 else f" {line}"
     return text.strip()
+
+
+def names_builds(header: list[str]) -> bool:
+    """Whether a header row heads a value-column grid.
+
+    It names a designator column, then two or more builds, not roles ('Value',
+    'Type').
+    """
+    names = header[1:]
+    return (
+        bool(header)
+        and _GRID_REF_HEADER.search(header[0]) is not None
+        and len([n for n in names if n]) >= 2
+        and not any(n.upper() in _ROLE_HEADERS for n in names)
+    )
 
 
 def _value_column_grid(
@@ -736,11 +754,9 @@ def _value_column_grid(
     if not header_rows:
         return None
     start, cells = header_rows[0]
-    names = cells[1:]
-    if len([n for n in names if n]) < 2 or any(
-        n.upper() in _ROLE_HEADERS for n in names
-    ):
+    if not names_builds(cells):
         return None
+    names = cells[1:]
     entries: list[Entry] = []
     for row in table[start + 1 :]:
         # 'FILTE' / 'R' is a wrapped 'FILTER' (RATT Deluxe).
@@ -748,6 +764,8 @@ def _value_column_grid(
         named = _NAMED_REF.match(ref)
         if named:
             ref = named.group(1)
+        if ref.istitle() and ref.isalpha():
+            ref = ref.upper()  # 'Pot' (Five Cats OKS Fuzz, read by OCR)
         if not ref or not (
             any(is_designator(r) for r in expand_refs(ref))
             or _CONTROL_LABEL.fullmatch(ref)
@@ -946,7 +964,9 @@ def _next_label(seen: Counter[str], ref: str) -> str:
 
 
 def _is_not_populated(value: str) -> bool:
-    return value.upper() in constants.NOT_POPULATED_VALUES
+    return value.upper() in constants.NOT_POPULATED_VALUES or bool(
+        constants.NOT_POPULATED_REMARK.match(value)
+    )
 
 
 def _record_not_populated(stats: StatsDict, ref: str, value: str) -> None:
@@ -1007,10 +1027,12 @@ def _layout_entries(
         # into 'R1 1M', NostalgiTone), so numbered designators other than the
         # row's own value are still read there.
         lines = page_lines(data["words"])
+        # Labels compare in upper case: a grid reads 'Pot' as 'POT'.
+        upper_values = {ref.upper(): value for ref, value in table_values.items()}
         table_lines = {
-            k: set(table_values[cells[0].text].upper().split())
+            k: set(upper_values[cells[0].text.upper()].upper().split())
             for k, cells in enumerate(lines)
-            if cells and cells[0].text in table_values
+            if cells and cells[0].text.upper() in upper_values
         }
         for listing in find_listings(data["words"]):
             stats["lines_read"] += 1
@@ -1332,7 +1354,11 @@ def read_pages(
 
     # --- BUILDS: variants and options ---
     pages = [
-        PageContext(page_lines(data["words"]), data["text"] or "")
+        PageContext(
+            page_lines(data["words"]),
+            data["text"] or "",
+            tuple(data.get("labels", [])),
+        )
         for data in pages_data
     ]
     plan = plan_builds(entries, pages)
@@ -1353,6 +1379,32 @@ def read_pages(
     check_footnotes(page_texts, stats)
     check_bom_reconciliation(page_texts, union, stats)
     return inventory, variants, options
+
+
+# Another program's OCR, drawn as text over a scanned parts list (Five Cats
+# Echoes, Funk Machine), confuses digits with letters: a designator 'Rl',
+# 'RS', 'Ql' and values 'lOK', 'SOnF', 'lOuF'. Such text looks right on the
+# page, so it is read wrong without a trace.
+_MISREAD_REF = re.compile(r"(?:R|C|Q|U|D|IC)[lIOSG]{1,2}")
+_MISREAD_VALUE = re.compile(
+    r"(?=[\dlIOS.]*[lIOS])(?=[\dlIOS.]*\d|[lIOS]{2})[\dlIOS.]+(?:[kKMR]|[pnuµ]F?)"
+)
+_MISREAD_MIN = 3
+
+
+def _misread(words: list[PDFWord]) -> bool:
+    """Whether a page's text is another program's OCR, full of misreads.
+
+    Both misread designators and misread values must recur: a real document
+    can name a part 'RS' or 'DSS', but never prints '10K' as 'lOK'.
+    """
+    texts = [w["text"] for w in words]
+    values = sum(
+        bool(_MISREAD_VALUE.fullmatch(t)) and any(ch in "lIOS" for ch in t)
+        for t in texts
+    )
+    refs = sum(bool(_MISREAD_REF.fullmatch(t)) for t in texts)
+    return values >= _MISREAD_MIN and refs >= _MISREAD_MIN
 
 
 # A footer sentence is no title: 'Don't forget to grab a copy of our general
@@ -1411,8 +1463,16 @@ def parse_pedalpcb_pdf(filepath: str, source_name: str) -> ParseResult:
         try:
             # Iterate pages once to grab expensive text/table data
             pages_data: list[PDFPageExtraction] = []
-            for raw_page in pdf.pages:
+            misread: set[int] = set()
+            for number, raw_page in enumerate(pdf.pages):
                 page = _without_marks(_straighten(raw_page.filter(_readable)))
+                page_words = _page_words(page)
+                if _misread(page_words):
+                    # Read as an image page instead (see `ocr.py`).
+                    check_misread_text(stats, number)
+                    misread.add(number)
+                    pages_data.append({"tables": [], "text": "", "words": []})
+                    continue
                 pages_data.append(
                     {
                         # Same word gap as the layout reader: kerned cells
@@ -1421,12 +1481,14 @@ def parse_pedalpcb_pdf(filepath: str, source_name: str) -> ParseResult:
                             {"text_x_tolerance": _WORD_GAP_PT}
                         ),
                         "text": page.extract_text(),
-                        "words": _page_words(page),
+                        "words": page_words,
                     }
                 )
 
             # --- PHASE 2: TITLE EXTRACTION ---
             try:
+                if 0 in misread:
+                    raise ValueError("the first page's text is misread OCR")
                 p1 = pdf.pages[0]
                 words = p1.extract_words(extra_attrs=["size"])
                 ignore = {

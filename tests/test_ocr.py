@@ -194,6 +194,52 @@ class TestTableBlock:
         assert {"Trim1", "Trim2", "Boost", "R1", "R6"} <= kept
         assert "Q1" not in kept
 
+    def test_build_columns_become_a_table(self) -> None:
+        # OKS Fuzz: 'Component | ColorSound | 1996 | Dark Meathead' two rows
+        # above a value per build; header cells are centred over values.
+        def row(top: float, *cells: tuple[str, float]) -> list[OcrBox]:
+            return [OcrBox(t, x, x + 6 * len(t), top, top + 9) for t, x in cells]
+
+        boxes = [
+            *row(
+                464,
+                ("Component", 87),
+                ("ColorSound", 159),
+                ("1996", 236),
+                ("Dark", 288),
+                ("Meathead", 316),
+            ),
+            *[
+                b
+                for k, (ref, a, b_, c) in enumerate(
+                    [
+                        ("R1", "2M", "1M", "2M"),
+                        ("R2", "10k", "18k", "10k"),
+                        ("C1", "100n", "47n", "470n"),
+                        ("C2", "220p", "470p", "150p"),
+                        ("Pot", "A500K", "B500K", "A500K"),
+                    ]
+                )
+                for b in row(488 + 12 * k, (ref, 92), (a, 171), (b_, 237), (c, 304))
+            ],
+        ]
+        (table,) = table_block(page_words(boxes))["tables"]
+        assert table[0] == ["Component", "ColorSound", "1996", "Dark Meathead"]
+        assert table[2] == ["R2", "10k", "18k", "10k"]
+
+    def test_a_value_and_type_table_is_no_grid(self) -> None:
+        def row(top: float, *cells: tuple[str, float]) -> list[OcrBox]:
+            return [OcrBox(t, x, x + 6 * len(t), top, top + 9) for t, x in cells]
+
+        boxes = row(464, ("Location", 40), ("Value", 100), ("Type", 170)) + [
+            b
+            for k in range(5)
+            for b in row(
+                488 + 12 * k, (f"R{k + 1}", 40), ("10k", 100), ("Resistor", 170)
+            )
+        ]
+        assert table_block(page_words(boxes))["tables"] == []
+
     def test_a_page_without_a_grid_keeps_nothing(self) -> None:
         boxes = [OcrBox("R9", 50, 66, 150, 164), OcrBox("05", 80, 96, 150, 164)]
         assert table_block(page_words(boxes))["words"] == []
@@ -356,7 +402,7 @@ class TestAttemptOcr:
         assert accepted.inventory[cap]["refs"] == ["C3"]
         assert accepted.stats["parts_found"] >= 11
 
-    def test_several_builds_offer_the_first(
+    def test_several_builds_are_offered(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         # Octavia: a second table relists parts for another build.
@@ -367,7 +413,7 @@ class TestAttemptOcr:
                 for n in range(1, 7):
                     key = make_component_key(ComponentCategory.RESISTORS, value)
                     inventory.add_part("x", key, f"R{n}", 1)
-                variants.append(BuildVariant(name, inventory, 0))
+                variants.append(BuildVariant(name, inventory, 6))
             return create_empty_inventory(), tuple(variants), ()
 
         monkeypatch.setattr("src.bom_lib.ocr.read_pages", builds)
@@ -376,10 +422,20 @@ class TestAttemptOcr:
         attempt = attempt_ocr(path, result, "Image", lambda *_: _grid_boxes())
 
         assert attempt is not None
+        # Partial: the page also names C1-C3, D1 and IC1, which no build lists.
         assert attempt.verdict == OcrVerdict.PARTIAL
-        assert any("'Octavia'" in w.message for w in attempt.warnings)
-        ten_k = make_component_key(ComponentCategory.RESISTORS, "10k")
-        assert len(attempt.inventory[ten_k]["refs"]) == 6
+        assert [v.name for v in attempt.variants] == ["Octavia", "Vintage"]
+        assert not attempt.inventory
+        assert "in 2 builds" in attempt.message
+
+        accepted = ParseResult(result.inventory, result.stats, ocr=attempt).accept_ocr()
+        assert accepted.requires_choice
+        vintage = accepted.select("Vintage")
+        one_k = make_component_key(ComponentCategory.RESISTORS, "1k")
+        assert vintage.inventory[one_k]["refs"] == [f"R{n}" for n in range(1, 7)]
+        kinds = {w.kind for w in vintage.stats["warnings"]}
+        assert ParseWarningKind.NO_PARTS_LIST not in kinds
+        assert ParseWarningKind.OCR_READ in kinds
 
     def test_values_side_by_side_are_partial(self, tmp_path: Path) -> None:
         # Victory III: 'R4 | 22K | 10K' under build columns, read as one list.

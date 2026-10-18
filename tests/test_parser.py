@@ -1029,3 +1029,24 @@ def test_pages_of_tables_are_all_read() -> None:
 
     assert "R23" not in refs()
     assert {"R1", "C1", "R23", "D13"} <= refs(tables_only=True)
+
+
+@pytest.mark.parametrize(
+    ("texts", "misread"),
+    [
+        # Five Cats Funk Machine: another program's OCR drawn over the scan.
+        (["Rl", "470K", "RS", "lOK", "Ql", "2N5088", "Ul", "SOnF", "lOuF"], True),
+        # A real page may name a part 'RS' or 'DSS', but prints values right.
+        (["RS", "DSS", "ROG", "10K", "100nF", "R1", "1M"], False),
+        (["Rl", "lOK"], False),
+    ],
+)
+def test_misread_text_layer(texts: list[str], misread: bool) -> None:
+    from src.bom_lib import PDFWord
+    from src.bom_lib.parser import _misread
+
+    words = [
+        PDFWord(text=t, x0=10.0 * k, x1=10.0 * k + 8, top=100.0, size=10.0)
+        for k, t in enumerate(texts)
+    ]
+    assert _misread(words) is misread

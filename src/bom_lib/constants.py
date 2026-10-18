@@ -329,8 +329,12 @@ NOT_POPULATED_VALUES = frozenset(
         # A wire link is not a part to buy (Aion FX: 'R31  JUMPER', '(jumper)').
         "JUMPER",
         "(JUMPER)",
+        # A build that leaves the spot empty (Five Cats OKS Fuzz: 'C3 | empty').
+        "EMPTY",
     }
 )
+# 'Omit - jumper pads 2+3' (Five Cats Octavia): unpopulated, with how.
+NOT_POPULATED_REMARK = re.compile(r"(?:OMIT|DNP|JUMPER)\s*[-\u2013(:]", re.IGNORECASE)
 
 # Switch specifications: pole/throw codes (SPDT, 1P8T) and positions (ON/OFF/ON).
 SWITCH_VALUE_PATTERN = re.compile(
