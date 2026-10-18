@@ -15,6 +15,7 @@ from src.bom_lib.layout import (
     footnote_marks,
     group_lines,
     split_cells,
+    valueless_refs,
 )
 from src.bom_lib.parser import enrich_value_from_type
 
@@ -681,3 +682,26 @@ def test_footnote_marks() -> None:
         PDFWord(text="22", x0=294, x1=306, top=100.5, size=11.0),
     ]
     assert [w["text"] for w in footnote_marks(words)] == ["1"]
+
+
+def test_footnote_marks_alone_and_paired() -> None:
+    # Aion FX legacy: 'D6-D9  ³' leaves the value to the builder; 'Volume
+    # 100kA ³˒⁶' marks two footnotes.
+    words = [
+        PDFWord(text="D6\u2013D9", x0=400, x1=430, top=100.5, size=11.0),
+        PDFWord(text="3", x0=460, x1=464, top=100.0, size=6.4),
+        PDFWord(text="100kA", x0=200, x1=230, top=200.5, size=11.0),
+        PDFWord(text="3,6", x0=232, x1=240, top=200.0, size=6.4),
+    ]
+    assert [w["text"] for w in footnote_marks(words)] == ["3", "3,6"]
+
+
+def test_valueless_refs() -> None:
+    # 'D6-D9' in the designator column with nothing beside it.
+    rows = [("R1", "1k"), ("R2", "510k"), ("R3", "220k"), ("D6-D9", ""), ("R4", "7k5")]
+    words = [
+        w
+        for k, (ref, value) in enumerate(rows)
+        for w in _line(*(c for c in (ref, value) if c), top=100.0 + 20 * k)
+    ]
+    assert valueless_refs(words) == ["D6", "D7", "D8", "D9"]

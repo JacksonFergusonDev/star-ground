@@ -17,8 +17,11 @@ from src.bom_lib.verification import (
     check_footnotes,
     check_marking_code,
     check_parts_found,
+    check_prose_pots,
     check_row_quantity,
     check_unextracted_refs,
+    check_value_assignments,
+    check_valueless_refs,
     check_version_note,
     find_bom_entries,
     find_listed_refs,
@@ -434,4 +437,45 @@ def test_an_unreadable_document_says_so() -> None:
     assert _kinds(stats) == [ParseWarningKind.NO_PARTS_LIST]
     stats = create_empty_stats()
     check_parts_found(stats, 12)
+    assert stats["warnings"] == []
+
+
+def _inventory(*parts: tuple[ComponentCategory, str, str]):
+    inv = create_empty_inventory()
+    for category, value, ref in parts:
+        inv[make_component_key(category, value)]["refs"].append(ref)
+    return inv
+
+
+def test_value_assignments_for_another_version() -> None:
+    # Aion FX legacy Rift: the Shin-Ei FY-2 changes, listed under a build note.
+    inv = _inventory(
+        (ComponentCategory.RESISTORS, "22k", "R1"),
+        (ComponentCategory.RESISTORS, "3k3", "R9"),
+        (ComponentCategory.CAPACITORS, "1n", "C2"),
+    )
+    stats = create_empty_stats()
+    text = "Shin-Ei FY-2: a few small value changes:\nR1 = 100k\nC2 = 1n\nR9 = jumper"
+    check_value_assignments([text], inv, stats)
+    assert [w.ref for w in stats["warnings"]] == ["R1", "R9"]
+
+
+def test_valueless_refs_are_named_unless_read() -> None:
+    inv = _inventory((ComponentCategory.DIODES, "1N914", "D6"))
+    stats = create_empty_stats()
+    check_valueless_refs(["D6", "D7"], inv, stats)
+    assert [w.ref for w in stats["warnings"]] == ["D7"]
+
+
+def test_pots_given_only_in_prose() -> None:
+    # Aion FX legacy Halo's variant tables list no pots.
+    text = "For all variants, the Sustain and Tone pots are 100kB and Volume is 100kA."
+    stats = create_empty_stats()
+    check_prose_pots(
+        [text], _inventory((ComponentCategory.RESISTORS, "1k", "R1")), stats
+    )
+    assert [w.ref for w in stats["warnings"]] == ["SUSTAIN", "TONE", "VOLUME"]
+    stats = create_empty_stats()
+    with_pot = _inventory((ComponentCategory.POTENTIOMETERS, "100kB", "TONE"))
+    check_prose_pots([text], with_pot, stats)
     assert stats["warnings"] == []

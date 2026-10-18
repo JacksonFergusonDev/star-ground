@@ -463,13 +463,18 @@ def _split_merged(cell: Cell) -> list[Cell]:
 # A footnote marker is a short number set at most this fraction of the size of
 # the word it follows (Aion FX legacy: '68k' at 11pt, marker '1' at 6.4pt).
 _SUPERSCRIPT_RATIO = 0.75
+_MARKS = re.compile(r"\d{1,2}(?:,\d{1,2})*,?")
+# ... within this many ems after it: after the designator when it stands alone.
+_ALONE_EM = 6.0
 
 
 def footnote_marks(words: list[PDFWord]) -> list[PDFWord]:
     """Superscript footnote markers printed right after a word.
 
     'R2  68k¹' and 'IC1  LT1054CP⁵' would otherwise read as values '68k 1'
-    and 'LT1054CP 5' (Aion FX legacy documents).
+    and 'LT1054CP 5' (Aion FX legacy documents). A marker can also stand alone
+    in a value cell ('D6-D9  ³', 'your choice'), where it would read as the
+    value '3'.
 
     Args:
         words: Words extracted from one page.
@@ -480,16 +485,78 @@ def footnote_marks(words: list[PDFWord]) -> list[PDFWord]:
     return [
         w
         for w in words
-        if w["text"].isdigit()
-        and len(w["text"]) <= 2
+        # 'Volume  100kA ³˒⁶' marks two footnotes.
+        if _MARKS.fullmatch(w["text"])
         and any(
             v is not w
             and w["size"] <= _SUPERSCRIPT_RATIO * v["size"]
-            and 0 <= w["x0"] - v["x1"] <= v["size"]
+            and 0 <= w["x0"] - v["x1"] <= _ALONE_EM * v["size"]
             and abs((v["top"] + v["size"]) - (w["top"] + w["size"])) < v["size"]
             for v in words
         )
     ]
+
+
+# A designator column holds at least this many listings.
+_VALUELESS_COLUMN = 3
+_VALUELESS_ALIGN_PT = 2.0
+
+
+def valueless_refs(words: list[PDFWord]) -> list[str]:
+    """Designators in a parts table's designator column printed with no value.
+
+    'D6-D9  ³' leaves the value to the builder (Aion FX legacy Cirrus); with
+    its footnote marker dropped, it is no listing, and would vanish silently.
+
+    Args:
+        words: Words extracted from one page.
+
+    Returns:
+        The designators, ranges expanded.
+    """
+    lines = page_lines(words)
+    listings = find_listings(words)
+    starts = {(lst.line, round(lst.x0)) for lst in listings}
+    edges: list[tuple[float, float]] = [
+        (cell.x0, cell.words[-1]["x1"])
+        for lst in listings
+        for cell in lines[lst.line]
+        if abs(cell.x0 - lst.x0) <= _VALUELESS_ALIGN_PT
+    ]
+
+    def in_column(cell: Cell) -> bool:
+        x1 = cell.words[-1]["x1"]
+        lefts = sum(abs(cell.x0 - a) <= _VALUELESS_ALIGN_PT for a, _ in edges)
+        rights = sum(abs(x1 - b) <= _VALUELESS_ALIGN_PT for _, b in edges)
+        return max(lefts, rights) >= _VALUELESS_COLUMN
+
+    refs: list[str] = []
+    for number, cells in enumerate(lines):
+        for k, cell in enumerate(cells):
+            text = cell.text
+            if (number, round(cell.x0)) in starts or not in_column(cell):
+                continue
+            ranged = REF_RANGE.fullmatch(text) is not None
+            if not (ranged or is_designator(text)):
+                continue
+            after = cells[k + 1] if k + 1 < len(cells) else None
+            if after is not None and not in_column(after):
+                continue
+            # A value in smaller type sits a little off the line ('RX2  jumper¹').
+            end, middle = cell.words[-1]["x1"], _middle(cell.words[0])
+            stop = after.x0 if after else math.inf
+            if any(
+                end < w["x0"] < stop
+                and abs(_middle(w) - middle) < cell.words[0]["size"]
+                for w in words
+            ):
+                continue
+            refs += expand_refs(text) if ranged else [text]
+    return refs
+
+
+def _middle(word: PDFWord) -> float:
+    return word["top"] + word["size"] / 2
 
 
 def page_lines(words: list[PDFWord]) -> list[list[Cell]]:

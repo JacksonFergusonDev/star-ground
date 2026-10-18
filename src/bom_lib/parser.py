@@ -36,6 +36,7 @@ from src.bom_lib.layout import (
     footnote_marks,
     page_lines,
     strip_asides,
+    valueless_refs,
 )
 from src.bom_lib.types import (
     BuildVariant,
@@ -58,10 +59,13 @@ from src.bom_lib.verification import (
     check_marking_code,
     check_misread_text,
     check_parts_found,
+    check_prose_pots,
     check_row_quantity,
     check_second_board,
     check_unclassified_row,
     check_unextracted_refs,
+    check_value_assignments,
+    check_valueless_refs,
     check_version_note,
     resolve_value_choice,
 )
@@ -1376,7 +1380,19 @@ def read_pages(
     ]
     check_parts_found(stats, sum(len(d["refs"]) for d in union.values()))
     check_unextracted_refs(listed_texts, union, stats)
+    check_valueless_refs(
+        [
+            ref
+            for k, data in enumerate(pages_data)
+            if bom_pages is None or k in bom_pages
+            for ref in valueless_refs(data["words"])
+        ],
+        union,
+        stats,
+    )
     check_footnotes(page_texts, stats)
+    check_value_assignments(page_texts, union, stats)
+    check_prose_pots(page_texts, union, stats)
     check_bom_reconciliation(page_texts, union, stats)
     return inventory, variants, options
 
