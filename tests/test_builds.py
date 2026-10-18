@@ -306,3 +306,29 @@ def test_repeated_lists_without_margin_names_are_one_build() -> None:
     ]
     plan = plan_builds(entries, [_page([("R1", 40)] * 1)])
     assert plan.variants == ()
+
+
+def test_repeated_tables_named_by_their_headings_are_builds() -> None:
+    # Aion FX legacy Plasma: 'Overdriver Parts List' and 'Power Boost Parts
+    # List' each head a complete parts table (ruled, so the rows carry no line).
+    def heading(text: str) -> list[Cell]:
+        return [
+            Cell(tuple(PDFWord(text=t, x0=40, x1=90, top=0, size=14) for t in [text]))
+        ]
+
+    refs = [f"R{n}" for n in range(1, 11)]
+    page = PageContext(
+        [heading("Parts List"), [_cell("Capacitors", 40)]]
+        + [[_cell(r, 40), _cell("1k", 80)] for r in refs],
+        "",
+    )
+    pages = [
+        PageContext([heading("Overdriver Parts List"), *page.lines[1:]], ""),
+        PageContext([heading("Power Boost Parts List"), *page.lines[1:]], ""),
+    ]
+    entries = [
+        Entry(r if p == 0 else f"{r} (2)", "1k", p, table=p)
+        for p in (0, 1)
+        for r in refs
+    ]
+    assert _names(plan_builds(entries, pages)) == ["Overdriver", "Power Boost"]

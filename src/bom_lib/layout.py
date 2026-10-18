@@ -463,6 +463,7 @@ def _split_merged(cell: Cell) -> list[Cell]:
 # A footnote marker is a short number set at most this fraction of the size of
 # the word it follows (Aion FX legacy: '68k' at 11pt, marker '1' at 6.4pt).
 _SUPERSCRIPT_RATIO = 0.75
+_MARKS = re.compile(r"\d{1,2}(?:,\d{1,2})*,?")
 # ... within this many ems after it: after the designator when it stands alone.
 _ALONE_EM = 6.0
 
@@ -485,8 +486,7 @@ def footnote_marks(words: list[PDFWord]) -> list[PDFWord]:
         w
         for w in words
         # 'Volume  100kA ³˒⁶' marks two footnotes.
-        if w["text"].rstrip(",").isdigit()
-        and len(w["text"]) <= 3
+        if _MARKS.fullmatch(w["text"])
         and any(
             v is not w
             and w["size"] <= _SUPERSCRIPT_RATIO * v["size"]
