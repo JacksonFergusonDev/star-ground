@@ -422,7 +422,8 @@ class TestAttemptOcr:
         attempt = attempt_ocr(path, result, "Image", lambda *_: _grid_boxes())
 
         assert attempt is not None
-        assert attempt.verdict == OcrVerdict.COMPLETE
+        # Partial: the page also names C1-C3, D1 and IC1, which no build lists.
+        assert attempt.verdict == OcrVerdict.PARTIAL
         assert [v.name for v in attempt.variants] == ["Octavia", "Vintage"]
         assert not attempt.inventory
         assert "in 2 builds" in attempt.message
