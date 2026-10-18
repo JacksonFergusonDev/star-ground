@@ -676,8 +676,10 @@ def resolve_value_choice(stats: StatsDict | None, ref: str, value: str) -> str:
         )
     ):
         # '15k or 22k' (MUFF'N Creamy Dreamer), '270nF/220nF' (Five Cats
-        # Albus); not a bare '1/4'.
-        if stats is not None:
+        # Albus); not a bare '1/4'. A value restated in other units
+        # ('100n/0.1uF', Aion FX Cumulus) is no choice.
+        restated = len({parse_value_to_decimal(v) for v in either.group(1, 2)}) == 1
+        if stats is not None and not restated:
             _warn(
                 stats,
                 ParseWarningKind.VALUE_CHOICE,
