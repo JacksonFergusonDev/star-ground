@@ -27,7 +27,10 @@ from src.bom_lib.designators import is_designator, parse_designator
 from src.bom_lib.enums import ComponentCategory
 from src.bom_lib.layout import (
     REF_RANGE,
+    Cell,
+    Listing,
     bom_note_cells,
+    clean_value,
     find_bom_rows,
     find_listings,
     footnote_marks,
@@ -366,6 +369,8 @@ _PROSE_CHARS = 60
 _SOCKET = re.compile(r"\bsocket\b", re.IGNORECASE)
 _CHOOSE_ROW = re.compile(r"\s*choose between .+ or ", re.IGNORECASE)
 _NUMBERED_NAME = re.compile(r"[A-Z]{1,3}\d{1,3}")
+# A capacitor's voltage rating in a cell of its own: '63V'.
+_RATING_CELL = re.compile(r"\d+(?:\.\d+)?V", re.IGNORECASE)
 _TABLE_HEADERS = frozenset({"LOCATION", "QUANTITY", "VALUE", "TYPE"})
 _LED_DESCRIPTION = re.compile(r"[^,]*\bLED\b", re.IGNORECASE)
 _LED_SPECS = re.compile(r"LED\s*,\s*(.+)$", re.IGNORECASE)
@@ -959,7 +964,7 @@ def _is_ignored(value: str) -> bool:
 def _layout_entries(
     pages_data: list[PDFPageExtraction],
     stats: StatsDict,
-    table_refs: set[str],
+    table_values: dict[str, str],
     only_pages: set[int] | None = None,
     skip_lines: set[tuple[int, int]] | None = None,
 ) -> list[Entry]:
@@ -972,7 +977,7 @@ def _layout_entries(
     Args:
         pages_data: Pre-extracted page data including word positions.
         stats: The statistics dictionary for tracking progress.
-        table_refs: Designators already extracted from ruled tables.
+        table_values: Designators already extracted from tables, with their values.
         only_pages: If given, the only pages to read.
         skip_lines: (page, line) pairs already read as text-table rows.
 
@@ -984,11 +989,17 @@ def _layout_entries(
         if only_pages is not None and page_no not in only_pages:
             continue
         # A ruled table's rows are read by the table strategy; read as layout,
-        # 'D1 | LED | 3mm Red LED' looks like a bare 'LED' listing (Bad Mamma Jamma).
+        # 'D1 | LED | 3mm Red LED' looks like a bare 'LED' listing (Bad Mamma
+        # Jamma), and a wrapped 'FILTE / R' cell like an 'R' control (RATT).
+        # But the table may have read only the first of the listings side by
+        # side on a line ('R2 | 1M | C2 | 220n' with its shaded rows merged
+        # into 'R1 1M', NostalgiTone), so numbered designators other than the
+        # row's own value are still read there.
+        lines = page_lines(data["words"])
         table_lines = {
-            k
-            for k, cells in enumerate(page_lines(data["words"]))
-            if table_refs and cells and cells[0].text in table_refs
+            k: set(table_values[cells[0].text].upper().split())
+            for k, cells in enumerate(lines)
+            if cells and cells[0].text in table_values
         }
         for listing in find_listings(data["words"]):
             stats["lines_read"] += 1
@@ -1000,9 +1011,19 @@ def _layout_entries(
             )
             value = listing.value
             for ref in refs:
+                row_value = table_lines.get(listing.line)
                 if (
-                    ref in table_refs
-                    or listing.line in table_lines
+                    ref in table_values
+                    # 'Q1-Q5' read whole by the table (GoldenFalk).
+                    or listing.ref in table_values
+                    or (
+                        row_value is not None
+                        and (
+                            not is_designator(ref)
+                            or ref.upper() in row_value
+                            or not _cell_value(lines[listing.line], listing)
+                        )
+                    )
                     or (page_no, listing.line) in (skip_lines or set())
                 ):
                     continue
@@ -1029,6 +1050,25 @@ def _layout_entries(
                     continue
                 entries.append(entry)
     return entries
+
+
+def _cell_value(cells: list[Cell], listing: Listing) -> bool:
+    """Whether a listing's value is just the cell after its designator.
+
+    On a ruled table's line, a value that runs on over further cells has
+    absorbed the next column ('C1 | 22n | P1-Reso | B50k Lin', GuitarPCB
+    Swah). Only a voltage rating may follow ('C9 | 1n | 63V').
+    """
+    k = next((i for i, c in enumerate(cells) if c.x0 == listing.x0), None)
+    if k is None:
+        return False
+    after = [c.text for c in cells[k + 1 : k + 3]]
+    if not after or not clean_value(after[0]):
+        return False  # 'C8A | * | 63V' (MoWah): the value is in the notes
+    readings = [after[:1]]
+    if len(after) == 2 and _RATING_CELL.fullmatch(after[1]):
+        readings.append(after)
+    return any(clean_value(" ".join(r)) == listing.value for r in readings if r)
 
 
 def _ingest_entries(
@@ -1261,7 +1301,7 @@ def read_pages(
     # --- STRATEGY 2: LAYOUT ANALYSIS ---
     # Recovers anything the tables missed (or everything, for column layouts)
     entries += _layout_entries(
-        pages_data, stats, {e.ref for e in entries}, bom_pages, row_lines
+        pages_data, stats, {e.ref: e.value for e in entries}, bom_pages, row_lines
     )
 
     # --- BUILDS: variants and options ---

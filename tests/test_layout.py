@@ -301,6 +301,16 @@ class TestCellRepairs:
         # The range lists all six pots (6 Band EQ), not 'POT1' valued '- 6 B50K'.
         assert find_listings(_line("POT1 - 6", "B50K")) == [Listing("POT1 - 6", "B50K")]
 
+    def test_a_range_cell_is_not_split(self) -> None:
+        # Dr Phybes: 'Q1 -Q4' is one range, not 'Q1' valued '-Q4 2N5952'.
+        assert find_listings(_line("Q1 -Q4", "2N5952")) == [Listing("Q1 -Q4", "2N5952")]
+
+    def test_a_spaced_designator_ends_a_value(self) -> None:
+        # EA Tremolo: 'C5  470n  63V  SW 1  3PDT' does not run C5 into the switch.
+        assert find_listings(_line("C5", "470n", "63V", "SW 1", "3PDT"))[0] == Listing(
+            "C5", "470n 63V"
+        )
+
     def test_range_in_a_listing_grid(self) -> None:
         # GuitarPCB SWAH: 'C9  1u  16V  D1-D2  1N4148' is two listings.
         assert find_listings(_line("C9", "1u", "16V", "D1-D2", "1N4148")) == [
