@@ -245,6 +245,29 @@ def check_unextracted_refs(
         )
 
 
+def check_valueless_refs(
+    refs: list[str], inventory: Inventory, stats: StatsDict
+) -> None:
+    """Warns about designators a parts table lists with no value.
+
+    Args:
+        refs: Designators printed in a designator column with no value beside
+            them (`layout.valueless_refs`).
+        inventory: The finished inventory for this document.
+        stats: Stats object that receives the warnings.
+    """
+    extracted = {ref.upper() for data in inventory.values() for ref in data["refs"]}
+    for ref in dict.fromkeys(refs):
+        if ref.upper() not in extracted:
+            _warn(
+                stats,
+                ParseWarningKind.UNEXTRACTED_REF,
+                ref,
+                f"{ref} is listed with no value (perhaps the builder's choice): "
+                "check the document.",
+            )
+
+
 def check_row_quantity(
     stats: StatsDict, refs: str, ref_count: int, quantity: int | None
 ) -> None:
@@ -431,6 +454,86 @@ def check_version_note(stats: StatsDict, ref: str, notes: str) -> None:
             f"{ref}: '{note}'. The document describes more than one version; "
             "check which parts your build needs.",
         )
+
+
+# 'R1 = 100k' on a line of its own: a build note's list of changes for another
+# version (Aion FX legacy Rift: the Shin-Ei FY-2 changes R1, C2, R9, R19).
+_ASSIGNMENT = re.compile(r"\s*([A-Z]{1,4}\d{1,3})\s*=\s*(\S+(?: \S+)?)\s*")
+_ASSIGNMENTS_MIN = 2
+
+
+def check_value_assignments(
+    page_texts: list[str], inventory: Inventory, stats: StatsDict
+) -> None:
+    """Warns about listed parts a list of 'REF = value' changes gives another value.
+
+    Args:
+        page_texts: Raw text of every page.
+        inventory: The finished inventory for this document.
+        stats: Stats object that receives the warnings.
+    """
+    listed = {
+        ref.upper(): key.value
+        for key, data in inventory.items()
+        for ref in data["refs"]
+    }
+    for text in page_texts:
+        found = [m for line in text.splitlines() if (m := _ASSIGNMENT.fullmatch(line))]
+        if len(found) < _ASSIGNMENTS_MIN:
+            continue
+        for m in found:
+            ref, value = m.group(1), m.group(2)
+            have = listed.get(ref.upper())
+            if have is None or _same_value(have, value):
+                continue
+            _warn(
+                stats,
+                ParseWarningKind.FOOTNOTE,
+                ref,
+                f"{ref}: the document's notes give '{ref} = {value}' (this list has "
+                f"{have}), perhaps for another version. Check which your build needs.",
+            )
+
+
+def _same_value(a: str, b: str) -> bool:
+    da, db = parse_value_to_decimal(a.split()[0]), parse_value_to_decimal(b.split()[0])
+    return da == db if da is not None and db is not None else a.upper() == b.upper()
+
+
+# Pots given in prose, not in the parts list: 'the Sustain and Tone pots are
+# 100kB and Volume is 100kA' (Aion FX legacy Halo).
+_PROSE_POTS = re.compile(
+    r"\b(?P<names>[A-Z][a-z]+(?:(?:, | and )[A-Z][a-z]+)*)"
+    r"(?: (?:pots?|controls?))? (?:are|is) (?P<value>\d+(?:\.\d+)?[kKM][ABCW])\b"
+)
+
+
+def check_prose_pots(
+    page_texts: list[str], inventory: Inventory, stats: StatsDict
+) -> None:
+    """Warns about pots a document names only in its prose.
+
+    Only when the parts list gave no pots at all: then a sentence naming
+    controls and a taper value is where they are.
+
+    Args:
+        page_texts: Raw text of every page.
+        inventory: The finished inventory for this document.
+        stats: Stats object that receives the warnings.
+    """
+    if any(key.category == ComponentCategory.POTENTIOMETERS for key in inventory):
+        return
+    text = " ".join(" ".join(page_texts).split())
+    for m in _PROSE_POTS.finditer(text):
+        for name in re.split(r", | and ", m.group("names")):
+            ref = name.upper()
+            _warn(
+                stats,
+                ParseWarningKind.UNEXTRACTED_REF,
+                ref,
+                f"{ref} ({m.group('value')}) is given in the document's notes, not its "
+                "parts list: add it by hand.",
+            )
 
 
 def check_unclassified_row(stats: StatsDict, ref: str, value: str) -> None:

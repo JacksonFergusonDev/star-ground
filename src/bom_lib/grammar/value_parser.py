@@ -98,7 +98,8 @@ def parse_value_to_decimal(val_str: str | None) -> Decimal | None:
     if not val_str or not isinstance(val_str, str):
         return None
 
-    cleaned_str = val_str.strip()
+    # Fonts set the micro prefix as Greek mu too ('4μ7', Aion FX legacy).
+    cleaned_str = val_str.strip().replace("\u03bc", "\u00b5")
     if not cleaned_str:
         return None
 
