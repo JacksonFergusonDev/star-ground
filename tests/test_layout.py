@@ -1,5 +1,7 @@
 """Unit tests for column-aware listing extraction in `src/bom_lib/layout.py`."""
 
+import math
+
 import pytest
 
 from src.bom_lib import PDFWord
@@ -164,6 +166,9 @@ def test_clean_value(raw: str, clean: str) -> None:
         ("5mm", "LED, 5mm, red diffused", "5mm Red Diffused LED"),
         ("5mm green", "LED, 5mm, green diffused", "5mm Green Diffused LED"),
         ("100n", "MLCC capacitor, X7R", "100n MLCC"),
+        # Five Cats: either kind will do.
+        ("100nF", "Box/MLCC Capacitor", "100nF"),
+        ("4.7nF", "Box / MLCC Cap", "4.7nF"),
     ],
 )
 def test_enrich_value_from_type(value: str, type_text: str, expected: str) -> None:
@@ -342,6 +347,62 @@ class TestCellRepairs:
             ("C1", "220uF"),
             ("U1", "TL072"),
         ]
+
+    @staticmethod
+    def _typed_table(*rows: tuple[str, ...]) -> list[PDFWord]:
+        """A 'Location | Value | Type' table with columns at 50, 90 and 150;
+        cells past the third follow one another."""
+        words = []
+        for k, cells in enumerate(rows):
+            x = 50.0
+            for n, cell in enumerate(cells):
+                x = (50.0, 90.0, 150.0)[n] if n < 3 else x
+                for t in cell.split():
+                    words.append(
+                        PDFWord(
+                            text=t,
+                            x0=x,
+                            x1=x + 6 * len(t),
+                            top=100.0 + 20 * k,
+                            size=SIZE,
+                        )
+                    )
+                    x += 6 * len(t) + SPACE
+                x += COLUMN
+        return words
+
+    def test_a_description_names_no_part(self) -> None:
+        # Five Cats: '6mm Trim Pot' is TRIM1's type, not a 'TRIM | Pot' listing.
+        words = self._typed_table(
+            ("R1", "33k", "1/4 Watt Resistor"),
+            ("R2", "2M2", "1/4 Watt Resistor"),
+            ("C1", "220uF", "Electrolytic Cap"),
+            ("TRIM1", "5K", "6mm", "Trim", "Pot"),
+        )
+        assert [(lst.ref, lst.value) for lst in find_listings(words)] == [
+            ("R1", "33k"),
+            ("R2", "2M2"),
+            ("C1", "220uF"),
+            ("TRIM1", "5K"),
+        ]
+
+    def test_an_led_and_its_size(self) -> None:
+        # Five Cats ZTrem: 'D5 | LED | 3MM LED' is D5's LED, and the next
+        # designator ('POT1') is no value of the description's 'LED'.
+        words = self._typed_table(
+            ("R1", "33k", "1/4 Watt Resistor"),
+            ("R2", "2M2", "1/4 Watt Resistor"),
+            ("C1", "220uF", "Electrolytic Cap"),
+            ("D5", "LED", "3MM", "LED", "POT1", "B100K"),
+        )
+        assert [(lst.ref, lst.value) for lst in find_listings(words)][-2:] == [
+            ("D5", "LED"),
+            ("POT1", "B100K"),
+        ]
+
+    def test_a_switch_symbol_is_a_value(self) -> None:
+        # Five Cats Five Zero: 'CLIP1 | SW_SPDT | Toggle - ON/ON'.
+        assert find_listings(_line("CLIP1", "SW_SPDT")) == [Listing("CLIP1", "SW_SPDT")]
 
     def test_range_in_a_listing_grid(self) -> None:
         # GuitarPCB SWAH: 'C9  1u  16V  D1-D2  1N4148' is two listings.
@@ -544,6 +605,43 @@ class TestTextBillOfMaterials:
             ("VOL", "A500K", None),
             ("DRIVE", "A100K", None),
             ("CLR", "1k8 - 4k7", 1),
+        ]
+
+    def test_a_table_beside_the_rows_ends_them(self) -> None:
+        # Five Cats via OCR: a second 'Location | Value | Type' table sits
+        # beside the first, its header lost.
+        cols = (50.0, 120.0, 190.0, 330.0, 400.0, 470.0)
+        words = (
+            self._row(100, *zip(("Location", "Value", "Type"), cols, strict=False))
+            + self._row(
+                120,
+                *zip(
+                    ("R1", "33k", "1/4 Watt Resistor", "C11", "5.6nF", "Box Cap"),
+                    cols,
+                    strict=True,
+                ),
+            )
+            + self._row(
+                140,
+                *zip(
+                    ("R2", "1M", "1/4 Watt Resistor", "BASS1", "B50K", "Pot"),
+                    cols,
+                    strict=True,
+                ),
+            )
+            + self._row(
+                160, *zip(("R3", "1k", "1/4 Watt Resistor"), cols, strict=False)
+            )
+        )
+        rows = find_bom_rows(words)
+        assert [(r.refs, r.value, r.type_text, r.end) for r in rows] == [
+            ("R1", "33k", "1/4 Watt Resistor", 330.0),
+            ("R2", "1M", "1/4 Watt Resistor", 330.0),
+            ("R3", "1k", "1/4 Watt Resistor", math.inf),
+        ]
+        assert [(lst.ref, lst.value) for lst in find_listings(words)][2:4] == [
+            ("R2", "1M"),
+            ("BASS1", "B50K"),
         ]
 
     def test_two_tables_on_one_page_are_numbered_apart(self) -> None:

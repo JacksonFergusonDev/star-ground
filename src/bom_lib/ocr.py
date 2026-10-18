@@ -25,7 +25,14 @@ from typing import TYPE_CHECKING, Any
 
 from src.bom_lib.designators import BOARD_REF, is_designator, parse_designator
 from src.bom_lib.enums import ComponentCategory, OcrVerdict, ParseWarningKind
-from src.bom_lib.layout import REF_RANGE, find_listings, group_lines, page_lines
+from src.bom_lib.layout import (
+    REF_RANGE,
+    find_listings,
+    group_lines,
+    page_lines,
+    split_cells,
+    starts_description,
+)
 from src.bom_lib.parser import read_pages
 from src.bom_lib.types import (
     ComponentKey,
@@ -72,11 +79,19 @@ _GLYPH_SHARE = 0.75
 # their OCR'd neighbours make junk listings ('V4  IUNMANN').
 _MIN_ALIGNED = 4
 _ALIGN_PT = 4.0
+# Rows with several values side by side that suggest build columns.
+_SIDE_BY_SIDE = 2
+# Designator numbers in one series: 'C100' starts another.
+_SERIES = 100
+# Listings that make a designator column for naming unread rows.
+_LABEL_COLUMN = 3
 # Rows further apart than this many row pitches start another block.
 _BLOCK_GAP = 3
 # A table's last rows can read as no listing; they are kept when this many
 # rows' pitch or less below it.
 _TRAILING_ROW = 1.5
+# Cells a row above the table must align with the table's (see `_rows_above`).
+_ABOVE_CELLS = 3
 # Extra character widths set before a designator found inside an OCR box.
 _CELL_BREAK = 2
 # A table's rows are evenly spaced: this share of its row gaps is within
@@ -116,6 +131,8 @@ _QUALIFIERS = {
         r"16mm|9mm|right-?angle)\)?"
     ),
 }
+_VOLTS = re.compile(r"\d+(?:\.\d+)?V", re.IGNORECASE)
+_PROSE_WORD = re.compile(r"[a-z]{2,}[.,;:]?")
 _VALUE_CHARS = re.compile(r"[\x20-\x7e\u00b5\u03a9\u2126]*")
 # A part label in a designator column: 'CLIP1', 'GAIN-TOG1', 'RELAX/PUSH',
 # '3PDT1'.
@@ -290,7 +307,14 @@ def page_words(boxes: list[OcrBox]) -> PDFPageExtraction:
             middle = median((b.top + b.bottom) / 2 for b in row)
             row_height = median(b.bottom - b.top for b in row)
             gap = abs((box.top + box.bottom) / 2 - middle)
-            if gap < 0.5 * min(height, row_height):
+            # Boxes one above the other are two rows however close they are
+            # ('THROB | B25K' over 'LEVEL | A100K', Five Cats Deep Down).
+            stacked = any(
+                min(b.x1, box.x1) - max(b.x0, box.x0)
+                > 0.5 * min(b.x1 - b.x0, box.x1 - box.x0)
+                for b in row
+            )
+            if gap < 0.5 * min(height, row_height) and not stacked:
                 row.append(box)
                 continue
         rows.append([box])
@@ -307,9 +331,18 @@ def page_words(boxes: list[OcrBox]) -> PDFPageExtraction:
             tokens = text.split()
             width = (box.x1 - box.x0) / len(" ".join(tokens))
             pos = 0.0
-            for token in tokens:
+            for k, token in enumerate(tokens):
                 x0 = box.x0 + pos * width
-                if words and words[-1]["top"] == top and _starts_cell(token):
+                if (
+                    words
+                    and words[-1]["top"] == top
+                    and (
+                        _starts_cell(token)
+                        # A value's description starts a cell: 'TL072 | Dual
+                        # Op Amp', in one box or two.
+                        or starts_description(words[-1]["text"], " ".join(tokens[k:]))
+                    )
+                ):
                     # A designator starts a cell, however close OCR set it to
                     # the cell before ('16V  D1-D2 1N4148', SWAH), even
                     # within one box.
@@ -418,6 +451,8 @@ def table_block(data: PDFPageExtraction) -> PDFPageExtraction:
         if 0 < top - rows[-1] <= _TRAILING_ROW * pitch:
             rows.append(top)
             left = min(left, x0)
+    listed = {lines[lst.line][0]["top"] for lst in listings}
+    rows = _rows_above(lines, rows, pitch, listed)
     margin = pitch / 2
     kept = [
         w
@@ -426,6 +461,48 @@ def table_block(data: PDFPageExtraction) -> PDFPageExtraction:
     ]
     text = "\n".join(" ".join(w["text"] for w in line) for line in group_lines(kept))
     return {"tables": [], "text": text, "words": kept}
+
+
+def _rows_above(
+    lines: list[list[PDFWord]], rows: list[float], pitch: float, listed: set[float]
+) -> list[float]:
+    """Adds the listings above a table that continue its cell columns.
+
+    A table beside the main one can start higher (Five Cats Samurai Boost:
+    'Trim1 | 10K | 6mm Trim Pot' above 'R1 | 1M'). The board drawing above a
+    table rarely lines up with it, so a row must hold a listing, start cells
+    at `_ABOVE_CELLS` of the table's cell columns, and lie within a table gap
+    of the next. Header rows are left out: a build-column header ('Jack |
+    Kraken | Sheriff', Victory III) is read better without them.
+    """
+    tops = set(rows)
+    edges = [
+        cell.x0
+        for line in lines
+        if line[0]["top"] in tops
+        for cell in split_cells(line)
+    ]
+    above: list[float] = []
+    for line in sorted(
+        (line for line in lines if line[0]["top"] < rows[0]),
+        key=lambda line: -line[0]["top"],
+    ):
+        top = line[0]["top"]
+        if (above or rows)[-1 if above else 0] - top > (
+            _BLOCK_GAP + 1 + _PITCH_TOLERANCE
+        ) * pitch:
+            break
+        aligned = sum(
+            any(abs(cell.x0 - x) <= _ALIGN_PT for x in edges)
+            for cell in split_cells(line)
+        )
+        if aligned >= _ABOVE_CELLS:
+            above.append(top)
+    # Rows between listings belong too ('Boost | Toggle | DPDT', which reads
+    # as no listing); those above the highest listing do not.
+    while above and above[-1] not in listed:
+        above.pop()
+    return [*reversed(above), *rows]
 
 
 def _base_ref(ref: str) -> str:
@@ -474,6 +551,9 @@ def _plausible(key: ComponentKey) -> bool:
     ):
         return False
     words = value.split() or [""]
+    if sum(_PROSE_WORD.fullmatch(word) is not None for word in words) >= 2:
+        # A sentence beside the table ran in: 'J201/2N5457 super small size.'
+        return False
     if key.category == ComponentCategory.POTENTIOMETERS:
         # A pot's control name may come first: 'P1  GAIN 1M Log'.
         while len(words) > 1 and words[0].isalpha() and words[0].isupper():
@@ -525,10 +605,12 @@ def _unlisted(pages_data: list[PDFPageExtraction], listed: set[str]) -> set[str]
     unlisted = set()
     for data in pages_data:
         listings = find_listings(data["words"])
+        # A short column of controls counts ('Trim1 | Trim2 | VOL', above
+        # Samurai Boost's unread 'Boost | Toggle | DPDT').
         columns = [
             c
             for c in _clusters([lst.x0 for lst in listings], _ALIGN_PT)
-            if len(c) >= _MIN_ALIGNED
+            if len(c) >= _LABEL_COLUMN
         ]
         for cells in page_lines(data["words"]):
             for cell in cells:
@@ -567,11 +649,18 @@ def _unread(listed: dict[str, ComponentKey], mentioned: set[str]) -> set[str]:
         m = _SERIAL_REF.fullmatch(ref)
         if m:
             numbers.setdefault(m.group(1), set()).add(int(m.group(2)))
+    # Each hundred is a series of its own: Five Cats numbers the power
+    # section 'C100', 'D100' after 'C1'-'C13'.
+    series = {
+        (prefix, n // _SERIES): {k for k in ns if k // _SERIES == n // _SERIES}
+        for prefix, ns in numbers.items()
+        for n in ns
+    }
     unread = {
         f"{prefix}{n}"
-        for prefix, ns in numbers.items()
-        if len(ns) >= 3
-        for n in range(1, max(ns))
+        for (prefix, hundred), ns in series.items()
+        if len(numbers[prefix]) >= 3
+        for n in range(max(1, min(ns) if hundred else 1), max(ns))
         if n not in ns
     }
     values = {word for key in listed.values() for word in key.value.split()}
@@ -585,11 +674,21 @@ def _unread(listed: dict[str, ComponentKey], mentioned: set[str]) -> set[str]:
             continue  # pads ('S4'), versions ('v4'), junk read off traces
         prefix, n = m.group(1), int(m.group(2))
         if prefix in numbers:
-            if n <= max(numbers[prefix]):
+            # The enclosure badge's 'C60' is no capacitor beside 'C1'-'C13'.
+            if (prefix, n // _SERIES) in series and n <= max(
+                series[prefix, n // _SERIES]
+            ):
                 unread.add(word)
         elif designator.category not in named:
             unread.add(word)
     return unread - set(listed)
+
+
+def _several_values(value: str) -> bool:
+    """Whether a value is several resistor or capacitor values ('68K 43K 47K')."""
+    # A voltage rating is no second value: '22n 63V' (GuitarPCB SWAH).
+    words = [w for w in value.split() if not _VOLTS.fullmatch(w)]
+    return len(words) > 1 and all(parse_value_to_decimal(w) is not None for w in words)
 
 
 def _verdict(
@@ -667,11 +766,30 @@ def attempt_ocr(
 
     stats: StatsDict = create_empty_stats()
     inventory = Inventory()
+    builds = 0
     if pages_data:
         try:
-            inventory, _, _ = read_pages(pages_data, source_name, stats)
+            inventory, variants, _ = read_pages(
+                pages_data, source_name, stats, tables_only=True
+            )
         except Exception:
             logger.exception("Reading OCR text failed for %s", source_name)
+        else:
+            if variants:
+                # Designators listed twice with different values read as
+                # several builds (Five Cats Octavia's 'To build the vintage
+                # Octavia' table); the attempt offers one list, so it
+                # offers the first and says so.
+                inventory, builds = variants[0].inventory, len(variants)
+                stats["warnings"].append(
+                    ParseWarning(
+                        ParseWarningKind.CONFLICTING_DUPLICATE,
+                        "",
+                        f"The parts list seems to describe {builds} builds; OCR "
+                        f"read only the first ('{variants[0].name}'). Check the "
+                        "document for the others.",
+                    )
+                )
 
     known = _refs(result.inventory)
     # A sentence beside a designator is prose OCR read near the table, not a
@@ -708,8 +826,15 @@ def attempt_ocr(
             "the document.",
         )
         for ref in sorted(
-            _unread(_listed(result.inventory) | _listed(parts), mentioned)
-            | _unlisted(pages_data, {r.upper() for r in {*_listed(inventory), *known}})
+            # A part that looks misread ('C60 | MM', an enclosure badge) does
+            # not extend a series.
+            _unread(
+                _listed(result.inventory)
+                | {r: k for r, k in _listed(parts).items() if _plausible(k)},
+                mentioned,
+            )
+            # A row read but dropped (its value too long to be one) is named.
+            | _unlisted(pages_data, {r.upper() for r in {*_listed(parts), *known}})
         )
     ]
     # The OCR reading's own self-checks: a designator read twice with two
@@ -723,6 +848,26 @@ def attempt_ocr(
     seen = {(w.kind, w.ref) for w in warnings}
     warnings += [w for w in own if (w.kind, w.ref) not in seen]
     conflicts = {w.ref for w in own if w.kind == ParseWarningKind.CONFLICTING_DUPLICATE}
+    side_by_side = sorted(
+        ref
+        for key, data in parts.items()
+        if _several_values(key.value)
+        for ref in data["refs"]
+    )
+    if not builds and len(side_by_side) >= _SIDE_BY_SIDE:
+        # Victory III prints 'R11 | 68K | 43K | 47K' under 'Jack | Kraken |
+        # Sheriff'; read as one list, the builds run together.
+        builds = len(side_by_side)
+        warnings.append(
+            ParseWarning(
+                ParseWarningKind.CONFLICTING_DUPLICATE,
+                "",
+                f"Some rows list several values side by side ({', '.join(side_by_side[:3])}"
+                f"{'...' if len(side_by_side) > 3 else ''}): the parts list may "
+                "describe several builds. Check the document.",
+            )
+        )
+    conflicts |= {""} if builds else set()
     verdict = _verdict(
         len(found), suspect, coverage, _gap_share(found | known), bool(conflicts)
     )

@@ -350,6 +350,7 @@ class TestAionChecks:
             ("2N5088/2N2222", "2N5088"),
             ("SPST or SPDT", "SPST"),
             ("15k or 22k", "15k"),
+            ("270nF/220nF", "270nF"),  # Five Cats Albus
         ],
     )
     def test_builder_choices_use_the_first_value(self, value: str, chosen: str) -> None:
@@ -357,7 +358,12 @@ class TestAionChecks:
         assert resolve_value_choice(stats, "RPD", value) == chosen
         assert _kinds(stats) == [ParseWarningKind.VALUE_CHOICE]
 
-    @pytest.mark.parametrize("value", ["2N5088", "B100K", "1-2"])
+    def test_a_restated_value_is_no_choice(self) -> None:
+        stats = create_empty_stats()
+        assert resolve_value_choice(stats, "C3", "100n/0.1uF") == "100n"
+        assert stats["warnings"] == []
+
+    @pytest.mark.parametrize("value", ["2N5088", "B100K", "1-2", "1/4", "220u/35V"])
     def test_values_that_are_not_choices(self, value: str) -> None:
         stats = create_empty_stats()
         assert resolve_value_choice(stats, "R1", value) == value
