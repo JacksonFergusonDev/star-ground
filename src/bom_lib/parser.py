@@ -1355,6 +1355,17 @@ def read_pages(
     return inventory, variants, options
 
 
+# A footer sentence is no title: 'Don't forget to grab a copy of our general
+# pedal building guide at: www.five-cats-pedals.co.uk/...' (Five Cats, whose
+# only text is the footer).
+_MAX_TITLE_WORDS = 8
+_URL = re.compile(r"www\.|https?:", re.IGNORECASE)
+
+
+def _is_title(text: str) -> bool:
+    return len(text.split()) <= _MAX_TITLE_WORDS and not _URL.search(text)
+
+
 def parse_pedalpcb_pdf(filepath: str, source_name: str) -> ParseResult:
     """Parses a PedalPCB Build Document (PDF).
 
@@ -1437,7 +1448,9 @@ def parse_pedalpcb_pdf(filepath: str, source_name: str) -> ParseResult:
                     max_size = max(c["size"] for c in candidates)
                     title_words = [w for w in candidates if w["size"] >= max_size - 1]
                     title_words.sort(key=lambda x: (x["top"], x["x0"]))
-                    stats["extracted_title"] = " ".join(w["text"] for w in title_words)
+                    title = " ".join(w["text"] for w in title_words)
+                    if _is_title(title):
+                        stats["extracted_title"] = title
             except Exception:
                 # Title extraction is heuristic/optional; don't fail the build if it misses.
                 pass

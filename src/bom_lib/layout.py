@@ -665,10 +665,14 @@ def _scan(
                         x0=cells[i].x0,
                     )
                 )
+            following = _text_at(texts, j + 1)
             if (
                 types
                 and j < len(texts)
-                and _describes(texts[j], _text_at(texts, j + 1))
+                # 'D1 | 5v1 Zener' after a value is the next listing (GuitarPCB
+                # Dr-Phybes).
+                and not _is_ref_cell(texts[j], following)
+                and _describes(texts[j], following)
             ):
                 # Its description names no part: '5K | 6mm Trim Pot'.
                 j = _description_end(cells, j, designators)

@@ -621,7 +621,7 @@ _VALUE_RANGE = re.compile(
 # Two part numbers or switch types, either of which may be bought.
 _PART_CODE = r"(?:\d?[A-Z]{1,4}\d{2,5}[A-Z]{0,3}|[SD34]P[SDT]T)"
 _PART_PAIR = re.compile(rf"({_PART_CODE})\s*(?:/|\bor\b)\s*({_PART_CODE})")
-_VALUE_PAIR = re.compile(r"(\S+)\s+or\s+(\S+)", re.IGNORECASE)
+_VALUE_PAIR = re.compile(r"(\S+?)(?:\s+or\s+|\s*/\s*)(\S+)", re.IGNORECASE)
 # An alternative printed inside the value: '51pF (or 47pF) MLCC'.
 _OR_ALTERNATIVE = re.compile(r"\s*\(\s*or\s+([^()]+?)\s*\)", re.IGNORECASE)
 
@@ -655,9 +655,13 @@ def resolve_value_choice(stats: StatsDict | None, ref: str, value: str) -> str:
         return pair.group(1)
     either = _VALUE_PAIR.fullmatch(value.strip())
     if either and all(
-        parse_value_to_decimal(v) is not None for v in either.group(1, 2)
+        parse_value_to_decimal(v) is not None
+        # A slash between bare numbers is a fraction ('1/4').
+        and (" or " in either.group(0).lower() or re.search(r"[A-Za-zµΩ]", v))
+        for v in either.group(1, 2)
     ):
-        # '15k or 22k' (MUFF'N Creamy Dreamer).
+        # '15k or 22k' (MUFF'N Creamy Dreamer), '270nF/220nF' (Five Cats
+        # Albus); not a bare '1/4'.
         if stats is not None:
             _warn(
                 stats,

@@ -306,7 +306,14 @@ def page_words(boxes: list[OcrBox]) -> PDFPageExtraction:
             middle = median((b.top + b.bottom) / 2 for b in row)
             row_height = median(b.bottom - b.top for b in row)
             gap = abs((box.top + box.bottom) / 2 - middle)
-            if gap < 0.5 * min(height, row_height):
+            # Boxes one above the other are two rows however close they are
+            # ('THROB | B25K' over 'LEVEL | A100K', Five Cats Deep Down).
+            stacked = any(
+                min(b.x1, box.x1) - max(b.x0, box.x0)
+                > 0.5 * min(b.x1 - b.x0, box.x1 - box.x0)
+                for b in row
+            )
+            if gap < 0.5 * min(height, row_height) and not stacked:
                 row.append(box)
                 continue
         rows.append([box])
