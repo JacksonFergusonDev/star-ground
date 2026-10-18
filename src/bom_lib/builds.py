@@ -161,12 +161,12 @@ def plan_builds(entries: list[Entry], pages: list[PageContext]) -> BuildPlan:
         The build plan. A single-circuit document has no variants.
     """
     variants = (
-        _repeat_variants(entries, pages)
-        or _column_variants(entries)
+        _column_variants(entries)
         # Before grids: a mod table beside the parts list shares its lines.
         or _mod_variants(entries, pages)
         or _grid_variants(entries, pages)
         or _table_variants(entries, pages)
+        or _repeat_variants(entries, pages)
         or _either_or_variants(entries, pages)
     )
     in_variants = {id(e) for v in variants for e in v.entries}
