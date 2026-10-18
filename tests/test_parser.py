@@ -999,3 +999,33 @@ def test_a_ruled_rows_value_is_not_read_as_a_listing() -> None:
     inventory, _, _ = read_pages([page], "Ruled", create_empty_stats())
     refs = {ref for data in inventory.values() for ref in data["refs"]}
     assert refs == {"D1"}
+
+
+def test_pages_of_tables_are_all_read() -> None:
+    # Five Cats Tone Monarch (OCR): the main table has its header, the
+    # daughterboard's on the next page does not.
+    from src.bom_lib import PDFWord, create_empty_stats
+    from src.bom_lib.parser import read_pages
+
+    main = _typed_page(
+        [
+            ("R1", "10k", "1/4 Watt Resistor"),
+            ("R2", "22k", "1/4 Watt Resistor"),
+            ("C1", "100n", "Box Cap"),
+        ]
+    )
+    words = [
+        PDFWord(text=t, x0=x, x1=x + 6 * len(t), top=100.0 + 20 * k, size=12.0)
+        for k, (ref, value) in enumerate(
+            [("R23", "47K"), ("R24", "4.7K"), ("D13", "1N5817")]
+        )
+        for t, x in ((ref, 50.0), (value, 110.0))
+    ]
+    board = PDFPageExtraction(tables=[], text="", words=words)
+
+    def refs(**kwargs: bool) -> set[str]:
+        inventory, _, _ = read_pages([main, board], "x", create_empty_stats(), **kwargs)
+        return {r for data in inventory.values() for r in data["refs"]}
+
+    assert "R23" not in refs()
+    assert {"R1", "C1", "R23", "D13"} <= refs(tables_only=True)

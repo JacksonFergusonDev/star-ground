@@ -79,6 +79,12 @@ _GLYPH_SHARE = 0.75
 # their OCR'd neighbours make junk listings ('V4  IUNMANN').
 _MIN_ALIGNED = 4
 _ALIGN_PT = 4.0
+# Rows with several values side by side that suggest build columns.
+_SIDE_BY_SIDE = 2
+# Designator numbers in one series: 'C100' starts another.
+_SERIES = 100
+# Listings that make a designator column for naming unread rows.
+_LABEL_COLUMN = 3
 # Rows further apart than this many row pitches start another block.
 _BLOCK_GAP = 3
 # A table's last rows can read as no listing; they are kept when this many
@@ -125,6 +131,7 @@ _QUALIFIERS = {
         r"16mm|9mm|right-?angle)\)?"
     ),
 }
+_PROSE_WORD = re.compile(r"[a-z]{2,}[.,;:]?")
 _VALUE_CHARS = re.compile(r"[\x20-\x7e\u00b5\u03a9\u2126]*")
 # A part label in a designator column: 'CLIP1', 'GAIN-TOG1', 'RELAX/PUSH',
 # '3PDT1'.
@@ -467,19 +474,27 @@ def _rows_above(
         if line[0]["top"] in tops
         for cell in split_cells(line)
     ]
+    above: list[float] = []
     for line in sorted(
         (line for line in lines if line[0]["top"] < rows[0]),
         key=lambda line: -line[0]["top"],
     ):
-        if rows[0] - line[0]["top"] > (_BLOCK_GAP + 1 + _PITCH_TOLERANCE) * pitch:
+        top = line[0]["top"]
+        if (above or rows)[-1 if above else 0] - top > (
+            _BLOCK_GAP + 1 + _PITCH_TOLERANCE
+        ) * pitch:
             break
         aligned = sum(
             any(abs(cell.x0 - x) <= _ALIGN_PT for x in edges)
             for cell in split_cells(line)
         )
-        if aligned >= _ABOVE_CELLS and line[0]["top"] in listed:
-            rows = [line[0]["top"], *rows]
-    return rows
+        if aligned >= _ABOVE_CELLS:
+            above.append(top)
+    # Rows between listings belong too ('Boost | Toggle | DPDT', which reads
+    # as no listing); those above the highest listing do not.
+    while above and above[-1] not in listed:
+        above.pop()
+    return [*reversed(above), *rows]
 
 
 def _base_ref(ref: str) -> str:
@@ -528,6 +543,9 @@ def _plausible(key: ComponentKey) -> bool:
     ):
         return False
     words = value.split() or [""]
+    if sum(_PROSE_WORD.fullmatch(word) is not None for word in words) >= 2:
+        # A sentence beside the table ran in: 'J201/2N5457 super small size.'
+        return False
     if key.category == ComponentCategory.POTENTIOMETERS:
         # A pot's control name may come first: 'P1  GAIN 1M Log'.
         while len(words) > 1 and words[0].isalpha() and words[0].isupper():
@@ -579,10 +597,12 @@ def _unlisted(pages_data: list[PDFPageExtraction], listed: set[str]) -> set[str]
     unlisted = set()
     for data in pages_data:
         listings = find_listings(data["words"])
+        # A short column of controls counts ('Trim1 | Trim2 | VOL', above
+        # Samurai Boost's unread 'Boost | Toggle | DPDT').
         columns = [
             c
             for c in _clusters([lst.x0 for lst in listings], _ALIGN_PT)
-            if len(c) >= _MIN_ALIGNED
+            if len(c) >= _LABEL_COLUMN
         ]
         for cells in page_lines(data["words"]):
             for cell in cells:
@@ -621,11 +641,18 @@ def _unread(listed: dict[str, ComponentKey], mentioned: set[str]) -> set[str]:
         m = _SERIAL_REF.fullmatch(ref)
         if m:
             numbers.setdefault(m.group(1), set()).add(int(m.group(2)))
+    # Each hundred is a series of its own: Five Cats numbers the power
+    # section 'C100', 'D100' after 'C1'-'C13'.
+    series = {
+        (prefix, n // _SERIES): {k for k in ns if k // _SERIES == n // _SERIES}
+        for prefix, ns in numbers.items()
+        for n in ns
+    }
     unread = {
         f"{prefix}{n}"
-        for prefix, ns in numbers.items()
-        if len(ns) >= 3
-        for n in range(1, max(ns))
+        for (prefix, hundred), ns in series.items()
+        if len(numbers[prefix]) >= 3
+        for n in range(max(1, min(ns) if hundred else 1), max(ns))
         if n not in ns
     }
     values = {word for key in listed.values() for word in key.value.split()}
@@ -639,11 +666,20 @@ def _unread(listed: dict[str, ComponentKey], mentioned: set[str]) -> set[str]:
             continue  # pads ('S4'), versions ('v4'), junk read off traces
         prefix, n = m.group(1), int(m.group(2))
         if prefix in numbers:
-            if n <= max(numbers[prefix]):
+            # The enclosure badge's 'C60' is no capacitor beside 'C1'-'C13'.
+            if (prefix, n // _SERIES) in series and n <= max(
+                series[prefix, n // _SERIES]
+            ):
                 unread.add(word)
         elif designator.category not in named:
             unread.add(word)
     return unread - set(listed)
+
+
+def _several_values(value: str) -> bool:
+    """Whether a value is several resistor or capacitor values ('68K 43K 47K')."""
+    words = value.split()
+    return len(words) > 1 and all(parse_value_to_decimal(w) is not None for w in words)
 
 
 def _verdict(
@@ -781,7 +817,13 @@ def attempt_ocr(
             "the document.",
         )
         for ref in sorted(
-            _unread(_listed(result.inventory) | _listed(parts), mentioned)
+            # A part that looks misread ('C60 | MM', an enclosure badge) does
+            # not extend a series.
+            _unread(
+                _listed(result.inventory)
+                | {r: k for r, k in _listed(parts).items() if _plausible(k)},
+                mentioned,
+            )
             # A row read but dropped (its value too long to be one) is named.
             | _unlisted(pages_data, {r.upper() for r in {*_listed(parts), *known}})
         )
@@ -797,6 +839,25 @@ def attempt_ocr(
     seen = {(w.kind, w.ref) for w in warnings}
     warnings += [w for w in own if (w.kind, w.ref) not in seen]
     conflicts = {w.ref for w in own if w.kind == ParseWarningKind.CONFLICTING_DUPLICATE}
+    side_by_side = sorted(
+        ref
+        for key, data in parts.items()
+        if _several_values(key.value)
+        for ref in data["refs"]
+    )
+    if not builds and len(side_by_side) >= _SIDE_BY_SIDE:
+        # Victory III prints 'R11 | 68K | 43K | 47K' under 'Jack | Kraken |
+        # Sheriff'; read as one list, the builds run together.
+        builds = len(side_by_side)
+        warnings.append(
+            ParseWarning(
+                ParseWarningKind.CONFLICTING_DUPLICATE,
+                "",
+                f"Some rows list several values side by side ({', '.join(side_by_side[:3])}"
+                f"{'...' if len(side_by_side) > 3 else ''}): the parts list may "
+                "describe several builds. Check the document.",
+            )
+        )
     conflicts |= {""} if builds else set()
     verdict = _verdict(
         len(found), suspect, coverage, _gap_share(found | known), bool(conflicts)

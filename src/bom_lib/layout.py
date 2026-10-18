@@ -113,14 +113,15 @@ _TYPE_TEXT = re.compile(
     r"\b(?:resistor|cap(?:acitor)?|diode|pot(?:entiometer)?|transistor|mosfet|j-?fet"
     r"|[np]pn|op[- ]?amp|regulator|toggle|trim(?:-?pot|mer)?|footswitch|switching"
     # A type cell OCR splits in two keeps only its first word: 'Box | Cap'.
-    r"|box|ceramic|electrolytic|polari[sz]ed|mlcc|film|schottky|zener|germanium"
+    r"|box|ceramic|electrolytic|polari[sz]ed|mlcc|film|schottky|zenn?er|germanium"
+    r"|charge pump|darlington"
     r"|watt|standard|\d+[- ]?pin|dip-?\d*)\b",
     re.IGNORECASE,
 )
 _TYPE_SHARE = 0.6
 # A part value or part number: '33k', '2M2', '220uF', 'B5K', 'TL072', '1N4148'.
 _VALUE_SHAPE = re.compile(
-    r"[ABCW]?\d+(?:\.\d+)?[pnuµkKMR]\d*(?:F|Ω)?|\d?[A-Z]{1,4}\d{2,}[A-Z]*",
+    r"[ABCW]?\d+(?:\.\d+)?[pnuµkKMR]\d*(?:F|Ω)?|\d?[A-Za-z]{1,4}\d{2,}[A-Z]*",
 )
 _TRIM_HEADING = re.compile(r"TRIM(?:MER)?S?(?:\s+POTS?)?\b", re.IGNORECASE)
 _TRIM_MARK = re.compile(r"\bTRIM|\b3362P?\b", re.IGNORECASE)
@@ -485,8 +486,7 @@ def find_listings(words: list[PDFWord]) -> list[Listing]:
     lines = page_lines(words)
     starts = Counter(round(listing.x0) for listing in _scan(words, frozenset()))
     columns = frozenset(x for x, n in starts.items() if n >= _MIN_COLUMN_REFS)
-    types = _type_columns(lines)
-    return _mark_trimmers(_scan(words, columns | types, types - columns), lines)
+    return _mark_trimmers(_scan(words, columns, _type_columns(lines)), lines)
 
 
 def starts_description(value: str, text: str) -> bool:
@@ -585,14 +585,18 @@ def _in_column(x0: float, size: float, columns: frozenset[int]) -> bool:
 
 def _scan(
     words: list[PDFWord],
-    columns: frozenset[int],
-    type_columns: frozenset[int] = frozenset(),
+    designators: frozenset[int],
+    types: frozenset[int] = frozenset(),
 ) -> list[Listing]:
-    """One listing pass; annotations never extend into a designator column.
+    """One listing pass; annotations never extend into another column.
 
-    A part description in a type column ('6mm Trim Pot') names no part, so
-    it starts no listing up to the next designator.
+    On a page with type columns, a part description ('6mm Trim Pot') ends a
+    value and names no part itself, so it starts no listing up to the next
+    designator.
     """
+    columns = designators | types
+    # A column where both designators and descriptions start is not skipped.
+    only_types = types - designators
     listings: list[Listing] = []
     # (value x-position, font size, index into listings) for the previous line.
     above: list[tuple[float, float, int]] = []
@@ -603,14 +607,8 @@ def _scan(
         current: list[tuple[float, float, int]] = []
         i = 0
         while i < len(texts):
-            if _in_column(cells[i].x0, cells[i].size, type_columns):
-                i += 1
-                while i < len(texts) and not (
-                    is_designator(texts[i])
-                    or _NUMBERED_LABEL.fullmatch(texts[i])
-                    or _in_column(cells[i].x0, cells[i].size, columns - type_columns)
-                ):
-                    i += 1
+            if _in_column(cells[i].x0, cells[i].size, only_types):
+                i = _description_end(cells, i, designators)
                 continue
             nxt = texts[i + 1] if i + 1 < len(texts) else None
             after = texts[i + 2] if i + 2 < len(texts) else None
@@ -637,16 +635,21 @@ def _scan(
                 # column: 'SW1  (FM/CC/Vintage)  DPDT On-On-On' (Minidrive) runs
                 # its value under the pots column.
                 complete = not _LABEL.fullmatch(" ".join(parts))
-                if (parts == ["LED"] and _LED_SIZE.match(texts[j])) or (
+                if types and (
+                    (parts == ["LED"] and _LED_SIZE.match(texts[j]))
+                    or (
+                        _VALUE_SHAPE.fullmatch(parts[0]) is not None
+                        and _describes(texts[j], following)
+                    )
+                ):
+                    # The value's description: 'D5 | LED | 3MM LED',
+                    # 'U2 | TL072 | 8 Pin Dual Op-Amp'.
+                    break
+                if (
                     _is_ref_cell(texts[j], following)
                     or _SPACED_REF.fullmatch(texts[j])
                     or not _is_annotation(texts[j])
                     or (complete and _in_column(cells[j].x0, cells[j].size, columns))
-                    or (
-                        type_columns
-                        and _VALUE_SHAPE.fullmatch(parts[0]) is not None
-                        and _describes(texts[j], following)
-                    )
                 ):
                     break
                 parts.append(texts[j])
@@ -662,9 +665,38 @@ def _scan(
                         x0=cells[i].x0,
                     )
                 )
+            if (
+                types
+                and j < len(texts)
+                and _describes(texts[j], _text_at(texts, j + 1))
+            ):
+                # Its description names no part: '5K | 6mm Trim Pot'.
+                j = _description_end(cells, j, designators)
             i = j
         above = current
     return listings
+
+
+def _text_at(texts: list[str], k: int) -> str | None:
+    return texts[k] if k < len(texts) else None
+
+
+def _description_end(cells: list[Cell], start: int, designators: frozenset[int]) -> int:
+    """Where a part description starting at a cell ends: the next designator."""
+    k = start + 1
+    # A numbered designator or a control name: a description's 'Trim Pot' or
+    # 'LED' is none.
+    while k < len(cells) and not (
+        BOARD_REF.fullmatch(cells[k].text)
+        or _NUMBERED_LABEL.fullmatch(cells[k].text)
+        or (
+            cells[k].text.isupper()
+            and _is_ref_cell(cells[k].text, _text_at([c.text for c in cells], k + 1))
+        )
+        or _in_column(cells[k].x0, cells[k].size, designators)
+    ):
+        k += 1
+    return k
 
 
 def _absorb_continuations(

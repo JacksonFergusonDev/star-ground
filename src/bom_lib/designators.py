@@ -72,7 +72,8 @@ _SUFFIX = re.compile(r"\d{1,3}[A-Ha-h]?|_[A-Za-z0-9]+")
 # only these short prefixes are trusted to start a new listing there.
 BOARD_REF = re.compile(
     r"(?:(?:R|C|D|Q|IC|U|SW|LED|LDR|X|Y|VR|TRIM|TR|CLR)\d{1,3}[A-Ha-h]?"
-    r"|(?:IC|LED|JACK|SW)_[A-Za-z0-9]+)"
+    # A switch symbol's name is a value: 'CLIP1 | SW_SPDT' (Five Cats).
+    r"|(?:IC|LED|JACK|SW)_(?!(?:[SD]P[SD]T|[34]PDT)$)[A-Za-z0-9]+)"
 )
 
 
