@@ -254,6 +254,31 @@ class TestTableBlock:
         assert {"3PDT-A", "4PDT", "D1"} <= {w["text"] for w in block["words"]}
         assert _unlisted([block], {f"D{k}" for k in range(1, 6)}) == {"3PDT-A", "4PDT"}
 
+    def test_a_build_header_under_the_typed_header_is_left_out(self) -> None:
+        # Victory III: 'Jack | Kraken | Sheriff' names the builds' value
+        # columns, under 'Ref | Value | Type'; it reads better without them.
+        def row(top: float, *cells: tuple[str, float]) -> list[OcrBox]:
+            return [OcrBox(t, x, x + 6 * len(t), top, top + 9) for t, x in cells]
+
+        boxes = [
+            *row(432, ("Ref", 329), ("Value", 383), ("Type", 470)),
+            *row(445, ("Jack", 355), ("Kraken", 384), ("Sheriff", 420)),
+            *[
+                b
+                for k in range(1, 6)
+                for b in row(
+                    445 + 13 * k,
+                    (f"C{k}", 329),
+                    ("1n", 356),
+                    ("2n", 384),
+                    ("Box Cap", 470),
+                )
+            ],
+        ]
+        kept = {w["text"] for w in table_block(page_words(boxes))["words"]}
+        assert "C1" in kept
+        assert "Kraken" not in kept
+
     def test_build_columns_become_a_table(self) -> None:
         # OKS Fuzz: 'Component | ColorSound | 1996 | Dark Meathead' two rows
         # above a value per build; header cells are centred over values.

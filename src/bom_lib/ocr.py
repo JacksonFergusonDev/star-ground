@@ -76,10 +76,8 @@ _FEW_CHARS = 50
 _VERTICAL = 1.1
 # A box's height includes padding around the glyphs.
 _GLYPH_SHARE = 0.75
-# A box joins a row when its middle lies within this share of a box height of
-# the row's: side-by-side tables can set their rows half a row apart (Five
-# Cats E.P.3.0's 'U1' beside 'R8').
-_ROW_SHARE = 0.35
+# A box's cell neighbour lies within this many box heights of it.
+_NEIGHBOUR = 3
 
 # A parts table is a grid: at least this many listings start at one x position
 # (within _ALIGN_PT). Labels on a PCB render or schematic are scattered, and
@@ -304,6 +302,43 @@ def _starts_cell(token: str) -> bool:
     )
 
 
+def _middle(box: OcrBox) -> float:
+    return (box.top + box.bottom) / 2
+
+
+def _follow_neighbours(rows: list[list[OcrBox]]) -> None:
+    """Moves each box to the row of its cell neighbour, where that is closer.
+
+    A table beside another can set its rows half a row apart (Five Cats
+    E.P.3.0): 'U1' lies as near the other table's 'R8' row as its own
+    '7660SEPA', and grouping by height alone can put it in either. The
+    nearest box beside it, its cell neighbour, says which.
+    """
+    for k, row in enumerate(rows):
+        near = [*rows[k - 1 : k], *rows[k + 1 : k + 2]]
+        for box in list(row):
+            if len(row) == 1:
+                break
+            height = box.bottom - box.top
+            beside = [
+                (max(b.x0 - box.x1, box.x0 - b.x1), j, b)
+                for j, other in enumerate([row, *near])
+                for b in other
+                if b is not box and abs(_middle(b) - _middle(box)) < height
+            ]
+            if not beside:
+                continue
+            gap, j, neighbour = min(beside, key=lambda t: t[0])
+            middle = median(_middle(b) for b in row if b is not box)
+            if (
+                j
+                and gap < _NEIGHBOUR * height
+                and abs(_middle(neighbour) - _middle(box)) < abs(middle - _middle(box))
+            ):
+                row.remove(box)
+                near[j - 1].append(box)
+
+
 def page_words(boxes: list[OcrBox]) -> PDFPageExtraction:
     """Turns recognized boxes into the positioned words the readers expect.
 
@@ -342,10 +377,11 @@ def page_words(boxes: list[OcrBox]) -> PDFPageExtraction:
                 > 0.5 * min(b.x1 - b.x0, box.x1 - box.x0)
                 for b in row
             )
-            if gap < _ROW_SHARE * min(height, row_height) and not stacked:
+            if gap < 0.5 * min(height, row_height) and not stacked:
                 row.append(box)
                 continue
         rows.append([box])
+    _follow_neighbours(rows)
 
     words: list[PDFWord] = []
     lines = []
@@ -815,11 +851,18 @@ def _rows_above(
     # as no listing); those above the highest listing do not, unless the
     # table's typed header heads them ('3PDT-A | 3PDT | 3PDT Footswitch'
     # under 'Reference | Value | Footprint', Five Cats Easyfoot).
+    # Those must start in the table's first column: a build header ('Jack |
+    # Kraken | Sheriff' under 'Ref | Value | Type', Victory III) does not.
     headers = [line[0]["top"] for line in lines if heads_typed_table(line)]
+    firsts = [line[0]["x0"] for line in lines if line[0]["top"] in tops]
+    starts = {line[0]["top"]: line[0]["x0"] for line in lines}
     while (
         above
         and above[-1] not in listed
-        and not any(0 < above[-1] - h <= _TRAILING_ROW * pitch for h in headers)
+        and not (
+            any(0 < above[-1] - h <= _TRAILING_ROW * pitch for h in headers)
+            and any(abs(starts[above[-1]] - x) <= _ALIGN_PT for x in firsts)
+        )
     ):
         above.pop()
     return [*reversed(above), *rows]
