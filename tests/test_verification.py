@@ -16,9 +16,11 @@ from src.bom_lib.verification import (
     check_duplicate,
     check_footnotes,
     check_marking_code,
+    check_numbering_gaps,
     check_parts_found,
     check_prose_pots,
     check_row_quantity,
+    check_two_values,
     check_unextracted_refs,
     check_value_assignments,
     check_valueless_refs,
@@ -479,3 +481,31 @@ def test_pots_given_only_in_prose() -> None:
     with_pot = _inventory((ComponentCategory.POTENTIOMETERS, "100kB", "TONE"))
     check_prose_pots([text], with_pot, stats)
     assert stats["warnings"] == []
+
+
+def test_a_sparse_series_names_its_gaps() -> None:
+    # GuitarPCB G2 Animal's text layer lists only a table of substitutes.
+    parts = [(ComponentCategory.RESISTORS, "10M", f"R{n}") for n in (1, 4, 8, 12)]
+    stats = create_empty_stats()
+    check_numbering_gaps(_inventory(*parts), stats)
+    assert {w.ref for w in stats["warnings"]} == {
+        f"R{n}" for n in (2, 3, 5, 6, 7, 9, 10, 11)
+    }
+    # A list with a few gaps is complete enough.
+    stats = create_empty_stats()
+    dense = [
+        (ComponentCategory.RESISTORS, "1k", f"R{n}") for n in range(1, 12) if n != 7
+    ]
+    check_numbering_gaps(_inventory(*dense), stats)
+    assert stats["warnings"] == []
+
+
+def test_two_values_side_by_side() -> None:
+    inv = _inventory(
+        (ComponentCategory.RESISTORS, "7.5k 8k2", "R6"),
+        (ComponentCategory.CAPACITORS, "22n 63V", "C1"),
+        (ComponentCategory.RESISTORS, "620 Lower Value", "R36"),
+    )
+    stats = create_empty_stats()
+    check_two_values(inv, stats)
+    assert [w.ref for w in stats["warnings"]] == ["R6"]

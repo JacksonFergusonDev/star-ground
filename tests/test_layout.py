@@ -705,3 +705,37 @@ def test_valueless_refs() -> None:
         for w in _line(*(c for c in (ref, value) if c), top=100.0 + 20 * k)
     ]
     assert valueless_refs(words) == ["D6", "D7", "D8", "D9"]
+
+
+def test_a_control_name_labels_a_board_designator() -> None:
+    # GuitarPCB PURP 'TR1 - BIAS | 100k'; XX Double Shot 'P1 | VOL 1 | 100k Log'.
+    assert find_listings(_line("TR1 - BIAS", "100k")) == [Listing("TR1", "100k")]
+    assert find_listings(_line("P1", "VOL 1", "100k Log")) == [
+        Listing("P1", "100k Log")
+    ]
+
+
+def test_side_by_side_boards_are_two_tables() -> None:
+    # GuitarPCB DumbleTone: 'FrontStage' and 'DumbleTone' head one header line.
+    from src.bom_lib.layout import find_bom_rows
+
+    words = [
+        *_line("FrontStage", top=80.0),
+        *[
+            PDFWord(**{**w, "x0": w["x0"] + 300, "x1": w["x1"] + 300})
+            for w in _line("DumbleTone", top=80.0)
+        ],
+        *_line("Part", "Value", top=100.0),
+        *[
+            PDFWord(**{**w, "x0": w["x0"] + 300, "x1": w["x1"] + 300})
+            for w in _line("Part", "Value", top=100.0)
+        ],
+        *_line("R1", "1M5", top=120.0),
+        *[
+            PDFWord(**{**w, "x0": w["x0"] + 300, "x1": w["x1"] + 300})
+            for w in _line("R1", "2M2", top=120.0)
+        ],
+    ]
+    rows = find_bom_rows(words)
+    assert [(r.refs, r.value) for r in rows] == [("R1", "1M5"), ("R1", "2M2")]
+    assert rows[0].table != rows[1].table
