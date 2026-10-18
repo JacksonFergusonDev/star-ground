@@ -116,6 +116,10 @@ _MAX_GAP_SHARE = 0.25
 # A reading naming more designators it did not read than this share of those
 # it did is incomplete.
 _MAX_UNREAD_SHARE = 0.1
+# Misread designator cells are read again on their own, enlarged by each of
+# these factors in turn until one reads a designator, at most this many per page.
+_REREAD_SCALES = (1.5, 2.5)
+_MAX_REREADS = 24
 
 # One OCR job at a time: each holds a rendered page and the model's buffers.
 _LOCK = threading.Lock()
@@ -530,6 +534,153 @@ def table_block(data: PDFPageExtraction) -> PDFPageExtraction:
     }
 
 
+@dataclass(frozen=True)
+class _LabelCell:
+    """A designator cell of a parts table that read as no designator.
+
+    Attributes:
+        word: The word read in the cell, or None when nothing was.
+        row: A word on the cell's row (its top and size place the cell).
+        left: Left edge of the cell, in points.
+        right: Right edge of the cell, in points.
+    """
+
+    word: PDFWord | None
+    row: PDFWord
+    left: float
+    right: float
+
+
+def _label_cells(words: list[PDFWord]) -> list[_LabelCell]:
+    """The table's designator cells that read as no designator.
+
+    A cell in a designator column that starts no listing ('60 | 10uF', 'ε3 |
+    2N3904'), or a row with a cell in the column's value column and nothing in
+    its designator column (the label went undetected).
+
+    Args:
+        words: The words of the page's parts table (`table_block`).
+
+    Returns:
+        The cells, top to bottom within each column.
+    """
+    lines = page_lines(words)
+    listings = find_listings(words)
+    starts = {(lst.line, round(lst.x0)) for lst in listings}
+    cells: list[_LabelCell] = []
+    for column in _clusters([lst.x0 for lst in listings], _ALIGN_PT):
+        if len(column) < _MIN_ALIGNED:
+            continue
+        left, right = column[0] - _ALIGN_PT, column[-1] + _ALIGN_PT
+        values = [
+            min(after)
+            for lst in listings
+            if left <= lst.x0 <= right
+            and (after := [c.x0 for c in lines[lst.line] if c.x0 > lst.x0 + 1])
+        ]
+        if not values:
+            continue
+        value_x = median(values)
+        for number, line in enumerate(lines):
+            here = [c for c in line if left <= c.x0 < value_x - _ALIGN_PT]
+            later = [c for c in line if c.x0 >= value_x - _ALIGN_PT]
+            if not later:
+                continue
+            row = later[0].words[0]
+            if not here:
+                if abs(later[0].x0 - value_x) <= _ALIGN_PT:
+                    cells.append(_LabelCell(None, row, left, value_x - 1))
+                continue
+            cell = here[0]
+            if (number, round(cell.x0)) in starts or len(cell.words) > 1:
+                continue
+            right = min(c.x0 for c in [*here[1:], later[0]]) - 1
+            cells.append(_LabelCell(cell.words[0], row, cell.x0, right))
+    return cells
+
+
+def _reread(
+    crop: Image, scale: float, middle: float, recognizer: Recognizer
+) -> str | None:
+    """Reads one cell's designator, enlarging it until it reads as one.
+
+    Args:
+        crop: The cell, with a margin.
+        scale: Points per pixel of the crop.
+        middle: The cell's vertical middle, in points from the crop's top.
+        recognizer: The OCR engine.
+
+    Returns:
+        The designator, or None when no enlargement reads one.
+    """
+    for factor in _REREAD_SCALES:
+        size = (round(crop.width * factor), round(crop.height * factor))
+        boxes = recognizer(crop.resize(size), scale / factor)
+        if not boxes:
+            continue
+        # The crop can catch the rows above and below: the cell is the box
+        # nearest its middle.
+        text = min(boxes, key=lambda b: abs((b.top + b.bottom) / 2 - middle)).text
+        ref = next((t for t in (text, text.upper()) if is_designator(t)), None)
+        if ref is not None:
+            return ref
+    return None
+
+
+def _reread_labels(
+    data: PDFPageExtraction, image: Image, scale: float, recognizer: Recognizer
+) -> PDFPageExtraction:
+    """Reads the table's misread designator cells again, one cell at a time.
+
+    In a whole page, OCR misreads some bold labels the same way every time:
+    'C9' as '60', 'Q3' as 'ε3', 'R8' as '88' (Five Cats), or misses them. The
+    cell on its own, enlarged, reads true. A re-read replaces the label only
+    when it reads as a designator the table does not already list.
+
+    Args:
+        data: One OCR'd page.
+        image: The page's rendering.
+        scale: Points per pixel of the rendering.
+        recognizer: The OCR engine.
+
+    Returns:
+        The page, with the labels read again.
+    """
+    table = table_block(data)["words"]
+    cells = _label_cells(table)[:_MAX_REREADS]
+    if not cells:
+        return data
+    words = list(data["words"])
+    # The table's own listings: the board drawing beside it names parts too.
+    listed = {lst.ref.upper() for lst in find_listings(table)}
+    for cell in cells:
+        word, row = cell.word, cell.row
+        height = row["size"] / _GLYPH_SHARE
+        pad = height / 4
+        box = (
+            round((cell.left - pad) / scale),
+            round((row["top"] - pad) / scale),
+            round(cell.right / scale),
+            round((row["top"] + height + pad) / scale),
+        )
+        if box[2] <= box[0]:
+            continue
+        ref = _reread(image.crop(box), scale, pad + height / 2, recognizer)
+        if ref is None or ref.upper() in listed:
+            continue
+        listed.add(ref.upper())
+        if word is not None:
+            words[words.index(word)] = PDFWord(**{**word, "text": ref})
+        else:
+            width = (row["x1"] - row["x0"]) / max(len(row["text"]), 1)
+            x0 = cell.left + _ALIGN_PT
+            words.append(
+                PDFWord(**{**row, "text": ref, "x0": x0, "x1": x0 + width * len(ref)})
+            )
+    words.sort(key=lambda w: (w["top"], w["x0"]))
+    return {**data, "words": words}
+
+
 def _build_grid(
     lines: list[list[PDFWord]], rows: list[float], pitch: float
 ) -> list[list[str | None]] | None:
@@ -901,6 +1052,7 @@ def attempt_ocr(
             dpi = max(_DPI, 72 * _MIN_RENDER_SIDE / max(page.width, page.height))
             image = page.to_image(resolution=dpi).original.convert("RGB")
             words = page_words(recognizer(image, 72 / dpi))
+            words = _reread_labels(words, image, 72 / dpi, recognizer)
             mentioned |= {w["text"] for w in words["words"]}
             pages_data.append(table_block(words))
             read.append(number)
