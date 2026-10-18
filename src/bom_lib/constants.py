@@ -329,6 +329,9 @@ NOT_POPULATED_VALUES = frozenset(
         # A wire link is not a part to buy (Aion FX: 'R31  JUMPER', '(jumper)').
         "JUMPER",
         "(JUMPER)",
+        # A control left out and wired around (Aion FX legacy Phobos: '(bypass)').
+        "BYPASS",
+        "(BYPASS)",
         # A build that leaves the spot empty (Five Cats OKS Fuzz: 'C3 | empty').
         "EMPTY",
     }

@@ -30,6 +30,7 @@ _PREFIXES: tuple[tuple[str, ComponentCategory | None], ...] = (
     ("RPD", _CAT.RESISTORS),  # Aion FX: input pulldown resistor
     ("RX", _CAT.RESISTORS),  # Aion FX: optional-mod resistors RX1, RX2
     ("CX", _CAT.CAPACITORS),
+    ("DX", _CAT.DIODES),  # Aion FX: alternate clipping diodes DX1-DX4
     ("LDR", _CAT.OPTOELECTRONICS),
     ("LED", _CAT.DIODES),
     ("CLR", _CAT.RESISTORS),

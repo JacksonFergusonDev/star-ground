@@ -288,9 +288,11 @@ def _repeat_variants(
     Five Cats Rat King lists every part four times, once per RAT version, in
     typed tables that number a repeated label ('R1 (2)'). When nearly every
     label repeats the same number of times, each repeat is a build, named by
-    the margin label beside its rows ('Standard RAT', 'Dirty RAT'), which
-    every build must have.
+    the margin label beside its rows ('Standard RAT', 'Dirty RAT') or the
+    heading above them ('Variant: Red Army', 'Power Boost Parts List', Aion FX
+    legacy Halo and Plasma), which every build must have.
     """
+    entries = _located(entries, pages)
     occurrences: dict[str, list[Entry]] = {}
     for e in entries:
         base = _REPEAT_SUFFIX.sub("", e.ref).upper()
@@ -321,13 +323,40 @@ def _repeat_variants(
             groups[k].append(replace(e, ref=_REPEAT_SUFFIX.sub("", e.ref)))
     # Only named builds: unnamed repeats are as likely a second board (GuitarPCB
     # Fuzz God) or a schematic beside the list (Aion FX legacy).
-    names = [_margin_label(group, pages) for group in groups]
+    names = [
+        _margin_label(group, pages) or _heading_label(group, pages) for group in groups
+    ]
     if None in names or len(set(names)) < len(names):
         return []
     return [
         PlannedVariant(str(name), tuple(group))
         for name, group in zip(names, groups, strict=True)
     ]
+
+
+def _located(entries: list[Entry], pages: list[PageContext]) -> list[Entry]:
+    """Entries with the line they sit on, ruled-table rows included.
+
+    A ruled table's rows carry no line (Aion FX legacy Halo prints two builds'
+    tables on a page); the k-th row for a designator on a page sits on the
+    k-th line that starts a cell with it.
+    """
+    seen: Counter[tuple[int, str]] = Counter()
+    located = []
+    for e in entries:
+        if e.line >= 0 or not 0 <= e.page < len(pages):
+            located.append(e)
+            continue
+        ref = _REPEAT_SUFFIX.sub("", e.ref)
+        k = seen[e.page, ref]
+        seen[e.page, ref] += 1
+        at = [
+            n
+            for n, line in enumerate(pages[e.page].lines)
+            if any(cell.text == ref for cell in line)
+        ]
+        located.append(replace(e, line=at[k]) if k < len(at) else e)
+    return located
 
 
 def _position(e: Entry) -> tuple[int, int]:
@@ -350,6 +379,60 @@ def _margin_label(group: list[Entry], pages: list[PageContext]) -> str | None:
         if lo <= w["top"] <= hi:
             lines.setdefault(w["top"], []).append(w["text"])
     return " ".join(next(iter(lines.values()))) if len(lines) == 1 else None
+
+
+# A heading above a build's table: larger than its rows, within a few lines
+# (a description of up to three lines can sit between, Halo's Creamy Dreamer).
+_HEADING_LINES = 6
+_HEADING_SIZE = 1.05
+# Column headings between a build's heading and its rows ('Capacitors |
+# Resistors | Resistors, cont.').
+_SECTION_WORDS = frozenset(
+    {
+        "CAPACITORS",
+        "RESISTORS",
+        "SEMICONDUCTORS",
+        "POTENTIOMETERS",
+        "OTHER",
+        "SWITCHES",
+        "CONT.",
+        "TRANSISTORS",
+        "DIODES",
+        "ICS",
+        "HARDWARE",
+    }
+)
+# Words around the name: 'Variant: Red Army', 'Power Boost Parts List',
+# 'Bill of Materials - FUZZ GOD:', 'Parts (Stock Circuit)'.
+_HEADING_WORDS = re.compile(
+    r"^\s*(?:variant|bill of materials)\s*[:\u2013-]\s*|^\s*parts\b\s*"
+    r"|\s*\bparts(?:\s+list)?\s*$|\s*:\s*$",
+    re.IGNORECASE,
+)
+
+
+def _heading_label(group: list[Entry], pages: list[PageContext]) -> str | None:
+    """The heading that names a build's table, printed above its rows."""
+    if not group:
+        return None
+    page_no = Counter(e.page for e in group).most_common(1)[0][0]
+    page = pages[page_no]
+    first = min(e.line for e in group if e.page == page_no)
+    if not 0 <= first < len(page.lines):
+        return None
+    size = page.lines[first][0].words[0]["size"]
+    for line in reversed(page.lines[max(0, first - _HEADING_LINES) : first]):
+        words = [w for cell in line for w in cell.words]
+        if words[0]["size"] < _HEADING_SIZE * size:
+            continue  # a description under the heading
+        text = " ".join(w["text"] for w in words)
+        if {t.strip(",").upper() for t in text.split()} <= _SECTION_WORDS | {"CONT"}:
+            continue
+        name = _HEADING_WORDS.sub("", text).strip()
+        if name.startswith("(") and name.endswith(")"):
+            name = name[1:-1].strip()
+        return name or None
+    return None
 
 
 # ----------------------------------------------------------- variant tables

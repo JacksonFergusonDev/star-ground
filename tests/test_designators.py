@@ -77,3 +77,10 @@ def test_board_refs(token: str) -> None:
 @pytest.mark.parametrize("token", ["TL072", "BS170", "J201", "C10K", "MPSA18"])
 def test_part_numbers_are_not_board_refs(token: str) -> None:
     assert not BOARD_REF.fullmatch(token)
+
+
+def test_alternate_clipping_diodes() -> None:
+    # Aion FX legacy Crescent: 'DX1-DX4  1N914'.
+    from src.bom_lib.designators import is_designator
+
+    assert is_designator("DX1")

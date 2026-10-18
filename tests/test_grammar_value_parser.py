@@ -96,3 +96,13 @@ def test_grammar_primitives() -> None:
     # build_value_parser returns valid parser
     parser = build_value_parser()
     assert parser is not None
+
+
+def test_greek_mu_is_micro() -> None:
+    # Aion FX legacy fonts set '4μ7' with the Greek letter.
+    from decimal import Decimal
+
+    from src.bom_lib.utils import parse_value_to_decimal
+
+    assert parse_value_to_decimal("4\u03bc7") == Decimal("0.0000047")
+    assert parse_value_to_decimal("10\u03bcF") == Decimal("0.000010")
