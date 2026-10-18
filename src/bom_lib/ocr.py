@@ -27,6 +27,7 @@ from src.bom_lib.designators import BOARD_REF, is_designator, parse_designator
 from src.bom_lib.enums import ComponentCategory, OcrVerdict, ParseWarningKind
 from src.bom_lib.layout import (
     REF_RANGE,
+    Listing,
     find_listings,
     group_lines,
     heads_typed_table,
@@ -72,9 +73,13 @@ _IMAGE_SHARE = 0.02
 _FEW_CHARS = 50
 # Recognized boxes taller than they are wide (by this factor) are vertical
 # labels on PCB renders, never parts-list cells.
-_VERTICAL = 1.2
+_VERTICAL = 1.1
 # A box's height includes padding around the glyphs.
 _GLYPH_SHARE = 0.75
+# A box joins a row when its middle lies within this share of a box height of
+# the row's: side-by-side tables can set their rows half a row apart (Five
+# Cats E.P.3.0's 'U1' beside 'R8').
+_ROW_SHARE = 0.35
 
 # A parts table is a grid: at least this many listings start at one x position
 # (within _ALIGN_PT). Labels on a PCB render or schematic are scattered, and
@@ -316,7 +321,7 @@ def page_words(boxes: list[OcrBox]) -> PDFPageExtraction:
         b
         for b in boxes
         if b.text.strip()
-        and not (len(b.text) > 2 and b.bottom - b.top > _VERTICAL * (b.x1 - b.x0))
+        and not (len(b.text) > 1 and b.bottom - b.top > _VERTICAL * (b.x1 - b.x0))
     ]
     flat.sort(key=lambda b: (b.top + b.bottom) / 2)
     rows: list[list[OcrBox]] = []
@@ -337,7 +342,7 @@ def page_words(boxes: list[OcrBox]) -> PDFPageExtraction:
                 > 0.5 * min(b.x1 - b.x0, box.x1 - box.x0)
                 for b in row
             )
-            if gap < 0.5 * min(height, row_height) and not stacked:
+            if gap < _ROW_SHARE * min(height, row_height) and not stacked:
                 row.append(box)
                 continue
         rows.append([box])
@@ -427,6 +432,33 @@ def _regular(rows: list[float]) -> bool:
     return _pitch(rows) is not None
 
 
+def _column_pitch(
+    aligned: list[Listing],
+    lines: list[list[PDFWord]],
+    rows: list[float],
+    columns: list[list[float]],
+) -> float | None:
+    """The row pitch of side-by-side tables whose rows are offset, or None.
+
+    Two tables can set their rows half a row apart (Five Cats E.P.3.0): the
+    rows of both together are uneven, but the longest designator column's are
+    even. The other table's can have rows of several lines ('U1 | 7660SEPA |
+    7660SEPA, MAX1044S, or LT1054 ...').
+    """
+    if len(columns) < 2:
+        return None
+    longest = max(columns, key=len)
+    tops = sorted(
+        {
+            top
+            for lst in aligned
+            if longest[0] <= lst.x0 <= longest[-1]
+            and (top := lines[lst.line][0]["top"]) in rows
+        }
+    )
+    return _pitch(tops)
+
+
 def table_block(data: PDFPageExtraction) -> PDFPageExtraction:
     """Keeps only the words of the page's parts table.
 
@@ -456,7 +488,7 @@ def table_block(data: PDFPageExtraction) -> PDFPageExtraction:
     # A row that read as no listing leaves a gap of one more pitch.
     blocks = _clusters(tops, (_BLOCK_GAP + 1 + _PITCH_TOLERANCE) * pitch)
     rows = max(blocks, key=len)
-    row_pitch = _pitch(rows)
+    row_pitch = _pitch(rows) or _column_pitch(aligned, lines, rows, columns)
     if row_pitch is None:
         # Aligned labels on a schematic (Apollo Tremolo's) are no table.
         return {"tables": [], "text": "", "words": []}
@@ -780,8 +812,15 @@ def _rows_above(
         if aligned >= _ABOVE_CELLS:
             above.append(top)
     # Rows between listings belong too ('Boost | Toggle | DPDT', which reads
-    # as no listing); those above the highest listing do not.
-    while above and above[-1] not in listed:
+    # as no listing); those above the highest listing do not, unless the
+    # table's typed header heads them ('3PDT-A | 3PDT | 3PDT Footswitch'
+    # under 'Reference | Value | Footprint', Five Cats Easyfoot).
+    headers = [line[0]["top"] for line in lines if heads_typed_table(line)]
+    while (
+        above
+        and above[-1] not in listed
+        and not any(0 < above[-1] - h <= _TRAILING_ROW * pitch for h in headers)
+    ):
         above.pop()
     return [*reversed(above), *rows]
 
