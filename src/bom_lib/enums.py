@@ -49,6 +49,7 @@ class ParseWarningKind(StrEnum):
     VALUE_CHOICE = "Builder's choice"
     NO_PARTS_LIST = "No parts list"
     OCR_READ = "Read by OCR"
+    MISREAD_TEXT = "Misread text layer"
 
 
 class OcrVerdict(StrEnum):

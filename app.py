@@ -391,13 +391,24 @@ def render_build_picker(slot: ProjectSlot, result: ParseResult) -> None:
         )
 
 
+def offered(slot: ProjectSlot) -> ParseResult | None:
+    """The slot's parse as the builder has it: with OCR's parts if accepted.
+
+    OCR can read several builds, so the build is chosen from this result.
+    """
+    parsed = slot.parsed
+    if parsed is not None and slot.use_ocr and parsed.ocr and parsed.ocr.has_parts:
+        return parsed.accept_ocr()
+    return parsed
+
+
 def render_ocr_offer(slot: ProjectSlot, attempt: OcrAttempt) -> None:
     """Tells the builder their parts list is an image, and offers OCR's reading.
 
     OCR misreads plausibly, so its parts are never used unless the builder
     opts in, and each one is listed for review on the master list.
     """
-    if attempt.verdict == OcrVerdict.UNUSABLE or not attempt.inventory:
+    if attempt.verdict == OcrVerdict.UNUSABLE or not attempt.has_parts:
         st.warning(attempt.message, icon="🖼️")
         slot.use_ocr = False
         return
@@ -552,10 +563,11 @@ for i, slot in enumerate(st.session_state.pedal_slots):
 
         parsed = ensure_parsed(slot)
         if parsed is not None:
-            if parsed.requires_choice:
-                render_build_picker(slot, parsed)
             if parsed.ocr is not None:
                 render_ocr_offer(slot, parsed.ocr)
+            builds = offered(slot)
+            if builds is not None and builds.requires_choice:
+                render_build_picker(slot, builds)
             for note in parsed.options:
                 st.caption(f"Option: {note}")
 
@@ -583,7 +595,9 @@ if generate:
     unchosen = [
         str(slot.name or slot.parsed.title or f"Project #{i + 1}")
         for i, slot in enumerate(st.session_state.pedal_slots)
-        if slot.parsed is not None and slot.parsed.requires_choice and not slot.variant
+        if (result := offered(slot)) is not None
+        and result.requires_choice
+        and slot.variant not in result.variant_names
     ]
     if unchosen:
         st.error(
@@ -615,11 +629,9 @@ if generate:
         # Unified Processing via Strategy Pattern. Uploads and URLs were parsed
         # when they arrived; work on a copy so the cached result stays pristine.
         if slot.parsed is not None and slot.parsed_key == input_key(slot):
-            result = copy.deepcopy(slot.parsed)
-            if result.requires_choice and slot.variant:
-                result = result.select(slot.variant)
-            if slot.use_ocr and result.ocr is not None and result.ocr.inventory:
-                result = result.accept_ocr()
+            result = copy.deepcopy(offered(slot) or slot.parsed)
+            if result.requires_choice and slot.variant in result.variant_names:
+                result = result.select(str(slot.variant))
             rename_source_in_inventory(result.inventory, PENDING_SOURCE, source)
         else:
             result = parser_context.process(slot.method, slot.data, source_name=source)
@@ -639,7 +651,7 @@ if generate:
             slot.name = str(detected_title)
             label = str(detected_title)
         # Name the build in every output: 'Muffin Fuzz (Civil War)'.
-        if slot.variant and slot.parsed is not None and slot.parsed.requires_choice:
+        if slot.variant and (built := offered(slot)) and built.requires_choice:
             label = f"{label} ({slot.variant})"
         if label != source:
             rename_source_in_inventory(p_inv, source, label)

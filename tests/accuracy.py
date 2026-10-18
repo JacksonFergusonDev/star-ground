@@ -564,7 +564,7 @@ def _is_flagged(ref: str, flagged: set[str]) -> bool:
 def _with_ocr(pdf: Path, res: ParseResult) -> tuple[ParseResult, OcrAttempt | None]:
     """The parse with OCR parts accepted, as a builder accepting them would get."""
     attempt = attempt_ocr(str(pdf), res, "Sample")
-    if attempt is None or not attempt.inventory:
+    if attempt is None or not attempt.has_parts:
         return res, attempt
     return replace(res, ocr=attempt).accept_ocr(), attempt
 

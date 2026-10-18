@@ -29,12 +29,14 @@ from src.bom_lib.layout import (
     REF_RANGE,
     find_listings,
     group_lines,
+    heads_typed_table,
     page_lines,
     split_cells,
     starts_description,
 )
-from src.bom_lib.parser import read_pages
+from src.bom_lib.parser import names_builds, read_pages
 from src.bom_lib.types import (
+    BuildVariant,
     ComponentKey,
     Inventory,
     OcrAttempt,
@@ -90,6 +92,13 @@ _BLOCK_GAP = 3
 # A table's last rows can read as no listing; they are kept when this many
 # rows' pitch or less below it.
 _TRAILING_ROW = 1.5
+# Build-column grids (see `_build_grid`): at least this many value columns,
+# each filled in this share of rows; a header cell names the column whose
+# span holds its centre.
+_GRID_COLUMNS = 2
+_GRID_SHARE = 0.5
+# Rows a separate block needs to continue the table (see `table_block`).
+_CONTINUED_ROWS = 2
 # Cells a row above the table must align with the table's (see `_rows_above`).
 _ABOVE_CELLS = 3
 # Extra character widths set before a designator found inside an OCR box.
@@ -104,6 +113,9 @@ _MIN_PARTS = 5
 _MAX_SUSPECT_SHARE = 0.15
 _MIN_COVERAGE = 0.6
 _MAX_GAP_SHARE = 0.25
+# A reading naming more designators it did not read than this share of those
+# it did is incomplete.
+_MAX_UNREAD_SHARE = 0.1
 
 # One OCR job at a time: each holds a rendered page and the model's buffers.
 _LOCK = threading.Lock()
@@ -159,6 +171,7 @@ _HEADERS = frozenset(
         "UNIQUE",
     }
 )
+_NAME_ON_VALUE = re.compile(r"\b([A-Z]{3,}\d{1,2})([ABCW]\d+(?:\.\d+)?[KkM])\b")
 _SERIAL_REF = re.compile(r"([A-Z]{1,3})(\d{1,3})")
 _DASHES = "-\u2013\u2014"
 # 'TR1 -TR3' read as one box: the range's spaces would split it in two.
@@ -222,8 +235,9 @@ def recognize(image: Image, scale: float) -> list[OcrBox]:
 def needs_ocr(result: ParseResult) -> bool:
     """Whether a parse looks incomplete in a way OCR might fix.
 
-    Either no parts list was read at all, or the document names designators
-    that are missing from the parts list. A document with several builds was
+    Either no parts list was read at all, the document names designators
+    that are missing from the parts list, or a page's text was set aside as
+    another program's misread OCR. A document with several builds was
     read well enough to find them, and is left alone.
 
     Args:
@@ -235,7 +249,12 @@ def needs_ocr(result: ParseResult) -> bool:
     if result.requires_choice:
         return False
     return any(
-        w.kind in (ParseWarningKind.NO_PARTS_LIST, ParseWarningKind.UNEXTRACTED_REF)
+        w.kind
+        in (
+            ParseWarningKind.NO_PARTS_LIST,
+            ParseWarningKind.UNEXTRACTED_REF,
+            ParseWarningKind.MISREAD_TEXT,
+        )
         for w in result.stats["warnings"]
     )
 
@@ -328,6 +347,8 @@ def page_words(boxes: list[OcrBox]) -> PDFPageExtraction:
         for box in _join_ranges(row):
             # OCR reads the micro sign as Greek mu ('1μ'); values use 'µ'.
             text = _SPACED_RANGE.sub(r"\1\2", box.text.replace("μ", "µ"))
+            # A name printed against its value: 'DISTORTION1A100K' (Rat King).
+            text = _NAME_ON_VALUE.sub(r"\1 \2", text)
             tokens = text.split()
             width = (box.x1 - box.x0) / len(" ".join(tokens))
             pos = 0.0
@@ -372,18 +393,34 @@ def _clusters(values: list[float], tolerance: float) -> list[list[float]]:
     return groups
 
 
-def _regular(rows: list[float]) -> bool:
-    """Whether rows are evenly spaced, as a table's are (blank rows allowed)."""
-    gaps = [b - a for a, b in pairwise(rows)]
-    if len(gaps) < 2:
-        return False
-    pitch = median(gaps)
+def _even(gaps: list[float], pitch: float) -> bool:
+    """Whether most gaps are whole multiples of a pitch."""
     even = sum(
         1 <= round(gap / pitch) <= _BLOCK_GAP
         and abs(gap - round(gap / pitch) * pitch) <= _PITCH_TOLERANCE * pitch
         for gap in gaps
     )
     return even >= _MIN_EVEN_ROWS * len(gaps)
+
+
+def _pitch(rows: list[float]) -> float | None:
+    """The row pitch of evenly spaced rows (blank rows allowed), or None.
+
+    The median gap is the pitch unless most rows sit a blank row apart:
+    M-Drive's rows alternate gaps of one and two pitches, so the median is two
+    and the rows one pitch apart look irregular. Half the median is tried
+    then.
+    """
+    gaps = [b - a for a, b in pairwise(rows)]
+    if len(gaps) < 2:
+        return None
+    pitch = median(gaps)
+    return next((p for p in (pitch, pitch / 2) if _even(gaps, p)), None)
+
+
+def _regular(rows: list[float]) -> bool:
+    """Whether rows are evenly spaced, as a table's are (blank rows allowed)."""
+    return _pitch(rows) is not None
 
 
 def table_block(data: PDFPageExtraction) -> PDFPageExtraction:
@@ -415,9 +452,11 @@ def table_block(data: PDFPageExtraction) -> PDFPageExtraction:
     # A row that read as no listing leaves a gap of one more pitch.
     blocks = _clusters(tops, (_BLOCK_GAP + 1 + _PITCH_TOLERANCE) * pitch)
     rows = max(blocks, key=len)
-    if not _regular(rows):
+    row_pitch = _pitch(rows)
+    if row_pitch is None:
         # Aligned labels on a schematic (Apollo Tremolo's) are no table.
         return {"tables": [], "text": "", "words": []}
+    pitch = min(pitch, row_pitch)
     # Rows that read as no listing can split one table in two ('LED | LED'
     # rows, Tone Monarch's daughterboard): a later block in the same
     # designator columns, at the same pitch, continues it.
@@ -425,17 +464,20 @@ def table_block(data: PDFPageExtraction) -> PDFPageExtraction:
     main_columns = [
         c for c in columns if any(c[0] <= starts_at[top] <= c[-1] for top in rows)
     ]
+    # So can a block above it: Rat King prints two builds' tables, one over
+    # the other, in the same columns.
+    main = rows
     for block in blocks:
         if (
-            block[0] > rows[-1]
-            and len(block) >= 2
+            block is not main
+            and len(block) >= _CONTINUED_ROWS
             and _regular([*block, block[-1] + pitch])
             and all(
                 any(c[0] <= starts_at[top] <= c[-1] for c in main_columns)
                 for top in block
             )
         ):
-            rows = rows + block
+            rows = sorted(rows + block)
     # A row that read as no listing ('SUBS | SDPT Toggle', WoollyTron) still
     # belongs to the table when it continues the table's rows from one of
     # its designator columns, so the reading can say it was not read.
@@ -453,6 +495,18 @@ def table_block(data: PDFPageExtraction) -> PDFPageExtraction:
             left = min(left, x0)
     listed = {lines[lst.line][0]["top"] for lst in listings}
     rows = _rows_above(lines, rows, pitch, listed)
+    # The table's own typed header row, just above it (Rat King's first build).
+    # An untyped grid's ('Part | Value', GuitarPCB) reads better without it.
+    header = [
+        line
+        for line in lines
+        if 0 < rows[0] - line[0]["top"] <= _TRAILING_ROW * pitch
+        and heads_typed_table(line)
+    ][-1:]
+    for line in header:
+        rows = [line[0]["top"], *rows]
+        # The whole header: 'Part' can start a little left of 'R1' (GuitarPCB).
+        left = min(left, line[0]["x0"])
     margin = pitch / 2
     kept = [
         w
@@ -460,7 +514,83 @@ def table_block(data: PDFPageExtraction) -> PDFPageExtraction:
         if rows[0] - margin <= w["top"] <= rows[-1] + margin and w["x0"] >= left - 1
     ]
     text = "\n".join(" ".join(w["text"] for w in line) for line in group_lines(kept))
-    return {"tables": [], "text": text, "words": kept}
+    grid = _build_grid(lines, rows, pitch)
+    # Words left of the table on its rows name parts of it ('Standard RAT'
+    # beside one build's rows, Five Cats Rat King).
+    labels = [
+        w
+        for w in words
+        if rows[0] - margin <= w["top"] <= rows[-1] + margin and w["x1"] < left - 1
+    ]
+    return {
+        "tables": [grid] if grid else [],
+        "text": text,
+        "words": kept,
+        "labels": labels,
+    }
+
+
+def _build_grid(
+    lines: list[list[PDFWord]], rows: list[float], pitch: float
+) -> list[list[str | None]] | None:
+    """A table of build columns, rebuilt as the ruled table OCR cannot see.
+
+    OKS Fuzz prints 'Component | ColorSound | 1996 | Meathead | Dark Meathead |
+    Ritual' over rows of a designator and its value in each build. Read as
+    listings, the values run together ('2M 2M 2M 2M 2M'); as a table, the
+    readers give each column its build (`parser._value_column_grid`).
+
+    Returns:
+        The header and rows, or None when the table has no named value columns.
+    """
+    tops = set(rows)
+    body = [split_cells(line) for line in lines if line[0]["top"] in tops]
+    starts = [
+        cell.x0
+        for cells in body
+        if len(cells) >= _GRID_COLUMNS + 1
+        for cell in cells[1:]
+    ]
+    columns = [
+        c for c in _clusters(starts, _ALIGN_PT) if len(c) >= _GRID_SHARE * len(body)
+    ]
+    if len(columns) < _GRID_COLUMNS:
+        return None
+    lefts = [c[0] - _ALIGN_PT for c in columns]
+
+    def column(x: float) -> int | None:
+        """The column whose span (from its left edge to the next's) holds x."""
+        inside = [k for k, left in enumerate(lefts) if x >= left]
+        return inside[-1] if inside else None
+
+    above = [
+        line
+        for line in lines
+        if 0 < rows[0] - line[0]["top"] <= (_BLOCK_GAP + 1) * pitch
+    ]
+    for line in sorted(above, key=lambda line: -line[0]["top"]):
+        cells = split_cells(line)
+        names: list[list[str]] = [[] for _ in columns]
+        for cell in cells[1:]:
+            # Header cells are centred over their column.
+            k = column((cell.x0 + cell.words[-1]["x1"]) / 2)
+            if k is not None:
+                names[k].append(cell.text)
+        if cells[0].x0 >= lefts[0] or sum(bool(n) for n in names) < len(columns):
+            continue
+        header = [cells[0].text, *(" ".join(n) for n in names)]
+        if not names_builds(header):
+            continue
+        table: list[list[str | None]] = [list(header)]
+        for row in body:
+            values: list[str | None] = [None] * len(columns)
+            for cell in row[1:]:
+                k = column(cell.x0)
+                if k is not None:
+                    values[k] = cell.text
+            table.append([row[0].text, *values])
+        return table
+    return None
 
 
 def _rows_above(
@@ -526,6 +656,18 @@ def _only_refs(inventory: Inventory, keep: set[str]) -> Inventory:
                 if _base_ref(ref) in keep:
                     kept.add_part(source, key, ref, per_ref)
     return kept
+
+
+def _union(variants: tuple[BuildVariant, ...]) -> Inventory:
+    """Every part of every build, each designator and value once."""
+    union = Inventory()
+    for variant in variants:
+        for key, data in variant.inventory.items():
+            for source, refs in data["sources"].items():
+                for ref in refs:
+                    if key not in union or ref not in union[key]["refs"]:
+                        union.add_part(source, key, ref, 1)
+    return union
 
 
 def _listed(inventory: Inventory) -> dict[str, ComponentKey]:
@@ -766,7 +908,7 @@ def attempt_ocr(
 
     stats: StatsDict = create_empty_stats()
     inventory = Inventory()
-    builds = 0
+    variants: tuple[BuildVariant, ...] = ()
     if pages_data:
         try:
             inventory, variants, _ = read_pages(
@@ -774,22 +916,10 @@ def attempt_ocr(
             )
         except Exception:
             logger.exception("Reading OCR text failed for %s", source_name)
-        else:
-            if variants:
-                # Designators listed twice with different values read as
-                # several builds (Five Cats Octavia's 'To build the vintage
-                # Octavia' table); the attempt offers one list, so it
-                # offers the first and says so.
-                inventory, builds = variants[0].inventory, len(variants)
-                stats["warnings"].append(
-                    ParseWarning(
-                        ParseWarningKind.CONFLICTING_DUPLICATE,
-                        "",
-                        f"The parts list seems to describe {builds} builds; OCR "
-                        f"read only the first ('{variants[0].name}'). Check the "
-                        "document for the others.",
-                    )
-                )
+    if variants:
+        # Several builds (Five Cats Octavia's 'To build the vintage Octavia'
+        # table, OKS Fuzz's version columns): every part of every build.
+        inventory = _union(variants)
 
     known = _refs(result.inventory)
     # A sentence beside a designator is prose OCR read near the table, not a
@@ -802,6 +932,11 @@ def attempt_ocr(
     if not found and known:
         return None
     parts = _only_refs(inventory, found)
+    builds = tuple(
+        BuildVariant(v.name, kept, sum(d["qty"] for d in kept.values()))
+        for v in variants
+        if (kept := _only_refs(v.inventory, found))
+    )
 
     missing = {
         w.ref
@@ -854,10 +989,10 @@ def attempt_ocr(
         if _several_values(key.value)
         for ref in data["refs"]
     )
-    if not builds and len(side_by_side) >= _SIDE_BY_SIDE:
-        # Victory III prints 'R11 | 68K | 43K | 47K' under 'Jack | Kraken |
-        # Sheriff'; read as one list, the builds run together.
-        builds = len(side_by_side)
+    if len(side_by_side) >= _SIDE_BY_SIDE:
+        # Build columns the reading did not recognize ('R11 | 68K | 43K |
+        # 47K'): read as one list, the builds run together.
+        conflicts.add("")
         warnings.append(
             ParseWarning(
                 ParseWarningKind.CONFLICTING_DUPLICATE,
@@ -867,10 +1002,13 @@ def attempt_ocr(
                 "describe several builds. Check the document.",
             )
         )
-    conflicts |= {""} if builds else set()
+    unread = sum(w.kind == ParseWarningKind.UNEXTRACTED_REF for w in warnings)
     verdict = _verdict(
         len(found), suspect, coverage, _gap_share(found | known), bool(conflicts)
     )
+    if verdict == OcrVerdict.COMPLETE and unread > _MAX_UNREAD_SHARE * len(found):
+        # Designators the reading names but did not read (K-Buffer: 5 of 12).
+        verdict = OcrVerdict.PARTIAL
     warnings.sort(key=lambda w: w.ref)
     if known and verdict == OcrVerdict.UNUSABLE:
         # The text layer read a parts list; a few stray OCR words are no
@@ -878,8 +1016,9 @@ def attempt_ocr(
         return None
     return OcrAttempt(
         verdict=verdict,
-        inventory=parts,
+        inventory=Inventory() if builds else parts,
         warnings=tuple(warnings),
+        variants=builds,
         pages=tuple(read),
         parts_read=len(found),
         suspect=suspect,

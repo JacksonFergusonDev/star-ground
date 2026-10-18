@@ -121,6 +121,42 @@ def test_modification_block_becomes_a_variant() -> None:
     assert {e.value for e in mod.entries} == {"2N5089", "Not Populated"}
 
 
+def test_a_build_table_beside_the_list() -> None:
+    # Five Cats Octavia: 'To build the vintage Octavia, with no tone pot' over
+    # a table sharing lines with the parts list (C10 on both), split by OCR
+    # into a cell per word; 'Volume' is added, 'Omit - ...' leaves C10 out.
+    page = _page(
+        [
+            ("C9", 180),
+            ("22uF", 224),
+            ("To", 411),
+            ("build", 422),
+            ("the", 444),
+            ("vintage", 458),
+            ("Octavia,", 487),
+            ("with", 520),
+            ("no", 538),
+        ],
+        [("C10", 180), ("10nF", 224), ("C10", 394), ("Omit", 438)],
+        [("C11", 180), ("100nF", 224), ("Volume", 394), ("A1M", 438)],
+    )
+    entries = [
+        Entry("C9", "22uF", 0, line=0, x0=180),
+        Entry("C10", "10nF", 0, line=1, x0=180),
+        Entry("C10", "Omit - jumper pads 2+3", 0, line=1, x0=394),
+        Entry("C11", "100nF", 0, line=2, x0=180),
+        Entry("VOLUME", "A1M", 0, line=2, x0=394),
+    ]
+    plan = plan_builds(entries, [page])
+    assert _names(plan) == ["Stock", "Vintage Octavia"]
+    stock, vintage = plan.variants
+    assert {e.ref for e in stock.entries} == {"C10"}
+    assert {(e.ref, e.not_populated) for e in vintage.entries} == {
+        ("C10", True),
+        ("VOLUME", False),
+    }
+
+
 def test_either_or_note_makes_variants() -> None:
     page = _page(
         text="NOTE: PCB is designed for either Nature control, or Treble + Bass"
@@ -257,3 +293,16 @@ def test_choose_between_row_offers_the_rows_beside_it() -> None:
     assert [e.ref for e in plan.common] == ["R1"]
     (option,) = plan.options
     assert [[e.ref for e in c] for _, c in option.choices] == [["GAIN_TRIM"], ["GAIN"]]
+
+
+def test_repeated_lists_without_margin_names_are_one_build() -> None:
+    # Two boards (or a schematic beside the list) repeat labels too; with no
+    # name beside each repeat they are not builds, and overlapping spans leave
+    # a repeat empty (Aion FX Halo legacy) without failing.
+    entries = [
+        Entry(ref if k == 0 else f"{ref} ({k + 1})", value, 0, line=line)
+        for k, line in ((0, 5), (1, 2))
+        for ref, value in [(f"R{n}", "10k") for n in range(1, 10)]
+    ]
+    plan = plan_builds(entries, [_page([("R1", 40)] * 1)])
+    assert plan.variants == ()

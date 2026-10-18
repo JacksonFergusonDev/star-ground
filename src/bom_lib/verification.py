@@ -725,6 +725,23 @@ def resolve_value_choice(stats: StatsDict | None, ref: str, value: str) -> str:
     return value
 
 
+def check_misread_text(stats: StatsDict, page: int) -> None:
+    """Tells the builder a page's text was set aside as misread OCR text.
+
+    Args:
+        stats: Stats object that receives the warning.
+        page: The page, counting from 0.
+    """
+    _warn(
+        stats,
+        ParseWarningKind.MISREAD_TEXT,
+        "",
+        f"The text on page {page + 1} was recognized from an image by another "
+        "program and is full of misreads ('lOK' for '10K', 'Rl' for 'R1'), so it "
+        "was not used.",
+    )
+
+
 def check_parts_found(stats: StatsDict, parts_found: int) -> None:
     """Tells the builder when no parts list could be read at all.
 
