@@ -15,6 +15,7 @@ Prose ("D8 and D9 are only needed...") never yields a listing, because its
 words are separated by ordinary spaces and so form a single cell.
 """
 
+import math
 import re
 from collections import Counter
 from dataclasses import dataclass, field, replace
@@ -109,17 +110,18 @@ _COLUMN_TOLERANCE_EM = 0.5
 # A part description in a type column: '1/4 Watt Resistor', 'Box Cap',
 # 'Electrolytic Capacitor - Min 16V', 'NPN - EBC', '16mm Potentiometer'.
 _TYPE_TEXT = re.compile(
-    r"\b(?:resistor|cap(?:acitor)?|diode|potentiometer|transistor|mosfet|j-?fet"
-    r"|[np]pn|op-?amp|regulator|toggle|trim-?pot|trimmer|footswitch"
+    r"\b(?:resistor|cap(?:acitor)?|diode|pot(?:entiometer)?|transistor|mosfet|j-?fet"
+    r"|[np]pn|op[- ]?amp|regulator|toggle|trim(?:-?pot|mer)?|footswitch|switching"
     # A type cell OCR splits in two keeps only its first word: 'Box | Cap'.
-    r"|box|ceramic|electrolytic|polari[sz]ed|mlcc|film|schottky|zener|germanium"
+    r"|box|ceramic|electrolytic|polari[sz]ed|mlcc|film|schottky|zenn?er|germanium"
+    r"|charge pump|darlington"
     r"|watt|standard|\d+[- ]?pin|dip-?\d*)\b",
     re.IGNORECASE,
 )
 _TYPE_SHARE = 0.6
 # A part value or part number: '33k', '2M2', '220uF', 'B5K', 'TL072', '1N4148'.
 _VALUE_SHAPE = re.compile(
-    r"[ABCW]?\d+(?:\.\d+)?[pnuµkKMR]\d*(?:F|Ω)?|\d?[A-Z]{1,4}\d{2,}[A-Z]*",
+    r"[ABCW]?\d+(?:\.\d+)?[pnuµkKMR]\d*(?:F|Ω)?|\d?[A-Za-z]{1,4}\d{2,}[A-Z]*",
 )
 _TRIM_HEADING = re.compile(r"TRIM(?:MER)?S?(?:\s+POTS?)?\b", re.IGNORECASE)
 _TRIM_MARK = re.compile(r"\bTRIM|\b3362P?\b", re.IGNORECASE)
@@ -130,6 +132,8 @@ _SPACED_REF = re.compile(r"(?:SW|IC|LED|Q|D|C|R) \d{1,3}")
 # A function label printed between a designator and its value: 'SW1 (Power) SPDT'.
 _LABEL = re.compile(r"\([^()\d]*\)")
 _LED_WORD = re.compile(r"\bLED\b", re.IGNORECASE)
+# An LED's size, which starts its description: '3MM LED', '3mm Red LED'.
+_LED_SIZE = re.compile(r"\d+(?:\.\d+)?\s*mm\b", re.IGNORECASE)
 # Two or more lowercase words mark a sentence ('Choose between ... or SMD').
 _LOWERCASE_WORD = re.compile(r"[a-z][a-z'-]*[.,;:]?")
 _ASIDE = re.compile(r"\((?:see (?:notes?|text)|or equivalent)\)", re.IGNORECASE)
@@ -286,8 +290,13 @@ def _starts_listing(cell: str, next_cell: str | None) -> bool:
     if span and is_designator(span.group(1)):
         return True
     # Directly after a designator a bare 'LED' is that designator's value
-    # ('LED_A  LED  Indicator LED'), unless a numeric value follows it.
-    return cell in constants.BARE_DESIGNATORS and _has_digit(next_cell)
+    # ('LED_A  LED  Indicator LED'), unless a numeric value follows it; a
+    # size describes the LED ('D5  LED  3MM LED', Five Cats).
+    return (
+        cell in constants.BARE_DESIGNATORS
+        and _has_digit(next_cell)
+        and not (cell == "LED" and _LED_SIZE.match(next_cell or ""))
+    )
 
 
 def _is_bare_value(cell: str | None) -> bool:
@@ -297,7 +306,8 @@ def _is_bare_value(cell: str | None) -> bool:
     by a numeric value ('LED  3mm Red LED') or an LED description that does
     not repeat it on its own ('LED  Indicator LED').
     """
-    if cell is None:
+    if cell is None or _NUMBERED_LABEL.fullmatch(cell):
+        # 'LED  POT1  B100K': the next designator is no value (Five Cats ZTrem).
         return False
     return _has_digit(cell) or (
         cell.upper() != "LED" and _LED_WORD.search(cell) is not None
@@ -476,7 +486,21 @@ def find_listings(words: list[PDFWord]) -> list[Listing]:
     lines = page_lines(words)
     starts = Counter(round(listing.x0) for listing in _scan(words, frozenset()))
     columns = frozenset(x for x, n in starts.items() if n >= _MIN_COLUMN_REFS)
-    return _mark_trimmers(_scan(words, columns | _type_columns(lines)), lines)
+    return _mark_trimmers(_scan(words, columns, _type_columns(lines)), lines)
+
+
+def starts_description(value: str, text: str) -> bool:
+    """Whether text after a value is the part's description, in its own cell.
+
+    OCR can set a 'Value | Type' pair closer than a cell gap, or read it as
+    one box: 'TL072 Dual Op Amp', 'B250K Potentiometer', '1N914  Small
+    Signal, Fast Switching Diode'.
+    """
+    return (
+        _VALUE_SHAPE.fullmatch(value) is not None
+        and bool(text)
+        and _describes(text, None)
+    )
 
 
 def _type_columns(lines: list[list[Cell]]) -> frozenset[int]:
@@ -498,11 +522,8 @@ def _type_columns(lines: list[list[Cell]]) -> frozenset[int]:
     cells = [cell for cells in lines for cell in cells[1:]]
 
     def describes(cell: Cell) -> bool:
-        # A value is never a description, though the cell after it may be one.
-        return (
-            _TYPE_TEXT.search(described[id(cell)]) is not None
-            and _VALUE_SHAPE.fullmatch(cell.text.split()[0]) is None
-        )
+        following = described[id(cell)][len(cell.text) + 1 :] or None
+        return _describes(cell.text, following)
 
     typed = [cell for cell in cells if describes(cell)]
     columns = set()
@@ -514,6 +535,18 @@ def _type_columns(lines: list[list[Cell]]) -> frozenset[int]:
         if kinds >= _MIN_COLUMN_REFS and kinds >= _TYPE_SHARE * len(near):
             columns.add(round(cell.x0))
     return frozenset(columns)
+
+
+def _describes(cell: str, next_cell: str | None) -> bool:
+    """Whether a cell (read with the next) describes a kind of part.
+
+    A value is never a description, though the cell after it may be one.
+    """
+    text = cell if next_cell is None else f"{cell} {next_cell}"
+    return (
+        _TYPE_TEXT.search(text) is not None
+        and _VALUE_SHAPE.fullmatch(cell.split()[0]) is None
+    )
 
 
 def _mark_trimmers(listings: list[Listing], lines: list[list[Cell]]) -> list[Listing]:
@@ -550,8 +583,20 @@ def _in_column(x0: float, size: float, columns: frozenset[int]) -> bool:
     return any(abs(x0 - x) <= _COLUMN_TOLERANCE_EM * size for x in columns)
 
 
-def _scan(words: list[PDFWord], columns: frozenset[int]) -> list[Listing]:
-    """One listing pass; annotations never extend into a designator column."""
+def _scan(
+    words: list[PDFWord],
+    designators: frozenset[int],
+    types: frozenset[int] = frozenset(),
+) -> list[Listing]:
+    """One listing pass; annotations never extend into another column.
+
+    On a page with type columns, a part description ('6mm Trim Pot') ends a
+    value and names no part itself, so it starts no listing up to the next
+    designator.
+    """
+    columns = designators | types
+    # A column where both designators and descriptions start is not skipped.
+    only_types = types - designators
     listings: list[Listing] = []
     # (value x-position, font size, index into listings) for the previous line.
     above: list[tuple[float, float, int]] = []
@@ -562,6 +607,9 @@ def _scan(words: list[PDFWord], columns: frozenset[int]) -> list[Listing]:
         current: list[tuple[float, float, int]] = []
         i = 0
         while i < len(texts):
+            if _in_column(cells[i].x0, cells[i].size, only_types):
+                i = _description_end(cells, i, designators)
+                continue
             nxt = texts[i + 1] if i + 1 < len(texts) else None
             after = texts[i + 2] if i + 2 < len(texts) else None
             if nxt is None and current and BOARD_REF.fullmatch(texts[i]):
@@ -587,6 +635,16 @@ def _scan(words: list[PDFWord], columns: frozenset[int]) -> list[Listing]:
                 # column: 'SW1  (FM/CC/Vintage)  DPDT On-On-On' (Minidrive) runs
                 # its value under the pots column.
                 complete = not _LABEL.fullmatch(" ".join(parts))
+                if types and (
+                    (parts == ["LED"] and _LED_SIZE.match(texts[j]))
+                    or (
+                        _VALUE_SHAPE.fullmatch(parts[0]) is not None
+                        and _describes(texts[j], following)
+                    )
+                ):
+                    # The value's description: 'D5 | LED | 3MM LED',
+                    # 'U2 | TL072 | 8 Pin Dual Op-Amp'.
+                    break
                 if (
                     _is_ref_cell(texts[j], following)
                     or _SPACED_REF.fullmatch(texts[j])
@@ -607,9 +665,42 @@ def _scan(words: list[PDFWord], columns: frozenset[int]) -> list[Listing]:
                         x0=cells[i].x0,
                     )
                 )
+            following = _text_at(texts, j + 1)
+            if (
+                types
+                and j < len(texts)
+                # 'D1 | 5v1 Zener' after a value is the next listing (GuitarPCB
+                # Dr-Phybes).
+                and not _is_ref_cell(texts[j], following)
+                and _describes(texts[j], following)
+            ):
+                # Its description names no part: '5K | 6mm Trim Pot'.
+                j = _description_end(cells, j, designators)
             i = j
         above = current
     return listings
+
+
+def _text_at(texts: list[str], k: int) -> str | None:
+    return texts[k] if k < len(texts) else None
+
+
+def _description_end(cells: list[Cell], start: int, designators: frozenset[int]) -> int:
+    """Where a part description starting at a cell ends: the next designator."""
+    k = start + 1
+    # A numbered designator or a control name: a description's 'Trim Pot' or
+    # 'LED' is none.
+    while k < len(cells) and not (
+        BOARD_REF.fullmatch(cells[k].text)
+        or _NUMBERED_LABEL.fullmatch(cells[k].text)
+        or (
+            cells[k].text.isupper()
+            and _is_ref_cell(cells[k].text, _text_at([c.text for c in cells], k + 1))
+        )
+        or _in_column(cells[k].x0, cells[k].size, designators)
+    ):
+        k += 1
+    return k
 
 
 def _absorb_continuations(
@@ -690,6 +781,8 @@ class BomRow:
         notes: The NOTES cell, including lines that continue it below the row.
         table: Which header line on the page the row sits under, counting from 0
             (a page can hold two boards' tables, GuitarPCB Tweed Fuzztone).
+        end: Left edge of a headerless table beside the row, whose listings
+            are not part of it; infinite when there is none.
     """
 
     refs: str
@@ -701,6 +794,7 @@ class BomRow:
     type_text: str = ""
     notes: str = ""
     table: int = 0
+    end: float = math.inf
 
 
 @dataclass(frozen=True, slots=True)
@@ -809,8 +903,22 @@ def _read_bom(words: list[PDFWord]) -> tuple[list[BomRow], list[Cell]]:
             continue
         fields: dict[tuple[int, str], str] = {}
         first_x0: dict[int, float] = {}
-        for cell in cells:
+        end = math.inf
+        for n, cell in enumerate(cells):
             target = _column_for(cell, sections)
+            next_text = cells[n + 1].text if n + 1 < len(cells) else None
+            first, _, rest = cell.text.partition(" ")
+            if (
+                target[1] == "type"
+                and target in fields
+                # OCR can read a listing as one box: 'FREQ B5K'.
+                and _is_ref_cell(first, rest or next_text)
+            ):
+                # A listing after the TYPE cell starts a second table whose
+                # header was not read (Five Cats prints two 'Location | Value |
+                # Type' tables side by side; OCR keeps only one header).
+                end = cell.x0
+                break
             fields[target] = f"{fields.get(target, '')} {cell.text}".strip()
             if target[1] == "refs":
                 first_x0.setdefault(target[0], cell.x0)
@@ -859,6 +967,7 @@ def _read_bom(words: list[PDFWord]) -> tuple[list[BomRow], list[Cell]]:
                     type_text=fields.get((k, "type"), ""),
                     notes=notes,
                     table=header_no,
+                    end=end,
                 )
             )
     return rows, note_cells
