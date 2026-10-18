@@ -336,6 +336,8 @@ def _position(e: Entry) -> tuple[int, int]:
 
 def _margin_label(group: list[Entry], pages: list[PageContext]) -> str | None:
     """The margin label beside a build's rows, if exactly one sits there."""
+    if not group:
+        return None
     page_no = Counter(e.page for e in group).most_common(1)[0][0]
     page = pages[page_no]
     rows = [e for e in group if e.page == page_no and 0 <= e.line < len(page.lines)]

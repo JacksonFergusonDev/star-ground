@@ -942,7 +942,7 @@ def _read_bom(words: list[PDFWord]) -> tuple[list[BomRow], list[Cell]]:
         end = math.inf
         right = max(col.x1 for sec in sections for col in sec)
         for n, cell in enumerate(cells):
-            if cell.x0 > right + _BEYOND_TABLE_EM * cell.size:
+            if cell.x0 > right + _BEYOND_TABLE_EM * cell.size and _is_prose(cell.text):
                 # Prose beside the table (K-Buffer's description) is no cell,
                 # and listings there are another table's.
                 end = cell.x0

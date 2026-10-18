@@ -293,3 +293,16 @@ def test_choose_between_row_offers_the_rows_beside_it() -> None:
     assert [e.ref for e in plan.common] == ["R1"]
     (option,) = plan.options
     assert [[e.ref for e in c] for _, c in option.choices] == [["GAIN_TRIM"], ["GAIN"]]
+
+
+def test_repeated_lists_without_margin_names_are_one_build() -> None:
+    # Two boards (or a schematic beside the list) repeat labels too; with no
+    # name beside each repeat they are not builds, and overlapping spans leave
+    # a repeat empty (Aion FX Halo legacy) without failing.
+    entries = [
+        Entry(ref if k == 0 else f"{ref} ({k + 1})", value, 0, line=line)
+        for k, line in ((0, 5), (1, 2))
+        for ref, value in [(f"R{n}", "10k") for n in range(1, 10)]
+    ]
+    plan = plan_builds(entries, [_page([("R1", 40)] * 1)])
+    assert plan.variants == ()
