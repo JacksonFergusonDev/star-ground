@@ -115,14 +115,15 @@ _TYPE_TEXT = re.compile(
     r"|[np]pn|op[- ]?amp|regulator|toggle|trim(?:-?pot|mer)?|footswitch|switching"
     # A type cell OCR splits in two keeps only its first word: 'Box | Cap'.
     r"|box|ceramic|electrolytic|polari[sz]ed|mlcc|film|schottky|zenn?er|germanium"
-    r"|charge pump|darlington"
+    r"|charge pump|darlington|transformer"
     r"|watt|standard|\d+[- ]?pin|dip-?\d*)\b",
     re.IGNORECASE,
 )
 _TYPE_SHARE = 0.6
-# A part value or part number: '33k', '2M2', '220uF', 'B5K', 'TL072', '1N4148'.
+# A part value or part number: '33k', '2M2', '220uF', 'B5K', 'TL072', '1N4148',
+# '42TM002'.
 _VALUE_SHAPE = re.compile(
-    r"[ABCW]?\d+(?:\.\d+)?[pnuµkKMR]\d*(?:F|Ω)?|\d?[A-Za-z]{1,4}\d{2,}[A-Z]*",
+    r"[ABCW]?\d+(?:\.\d+)?[pnuµkKMR]\d*(?:F|Ω)?|\d{0,2}[A-Za-z]{1,4}\d{2,}[A-Z]*",
 )
 _TRIM_HEADING = re.compile(r"TRIM(?:MER)?S?(?:\s+POTS?)?\b", re.IGNORECASE)
 _TRIM_MARK = re.compile(r"\bTRIM|\b3362P?\b", re.IGNORECASE)

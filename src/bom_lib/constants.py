@@ -336,9 +336,10 @@ NOT_POPULATED_VALUES = frozenset(
 # 'Omit - jumper pads 2+3' (Five Cats Octavia): unpopulated, with how.
 NOT_POPULATED_REMARK = re.compile(r"(?:OMIT|DNP|JUMPER)\s*[-\u2013(:]", re.IGNORECASE)
 
-# Switch specifications: pole/throw codes (SPDT, 1P8T) and positions (ON/OFF/ON).
+# Switch specifications: pole/throw codes (SPDT, 1P8T) and positions (ON/OFF/ON),
+# also in a KiCad symbol name ('SW_SPDT', Five Cats).
 SWITCH_VALUE_PATTERN = re.compile(
-    r"\b(?:[SD34]P[DS]T|\dP\dT|ON\s*[/-]\s*(?:OFF\s*[/-]\s*)?ON)\b"
+    r"(?:\b|(?<=_))(?:[SD34]P[DS]T|\dP\dT|ON\s*[/-]\s*(?:OFF\s*[/-]\s*)?ON)\b"
 )
 
 # Manufacturing Artifact Exclusion List

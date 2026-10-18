@@ -27,6 +27,7 @@ from src.bom_lib.designators import BOARD_REF, is_designator, parse_designator
 from src.bom_lib.enums import ComponentCategory, OcrVerdict, ParseWarningKind
 from src.bom_lib.layout import (
     REF_RANGE,
+    Listing,
     find_listings,
     group_lines,
     heads_typed_table,
@@ -75,6 +76,8 @@ _FEW_CHARS = 50
 _VERTICAL = 1.2
 # A box's height includes padding around the glyphs.
 _GLYPH_SHARE = 0.75
+# A box's cell neighbour lies within this many box heights of it.
+_NEIGHBOUR = 3
 
 # A parts table is a grid: at least this many listings start at one x position
 # (within _ALIGN_PT). Labels on a PCB render or schematic are scattered, and
@@ -116,6 +119,10 @@ _MAX_GAP_SHARE = 0.25
 # A reading naming more designators it did not read than this share of those
 # it did is incomplete.
 _MAX_UNREAD_SHARE = 0.1
+# Misread designator cells are read again on their own, enlarged by each of
+# these factors in turn until one reads a designator, at most this many per page.
+_REREAD_SCALES = (1.5, 2.5)
+_MAX_REREADS = 24
 
 # One OCR job at a time: each holds a rendered page and the model's buffers.
 _LOCK = threading.Lock()
@@ -295,6 +302,43 @@ def _starts_cell(token: str) -> bool:
     )
 
 
+def _middle(box: OcrBox) -> float:
+    return (box.top + box.bottom) / 2
+
+
+def _follow_neighbours(rows: list[list[OcrBox]]) -> None:
+    """Moves each box to the row of its cell neighbour, where that is closer.
+
+    A table beside another can set its rows half a row apart (Five Cats
+    E.P.3.0): 'U1' lies as near the other table's 'R8' row as its own
+    '7660SEPA', and grouping by height alone can put it in either. The
+    nearest box beside it, its cell neighbour, says which.
+    """
+    for k, row in enumerate(rows):
+        near = [*rows[k - 1 : k], *rows[k + 1 : k + 2]]
+        for box in list(row):
+            if len(row) == 1:
+                break
+            height = box.bottom - box.top
+            beside = [
+                (max(b.x0 - box.x1, box.x0 - b.x1), j, b)
+                for j, other in enumerate([row, *near])
+                for b in other
+                if b is not box and abs(_middle(b) - _middle(box)) < height
+            ]
+            if not beside:
+                continue
+            gap, j, neighbour = min(beside, key=lambda t: t[0])
+            middle = median(_middle(b) for b in row if b is not box)
+            if (
+                j
+                and gap < _NEIGHBOUR * height
+                and abs(_middle(neighbour) - _middle(box)) < abs(middle - _middle(box))
+            ):
+                row.remove(box)
+                near[j - 1].append(box)
+
+
 def page_words(boxes: list[OcrBox]) -> PDFPageExtraction:
     """Turns recognized boxes into the positioned words the readers expect.
 
@@ -337,6 +381,7 @@ def page_words(boxes: list[OcrBox]) -> PDFPageExtraction:
                 row.append(box)
                 continue
         rows.append([box])
+    _follow_neighbours(rows)
 
     words: list[PDFWord] = []
     lines = []
@@ -423,6 +468,33 @@ def _regular(rows: list[float]) -> bool:
     return _pitch(rows) is not None
 
 
+def _column_pitch(
+    aligned: list[Listing],
+    lines: list[list[PDFWord]],
+    rows: list[float],
+    columns: list[list[float]],
+) -> float | None:
+    """The row pitch of side-by-side tables whose rows are offset, or None.
+
+    Two tables can set their rows half a row apart (Five Cats E.P.3.0): the
+    rows of both together are uneven, but the longest designator column's are
+    even. The other table's can have rows of several lines ('U1 | 7660SEPA |
+    7660SEPA, MAX1044S, or LT1054 ...').
+    """
+    if len(columns) < 2:
+        return None
+    longest = max(columns, key=len)
+    tops = sorted(
+        {
+            top
+            for lst in aligned
+            if longest[0] <= lst.x0 <= longest[-1]
+            and (top := lines[lst.line][0]["top"]) in rows
+        }
+    )
+    return _pitch(tops)
+
+
 def table_block(data: PDFPageExtraction) -> PDFPageExtraction:
     """Keeps only the words of the page's parts table.
 
@@ -452,7 +524,7 @@ def table_block(data: PDFPageExtraction) -> PDFPageExtraction:
     # A row that read as no listing leaves a gap of one more pitch.
     blocks = _clusters(tops, (_BLOCK_GAP + 1 + _PITCH_TOLERANCE) * pitch)
     rows = max(blocks, key=len)
-    row_pitch = _pitch(rows)
+    row_pitch = _pitch(rows) or _column_pitch(aligned, lines, rows, columns)
     if row_pitch is None:
         # Aligned labels on a schematic (Apollo Tremolo's) are no table.
         return {"tables": [], "text": "", "words": []}
@@ -528,6 +600,153 @@ def table_block(data: PDFPageExtraction) -> PDFPageExtraction:
         "words": kept,
         "labels": labels,
     }
+
+
+@dataclass(frozen=True)
+class _LabelCell:
+    """A designator cell of a parts table that read as no designator.
+
+    Attributes:
+        word: The word read in the cell, or None when nothing was.
+        row: A word on the cell's row (its top and size place the cell).
+        left: Left edge of the cell, in points.
+        right: Right edge of the cell, in points.
+    """
+
+    word: PDFWord | None
+    row: PDFWord
+    left: float
+    right: float
+
+
+def _label_cells(words: list[PDFWord]) -> list[_LabelCell]:
+    """The table's designator cells that read as no designator.
+
+    A cell in a designator column that starts no listing ('60 | 10uF', 'ε3 |
+    2N3904'), or a row with a cell in the column's value column and nothing in
+    its designator column (the label went undetected).
+
+    Args:
+        words: The words of the page's parts table (`table_block`).
+
+    Returns:
+        The cells, top to bottom within each column.
+    """
+    lines = page_lines(words)
+    listings = find_listings(words)
+    starts = {(lst.line, round(lst.x0)) for lst in listings}
+    cells: list[_LabelCell] = []
+    for column in _clusters([lst.x0 for lst in listings], _ALIGN_PT):
+        if len(column) < _MIN_ALIGNED:
+            continue
+        left, right = column[0] - _ALIGN_PT, column[-1] + _ALIGN_PT
+        values = [
+            min(after)
+            for lst in listings
+            if left <= lst.x0 <= right
+            and (after := [c.x0 for c in lines[lst.line] if c.x0 > lst.x0 + 1])
+        ]
+        if not values:
+            continue
+        value_x = median(values)
+        for number, line in enumerate(lines):
+            here = [c for c in line if left <= c.x0 < value_x - _ALIGN_PT]
+            later = [c for c in line if c.x0 >= value_x - _ALIGN_PT]
+            if not later:
+                continue
+            row = later[0].words[0]
+            if not here:
+                if abs(later[0].x0 - value_x) <= _ALIGN_PT:
+                    cells.append(_LabelCell(None, row, left, value_x - 1))
+                continue
+            cell = here[0]
+            if (number, round(cell.x0)) in starts or len(cell.words) > 1:
+                continue
+            right = min(c.x0 for c in [*here[1:], later[0]]) - 1
+            cells.append(_LabelCell(cell.words[0], row, cell.x0, right))
+    return cells
+
+
+def _reread(
+    crop: Image, scale: float, middle: float, recognizer: Recognizer
+) -> str | None:
+    """Reads one cell's designator, enlarging it until it reads as one.
+
+    Args:
+        crop: The cell, with a margin.
+        scale: Points per pixel of the crop.
+        middle: The cell's vertical middle, in points from the crop's top.
+        recognizer: The OCR engine.
+
+    Returns:
+        The designator, or None when no enlargement reads one.
+    """
+    for factor in _REREAD_SCALES:
+        size = (round(crop.width * factor), round(crop.height * factor))
+        boxes = recognizer(crop.resize(size), scale / factor)
+        if not boxes:
+            continue
+        # The crop can catch the rows above and below: the cell is the box
+        # nearest its middle.
+        text = min(boxes, key=lambda b: abs((b.top + b.bottom) / 2 - middle)).text
+        ref = next((t for t in (text, text.upper()) if is_designator(t)), None)
+        if ref is not None:
+            return ref
+    return None
+
+
+def _reread_labels(
+    data: PDFPageExtraction, image: Image, scale: float, recognizer: Recognizer
+) -> PDFPageExtraction:
+    """Reads the table's misread designator cells again, one cell at a time.
+
+    In a whole page, OCR misreads some bold labels the same way every time:
+    'C9' as '60', 'Q3' as 'ε3', 'R8' as '88' (Five Cats), or misses them. The
+    cell on its own, enlarged, reads true. A re-read replaces the label only
+    when it reads as a designator the table does not already list.
+
+    Args:
+        data: One OCR'd page.
+        image: The page's rendering.
+        scale: Points per pixel of the rendering.
+        recognizer: The OCR engine.
+
+    Returns:
+        The page, with the labels read again.
+    """
+    table = table_block(data)["words"]
+    cells = _label_cells(table)[:_MAX_REREADS]
+    if not cells:
+        return data
+    words = list(data["words"])
+    # The table's own listings: the board drawing beside it names parts too.
+    listed = {lst.ref.upper() for lst in find_listings(table)}
+    for cell in cells:
+        word, row = cell.word, cell.row
+        height = row["size"] / _GLYPH_SHARE
+        pad = height / 4
+        box = (
+            round((cell.left - pad) / scale),
+            round((row["top"] - pad) / scale),
+            round(cell.right / scale),
+            round((row["top"] + height + pad) / scale),
+        )
+        if box[2] <= box[0]:
+            continue
+        ref = _reread(image.crop(box), scale, pad + height / 2, recognizer)
+        if ref is None or ref.upper() in listed:
+            continue
+        listed.add(ref.upper())
+        if word is not None:
+            words[words.index(word)] = PDFWord(**{**word, "text": ref})
+        else:
+            width = (row["x1"] - row["x0"]) / max(len(row["text"]), 1)
+            x0 = cell.left + _ALIGN_PT
+            words.append(
+                PDFWord(**{**row, "text": ref, "x0": x0, "x1": x0 + width * len(ref)})
+            )
+    words.sort(key=lambda w: (w["top"], w["x0"]))
+    return {**data, "words": words}
 
 
 def _build_grid(
@@ -629,8 +848,22 @@ def _rows_above(
         if aligned >= _ABOVE_CELLS:
             above.append(top)
     # Rows between listings belong too ('Boost | Toggle | DPDT', which reads
-    # as no listing); those above the highest listing do not.
-    while above and above[-1] not in listed:
+    # as no listing); those above the highest listing do not, unless the
+    # table's typed header heads them ('3PDT-A | 3PDT | 3PDT Footswitch'
+    # under 'Reference | Value | Footprint', Five Cats Easyfoot).
+    # Those must start in the table's first column: a build header ('Jack |
+    # Kraken | Sheriff' under 'Ref | Value | Type', Victory III) does not.
+    headers = [line[0]["top"] for line in lines if heads_typed_table(line)]
+    firsts = [line[0]["x0"] for line in lines if line[0]["top"] in tops]
+    starts = {line[0]["top"]: line[0]["x0"] for line in lines}
+    while (
+        above
+        and above[-1] not in listed
+        and not (
+            any(0 < above[-1] - h <= _TRAILING_ROW * pitch for h in headers)
+            and any(abs(starts[above[-1]] - x) <= _ALIGN_PT for x in firsts)
+        )
+    ):
         above.pop()
     return [*reversed(above), *rows]
 
@@ -734,8 +967,8 @@ def _gap_share(refs: set[str]) -> float:
 def _unlisted(pages_data: list[PDFPageExtraction], listed: set[str]) -> set[str]:
     """Labels in a table's designator columns that were read as no part.
 
-    A row whose value the readers reject ('CLIP1 | SW_SPDT', 'R10A1 |
-    JUMPER', 'PWR1 | Barrel_Jack') would otherwise vanish without a trace.
+    A row whose value the readers reject ('R10A1 | JUMPER', 'PWR1 |
+    Barrel_Jack') would otherwise vanish without a trace.
 
     Args:
         pages_data: The table blocks OCR read.
@@ -901,6 +1134,7 @@ def attempt_ocr(
             dpi = max(_DPI, 72 * _MIN_RENDER_SIDE / max(page.width, page.height))
             image = page.to_image(resolution=dpi).original.convert("RGB")
             words = page_words(recognizer(image, 72 / dpi))
+            words = _reread_labels(words, image, 72 / dpi, recognizer)
             mentioned |= {w["text"] for w in words["words"]}
             pages_data.append(table_block(words))
             read.append(number)
