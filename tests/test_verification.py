@@ -358,7 +358,7 @@ class TestAionChecks:
         assert resolve_value_choice(stats, "RPD", value) == chosen
         assert _kinds(stats) == [ParseWarningKind.VALUE_CHOICE]
 
-    @pytest.mark.parametrize("value", ["2N5088", "B100K", "1-2", "1/4"])
+    @pytest.mark.parametrize("value", ["2N5088", "B100K", "1-2", "1/4", "220u/35V"])
     def test_values_that_are_not_choices(self, value: str) -> None:
         stats = create_empty_stats()
         assert resolve_value_choice(stats, "R1", value) == value

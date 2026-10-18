@@ -622,6 +622,9 @@ _VALUE_RANGE = re.compile(
 _PART_CODE = r"(?:\d?[A-Z]{1,4}\d{2,5}[A-Z]{0,3}|[SD34]P[SDT]T)"
 _PART_PAIR = re.compile(rf"({_PART_CODE})\s*(?:/|\bor\b)\s*({_PART_CODE})")
 _VALUE_PAIR = re.compile(r"(\S+?)(?:\s+or\s+|\s*/\s*)(\S+)", re.IGNORECASE)
+_UNIT = re.compile(r"[A-Za-zµΩ]")
+_VOLTAGE = re.compile(r"\d+(?:\.\d+)?V", re.IGNORECASE)
+_SINGLE_REF = re.compile(r"[^\s,]+")
 # An alternative printed inside the value: '51pF (or 47pF) MLCC'.
 _OR_ALTERNATIVE = re.compile(r"\s*\(\s*or\s+([^()]+?)\s*\)", re.IGNORECASE)
 
@@ -654,11 +657,23 @@ def resolve_value_choice(stats: StatsDict | None, ref: str, value: str) -> str:
             )
         return pair.group(1)
     either = _VALUE_PAIR.fullmatch(value.strip())
-    if either and all(
-        parse_value_to_decimal(v) is not None
-        # A slash between bare numbers is a fraction ('1/4').
-        and (" or " in either.group(0).lower() or re.search(r"[A-Za-zµΩ]", v))
-        for v in either.group(1, 2)
+    slash = " or " not in either.group(0).lower() if either else False
+    if (
+        either
+        and all(parse_value_to_decimal(v) is not None for v in either.group(1, 2))
+        and not (
+            slash
+            and (
+                # A slash between bare numbers is a fraction ('1/4'), one
+                # before a voltage is a rating ('220u/35V', Aion FX), and two
+                # designators take one value each ('R21, R23 | 1k8/4k7').
+                any(
+                    not _UNIT.search(v) or _VOLTAGE.fullmatch(v)
+                    for v in either.group(1, 2)
+                )
+                or not _SINGLE_REF.fullmatch(ref)
+            )
+        )
     ):
         # '15k or 22k' (MUFF'N Creamy Dreamer), '270nF/220nF' (Five Cats
         # Albus); not a bare '1/4'.
