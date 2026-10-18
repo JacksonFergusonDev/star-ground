@@ -948,3 +948,54 @@ def test_near_upright_characters_are_straightened() -> None:
     assert char["upright"] is True
     assert char["matrix"][:4] == (0.66, 0.0, 0.0, 0.66)
     assert char["size"] == 7.49
+
+
+def _ruled_page(
+    table: list[list[str | None]], lines: list[tuple[str, ...]]
+) -> PDFPageExtraction:
+    """One page with a ruled table and the words of its rows."""
+    from src.bom_lib import PDFWord
+
+    words = []
+    for k, cells in enumerate(lines):
+        x = 50.0
+        for text in cells:
+            for word in text.split():
+                words.append(
+                    PDFWord(
+                        text=word,
+                        x0=x,
+                        x1=x + 6 * len(word),
+                        top=100.0 + 20 * k,
+                        size=12.0,
+                    )
+                )
+                x += 6 * len(word) + 2.7
+            x += 20.0
+    return PDFPageExtraction(tables=[table], text="", words=words)
+
+
+def test_listings_beside_a_ruled_row_are_read() -> None:
+    # NostalgiTone: the table reads 'R2 | 1M' but merges the shaded row into
+    # 'R1 1M', so C1, C2 and R1 are left to the layout reader.
+    from src.bom_lib import create_empty_stats
+    from src.bom_lib.parser import read_pages
+
+    page = _ruled_page(
+        [["R1 1M", None, "C1 47n", None], ["R2", "1M", "C2", "220n"]],
+        [("R1", "1M", "C1", "47n"), ("R2", "1M", "C2", "220n")],
+    )
+    inventory, _, _ = read_pages([page], "Shaded", create_empty_stats())
+    refs = {ref for data in inventory.values() for ref in data["refs"]}
+    assert refs == {"R1", "R2", "C1", "C2"}
+
+
+def test_a_ruled_rows_value_is_not_read_as_a_listing() -> None:
+    # Bad Mamma Jamma: 'D1 | LED | 3mm Red LED' is not a bare 'LED' listing.
+    from src.bom_lib import create_empty_stats
+    from src.bom_lib.parser import read_pages
+
+    page = _ruled_page([["D1", "LED", "3mm Red LED"]], [("D1", "LED", "3mm Red LED")])
+    inventory, _, _ = read_pages([page], "Ruled", create_empty_stats())
+    refs = {ref for data in inventory.values() for ref in data["refs"]}
+    assert refs == {"D1"}

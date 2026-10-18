@@ -110,6 +110,8 @@ _TRIM_HEADING = re.compile(r"TRIM(?:MER)?S?(?:\s+POTS?)?\b", re.IGNORECASE)
 _TRIM_MARK = re.compile(r"\bTRIM|\b3362P?\b", re.IGNORECASE)
 _PAREN_LABEL = re.compile(r"\((\w+)\)")
 _DASHES = frozenset({"-", "\u2013", "\u2014"})
+# A designator set with a space ('SW 1', EA Tremolo) ends the value before it.
+_SPACED_REF = re.compile(r"(?:SW|IC|LED|Q|D|C|R) \d{1,3}")
 # A function label printed between a designator and its value: 'SW1 (Power) SPDT'.
 _LABEL = re.compile(r"\([^()\d]*\)")
 _LED_WORD = re.compile(r"\bLED\b", re.IGNORECASE)
@@ -343,6 +345,8 @@ def _split_merged(cell: Cell) -> list[Cell]:
     cell is split when its first word is a designator or control name and the
     rest is a short value; prose ('D8 and D9 are only needed...') is left whole.
     """
+    if REF_RANGE.fullmatch(cell.text):
+        return [cell]  # 'Q1 -Q4' is one range (Dr Phybes)
     words = cell.text.split()
     dashed = False
     paren = _PAREN_LABEL.fullmatch(words[1]) if len(words) > 2 else None
@@ -532,6 +536,7 @@ def _scan(words: list[PDFWord], columns: frozenset[int]) -> list[Listing]:
                 complete = not _LABEL.fullmatch(" ".join(parts))
                 if (
                     _is_ref_cell(texts[j], following)
+                    or _SPACED_REF.fullmatch(texts[j])
                     or not _is_annotation(texts[j])
                     or (complete and _in_column(cells[j].x0, cells[j].size, columns))
                 ):
