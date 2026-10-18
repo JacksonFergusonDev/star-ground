@@ -36,6 +36,11 @@ _MIN_VARIANT_TABLE_REFS = 8
 _MOD_HEADING = re.compile(
     r"[^A-Za-z]*(?P<name>[A-Za-z][A-Za-z ]*\bmod(?:ification)?)\W*", re.I
 )
+# 'To build the vintage Octavia, with no tone pot' (Five Cats): the parts
+# below build that version.
+_BUILD_HEADING = re.compile(
+    r"to build (?:the |an? )?(?P<name>[A-Za-z][A-Za-z0-9' -]*?)\s*(?:[,(:]|$)", re.I
+)
 _CHOOSE_BETWEEN = re.compile(r"choose between (?P<a>.+?) or (?P<b>.+?)\W*$", re.I)
 # 'designed for either Nature control, or Treble + Bass controls' (Fuchsia).
 _EITHER_OR = re.compile(
@@ -79,7 +84,9 @@ class Entry:
     @property
     def not_populated(self) -> bool:
         """Whether the document marks this designator as deliberately empty."""
-        return self.value.upper() in constants.NOT_POPULATED_VALUES
+        return self.value.upper() in constants.NOT_POPULATED_VALUES or bool(
+            constants.NOT_POPULATED_REMARK.match(self.value)
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -147,9 +154,10 @@ def plan_builds(entries: list[Entry], pages: list[PageContext]) -> BuildPlan:
     """
     variants = (
         _column_variants(entries)
+        # Before grids: a mod table beside the parts list shares its lines.
+        or _mod_variants(entries, pages)
         or _grid_variants(entries, pages)
         or _table_variants(entries, pages)
-        or _mod_variants(entries, pages)
         or _either_or_variants(entries, pages)
     )
     in_variants = {id(e) for v in variants for e in v.entries}
@@ -301,13 +309,23 @@ def _page_subtitle(text: str) -> str | None:
 def _mod_variants(
     entries: list[Entry], pages: list[PageContext]
 ) -> list[PlannedVariant]:
-    """A '... Mod' heading followed by re-listed designators in its column."""
+    """A '... Mod' heading followed by re-listed designators in its column.
+
+    A 'To build the ...' heading names a version the same way; its table can
+    also add parts the main list lacks ('Volume | A1M', Octavia), and the
+    heading can be split into a cell per word (OCR).
+    """
     for page_no, page in enumerate(pages):
         for line_no, cells in enumerate(page.lines):
-            for cell in cells:
+            for k, cell in enumerate(cells):
                 m = _MOD_HEADING.fullmatch(cell.text)
-                if not m or len(cell.text.split()) > 4:
-                    continue
+                if m and len(cell.text.split()) <= 4:
+                    name, additions = m.group("name"), False
+                else:
+                    b = _BUILD_HEADING.match(" ".join(c.text for c in cells[k:]))
+                    if b is None:
+                        continue
+                    name, additions = b.group("name"), True
                 block = _column_entries_below(entries, page_no, line_no, cell.x0)
                 outside = {e.ref for e in entries if e not in block}
                 overrides = [e for e in block if e.ref in outside]
@@ -317,10 +335,10 @@ def _mod_variants(
                 stock = tuple(
                     e for e in entries if e.ref in overridden and e not in block
                 )
-                mod_name = " ".join(m.group("name").split()).title()
+                mod = block if additions else overrides
                 return [
                     PlannedVariant("Stock", stock),
-                    PlannedVariant(mod_name, tuple(overrides)),
+                    PlannedVariant(" ".join(name.split()).title(), tuple(mod)),
                 ]
     return []
 

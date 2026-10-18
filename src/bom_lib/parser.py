@@ -682,8 +682,9 @@ def _table_entries(
     return entries
 
 
-# The designator column of a value-column grid: 'Part', 'Part #', "MUFF'N Part #".
-_GRID_REF_HEADER = re.compile(r"(?:^|\s)PART\s*#?$", re.IGNORECASE)
+# The designator column of a value-column grid: 'Part', 'Part #', "MUFF'N Part #",
+# 'Component' (Five Cats OKS Fuzz).
+_GRID_REF_HEADER = re.compile(r"(?:^|\s)(?:PART\s*#?|COMPONENT)$", re.IGNORECASE)
 # Headers that name a column's role, not a circuit version.
 _ROLE_HEADERS = frozenset(
     {
@@ -696,6 +697,7 @@ _ROLE_HEADERS = frozenset(
         "QTY",
         "QUANTITY",
         "DESCRIPTION",
+        "FOOTPRINT",
     }
 )
 # 'P1-Sus/Fuzz': the designator, then the control's name.
@@ -711,6 +713,21 @@ def _grid_header_text(cell: str | None) -> str:
     for line in lines:
         text += line if text and len(line) <= 2 else f" {line}"
     return text.strip()
+
+
+def names_builds(header: list[str]) -> bool:
+    """Whether a header row heads a value-column grid.
+
+    It names a designator column, then two or more builds, not roles ('Value',
+    'Type').
+    """
+    names = header[1:]
+    return (
+        bool(header)
+        and _GRID_REF_HEADER.search(header[0]) is not None
+        and len([n for n in names if n]) >= 2
+        and not any(n.upper() in _ROLE_HEADERS for n in names)
+    )
 
 
 def _value_column_grid(
@@ -736,11 +753,9 @@ def _value_column_grid(
     if not header_rows:
         return None
     start, cells = header_rows[0]
-    names = cells[1:]
-    if len([n for n in names if n]) < 2 or any(
-        n.upper() in _ROLE_HEADERS for n in names
-    ):
+    if not names_builds(cells):
         return None
+    names = cells[1:]
     entries: list[Entry] = []
     for row in table[start + 1 :]:
         # 'FILTE' / 'R' is a wrapped 'FILTER' (RATT Deluxe).
@@ -748,6 +763,8 @@ def _value_column_grid(
         named = _NAMED_REF.match(ref)
         if named:
             ref = named.group(1)
+        if ref.istitle() and ref.isalpha():
+            ref = ref.upper()  # 'Pot' (Five Cats OKS Fuzz, read by OCR)
         if not ref or not (
             any(is_designator(r) for r in expand_refs(ref))
             or _CONTROL_LABEL.fullmatch(ref)
@@ -946,7 +963,9 @@ def _next_label(seen: Counter[str], ref: str) -> str:
 
 
 def _is_not_populated(value: str) -> bool:
-    return value.upper() in constants.NOT_POPULATED_VALUES
+    return value.upper() in constants.NOT_POPULATED_VALUES or bool(
+        constants.NOT_POPULATED_REMARK.match(value)
+    )
 
 
 def _record_not_populated(stats: StatsDict, ref: str, value: str) -> None:
@@ -1007,10 +1026,12 @@ def _layout_entries(
         # into 'R1 1M', NostalgiTone), so numbered designators other than the
         # row's own value are still read there.
         lines = page_lines(data["words"])
+        # Labels compare in upper case: a grid reads 'Pot' as 'POT'.
+        upper_values = {ref.upper(): value for ref, value in table_values.items()}
         table_lines = {
-            k: set(table_values[cells[0].text].upper().split())
+            k: set(upper_values[cells[0].text.upper()].upper().split())
             for k, cells in enumerate(lines)
-            if cells and cells[0].text in table_values
+            if cells and cells[0].text.upper() in upper_values
         }
         for listing in find_listings(data["words"]):
             stats["lines_read"] += 1

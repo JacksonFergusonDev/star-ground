@@ -279,3 +279,62 @@ def test_multi_circuit_pdf_requires_a_build_choice(app, monkeypatch):
     assert not any(
         "C6" in refs for d in inventory.values() for refs in d["sources"].values()
     )
+
+
+def test_ocr_builds_are_chosen_after_accepting_them(app, monkeypatch):
+    """An image parts list OCR read as several builds: the build picker
+    appears once the OCR parts are accepted, and Generate builds the choice."""
+    from src.bom_lib import create_empty_inventory, create_empty_stats
+    from src.bom_lib.enums import OcrVerdict
+    from src.bom_lib.types import (
+        BuildVariant,
+        OcrAttempt,
+        ParseResult,
+        make_component_key,
+    )
+
+    def build(value):
+        inventory = create_empty_inventory()
+        key = make_component_key(ComponentCategory.RESISTORS, value)
+        for ref in ("R1", "R2"):
+            inventory.add_part("__pending__", key, ref, 1)
+        return inventory
+
+    attempt = OcrAttempt(
+        verdict=OcrVerdict.COMPLETE,
+        inventory=Inventory(),
+        warnings=(),
+        pages=(0,),
+        parts_read=2,
+        suspect=0,
+        supplements=False,
+        variants=(
+            BuildVariant("Octavia", build("10k"), 2),
+            BuildVariant("Vintage", build("1k"), 2),
+        ),
+    )
+
+    def fake_process(self, method, data, source_name):
+        return ParseResult(create_empty_inventory(), create_empty_stats(), ocr=attempt)
+
+    monkeypatch.setattr(
+        "src.bom_lib.strategies.context.BOMParserContext.process", fake_process
+    )
+    slot = ProjectSlot(method=InputMethod.FROM_URL)
+    app.session_state.pedal_slots = [slot]
+    app.session_state[f"method_{slot.id}"] = InputMethod.FROM_URL
+    app.session_state[f"url_{slot.id}"] = "https://example.test/Octavia.pdf"
+    app.run()
+
+    assert not [sb for sb in app.selectbox if sb.label == "Build"]
+    (accept,) = [c for c in app.checkbox if "read by OCR" in c.label]
+    accept.check().run()
+    (picker,) = [sb for sb in app.selectbox if sb.label == "Build"]
+    assert picker.options == ["Octavia", "Vintage"]
+
+    picker.select("Vintage").run()
+    next(b for b in app.button if b.label == "Generate Master List").click().run()
+    assert not app.error
+    inventory = app.session_state.inventory
+    one_k = ComponentKey(ComponentCategory.RESISTORS, "1k")
+    assert any("Vintage" in source for source in inventory[one_k]["sources"])

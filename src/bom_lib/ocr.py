@@ -33,8 +33,9 @@ from src.bom_lib.layout import (
     split_cells,
     starts_description,
 )
-from src.bom_lib.parser import read_pages
+from src.bom_lib.parser import names_builds, read_pages
 from src.bom_lib.types import (
+    BuildVariant,
     ComponentKey,
     Inventory,
     OcrAttempt,
@@ -90,6 +91,11 @@ _BLOCK_GAP = 3
 # A table's last rows can read as no listing; they are kept when this many
 # rows' pitch or less below it.
 _TRAILING_ROW = 1.5
+# Build-column grids (see `_build_grid`): at least this many value columns,
+# each filled in this share of rows; a header cell names the column whose
+# span holds its centre.
+_GRID_COLUMNS = 2
+_GRID_SHARE = 0.5
 # Cells a row above the table must align with the table's (see `_rows_above`).
 _ABOVE_CELLS = 3
 # Extra character widths set before a designator found inside an OCR box.
@@ -460,7 +466,71 @@ def table_block(data: PDFPageExtraction) -> PDFPageExtraction:
         if rows[0] - margin <= w["top"] <= rows[-1] + margin and w["x0"] >= left - 1
     ]
     text = "\n".join(" ".join(w["text"] for w in line) for line in group_lines(kept))
-    return {"tables": [], "text": text, "words": kept}
+    grid = _build_grid(lines, rows, pitch)
+    return {"tables": [grid] if grid else [], "text": text, "words": kept}
+
+
+def _build_grid(
+    lines: list[list[PDFWord]], rows: list[float], pitch: float
+) -> list[list[str | None]] | None:
+    """A table of build columns, rebuilt as the ruled table OCR cannot see.
+
+    OKS Fuzz prints 'Component | ColorSound | 1996 | Meathead | Dark Meathead |
+    Ritual' over rows of a designator and its value in each build. Read as
+    listings, the values run together ('2M 2M 2M 2M 2M'); as a table, the
+    readers give each column its build (`parser._value_column_grid`).
+
+    Returns:
+        The header and rows, or None when the table has no named value columns.
+    """
+    tops = set(rows)
+    body = [split_cells(line) for line in lines if line[0]["top"] in tops]
+    starts = [
+        cell.x0
+        for cells in body
+        if len(cells) >= _GRID_COLUMNS + 1
+        for cell in cells[1:]
+    ]
+    columns = [
+        c for c in _clusters(starts, _ALIGN_PT) if len(c) >= _GRID_SHARE * len(body)
+    ]
+    if len(columns) < _GRID_COLUMNS:
+        return None
+    lefts = [c[0] - _ALIGN_PT for c in columns]
+
+    def column(x: float) -> int | None:
+        """The column whose span (from its left edge to the next's) holds x."""
+        inside = [k for k, left in enumerate(lefts) if x >= left]
+        return inside[-1] if inside else None
+
+    above = [
+        line
+        for line in lines
+        if 0 < rows[0] - line[0]["top"] <= (_BLOCK_GAP + 1) * pitch
+    ]
+    for line in sorted(above, key=lambda line: -line[0]["top"]):
+        cells = split_cells(line)
+        names: list[list[str]] = [[] for _ in columns]
+        for cell in cells[1:]:
+            # Header cells are centred over their column.
+            k = column((cell.x0 + cell.words[-1]["x1"]) / 2)
+            if k is not None:
+                names[k].append(cell.text)
+        if cells[0].x0 >= lefts[0] or sum(bool(n) for n in names) < len(columns):
+            continue
+        header = [cells[0].text, *(" ".join(n) for n in names)]
+        if not names_builds(header):
+            continue
+        table: list[list[str | None]] = [list(header)]
+        for row in body:
+            values: list[str | None] = [None] * len(columns)
+            for cell in row[1:]:
+                k = column(cell.x0)
+                if k is not None:
+                    values[k] = cell.text
+            table.append([row[0].text, *values])
+        return table
+    return None
 
 
 def _rows_above(
@@ -526,6 +596,18 @@ def _only_refs(inventory: Inventory, keep: set[str]) -> Inventory:
                 if _base_ref(ref) in keep:
                     kept.add_part(source, key, ref, per_ref)
     return kept
+
+
+def _union(variants: tuple[BuildVariant, ...]) -> Inventory:
+    """Every part of every build, each designator and value once."""
+    union = Inventory()
+    for variant in variants:
+        for key, data in variant.inventory.items():
+            for source, refs in data["sources"].items():
+                for ref in refs:
+                    if key not in union or ref not in union[key]["refs"]:
+                        union.add_part(source, key, ref, 1)
+    return union
 
 
 def _listed(inventory: Inventory) -> dict[str, ComponentKey]:
@@ -766,7 +848,7 @@ def attempt_ocr(
 
     stats: StatsDict = create_empty_stats()
     inventory = Inventory()
-    builds = 0
+    variants: tuple[BuildVariant, ...] = ()
     if pages_data:
         try:
             inventory, variants, _ = read_pages(
@@ -774,22 +856,10 @@ def attempt_ocr(
             )
         except Exception:
             logger.exception("Reading OCR text failed for %s", source_name)
-        else:
-            if variants:
-                # Designators listed twice with different values read as
-                # several builds (Five Cats Octavia's 'To build the vintage
-                # Octavia' table); the attempt offers one list, so it
-                # offers the first and says so.
-                inventory, builds = variants[0].inventory, len(variants)
-                stats["warnings"].append(
-                    ParseWarning(
-                        ParseWarningKind.CONFLICTING_DUPLICATE,
-                        "",
-                        f"The parts list seems to describe {builds} builds; OCR "
-                        f"read only the first ('{variants[0].name}'). Check the "
-                        "document for the others.",
-                    )
-                )
+    if variants:
+        # Several builds (Five Cats Octavia's 'To build the vintage Octavia'
+        # table, OKS Fuzz's version columns): every part of every build.
+        inventory = _union(variants)
 
     known = _refs(result.inventory)
     # A sentence beside a designator is prose OCR read near the table, not a
@@ -802,6 +872,11 @@ def attempt_ocr(
     if not found and known:
         return None
     parts = _only_refs(inventory, found)
+    builds = tuple(
+        BuildVariant(v.name, kept, sum(d["qty"] for d in kept.values()))
+        for v in variants
+        if (kept := _only_refs(v.inventory, found))
+    )
 
     missing = {
         w.ref
@@ -854,10 +929,10 @@ def attempt_ocr(
         if _several_values(key.value)
         for ref in data["refs"]
     )
-    if not builds and len(side_by_side) >= _SIDE_BY_SIDE:
-        # Victory III prints 'R11 | 68K | 43K | 47K' under 'Jack | Kraken |
-        # Sheriff'; read as one list, the builds run together.
-        builds = len(side_by_side)
+    if len(side_by_side) >= _SIDE_BY_SIDE:
+        # Build columns the reading did not recognize ('R11 | 68K | 43K |
+        # 47K'): read as one list, the builds run together.
+        conflicts.add("")
         warnings.append(
             ParseWarning(
                 ParseWarningKind.CONFLICTING_DUPLICATE,
@@ -867,7 +942,6 @@ def attempt_ocr(
                 "describe several builds. Check the document.",
             )
         )
-    conflicts |= {""} if builds else set()
     verdict = _verdict(
         len(found), suspect, coverage, _gap_share(found | known), bool(conflicts)
     )
@@ -878,8 +952,9 @@ def attempt_ocr(
         return None
     return OcrAttempt(
         verdict=verdict,
-        inventory=parts,
+        inventory=Inventory() if builds else parts,
         warnings=tuple(warnings),
+        variants=builds,
         pages=tuple(read),
         parts_read=len(found),
         suspect=suspect,

@@ -574,13 +574,16 @@ class OcrAttempt:
 
     Attributes:
         verdict: How far the reading can be trusted.
-        inventory: The parts OCR found that the text layer did not.
+        inventory: The parts OCR found that the text layer did not; empty when
+            the reading holds several builds.
         warnings: One 'Read by OCR' warning per part.
         pages: The pages read (0-based).
         parts_read: How many designators OCR found.
         suspect: How many of them have implausible values.
         supplements: Whether the text layer listed some parts already (so OCR
             only fills in the rest).
+        variants: The builds OCR read, when the parts list describes several
+            (version columns, a second build's table); empty otherwise.
     """
 
     verdict: OcrVerdict
@@ -590,6 +593,12 @@ class OcrAttempt:
     parts_read: int
     suspect: int
     supplements: bool
+    variants: tuple[BuildVariant, ...] = ()
+
+    @property
+    def has_parts(self) -> bool:
+        """Whether there is anything to accept."""
+        return bool(self.inventory) or bool(self.variants)
 
     @property
     def message(self) -> str:
@@ -608,6 +617,8 @@ class OcrAttempt:
                 "could not read: enter the parts by hand."
             )
         found = f"OCR (text recognition) read {self.parts_read} parts from it"
+        if self.variants:
+            found += f", in {len(self.variants)} builds"
         if self.verdict == OcrVerdict.PARTIAL:
             wrong = f", and {self.suspect} look wrong" if self.suspect else ""
             return (
@@ -691,28 +702,52 @@ class ParseResult:
         Raises:
             ValueError: If there are no OCR parts to accept.
         """
-        if self.ocr is None or not self.ocr.inventory:
+        if self.ocr is None or not self.ocr.has_parts:
             raise ValueError("No OCR parts to accept")
+        if self.ocr.variants:
+            # The builds OCR read become the document's builds, each with the
+            # parts the text layer read too.
+            variants = tuple(
+                replace(
+                    v,
+                    inventory=self._with(v.inventory),
+                    parts_found=v.parts_found + self.stats["parts_found"],
+                )
+                for v in self.ocr.variants
+            )
+            return replace(
+                self,
+                inventory=Inventory(),
+                stats=self._ocr_stats(self.ocr),
+                variants=variants,
+                ocr=None,
+            )
+        inventory = self._with(self.ocr.inventory)
+        stats = self._ocr_stats(self.ocr)
+        stats["parts_found"] += sum(d["qty"] for d in self.ocr.inventory.values())
+        return replace(self, inventory=inventory, stats=stats, ocr=None)
+
+    def _with(self, parts: Inventory) -> Inventory:
+        """This result's parts list with other parts added."""
         inventory = copy.deepcopy(self.inventory)
-        for key, data in self.ocr.inventory.items():
+        for key, data in parts.items():
             if key in inventory:
                 inventory.merge(Inventory({key: data}))
             else:
                 inventory[key] = copy.deepcopy(data)
-        read = {r for data in self.ocr.inventory.values() for r in data["refs"]}
+        return inventory
+
+    def _ocr_stats(self, ocr: OcrAttempt) -> StatsDict:
+        """The stats with OCR's warnings, less those its reading answered."""
+        inventories = [ocr.inventory, *(v.inventory for v in ocr.variants)]
+        read = {r for inv in inventories for data in inv.values() for r in data["refs"]}
         warnings = [
             w
             for w in self.stats["warnings"]
             if w.kind != ParseWarningKind.NO_PARTS_LIST
             and not (w.kind == ParseWarningKind.UNEXTRACTED_REF and w.ref in read)
         ]
-        stats = cast(
+        return cast(
             StatsDict,
-            {
-                **self.stats,
-                "warnings": warnings + list(self.ocr.warnings),
-                "parts_found": self.stats["parts_found"]
-                + sum(d["qty"] for d in self.ocr.inventory.values()),
-            },
+            {**self.stats, "warnings": warnings + list(ocr.warnings)},
         )
-        return replace(self, inventory=inventory, stats=stats, ocr=None)
