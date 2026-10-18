@@ -538,7 +538,9 @@ def enrich_value_from_type(value: str, type_text: str, notes: str = "") -> str:
         return f"{value} Dual"
     if "CAPACITOR" in detail and any(ch.isdigit() for ch in value):
         for keyword, name in _DIELECTRICS:
-            if keyword in detail and keyword not in value.upper():
+            # 'Box/MLCC Capacitor' (Five Cats) leaves the choice open.
+            either = re.search(rf"/\s*{keyword}|{keyword}\s*/", detail)
+            if keyword in detail and keyword not in value.upper() and not either:
                 return f"{value} {name}"
     return value
 
@@ -837,7 +839,7 @@ def _check_typed_row(
 
 def _text_table_entries(
     pages_data: list[PDFPageExtraction], stats: StatsDict
-) -> list[Entry]:
+) -> tuple[list[Entry], dict[tuple[int, int], float]]:
     """Strategy 1b: Extract entries from unruled 'Reference | Value | Quantity' tables.
 
     Each row may list several designators ('R10-R12,R18'); it becomes one
@@ -849,9 +851,11 @@ def _text_table_entries(
         stats: The statistics dictionary for tracking progress.
 
     Returns:
-        One entry per designator, in reading order.
+        One entry per designator, in reading order, and for each (page, line)
+        read as a row, where the row ends (see `BomRow.end`).
     """
     entries: list[Entry] = []
+    spans: dict[tuple[int, int], float] = {}
     seen: Counter[str] = Counter()
     for page_no, data in enumerate(pages_data):
         for row in find_bom_rows(data["words"]):
@@ -885,6 +889,8 @@ def _text_table_entries(
                 designator = parse_designator(ref)
                 if designator and designator.category == ComponentCategory.CAPACITORS:
                     check_marking_code(stats, ref, value, row.marking)
+            if refs:
+                spans[page_no, row.line] = row.end
             entries += [
                 Entry(
                     ref,
@@ -897,7 +903,7 @@ def _text_table_entries(
                 )
                 for ref in refs
             ]
-    return entries
+    return entries, spans
 
 
 def _untyped_refs(stats: StatsDict, refs: list[str], value: str) -> list[str]:
@@ -970,7 +976,7 @@ def _layout_entries(
     stats: StatsDict,
     table_values: dict[str, str],
     only_pages: set[int] | None = None,
-    skip_lines: set[tuple[int, int]] | None = None,
+    row_ends: dict[tuple[int, int], float] | None = None,
 ) -> list[Entry]:
     """Strategy 2: Extract entries from the page layout.
 
@@ -983,7 +989,8 @@ def _layout_entries(
         stats: The statistics dictionary for tracking progress.
         table_values: Designators already extracted from tables, with their values.
         only_pages: If given, the only pages to read.
-        skip_lines: (page, line) pairs already read as text-table rows.
+        row_ends: Lines already read as text-table rows, keyed (page, line),
+            with where each row ends; listings beyond the end are read.
 
     Returns:
         One entry per listing, with its page position.
@@ -1014,8 +1021,12 @@ def _layout_entries(
                 else [listing.ref]
             )
             value = listing.value
+            end = (row_ends or {}).get((page_no, listing.line), -1)
             for ref in refs:
-                row_value = table_lines.get(listing.line)
+                # A listing past the row's end is in a table beside it.
+                row_value = (
+                    None if listing.x0 >= end > 0 else table_lines.get(listing.line)
+                )
                 if (
                     ref in table_values
                     # 'Q1-Q5' read whole by the table (GoldenFalk).
@@ -1028,7 +1039,7 @@ def _layout_entries(
                             or not _cell_value(lines[listing.line], listing)
                         )
                     )
-                    or (page_no, listing.line) in (skip_lines or set())
+                    or listing.x0 < end
                 ):
                     continue
                 entry = Entry(ref, value, page_no, line=listing.line, x0=listing.x0)
@@ -1266,7 +1277,11 @@ def _without_marks(page: Page) -> Page:
 
 
 def read_pages(
-    pages_data: list[PDFPageExtraction], source_name: str, stats: StatsDict
+    pages_data: list[PDFPageExtraction],
+    source_name: str,
+    stats: StatsDict,
+    *,
+    tables_only: bool = False,
 ) -> tuple[Inventory, tuple[BuildVariant, ...], tuple[OptionNote, ...]]:
     """Reads the parts lists of a document's pages and checks the result.
 
@@ -1277,6 +1292,9 @@ def read_pages(
         pages_data: Every page's tables, text and words, in document order.
         source_name: Label for the source.
         stats: Statistics and warnings, updated in place.
+        tables_only: Whether each page holds nothing but its parts tables (OCR
+            keeps only those), so every page is read, not only those with a
+            text bill of materials.
 
     Returns:
         The single-build inventory (empty when the document has variants),
@@ -1287,9 +1305,9 @@ def read_pages(
     # other strategies only read its own pages: elsewhere (vector
     # schematics) symbol labels look like listings and drawings like
     # tables.
-    text_rows = _text_table_entries(pages_data, stats)
-    bom_pages = {row.page for row in text_rows} or None
-    row_lines = {(row.page, row.line) for row in text_rows}
+    text_rows, row_ends = _text_table_entries(pages_data, stats)
+    # Five Cats Tone Monarch heads its main table but not its daughterboard's.
+    bom_pages = None if tables_only else ({row.page for row in text_rows} or None)
     entries = _table_entries(pages_data, stats, bom_pages)
     # A boxed 'Part | Value' grid is both a ruled table and a text table
     # (GuitarPCB); read it once, or every part would be bought twice.
@@ -1309,7 +1327,7 @@ def read_pages(
     # --- STRATEGY 2: LAYOUT ANALYSIS ---
     # Recovers anything the tables missed (or everything, for column layouts)
     entries += _layout_entries(
-        pages_data, stats, {e.ref: e.value for e in entries}, bom_pages, row_lines
+        pages_data, stats, {e.ref: e.value for e in entries}, bom_pages, row_ends
     )
 
     # --- BUILDS: variants and options ---

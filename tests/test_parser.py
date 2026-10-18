@@ -821,7 +821,7 @@ def test_typed_table_repeated_labels_are_separate_parts() -> None:
         ]
     )
     stats = create_empty_stats()
-    entries = _text_table_entries([page], stats)
+    entries, _ = _text_table_entries([page], stats)
     assert [(e.ref, e.value) for e in entries] == [
         ("GAIN", "1MA"),
         ("GAIN (2)", "SPDT ON/ON"),
