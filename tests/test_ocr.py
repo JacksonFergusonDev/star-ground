@@ -20,6 +20,7 @@ from src.bom_lib import (
 from src.bom_lib.ocr import (
     OcrBox,
     _plausible,
+    _reread_labels,
     _several_values,
     _unlisted,
     _unread,
@@ -151,6 +152,19 @@ class TestPageWords:
         words = page_words([OcrBox("R15", 0, 10, 0, 40)])["words"]
         assert words == []
 
+    def test_offset_rows_of_tables_side_by_side_stay_apart(self) -> None:
+        # Five Cats E.P.3.0: the right table's 'U1' row sits half a row below
+        # the left table's 'R8'.
+        boxes = [
+            OcrBox("R8", 38, 55, 557.6, 573.3),
+            OcrBox("100K", 87, 113, 559.7, 572.0),
+            OcrBox("U1", 350, 367, 564.8, 578.0),
+            OcrBox("7660SEPA", 399, 440, 566.5, 577.5),
+        ]
+        tops = {w["text"]: w["top"] for w in page_words(boxes)["words"]}
+        assert tops["R8"] == tops["100K"]
+        assert tops["U1"] == tops["7660SEPA"] != tops["R8"]
+
 
 class TestTableBlock:
     """Only the aligned grid of a page is read."""
@@ -193,6 +207,76 @@ class TestTableBlock:
         kept = {w["text"] for w in table_block(page_words(boxes))["words"]}
         assert {"Trim1", "Trim2", "Boost", "R1", "R6"} <= kept
         assert "Q1" not in kept
+
+    def test_tables_side_by_side_with_offset_rows(self) -> None:
+        # Five Cats E.P.3.0: the right table's rows sit half a row below the
+        # left's, and its 'U1' row runs over several lines.
+        def row(top: float, *cells: tuple[str, float]) -> list[OcrBox]:
+            return [OcrBox(t, x, x + 6 * len(t), top, top + 10) for t, x in cells]
+
+        boxes = [
+            *[
+                b
+                for k in range(1, 11)
+                for b in row(400 + 13 * k, (f"R{k}", 38), ("1M", 87))
+            ],
+            *[
+                b
+                for k in range(1, 5)
+                for b in row(406 + 13 * k, (f"D{k}", 350), ("1N5817", 399))
+            ],
+            *row(471, ("U1", 350), ("TL072", 399)),
+            *row(523, ("Q1", 350), ("2N5457", 399)),
+        ]
+        kept = {w["text"] for w in table_block(page_words(boxes))["words"]}
+        assert {"R1", "R10", "D1", "U1", "Q1"} <= kept
+
+    def test_rows_under_the_typed_header_belong(self) -> None:
+        # Five Cats Easyfoot: '3PDT-A | 3PDT | 3PDT Footswitch' rows read as
+        # no listing, between the table's header and its first listing.
+        def row(top: float, *cells: tuple[str, float]) -> list[OcrBox]:
+            return [OcrBox(t, x, x + 6 * len(t), top, top + 9) for t, x in cells]
+
+        boxes = [
+            *row(487, ("Reference", 60), ("Value", 111), ("Footprint", 148)),
+            *row(501, ("3PDT-A", 60), ("3PDT", 108), ("3PDT Footswitch", 148)),
+            *row(514, ("4PDT", 60), ("4PDT", 108), ("4PDT Footswitch", 148)),
+            *[
+                b
+                for k in range(1, 6)
+                for b in row(
+                    527 + 13 * k, (f"D{k}", 60), ("LED", 108), ("3MM LED", 148)
+                )
+            ],
+        ]
+        block = table_block(page_words(boxes))
+        assert {"3PDT-A", "4PDT", "D1"} <= {w["text"] for w in block["words"]}
+        assert _unlisted([block], {f"D{k}" for k in range(1, 6)}) == {"3PDT-A", "4PDT"}
+
+    def test_a_build_header_under_the_typed_header_is_left_out(self) -> None:
+        # Victory III: 'Jack | Kraken | Sheriff' names the builds' value
+        # columns, under 'Ref | Value | Type'; it reads better without them.
+        def row(top: float, *cells: tuple[str, float]) -> list[OcrBox]:
+            return [OcrBox(t, x, x + 6 * len(t), top, top + 9) for t, x in cells]
+
+        boxes = [
+            *row(432, ("Ref", 329), ("Value", 383), ("Type", 470)),
+            *row(445, ("Jack", 355), ("Kraken", 384), ("Sheriff", 420)),
+            *[
+                b
+                for k in range(1, 6)
+                for b in row(
+                    445 + 13 * k,
+                    (f"C{k}", 329),
+                    ("1n", 356),
+                    ("2n", 384),
+                    ("Box Cap", 470),
+                )
+            ],
+        ]
+        kept = {w["text"] for w in table_block(page_words(boxes))["words"]}
+        assert "C1" in kept
+        assert "Kraken" not in kept
 
     def test_build_columns_become_a_table(self) -> None:
         # OKS Fuzz: 'Component | ColorSound | 1996 | Dark Meathead' two rows
@@ -251,12 +335,57 @@ class TestUnlisted:
     def test_a_row_with_an_unreadable_value(self) -> None:
         boxes = [
             *_grid_boxes(),
-            OcrBox("CLIP1", 180, 220, 500, 514),
-            OcrBox("SW_SPDT", 250, 300, 500, 514),
+            OcrBox("PWR1", 180, 212, 500, 514),
+            OcrBox("Barrel_Jack", 250, 330, 500, 514),
         ]
         block = table_block(page_words(boxes))
         listed = {"R1", "R2", "R3", "R4", "R5", "C1", "C2", "C3", "IC1", "D1", "D2"}
-        assert _unlisted([block], listed) == {"CLIP1"}
+        assert _unlisted([block], listed) == {"PWR1"}
+
+
+class TestRereadLabels:
+    """Misread designator cells are read again on their own."""
+
+    @staticmethod
+    def _reread(boxes: list[OcrBox], reads: str) -> list[str]:
+        from PIL import Image
+
+        def recognizer(image: Any, scale: float) -> list[OcrBox]:
+            # The cell alone: one box in the crop's middle.
+            height = image.height * scale
+            return [OcrBox(reads, 0, 16, height / 2 - 7, height / 2 + 7)]
+
+        data = _reread_labels(
+            page_words(boxes), Image.new("RGB", (600, 800)), 1.0, recognizer
+        )
+        return [w["text"] for w in data["words"] if w["x0"] < 60]
+
+    def test_a_misread_label(self) -> None:
+        # Five Cats: 'C9' reads '60' in the whole page, 'C9' on its own.
+        boxes = [
+            *_grid_boxes(),
+            OcrBox("60", 40, 56, 500, 514),
+            OcrBox("1n", 110, 126, 500, 514),
+        ]
+        assert self._reread(boxes, "C9")[-1] == "C9"
+
+    def test_an_undetected_label(self) -> None:
+        boxes = [
+            *_grid_boxes(),
+            OcrBox("1n", 110, 126, 500, 514),
+            OcrBox("R6", 40, 56, 520, 534),
+            OcrBox("1k", 110, 126, 520, 534),
+        ]
+        assert self._reread(boxes, "C9")[-2:] == ["C9", "R6"]
+
+    def test_no_designator_or_one_listed_already_is_kept(self) -> None:
+        boxes = [
+            *_grid_boxes(),
+            OcrBox("60", 40, 56, 500, 514),
+            OcrBox("1n", 110, 126, 500, 514),
+        ]
+        assert self._reread(boxes, "6O")[-1] == "60"
+        assert self._reread(boxes, "R1")[-1] == "60"
 
 
 class TestPlausible:
@@ -401,6 +530,19 @@ class TestAttemptOcr:
         cap = make_component_key(ComponentCategory.CAPACITORS, "1u")
         assert accepted.inventory[cap]["refs"] == ["C3"]
         assert accepted.stats["parts_found"] >= 11
+
+    def test_a_switch_symbol_is_read(self, tmp_path: Path) -> None:
+        # Five Cats Jive-By Shooter: 'CLIP1 | SW_SPDT | SPDT Toggle'.
+        path = _blank_pdf(tmp_path / "image.pdf")
+        result = parse_pedalpcb_pdf(path, "Image")
+        boxes = [
+            *_grid_boxes(),
+            OcrBox("CLIP1", 40, 80, 500, 514),
+            OcrBox("SW_SPDT", 110, 166, 500, 514),
+        ]
+        attempt = attempt_ocr(path, result, "Image", lambda *_: boxes)
+        assert attempt is not None
+        assert any("CLIP1" in d["refs"] for d in attempt.inventory.values())
 
     def test_several_builds_are_offered(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
