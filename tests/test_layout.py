@@ -311,6 +311,38 @@ class TestCellRepairs:
             "C5", "470n 63V"
         )
 
+    def test_a_type_column_ends_values(self) -> None:
+        # Five Cats via OCR: no header row, so the 'Type' column is found by
+        # its descriptions, some split into a cell per word.
+        rows = [
+            ("R1", "33k", "1/4 Watt Resistor"),
+            ("R2", "2M2", "1/4", "Watt", "Resistor"),
+            ("C1", "220uF", "Electrolytic Cap"),
+            ("U1", "TL072", "8", "Pin", "Op-Amp"),
+        ]
+        words = []
+        for k, cells in enumerate(rows):
+            # Fixed columns at 50 / 90 / 130, a split description's words
+            # each a cell of its own.
+            xs = (50.0, 90.0, 130.0, 160.0, 190.0)
+            for text, x in zip(cells, xs, strict=False):
+                words += [
+                    PDFWord(
+                        text=t,
+                        x0=x + 40 * i,
+                        x1=x + 40 * i + 6 * len(t),
+                        top=100.0 + 20 * k,
+                        size=SIZE,
+                    )
+                    for i, t in enumerate([text])
+                ]
+        assert [(lst.ref, lst.value) for lst in find_listings(words)] == [
+            ("R1", "33k"),
+            ("R2", "2M2"),
+            ("C1", "220uF"),
+            ("U1", "TL072"),
+        ]
+
     def test_range_in_a_listing_grid(self) -> None:
         # GuitarPCB SWAH: 'C9  1u  16V  D1-D2  1N4148' is two listings.
         assert find_listings(_line("C9", "1u", "16V", "D1-D2", "1N4148")) == [

@@ -106,6 +106,21 @@ _MAX_MERGED_VALUE_WORDS = 6
 # A designator column is an x-position where at least this many listings start.
 _MIN_COLUMN_REFS = 3
 _COLUMN_TOLERANCE_EM = 0.5
+# A part description in a type column: '1/4 Watt Resistor', 'Box Cap',
+# 'Electrolytic Capacitor - Min 16V', 'NPN - EBC', '16mm Potentiometer'.
+_TYPE_TEXT = re.compile(
+    r"\b(?:resistor|cap(?:acitor)?|diode|potentiometer|transistor|mosfet|j-?fet"
+    r"|[np]pn|op-?amp|regulator|toggle|trim-?pot|trimmer|footswitch"
+    # A type cell OCR splits in two keeps only its first word: 'Box | Cap'.
+    r"|box|ceramic|electrolytic|polari[sz]ed|mlcc|film|schottky|zener|germanium"
+    r"|watt|standard|\d+[- ]?pin|dip-?\d*)\b",
+    re.IGNORECASE,
+)
+_TYPE_SHARE = 0.6
+# A part value or part number: '33k', '2M2', '220uF', 'B5K', 'TL072', '1N4148'.
+_VALUE_SHAPE = re.compile(
+    r"[ABCW]?\d+(?:\.\d+)?[pnuµkKMR]\d*(?:F|Ω)?|\d?[A-Z]{1,4}\d{2,}[A-Z]*",
+)
 _TRIM_HEADING = re.compile(r"TRIM(?:MER)?S?(?:\s+POTS?)?\b", re.IGNORECASE)
 _TRIM_MARK = re.compile(r"\bTRIM|\b3362P?\b", re.IGNORECASE)
 _PAREN_LABEL = re.compile(r"\((\w+)\)")
@@ -458,9 +473,47 @@ def find_listings(words: list[PDFWord]) -> list[Listing]:
     # A first pass finds where designator columns start, so a value does not
     # absorb text that sits in the next column ('C24  10n | 6 x 5-pin Male
     # Pinheader' under a PIN HEADERS heading, Emu Amp Simulator).
+    lines = page_lines(words)
     starts = Counter(round(listing.x0) for listing in _scan(words, frozenset()))
     columns = frozenset(x for x, n in starts.items() if n >= _MIN_COLUMN_REFS)
-    return _mark_trimmers(_scan(words, columns), page_lines(words))
+    return _mark_trimmers(_scan(words, columns | _type_columns(lines)), lines)
+
+
+def _type_columns(lines: list[list[Cell]]) -> frozenset[int]:
+    """Where a column of part descriptions starts.
+
+    A 'Location | Value | Type' table without its header row (Five Cats, read
+    by OCR) would otherwise run each value into its description: '33k 1/4
+    Watt Resistor'. A column is a type column when most of its cells describe
+    a kind of part.
+    """
+    # OCR can split a description into a cell per word ('8 | Pin | Dual
+    # Op-Amp'), so a cell is read with the one after it.
+    described = {
+        id(cell): " ".join(c.text for c in cells[k : k + 2])
+        for cells in lines
+        for k, cell in enumerate(cells)
+        if k
+    }
+    cells = [cell for cells in lines for cell in cells[1:]]
+
+    def describes(cell: Cell) -> bool:
+        # A value is never a description, though the cell after it may be one.
+        return (
+            _TYPE_TEXT.search(described[id(cell)]) is not None
+            and _VALUE_SHAPE.fullmatch(cell.text.split()[0]) is None
+        )
+
+    typed = [cell for cell in cells if describes(cell)]
+    columns = set()
+    for cell in typed:
+        near = [
+            c for c in cells if abs(c.x0 - cell.x0) <= _COLUMN_TOLERANCE_EM * c.size
+        ]
+        kinds = sum(1 for c in near if describes(c))
+        if kinds >= _MIN_COLUMN_REFS and kinds >= _TYPE_SHARE * len(near):
+            columns.add(round(cell.x0))
+    return frozenset(columns)
 
 
 def _mark_trimmers(listings: list[Listing], lines: list[list[Cell]]) -> list[Listing]:
@@ -596,7 +649,7 @@ def _absorb_continuations(
 # Column headers of a text bill of materials ('Reference  Value  Quantity  Notes',
 # Aion FX's 'PART  VALUE  TYPE  NOTES').
 _REF_HEADERS = frozenset(
-    {"REFERENCE", "REFERENCES", "REF", "REFS", "DESIGNATOR", "PART"}
+    {"REFERENCE", "REFERENCES", "REF", "REFS", "DESIGNATOR", "PART", "LOCATION"}
 )
 # 'Name' heads the designator column only beside a 'Value' column (Q-Tune's
 # 'Value | Name | Qty' packing list).
@@ -609,6 +662,7 @@ _BOM_COLUMNS = {
     "NOTES": "notes",
     "COMMENTS": "notes",
     "TYPE": "type",
+    "FOOTPRINT": "type",
 }
 # A wrapped value loses its closing parenthesis: '1N5226 (1N5' / '226)'.
 _UNCLOSED_ASIDE = re.compile(r"\s*\([^)]*$")
