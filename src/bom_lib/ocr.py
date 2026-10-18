@@ -29,7 +29,7 @@ from src.bom_lib.layout import (
     REF_RANGE,
     find_listings,
     group_lines,
-    heads_table,
+    heads_typed_table,
     page_lines,
     split_cells,
     starts_description,
@@ -113,6 +113,9 @@ _MIN_PARTS = 5
 _MAX_SUSPECT_SHARE = 0.15
 _MIN_COVERAGE = 0.6
 _MAX_GAP_SHARE = 0.25
+# A reading naming more designators it did not read than this share of those
+# it did is incomplete.
+_MAX_UNREAD_SHARE = 0.1
 
 # One OCR job at a time: each holds a rendered page and the model's buffers.
 _LOCK = threading.Lock()
@@ -492,13 +495,18 @@ def table_block(data: PDFPageExtraction) -> PDFPageExtraction:
             left = min(left, x0)
     listed = {lines[lst.line][0]["top"] for lst in listings}
     rows = _rows_above(lines, rows, pitch, listed)
-    # The table's own header row, just above it (Rat King's first build).
+    # The table's own typed header row, just above it (Rat King's first build).
+    # An untyped grid's ('Part | Value', GuitarPCB) reads better without it.
     header = [
-        line[0]["top"]
+        line
         for line in lines
-        if 0 < rows[0] - line[0]["top"] <= _TRAILING_ROW * pitch and heads_table(line)
-    ]
-    rows = header[-1:] + rows
+        if 0 < rows[0] - line[0]["top"] <= _TRAILING_ROW * pitch
+        and heads_typed_table(line)
+    ][-1:]
+    for line in header:
+        rows = [line[0]["top"], *rows]
+        # The whole header: 'Part' can start a little left of 'R1' (GuitarPCB).
+        left = min(left, line[0]["x0"])
     margin = pitch / 2
     kept = [
         w
@@ -994,9 +1002,13 @@ def attempt_ocr(
                 "describe several builds. Check the document.",
             )
         )
+    unread = sum(w.kind == ParseWarningKind.UNEXTRACTED_REF for w in warnings)
     verdict = _verdict(
         len(found), suspect, coverage, _gap_share(found | known), bool(conflicts)
     )
+    if verdict == OcrVerdict.COMPLETE and unread > _MAX_UNREAD_SHARE * len(found):
+        # Designators the reading names but did not read (K-Buffer: 5 of 12).
+        verdict = OcrVerdict.PARTIAL
     warnings.sort(key=lambda w: w.ref)
     if known and verdict == OcrVerdict.UNUSABLE:
         # The text layer read a parts list; a few stray OCR words are no

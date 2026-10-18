@@ -288,7 +288,8 @@ def _repeat_variants(
     Five Cats Rat King lists every part four times, once per RAT version, in
     typed tables that number a repeated label ('R1 (2)'). When nearly every
     label repeats the same number of times, each repeat is a build, named by
-    the margin label beside its rows ('Standard RAT', 'Dirty RAT').
+    the margin label beside its rows ('Standard RAT', 'Dirty RAT'), which
+    every build must have.
     """
     occurrences: dict[str, list[Entry]] = {}
     for e in entries:
@@ -318,9 +319,14 @@ def _repeat_variants(
         k = next((k for k, (lo, hi) in enumerate(spans) if lo <= at <= hi), None)
         if k is not None:
             groups[k].append(replace(e, ref=_REPEAT_SUFFIX.sub("", e.ref)))
+    # Only named builds: unnamed repeats are as likely a second board (GuitarPCB
+    # Fuzz God) or a schematic beside the list (Aion FX legacy).
+    names = [_margin_label(group, pages) for group in groups]
+    if None in names or len(set(names)) < len(names):
+        return []
     return [
-        PlannedVariant(_margin_label(group, pages) or f"Version {k + 1}", tuple(group))
-        for k, group in enumerate(groups)
+        PlannedVariant(str(name), tuple(group))
+        for name, group in zip(names, groups, strict=True)
     ]
 
 

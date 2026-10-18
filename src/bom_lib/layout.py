@@ -782,6 +782,8 @@ _BOM_COLUMNS = {
     "TYPE": "type",
     "FOOTPRINT": "type",
 }
+# A cell starting this many ems right of the last header is outside the table.
+_BEYOND_TABLE_EM = 4.0
 # A wrapped value loses its closing parenthesis: '1N5226 (1N5' / '226)'.
 _UNCLOSED_ASIDE = re.compile(r"\s*\([^)]*$")
 # A part's printed marking is not its value: '100n (104)', '1N4148 (41 48)',
@@ -835,10 +837,11 @@ class _Column:
         return (self.x0 + self.x1) / 2
 
 
-def heads_table(words: list[PDFWord]) -> bool:
-    """Whether a line of words heads a text table ('Ref | Value | Footprint')."""
+def heads_typed_table(words: list[PDFWord]) -> bool:
+    """Whether a line of words heads a typed table ('Ref | Value | Footprint')."""
     names = {w["text"].upper() for w in words}
-    return bool(names & _REF_HEADERS) and "VALUE" in names
+    types = {name for name, field in _BOM_COLUMNS.items() if field == "type"}
+    return bool(names & _REF_HEADERS) and "VALUE" in names and bool(names & types)
 
 
 def _header_sections(cells: list[Cell]) -> list[list[_Column]]:
@@ -937,7 +940,13 @@ def _read_bom(words: list[PDFWord]) -> tuple[list[BomRow], list[Cell]]:
         fields: dict[tuple[int, str], str] = {}
         first_x0: dict[int, float] = {}
         end = math.inf
+        right = max(col.x1 for sec in sections for col in sec)
         for n, cell in enumerate(cells):
+            if cell.x0 > right + _BEYOND_TABLE_EM * cell.size:
+                # Prose beside the table (K-Buffer's description) is no cell,
+                # and listings there are another table's.
+                end = cell.x0
+                break
             target = _column_for(cell, sections)
             next_text = cells[n + 1].text if n + 1 < len(cells) else None
             first, _, rest = cell.text.partition(" ")
