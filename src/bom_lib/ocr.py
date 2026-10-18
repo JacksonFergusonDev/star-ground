@@ -23,9 +23,9 @@ from itertools import pairwise
 from statistics import median
 from typing import TYPE_CHECKING, Any
 
-from src.bom_lib.designators import is_designator, parse_designator
+from src.bom_lib.designators import BOARD_REF, is_designator, parse_designator
 from src.bom_lib.enums import ComponentCategory, OcrVerdict, ParseWarningKind
-from src.bom_lib.layout import find_listings, group_lines
+from src.bom_lib.layout import REF_RANGE, find_listings, group_lines, page_lines
 from src.bom_lib.parser import read_pages
 from src.bom_lib.types import (
     ComponentKey,
@@ -38,7 +38,7 @@ from src.bom_lib.types import (
     StatsDict,
     create_empty_stats,
 )
-from src.bom_lib.utils import parse_value_to_decimal
+from src.bom_lib.utils import expand_refs, parse_value_to_decimal
 
 if TYPE_CHECKING:
     from pdfplumber.page import Page
@@ -50,6 +50,10 @@ logger = logging.getLogger(__name__)
 # longest side is _DETECT_SIDE pixels. Together they keep one page under about
 # 500 MB, with the same accuracy as 300 dpi on GuitarPCB's image tables.
 _DPI = 200
+# A small page (Five Cats' A5 inserts, 7pt table rows) is rendered larger, to
+# at least this many pixels on its longest side: at 200 dpi OCR reads 'R27' as
+# 'R21' and '220nF' as '220nl'.
+_MIN_RENDER_SIDE = 2400
 _DETECT_SIDE = 1280
 # At about 2.5 s a page, a document never takes more than about 20 s.
 _MAX_PAGES = 8
@@ -70,6 +74,11 @@ _MIN_ALIGNED = 4
 _ALIGN_PT = 4.0
 # Rows further apart than this many row pitches start another block.
 _BLOCK_GAP = 3
+# A table's last rows can read as no listing; they are kept when this many
+# rows' pitch or less below it.
+_TRAILING_ROW = 1.5
+# Extra character widths set before a designator found inside an OCR box.
+_CELL_BREAK = 2
 # A table's rows are evenly spaced: this share of its row gaps is within
 # _PITCH_TOLERANCE of the typical one. A schematic's aligned labels are not.
 _MIN_EVEN_ROWS = 0.7
@@ -108,6 +117,31 @@ _QUALIFIERS = {
     ),
 }
 _VALUE_CHARS = re.compile(r"[\x20-\x7e\u00b5\u03a9\u2126]*")
+# A part label in a designator column: 'CLIP1', 'GAIN-TOG1', 'RELAX/PUSH',
+# '3PDT1'.
+_LABEL = re.compile(r"(?=\d*[A-Z])[A-Z0-9][A-Za-z0-9_/-]{0,15}")
+# Column headings and section titles of a parts table.
+_HEADERS = frozenset(
+    {
+        "REF",
+        "REFERENCE",
+        "LOCATION",
+        "PART",
+        "VALUE",
+        "TYPE",
+        "FOOTPRINT",
+        "RESISTORS",
+        "CAPACITORS",
+        "DIODES",
+        "TRANSISTORS",
+        "ICS",
+        "POTENTIOMETERS",
+        "SWITCHES",
+        "COMPONENT",
+        "TOTAL",
+        "UNIQUE",
+    }
+)
 _SERIAL_REF = re.compile(r"([A-Z]{1,3})(\d{1,3})")
 _DASHES = "-\u2013\u2014"
 # 'TR1 -TR3' read as one box: the range's spaces would split it in two.
@@ -135,7 +169,7 @@ class OcrBox:
     bottom: float
 
 
-Recognizer = Callable[["Image"], list[OcrBox]]
+Recognizer = Callable[["Image", float], list[OcrBox]]
 
 
 @cache
@@ -147,17 +181,17 @@ def _engine() -> Any:
     )
 
 
-def recognize(image: Image) -> list[OcrBox]:
+def recognize(image: Image, scale: float) -> list[OcrBox]:
     """Reads the text on a page image with RapidOCR.
 
     Args:
-        image: The page rendered at `_DPI`.
+        image: The rendered page.
+        scale: Points per pixel of the rendering.
 
     Returns:
         The recognized boxes, in points.
     """
     out = _engine()(image)
-    scale = 72 / _DPI
     boxes = []
     for corners, text in zip(
         out.boxes if out.boxes is not None else (), out.txts or (), strict=True
@@ -219,6 +253,12 @@ def _join_ranges(row: list[OcrBox]) -> list[OcrBox]:
     return joined
 
 
+def _starts_cell(token: str) -> bool:
+    return (
+        BOARD_REF.fullmatch(token) is not None or REF_RANGE.fullmatch(token) is not None
+    )
+
+
 def page_words(boxes: list[OcrBox]) -> PDFPageExtraction:
     """Turns recognized boxes into the positioned words the readers expect.
 
@@ -243,10 +283,15 @@ def page_words(boxes: list[OcrBox]) -> PDFPageExtraction:
     for box in flat:
         height = box.bottom - box.top
         if rows:
-            last = rows[-1][-1]
-            gap = abs((box.top + box.bottom) / 2 - (last.top + last.bottom) / 2)
-            if gap < 0.5 * max(height, last.bottom - last.top):
-                rows[-1].append(box)
+            # Against the row as a whole and the smaller height: a tall box
+            # (a wrapped cell) must not chain rows a few points apart into one
+            # (Five Cats tables have 7pt rows).
+            row = rows[-1]
+            middle = median((b.top + b.bottom) / 2 for b in row)
+            row_height = median(b.bottom - b.top for b in row)
+            gap = abs((box.top + box.bottom) / 2 - middle)
+            if gap < 0.5 * min(height, row_height):
+                row.append(box)
                 continue
         rows.append([box])
 
@@ -261,18 +306,24 @@ def page_words(boxes: list[OcrBox]) -> PDFPageExtraction:
             text = _SPACED_RANGE.sub(r"\1\2", box.text.replace("μ", "µ"))
             tokens = text.split()
             width = (box.x1 - box.x0) / len(" ".join(tokens))
-            pos = 0
+            pos = 0.0
             for token in tokens:
+                x0 = box.x0 + pos * width
+                if words and words[-1]["top"] == top and _starts_cell(token):
+                    # A designator starts a cell, however close OCR set it to
+                    # the cell before ('16V  D1-D2 1N4148', SWAH), even
+                    # within one box.
+                    x0 = max(x0, words[-1]["x1"] + _CELL_BREAK * width)
                 words.append(
                     PDFWord(
                         text=token,
-                        x0=box.x0 + pos * width,
-                        x1=box.x0 + (pos + len(token)) * width,
+                        x0=x0,
+                        x1=x0 + len(token) * width,
                         top=top,
                         size=size,
                     )
                 )
-                pos += len(token) + 1
+                pos = (x0 - box.x0) / width + len(token) + 1
         lines.append(" ".join(b.text for b in row))
     return {"tables": [], "text": "\n".join(lines), "words": words}
 
@@ -289,12 +340,16 @@ def _clusters(values: list[float], tolerance: float) -> list[list[float]]:
 
 
 def _regular(rows: list[float]) -> bool:
-    """Whether rows are evenly spaced, as a table's are."""
+    """Whether rows are evenly spaced, as a table's are (blank rows allowed)."""
     gaps = [b - a for a, b in pairwise(rows)]
     if len(gaps) < 2:
         return False
     pitch = median(gaps)
-    even = sum(abs(gap - pitch) <= _PITCH_TOLERANCE * pitch for gap in gaps)
+    even = sum(
+        1 <= round(gap / pitch) <= _BLOCK_GAP
+        and abs(gap - round(gap / pitch) * pitch) <= _PITCH_TOLERANCE * pitch
+        for gap in gaps
+    )
     return even >= _MIN_EVEN_ROWS * len(gaps)
 
 
@@ -324,12 +379,45 @@ def table_block(data: PDFPageExtraction) -> PDFPageExtraction:
         return {"tables": [], "text": "", "words": []}
     tops = sorted({lines[lst.line][0]["top"] for lst in aligned})
     pitch = median(b - a for a, b in pairwise(tops)) if len(tops) > 1 else 0.0
-    blocks = _clusters(tops, _BLOCK_GAP * pitch)
+    # A row that read as no listing leaves a gap of one more pitch.
+    blocks = _clusters(tops, (_BLOCK_GAP + 1 + _PITCH_TOLERANCE) * pitch)
     rows = max(blocks, key=len)
     if not _regular(rows):
         # Aligned labels on a schematic (Apollo Tremolo's) are no table.
         return {"tables": [], "text": "", "words": []}
+    # Rows that read as no listing can split one table in two ('LED | LED'
+    # rows, Tone Monarch's daughterboard): a later block in the same
+    # designator columns, at the same pitch, continues it.
+    starts_at = {lines[lst.line][0]["top"]: lst.x0 for lst in aligned}
+    main_columns = [
+        c for c in columns if any(c[0] <= starts_at[top] <= c[-1] for top in rows)
+    ]
+    for block in blocks:
+        if (
+            block[0] > rows[-1]
+            and len(block) >= 2
+            and _regular([*block, block[-1] + pitch])
+            and all(
+                any(c[0] <= starts_at[top] <= c[-1] for c in main_columns)
+                for top in block
+            )
+        ):
+            rows = rows + block
+    # A row that read as no listing ('SUBS | SDPT Toggle', WoollyTron) still
+    # belongs to the table when it continues the table's rows from one of
+    # its designator columns, so the reading can say it was not read.
+    # Only below the table and at its pitch: above it lies the board drawing,
+    # whose labels can line up with the columns.
     left = min(lst.x0 for lst in aligned if lines[lst.line][0]["top"] in rows)
+    starts = sorted(
+        (line[0]["top"], line[0]["x0"])
+        for line in lines
+        if any(c[0] - _ALIGN_PT <= line[0]["x0"] <= c[-1] + _ALIGN_PT for c in columns)
+    )
+    for top, x0 in starts:
+        if 0 < top - rows[-1] <= _TRAILING_ROW * pitch:
+            rows.append(top)
+            left = min(left, x0)
     margin = pitch / 2
     kept = [
         w
@@ -419,6 +507,44 @@ def _gap_share(refs: set[str]) -> float:
     expected = sum(max(ns) for ns in numbers.values() if len(ns) >= 3)
     present = sum(len(ns) for ns in numbers.values() if len(ns) >= 3)
     return 1 - present / expected if expected else 0.0
+
+
+def _unlisted(pages_data: list[PDFPageExtraction], listed: set[str]) -> set[str]:
+    """Labels in a table's designator columns that were read as no part.
+
+    A row whose value the readers reject ('CLIP1 | SW_SPDT', 'R10A1 |
+    JUMPER', 'PWR1 | Barrel_Jack') would otherwise vanish without a trace.
+
+    Args:
+        pages_data: The table blocks OCR read.
+        listed: Every designator the reading (or the text layer) listed.
+
+    Returns:
+        The labels to check, as printed.
+    """
+    unlisted = set()
+    for data in pages_data:
+        listings = find_listings(data["words"])
+        columns = [
+            c
+            for c in _clusters([lst.x0 for lst in listings], _ALIGN_PT)
+            if len(c) >= _MIN_ALIGNED
+        ]
+        for cells in page_lines(data["words"]):
+            for cell in cells:
+                label = cell.text.split()[0]
+                refs = expand_refs(label) if REF_RANGE.fullmatch(label) else [label]
+                if (
+                    any(
+                        c[0] - _ALIGN_PT <= cell.x0 <= c[-1] + _ALIGN_PT
+                        for c in columns
+                    )
+                    and _LABEL.fullmatch(label)
+                    and not {r.upper() for r in refs} <= listed
+                    and label.upper() not in _HEADERS
+                ):
+                    unlisted.add(label)
+    return unlisted
 
 
 def _unread(listed: dict[str, ComponentKey], mentioned: set[str]) -> set[str]:
@@ -531,8 +657,9 @@ def attempt_ocr(
                 break
             if not _candidate(page):
                 continue
-            image = page.to_image(resolution=_DPI).original.convert("RGB")
-            words = page_words(recognizer(image))
+            dpi = max(_DPI, 72 * _MIN_RENDER_SIDE / max(page.width, page.height))
+            image = page.to_image(resolution=dpi).original.convert("RGB")
+            words = page_words(recognizer(image, 72 / dpi))
             mentioned |= {w["text"] for w in words["words"]}
             pages_data.append(table_block(words))
             read.append(number)
@@ -582,6 +709,7 @@ def attempt_ocr(
         )
         for ref in sorted(
             _unread(_listed(result.inventory) | _listed(parts), mentioned)
+            | _unlisted(pages_data, {r.upper() for r in {*_listed(inventory), *known}})
         )
     ]
     # The OCR reading's own self-checks: a designator read twice with two

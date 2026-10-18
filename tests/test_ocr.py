@@ -20,6 +20,7 @@ from src.bom_lib import (
 from src.bom_lib.ocr import (
     OcrBox,
     _plausible,
+    _unlisted,
     _unread,
     _verdict,
     attempt_ocr,
@@ -94,6 +95,39 @@ class TestPageWords:
         words = page_words([OcrBox("1μ", 0, 20, 0, 14)])["words"]
         assert words[0]["text"] == "1µ"
 
+    def test_close_rows_stay_apart(self) -> None:
+        # Five Cats: 7pt rows, and a tall box (a wrapped cell) beside them
+        # must not chain them into one line.
+        boxes = [
+            OcrBox("R26", 20, 32, 444, 451),
+            OcrBox("20K", 44, 56, 444, 451),
+            OcrBox("Ceramic Cap", 202, 230, 440, 458),
+            OcrBox("R27", 20, 32, 452, 459),
+            OcrBox("20K", 44, 56, 452, 459),
+        ]
+        words = page_words(boxes)["words"]
+        assert len({w["top"] for w in words if w["text"] in {"R26", "R27"}}) == 2
+
+    def test_a_designator_starts_a_cell(self) -> None:
+        # SWAH: '16V' and 'D1-D2' read 5pt apart, or as one box.
+        for boxes in (
+            [OcrBox("16V", 399, 424, 665, 674), OcrBox("D1-D2", 429, 465, 665, 674)],
+            [OcrBox("16V D1-D2", 399, 440, 665, 674)],
+        ):
+            words = [
+                OcrBox("C9", 320, 340, 665, 674),
+                OcrBox("1µ", 365, 383, 665, 674),
+                *boxes,
+                OcrBox("1N4148", 502, 542, 665, 674),
+            ]
+            from src.bom_lib.layout import find_listings
+
+            listings = find_listings(page_words(words)["words"])
+            assert [(lst.ref, lst.value) for lst in listings] == [
+                ("C9", "1µ 16V"),
+                ("D1-D2", "1N4148"),
+            ]
+
     def test_vertical_labels_are_dropped(self) -> None:
         # A PCB render's rotated 'R15' reads as a tall, narrow box.
         words = page_words([OcrBox("R15", 0, 10, 0, 40)])["words"]
@@ -119,6 +153,20 @@ class TestTableBlock:
     def test_a_page_without_a_grid_keeps_nothing(self) -> None:
         boxes = [OcrBox("R9", 50, 66, 150, 164), OcrBox("05", 80, 96, 150, 164)]
         assert table_block(page_words(boxes))["words"] == []
+
+
+class TestUnlisted:
+    """A table row read as no part is named."""
+
+    def test_a_row_with_an_unreadable_value(self) -> None:
+        boxes = [
+            *_grid_boxes(),
+            OcrBox("CLIP1", 180, 220, 500, 514),
+            OcrBox("SW_SPDT", 250, 300, 500, 514),
+        ]
+        block = table_block(page_words(boxes))
+        listed = {"R1", "R2", "R3", "R4", "R5", "C1", "C2", "C3", "IC1", "D1", "D2"}
+        assert _unlisted([block], listed) == {"CLIP1"}
 
 
 class TestPlausible:
@@ -221,7 +269,7 @@ class TestAttemptOcr:
         result = parse_pedalpcb_pdf(path, "Image")
         assert needs_ocr(result)
 
-        attempt = attempt_ocr(path, result, "Image", lambda _: _grid_boxes())
+        attempt = attempt_ocr(path, result, "Image", lambda *_: _grid_boxes())
 
         assert attempt is not None
         assert attempt.verdict == OcrVerdict.COMPLETE
@@ -245,14 +293,14 @@ class TestAttemptOcr:
         path = _blank_pdf(tmp_path / "image.pdf")
         result = parse_pedalpcb_pdf(path, "Image")
 
-        attempt = attempt_ocr(path, result, "Image", lambda _: [])
+        attempt = attempt_ocr(path, result, "Image", lambda *_: [])
 
         assert attempt is not None
         assert attempt.verdict == OcrVerdict.UNUSABLE
         assert "even with OCR" in attempt.message
 
     def test_clean_parse_is_not_read(self, tmp_path: Path) -> None:
-        def fail(_: object) -> list[OcrBox]:
+        def fail(*_: object) -> list[OcrBox]:
             raise AssertionError("OCR must not run")
 
         result = ParseResult(create_empty_inventory(), _stats())
