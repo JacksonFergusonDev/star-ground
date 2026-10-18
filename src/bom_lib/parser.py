@@ -926,6 +926,10 @@ def _without_note_cells(data: PDFPageExtraction, text: str) -> str:
     return text
 
 
+# The number `_next_label` gives a repeated label: 'GAIN (2)'.
+_REPEAT = re.compile(r" \(\d+\)$")
+
+
 def _next_label(seen: Counter[str], ref: str) -> str:
     """The designator for a typed-table row, numbering repeats ('GAIN (2)').
 
@@ -1291,8 +1295,12 @@ def read_pages(
     # (GuitarPCB); read it once, or every part would be bought twice.
     # The ruled cell keeps a value wrapped over two lines ('Bi-Color CA
     # LED (see' / 'text)', Mini-Me), so the ruled reading wins.
+    # A repeated label is numbered by the text reading only ('MIX (2)',
+    # Cataclysm lists MIX twice), so rows are matched by their label.
     ruled_refs = {(e.page, e.ref) for e in entries}
-    text_rows = [r for r in text_rows if (r.page, r.ref) not in ruled_refs]
+    text_rows = [
+        r for r in text_rows if (r.page, _REPEAT.sub("", r.ref)) not in ruled_refs
+    ]
     # Number the text tables after the ruled ones.
     entries += [
         replace(row, table=len(entries) + (row.table or 0)) for row in text_rows
