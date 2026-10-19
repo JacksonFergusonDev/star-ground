@@ -681,6 +681,15 @@ def check_alternate_value(stats: StatsDict, ref: str, listed: str, other: str) -
     )
 
 
+# A note that says what to buy: a construction or a value ('Mod value is MLCC,
+# not film'), unlike 'See build notes' or 'Adjust value to change brightness'.
+_PART_DETAIL = re.compile(
+    r"\b(?:MLCC|film|tantalum|electrolytic|ceramic|bipolar)\b"
+    r"|\b\d+(?:\.\d+)?\s?(?:[pnuµ]F?|[kKMR]\d*)\b",
+    re.IGNORECASE,
+)
+
+
 def check_build_note(stats: StatsDict, ref: str, builds: list[str], notes: str) -> None:
     """Warns about a note on a row whose builds take different values.
 
@@ -694,7 +703,11 @@ def check_build_note(stats: StatsDict, ref: str, builds: list[str], notes: str) 
         notes: The row's NOTES cell.
     """
     note = " ".join(notes.replace("*", " ").split())
-    if note and len(set(builds)) > 1 and not _VERSION_NOTE.search(note):
+    if (
+        len(set(builds)) > 1
+        and _PART_DETAIL.search(note)
+        and not _VERSION_NOTE.search(note)
+    ):
         _warn(
             stats,
             ParseWarningKind.FOOTNOTE,
