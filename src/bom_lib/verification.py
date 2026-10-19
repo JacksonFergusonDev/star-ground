@@ -469,6 +469,10 @@ _FOOTNOTE_LINE = re.compile(
 )
 _FOOTNOTE_LINES = 8
 _SENTENCE = re.compile(r"(?<=[.!?])\s+")
+# 'use 39k for R15': a value change that builds the circuit another way.
+_VALUE_FOR = re.compile(
+    r"\buse \d[\w.]* for (?:both )?[A-Z]{1,3}\d{1,3}\b", re.IGNORECASE
+)
 
 
 def check_numbered_footnotes(
@@ -508,6 +512,13 @@ def check_numbered_footnotes(
                 re.search(rf"\b{re.escape(label)}\b", note, re.IGNORECASE) is not None
             )
 
+        # Only a page whose footnotes rebuild the circuit another way ('use 39k
+        # for R15') describes another build; leaving off optional parts alone
+        # ('leave off IC2, D2-D3, and C11', Aion FX legacy Crescent) does not.
+        if not any(
+            _OMIT_INSTRUCTION.search(n) and _VALUE_FOR.search(n) for n in notes.values()
+        ):
+            continue
         for label, mark in rows:
             note = notes.get(mark, "")
             ref = listed.get(label.upper())
@@ -598,6 +609,8 @@ _BUILD_LABEL = (
     r"(?!(?i:alt(?:ernat(?:e|ive))?|sub(?:stitute)?|quantity|qty|notes?|use|or|"
     r"optional|recommended|see|pin|ratio|max|min|value|rating)\b)"
     r"[A-Z][\w&/'-]*(?: [\w&/'-]+){0,2}"
+    # 'Galaxie mod: omit' (Aion FX Sapphire) names a modification, not a build.
+    r"(?<!(?i: mod))(?<!(?i: mods))"
 )
 _VERSION_NOTE = re.compile(
     rf"\b(?i:in|for) (?:the )?{_HISTORY}(?!(?i:this|stock|standard|any|all|every)\b)"

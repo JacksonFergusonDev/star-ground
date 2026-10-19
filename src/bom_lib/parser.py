@@ -1043,7 +1043,7 @@ def _text_table_entries(
                     )
                 for ref in refs:
                     _check_typed_row(stats, ref, value, hint)
-            elif row.notes:
+            elif row.notes and _is_not_populated(value):
                 # '(omit) | | Formula 5F6: 4.7uF electrolytic' (Aion FX Triton):
                 # an empty spot with no TYPE is filled in another build.
                 check_version_note(stats, row.refs, row.notes)
