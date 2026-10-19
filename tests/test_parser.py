@@ -1096,5 +1096,7 @@ def test_wrapped_ruled_value_matches_its_first_line() -> None:
     from src.bom_lib.parser import _wrapped
 
     assert _wrapped("Bi-color CA LED", "Bi-color CA")
+    assert _wrapped("Bi-Color CA LED", "LED")
+    assert _wrapped("Bi-Color CA LED", "text)")
     assert not _wrapped("Bi-color CA LED", "Red LED")
     assert not _wrapped("100k", "")

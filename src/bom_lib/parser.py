@@ -1180,14 +1180,20 @@ _ZERO_WIDTH = re.compile("[\u200b-\u200d\ufeff]")
 
 
 def _wrapped(ruled: str, text: str) -> bool:
-    """Whether a text reading is the first line of a ruled cell's wrapped value.
+    """Whether a text reading is one line of a ruled cell's wrapped value.
 
-    GuitarPCB EMEXAR's ruled cell 'Bi-color CA LED' reads 'Bi-color CA' as text.
+    GuitarPCB EMEXAR's ruled cell 'Bi-color CA LED' reads 'Bi-color CA' as
+    text and Red Special's reads 'LED'; Mini-Me's 'Bi-Color CA LED (see' /
+    'text)' reads the aside's tail, which the ruled reading drops.
     """
     ruled, text = (
         " ".join(_ZERO_WIDTH.sub("", v).split()).upper() for v in (ruled, text)
     )
-    return bool(text) and ruled.startswith(text + " ")
+    return bool(text) and (
+        ruled.startswith(text + " ")
+        or ruled.endswith(" " + text)
+        or (text.endswith(")") and "(" not in text)
+    )
 
 
 def _same_value(seen: str | None, value: str) -> bool:
