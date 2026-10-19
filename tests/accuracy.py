@@ -545,6 +545,9 @@ def sample_group(samples_dir: Path | str, pdf: Path | str) -> str:
 _REPEAT = re.compile(r"^(.*) \((\d+)\)$")
 # Stands for every designator: a document-level warning covers them all.
 _EVERYTHING = "*"
+# A parts list printed as an image was named: every part missing from the
+# reading is covered, but not a wrong value read from the text.
+_MISSING = "+"
 
 
 def _is_flagged(ref: str, flagged: set[str]) -> bool:
@@ -591,6 +594,11 @@ def score_doc(doc: GoldenDoc, ocr: bool = False) -> DocScore:
     if any(w.kind == ParseWarningKind.NO_PARTS_LIST for w in res.stats["warnings"]):
         # The builder was told nothing could be read: every part is flagged.
         flagged.add(_EVERYTHING)
+    if any(
+        w.kind == ParseWarningKind.IMAGE_PARTS_LIST and not w.ref
+        for w in res.stats["warnings"]
+    ):
+        flagged.add(_MISSING)
 
     builds = [_actual_parts(v.inventory) for v in res.variants] or [
         _actual_parts(res.inventory)
@@ -622,7 +630,7 @@ def score_doc(doc: GoldenDoc, ocr: bool = False) -> DocScore:
         results=tuple(results),
         title_expected=doc.title,
         title_actual=res.title,
-        warned_refs=frozenset(flagged - {_EVERYTHING}),
+        warned_refs=frozenset(flagged - {_EVERYTHING, _MISSING}),
         ambiguous_refs=doc.ambiguous_refs,
         variant_count=len(doc.variants),
         builds_found=len(res.variants) or 1,
@@ -664,7 +672,10 @@ def _grade_variant(
     for ref, exp in expected.items():
         act = actual.get(ref)
         outcome = Outcome.MISSING if act is None else _grade(exp, act)
-        results.append(RefResult(ref, outcome, exp, act, _is_flagged(ref, flagged)))
+        covered = _is_flagged(ref, flagged) or (
+            outcome == Outcome.MISSING and _MISSING in flagged
+        )
+        results.append(RefResult(ref, outcome, exp, act, covered))
     for ref, act in actual.items():
         if ref not in expected:
             results.append(

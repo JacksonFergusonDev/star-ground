@@ -42,6 +42,8 @@ _VACTROL = re.compile(r"VTL\d|NSL-?\d")
 # A DIP switch, written with a dash ('DIP-5'), unlike socket sizes ('DIP8').
 DIP_SWITCH = re.compile(r"\bDIP-\d+\b|\bDIP[- ]?\d+\b.*\bSWITCH|\bDIP SWITCH")
 _JACK_VALUE = re.compile(r"\b(?:TRS|JACK)\b")
+_REVERB_BRICK = re.compile(r"BTDR-?\d")
+_DC_JACK = re.compile(r"\b\d(?:\.\d)?\s*MM DC\b|\bDC (?:JACK|SOCKET)\b")
 _POT_VALUE = re.compile(
     r"(?<![\w.])(?:[ABCWG]\d+(?:\.\d+)?[KM][ABC]?|\d+(?:\.\d+)?[KM][ABCWG]?)(?![\w.])"
 )
@@ -127,7 +129,9 @@ def normalize_value_by_category(category: ComponentCategory, val_raw: str) -> st
 
     # A trimmer's package note is not part of its value ('10K Trim (3362P)').
     if category == ComponentCategory.POTENTIOMETERS:
-        clean_val = " ".join(_TRIM_NOTE.sub(" ", clean_val).split()) or clean_val
+        # 'Trim - 50k' (GuitarPCB NostalgiTone Chorus) leaves no dash behind.
+        trimmed = " ".join(_TRIM_NOTE.sub(" ", clean_val).split()).lstrip("-\u2013 ")
+        clean_val = trimmed or clean_val
 
     return clean_val
 
@@ -153,8 +157,12 @@ def _named_control_category(
     # Muffin Factory: 'DIP1  DIP-5 Dip Switch'.
     if DIP_SWITCH.search(val_up):
         return ComponentCategory.SWITCHES
-    # Muzzle: 'SIDECHAIN  1/4" Switching TRS'.
-    if _JACK_VALUE.search(val_up):
+    # A Belton reverb brick: GuitarPCB Ancestral Apparition's 'BTDR-2H  LONG'.
+    if _REVERB_BRICK.match(name) or _REVERB_BRICK.match(val_up):
+        return ComponentCategory.HARDWARE_MISC
+    # Muzzle: 'SIDECHAIN  1/4" Switching TRS'; GuitarPCB Test Rig: 'DC Power
+    # 2.1MM DC'.
+    if _JACK_VALUE.search(val_up) or _DC_JACK.search(val_up):
         return ComponentCategory.HARDWARE_MISC
     if name in constants.SWITCH_LABELS and any(
         x in val_up for x in ("ON", "SW", "SP", "DP")

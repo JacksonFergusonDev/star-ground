@@ -36,6 +36,8 @@ from src.bom_lib.layout import (
     footnote_marks,
     names_control,
     page_lines,
+    pictured_lists,
+    ref_group,
     strip_asides,
     valueless_refs,
 )
@@ -46,6 +48,7 @@ from src.bom_lib.types import (
     ParseResult,
     PDFPageExtraction,
     PDFWord,
+    Picture,
     StatsDict,
     create_empty_inventory,
     create_empty_stats,
@@ -56,11 +59,14 @@ from src.bom_lib.verification import (
     check_bom_reconciliation,
     check_classification,
     check_duplicate,
+    check_either_part,
     check_footnotes,
     check_marking_code,
     check_misread_text,
     check_numbering_gaps,
+    check_other_list,
     check_parts_found,
+    check_pictured_lists,
     check_prose_pots,
     check_row_quantity,
     check_second_board,
@@ -404,7 +410,8 @@ _TWO_POSITION = re.compile(r"\b2[- ]POSITION\b")
 _DIELECTRICS = (("TANTALUM", "Tantalum"), ("MLCC", "MLCC"))
 
 
-_VOLTAGE = re.compile(r"\b(\d+(?:\.\d+)?)\s*V(?:DC)?\b", re.IGNORECASE)
+# '25V', '25 VDC', '16+V' (GuitarPCB Fuzzy Bee: '16 volts or more').
+_VOLTAGE = re.compile(r"\b(\d+(?:\.\d+)?)\s*\+?\s*V(?:DC)?\b", re.IGNORECASE)
 _NON_POLAR = re.compile(r"\bnon[- ]?polar(?:i[sz]ed)?\b|\bbi-?polar\b", re.IGNORECASE)
 _NP_MARK = re.compile(r"\b(?:NP|BP)\b|\bnon[- ]?polar|\bbi-?polar", re.IGNORECASE)
 
@@ -601,7 +608,8 @@ def _table_entries(
                     val_idx = i
                 elif h == "TYPE":
                     type_idx = i
-                elif h == "NOTES":
+                elif h in ("NOTES", "COMMENTS"):
+                    # GuitarPCB Fuzzy Bee: 'Part | Value | Comments'.
                     notes_idx = i
 
             if loc_idx == -1 and {"QTY", "QUANTITY"} & set(headers):
@@ -891,7 +899,11 @@ def _text_table_entries(
         for row in find_bom_rows(data["words"]):
             stats["lines_read"] += 1
             value, hint = row.value, None
-            refs = expand_refs(row.refs) if " " not in row.refs else [row.refs]
+            group = ref_group(row.refs)  # 'LDR 1 - 4' (GuitarPCB Band of Gypsys)
+            if group is not None:
+                refs = expand_refs(group)
+            else:
+                refs = expand_refs(row.refs) if " " not in row.refs else [row.refs]
             if row.type_text:
                 value, hint = _typed_row(
                     stats, row.refs, row.value, row.type_text, row.notes, check=False
@@ -992,7 +1004,14 @@ def _record_not_populated(stats: StatsDict, ref: str, value: str) -> None:
         stats["seen_refs"].setdefault(r, value)
 
 
+# Pin voltages beside a transistor: 'Q1  E-.39, B- .94, c- 1.62' (GuitarPCB
+# ColorTone Overdrive's voltage table).
+_PIN_VOLTAGES = re.compile(r"[EBCDGS]\s*[-:=]\s*\.?\d", re.IGNORECASE)
+
+
 def _is_ignored(value: str) -> bool:
+    if _PIN_VOLTAGES.match(value):
+        return True
     if DIP_SWITCH.search(value.upper()):
         return False  # a DIP switch is a part; a DIP socket line is not
     words = set(re.findall(r"[A-Z]+", value.upper()))
@@ -1051,7 +1070,7 @@ def _layout_entries(
             # A range lists each of its designators: 'D1-D2  1N4148'.
             refs = (
                 expand_refs(listing.ref)
-                if REF_RANGE.fullmatch(listing.ref)
+                if REF_RANGE.fullmatch(listing.ref) or "," in listing.ref
                 else [listing.ref]
             )
             value = listing.value
@@ -1076,7 +1095,10 @@ def _layout_entries(
                                 and ref.upper() not in constants.KEYWORDS
                             )
                             or ref.upper() in row_value
-                            or not _cell_value(lines[listing.line], listing)
+                            # A designator with nothing beside it is kept, to be
+                            # warned (GuitarPCB Capt Munch's D3, its value
+                            # wrapped above and below the row).
+                            or (value and not _cell_value(lines[listing.line], listing))
                         )
                     )
                     or listing.x0 < end
@@ -1357,6 +1379,24 @@ def _without_marks(page: Page) -> Page:
     return page.filter(keep)
 
 
+# A page outside the parts list with this many listings, this many starting
+# at one x position, holds another parts list (GuitarPCB Stage 3's page 5).
+_OTHER_LIST_MIN = 8
+_OTHER_LIST_ALIGNED = 4
+# An image covering this share of a page may be a parts table.
+_PICTURE_SHARE = 0.02
+
+
+def _pictures(page: Any) -> list[Picture]:
+    """A pdfplumber page's large images."""
+    area = page.width * page.height
+    return [
+        Picture(im["x0"], im["top"], im["x1"], im["bottom"])
+        for im in page.images
+        if (im["x1"] - im["x0"]) * (im["bottom"] - im["top"]) >= _PICTURE_SHARE * area
+    ]
+
+
 def read_pages(
     pages_data: list[PDFPageExtraction],
     source_name: str,
@@ -1463,6 +1503,32 @@ def read_pages(
     check_prose_pots(page_texts, union, stats)
     check_numbering_gaps(union, stats)
     check_two_values(union, stats)
+    check_either_part(page_texts, union, stats)
+    pictured = {
+        k: found
+        for k, data in enumerate(pages_data)
+        if (found := pictured_lists(data["words"], data.get("pictures", [])))
+    }
+    refs_by_page: dict[int, set[str]] = {}
+    for e in entries:
+        refs_by_page.setdefault(e.page, set()).add(_REPEAT.sub("", e.ref))
+    check_pictured_lists(pictured, refs_by_page, stats)
+    if bom_pages is not None:
+        read: dict[str, str] = {}
+        for e in entries:
+            read.setdefault(e.ref, e.value)
+        for k, data in enumerate(pages_data):
+            if k in bom_pages:
+                continue
+            listings = find_listings(data["words"])
+            columns = Counter(round(listing.x0) for listing in listings)
+            # A table, not labels scattered over a schematic or board render.
+            if len(listings) >= _OTHER_LIST_MIN and max(columns.values()) >= (
+                _OTHER_LIST_ALIGNED
+            ):
+                check_other_list(
+                    k, [(li.ref, li.value) for li in listings], read, stats
+                )
     check_bom_reconciliation(page_texts, union, stats)
     return inventory, variants, options
 
@@ -1568,6 +1634,7 @@ def parse_pedalpcb_pdf(filepath: str, source_name: str) -> ParseResult:
                         ),
                         "text": page.extract_text(),
                         "words": page_words,
+                        "pictures": _pictures(raw_page),
                     }
                 )
 

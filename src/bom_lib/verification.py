@@ -230,8 +230,18 @@ def check_unextracted_refs(
         # A bare 'LED' in the parts list is the schematic's only 'LED1'
         # (Aion FX legacy documents).
         extracted.add("LED1")
+    joined = " ".join(" ".join(page_texts).split())
     for ref in sorted(r for r in listed if r.upper() not in extracted):
         if ref.upper() in values:
+            continue
+        # An alternative to a listed value: 'Q1  J309 or J113' (GuitarPCB
+        # FrontStage) names a JFET, not a jack.
+        if any(
+            m.group(1).upper() in values
+            for m in re.finditer(
+                rf"(\S+)\s*(?:\bor\b|/)\s*{re.escape(ref)}\b", joined, re.IGNORECASE
+            )
+        ):
             continue
         section = _IC_SECTION.fullmatch(ref.upper())
         if section and section.group("chip") in extracted:
@@ -799,9 +809,15 @@ _VALUE_RANGE = re.compile(
     r"(?P<hi>\d+(?:\.\d+)?[pnuµmkKMR]?\d*[FΩ]?)(?P<rest>(?:\s.*)?)",
     re.IGNORECASE,
 )
-# Two part numbers or switch types, either of which may be bought.
+# Two part numbers or switch types, either of which may be bought. In a
+# comma list a part number may start with its digits ('7660S, 1044', GuitarPCB
+# Fuzzy Bee); a slash between bare numbers is no choice ('1/4').
 _PART_CODE = r"(?:\d?[A-Z]{1,4}\d{2,5}[A-Z]{0,3}|[SD34]P[SDT]T)"
-_PART_PAIR = re.compile(rf"({_PART_CODE})\s*(?:/|\bor\b)\s*({_PART_CODE})")
+_LISTED_CODE = rf"(?:{_PART_CODE}|\d{{3,5}}[A-Z]{{0,3}})"
+_PART_PAIR = re.compile(
+    rf"({_PART_CODE})\s*(?:/|\bor\b)\s*({_PART_CODE})"
+    rf"|({_LISTED_CODE}),\s*({_LISTED_CODE})"
+)
 _VALUE_PAIR = re.compile(r"(\S+?)(?:\s+or\s+|\s*/\s*)(\S+)", re.IGNORECASE)
 _UNIT = re.compile(r"[A-Za-zµΩ]")
 _VOLTAGE = re.compile(r"\d+(?:\.\d+)?V", re.IGNORECASE)
@@ -828,15 +844,15 @@ def resolve_value_choice(stats: StatsDict | None, ref: str, value: str) -> str:
     pair = _PART_PAIR.fullmatch(value.strip())
     if pair:
         # '2N5088/2N2222' (American Fuzz), 'SPST or SPDT' (RATT Deluxe).
+        first, second = (g for g in pair.groups() if g)
         if stats is not None:
             _warn(
                 stats,
                 ParseWarningKind.VALUE_CHOICE,
                 ref,
-                f"{ref}: the document allows {pair.group(1)} or {pair.group(2)}; "
-                f"{pair.group(1)} is used.",
+                f"{ref}: the document allows {first} or {second}; {first} is used.",
             )
-        return pair.group(1)
+        return first
     either = _VALUE_PAIR.fullmatch(value.strip())
     slash = " or " not in either.group(0).lower() if either else False
     if (
@@ -943,3 +959,139 @@ def check_parts_found(stats: StatsDict, parts_found: int) -> None:
             "list may be printed as an image, or list parts without designators. "
             "Enter the parts by hand.",
         )
+
+
+def check_pictured_lists(
+    pictured: dict[int, list[str]], refs_by_page: dict[int, set[str]], stats: StatsDict
+) -> None:
+    """Warns about parts lists printed as pictures, which the text layer never reads.
+
+    The list's parts are missing, so the document as a whole is warned. A
+    numbered designator read from another list on the same page is warned
+    too: the pictured list numbers its own parts and may use the same
+    designators (GuitarPCB Sonic Architect: both boards have an R1), so which
+    board a part belongs to is uncertain. Control names (BASS, GAIN) are each
+    board's own.
+
+    Args:
+        pictured: Headings of pictured lists, by page index.
+        refs_by_page: Designators read from each page's text.
+        stats: Stats object that receives the warnings.
+    """
+    for page, headings in sorted(pictured.items()):
+        names = ", ".join(f"'{h}'" for h in headings)
+        _warn(
+            stats,
+            ParseWarningKind.IMAGE_PARTS_LIST,
+            "",
+            f"The parts list {names} on page {page + 1} is an image, so its parts "
+            "were not read. Check the document.",
+        )
+        for ref in sorted(refs_by_page.get(page, ())):
+            if not _SERIES_REF.fullmatch(ref):
+                continue
+            _warn(
+                stats,
+                ParseWarningKind.IMAGE_PARTS_LIST,
+                ref,
+                f"{ref} was read beside the image parts list {names} on page "
+                f"{page + 1}, which may use the same designators for another "
+                "board. Check which list it belongs to.",
+            )
+
+
+def _same_listing(a: str, b: str) -> bool:
+    """Whether two printed values name one part: '1k8'/'1.8k', 'SPST Toggle'/'SPST'."""
+    x, y = (" ".join(v.upper().split()) for v in (a, b))
+    if x == y or x.startswith(y + " ") or y.startswith(x + " "):
+        return True
+    # Numbers compare before upper-casing: the micro sign upper-cases to Greek Mu.
+    head = [v.split()[0] if v.split() else "" for v in (a, b)]
+    dx, dy = (parse_value_to_decimal(h) for h in head)
+    return dx is not None and dx == dy and x.split()[1:] == y.split()[1:]
+
+
+_OTHER_LIST_SHARE = 0.6
+
+
+def check_other_list(
+    page: int, listed: list[tuple[str, str]], read: dict[str, str], stats: StatsDict
+) -> None:
+    """Warns about a second parts list on a page the readers left alone.
+
+    The readers keep to the pages of a document's parts list, so a list
+    elsewhere is never read: GuitarPCB Stage 3's page 5 lists the previous
+    board version ('R1 | *Text', 'C2 | 22n') under no table header. Each
+    designator it gives another value is warned, as the part another version
+    or board would need.
+
+    Args:
+        page: The page index of the unread list.
+        listed: The (designator, value) pairs it prints.
+        read: The value read for each designator from the parts list.
+        stats: Stats object that receives the warnings.
+    """
+    _warn(
+        stats,
+        ParseWarningKind.CONFLICTING_DUPLICATE,
+        "",
+        f"Page {page + 1} has another parts list, which was not read: it may "
+        "describe another version or board. Check the document.",
+    )
+    for ref, value in listed:
+        if ref in read and not _same_listing(value, read[ref]):
+            _warn(
+                stats,
+                ParseWarningKind.CONFLICTING_DUPLICATE,
+                ref,
+                f"{ref} is {value!r} in another parts list on page {page + 1}, which "
+                f"was not read; {read[ref]!r} is used. Check the document.",
+            )
+    # A whole other list (most designators in common) that lacks a part
+    # describes a build without it: Stage 3's previous board has no R6 or D2.
+    numbered = {r for r in read if _SERIES_REF.fullmatch(r)}
+    others = {ref for ref, _ in listed}
+    if numbered and len(numbered & others) >= _OTHER_LIST_SHARE * len(numbered):
+        for ref in sorted(numbered - others):
+            _warn(
+                stats,
+                ParseWarningKind.CONFLICTING_DUPLICATE,
+                ref,
+                f"{ref} is missing from another parts list on page {page + 1}, which "
+                "was not read: another version or board may not use it. Check the "
+                "document.",
+            )
+
+
+# 'TR1 / R18 - either the trim pot or fixed resistor is used but not both'
+# (GuitarPCB Super Drive 70s).
+_EITHER_PART = re.compile(
+    r"\b([A-Z]{1,4}\d{1,3})\s*(?:/|\bor\b)\s*([A-Z]{1,4}\d{1,3})\b[^.]{0,40}?\beither\b"
+    r"[^.]*\bnot both\b",
+    re.IGNORECASE,
+)
+
+
+def check_either_part(
+    page_texts: list[str], inventory: Inventory, stats: StatsDict
+) -> None:
+    """Warns about two listed parts the document says are alternatives.
+
+    Args:
+        page_texts: Every page's text.
+        inventory: The finished inventory for this document.
+        stats: Stats object that receives the warnings.
+    """
+    listed = {ref for data in inventory.values() for ref in data["refs"]}
+    for text in page_texts:
+        for m in _EITHER_PART.finditer(" ".join(text.split())):
+            a, b = m.group(1).upper(), m.group(2).upper()
+            if a in listed and b in listed:
+                for ref, other in ((a, b), (b, a)):
+                    _warn(
+                        stats,
+                        ParseWarningKind.VALUE_CHOICE,
+                        ref,
+                        f"{ref} or {other}: the document says to fit one, not both. "
+                        "Check the document.",
+                    )
