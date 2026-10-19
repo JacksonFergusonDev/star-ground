@@ -1100,3 +1100,13 @@ def test_wrapped_ruled_value_matches_its_first_line() -> None:
     assert _wrapped("Bi-Color CA LED", "text)")
     assert not _wrapped("Bi-color CA LED", "Red LED")
     assert not _wrapped("100k", "")
+
+
+def test_comments_rating_and_pin_voltages() -> None:
+    # GuitarPCB Fuzzy Bee: 'C1 | 100n | Box Capacitor, 16+V'.
+    from src.bom_lib.parser import _is_ignored, capacitor_notes
+
+    assert capacitor_notes("C1", "100n", "Box Capacitor, 16+V") == "100n (16V minimum)"
+    # ColorTone Overdrive's voltage table: 'Q1 | E-.39, B- .94, c- 1.62'.
+    assert _is_ignored("E-.39, B- .94, c- 1.62")
+    assert not _is_ignored("BC109")

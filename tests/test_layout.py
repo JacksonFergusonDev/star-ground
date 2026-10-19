@@ -747,3 +747,45 @@ def test_side_by_side_boards_are_two_tables() -> None:
     rows = find_bom_rows(words)
     assert [(r.refs, r.value) for r in rows] == [("R1", "1M5"), ("R1", "2M2")]
     assert rows[0].table != rows[1].table
+
+
+def test_designator_groups_with_spaces() -> None:
+    # GuitarPCB Funk 49 'D1 D2 | 1N4148'; Band of Gypsys 'LDR 1 - 4 | PDV-P9023'.
+    assert find_listings(_line("R3", "1M", "D1 D2", "1N4148"))[-1] == Listing(
+        "D1,D2", "1N4148"
+    )
+    assert find_listings(_line("LDR 1 - 4", "PDV-P9023")) == [
+        Listing("LDR1-LDR4", "PDV-P9023")
+    ]
+
+
+def test_title_case_pot_with_worded_taper_starts_a_listing() -> None:
+    # GuitarPCB Funk 49: 'R10 | 1k5 | Volume | 100k Log'.
+    assert find_listings(_line("R10", "1k5", "Volume", "100k Log")) == [
+        Listing("R10", "1k5"),
+        Listing("VOLUME", "100k Log"),
+    ]
+
+
+def test_pictured_list_under_heading() -> None:
+    from src.bom_lib.layout import pictured_lists
+    from src.bom_lib.types import Picture
+
+    words = _line("Bill of Materials Sonic Bloom:", top=74.0)
+    assert pictured_lists(words, [Picture(40, 94, 377, 220)]) == [
+        "Bill of Materials Sonic Bloom"
+    ]
+    # A picture with the table's text over it is read already.
+    inside = [*words, *_line("R1", "1k", top=120.0)]
+    assert pictured_lists(inside, [Picture(40, 94, 377, 220)]) == []
+
+
+def test_pole_type_in_label_joins_the_value() -> None:
+    # GuitarPCB Skyn-Tone: 'SW - SPDT | On-Off_On'.
+    words = [
+        *_line("Part", "Value", top=100.0),
+        *_line("SW - SPDT", "On-Off_On", top=120.0),
+    ]
+    assert [(r.refs, r.value) for r in find_bom_rows(words)] == [
+        ("SW", "SPDT On-Off_On")
+    ]
