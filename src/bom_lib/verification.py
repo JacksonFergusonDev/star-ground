@@ -268,9 +268,11 @@ def check_valueless_refs(
             )
 
 
-# A series ('R1' ... 'R43') listed this sparsely is a list read in part, or not
-# the parts list at all (GuitarPCB G2 Animal's text layer holds only a table
-# of substitute values; the parts list is an image).
+# A series ('R1' ... 'R43') listed this sparsely, in a reading with no
+# capacitors, is not the parts list at all (GuitarPCB G2 Animal's text layer
+# holds only a table of substitute values; the parts list is an image). With
+# capacitors listed, sparse numbering is the design's own (PedalPCB Thermionic
+# Deluxe numbers its resistors R32-R37).
 _SERIES_REF = re.compile(r"([A-Z]{1,3})(\d{1,3})")
 _SPARSE_SHARE = 0.5
 _SPARSE_MIN = 8
@@ -280,10 +282,15 @@ _SERIES = 100
 def check_numbering_gaps(inventory: Inventory, stats: StatsDict) -> None:
     """Warns about the numbers missing from a designator series listed sparsely.
 
+    Only a reading with no capacitors is checked: every circuit has some, so
+    their absence says the parser read something other than the parts list.
+
     Args:
         inventory: The finished inventory for this document.
         stats: Stats object that receives the warnings.
     """
+    if any(key.category == ComponentCategory.CAPACITORS for key in inventory):
+        return
     numbers: dict[tuple[str, int], set[int]] = {}
     for data in inventory.values():
         for ref in data["refs"]:

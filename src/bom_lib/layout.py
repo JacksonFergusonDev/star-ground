@@ -795,10 +795,16 @@ def _scan(
 
 
 def names_control(text: str) -> bool:
-    """Whether a cell is a control's name, perhaps numbered: 'VOL 1', 'GAIN'."""
+    """Whether a cell is a control's name, perhaps numbered: 'VOL 1', 'GAIN'.
+
+    'Trim' is not: before a value it says the part is a trimmer ('RUETZ |
+    Trim 100R', GuitarPCB Doomstortion).
+    """
     name, *rest = text.upper().split()
-    return (name in constants.POT_LABELS or name in constants.KEYWORDS) and all(
-        w.isdigit() for w in rest
+    return (
+        name != "TRIM"
+        and (name in constants.POT_LABELS or name in constants.KEYWORDS)
+        and all(w.isdigit() for w in rest)
     )
 
 
@@ -1170,7 +1176,8 @@ def _read_bom(words: list[PDFWord]) -> tuple[list[BomRow], list[Cell]]:
 _REF_COUNT = re.compile(r"\s+x\s*(\d+)$")
 # 'ORDER switch', 'DEEP switch': the noun restates the category.
 _LABEL_NOUN = re.compile(r"(?<=[A-Z0-9]) (?:switch|pot|trimmer)$")
-_NAMED_DESIGNATOR = re.compile(r"([A-Z]{1,4}\d{1,3})-[A-Za-z]{3,}")
+# 'TR1-BIAS' names TR1's control; 'IC1-SOCKET' (Aion Amethyst) is a part of its own.
+_NAMED_DESIGNATOR = re.compile(r"([A-Z]{1,4}\d{1,3})-(?!(?i:socket)\b)[A-Za-z]{3,}")
 _DESIGNATOR_ROLE = re.compile(r"([A-Z]{1,3}\d{1,3}) [A-Z][a-z]+(?: [A-Z][a-z]+)*")
 # A part label in a typed table: 'VOL.', 'HI-MID FREQ', 'IC1-S', 'PRE-V. SEND'.
 _PART_LABEL = re.compile(r"[A-Z][A-Za-z0-9_./+-]*(?: [A-Za-z0-9_./+-]+){0,2}")

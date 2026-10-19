@@ -498,6 +498,12 @@ def test_a_sparse_series_names_its_gaps() -> None:
     ]
     check_numbering_gaps(_inventory(*dense), stats)
     assert stats["warnings"] == []
+    # With capacitors listed, sparse numbering is the design's own
+    # (PedalPCB Thermionic Deluxe: R32-R37).
+    stats = create_empty_stats()
+    cap = (ComponentCategory.CAPACITORS, "100n", "C1")
+    check_numbering_gaps(_inventory(*parts, cap), stats)
+    assert stats["warnings"] == []
 
 
 def test_two_values_side_by_side() -> None:

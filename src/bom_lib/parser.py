@@ -369,7 +369,9 @@ _TYPE_HINTS: tuple[tuple[str, ComponentCategory], ...] = (
 )
 # A named control in a grid: 'VOL', 'HI/LO', 'VOL 1', 'CLN_LVL'.
 # 'VOL', 'GAIN 2'; title case too ('Input', 'Bias Trim', GuitarPCB DumbleTone).
-_CONTROL_LABEL = re.compile(r"[A-Z][A-Za-z0-9_/-]*(?: [A-Za-z0-9]+)?")
+# The second word is a number or a word, never a value: 'C1 100n' is a
+# designator and its value run together (GuitarPCB ShoNuff).
+_CONTROL_LABEL = re.compile(r"[A-Z][A-Za-z0-9_/-]*(?: (?:\d+|[A-Za-z]+))?")
 # Text tables are numbered page * this + header line, so two tables on one
 # page stay apart.
 _TABLES_PER_PAGE = 100
@@ -1174,10 +1176,28 @@ def _ingest_entries(
     return inventory, stats
 
 
+_ZERO_WIDTH = re.compile("[\u200b-\u200d\ufeff]")
+
+
+def _wrapped(ruled: str, text: str) -> bool:
+    """Whether a text reading is the first line of a ruled cell's wrapped value.
+
+    GuitarPCB EMEXAR's ruled cell 'Bi-color CA LED' reads 'Bi-color CA' as text.
+    """
+    ruled, text = (
+        " ".join(_ZERO_WIDTH.sub("", v).split()).upper() for v in (ruled, text)
+    )
+    return bool(text) and ruled.startswith(text + " ")
+
+
 def _same_value(seen: str | None, value: str) -> bool:
-    """Whether two listings give one value: '100p' and '100pF', '1K8' and '1k8'."""
+    """Whether two listings give one value: '100p' and '100pF', '1K8' and '1k8'.
+
+    Zero-width spaces are ignored (GuitarPCB The Vibe's ruled cells carry them).
+    """
     if seen is None:
         return False
+    seen, value = (" ".join(_ZERO_WIDTH.sub("", v).split()) for v in (seen, value))
     if seen.upper() == value.upper():
         return True
     a, b = seen.split(), value.split()
@@ -1380,7 +1400,7 @@ def read_pages(
         r
         for r in text_rows
         if not any(
-            _same_value(v, r.value)
+            _same_value(v, r.value) or _wrapped(v, r.value)
             for v in ruled.get((r.page, _REPEAT.sub("", r.ref)), ())
         )
     ]

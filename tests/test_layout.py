@@ -715,6 +715,14 @@ def test_a_control_name_labels_a_board_designator() -> None:
     ]
 
 
+def test_trim_before_a_value_is_no_control_name() -> None:
+    # GuitarPCB Doomstortion 'RUETZ | Trim 100R': 'Trim' says what the part is.
+    from src.bom_lib.layout import names_control
+
+    assert names_control("VOL 1")
+    assert not names_control("Trim")
+
+
 def test_side_by_side_boards_are_two_tables() -> None:
     # GuitarPCB DumbleTone: 'FrontStage' and 'DumbleTone' head one header line.
     from src.bom_lib.layout import find_bom_rows
