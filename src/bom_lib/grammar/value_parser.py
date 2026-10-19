@@ -4,6 +4,7 @@ Converts engineering notation (e.g., '10k', '4.7u', '100n') and BS 1852
 sandwich notation (e.g., '1k5', '4n7', '4K7') into exact `Decimal` base units.
 """
 
+import re
 from decimal import Decimal, InvalidOperation
 from typing import Final
 
@@ -100,6 +101,10 @@ def parse_value_to_decimal(val_str: str | None) -> Decimal | None:
 
     # Fonts set the micro prefix as Greek mu too ('4μ7', Aion FX legacy).
     cleaned_str = val_str.strip().replace("\u03bc", "\u00b5")
+    # 'R31  47 ohm' (GuitarPCB Mini-Me): a unit spelled out after a space.
+    cleaned_str = re.sub(
+        r"(?<=\d)\s+(?=(?:ohms?|\u03a9)$)", "", cleaned_str, flags=re.I
+    )
     if not cleaned_str:
         return None
 

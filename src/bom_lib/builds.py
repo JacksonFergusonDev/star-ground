@@ -38,8 +38,9 @@ _MIN_VARIANT_TABLE_REFS = 8
 _REPEAT_SHARE = 0.7
 _REPEAT_SUFFIX = re.compile(r" \(\d+\)$")
 
+# 'Bass Mod', 'MOD3:' (GuitarPCB Dr Phybes).
 _MOD_HEADING = re.compile(
-    r"[^A-Za-z]*(?P<name>[A-Za-z][A-Za-z ]*\bmod(?:ification)?)\W*", re.I
+    r"[^A-Za-z]*(?P<name>(?:[A-Za-z][A-Za-z ]*)?\bmod(?:ification)?\d?)\W*", re.I
 )
 # 'To build the vintage Octavia, with no tone pot' (Five Cats): the parts
 # below build that version.

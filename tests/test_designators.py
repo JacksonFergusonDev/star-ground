@@ -84,3 +84,13 @@ def test_alternate_clipping_diodes() -> None:
     from src.bom_lib.designators import is_designator
 
     assert is_designator("DX1")
+
+
+def test_a_voltage_regulator() -> None:
+    # GuitarPCB Delay: 'REG  L78L05'.
+    from src.bom_lib.designators import parse_designator
+    from src.bom_lib.enums import ComponentCategory
+
+    designator = parse_designator("REG")
+    assert designator is not None
+    assert designator.category == ComponentCategory.ICS
