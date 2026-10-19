@@ -35,6 +35,7 @@ _PREFIXES: tuple[tuple[str, ComponentCategory | None], ...] = (
     ("LDR", _CAT.OPTOELECTRONICS),
     ("LED", _CAT.DIODES),
     ("CLR", _CAT.RESISTORS),
+    ("CONN", _CAT.HARDWARE_MISC),  # connectors (GuitarPCB Test Rig: 'CONN1')
     ("POT", _CAT.POTENTIOMETERS),
     ("PNP", _CAT.TRANSISTORS),  # Twin Face: 'PNP1  AC128'
     ("NPN", _CAT.TRANSISTORS),

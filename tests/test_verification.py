@@ -515,3 +515,68 @@ def test_two_values_side_by_side() -> None:
     stats = create_empty_stats()
     check_two_values(inv, stats)
     assert [w.ref for w in stats["warnings"]] == ["R6"]
+
+
+def test_pictured_list_warns_document_and_shared_designators() -> None:
+    # GuitarPCB Sonic Architect: the Sonic Bloom list is an image beside the
+    # AmpEQ text list on page 3.
+    from src.bom_lib.verification import check_pictured_lists
+
+    stats = create_empty_stats()
+    check_pictured_lists(
+        {2: ["Bill of Materials Sonic Bloom"]}, {2: {"R1", "C3", "BASS"}}, stats
+    )
+    assert [(w.kind, w.ref) for w in stats["warnings"]] == [
+        (ParseWarningKind.IMAGE_PARTS_LIST, ""),
+        (ParseWarningKind.IMAGE_PARTS_LIST, "C3"),
+        (ParseWarningKind.IMAGE_PARTS_LIST, "R1"),
+    ]
+
+
+def test_other_list_warns_changed_and_absent_parts() -> None:
+    # GuitarPCB Stage 3: page 5 lists the previous board, unread.
+    from src.bom_lib.verification import check_other_list
+
+    read = {f"R{n}": "1k" for n in range(1, 7)} | {"C2": "10n", "D2": "1n4001"}
+    listed = [(f"R{n}", "1k") for n in range(1, 6)] + [("C2", "22n")]
+    stats = create_empty_stats()
+    check_other_list(4, listed, read, stats)
+    assert [w.ref for w in stats["warnings"]] == ["", "C2", "D2", "R6"]
+    # The same value in other units is the same part.
+    stats = create_empty_stats()
+    check_other_list(4, [("C1", "22µ")], {"C1": "22u"}, stats)
+    assert [w.ref for w in stats["warnings"]] == [""]
+
+
+def test_either_part_note() -> None:
+    from src.bom_lib.verification import check_either_part
+
+    inv = _inventory(
+        (ComponentCategory.POTENTIOMETERS, "3k", "TR1"),
+        (ComponentCategory.RESISTORS, "1k", "R18"),
+    )
+    stats = create_empty_stats()
+    text = (
+        "TR1 / R18 \u2013 either the trim pot or fixed resistor is used but not both."
+    )
+    check_either_part([text], inv, stats)
+    assert {(w.kind, w.ref) for w in stats["warnings"]} == {
+        (ParseWarningKind.VALUE_CHOICE, "TR1"),
+        (ParseWarningKind.VALUE_CHOICE, "R18"),
+    }
+
+
+def test_alternative_part_number_is_no_missing_designator() -> None:
+    # GuitarPCB FrontStage: 'Q1 | J309 or J113' names a JFET, not jack J113.
+    inv = _inventory((ComponentCategory.TRANSISTORS, "J309", "Q1"))
+    stats = create_empty_stats()
+    check_unextracted_refs(["Q1 J309 or J113"], inv, stats)
+    assert stats["warnings"] == []
+
+
+def test_comma_listed_part_numbers_are_a_choice() -> None:
+    stats = create_empty_stats()
+    assert resolve_value_choice(stats, "IC1", "7660S, 1044") == "7660S"
+    assert [w.kind for w in stats["warnings"]] == [ParseWarningKind.VALUE_CHOICE]
+    # A slash between bare numbers stays as printed.
+    assert resolve_value_choice(create_empty_stats(), "R1", "100/220") == "100/220"
