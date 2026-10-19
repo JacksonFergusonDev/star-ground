@@ -76,6 +76,7 @@ from src.bom_lib.verification import (
     check_value_assignments,
     check_valueless_refs,
     check_version_note,
+    is_schematic_page,
     resolve_value_choice,
 )
 
@@ -1518,7 +1519,8 @@ def read_pages(
         for e in entries:
             read.setdefault(e.ref, e.value)
         for k, data in enumerate(pages_data):
-            if k in bom_pages:
+            # A schematic's 'REF value' labels are a drawing (Aion FX Procyon).
+            if k in bom_pages or is_schematic_page(data["text"] or ""):
                 continue
             listings = find_listings(data["words"])
             columns = Counter(round(listing.x0) for listing in listings)

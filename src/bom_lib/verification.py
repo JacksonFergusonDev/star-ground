@@ -44,6 +44,21 @@ _LED_DESCRIPTOR = re.compile(
 # The title block of a schematic exported from an EDA tool.
 _SCHEMATIC_PAGE = re.compile(r"\bKiCad\b|\.kicad_sch\b|\bFile:\s*\S+\.sch\b", re.I)
 _IC_SECTION = re.compile(r"(?P<chip>(?:IC|U)\d+)[A-H]")
+# Aion FX heads its schematic pages 'SCHEMATIC'.
+_SCHEMATIC_HEADING = re.compile(r"\s*SCHEMATIC\b")
+
+
+def is_schematic_page(text: str) -> bool:
+    """Whether a page is a schematic drawing, whose 'R1 10k' labels list no parts.
+
+    Args:
+        text: The page's text.
+
+    Returns:
+        True for a KiCad schematic or a page headed 'SCHEMATIC'.
+    """
+    return bool(_SCHEMATIC_PAGE.search(text) or _SCHEMATIC_HEADING.match(text))
+
 
 _DATE = re.compile(r"\d{1,2}[./-]\d{1,2}[./-]\d{2,4}")
 
@@ -1012,6 +1027,14 @@ def _same_listing(a: str, b: str) -> bool:
 
 
 _OTHER_LIST_SHARE = 0.6
+# A cell of a versions table: a value, or an empty spot ('(omit)', 'Empty',
+# '_' in GuitarPCB Emexar v4).
+_GRID_CELL = re.compile(
+    r"(?<!\S)(?:\d+(?:\.\d+)?[pnuµkKMR]?\d*[A-Za-z]{0,2}"
+    r"|\(?(?:omit|jumper|empty|nothing)\)?|_)(?!\S)",
+    re.IGNORECASE,
+)
+_GRID_SHARE = 0.25
 
 
 def check_other_list(
@@ -1031,6 +1054,11 @@ def check_other_list(
         read: The value read for each designator from the parts list.
         stats: Stats object that receives the warnings.
     """
+    several = sum(len(_GRID_CELL.findall(value)) >= 2 for _, value in listed)
+    if several >= _GRID_SHARE * len(listed):
+        # A versions table, one column per build ('DEPTH | 350kB 1MB 100kB',
+        # Aion FX Orpheus); the document's version notes cover it.
+        return
     _warn(
         stats,
         ParseWarningKind.CONFLICTING_DUPLICATE,
