@@ -332,6 +332,8 @@ NOT_POPULATED_VALUES = frozenset(
         # A control left out and wired around (Aion FX legacy Phobos: '(bypass)').
         "BYPASS",
         "(BYPASS)",
+        # Pads left open, no part (GuitarPCB The Vibe: 'SW1 | *Open').
+        "OPEN",
         # A build that leaves the spot empty (Five Cats OKS Fuzz: 'C3 | empty').
         "EMPTY",
     }

@@ -106,3 +106,27 @@ def test_greek_mu_is_micro() -> None:
 
     assert parse_value_to_decimal("4\u03bc7") == Decimal("0.0000047")
     assert parse_value_to_decimal("10\u03bcF") == Decimal("0.000010")
+
+
+def test_spelled_out_ohms() -> None:
+    from decimal import Decimal
+
+    from src.bom_lib.classifier import categorize_part
+    from src.bom_lib.utils import parse_value_to_decimal
+
+    assert parse_value_to_decimal("47 ohm") == Decimal("47")
+    result = categorize_part("R31", "47 ohm")
+    assert result is not None
+    assert result.clean_value == "47"
+
+
+def test_a_numbered_t_with_a_resistance_is_a_trimmer() -> None:
+    from src.bom_lib.classifier import categorize_part
+    from src.bom_lib.enums import ComponentCategory
+
+    trimmer = categorize_part("T1", "5k")
+    transformer = categorize_part("T1", "42TM002")
+    assert trimmer is not None
+    assert trimmer.category == ComponentCategory.POTENTIOMETERS
+    assert transformer is not None
+    assert transformer.category == ComponentCategory.HARDWARE_MISC

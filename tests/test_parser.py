@@ -786,11 +786,12 @@ def test_a_designator_repeated_in_another_table_is_another_board() -> None:
     assert (q1["qty"], r102["qty"]) == (2, 1)
 
 
-def _typed_page(rows: list[tuple[str, str, str]]) -> PDFPageExtraction:
+def _typed_page(
+    rows: list[tuple[str, str, str]], cols: tuple[float, float, float] = (50, 110, 200)
+) -> PDFPageExtraction:
     """One page holding an Aion FX style 'PART | VALUE | TYPE' table."""
     from src.bom_lib import PDFWord
 
-    cols = (50.0, 110.0, 200.0)
     words = []
     for k, cells in enumerate([("PART", "VALUE", "TYPE"), *rows]):
         for text, x in zip(cells, cols, strict=True):
@@ -828,6 +829,23 @@ def test_typed_table_repeated_labels_are_separate_parts() -> None:
         ("LEDR", "4k7"),
     ]
     assert stats["warnings"] == []
+
+
+def test_typed_table_socket_row_keeps_its_label() -> None:
+    # Aion FX Amethyst: 'IC1-SOCKET' is the socket, not IC1 named by its role
+    # the way GuitarPCB's 'TR1-BIAS' is.
+    from src.bom_lib import create_empty_stats
+    from src.bom_lib.parser import _text_table_entries
+
+    page = _typed_page(
+        [
+            ("IC1", "TL072", "Op-amp, dual"),
+            ("IC1-SOCKET", "DIP-8 socket", "IC socket, DIP-8"),
+        ],
+        cols=(50, 130, 220),
+    )
+    entries, _ = _text_table_entries([page], create_empty_stats())
+    assert [e.ref for e in entries] == ["IC1", "IC1-SOCKET"]
 
 
 def test_listed_sockets_are_not_injected_again() -> None:
@@ -1050,3 +1068,35 @@ def test_misread_text_layer(texts: list[str], misread: bool) -> None:
         for k, t in enumerate(texts)
     ]
     assert _misread(words) is misread
+
+
+def test_control_label_is_no_designator_and_value() -> None:
+    # GuitarPCB DumbleTone labels 'Bias Trim'; ShoNuff's 'C1 100n' is a
+    # designator and its value run together.
+    from src.bom_lib.parser import _CONTROL_LABEL
+
+    assert _CONTROL_LABEL.fullmatch("Bias Trim")
+    assert _CONTROL_LABEL.fullmatch("GAIN 2")
+    assert not _CONTROL_LABEL.fullmatch("C1 100n")
+    assert not _CONTROL_LABEL.fullmatch("P1-Crackle C5k")
+
+
+def test_same_value_ignores_zero_width_spaces() -> None:
+    # GuitarPCB The Vibe: a ruled cell '​ ​ 2N4125 - PNP' and the
+    # text reading of the same row.
+    from src.bom_lib.parser import _same_value
+
+    assert _same_value("​ ​ 2N4125 - PNP", "2N4125 - PNP")
+    assert not _same_value("2N4125 - PNP", "2N3906")
+
+
+def test_wrapped_ruled_value_matches_its_first_line() -> None:
+    # GuitarPCB EMEXAR: the ruled cell 'Bi-color CA LED' reads 'Bi-color CA'
+    # as text; another value is another row.
+    from src.bom_lib.parser import _wrapped
+
+    assert _wrapped("Bi-color CA LED", "Bi-color CA")
+    assert _wrapped("Bi-Color CA LED", "LED")
+    assert _wrapped("Bi-Color CA LED", "text)")
+    assert not _wrapped("Bi-color CA LED", "Red LED")
+    assert not _wrapped("100k", "")

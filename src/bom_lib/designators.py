@@ -28,6 +28,7 @@ _PREFIXES: tuple[tuple[str, ComponentCategory | None], ...] = (
     ("RLED", _CAT.RESISTORS),
     ("LEDR", _CAT.RESISTORS),  # Aion FX: LED current-limiting resistor
     ("RPD", _CAT.RESISTORS),  # Aion FX: input pulldown resistor
+    ("REG", _CAT.ICS),  # voltage regulators (GuitarPCB: 'REG  L78L05')
     ("RX", _CAT.RESISTORS),  # Aion FX: optional-mod resistors RX1, RX2
     ("CX", _CAT.CAPACITORS),
     ("DX", _CAT.DIODES),  # Aion FX: alternate clipping diodes DX1-DX4
@@ -61,8 +62,8 @@ _PREFIXES: tuple[tuple[str, ComponentCategory | None], ...] = (
 
 # Designators printed without a number or name suffix.
 # 'RX' is an optional resistor (GuitarPCB Mini-Me 'Rx  1M'), a lone 'IC' the
-# only chip besides IC1 (Tube Screaming Preamp).
-_BARE = frozenset({"LED", "CLR", "RLED", "LEDR", "RPD", "TRIM", "RX", "IC"})
+# only chip besides IC1 (Tube Screaming Preamp), 'REG' the voltage regulator.
+_BARE = frozenset({"LED", "CLR", "RLED", "LEDR", "RPD", "TRIM", "RX", "IC", "REG"})
 
 # A channel suffix letter (R1A/R1B, D10a-D10d). K, M and R are excluded so a
 # C-taper pot value (C10K, C1M) is never mistaken for capacitor C10.
