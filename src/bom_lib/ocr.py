@@ -243,8 +243,8 @@ def needs_ocr(result: ParseResult) -> bool:
     """Whether a parse looks incomplete in a way OCR might fix.
 
     Either no parts list was read at all, the document names designators
-    that are missing from the parts list, or a page's text was set aside as
-    another program's misread OCR. A document with several builds was
+    that are missing from the parts list, a parts list is printed as an
+    image, or a page's text was set aside as another program's misread OCR. A document with several builds was
     read well enough to find them, and is left alone.
 
     Args:
@@ -261,6 +261,7 @@ def needs_ocr(result: ParseResult) -> bool:
             ParseWarningKind.NO_PARTS_LIST,
             ParseWarningKind.UNEXTRACTED_REF,
             ParseWarningKind.MISREAD_TEXT,
+            ParseWarningKind.IMAGE_PARTS_LIST,
         )
         for w in result.stats["warnings"]
     )

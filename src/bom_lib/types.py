@@ -377,6 +377,16 @@ class PDFWord(TypedDict):
     size: float
 
 
+@dataclass(frozen=True)
+class Picture:
+    """An image drawn on a PDF page, in points from the page's top-left corner."""
+
+    x0: float
+    top: float
+    x1: float
+    bottom: float
+
+
 class PDFPageExtraction(TypedDict):
     """Extracted text and tabular layout from a single PDF page.
 
@@ -387,12 +397,15 @@ class PDFPageExtraction(TypedDict):
         labels: Words printed in the margin beside a table, which name parts
             of it ('Standard RAT' beside one build's rows); OCR keeps them
             apart from the table's words.
+        pictures: The page's large images, where a parts table may be drawn
+            as a picture rather than text.
     """
 
     tables: list[list[list[str | None]]]
     text: str | None
     words: list[PDFWord]
     labels: NotRequired[list[PDFWord]]
+    pictures: NotRequired[list[Picture]]
 
 
 ShoppingListRow = TypedDict(

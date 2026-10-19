@@ -22,7 +22,7 @@ from dataclasses import dataclass, field, replace
 
 from src.bom_lib import constants
 from src.bom_lib.designators import BOARD_REF, is_designator
-from src.bom_lib.types import PDFWord
+from src.bom_lib.types import PDFWord, Picture
 from src.bom_lib.utils import expand_refs
 
 # Gaps wider than this fraction of the font size separate cells. Measured on
@@ -42,7 +42,16 @@ _CONTROL_NAME = re.compile(r"[A-Z](?:[A-Z0-9_/-]{1,11})?")
 # A control name in title case, recognized only beside a tapered pot value:
 # 'Volume  A100k', 'Mid  B100k' (GuitarPCB Tone TwEQ).
 _TITLE_NAME = re.compile(r"[A-Z][a-z]{2,11}")
-_TAPERED_POT = re.compile(r"[ABCWG]\d+(?:\.\d+)?[KkM]")
+# 'A100k', or a taper in words: 'Volume  100k Log', 'Fuzz  10k Anti-Log **'
+# (GuitarPCB Funk 49).
+_TAPERED_POT = re.compile(
+    r"[ABCWG]\d+(?:\.\d+)?[KkM]"
+    r"|\d+(?:\.\d+)?[KkM] (?i:anti-?log|rev(?:erse)? log|log|lin(?:ear)?|audio)(?: ?\*+)?"
+)
+# Designators side by side in one cell, 'D1 D2' (Funk 49), and a range
+# spaced from its prefix, 'LDR 1 - 4' (Band of Gypsys).
+_SPACED_REFS = re.compile(r"([A-Z]{1,3})\d{1,3}(?: \1\d{1,3}){1,3}")
+_SPACED_RANGE = re.compile(r"([A-Z]{2,4}) (\d{1,3}) ?[-\u2013] ?(\d{1,3})")
 _MULTIWORD_NAME = re.compile(r"[A-Z]{2,}(?: [A-Z]{2,}){1,2}|[A-Z]{3,} \d{1,2}")
 _NUMBERED_NAME_HEAD = re.compile(r"[A-Z]{3,}")
 # A whole-cell parenthetical on the next line, aligned with a value above it,
@@ -248,6 +257,8 @@ def _is_ref_cell(cell: str, next_cell: str | None) -> bool:
         return _is_bare_value(next_cell)
     if is_designator(cell) or _NUMBERED_LABEL.fullmatch(cell):
         return True
+    if ref_group(cell) is not None:
+        return next_cell is not None and not next_cell.isdigit()
     span = REF_RANGE.fullmatch(cell)
     if span and is_designator(span.group(1)):
         # Not before a bare count: 'D21 - D28  8' is a quantity column (Q-Tune).
@@ -280,18 +291,39 @@ def _unmarked(cell: str) -> str:
     return cell.strip("*") or cell
 
 
+def ref_group(cell: str) -> str | None:
+    """A designator list or range written with spaces, as 'D1,D2' or 'LDR1-LDR4'."""
+    if _SPACED_REFS.fullmatch(cell) and all(is_designator(r) for r in cell.split()):
+        return ",".join(cell.split())
+    span = _SPACED_RANGE.fullmatch(cell)
+    if span and is_designator(span.group(1) + span.group(2)):
+        prefix = span.group(1)
+        return f"{prefix}{span.group(2)}-{prefix}{span.group(3)}"
+    return None
+
+
 def _ref_name(cell: str) -> str:
     """The designator a ref cell names; control names are upper case ('Volume')."""
     name = _unmarked(cell)
+    group = ref_group(name)
+    if group is not None:
+        return group
     return name.upper() if _TITLE_NAME.fullmatch(name) else name
 
 
 def _starts_listing(cell: str, next_cell: str | None) -> bool:
     """Whether a cell in value position is really the next designator."""
-    if BOARD_REF.fullmatch(cell):
+    if BOARD_REF.fullmatch(cell) or ref_group(cell) is not None:
         return True
     span = REF_RANGE.fullmatch(cell)
     if span and is_designator(span.group(1)):
+        return True
+    if (
+        _TITLE_NAME.fullmatch(cell)
+        and next_cell is not None
+        and _TAPERED_POT.fullmatch(next_cell)
+    ):
+        # 'R10 | 1k5 | Volume | 100k Log': the next row of a side-by-side table.
         return True
     # Directly after a designator a bare 'LED' is that designator's value
     # ('LED_A  LED  Indicator LED'), unless a numeric value follows it; a
@@ -401,8 +433,8 @@ def _split_merged(cell: Cell) -> list[Cell]:
     cell is split when its first word is a designator or control name and the
     rest is a short value; prose ('D8 and D9 are only needed...') is left whole.
     """
-    if REF_RANGE.fullmatch(cell.text):
-        return [cell]  # 'Q1 -Q4' is one range (Dr Phybes)
+    if REF_RANGE.fullmatch(cell.text) or ref_group(cell.text) is not None:
+        return [cell]  # 'Q1 -Q4' is one range (Dr Phybes); 'D1 D2' one list
     words = cell.text.split()
     dashed = False
     paren = _PAREN_LABEL.fullmatch(words[1]) if len(words) > 2 else None
@@ -566,6 +598,49 @@ def valueless_refs(words: list[PDFWord]) -> list[str]:
 
 def _middle(word: PDFWord) -> float:
     return word["top"] + word["size"] / 2
+
+
+# 'Bill of Materials Sonic Bloom:', 'PARTS LIST', 'BOM'.
+_LIST_HEADING = re.compile(r"(?:bill of materials|parts list|bom)\b", re.IGNORECASE)
+# The picture starts right under its heading, within this many line heights.
+_PICTURE_GAP_EM = 3.0
+
+
+def pictured_lists(words: list[PDFWord], pictures: list[Picture]) -> list[str]:
+    """Parts-list headings whose list is a picture, not text.
+
+    GuitarPCB Sonic Architect heads two boards' lists 'Bill of Materials Sonic
+    Bloom:' and 'Bill of Materials AmpEQ:'; the first is an image right under
+    its heading, with no text inside it, so the text layer never reads it.
+
+    Args:
+        words: Words extracted from one page.
+        pictures: The page's large images.
+
+    Returns:
+        The heading of every such list, top to bottom.
+    """
+    found = []
+    for line in group_lines(words):
+        text = " ".join(w["text"] for w in line)
+        if not _LIST_HEADING.match(text):
+            continue
+        bottom = max(w["top"] + w["size"] for w in line)
+        left = line[0]["x0"]
+        for pic in pictures:
+            if not (
+                0 <= pic.top - bottom <= _PICTURE_GAP_EM * line[0]["size"]
+                and pic.x0 - line[0]["size"] <= left <= pic.x1
+            ):
+                continue
+            inside = any(
+                pic.x0 <= w["x0"] <= pic.x1 and pic.top <= w["top"] <= pic.bottom
+                for w in words
+            )
+            if not inside:
+                found.append(text.rstrip(":"))
+                break
+    return found
 
 
 def page_lines(words: list[PDFWord]) -> list[list[Cell]]:
@@ -1130,6 +1205,11 @@ def _read_bom(words: list[PDFWord]) -> tuple[list[BomRow], list[Cell]]:
             value = _UNCLOSED_ASIDE.sub(
                 "", _ASIDE.sub("", fields.get((k, "value"), ""))
             )
+            # 'SW - SPDT | On-Off_On' (GuitarPCB Skyn-Tone): the pole type in
+            # the label belongs to the value.
+            poles = _POLES_LABEL.fullmatch(refs)
+            if poles:
+                refs, value = poles.group(1), f"{poles.group(2)} {value}".strip()
             notes = fields.get((k, "notes"), "")
             last = last_row.get(k)
             if typed and not refs and notes and last is not None:
@@ -1177,6 +1257,7 @@ _REF_COUNT = re.compile(r"\s+x\s*(\d+)$")
 # 'ORDER switch', 'DEEP switch': the noun restates the category.
 _LABEL_NOUN = re.compile(r"(?<=[A-Z0-9]) (?:switch|pot|trimmer)$")
 # 'TR1-BIAS' names TR1's control; 'IC1-SOCKET' (Aion Amethyst) is a part of its own.
+_POLES_LABEL = re.compile(r"([A-Z]{1,4}\d{0,3}) ?- ?([SD34]P[SDT]T)")
 _NAMED_DESIGNATOR = re.compile(r"([A-Z]{1,4}\d{1,3})-(?!(?i:socket)\b)[A-Za-z]{3,}")
 _DESIGNATOR_ROLE = re.compile(r"([A-Z]{1,3}\d{1,3}) [A-Z][a-z]+(?: [A-Z][a-z]+)*")
 # A part label in a typed table: 'VOL.', 'HI-MID FREQ', 'IC1-S', 'PRE-V. SEND'.

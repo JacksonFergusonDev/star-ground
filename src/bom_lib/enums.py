@@ -50,6 +50,7 @@ class ParseWarningKind(StrEnum):
     NO_PARTS_LIST = "No parts list"
     OCR_READ = "Read by OCR"
     MISREAD_TEXT = "Misread text layer"
+    IMAGE_PARTS_LIST = "Parts list is an image"
 
 
 class OcrVerdict(StrEnum):
