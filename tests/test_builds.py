@@ -332,3 +332,56 @@ def test_repeated_tables_named_by_their_headings_are_builds() -> None:
         for r in refs
     ]
     assert _names(plan_builds(entries, pages)) == ["Overdriver", "Power Boost"]
+
+
+def test_many_repeated_lists_with_differing_groupings_are_builds() -> None:
+    # Aion FX legacy Stratus: three named lists repeat R1-R10, but group their
+    # extra parts differently. A row under the first list whose label is listed
+    # again belongs to that list ('RX1'); a part listed once below it ('RPD') or
+    # a named part listed with the first build only ('LED') is every build's.
+    def heading(text: str) -> list[Cell]:
+        return [Cell((PDFWord(text=text, x0=40, x1=90, top=0, size=14),))]
+
+    refs = [f"R{n}" for n in range(1, 11)]
+    extras = [[f"D{k}" for k in range(n, n + 2)] for n in (20, 30, 40)]
+    pages, entries = [], []
+    for p, name in enumerate(["Stock", "Fulldrive", "Landgraff"]):
+        body = [[_cell(r, 40), _cell("1k", 80)] for r in refs]
+        tail = [
+            [_cell("RX1", 40), _cell("47k", 80)],
+            [_cell("RPD", 40), _cell("1M", 80)],
+        ]
+        pages.append(PageContext([heading(name), *body, *(tail if p == 0 else [])], ""))
+        # The extra parts sit in a second column, beside R2 and R3.
+        entries += [Entry(r, "1k", p, line=k + 1) for k, r in enumerate(refs)]
+        entries += [Entry(r, "1k", p, line=k + 2) for k, r in enumerate(extras[p])]
+        if p == 0:
+            entries += [
+                Entry("LED", "5mm", 0, line=4),
+                Entry("RX1", "47k", 0, line=len(refs) + 1),
+                Entry("RPD", "1M", 0, line=len(refs) + 2),
+            ]
+    entries.append(Entry("RX1", "47k", 1, line=5))
+    plan = plan_builds(entries, pages)
+    assert _names(plan) == ["Stock", "Fulldrive", "Landgraff"]
+    assert {e.ref for e in plan.common} == {"LED", "RPD"}
+    stock = {e.ref for e in plan.variants[0].entries}
+    assert "RX1" in stock
+    assert "RX1" not in {e.ref for e in plan.variants[2].entries}
+
+
+def test_two_repeated_lists_need_most_labels_to_repeat() -> None:
+    # GuitarPCB Skyn-Tone: two boards share most labels; many listed once.
+    def heading(text: str) -> list[Cell]:
+        return [Cell((PDFWord(text=text, x0=40, x1=90, top=0, size=14),))]
+
+    shared = [f"R{n}" for n in range(1, 11)]
+    only = [[f"C{n}" for n in range(1, 7)], [f"Q{n}" for n in range(1, 7)]]
+    pages, entries = [], []
+    for p, name in enumerate(["Compressor", "WattAmp"]):
+        listed = shared + only[p]
+        pages.append(
+            PageContext([heading(name), *([[_cell(r, 40)] for r in listed])], "")
+        )
+        entries += [Entry(r, "1k", p, line=k + 1) for k, r in enumerate(listed)]
+    assert plan_builds(entries, pages).variants == ()

@@ -592,6 +592,19 @@ class TestTextBillOfMaterials:
             "4",
         ]
 
+    def test_typed_label_may_start_with_a_number(self) -> None:
+        # Aion FX Karkadann: the 100 Hz EQ pot is labeled '100HZ'.
+        cols = (50.0, 110.0, 200.0)
+        words = self._row(
+            100, *zip(("PART", "VALUE", "TYPE"), cols, strict=True)
+        ) + self._row(
+            120,
+            ("100HZ", cols[0]),
+            ("20kB", cols[1]),
+            ("16mm right-angle PCB mount pot", cols[2]),
+        )
+        assert [(r.refs, r.value) for r in find_bom_rows(words)] == [("100HZ", "20kB")]
+
     def test_grid_labels_markers_and_counts(self) -> None:
         # GuitarPCB 'Part | Value' grids: named controls, '*' markers on refs and
         # values, and a 'CLR x1' count.

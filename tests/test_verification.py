@@ -13,6 +13,7 @@ from src.bom_lib import (
 from src.bom_lib.verification import (
     check_alternate_value,
     check_bom_reconciliation,
+    check_build_changes,
     check_build_note,
     check_classification,
     check_duplicate,
@@ -20,12 +21,14 @@ from src.bom_lib.verification import (
     check_marking_code,
     check_numbered_footnotes,
     check_numbering_gaps,
+    check_part_versions,
     check_parts_found,
     check_prose_pots,
     check_row_quantity,
     check_two_values,
     check_unextracted_refs,
     check_value_assignments,
+    check_value_keyed_list,
     check_valueless_refs,
     check_version_note,
     find_bom_entries,
@@ -396,6 +399,11 @@ class TestAionChecks:
             "Carbon comp in original, measured value 560R Formula 5F6: 1k8 DLS Red: 1k",
             "Formula 5F6: 4.7uF electrolytic",
             "Formula 5F6: (omit)",
+            # Aion FX Malacandra and Aurum.
+            "RC Booster and Bass RC use 22k.",
+            "RC Booster and Bass RC jumper this.",
+            "Bass RC omits this diode.",
+            "Use 16k for original OD-2.",
         ],
     )
     def test_notes_that_name_another_build(self, note: str) -> None:
@@ -418,6 +426,10 @@ class TestAionChecks:
             "Alternate: 4K7",
             "Sub: MPSA18",
             "Quantity: 2",
+            "Leave empty or omit this.",
+            "Use 100n for C4 if you want more bass.",
+            "Original OD-2 uses 22n. See build notes.",
+            "Galaxie mod: 10k. See build notes for full mod.",
         ],
     )
     def test_notes_that_name_no_build(self, note: str) -> None:
@@ -635,3 +647,85 @@ def test_footnotes_on_building_without_a_part() -> None:
     stats = create_empty_stats()
     check_numbered_footnotes([marked], [text], inventory, stats)
     assert sorted(w.ref for w in stats["warnings"]) == ["CX1", "MIDRANGE", "R15"]
+
+
+def _listed(*parts: tuple[str, str, ComponentCategory]):
+    inventory = create_empty_inventory()
+    for ref, value, cat in parts:
+        inventory[make_component_key(cat, value)]["refs"].append(ref)
+    return inventory
+
+
+def test_build_notes_change_list_for_another_version() -> None:
+    # Aion FX Quartz ('Bass variant' bullets) and Aurum ('Building the original
+    # OD-2' prose); a modification's list (Sunstone) is not another version.
+    text = "\n".join(
+        [
+            "Bass variant",
+            "The bass version shares the same overall schematic.",
+            "• R34: 1k5 → 100R",
+            "• D2-4: omit (leave empty)",
+            "Building the original OD-2",
+            "1. Use 22n for C12 instead of 27n.",
+            "2. Jumper R8 instead of using a 4k7 resistor.",
+            "Color switch modification",
+            "• R23: 3k3 → 2k2",
+        ]
+    )
+    inventory = _listed(
+        ("R34", "1k5", ComponentCategory.RESISTORS),
+        ("D3", "1N914", ComponentCategory.DIODES),
+        ("C12", "27n", ComponentCategory.CAPACITORS),
+        ("R8", "4k7", ComponentCategory.RESISTORS),
+        ("R23", "3k3", ComponentCategory.RESISTORS),
+    )
+    stats = create_empty_stats()
+    check_build_changes([text], inventory, stats)
+    assert sorted(w.ref for w in stats["warnings"]) == ["C12", "D3", "R34", "R8"]
+
+
+def test_part_numbered_version_swaps_its_part() -> None:
+    # Aion FX Lithium: 'Use 1k for MN3207 version' on R16; IC2 is an MN3007.
+    rows = [
+        ("R16", "JUMPER", "Use 1k for MN3207 version. See build notes."),
+        ("IC2", "MN3007", ""),
+        ("IC3", "TL072", ""),
+    ]
+    stats = create_empty_stats()
+    check_part_versions(stats, rows)
+    assert [w.ref for w in stats["warnings"]] == ["IC2"]
+
+
+def test_capacitance_under_a_resistor_designator() -> None:
+    # Aion FX legacy Stratus's SD-1 table: 'R8  18n capacitor'.
+    stats = create_empty_stats()
+    check_classification(
+        stats, "R8", "18n capacitor", ComponentCategory.RESISTORS, "18n capacitor"
+    )
+    assert _kinds(stats) == [ParseWarningKind.CATEGORY_CONFLICT]
+    quiet = create_empty_stats()
+    # A diode number is no capacitance (GuitarPCB Emexar v4: 'R10  1N4001').
+    check_classification(quiet, "R10", "1N4001", ComponentCategory.RESISTORS, "1N4001")
+    assert not any("capacitor's" in w.message for w in quiet["warnings"])
+
+
+def test_omitted_and_running_title_refs_are_accounted_for() -> None:
+    # Aion FX Gale: the schematic labels C1, which the list leaves empty;
+    # legacy L5 Preamp's running footer 'L5 PREAMP 5' is no listing of L5.
+    pages = [f"R1 10k\nC1 120pF\nL5 PREAMP {n}" for n in range(1, 5)]
+    inventory = _listed(("R1", "10k", ComponentCategory.RESISTORS))
+    stats = create_empty_stats()
+    check_unextracted_refs(pages, inventory, stats, frozenset({"C1"}))
+    assert stats["warnings"] == []
+
+
+def test_value_keyed_parts_list_cannot_be_read() -> None:
+    # Aion FX 3PDT Bypass: 'PART QTY TYPE NOTES' with values in PART.
+    stats = create_empty_stats()
+    check_value_keyed_list(
+        ["PARTS LIST\nPART QTY TYPE NOTES\n1N5817 (D1) 1 Schottky"], stats
+    )
+    assert _kinds(stats) == [ParseWarningKind.NO_PARTS_LIST]
+    quiet = create_empty_stats()
+    check_value_keyed_list(["PART VALUE TYPE NOTES\nR1 10k Metal film"], quiet)
+    assert quiet["warnings"] == []
