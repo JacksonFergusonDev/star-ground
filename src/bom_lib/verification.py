@@ -47,6 +47,7 @@ _SCHEMATIC_PAGE = re.compile(r"\bKiCad\b|\.kicad_sch\b|\bFile:\s*\S+\.sch\b", re
 _IC_SECTION = re.compile(r"(?P<chip>(?:IC|U)\d+)[A-H]")
 # Aion FX heads its schematic pages 'SCHEMATIC'.
 _SCHEMATIC_HEADING = re.compile(r"\s*SCHEMATIC\b")
+_SCHEMATIC_TITLE = re.compile(r"\s*SCHEMATIC\b", re.IGNORECASE)
 
 
 def is_schematic_page(text: str) -> bool:
@@ -275,7 +276,12 @@ def check_unextracted_refs(
         if not _SCHEMATIC_PAGE.search(text):
             for pattern in running:
                 text = pattern.sub(" ", text)
-            listed |= find_listed_refs(text)
+            found = find_listed_refs(text)
+            if _SCHEMATIC_TITLE.match(text):
+                # A drawn schematic's net labels are no parts: Aion FX legacy
+                # Astra's 'IN' sits beside R1's '1M'. Its designators still count.
+                found = {ref for ref in found if any(ch.isdigit() for ch in ref)}
+            listed |= found
 
     # A part number shaped like a designator is a value, not a listing:
     # 'Q1-Q5  J201  JFET transistor' (Golden Falk).
@@ -507,6 +513,7 @@ _FOOTNOTE_LINE = re.compile(
     r"(?:^|\s)(\d{1,2}) ([A-Z][^:]{2,40}:.*)$|^(\d{1,2}) (\S.*)$"
 )
 _FOOTNOTE_LINES = 8
+_ONLY_ONE = re.compile(r"\buse only one of (?:these|them|the two)\b", re.IGNORECASE)
 _SENTENCE = re.compile(r"(?<=[.!?])\s+")
 # 'use 39k for R15': a value change that builds the circuit another way.
 _VALUE_FOR = re.compile(
@@ -551,6 +558,18 @@ def check_numbered_footnotes(
                 re.search(rf"\b{re.escape(label)}\b", note, re.IGNORECASE) is not None
             )
 
+        # 'Use only one of these' (Aion FX legacy Aphelion: IC1 single or IC2
+        # dual op-amp): the marked parts are alternatives, not all bought.
+        for label, mark in rows:
+            ref = listed.get(label.upper())
+            if ref and _ONLY_ONE.search(notes.get(mark, "")):
+                _warn(
+                    stats,
+                    ParseWarningKind.FOOTNOTE,
+                    ref,
+                    f"{ref} has a note: {notes[mark]} Buy only the one you use.",
+                )
+
         # Only a page whose footnotes rebuild the circuit another way ('use 39k
         # for R15') describes another build; leaving off optional parts alone
         # ('leave off IC2, D2-D3, and C11', Aion FX legacy Crescent) does not.
@@ -589,7 +608,12 @@ def check_numbered_footnotes(
 # the following substitutions'. Not a modification ('Color switch modification').
 _BUILD_PASSAGE = re.compile(
     r"^building (?:the |an? )?\S|^\S+(?: \S+){0,3} (?:variant|version)(?: \([^()]*\))?$"
-    r"|\bbuild (?:the|an?) [^.]*\b(?:variant|version)\b",
+    r"|\bbuild (?:the|an?) [^.]*\b(?:variant|version)\b"
+    # 'The Analogman version of the Astrotone uses 1M2 for R1 and R4' (Aion FX
+    # legacy Astra footnote).
+    r"|\bversion\b[^.]*\buses \S*\d\S* for "
+    # 'If you want triangle-wave mode instead, here are the changes to make' (Aion FX Argus).
+    r"|\bhere are the changes to make\b|\bmake the following (?:changes|substitutions)\b",
     re.IGNORECASE,
 )
 _MODIFICATION = re.compile(r"\bmod(?:s|ification|ifications)?\b", re.IGNORECASE)
@@ -599,9 +623,11 @@ _PASSAGE_LINES = 25
 _DESIGNATOR = r"[A-Z]{1,3}\d{1,3}(?:-\d{1,3})?"
 # '• C5: 470n → 68n', '• R6: jumper', '• D2-8: omit (leave empty)'.
 _CHANGE_ITEM = re.compile(rf"^[•*-]?\s*({_DESIGNATOR})\s*:\s*\S")
-# 'Use 22n for C12 instead of 27n', 'Use 16k for R36 and 14k for R37', 'Jumper R8'.
+# 'Use 22n for C12 instead of 27n', 'Use 16k for R36 and 14k for R37', 'Jumper R8',
+# '470R for R6, and 470n for C1 and C4'.
 _CHANGE_PROSE = re.compile(
-    rf"\buse \S+ for ({_DESIGNATOR})(?: and \S+ for ({_DESIGNATOR}))?"
+    rf"\b(?:use \S+|\S*\d\S*) for ({_DESIGNATOR})(?: and ({_DESIGNATOR}))?"
+    rf"(?: and \S+ for ({_DESIGNATOR}))?"
     rf"|\b(?:jumper|omit) ({_DESIGNATOR})\b",
     re.IGNORECASE,
 )
@@ -644,8 +670,8 @@ def check_build_changes(
             k += 1
             if not _BUILD_PASSAGE.search(line) or _MODIFICATION.search(line):
                 continue
-            for body in lines[k : k + _PASSAGE_LINES]:
-                if _NOTE_HEADING.match(body) and not _CHANGE_ITEM.match(body):
+            for n, body in enumerate(lines[k - 1 : k + _PASSAGE_LINES]):
+                if n and _NOTE_HEADING.match(body) and not _CHANGE_ITEM.match(body):
                     break
                 labels = [m.group(1) for m in [_CHANGE_ITEM.match(body)] if m]
                 for m in _CHANGE_PROSE.finditer(body):
@@ -740,7 +766,8 @@ _VERSION_NOTE = re.compile(
     # 'Use a 100n film capacitor here if building a 3-transistor variant'.
     r"|\b(?i:if building)\b"
     # 'Analogman version uses 1.2M here', 'GC-1 uses 150k', 'G-2 uses 22uF'.
-    rf"|(?:^|[.;]\s*){_HISTORY}(?:[A-Z]{_NAME_WORD}?(?: {_NAME_WORD}){{0,3}}) uses \S"
+    # 'The HM-2 uses 2SK30A-Y' (Aion FX Graviton) names the original unit: history.
+    rf"|(?:^|[.;]\s*)(?!The ){_HISTORY}(?:[A-Z]{_NAME_WORD}?(?: {_NAME_WORD}){{0,3}}) uses \S"
     # 'RC Booster and Bass RC use 22k', 'Bass RC omits this diode', 'RC Booster
     # and Bass RC jumper this' (Aion FX Malacandra).
     rf"|(?:^|[.;]\s*){_SUBJECT}(?: and {_SUBJECT})? (?:use \S|(?:omit|jumper)s? (?:this|it)\b)"
@@ -762,7 +789,10 @@ _VERSION_NOTE = re.compile(
     r"|\b(?i:part of the optional)\b"
     # 'Carbon comp in original, measured value 560R Formula 5F6: 1k8 DLS Red: 1k'
     # (Aion FX Triton): a build's value anywhere in the note.
-    rf"|(?<![\w:]){_BUILD_LABEL}: (?:\(?(?i:omit)\)?|\d[\w.]*)",
+    # 'V2: J201 (MMBFJ201)' (Aion FX Muramasa): a part number.
+    rf"|(?<![\w:]){_BUILD_LABEL}: (?:\(?(?i:omit)\)?|(?:[A-Z]{{1,4}}-?)?\d[\w.]*)"
+    # 'Omit if using tone pot' (Aion FX Rift): one control or the other.
+    r"|\b(?i:omit if using (?:an? |the )?\w+ (?:pot|potentiometer|switch|toggle))\b",
 )
 
 

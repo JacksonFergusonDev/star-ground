@@ -169,6 +169,7 @@ def plan_builds(entries: list[Entry], pages: list[PageContext]) -> BuildPlan:
         or _table_variants(entries, pages)
         or _repeat_variants(entries, pages)
         or _either_or_variants(entries, pages)
+        or _slash_variants(entries, pages)
     )
     in_variants = {id(e) for v in variants for e in v.entries}
     variant_refs = {e.ref for v in variants for e in v.entries}
@@ -375,6 +376,45 @@ def _span_of(
         if at[0] == hi[0] and hi < at and (nxt is None or at < nxt):
             return k
     return None
+
+
+# A parts list headed by two build names: 'Parts (Distortion+ / '79 Gray 250)'
+# (Aion FX legacy Aphelion), whose cells give one value per build: '1M / 470k'.
+_SLASH_HEADING = re.compile(
+    r"^Parts \((?P<a>[^/()]+?) / (?P<b>[^/()]+?)\)\s*$", re.MULTILINE
+)
+_SLASH_VALUE = re.compile(r"^(?P<a>\S+(?: \S+)?) / (?P<b>\S+(?: \S+)?)$")
+_MIN_SLASH_ROWS = 4
+
+
+def _slash_variants(
+    entries: list[Entry], pages: list[PageContext]
+) -> list[PlannedVariant]:
+    """Two builds listed in one table, 'A / B' in each cell that differs.
+
+    The heading names the builds; a cell without a slash is both builds'.
+    """
+    variants: list[PlannedVariant] = []
+    for page_no, page in enumerate(pages):
+        heading = _SLASH_HEADING.search(page.text)
+        if heading is None:
+            continue
+        split = [
+            (e, m)
+            for e in entries
+            if e.page == page_no and (m := _SLASH_VALUE.match(e.value))
+        ]
+        if len(split) < _MIN_SLASH_ROWS:
+            continue
+        for side in ("a", "b"):
+            variants.append(
+                PlannedVariant(
+                    heading.group(side).strip(),
+                    tuple(replace(e, value=m.group(side)) for e, m in split),
+                )
+            )
+        break
+    return variants
 
 
 def _located(entries: list[Entry], pages: list[PageContext]) -> list[Entry]:
