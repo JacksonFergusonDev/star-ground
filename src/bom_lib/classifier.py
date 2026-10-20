@@ -237,6 +237,14 @@ def categorize_part(
             if "LED" in val_up
             else ComponentCategory.HARDWARE_MISC
         )
+        if (
+            designator.prefix == "LED"
+            and ref_up != "LED"
+            and category_hint == ComponentCategory.RESISTORS
+        ):
+            # Aion FX Ibex and L5 Preamp name extra LED resistors 'LEDB', 'LEDC':
+            # read as LED channels, but the TYPE says 'Metal film resistor'.
+            category = ComponentCategory.RESISTORS
         if category == ComponentCategory.ICS and _VACTROL.match(val_up):
             # Constrictor: 'U1  VTL5C10' is an optoisolator, not a chip.
             category = ComponentCategory.OPTOELECTRONICS
