@@ -13,6 +13,7 @@ from collections import Counter
 from decimal import Decimal
 
 from src.bom_lib import constants
+from src.bom_lib.designators import is_designator
 from src.bom_lib.enums import ComponentCategory, ParseWarningKind
 from src.bom_lib.types import Inventory, ParseWarning, StatsDict
 from src.bom_lib.utils import parse_value_to_decimal
@@ -303,6 +304,16 @@ def check_unextracted_refs(
             )
         ):
             continue
+        if not any(ch.isdigit() for ch in ref) and any(
+            m.group(1).upper() in extracted
+            for m in re.finditer(
+                rf"\b([A-Z]{{1,3}}\d{{1,3}})\s+{re.escape(ref)}\b",
+                joined,
+                re.IGNORECASE,
+            )
+        ):
+            # 'P1 GAIN 1M Log' (GuitarPCB Over Drive Circuit): the name labels P1.
+            continue
         section = _IC_SECTION.fullmatch(ref.upper())
         if section and section.group("chip") in extracted:
             # 'IC2A' on a schematic is one half of the dual op-amp IC2.
@@ -384,6 +395,49 @@ def check_numbering_gaps(inventory: Inventory, stats: StatsDict) -> None:
                 )
 
 
+# Words that describe a resistor or capacitor ('100n Film', '1u Tantalum').
+_PASSIVE_WORDS = frozenset(
+    {
+        "FILM",
+        "BOX",
+        "POLY",
+        "MLCC",
+        "CERAMIC",
+        "CERAMICS",
+        "TANTALUM",
+        "ELECTRO",
+        "ELECTROLYTIC",
+        "METAL",
+        "CARBON",
+        "BIPOLAR",
+        "AXIAL",
+        "RADIAL",
+        "LOW",
+        "ESR",
+        "NP",
+        "NPO",
+        "C0G",
+        "X7R",
+        "WIMA",
+        "MF",
+        "MKT",
+        "MKP",
+        "SILVER",
+        "MICA",
+        "TRIM",
+        "TRIMMER",
+        "LOG",
+        "LIN",
+        "REV",
+        "AUDIO",
+        "LINEAR",
+        "DUAL",
+        "MINI",
+        "SMD",
+    }
+)
+
+
 def check_two_values(inventory: Inventory, stats: StatsDict) -> None:
     """Warns about a resistor or capacitor whose value is two values side by side.
 
@@ -403,6 +457,26 @@ def check_two_values(inventory: Inventory, stats: StatsDict) -> None:
             continue
         tokens = key.value.split()
         if len(tokens) < 2 or tokens[1][-1:].upper() in ("V", "%"):
+            continue
+        if parse_value_to_decimal(tokens[0]) is not None and (
+            is_designator(tokens[1])
+            # One stray word; a remark ('620R Lower Value') is several.
+            or (
+                len(tokens) == 2
+                and tokens[1].isalpha()
+                and tokens[1].istitle()
+                and tokens[1].upper() not in _PASSIVE_WORDS
+            )
+        ):
+            # 'R12  1k  P3 LEVEL 100k Log', 'R14  10k  Buffer' (older GuitarPCB Tube
+            # Screaming Ultra): the value ran into the next cell.
+            for ref in data["refs"]:
+                _warn(
+                    stats,
+                    ParseWarningKind.UNPARSED_VALUE,
+                    ref,
+                    f"{ref} value '{key.value}' runs into other text: check its value.",
+                )
             continue
         first, second = (parse_value_to_decimal(t) for t in tokens[:2])
         if first is None or second is None or first == second:
@@ -613,7 +687,11 @@ _BUILD_PASSAGE = re.compile(
     # legacy Astra footnote).
     r"|\bversion\b[^.]*\buses \S*\d\S* for "
     # 'If you want triangle-wave mode instead, here are the changes to make' (Aion FX Argus).
-    r"|\bhere are the changes to make\b|\bmake the following (?:changes|substitutions)\b",
+    r"|\bhere are the changes to make\b|\bmake the following (?:changes|substitutions)\b"
+    # '808 Style Build: Use Landgraff Dynamic Overdrive values with these exceptions
+    # C4: 47n, ...', '...JUMPER D2 and change values of R4 to 1M, R5 to 470K'
+    # (GuitarPCB Tube Screaming Ultra).
+    r"|\bstyle build\b|\bchange values? of\b",
     re.IGNORECASE,
 )
 _MODIFICATION = re.compile(r"\bmod(?:s|ification|ifications)?\b", re.IGNORECASE)
@@ -628,7 +706,21 @@ _CHANGE_ITEM = re.compile(rf"^[•*-]?\s*({_DESIGNATOR})\s*:\s*\S")
 _CHANGE_PROSE = re.compile(
     rf"\b(?:use \S+|\S*\d\S*) for ({_DESIGNATOR})(?: and ({_DESIGNATOR}))?"
     rf"(?: and \S+ for ({_DESIGNATOR}))?"
-    rf"|\b(?:jumper|omit) ({_DESIGNATOR})\b",
+    rf"|\b(?:jumper|omit) ({_DESIGNATOR})\b"
+    # 'exceptions C4: 47n, Gain Pot: B500k, R6: 51k', 'R4 to 1M, R5 to 470K',
+    # 'D2 is replaced by a jumper'.
+    rf"|\b({_DESIGNATOR}):\s*\d|\b({_DESIGNATOR}) to \d|\b({_DESIGNATOR}) is replaced\b",
+    re.IGNORECASE,
+)
+# 'The part list aside from IC1 and D4 is identical in both versions' (GuitarPCB MoRC).
+_SAME_EXCEPT = re.compile(
+    rf"\b(?:aside|apart) from ((?:{_DESIGNATOR})(?:(?:,\s*|\s+and\s+)(?:{_DESIGNATOR}))*)"
+    r" (?:is|are) (?:identical|the same) in (?:both|all) versions\b",
+    re.IGNORECASE,
+)
+# 'do not install R1, R2 R3, C1 and Q1' (Tube Screaming Ultra's Robin Trower build).
+_OMIT_LIST = re.compile(
+    rf"\bdo not install ((?:{_DESIGNATOR})(?:(?:,\s*|\s+and\s+|\s+)(?:{_DESIGNATOR}))*)",
     re.IGNORECASE,
 )
 
@@ -663,6 +755,17 @@ def check_build_changes(
     """
     listed = {ref.upper(): ref for data in inventory.values() for ref in data["refs"]}
     for text in page_texts:
+        for m in _SAME_EXCEPT.finditer(" ".join((text or "").split())):
+            for label in re.findall(_DESIGNATOR, m.group(1), re.IGNORECASE):
+                ref = listed.get(label.upper())
+                if ref:
+                    _warn(
+                        stats,
+                        ParseWarningKind.FOOTNOTE,
+                        ref,
+                        f"{ref} differs between the versions this list covers "
+                        f"('{m.group(0)}'); check which your build needs.",
+                    )
         lines = [" ".join(line.split()) for line in (text or "").splitlines()]
         k = 0
         while k < len(lines):
@@ -681,7 +784,9 @@ def check_build_changes(
                 labels = [m.group(1) for m in [_CHANGE_ITEM.match(body)] if m]
                 for m in _CHANGE_PROSE.finditer(body):
                     labels += [g for g in m.groups() if g]
-                for label in labels:
+                for m in _OMIT_LIST.finditer(body):
+                    labels += re.findall(_DESIGNATOR, m.group(1), re.IGNORECASE)
+                for label in dict.fromkeys(labels):
                     for name in _designators(label.upper()):
                         ref = listed.get(name)
                         if ref:
@@ -732,6 +837,16 @@ def check_duplicate(
     """
     looks_like_prose = new_value.isalpha() and new_value.islower()
     if looks_like_prose or _DATE.search(new_value):
+        return
+    head, _, remark = new_value.partition(" ")
+    if (
+        remark
+        and not any(ch.isdigit() for ch in remark)
+        and parse_value_to_decimal(head) is not None
+        and _comparable(head) == _comparable(first_value)
+    ):
+        # '3k3 LED CLR' (GuitarPCB G-02 Animal's suggestion table): the same
+        # value with a remark.
         return
     if _comparable(first_value) != _comparable(new_value):
         _warn(
@@ -1019,6 +1134,31 @@ def check_unclassified_row(stats: StatsDict, ref: str, value: str) -> None:
 _CAPACITANCE = re.compile(r"^\d+(?:\.\d+)?[pnuµ]\d?F?\b|\bcapacitor\b", re.IGNORECASE)
 
 
+# A value that only points to the build notes: 'See Text' (GuitarPCB G-02 Animal).
+_SEE_TEXT_VALUE = re.compile(r"\s*see (?:build )?(?:notes?|text)\s*", re.IGNORECASE)
+
+
+def check_pointer_value(stats: StatsDict, ref: str, raw_value: str) -> None:
+    """Warns when a part's value only points to the build notes.
+
+    'Q1-Q6  See Text' (GuitarPCB G-02 Animal) names no part the classifier can
+    read, so the part would otherwise vanish without a trace.
+
+    Args:
+        stats: Stats object that receives the warnings.
+        ref: The designator.
+        raw_value: The value exactly as extracted.
+    """
+    if _SEE_TEXT_VALUE.fullmatch(raw_value):
+        _warn(
+            stats,
+            ParseWarningKind.UNPARSED_VALUE,
+            ref,
+            f"{ref} value is '{raw_value.strip()}': the document gives it in its "
+            "text; check the build notes for what to use.",
+        )
+
+
 def check_classification(
     stats: StatsDict, ref: str, raw_value: str, category: ComponentCategory, value: str
 ) -> None:
@@ -1057,7 +1197,14 @@ def check_classification(
             and category == ComponentCategory.POTENTIOMETERS
             and _TRIM_WORD.search(raw_value) is not None
         )
-        if expected is not None and category != expected and not (vactrol or trimmer):
+        # An LED's current-limiting resistor named after it (Aion FX: 'LED1  10k
+        # Metal film resistor'); the classifier only says resistor on a TYPE hint.
+        led_resistor = prefix == "LED" and category == ComponentCategory.RESISTORS
+        if (
+            expected is not None
+            and category != expected
+            and not (vactrol or trimmer or led_resistor)
+        ):
             _warn(
                 stats,
                 ParseWarningKind.CATEGORY_CONFLICT,
@@ -1489,9 +1636,17 @@ def check_other_list(
 
 # 'TR1 / R18 - either the trim pot or fixed resistor is used but not both'
 # (GuitarPCB Super Drive 70s).
+# 'Install R9 or TR1 but do not install both' (GuitarPCB Sriracha Fuzz).
 _EITHER_PART = re.compile(
-    r"\b([A-Z]{1,4}\d{1,3})\s*(?:/|\bor\b)\s*([A-Z]{1,4}\d{1,3})\b[^.]{0,40}?\beither\b"
-    r"[^.]*\bnot both\b",
+    r"\b([A-Z]{1,4}\d{1,3})\s*(?:/|\bor\b)\s*([A-Z]{1,4}\d{1,3})\b[^.]{0,40}?"
+    r"(?:\beither\b[^.]*)?\bnot (?:install |use )?both\b",
+    re.IGNORECASE,
+)
+# 'only install T2 and not the Boost potentiometer' (GuitarPCB ColorTone Bass
+# Fuzz): a trimmer or a pot in one place.
+_ONLY_INSTALL = re.compile(
+    r"\bonly install (?:the )?(\w+)(?: potentiometer| pot| trimmer| trim ?pot)? and "
+    r"(?:do )?not (?:install )?(?:the )?(\w+)",
     re.IGNORECASE,
 )
 
@@ -1506,10 +1661,16 @@ def check_either_part(
         inventory: The finished inventory for this document.
         stats: Stats object that receives the warnings.
     """
-    listed = {ref for data in inventory.values() for ref in data["refs"]}
+    listed = {ref.upper() for data in inventory.values() for ref in data["refs"]}
+    warned: set[frozenset[str]] = set()
     for text in page_texts:
-        for m in _EITHER_PART.finditer(" ".join(text.split())):
+        flat = " ".join(text.split())
+        for m in [*_EITHER_PART.finditer(flat), *_ONLY_INSTALL.finditer(flat)]:
             a, b = m.group(1).upper(), m.group(2).upper()
+            # The notes often say it twice, once for each choice.
+            if a == b or frozenset((a, b)) in warned:
+                continue
+            warned.add(frozenset((a, b)))
             if a in listed and b in listed:
                 for ref, other in ((a, b), (b, a)):
                     _warn(

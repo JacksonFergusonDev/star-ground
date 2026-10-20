@@ -336,6 +336,9 @@ NOT_POPULATED_VALUES = frozenset(
         "OPEN",
         # A build that leaves the spot empty (Five Cats OKS Fuzz: 'C3 | empty').
         "EMPTY",
+        # GuitarPCB EMEXAR's MicroAmp build: 'C1 | Nothing'; Blues Kicker 'D3 - D4 | NONE'.
+        "NOTHING",
+        "NONE",
     }
 )
 # 'Omit - jumper pads 2+3' (Five Cats Octavia): unpopulated, with how.
