@@ -1057,7 +1057,14 @@ def check_classification(
             and category == ComponentCategory.POTENTIOMETERS
             and _TRIM_WORD.search(raw_value) is not None
         )
-        if expected is not None and category != expected and not (vactrol or trimmer):
+        # An LED's current-limiting resistor named after it (Aion FX: 'LED1  10k
+        # Metal film resistor'); the classifier only says resistor on a TYPE hint.
+        led_resistor = prefix == "LED" and category == ComponentCategory.RESISTORS
+        if (
+            expected is not None
+            and category != expected
+            and not (vactrol or trimmer or led_resistor)
+        ):
             _warn(
                 stats,
                 ParseWarningKind.CATEGORY_CONFLICT,

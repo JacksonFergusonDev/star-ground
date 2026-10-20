@@ -178,6 +178,12 @@ class TestCheckClassification:
         )
         assert _kinds(stats) == [ParseWarningKind.CATEGORY_CONFLICT]
 
+    def test_led_named_resistor_does_not_warn(self) -> None:
+        # Aion FX Heliosphere: 'LED1  10k  Metal film resistor' is the LED's resistor.
+        stats = create_empty_stats()
+        check_classification(stats, "LED1", "10k", ComponentCategory.RESISTORS, "10k")
+        assert stats["warnings"] == []
+
     def test_unparseable_passive_value(self) -> None:
         stats = create_empty_stats()
         check_classification(stats, "R9", "22K*", ComponentCategory.RESISTORS, "22K*")
