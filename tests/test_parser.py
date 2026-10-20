@@ -1110,3 +1110,142 @@ def test_comments_rating_and_pin_voltages() -> None:
     # ColorTone Overdrive's voltage table: 'Q1 | E-.39, B- .94, c- 1.62'.
     assert _is_ignored("E-.39, B- .94, c- 1.62")
     assert not _is_ignored("BC109")
+
+
+def _words_page(
+    rows: list[tuple[tuple[str, float], ...]], text: str = ""
+) -> PDFPageExtraction:
+    """A page of positioned cells: each row is (text, x) pairs, one line each."""
+    from src.bom_lib import PDFWord
+
+    words = []
+    for k, cells in enumerate(rows):
+        for cell, x in cells:
+            for word in cell.split():
+                words.append(
+                    PDFWord(
+                        text=word,
+                        x0=x,
+                        x1=x + 6 * len(word),
+                        top=100.0 + 20 * k,
+                        size=12.0,
+                    )
+                )
+                x += 6 * len(word) + 2.7
+    return PDFPageExtraction(tables=[], text=text, words=words)
+
+
+def test_value_column_per_build_makes_builds() -> None:
+    # Aion FX Aphelion: 'PART | VALUE (D+) | VALUE (250) | TYPE'.
+    from src.bom_lib import create_empty_stats
+    from src.bom_lib.builds import plan_builds
+    from src.bom_lib.parser import _text_table_entries
+
+    cols = (50.0, 110.0, 190.0, 270.0)
+
+    def row(*cells: str) -> tuple[tuple[str, float], ...]:
+        return tuple((c, x) for c, x in zip(cells, cols, strict=True) if c)
+
+    page = _words_page(
+        [
+            row("PART", "VALUE (D+)", "VALUE (250)", "TYPE"),
+            row("R2", "1M", "470k", "Metal film resistor, 1/4W"),
+            row("R4", "4k7", "4k7", "Metal film resistor, 1/4W"),
+            # Elite prints a hardware row's one value under the first build only.
+            row("FSW", "3PDT", "", "Stomp switch, 3PDT"),
+        ]
+    )
+    entries, _ = _text_table_entries([page], create_empty_stats())
+    assert [(e.ref, e.value, e.column) for e in entries] == [
+        ("R2", "1M", "D+"),
+        ("R2", "470k", "250"),
+        ("R4", "4k7", "D+"),
+        ("R4", "4k7", "250"),
+        ("FSW", "3PDT", "D+"),
+        ("FSW", "3PDT", "250"),
+    ]
+    plan = plan_builds(entries, [])
+    assert [v.name for v in plan.variants] == ["D+", "250"]
+
+
+@pytest.mark.parametrize(
+    ("ref", "value", "expected"),
+    [
+        ("C4", "470n / 68n", [("C4", "470n", "vintage"), ("C4", "68n", "modern")]),
+        (
+            "R11",
+            "27k / (omit)",
+            [("R11", "27k", "vintage"), ("R11", "(omit)", "modern")],
+        ),
+        ("IC1 (vintage)", "TA7136P", [("IC1", "TA7136P", "vintage")]),
+        ("D6", "1N914 (modern only)", [("D6", "1N914", "modern")]),
+        ("R1", "1k", [("R1", "1k", None)]),
+    ],
+)
+def test_two_build_list_rows_split_by_build(
+    ref: str, value: str, expected: list[tuple[str, str, str | None]]
+) -> None:
+    # Aion FX legacy Comet: 'Parts (vintage / modern values)'.
+    from src.bom_lib.parser import _version_split
+
+    assert _version_split(ref, value, ("vintage", "modern")) == expected
+    assert _version_split(ref, value, None) == [(ref, value, None)]
+
+
+def test_alternate_spec_table_adds_no_parts() -> None:
+    # Aion FX legacy Refractor: 'Silver Pony specs' restate listed values.
+    from src.bom_lib import create_empty_stats
+    from src.bom_lib.builds import Entry
+    from src.bom_lib.parser import _alternate_spec_table
+
+    listed = [
+        Entry("R10", "2k", 0, table=0),
+        Entry("R17", "27k", 0, table=0),
+        Entry("R21", "1k8", 0, table=0),
+        Entry("R23", "4k7", 0, table=0),
+        Entry("C13", "820pF MLCC", 0, table=0),
+    ]
+    table: list[list[str | None]] = [
+        ["R10", "2k", "47R", "More gain"],
+        ["R17", "27k", "10k", "Increased volume"],
+        ["R21, R23", "1k8 / 4k7", "4k7 / 1k8", "Tone range"],
+        ["C13", "820pF", "820pF", "Same"],
+    ]
+    stats = create_empty_stats()
+    assert _alternate_spec_table(table, listed, stats)
+    assert sorted(w.ref for w in stats["warnings"]) == ["R10", "R17", "R21", "R23"]
+    # A table of new parts is read as usual.
+    assert not _alternate_spec_table(
+        [["R30", "1k", "2k", "x"], ["R31", "1k", "2k", "x"], ["R32", "1k", "2k", "x"]],
+        listed,
+        create_empty_stats(),
+    )
+
+
+def test_mod_change_list_is_not_parts() -> None:
+    # Aion FX legacy Comet's 'Mod 1 | Mod 2' tables re-list IC1, C1, C2...
+    from src.bom_lib.builds import Entry
+    from src.bom_lib.parser import _is_change_list
+
+    mods = [Entry("IC1", "OPA2134", 2), Entry("C1", "100n", 2), Entry("C2", "100n", 2)]
+    seen = {"IC1", "C1", "C2", "R1"}
+    assert _is_change_list(mods, seen, "Modifications\nMod 1 Mod 2\nIC1 OPA2134")
+    assert not _is_change_list(mods, seen, "Parts (cont.)")
+    assert not _is_change_list([*mods, Entry("R40", "1k", 2)], seen, "Mod 1 Mod 2")
+
+
+def test_tantalum_note_about_another_part_is_not_this_part() -> None:
+    # Aion FX Dryad: C5 '1uF | Film capacitor | Can omit and use 4.7uF tantalum for C6'.
+    from src.bom_lib.parser import enrich_value_from_type
+
+    assert (
+        enrich_value_from_type(
+            "1uF",
+            "Film capacitor, 7.2 x 3.5mm",
+            "Can omit and use 4.7uF tantalum for C6.",
+        )
+        == "1uF"
+    )
+    assert (
+        enrich_value_from_type("1uF", "Film capacitor", "Tantalum.") == "1uF Tantalum"
+    )

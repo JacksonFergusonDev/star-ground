@@ -399,6 +399,8 @@ class PDFPageExtraction(TypedDict):
             apart from the table's words.
         pictures: The page's large images, where a parts table may be drawn
             as a picture rather than text.
+        marked: Rows whose value carries a numbered footnote marker, as
+            (row label, marker) pairs (see `layout.marked_labels`).
     """
 
     tables: list[list[list[str | None]]]
@@ -406,6 +408,7 @@ class PDFPageExtraction(TypedDict):
     words: list[PDFWord]
     labels: NotRequired[list[PDFWord]]
     pictures: NotRequired[list[Picture]]
+    marked: NotRequired[list[tuple[str, str]]]
 
 
 ShoppingListRow = TypedDict(

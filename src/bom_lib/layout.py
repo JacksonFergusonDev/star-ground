@@ -538,6 +538,34 @@ def footnote_marks(words: list[PDFWord]) -> list[PDFWord]:
     ]
 
 
+def marked_labels(words: list[PDFWord]) -> list[tuple[str, str]]:
+    """The label of each table row whose value carries a footnote marker.
+
+    Aion FX legacy Lumin lists 'R15  15k¹' and 'Midrange  50kB¹', and footnote 1
+    says how to build without the Midrange knob. The markers are dropped before
+    reading (`footnote_marks`), so this records which row each one marked.
+
+    Args:
+        words: Words extracted from one page, markers included.
+
+    Returns:
+        (row label, marker) pairs: ('R15', '1'), ('High Freq', '2').
+    """
+    marks = footnote_marks(words)
+    if not marks:
+        return []
+    found: list[tuple[str, str]] = []
+    for cells in page_lines(words):
+        for k, cell in enumerate(cells):
+            for word in cell.words:
+                if any(word is m for m in marks) and k > 0:
+                    label = cells[k - 1].text
+                    if cell.words[0] is word and k > 1:
+                        label = cells[k - 2].text  # the marker is a cell of its own
+                    found += [(label, n) for n in word["text"].split(",") if n]
+    return found
+
+
 # A designator column holds at least this many listings.
 _VALUELESS_COLUMN = 3
 _VALUELESS_ALIGN_PT = 2.0
@@ -947,6 +975,8 @@ _REF_HEADERS = frozenset(
 # 'Name' heads the designator column only beside a 'Value' column (Q-Tune's
 # 'Value | Name | Qty' packing list).
 _NAME_HEADER = "NAME"
+# One VALUE column per build: 'VALUE (D+) | VALUE (250)' (Aion FX Aphelion).
+_BUILD_VALUE_HEADER = re.compile(r"VALUE \((?P<build>[^()]+)\)", re.IGNORECASE)
 _BOM_COLUMNS = {
     "VALUE": "value",
     "QUANTITY": "qty",
@@ -987,6 +1017,9 @@ class BomRow:
             (a page can hold two boards' tables, GuitarPCB Tweed Fuzztone).
         end: Left edge of a headerless table beside the row, whose listings
             are not part of it; infinite when there is none.
+        builds: Each build's name and value when the table has one VALUE column
+            per build ('VALUE (D+) | VALUE (250)'); empty otherwise. `value`
+            is the first build's.
     """
 
     refs: str
@@ -999,6 +1032,7 @@ class BomRow:
     notes: str = ""
     table: int = 0
     end: float = math.inf
+    builds: tuple[tuple[str, str], ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -1006,6 +1040,7 @@ class _Column:
     field: str
     x0: float
     x1: float
+    build: str = ""  # the build a 'VALUE (name)' column holds
 
     @property
     def center(self) -> float:
@@ -1023,14 +1058,25 @@ def _header_sections(cells: list[Cell]) -> list[list[_Column]]:
     """The 'Reference | Value | Quantity' header groups on one line, left to right.
 
     A line can carry several tables side by side (Q-Tune: 'Value Name Qty
-    Value Name Qty'); a repeated field starts the next group.
+    Value Name Qty'); a repeated field starts the next group. 'VALUE (D+) |
+    VALUE (250)' are one table's build columns (Aion FX Aphelion): the first
+    is the table's value column, the others are fields named 'build:<name>'.
     """
-    has_value = any(c.text.upper() == "VALUE" for c in cells)
+    has_value = any(
+        c.text.upper() == "VALUE" or _BUILD_VALUE_HEADER.fullmatch(c.text)
+        for c in cells
+    )
     sections: list[list[_Column]] = []
     current: list[_Column] = []
     for cell in cells:
         name = cell.text.upper()
-        if name in _REF_HEADERS or (name == _NAME_HEADER and has_value):
+        build = _BUILD_VALUE_HEADER.fullmatch(cell.text)
+        label = ""
+        if build:
+            label = build.group("build").strip()
+            first = not any(col.field == "value" for col in current)
+            field_name = "value" if first else f"build:{label}"
+        elif name in _REF_HEADERS or (name == _NAME_HEADER and has_value):
             field_name = "refs"
         elif name in _BOM_COLUMNS:
             field_name = _BOM_COLUMNS[name]
@@ -1039,7 +1085,7 @@ def _header_sections(cells: list[Cell]) -> list[list[_Column]]:
         if any(col.field == field_name for col in current):
             sections.append(current)
             current = []
-        current.append(_Column(field_name, cell.x0, cell.words[-1]["x1"]))
+        current.append(_Column(field_name, cell.x0, cell.words[-1]["x1"], label))
     sections.append(current)
     return [sec for sec in sections if {"refs", "value"} <= {col.field for col in sec}]
 
@@ -1233,6 +1279,7 @@ def _read_bom(words: list[PDFWord]) -> tuple[list[BomRow], list[Cell]]:
                 continue
             # Optional-part markers are not part of the value ('*100p', '330k*').
             value = " ".join(value.replace("*", " ").split()) or value
+            builds = _build_values(sections[k], fields, k, value)
             qty = fields.get((k, "qty"), "") or (count.group(1) if count else "")
             last_row[k] = len(rows)
             rows.append(
@@ -1247,9 +1294,37 @@ def _read_bom(words: list[PDFWord]) -> tuple[list[BomRow], list[Cell]]:
                     notes=notes,
                     table=table_of.get(sections[k][0].x0, header_no),
                     end=end,
+                    builds=builds,
                 )
             )
     return rows, note_cells
+
+
+def _build_values(
+    section: list[_Column], fields: dict[tuple[int, str], str], k: int, value: str
+) -> tuple[tuple[str, str], ...]:
+    """Each build's value in a table with one VALUE column per build.
+
+    The first build's value is the row's (already cleaned) value. A blank
+    build cell shares it: Aion FX Elite prints its hardware rows' single value
+    under the first build only.
+    """
+    named = [col for col in section if col.build]
+    if len(named) < 2:
+        return ()
+    out = []
+    for col in named:
+        cell = value
+        if col.field != "value":
+            raw = _UNCLOSED_ASIDE.sub(
+                "", _ASIDE.sub("", fields.get((k, col.field), ""))
+            )
+            marking = _MARKING.search(raw)
+            if marking:
+                raw = raw[: marking.start()]
+            cell = " ".join(raw.replace("*", " ").split()) or value
+        out.append((col.build, cell))
+    return tuple(out)
 
 
 # 'CLR x1', 'CLR x 2': how many of the part to buy.

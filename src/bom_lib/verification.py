@@ -455,6 +455,96 @@ def check_footnotes(page_texts: list[str], stats: StatsDict) -> None:
                     )
 
 
+# A footnote that says how to build without the marked parts: 'To omit this
+# control, use 47n for C5 and omit CX3, CX4 and the Low Freq switch' (Aion FX Lumin).
+_OMIT_INSTRUCTION = re.compile(
+    r"\bto omit\b|\bleave (?:it |this |them )?off\b"
+    r"|\bif you (?:do )?(?:not )?want to (?:leave|omit)\b",
+    re.IGNORECASE,
+)
+# '1 Midrange knob: ...' may share its line with the table beside it ('R19 1k 1
+# Midrange knob: ...'); a footnote without a heading starts its line.
+_FOOTNOTE_LINE = re.compile(
+    r"(?:^|\s)(\d{1,2}) ([A-Z][^:]{2,40}:.*)$|^(\d{1,2}) (\S.*)$"
+)
+_FOOTNOTE_LINES = 8
+_SENTENCE = re.compile(r"(?<=[.!?])\s+")
+# 'use 39k for R15': a value change that builds the circuit another way.
+_VALUE_FOR = re.compile(
+    r"\buse \d[\w.]* for (?:both )?[A-Z]{1,3}\d{1,3}\b", re.IGNORECASE
+)
+
+
+def check_numbered_footnotes(
+    marked: list[list[tuple[str, str]]],
+    page_texts: list[str],
+    inventory: Inventory,
+    stats: StatsDict,
+) -> None:
+    """Warns about listed parts whose footnote says how to build without them.
+
+    Args:
+        marked: Per page, the (row label, marker) pairs of footnoted values.
+        page_texts: Raw text of every page.
+        inventory: The finished inventory for this document.
+        stats: Stats object that receives the warnings.
+    """
+    listed = {ref.upper(): ref for data in inventory.values() for ref in data["refs"]}
+    for rows, text in zip(marked, page_texts, strict=True):
+        if not rows:
+            continue
+        lines = [" ".join(line.split()) for line in (text or "").splitlines()]
+        notes: dict[str, str] = {}
+        for k, line in enumerate(lines):
+            head = _FOOTNOTE_LINE.search(line)
+            if not head:
+                continue
+            mark, first = head.group(1) or head.group(3), head.group(2) or head.group(4)
+            body = [first]
+            for more in lines[k + 1 : k + _FOOTNOTE_LINES]:
+                if _FOOTNOTE_LINE.search(more):
+                    break
+                body.append(more)
+            notes.setdefault(mark, " ".join(body))
+
+        def named(label: str, note: str) -> bool:
+            return (
+                re.search(rf"\b{re.escape(label)}\b", note, re.IGNORECASE) is not None
+            )
+
+        # Only a page whose footnotes rebuild the circuit another way ('use 39k
+        # for R15') describes another build; leaving off optional parts alone
+        # ('leave off IC2, D2-D3, and C11', Aion FX legacy Crescent) does not.
+        if not any(
+            _OMIT_INSTRUCTION.search(n) and _VALUE_FOR.search(n) for n in notes.values()
+        ):
+            continue
+        for label, mark in rows:
+            note = notes.get(mark, "")
+            ref = listed.get(label.upper())
+            # The omit instruction and the footnote's heading say which parts
+            # it concerns: 'High frequency switch: ... I recommend socketing C4,
+            # CX1 and CX2 ... To omit this control, just leave off CX1, CX2 and
+            # the High Freq switch' (not C4, though marked too).
+            heading = note.split(":", 1)[0] if ":" in note else ""
+            scope = " ".join(
+                [
+                    heading,
+                    *(t for t in _SENTENCE.split(note) if _OMIT_INSTRUCTION.search(t)),
+                ]
+            )
+            names_any = any(named(other, scope) for other, m in rows if m == mark)
+            if names_any and not named(label, scope):
+                continue
+            if ref and _OMIT_INSTRUCTION.search(note):
+                _warn(
+                    stats,
+                    ParseWarningKind.FOOTNOTE,
+                    ref,
+                    f"{ref} has a note on building without it: {note}",
+                )
+
+
 def check_second_board(
     stats: StatsDict, ref: str, second: str, first_value: str, second_value: str
 ) -> None:
@@ -513,6 +603,15 @@ _HISTORY = (
 )
 # A build's name: words without a sentence-ending period ('TS-9', 'Tube Sound Fuzz').
 _NAME_WORD = r"(?:[\w/-]|\.(?=\w))+"
+# A build named before its value: 'Formula 5F6', 'DLS Red'. Not a generic label
+# ('Alternate: 4K7', 'Sub: MPSA18', 'Quantity: 2', 'Note: ...').
+_BUILD_LABEL = (
+    r"(?!(?i:alt(?:ernat(?:e|ive))?|sub(?:stitute)?|quantity|qty|notes?|use|or|"
+    r"optional|recommended|see|pin|ratio|max|min|value|rating)\b)"
+    r"[A-Z][\w&/'-]*(?: [\w&/'-]+){0,2}"
+    # 'Galaxie mod: omit' (Aion FX Sapphire) names a modification, not a build.
+    r"(?<!(?i: mod))(?<!(?i: mods))"
+)
 _VERSION_NOTE = re.compile(
     rf"\b(?i:in|for) (?:the )?{_HISTORY}(?!(?i:this|stock|standard|any|all|every)\b)"
     r"[\w' /.-]+? (?i:version|variant|specs?|circuit)\b"
@@ -531,7 +630,10 @@ _VERSION_NOTE = re.compile(
     r"use|or|optional|alternate part|recommended|see)\s*:)"
     r"[A-Z][\w &/'-]{1,30}: [\w.]+(?:\s*[;.]|$)"
     # 'Part of the optional Morning Glory gain stage.'
-    r"|\b(?i:part of the optional)\b",
+    r"|\b(?i:part of the optional)\b"
+    # 'Carbon comp in original, measured value 560R Formula 5F6: 1k8 DLS Red: 1k'
+    # (Aion FX Triton): a build's value anywhere in the note.
+    rf"|(?<![\w:]){_BUILD_LABEL}: (?:\(?(?i:omit)\)?|\d[\w.]*)",
 )
 
 
@@ -556,6 +658,62 @@ def check_version_note(stats: StatsDict, ref: str, notes: str) -> None:
             ref,
             f"{ref}: '{note}'. The document describes more than one version; "
             "check which parts your build needs.",
+        )
+
+
+def check_alternate_value(stats: StatsDict, ref: str, listed: str, other: str) -> None:
+    """Warns about a listed part another version of the circuit gives another value.
+
+    Aion FX legacy Refractor's 'Silver Pony specs' table: 'R10 | 2k | 47R'.
+
+    Args:
+        stats: Stats object that receives the warning.
+        ref: The designator.
+        listed: The value the parts list gives.
+        other: The other version's value.
+    """
+    _warn(
+        stats,
+        ParseWarningKind.FOOTNOTE,
+        ref,
+        f"{ref}: listed as {listed}, but the document gives {other} for another "
+        "version of the circuit; check which your build needs.",
+    )
+
+
+# A note that says what to buy: a construction or a value ('Mod value is MLCC,
+# not film'), unlike 'See build notes' or 'Adjust value to change brightness'.
+_PART_DETAIL = re.compile(
+    r"\b(?:MLCC|film|tantalum|electrolytic|ceramic|bipolar)\b"
+    r"|\b\d+(?:\.\d+)?\s?(?:[pnuµ]F?|[kKMR]\d*)\b",
+    re.IGNORECASE,
+)
+
+
+def check_build_note(stats: StatsDict, ref: str, builds: list[str], notes: str) -> None:
+    """Warns about a note on a row whose builds take different values.
+
+    Aion FX Elite's C13 is '1n | 1n | 820pF' with the note 'Mod value is MLCC,
+    not film': the note concerns one build, and which one cannot be read.
+
+    Args:
+        stats: Stats object that receives the warning.
+        ref: The row's designator.
+        builds: The row's value in each build.
+        notes: The row's NOTES cell.
+    """
+    note = " ".join(notes.replace("*", " ").split())
+    if (
+        len(set(builds)) > 1
+        and _PART_DETAIL.search(note)
+        and not _VERSION_NOTE.search(note)
+    ):
+        _warn(
+            stats,
+            ParseWarningKind.FOOTNOTE,
+            ref,
+            f"{ref}: '{note}'. The builds differ here and the note may apply to "
+            "only one of them; check this part for your build.",
         )
 
 
