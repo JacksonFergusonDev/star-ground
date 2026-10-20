@@ -156,17 +156,15 @@
       }
     },
     "Hardware/Misc | DIP SOCKET (Check Size)": {
-      "qty": 3,
+      "qty": 2,
       "refs": [
         "IC1 (Inj)",
-        "IC2 (Inj)",
-        "IC3 (Inj)"
+        "IC2 (Inj)"
       ],
       "sources": {
         "Sample": [
           "IC1 (Inj)",
-          "IC2 (Inj)",
-          "IC3 (Inj)"
+          "IC2 (Inj)"
         ]
       }
     },

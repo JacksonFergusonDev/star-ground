@@ -29,9 +29,11 @@ _PREFIXES: tuple[tuple[str, ComponentCategory | None], ...] = (
     ("LEDR", _CAT.RESISTORS),  # Aion FX: LED current-limiting resistor
     ("RPD", _CAT.RESISTORS),  # Aion FX: input pulldown resistor
     ("REG", _CAT.ICS),  # voltage regulators (GuitarPCB: 'REG  L78L05')
+    ("RG", _CAT.ICS),  # Aion FX legacy Blueshift: 'RG1  78L06'
     ("RX", _CAT.RESISTORS),  # Aion FX: optional-mod resistors RX1, RX2
     ("CX", _CAT.CAPACITORS),
     ("DX", _CAT.DIODES),  # Aion FX: alternate clipping diodes DX1-DX4
+    ("QX", _CAT.TRANSISTORS),  # Aion FX legacy L5 Preamp: 'QX1, QX2  2N5088'
     ("LDR", _CAT.OPTOELECTRONICS),
     ("LED", _CAT.DIODES),
     ("CLR", _CAT.RESISTORS),

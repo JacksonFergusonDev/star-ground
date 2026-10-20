@@ -33,8 +33,8 @@ _COLUMN_TOLERANCE_PT = 25.0
 # of its designators with another table on a different page.
 _VARIANT_TABLE_OVERLAP = 0.6
 _MIN_VARIANT_TABLE_REFS = 8
-# Repeated parts lists (see `_repeat_variants`): the share of labels that must
-# repeat the same number of times.
+# Repeated parts lists (see `_repeat_variants`): the share of labels (or, for
+# three or more builds, of listings) that must repeat the same number of times.
 _REPEAT_SHARE = 0.7
 _REPEAT_SUFFIX = re.compile(r" \(\d+\)$")
 
@@ -303,7 +303,15 @@ def _repeat_variants(
     if (
         builds < 2
         or labels < _MIN_VARIANT_TABLE_REFS
-        or labels < _REPEAT_SHARE * len(occurrences)
+        or (
+            labels < _REPEAT_SHARE * len(occurrences)
+            # Aion FX legacy Stratus's eight builds group their diodes
+            # differently ('D2, 4, 6, 8', 'D2, D3, D4'), adding many labels
+            # listed once or twice; most listings still repeat. Two lists
+            # sharing most labels can be two boards of one build (GuitarPCB
+            # Skyn-Tone), so that takes three builds.
+            and (builds < 3 or builds * labels < _REPEAT_SHARE * len(entries))
+        )
     ):
         return []
     # Each build spans the rows its labels' k-th listings cover; a label OCR
@@ -318,10 +326,18 @@ def _repeat_variants(
     ]
     groups: list[list[Entry]] = [[] for _ in range(builds)]
     for e in entries:
-        at = _position(e)
-        k = next((k for k, (lo, hi) in enumerate(spans) if lo <= at <= hi), None)
+        base = _REPEAT_SUFFIX.sub("", e.ref).upper()
+        k = _span_of(_position(e), spans, repeated=len(occurrences[base]) > 1)
         if k is not None:
             groups[k].append(replace(e, ref=_REPEAT_SUFFIX.sub("", e.ref)))
+    # A named part listed once, with the first build only, is the board's: Aion
+    # FX legacy Stratus lists its LED with the stock circuit, and its seven
+    # alternative circuits' tables leave the LED out.
+    groups[0] = [
+        e
+        for e in groups[0]
+        if any(ch.isdigit() for ch in e.ref) or len(occurrences[e.ref.upper()]) > 1
+    ]
     # Only named builds: unnamed repeats are as likely a second board (GuitarPCB
     # Fuzz God) or a schematic beside the list (Aion FX legacy).
     names = [
@@ -333,6 +349,32 @@ def _repeat_variants(
         PlannedVariant(str(name), tuple(group))
         for name, group in zip(names, groups, strict=True)
     ]
+
+
+def _span_of(
+    at: tuple[int, int],
+    spans: list[tuple[tuple[int, int], tuple[int, int]]],
+    *,
+    repeated: bool,
+) -> int | None:
+    """The build whose listing holds a row, if any.
+
+    A row inside a build's span is that build's. A row below a span, on the
+    span's last page and before the next build starts, is that build's too when
+    its label is listed again elsewhere (Aion FX legacy Stratus prints 'RX1' under
+    the stock list and in the Fulldrive list); a label listed only once there
+    ('RPD', 'LEDR') is shared by every build.
+    """
+    for k, (lo, hi) in enumerate(spans):
+        if lo <= at <= hi:
+            return k
+    if not repeated:
+        return None
+    for k, (_, hi) in enumerate(spans):
+        nxt = spans[k + 1][0] if k + 1 < len(spans) else None
+        if at[0] == hi[0] and hi < at and (nxt is None or at < nxt):
+            return k
+    return None
 
 
 def _located(entries: list[Entry], pages: list[PageContext]) -> list[Entry]:

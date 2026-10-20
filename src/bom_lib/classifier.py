@@ -34,6 +34,7 @@ _RESISTANCE = re.compile(r"\b\d+(?:\.\d+)?[KkMR]\d*\b")
 _MILLIAMPS = re.compile(r"\dmA\b")
 _REPEAT_SUFFIX = re.compile(r"\s+\(\d+\)$")
 _LED_VALUE = re.compile(r"\bLED\b")
+_LED_SPEC = re.compile(r"\d+(?:\.\d+)?\s*MM\b(?: [A-Z]+)? LED\b")
 _NUMBERED_LABEL = re.compile(r"[A-Z]{2,5}\d{1,3}")
 _SLASH_RATING = re.compile(r"(?<=[\dpnuµF])/(\d+(?:\.\d+)?)\s*V\b", re.IGNORECASE)
 _OHMS = re.compile(r"(?<![\w.])\d+(?:\.\d+)?R\d*(?![\w.])")
@@ -42,6 +43,12 @@ _VACTROL = re.compile(r"VTL\d|NSL-?\d")
 # A DIP switch, written with a dash ('DIP-5'), unlike socket sizes ('DIP8').
 DIP_SWITCH = re.compile(r"\bDIP-\d+\b|\bDIP[- ]?\d+\b.*\bSWITCH|\bDIP SWITCH")
 _JACK_VALUE = re.compile(r"\b(?:TRS|JACK)\b")
+# A TO-92/TO-220 voltage regulator takes no DIP socket: '78L06', 'MC7815', 'LM317'.
+_REGULATOR = re.compile(r"(?:L|LM|MC|UA|KA)?7[89]L?\d{2}\b|LM317\b")
+# Switchcraft jack part numbers: Aion FX legacy Blueshift's 'IN  111X'.
+_SWITCHCRAFT_JACK = re.compile(r"11[12][A-Z]?X\b")
+# A photo-FET optocoupler: Blueshift's 'OPTO  H11F1'.
+_OPTOCOUPLER = re.compile(r"H11F\d\b")
 _REVERB_BRICK = re.compile(r"BTDR-?\d")
 _DC_JACK = re.compile(r"\b\d(?:\.\d)?\s*MM DC\b|\bDC (?:JACK|SOCKET)\b")
 _POT_VALUE = re.compile(
@@ -143,8 +150,17 @@ def _named_control_category(
     name: str, val_up: str, val: str
 ) -> ComponentCategory | None:
     """Category of a named control (VOLUME, SHIFT, OSC-SW), decided by its value."""
+    # Another control's name is no value: a drill template's knob labels read
+    # as 'LEVEL  BASS2' (Aion FX legacy L5 Preamp).
+    stem = val_up.rstrip("0123456789 ")
+    if stem in constants.POT_LABELS or stem in constants.SWITCH_LABELS:
+        return None
     if constants.SWITCH_VALUE_PATTERN.search(val_up):
         return ComponentCategory.SWITCHES
+    # A sized LED names itself, whatever the label: Aion FX legacy L5 Preamp's
+    # 'BYPASS  5MM LED' and 'COMP  5MM LED' (COMP is also a pot name).
+    if _LED_SPEC.match(val_up):
+        return ComponentCategory.DIODES
     # '250mA' is a current rating, not a 250M audio-taper pot.
     if _POT_VALUE.search(val_up) and not _MILLIAMPS.search(val):
         return ComponentCategory.POTENTIOMETERS
@@ -152,7 +168,7 @@ def _named_control_category(
     if _OHMS.search(val_up) and _TRIM_NOTE.search(val):
         return ComponentCategory.POTENTIOMETERS
     # A vactrol on an unfamiliar designator: CDXL's 'OC1  VTL5C4/2'.
-    if _VACTROL.match(val_up):
+    if _VACTROL.match(val_up) or _OPTOCOUPLER.match(val_up):
         return ComponentCategory.OPTOELECTRONICS
     # Muffin Factory: 'DIP1  DIP-5 Dip Switch'.
     if DIP_SWITCH.search(val_up):
@@ -163,6 +179,9 @@ def _named_control_category(
     # Muzzle: 'SIDECHAIN  1/4" Switching TRS'; GuitarPCB Test Rig: 'DC Power
     # 2.1MM DC'.
     if _JACK_VALUE.search(val_up) or _DC_JACK.search(val_up):
+        return ComponentCategory.HARDWARE_MISC
+    # 'IN  111X'; 'DC JACK  miniature' names itself.
+    if _SWITCHCRAFT_JACK.match(val_up) or "JACK" in name.split():
         return ComponentCategory.HARDWARE_MISC
     if name in constants.SWITCH_LABELS and any(
         x in val_up for x in ("ON", "SW", "SP", "DP")
@@ -266,7 +285,10 @@ def categorize_part(
             "REVERB",
             "ESP32",
         ]
-        if not any(k in val_up for k in skip_injection_keywords):
+        regulator = _REGULATOR.match(val_up) or (
+            designator is not None and designator.prefix in ("REG", "RG")
+        )
+        if not regulator and not any(k in val_up for k in skip_injection_keywords):
             injection = ComponentKey(
                 ComponentCategory.HARDWARE_MISC, "DIP SOCKET (Check Size)"
             )

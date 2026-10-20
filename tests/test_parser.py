@@ -1249,3 +1249,27 @@ def test_tantalum_note_about_another_part_is_not_this_part() -> None:
     assert (
         enrich_value_from_type("1uF", "Film capacitor", "Tantalum.") == "1uF Tantalum"
     )
+
+
+def test_socket_value_outranks_a_wrong_type() -> None:
+    # Aion FX Nysiad Silicon: 'IC1-S | DIP-8 socket | BJT transistor, NPN, TO-92'.
+    from src.bom_lib import create_empty_stats
+    from src.bom_lib.parser import _typed_row
+
+    _, hint = _typed_row(
+        create_empty_stats(), "IC1-S", "DIP-8 socket", "BJT transistor, NPN, TO-92", ""
+    )
+    assert hint == ComponentCategory.HARDWARE_MISC
+
+
+def test_a_named_label_used_twice_is_two_parts() -> None:
+    # Aion FX legacy L5 Preamp lists 'COMP  5MM LED' and 'Comp  SPDT'.
+    from src.bom_lib.builds import Entry
+    from src.bom_lib.parser import _ingest_entries
+
+    inventory, stats = _ingest_entries(
+        [Entry("COMP", "5MM LED", 0), Entry("Comp", "SPDT", 0)], "T"
+    )
+    refs = sorted(ref for data in inventory.values() for ref in data["refs"])
+    assert refs == ["COMP", "Comp (2)"]
+    assert stats["warnings"] == []
