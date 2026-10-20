@@ -59,6 +59,7 @@ from src.bom_lib.utils import expand_refs, parse_value_to_decimal
 from src.bom_lib.verification import (
     check_alternate_value,
     check_bom_reconciliation,
+    check_build_changes,
     check_build_note,
     check_classification,
     check_duplicate,
@@ -69,6 +70,7 @@ from src.bom_lib.verification import (
     check_numbered_footnotes,
     check_numbering_gaps,
     check_other_list,
+    check_part_versions,
     check_parts_found,
     check_pictured_lists,
     check_prose_pots,
@@ -78,6 +80,7 @@ from src.bom_lib.verification import (
     check_unclassified_row,
     check_unextracted_refs,
     check_value_assignments,
+    check_value_keyed_list,
     check_valueless_refs,
     check_version_note,
     is_schematic_page,
@@ -140,6 +143,16 @@ def ingest_bom_line(
 
         # De-dupe Check
         if stats is not None and "seen_refs" in stats:
+            if not is_designator(r) and r not in stats["seen_refs"]:
+                # A named label used twice is two parts, bought under 'COMP (2)'
+                # as in typed tables (Aion FX legacy L5 Preamp: 'COMP  5MM LED'
+                # and 'Comp  SPDT').
+                taken = {ref.upper() for ref in stats["seen_refs"]}
+                if r.upper() in taken:
+                    n = 2
+                    while f"{r.upper()} ({n})" in taken:
+                        n += 1
+                    r = f"{r} ({n})"
             if r in stats["seen_refs"]:
                 check_duplicate(stats, r, stats["seen_refs"][r], val_raw)
                 continue
@@ -969,6 +982,10 @@ def _typed_row(
         value = type_text
     value = enrich_value_from_type(value, type_text, notes)
     hint = category_from_type(type_text)
+    if _SOCKET.search(value) and not _SOCKET.search(type_text):
+        # Aion FX Nysiad Silicon: 'IC1-S | DIP-8 socket | BJT transistor, NPN,
+        # TO-92' repeats the row above's TYPE; a socket is hardware.
+        hint = ComponentCategory.HARDWARE_MISC
     if check:
         _check_typed_row(stats, ref, value, hint)
     return value, hint
@@ -1009,9 +1026,11 @@ def _text_table_entries(
     entries: list[Entry] = []
     spans: dict[tuple[int, int], float] = {}
     seen: Counter[str] = Counter()
+    noted: list[tuple[str, str, str]] = []
     for page_no, data in enumerate(pages_data):
         for row in find_bom_rows(data["words"]):
             stats["lines_read"] += 1
+            noted.append((row.refs, row.value, row.notes))
             value, hint = row.value, None
             group = ref_group(row.refs)  # 'LDR 1 - 4' (GuitarPCB Band of Gypsys)
             if group is not None:
@@ -1075,6 +1094,7 @@ def _text_table_entries(
                 for build, cell in builds
                 for ref in refs
             ]
+    check_part_versions(stats, noted)
     return entries, spans
 
 
@@ -1617,7 +1637,11 @@ def read_pages(
         for k, (data, text) in enumerate(zip(pages_data, page_texts, strict=True))
     ]
     check_parts_found(stats, sum(len(d["refs"]) for d in union.values()))
-    check_unextracted_refs(listed_texts, union, stats)
+    check_value_keyed_list(page_texts, stats)
+    omitted = frozenset(
+        r for e in entries if _is_not_populated(e.value) for r in expand_refs(e.ref)
+    )
+    check_unextracted_refs(listed_texts, union, stats, omitted)
     check_valueless_refs(
         [
             ref
@@ -1632,6 +1656,9 @@ def read_pages(
     check_numbered_footnotes(
         [data.get("marked", []) for data in pages_data], page_texts, union, stats
     )
+    if not variants:
+        # A document read as several builds already gives each its values.
+        check_build_changes(page_texts, union, stats)
     check_value_assignments(page_texts, union, stats)
     check_prose_pots(page_texts, union, stats)
     check_numbering_gaps(union, stats)
@@ -1698,6 +1725,9 @@ def _misread(words: list[PDFWord]) -> bool:
 # only text is the footer).
 _MAX_TITLE_WORDS = 8
 _URL = re.compile(r"www\.|https?:", re.IGNORECASE)
+
+
+_DISCLAIMER = re.compile(r"\s*(?:WARNING|DISCLAIMER)\b")
 
 
 def _is_title(text: str) -> bool:
@@ -1777,9 +1807,15 @@ def parse_pedalpcb_pdf(filepath: str, source_name: str) -> ParseResult:
 
             # --- PHASE 2: TITLE EXTRACTION ---
             try:
-                if 0 in misread:
-                    raise ValueError("the first page's text is misread OCR")
-                p1 = pdf.pages[0]
+                # A cover page of warnings comes before the title page (Aion FX
+                # legacy Blueshift: 'WARNING / DISCLAIMER').
+                first = int(
+                    len(pdf.pages) > 1
+                    and bool(_DISCLAIMER.match(pages_data[0]["text"] or ""))
+                )
+                if first in misread:
+                    raise ValueError("the title page's text is misread OCR")
+                p1 = pdf.pages[first]
                 words = p1.extract_words(extra_attrs=["size"])
                 ignore = {
                     "PEDALPCB",

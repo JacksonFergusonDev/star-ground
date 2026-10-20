@@ -9,6 +9,7 @@ the parser may be wrong, but it must never be wrong *silently*.
 
 import re
 import unicodedata
+from collections import Counter
 from decimal import Decimal
 
 from src.bom_lib import constants
@@ -212,8 +213,37 @@ def find_listed_refs(text: str) -> set[str]:
     return found
 
 
+# A line printed on this many pages is a running header or footer.
+_RUNNING_PAGES = 3
+
+
+def _page_free(line: str) -> str:
+    """A line without its page number: 'L5 PREAMP 5' -> 'L5 PREAMP'."""
+    return re.sub(r"\s*\d+$", "", " ".join(line.split()))
+
+
+def _running_lines(page_texts: list[str]) -> set[str]:
+    """Lines repeated on most pages, page numbers aside: headers and footers.
+
+    Aion FX legacy L5 Preamp's footer 'L5 PREAMP 5' reads as the designator L5
+    listed with a value.
+    """
+    counts: Counter[str] = Counter()
+    for text in page_texts:
+        counts.update({_page_free(line) for line in text.splitlines() if line.strip()})
+    pages = sum(1 for text in page_texts if text.strip())
+    return {
+        line
+        for line, n in counts.items()
+        if line and n >= max(_RUNNING_PAGES, pages // 2 + 1)
+    }
+
+
 def check_unextracted_refs(
-    page_texts: list[str], inventory: Inventory, stats: StatsDict
+    page_texts: list[str],
+    inventory: Inventory,
+    stats: StatsDict,
+    omitted: frozenset[str] = frozenset(),
 ) -> None:
     """Warns about designators listed in the document but absent from the output.
 
@@ -221,21 +251,30 @@ def check_unextracted_refs(
         page_texts: Raw text of every page.
         inventory: The finished inventory for this document.
         stats: Stats object that receives the warnings.
+        omitted: Designators the parts list itself leaves empty ('C1 | OMIT');
+            a schematic still labels them (Aion FX Gale).
     """
     extracted = {
         ref.upper()
         for data in inventory.values()
         for ref in data["refs"]
         if "(Inj)" not in ref
-    }
+    } | {ref.upper() for ref in omitted}
     # The words of a two-word label are accounted for ('HI CUT' covers 'CUT').
     extracted |= {word for ref in extracted if " " in ref for word in ref.split()}
 
     listed: set[str] = set()
+    # The running title also heads the first pages ('Overview L5 Preamp').
+    running = [
+        re.compile(rf"\b{re.escape(line)}\b", re.IGNORECASE)
+        for line in _running_lines(page_texts)
+    ]
     for text in page_texts:
         # A vector schematic labels every symbol 'REF value'; those labels are
         # a drawing, not a parts list.
         if not _SCHEMATIC_PAGE.search(text):
+            for pattern in running:
+                text = pattern.sub(" ", text)
             listed |= find_listed_refs(text)
 
     # A part number shaped like a designator is a value, not a listing:
@@ -545,6 +584,85 @@ def check_numbered_footnotes(
                 )
 
 
+# A build-notes passage that builds another version: 'Building the RC Booster',
+# 'Bass variant', 'TS-25 variant (higher gain)', 'If you'd like to build the post-1994 version of the DS-1, make
+# the following substitutions'. Not a modification ('Color switch modification').
+_BUILD_PASSAGE = re.compile(
+    r"^building (?:the |an? )?\S|^\S+(?: \S+){0,3} (?:variant|version)(?: \([^()]*\))?$"
+    r"|\bbuild (?:the|an?) [^.]*\b(?:variant|version)\b",
+    re.IGNORECASE,
+)
+_MODIFICATION = re.compile(r"\bmod(?:s|ification|ifications)?\b", re.IGNORECASE)
+# A passage ends at the next heading: a short line with no closing punctuation.
+_NOTE_HEADING = re.compile(r"^[A-Z][\w'\u2019&/ -]{2,40}$")
+_PASSAGE_LINES = 25
+_DESIGNATOR = r"[A-Z]{1,3}\d{1,3}(?:-\d{1,3})?"
+# '• C5: 470n → 68n', '• R6: jumper', '• D2-8: omit (leave empty)'.
+_CHANGE_ITEM = re.compile(rf"^[•*-]?\s*({_DESIGNATOR})\s*:\s*\S")
+# 'Use 22n for C12 instead of 27n', 'Use 16k for R36 and 14k for R37', 'Jumper R8'.
+_CHANGE_PROSE = re.compile(
+    rf"\buse \S+ for ({_DESIGNATOR})(?: and \S+ for ({_DESIGNATOR}))?"
+    rf"|\b(?:jumper|omit) ({_DESIGNATOR})\b",
+    re.IGNORECASE,
+)
+
+
+def _designators(label: str) -> list[str]:
+    """'D2-8' -> D2..D8; anything else is one designator."""
+    m = re.fullmatch(r"([A-Z]+)(\d+)-(\d+)", label)
+    if not m:
+        return [label]
+    lo, hi = int(m.group(2)), int(m.group(3))
+    return (
+        [f"{m.group(1)}{n}" for n in range(lo, hi + 1)]
+        if lo < hi <= lo + 20
+        else [label]
+    )
+
+
+def check_build_changes(
+    page_texts: list[str], inventory: Inventory, stats: StatsDict
+) -> None:
+    """Warns about listed parts a build-notes passage changes for another version.
+
+    Aion FX Quartz lists one parts table and gives the bass version as a change
+    list ('Bass variant: • R34: 1k5 → 100R'); Aurum gives the original OD-2 in
+    prose ('Building the original OD-2: Use 22n for C12 instead of 27n'). The
+    listed values build one version; the warned parts differ in the other.
+
+    Args:
+        page_texts: Raw text of every page.
+        inventory: The finished inventory for this document.
+        stats: Stats object that receives the warnings.
+    """
+    listed = {ref.upper(): ref for data in inventory.values() for ref in data["refs"]}
+    for text in page_texts:
+        lines = [" ".join(line.split()) for line in (text or "").splitlines()]
+        k = 0
+        while k < len(lines):
+            line = lines[k]
+            k += 1
+            if not _BUILD_PASSAGE.search(line) or _MODIFICATION.search(line):
+                continue
+            for body in lines[k : k + _PASSAGE_LINES]:
+                if _NOTE_HEADING.match(body) and not _CHANGE_ITEM.match(body):
+                    break
+                labels = [m.group(1) for m in [_CHANGE_ITEM.match(body)] if m]
+                for m in _CHANGE_PROSE.finditer(body):
+                    labels += [g for g in m.groups() if g]
+                for label in labels:
+                    for name in _designators(label.upper()):
+                        ref = listed.get(name)
+                        if ref:
+                            _warn(
+                                stats,
+                                ParseWarningKind.FOOTNOTE,
+                                ref,
+                                f"{ref}: the build notes change it for another "
+                                f"version ('{line}'); check which your build needs.",
+                            )
+
+
 def check_second_board(
     stats: StatsDict, ref: str, second: str, first_value: str, second_value: str
 ) -> None:
@@ -601,6 +719,10 @@ _HISTORY = (
     r"(?!(?i:the )?(?:(?i:original|older|some|most|many|factory|can|could|may|you)\b"
     r"|(?i:early|earlier|later)\b(?! [\w-]*\d)))"
 )
+# A build named as a sentence's subject: capitalized words or model numbers
+# ('Bass RC', 'RC Booster and Bass RC'), not a phrase ('Leave empty or omit this').
+_SUBJECT_WORD = r"[A-Z0-9][\w/-]*"
+_SUBJECT = rf"{_HISTORY}{_SUBJECT_WORD}(?: {_SUBJECT_WORD}){{0,3}}"
 # A build's name: words without a sentence-ending period ('TS-9', 'Tube Sound Fuzz').
 _NAME_WORD = r"(?:[\w/-]|\.(?=\w))+"
 # A build named before its value: 'Formula 5F6', 'DLS Red'. Not a generic label
@@ -619,6 +741,12 @@ _VERSION_NOTE = re.compile(
     r"|\b(?i:if building)\b"
     # 'Analogman version uses 1.2M here', 'GC-1 uses 150k', 'G-2 uses 22uF'.
     rf"|(?:^|[.;]\s*){_HISTORY}(?:[A-Z]{_NAME_WORD}?(?: {_NAME_WORD}){{0,3}}) uses \S"
+    # 'RC Booster and Bass RC use 22k', 'Bass RC omits this diode', 'RC Booster
+    # and Bass RC jumper this' (Aion FX Malacandra).
+    rf"|(?:^|[.;]\s*){_SUBJECT}(?: and {_SUBJECT})? (?:use \S|(?:omit|jumper)s? (?:this|it)\b)"
+    # 'Use 16k for original OD-2' (Aion FX Aurum): a model number, not a part
+    # ('Use 100n for C4').
+    rf"|\b(?i:use) \d\S* (?:in|for) (?:the )?(?i:original )?(?![A-Z]{{1,3}}\d+\b)[A-Z][\w-]*\d"
     # 'Omit (leave empty) for P-2', 'Jumper for GC-1', 'Omit if using Morning Glory'.
     rf"|\b(?i:omit|jumper)\b[^.;]*?\b(?i:for|in|if using) {_HISTORY}(?:the )?[A-Z]"
     # '100pF in the SD-9M', '10M in Catalinbread and Orpheum'.
@@ -628,7 +756,8 @@ _VERSION_NOTE = re.compile(
     # 'Alternate: 4K7', 'Sub: MPSA18', 'Quantity: 2' (PedalPCB) name no build.
     r"|^(?!(?i:alt(?:ernat(?:e|ive))?|sub(?:stitute)?|quantity|qty|note|notes|"
     r"use|or|optional|alternate part|recommended|see)\s*:)"
-    r"[A-Z][\w &/'-]{1,30}: [\w.]+(?:\s*[;.]|$)"
+    # 'Galaxie mod: 10k' (Aion FX Sapphire) is a modification, not a build.
+    r"[A-Z][\w &/'-]{1,30}(?<!(?i: mod))(?<!(?i: mods)): [\w.]+(?:\s*[;.]|$)"
     # 'Part of the optional Morning Glory gain stage.'
     r"|\b(?i:part of the optional)\b"
     # 'Carbon comp in original, measured value 560R Formula 5F6: 1k8 DLS Red: 1k'
@@ -659,6 +788,38 @@ def check_version_note(stats: StatsDict, ref: str, notes: str) -> None:
             f"{ref}: '{note}'. The document describes more than one version; "
             "check which parts your build needs.",
         )
+
+
+# A version named by the part it is built around: 'Use 1k for MN3207 version'.
+_PART_VERSION = re.compile(
+    r"\b(?:for|if building)(?: the| an?)? ([A-Z]{2,}\d{3,}[A-Z]*) version\b",
+    re.IGNORECASE,
+)
+
+
+def check_part_versions(stats: StatsDict, rows: list[tuple[str, str, str]]) -> None:
+    """Warns about the listed part a part-numbered version swaps out.
+
+    Aion FX Lithium lists IC2 as MN3007, and its NOTES give values 'for MN3207
+    version': that version replaces IC2 itself, though IC2's own row says nothing.
+
+    Args:
+        stats: Stats object that receives the warnings.
+        rows: The document's (designator, value, notes) rows.
+    """
+    names = {m.group(1).upper() for _, _, n in rows for m in _PART_VERSION.finditer(n)}
+    for ref, value, _ in rows:
+        listed = value.upper()
+        for name in names:
+            near = len(listed) == len(name) and listed[:2] == name[:2]
+            if near and sum(a != b for a, b in zip(listed, name, strict=True)) == 1:
+                _warn(
+                    stats,
+                    ParseWarningKind.FOOTNOTE,
+                    ref,
+                    f"{ref}: listed as {value}, but the document describes an "
+                    f"{name} version; check which your build needs.",
+                )
 
 
 def check_alternate_value(stats: StatsDict, ref: str, listed: str, other: str) -> None:
@@ -818,6 +979,11 @@ def check_unclassified_row(stats: StatsDict, ref: str, value: str) -> None:
     )
 
 
+# A capacitor value or the word itself: Aion FX legacy Stratus's SD-1 table puts
+# '18n capacitor' in the R8 position.
+_CAPACITANCE = re.compile(r"^\d+(?:\.\d+)?[pnuµ]\d*F?\b|\bcapacitor\b", re.IGNORECASE)
+
+
 def check_classification(
     stats: StatsDict, ref: str, raw_value: str, category: ComponentCategory, value: str
 ) -> None:
@@ -876,6 +1042,16 @@ def check_classification(
             ref,
             f"{ref} ('{raw_value}') looks like a switch but was classified as "
             f"{category.value}.",
+        )
+        return
+
+    if category == ComponentCategory.RESISTORS and _CAPACITANCE.search(raw_value):
+        _warn(
+            stats,
+            ParseWarningKind.CATEGORY_CONFLICT,
+            ref,
+            f"{ref} ('{raw_value}') is listed under a resistor designator, but "
+            "its value is a capacitor's.",
         )
         return
 
@@ -1131,6 +1307,33 @@ def check_parts_found(stats: StatsDict, parts_found: int) -> None:
             "No parts with designators could be read from this document: its parts "
             "list may be printed as an image, or list parts without designators. "
             "Enter the parts by hand.",
+        )
+
+
+# A parts table keyed by value, with no designator column: 'PART | QTY | TYPE |
+# NOTES' where PART is '1N5817 (D1)' or '100n (0.1uF)' (Aion FX 3PDT Bypass).
+_VALUE_KEYED_HEADER = re.compile(
+    r"^\s*PART\s+QTY\s+TYPE\b(?!.*\bVALUE\b)", re.MULTILINE
+)
+
+
+def check_value_keyed_list(page_texts: list[str], stats: StatsDict) -> None:
+    """Tells the builder when the parts list names parts by value, not designator.
+
+    Whatever was read elsewhere in the document (a schematic's labels) is not
+    that list, so nothing extracted can be trusted as complete.
+
+    Args:
+        page_texts: Raw text of every page.
+        stats: Stats object that receives the warning.
+    """
+    if any(_VALUE_KEYED_HEADER.search(text) for text in page_texts):
+        _warn(
+            stats,
+            ParseWarningKind.NO_PARTS_LIST,
+            "",
+            "The parts list names its parts by value, not by designator ('PART | QTY | "
+            "TYPE'), so it could not be read. Enter the parts by hand.",
         )
 
 

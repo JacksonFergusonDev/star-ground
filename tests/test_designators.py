@@ -33,6 +33,8 @@ from src.bom_lib.enums import ComponentCategory as Cat
         ("RPD2", Cat.RESISTORS),
         ("RX1", Cat.RESISTORS),  # Aion FX optional-mod parts
         ("CX5", Cat.CAPACITORS),
+        ("QX1", Cat.TRANSISTORS),  # Aion FX legacy L5 Preamp
+        ("RG1", Cat.ICS),  # voltage regulator (Aion FX legacy Blueshift)
         ("Z1", Cat.DIODES),  # zener
         ("XFM1", Cat.HARDWARE_MISC),  # transformer
         ("r1", Cat.RESISTORS),

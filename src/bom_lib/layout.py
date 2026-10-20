@@ -1335,8 +1335,11 @@ _LABEL_NOUN = re.compile(r"(?<=[A-Z0-9]) (?:switch|pot|trimmer)$")
 _POLES_LABEL = re.compile(r"([A-Z]{1,4}\d{0,3}) ?- ?([SD34]P[SDT]T)")
 _NAMED_DESIGNATOR = re.compile(r"([A-Z]{1,4}\d{1,3})-(?!(?i:socket)\b)[A-Za-z]{3,}")
 _DESIGNATOR_ROLE = re.compile(r"([A-Z]{1,3}\d{1,3}) [A-Z][a-z]+(?: [A-Z][a-z]+)*")
-# A part label in a typed table: 'VOL.', 'HI-MID FREQ', 'IC1-S', 'PRE-V. SEND'.
-_PART_LABEL = re.compile(r"[A-Z][A-Za-z0-9_./+-]*(?: [A-Za-z0-9_./+-]+){0,2}")
+# A part label in a typed table: 'VOL.', 'HI-MID FREQ', 'IC1-S', 'PRE-V. SEND',
+# '100HZ' (Aion FX Karkadann's 100 Hz EQ pot).
+_PART_LABEL = re.compile(
+    r"(?:[A-Z]|\d+[A-Z]{2,}\b)[A-Za-z0-9_./+-]*(?: [A-Za-z0-9_./+-]+){0,2}"
+)
 
 
 def _is_label(cell: str) -> bool:
