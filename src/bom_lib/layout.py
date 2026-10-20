@@ -150,6 +150,12 @@ _LED_SIZE = re.compile(r"\d+(?:[./]\d+)?\s*mm\b", re.IGNORECASE)
 # Two or more lowercase words mark a sentence ('Choose between ... or SMD').
 _LOWERCASE_WORD = re.compile(r"[a-z][a-z'-]*[.,;:]?")
 _ASIDE = re.compile(r"\((?:see (?:notes?|text)|or equivalent)\)", re.IGNORECASE)
+# A trailing remark naming the part this one replaces.
+_OPTION_TO = re.compile(
+    r"\s+(?:an? )?option (?:to|for) [A-Z]{1,4}\d{1,3}$", re.IGNORECASE
+)
+# A trailing unbracketed pointer to the build notes.
+_SEE_TEXT = re.compile(r"\s+see (?:build )?(?:notes?|text)$", re.IGNORECASE)
 # Trailing words that only restate the component type.
 # A part supplied with the PCB is still a part: '24LC32A *Included' (Deflector).
 _INCLUDED = re.compile(r"\s*\*\s*Included(?: with (?:the )?PCB)?\s*$", re.IGNORECASE)
@@ -368,7 +374,17 @@ def _is_annotation(cell: str) -> bool:
 
 def strip_asides(value: str) -> str:
     """Removes '(see notes)', '(see text)' and '(or equivalent)' from a value."""
-    return " ".join(_ASIDE.sub("", value).split()) or value
+    return drop_remarks(" ".join(_ASIDE.sub("", value).split()) or value)
+
+
+def drop_remarks(value: str) -> str:
+    """Removes a trailing remark that is no part of the value.
+
+    'Status LED see text' (GuitarPCB Tight Box) points to the build notes;
+    '2k Option to R9' (Sriracha Fuzz) names the part this one replaces. A value
+    that is only a pointer ('See Text') stays, so it can be reported.
+    """
+    return _OPTION_TO.sub("", _SEE_TEXT.sub("", value)) or value
 
 
 _LEADING_DASH = re.compile(r"^[-\u2013]\s*(?=\d)")
@@ -396,6 +412,7 @@ def clean_value(value: str) -> str:
     head, dash, tail = value.rpartition(" - ")
     if dash and head and (tail.startswith("http") or _is_prose(tail)):
         value = head
+    value = drop_remarks(value)
     # A leading function label is not part of the value: '(Voltage) SPDT Toggle'.
     label = _LABEL.match(value)
     if label and label.end() < len(value):
@@ -1137,6 +1154,62 @@ def _column_for(cell: Cell, sections: list[list[_Column]]) -> tuple[int, str]:
     return k, col.field
 
 
+def _borrow_offset_values(
+    cells: list[Cell],
+    lines: list[list[Cell]],
+    line_no: int,
+    sections: list[list[_Column]],
+    borrowed: set[int],
+) -> list[Cell]:
+    """Gives a label with an empty value cell the value set half a line off.
+
+    GuitarPCB Tube Screaming Ultra prints its last column's values a little
+    above their labels, so 'LEVEL' and 'A100k' land on separate lines and the
+    pot would vanish. A value cell on the line just above or below, on a line
+    with no label of its own in that table, is the label's value; a value
+    ending in 'or' continues on the other side ('TL072 or' / 'IC1' /
+    'NE5532', D'Lay).
+
+    Args:
+        cells: The current line's cells.
+        lines: Every line of the page.
+        line_no: The current line's index.
+        sections: The table sections in force.
+        borrowed: Ids of cells already read into another line; updated.
+
+    Returns:
+        The line's cells with the borrowed value cells added.
+    """
+    placed = [(_column_for(c, sections), c) for c in cells]
+    empty = [
+        k
+        for (k, field), _ in placed
+        if field == "refs"
+        and not any(kf == (k, "value") for kf, _ in placed)
+        and not any(col.field == "type" for col in sections[k])
+    ]
+    added: list[Cell] = []
+    for k in empty:
+        found: list[Cell] = []
+        for nb in (line_no - 1, line_no + 1):
+            if not 0 <= nb < len(lines) or _header_sections(lines[nb]):
+                continue
+            if found and not found[-1].text.endswith(" or"):
+                break
+            near = [
+                (_column_for(c, sections), c)
+                for c in lines[nb]
+                if id(c) not in borrowed
+            ]
+            if any(kf == (k, "refs") for kf, _ in near):
+                continue
+            found += [c for kf, c in near if kf == (k, "value")]
+        for c in found:
+            borrowed.add(id(c))
+        added += found
+    return sorted(cells + added, key=lambda c: c.x0) if added else cells
+
+
 def find_bom_rows(words: list[PDFWord]) -> list[BomRow]:
     """Reads text tables headed 'Reference | Value | Quantity | Notes'.
 
@@ -1165,9 +1238,25 @@ def bom_note_cells(words: list[PDFWord]) -> list[Cell]:
     return _read_bom(words)[1]
 
 
-def _read_bom(words: list[PDFWord]) -> tuple[list[BomRow], list[Cell]]:
+def bom_valueless_refs(words: list[PDFWord]) -> list[str]:
+    """Designators a text table lists with an empty value cell.
+
+    GuitarPCB The Burner prints 'D2' with nothing beside it; without a value it
+    is no row, and the part would vanish silently.
+
+    Args:
+        words: Words extracted from one page.
+
+    Returns:
+        The designators, ranges expanded.
+    """
+    return _read_bom(words)[2]
+
+
+def _read_bom(words: list[PDFWord]) -> tuple[list[BomRow], list[Cell], list[str]]:
     rows: list[BomRow] = []
     note_cells: list[Cell] = []
+    valueless: list[str] = []
     sections: list[list[_Column]] = []
     # Per table section, the index in `rows` of its latest row.
     last_row: dict[int, int] = {}
@@ -1175,6 +1264,8 @@ def _read_bom(words: list[PDFWord]) -> tuple[list[BomRow], list[Cell]]:
     table_of: dict[float, int] = {}
     header_no = -1
     lines = page_lines(words)
+    # Value cells read into a neighbouring line's row (`_borrow_offset_values`).
+    borrowed: set[int] = set()
     for line_no, cells in enumerate(lines):
         found = _header_sections(cells)
         if found:
@@ -1198,6 +1289,8 @@ def _read_bom(words: list[PDFWord]) -> tuple[list[BomRow], list[Cell]]:
             cells = [c for c in cells if c.x0 < lo or c.x0 > hi]
         if not sections:
             continue
+        cells = [c for c in cells if id(c) not in borrowed]
+        cells = _borrow_offset_values(cells, lines, line_no, sections, borrowed)
         fields: dict[tuple[int, str], str] = {}
         first_x0: dict[int, float] = {}
         end = math.inf
@@ -1248,8 +1341,8 @@ def _read_bom(words: list[PDFWord]) -> tuple[list[BomRow], list[Cell]]:
             role = _DESIGNATOR_ROLE.fullmatch(refs)
             if role:
                 refs = role.group(1)
-            value = _UNCLOSED_ASIDE.sub(
-                "", _ASIDE.sub("", fields.get((k, "value"), ""))
+            value = drop_remarks(
+                _UNCLOSED_ASIDE.sub("", _ASIDE.sub("", fields.get((k, "value"), "")))
             )
             # 'SW - SPDT | On-Off_On' (GuitarPCB Skyn-Tone): the pole type in
             # the label belongs to the value.
@@ -1275,6 +1368,8 @@ def _read_bom(words: list[PDFWord]) -> tuple[list[BomRow], list[Cell]]:
             # A typed table's TYPE explains any label; an untyped grid's label
             # ('Part | Value' grids: 'VOL | A100k') is judged by its value later.
             labeled = _is_label(refs) and (not typed or fields.get((k, "type")))
+            if not value and _is_ref_list(refs) and not typed:
+                valueless += [r for r in expand_refs(refs) if is_designator(r)]
             if not value or not (_is_ref_list(refs) or labeled):
                 continue
             # Optional-part markers are not part of the value ('*100p', '330k*').
@@ -1297,7 +1392,7 @@ def _read_bom(words: list[PDFWord]) -> tuple[list[BomRow], list[Cell]]:
                     builds=builds,
                 )
             )
-    return rows, note_cells
+    return rows, note_cells, valueless
 
 
 def _build_values(

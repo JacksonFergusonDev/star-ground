@@ -27,7 +27,8 @@ _SIZED_LED = re.compile(r"\d+(?:\.\d+)?mm(?:\s+[A-Za-z]+)?", re.IGNORECASE)
 # (Bourns trimmer series), not part of the value.
 _TRIM_NOTE = re.compile(
     r"\([^()]*\b(?:33(?:62|86)P?|3296[A-Z]?|TRIM(?:MER|POT)?)\b[^()]*\)"
-    r"|\b3362P\b|\bTRIM(?:MER|POT)?\b",
+    # '10K Trimmer Pot' (GuitarPCB Julius).
+    r"|\b3362P\b|\bTRIM(?:MER|POT)?(?: POT)?\b",
     re.IGNORECASE,
 )
 _RESISTANCE = re.compile(r"\b\d+(?:\.\d+)?[KkMR]\d*\b")

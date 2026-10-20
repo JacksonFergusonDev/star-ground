@@ -1222,6 +1222,47 @@ def test_alternate_spec_table_adds_no_parts() -> None:
     )
 
 
+def test_shaded_grid_is_read_pair_by_pair() -> None:
+    # GuitarPCB SWAH V4: a headerless grid whose shaded rows merge 'R8 6k8';
+    # NostalgiTone 70s: '** Q2-Q6 | J201 (see notes)', 'D1 - D2', '* CLR x3';
+    # DVF v3: a rating in its own cell.
+    from src.bom_lib.parser import _shaded_pairs
+
+    table: list[list[str | None]] = [
+        ["R8 6k8", None, "R20", "22k", "C12", "100n", "D6 CA Bi-colour", None],
+        ["R9", "4k7", "R21 10k", None, "C1", "22n", "P1-Reso", "B50k Lin"],
+        ["R10 6k8", None, "C4", "47n", "63V", "TR1-Bias 50k", None, None],
+        [
+            "** Q2-Q6",
+            "J201 (see notes)",
+            "D1 - D2",
+            "LED",
+            "* CLR x3",
+            "1k8-4k7",
+            "",
+            "",
+        ],
+    ]
+    assert _shaded_pairs(table) == [
+        ["R8", "6k8"],
+        ["R20", "22k"],
+        ["C12", "100n"],
+        ["D6", "CA Bi-colour"],
+        ["R9", "4k7"],
+        ["R21", "10k"],
+        ["C1", "22n"],
+        ["P1", "B50k Lin"],
+        ["R10", "6k8"],
+        ["C4", "47n 63V"],
+        ["TR1", "50k"],
+        ["Q2-Q6", "J201 (see notes)"],
+        ["D1-D2", "LED"],
+        ["CLR", "1k8-4k7"],
+    ]
+    # A narrow table is left to the usual reading.
+    assert _shaded_pairs([["R1", "1M"], ["R2", "2M"]]) is None
+
+
 def test_mod_change_list_is_not_parts() -> None:
     # Aion FX legacy Comet's 'Mod 1 | Mod 2' tables re-list IC1, C1, C2...
     from src.bom_lib.builds import Entry
