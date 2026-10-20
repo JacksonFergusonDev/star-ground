@@ -137,6 +137,13 @@ def ingest_bom_line(
     expanded_refs = expand_refs(ref_raw)
     val_raw = resolve_value_choice(stats, ref_raw, val_raw)
 
+    pointer = _POINTER_TAIL.search(val_raw)
+    if pointer and val_raw[: pointer.start()].strip():
+        # 'PNP—See Text' (GuitarPCB PUFF v4): a kind of part, chosen in the notes.
+        if stats is not None:
+            for r in expanded_refs:
+                check_pointer_value(stats, r, val_raw)
+        val_raw = val_raw[: pointer.start()].strip()
     for r in expanded_refs:
         if _POINTER_VALUE.fullmatch(val_raw.strip()):
             # 'Q1-Q6  See Text' (GuitarPCB G-02 Animal): the value is in the
@@ -675,6 +682,9 @@ def _table_entries(
                         ref
                         and value
                         and not _is_ignored(value)  # 'BIAS | TP' is a test point
+                        # 'C8A | * | 63V' (MoWah) gives only a rating: the value
+                        # is in the notes.
+                        and not _RATING_CELL.fullmatch(value.strip("* "))
                         and (page_no, ref, value) not in shaded_seen
                     ):
                         shaded_seen.add((page_no, ref, value))
@@ -717,6 +727,9 @@ def _table_entries(
                     pair = _REF_PAIR.fullmatch(ref_raw)
                     if pair and all(is_designator(g) for g in pair.groups()):
                         ref_raw = f"{pair.group(1)},{pair.group(2)}"
+                    named = _NAMED_REF.match(ref_raw)
+                    if named and "=" in ref_raw:
+                        ref_raw = named.group(1)  # 'P1=FUZZ' (GuitarPCB PUFF v4)
                     # 'TR1 (see text)', 'TR2 (Volume)' (GuitarPCB D'Lay): an aside
                     # on the designator.
                     aside = _REF_ASIDE.fullmatch(ref_raw)
@@ -870,6 +883,7 @@ def _runs_on(value: str) -> bool:
     words = value.split()
     return any(
         not _JFET_PART.fullmatch(w)
+        and w.upper() != "LED"  # 'CA Bi-colour LED' names the part
         and words[k - 1].lower() not in ("or", "/")  # 'J309 or J113' names alternatives
         and (
             is_designator(w)
@@ -972,9 +986,13 @@ def _version_split(
 
 # A value that only points to the build notes.
 _POINTER_VALUE = re.compile(r"see (?:build )?(?:notes?|text)", re.IGNORECASE)
+_POINTER_TAIL = re.compile(
+    r"\s*[-\u2013\u2014]\s*see (?:build )?(?:notes?|text)\s*$", re.IGNORECASE
+)
 # Lower case only: PedalPCB's 'TOGGLE SWITCH' is the part's whole name.
 _RULED_LABEL_NOUN = re.compile(r"(?<=[A-Za-z]{3}) (?:switch|pot|trimmer)$")
-_REF_PAIR = re.compile(r"(\w+)\s*(?:&|\band\b)\s*(\w+)", re.IGNORECASE)
+# 'IC1 & IC2'; 'LED + *CLR' (GuitarPCB The Mule: a status LED and its CLR).
+_REF_PAIR = re.compile(r"(\w+)\s*(?:&|\+|\band\b)\s*\*?(\w+)", re.IGNORECASE)
 # 'TR1 (see text)', 'TR2 (Volume)'; not 'RX2 (by IC1)' (Aion FX legacy Aurora names
 # two positions of RX2 apart) or 'IC1 (vintage)' (Comet legacy names a build).
 _REF_ASIDE = re.compile(r"([A-Za-z]{1,4}\d{1,3})\s*\(([^\d()]*)\)", re.DOTALL)
@@ -1057,7 +1075,7 @@ _ROLE_HEADERS = frozenset(
     }
 )
 # 'P1-Sus/Fuzz': the designator, then the control's name.
-_NAMED_REF = re.compile(r"([A-Z]{1,3}\d{1,3})-(?![A-Z]{1,3}\d)[A-Za-z]")
+_NAMED_REF = re.compile(r"([A-Z]{1,3}\d{1,3})[-=](?![A-Z]{1,3}\d)[A-Za-z]")
 # A note in a value column naming the row's role ('R12 | 1k8 | CLR', RATT).
 _ROLE_CELLS = frozenset({"CLR"})
 
@@ -1118,6 +1136,9 @@ def _shaded_pairs(table: list[list[str | None]]) -> list[list[str]] | None:
             return None  # 'J201' is the JFET, not jack J201; 'Trim 50K' a trimmer
         if REF_RANGE.fullmatch(text) or is_designator(text):
             return text
+        pair = _REF_PAIR.fullmatch(text)
+        if pair and all(is_designator(g) for g in pair.groups()):
+            return ",".join(pair.groups())  # 'LED + *CLR | Status' (The Mule)
         words = text.replace(",", " ").split()
         if len(words) > 1 and all(is_designator(w) for w in words):
             return ",".join(words)  # 'D1 D2 | 1N4148' (GuitarPCB Fat Cat Fuzz)
@@ -1127,6 +1148,8 @@ def _shaded_pairs(table: list[list[str | None]]) -> list[list[str]] | None:
         return None
 
     def holds_pair(text: str) -> bool:
+        if label(text) is not None:
+            return False  # two designators sharing one value cell
         head, _, rest = text.partition(" ")
         return bool(rest) and label(head) is not None
 
@@ -1651,6 +1674,9 @@ def _cell_value(cells: list[Cell], listing: Listing) -> bool:
         readings.append(after)
     if len(after) == 2 and names_control(after[0]):
         readings.append(after[1:])  # 'P1 | VOL 1 | 100k Log' (XX Double Shot)
+    rest = [c.text for c in cells[k + 1 :]]
+    if not any(is_designator(t.split()[0]) or names_control(t) for t in rest):
+        readings.append(rest)  # 'SW 1 | 3PDT | Footswitch' ends the line (EA Tremelo)
     return any(clean_value(" ".join(r)) == listing.value for r in readings if r)
 
 
@@ -2115,11 +2141,12 @@ _URL = re.compile(r"www\.|https?:", re.IGNORECASE)
 
 
 _DISCLAIMER = re.compile(r"\s*(?:WARNING|DISCLAIMER)\b")
-_PRESENTS = re.compile(r"GuitarPCB Presents?", re.IGNORECASE)
+# 'GuitarPCB Presents' above a NostalgiTone title, a bare 'GuitarPCB.com' above V6's.
+_PRESENTS = re.compile(r"GuitarPCB(?: Presents?|\.com)", re.IGNORECASE)
 # 'TIGHT BOX by GuitarPCB', 'GuitarPCB.com - MoRC v4 2020 & v3': the publisher's
 # byline is no part of the name.
 _BYLINE = re.compile(
-    r"\s+by GuitarPCB$|^GuitarPCB\.com(?:\s+-)?\s+|^GuitarPCB Presents?\s+",
+    r"\s+by GuitarPCB(?:\.com)?$|^GuitarPCB\.com(?:\s+-)?\s+|^GuitarPCB Presents?\s+",
     re.IGNORECASE,
 )
 

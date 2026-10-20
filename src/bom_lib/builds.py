@@ -195,6 +195,10 @@ def plan_builds(entries: list[Entry], pages: list[PageContext]) -> BuildPlan:
 # --------------------------------------------------------------------- grids
 
 
+# Words of a parts table's column header, which name no build.
+_TABLE_HEADER_WORDS = frozenset({"PART", "PARTS", "VALUE", "VALUES", "REF", "QTY"})
+
+
 def _grid_variants(
     entries: list[Entry], pages: list[PageContext]
 ) -> list[PlannedVariant]:
@@ -225,6 +229,12 @@ def _grid_variants(
             # No header: name each column by its first listing ('MID C10K Dual'
             # / 'MID C100K Dual', Frost Drive's alternate pot).
             first = sorted((e for e in row if e.ref == ref), key=lambda e: e.x0)
+            if all(set(name.upper().split()) <= _TABLE_HEADER_WORDS for name in names):
+                # Each column is headed only 'Part | Value': two boards' tables
+                # side by side, not versions (GuitarPCB Rock Hard Dual Combo).
+                while by_line.get(line):
+                    line += 1
+                continue
             names = [
                 f"{e.ref} {e.value}" if name == f"Variant {k + 1}" else name
                 for k, (name, e) in enumerate(zip(names, first, strict=True))

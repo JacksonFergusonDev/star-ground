@@ -287,10 +287,13 @@ def check_unextracted_refs(
     # A part number shaped like a designator is a value, not a listing:
     # 'Q1-Q5  J201  JFET transistor' (Golden Falk).
     values = {key.value.split()[0].upper() for key in inventory if key.value.split()}
-    if "LED" in extracted and "LED2" not in {r.upper() for r in listed}:
-        # A bare 'LED' in the parts list is the schematic's only 'LED1'
-        # (Aion FX legacy documents).
-        extracted.add("LED1")
+    listed_upper = {r.upper() for r in listed}
+    for bare in [r for r in extracted if r.isalpha()]:
+        if f"{bare}2" not in listed_upper:
+            # A bare 'LED' in the parts list is the schematic's only 'LED1' (Aion
+            # FX legacy documents); 'SW - SPDT' is the notes' only 'SW1'
+            # (GuitarPCB NostalgiTone Compressor).
+            extracted.add(f"{bare}1")
     joined = " ".join(" ".join(page_texts).split())
     for ref in sorted(r for r in listed if r.upper() not in extracted):
         if ref.upper() in values:
@@ -848,6 +851,12 @@ def check_duplicate(
         # '3k3 LED CLR' (GuitarPCB G-02 Animal's suggestion table): the same
         # value with a remark.
         return
+    if not any(ch.isdigit() for ch in new_value) and first_value.upper().endswith(
+        f" {new_value.upper()}"
+    ):
+        # 'LED' is the second line of a wrapped 'CA Bi-colour / LED' cell, read
+        # alone by another reader (GuitarPCB Dr Phybes).
+        return
     if _comparable(first_value) != _comparable(new_value):
         _warn(
             stats,
@@ -1135,7 +1144,10 @@ _CAPACITANCE = re.compile(r"^\d+(?:\.\d+)?[pnuµ]\d?F?\b|\bcapacitor\b", re.IGNO
 
 
 # A value that only points to the build notes: 'See Text' (GuitarPCB G-02 Animal).
-_SEE_TEXT_VALUE = re.compile(r"\s*see (?:build )?(?:notes?|text)\s*", re.IGNORECASE)
+# 'See Text', or a part type then the pointer: 'PNP—See Text' (GuitarPCB PUFF v4).
+_SEE_TEXT_VALUE = re.compile(
+    r"(?:.*[-\u2013\u2014]\s*)?\s*see (?:build )?(?:notes?|text)\s*", re.IGNORECASE
+)
 
 
 def check_pointer_value(stats: StatsDict, ref: str, raw_value: str) -> None:

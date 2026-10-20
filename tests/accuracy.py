@@ -591,8 +591,11 @@ def score_doc(doc: GoldenDoc, ocr: bool = False) -> DocScore:
     if ocr:
         res, attempt = _with_ocr(doc.pdf, res)
     flagged = {w.ref.upper() for w in res.stats["warnings"] if w.ref}
-    if any(w.kind == ParseWarningKind.NO_PARTS_LIST for w in res.stats["warnings"]):
-        # The builder was told nothing could be read: every part is flagged.
+    if res.stats["errors"] or any(
+        w.kind == ParseWarningKind.NO_PARTS_LIST for w in res.stats["warnings"]
+    ):
+        # The builder was told nothing could be read (or the parse failed, which
+        # the app reports): every part is flagged.
         flagged.add(_EVERYTHING)
     if any(
         w.kind == ParseWarningKind.IMAGE_PARTS_LIST and not w.ref
