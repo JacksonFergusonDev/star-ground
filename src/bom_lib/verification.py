@@ -981,7 +981,7 @@ def check_unclassified_row(stats: StatsDict, ref: str, value: str) -> None:
 
 # A capacitor value or the word itself: Aion FX legacy Stratus's SD-1 table puts
 # '18n capacitor' in the R8 position.
-_CAPACITANCE = re.compile(r"^\d+(?:\.\d+)?[pnuµ]\d*F?\b|\bcapacitor\b", re.IGNORECASE)
+_CAPACITANCE = re.compile(r"^\d+(?:\.\d+)?[pnuµ]\d?F?\b|\bcapacitor\b", re.IGNORECASE)
 
 
 def check_classification(

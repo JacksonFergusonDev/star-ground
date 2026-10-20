@@ -34,7 +34,7 @@ _RESISTANCE = re.compile(r"\b\d+(?:\.\d+)?[KkMR]\d*\b")
 _MILLIAMPS = re.compile(r"\dmA\b")
 _REPEAT_SUFFIX = re.compile(r"\s+\(\d+\)$")
 _LED_VALUE = re.compile(r"\bLED\b")
-_SIZED_LED = re.compile(r"\d+(?:\.\d+)?\s*MM\b(?: [A-Z]+)? LED\b")
+_LED_SPEC = re.compile(r"\d+(?:\.\d+)?\s*MM\b(?: [A-Z]+)? LED\b")
 _NUMBERED_LABEL = re.compile(r"[A-Z]{2,5}\d{1,3}")
 _SLASH_RATING = re.compile(r"(?<=[\dpnuµF])/(\d+(?:\.\d+)?)\s*V\b", re.IGNORECASE)
 _OHMS = re.compile(r"(?<![\w.])\d+(?:\.\d+)?R\d*(?![\w.])")
@@ -159,7 +159,7 @@ def _named_control_category(
         return ComponentCategory.SWITCHES
     # A sized LED names itself, whatever the label: Aion FX legacy L5 Preamp's
     # 'BYPASS  5MM LED' and 'COMP  5MM LED' (COMP is also a pot name).
-    if _SIZED_LED.match(val_up):
+    if _LED_SPEC.match(val_up):
         return ComponentCategory.DIODES
     # '250mA' is a current rating, not a 250M audio-taper pot.
     if _POT_VALUE.search(val_up) and not _MILLIAMPS.search(val):

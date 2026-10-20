@@ -703,6 +703,10 @@ def test_capacitance_under_a_resistor_designator() -> None:
         stats, "R8", "18n capacitor", ComponentCategory.RESISTORS, "18n capacitor"
     )
     assert _kinds(stats) == [ParseWarningKind.CATEGORY_CONFLICT]
+    quiet = create_empty_stats()
+    # A diode number is no capacitance (GuitarPCB Emexar v4: 'R10  1N4001').
+    check_classification(quiet, "R10", "1N4001", ComponentCategory.RESISTORS, "1N4001")
+    assert not any("capacitor's" in w.message for w in quiet["warnings"])
 
 
 def test_omitted_and_running_title_refs_are_accounted_for() -> None:
