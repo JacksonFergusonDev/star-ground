@@ -11,11 +11,14 @@ from src.bom_lib import (
     parse_with_verification,
 )
 from src.bom_lib.verification import (
+    check_alternate_value,
     check_bom_reconciliation,
+    check_build_note,
     check_classification,
     check_duplicate,
     check_footnotes,
     check_marking_code,
+    check_numbered_footnotes,
     check_numbering_gaps,
     check_parts_found,
     check_prose_pots,
@@ -389,6 +392,10 @@ class TestAionChecks:
             "10M in Catalinbread and Orpheum.",
             "Orpheum: 10M; Axis/Foxey: omit (leave empty)",
             "Use a 100n film capacitor here if building a 3-transistor variant.",
+            # Aion FX Triton: builds' values anywhere in the note.
+            "Carbon comp in original, measured value 560R Formula 5F6: 1k8 DLS Red: 1k",
+            "Formula 5F6: 4.7uF electrolytic",
+            "Formula 5F6: (omit)",
         ],
     )
     def test_notes_that_name_another_build(self, note: str) -> None:
@@ -580,3 +587,51 @@ def test_comma_listed_part_numbers_are_a_choice() -> None:
     assert [w.kind for w in stats["warnings"]] == [ParseWarningKind.VALUE_CHOICE]
     # A slash between bare numbers stays as printed.
     assert resolve_value_choice(create_empty_stats(), "R1", "100/220") == "100/220"
+
+
+def test_build_note_on_a_row_whose_builds_differ() -> None:
+    # Aion FX Elite: C13 '1n | 1n | 820pF', 'Mod value is MLCC, not film.'
+    stats = create_empty_stats()
+    check_build_note(
+        stats, "C13", ["1n", "1n", "820pF"], "Mod value is MLCC, not film."
+    )
+    assert _kinds(stats) == [ParseWarningKind.FOOTNOTE]
+    quiet = create_empty_stats()
+    check_build_note(quiet, "C11", ["10pF", "10pF", "10pF"], "Mod value is MLCC.")
+    check_build_note(quiet, "R1", ["1k", "2k"], "")
+    assert quiet["warnings"] == []
+
+
+def test_alternate_value_is_warned() -> None:
+    stats = create_empty_stats()
+    check_alternate_value(stats, "R10", "2k", "47R")
+    assert [(w.kind, w.ref) for w in stats["warnings"]] == [
+        (ParseWarningKind.FOOTNOTE, "R10")
+    ]
+
+
+def test_footnotes_on_building_without_a_part() -> None:
+    # Aion FX legacy Lumin: values carry markers, footnotes say how to omit.
+    text = "\n".join(
+        [
+            "R19 1k 1 Midrange knob: The original unit only has two knobs. By putting",
+            "R20 47k a 15k resistor in R15 we can adjust the midrange. If you do want to",
+            "leave it off, use 39k for R15 and jumper lugs 2 and 3.",
+            "2 High frequency switch: I recommend socketing C4, CX1 and CX2. To omit",
+            "this control, just leave off CX1, CX2 and the High Freq switch.",
+            "4 C10 was added in the 2015 revision.",
+        ]
+    )
+    marked = [("R15", "1"), ("Midrange", "1"), ("C4", "2"), ("CX1", "2"), ("C10", "4")]
+    inventory = create_empty_inventory()
+    for ref, value, cat in (
+        ("R15", "15k", ComponentCategory.RESISTORS),
+        ("MIDRANGE", "50kB", ComponentCategory.POTENTIOMETERS),
+        ("C4", "3n3", ComponentCategory.CAPACITORS),
+        ("CX1", "1n5", ComponentCategory.CAPACITORS),
+        ("C10", "100n", ComponentCategory.CAPACITORS),
+    ):
+        inventory[make_component_key(cat, value)]["refs"].append(ref)
+    stats = create_empty_stats()
+    check_numbered_footnotes([marked], [text], inventory, stats)
+    assert sorted(w.ref for w in stats["warnings"]) == ["CX1", "MIDRANGE", "R15"]

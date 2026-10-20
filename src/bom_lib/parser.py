@@ -34,6 +34,7 @@ from src.bom_lib.layout import (
     find_bom_rows,
     find_listings,
     footnote_marks,
+    marked_labels,
     names_control,
     page_lines,
     pictured_lists,
@@ -56,13 +57,16 @@ from src.bom_lib.types import (
 )
 from src.bom_lib.utils import expand_refs, parse_value_to_decimal
 from src.bom_lib.verification import (
+    check_alternate_value,
     check_bom_reconciliation,
+    check_build_note,
     check_classification,
     check_duplicate,
     check_either_part,
     check_footnotes,
     check_marking_code,
     check_misread_text,
+    check_numbered_footnotes,
     check_numbering_gaps,
     check_other_list,
     check_parts_found,
@@ -556,12 +560,19 @@ def enrich_value_from_type(value: str, type_text: str, notes: str = "") -> str:
     if _DUAL_GANG.search(detail) and "DUAL" not in value.upper():
         return f"{value} Dual"
     if "CAPACITOR" in detail and any(ch.isdigit() for ch in value):
+        # A note naming another part describes that part: 'Can omit and use
+        # 4.7uF tantalum for C6' (Aion FX Dryad) on the 1uF film cap C5.
+        construction = type_text.upper() if _OTHER_PART.search(notes) else detail
         for keyword, name in _DIELECTRICS:
             # 'Box/MLCC Capacitor' (Five Cats) leaves the choice open.
-            either = re.search(rf"/\s*{keyword}|{keyword}\s*/", detail)
-            if keyword in detail and keyword not in value.upper() and not either:
+            either = re.search(rf"/\s*{keyword}|{keyword}\s*/", construction)
+            if keyword in construction and keyword not in value.upper() and not either:
                 return f"{value} {name}"
     return value
+
+
+# A designator named in a NOTES cell: 'use 4.7uF tantalum for C6'.
+_OTHER_PART = re.compile(r"\b(?:for|in|with) [A-Z]{1,3}\d{1,3}\b")
 
 
 def _table_entries(
@@ -580,15 +591,21 @@ def _table_entries(
         One entry per table row that names a designator and a value.
     """
     entries: list[Entry] = []
+    seen_refs: set[str] = set()
     table_no = -1
     for page_no, data in enumerate(pages_data):
         if only_pages is not None and page_no not in only_pages:
             continue
+        heading = _SLASH_VERSIONS.search(data["text"] or "")
+        versions = (heading.group(1), heading.group(2)) if heading else None
         for table in data["tables"]:
             if not table:
                 continue
             table_no += 1
 
+            table_entries: list[Entry] = []
+            if _alternate_spec_table(table, entries, stats):
+                continue
             grid = _value_column_grid(table, page_no, table_no)
             if grid is not None:
                 entries += grid
@@ -689,19 +706,115 @@ def _table_entries(
                     ref_raw = ref_raw[: quantity.start()].strip()
 
                 if ref_raw and val_raw:
-                    entries.append(
-                        Entry(
-                            ref_raw,
-                            val_raw,
-                            page_no,
-                            table=table_no,
-                            hint=hint,
-                            follows_or=follows_or,
-                            qty=qty,
+                    for ref, value, version in _version_split(
+                        ref_raw, val_raw, versions
+                    ):
+                        table_entries.append(
+                            Entry(
+                                ref,
+                                value,
+                                page_no,
+                                table=table_no,
+                                hint=hint,
+                                follows_or=follows_or,
+                                qty=qty,
+                                column=version,
+                            )
                         )
-                    )
                     follows_or = False
+            if _is_change_list(table_entries, seen_refs, data["text"] or ""):
+                continue
+            seen_refs.update(e.ref for e in table_entries)
+            entries += table_entries
     return entries
+
+
+# 'Parts (vintage / modern values)' (Aion FX legacy Comet): the page's 'A / B'
+# values are two builds'.
+_SLASH_VERSIONS = re.compile(r"\((\w+) / (\w+) values\)", re.IGNORECASE)
+# 'IC1 (vintage)': a part in one build only; '1N914 (modern only)' likewise.
+_VERSION_REF = re.compile(r"(\S+) \((\w+)\)")
+_VERSION_ONLY = re.compile(r"(.+?) \((\w+) only\)", re.IGNORECASE)
+# A 'Mod 1 | Mod 2' heading over tables of value changes (Aion FX legacy Comet).
+_MOD_HEADING = re.compile(r"^\s*Mod 1\b", re.MULTILINE)
+_CHANGE_LIST_MIN = 3
+
+
+def _version_split(
+    ref: str, value: str, versions: tuple[str, str] | None
+) -> list[tuple[str, str, str | None]]:
+    """Splits a row of a two-build list into each build's part.
+
+    Under 'Parts (vintage / modern values)', '470n / 68n' is C4 in each build,
+    'IC1 (vintage)' and '1N914 (modern only)' are parts of one build, and any
+    other row is common (version None).
+    """
+    if versions is None:
+        return [(ref, value, None)]
+    lowered = [v.lower() for v in versions]
+    named = _VERSION_REF.fullmatch(ref)
+    if named and named.group(2).lower() in lowered:
+        return [
+            (named.group(1), value, versions[lowered.index(named.group(2).lower())])
+        ]
+    only = _VERSION_ONLY.fullmatch(value)
+    if only and only.group(2).lower() in lowered:
+        return [(ref, only.group(1), versions[lowered.index(only.group(2).lower())])]
+    pair = value.split(" / ")
+    if len(pair) == len(versions):
+        return [(ref, v.strip(), name) for v, name in zip(pair, versions, strict=True)]
+    return [(ref, value, None)]
+
+
+def _alternate_spec_table(
+    table: list[list[str | None]], listed: list[Entry], stats: StatsDict
+) -> bool:
+    """Reads a table restating listed parts' values beside other values.
+
+    Aion FX legacy Refractor prints 'R10 | 2k | 47R | More gain' for the
+    'Silver Pony' specs: every designator is already listed, the first value
+    is the listed one and the second another version's. Such a table adds no
+    parts; each part it gives another value is warned.
+
+    Returns:
+        Whether the table was such a list (and should not be read as parts).
+    """
+    values = {e.ref: e.value for e in listed}
+    rows = [[str(c or "").strip() for c in row] for row in table]
+    rows = [r for r in rows if r and r[0]]
+    if len(rows) < _CHANGE_LIST_MIN or any(len(r) < 3 for r in rows):
+        return False
+    changes: list[tuple[str, str, str]] = []
+    for row in rows:
+        refs = expand_refs(row[0].replace(" ", ""))
+        old, new = row[1].split(" / "), row[2].split(" / ")
+        if not all(ref in values for ref in refs) or len(old) != len(new):
+            return False
+        if len(old) == 1:
+            old, new = old * len(refs), new * len(refs)
+        if len(old) != len(refs):
+            return False
+        for ref, was, now in zip(refs, old, new, strict=True):
+            if was.split()[:1] != values[ref].split()[:1]:
+                return False
+            changes.append((ref, was, now))
+    for ref, was, now in changes:
+        if now.split()[:1] != was.split()[:1]:
+            check_alternate_value(stats, ref, was, now)
+    return True
+
+
+def _is_change_list(table: list[Entry], seen: set[str], page_text: str) -> bool:
+    """Whether a table under a 'Mod 1 | Mod 2' heading only re-lists earlier parts.
+
+    Such a table gives other values for parts already listed ('IC1 OPA2134',
+    'C1 100n'): a modification, not more parts to buy.
+    """
+    return (
+        len(table) >= _CHANGE_LIST_MIN
+        and bool(_MOD_HEADING.search(page_text))
+        and all(e.ref in seen for e in table)
+    )
 
 
 # The designator column of a value-column grid: 'Part', 'Part #', "MUFF'N Part #",
@@ -905,21 +1018,35 @@ def _text_table_entries(
                 refs = expand_refs(group)
             else:
                 refs = expand_refs(row.refs) if " " not in row.refs else [row.refs]
+            # 'VALUE (D+) | VALUE (250)': one value per build (Aion FX Aphelion).
+            builds: list[tuple[str | None, str]] = list(row.builds) or [(None, value)]
             if row.type_text:
-                value, hint = _typed_row(
-                    stats, row.refs, row.value, row.type_text, row.notes, check=False
-                )
+                typed: list[tuple[str | None, str]] = []
+                for build, cell in builds:
+                    cell, hint = _typed_row(
+                        stats, row.refs, cell, row.type_text, row.notes, check=False
+                    )
+                    cell = _drop_restated_value(cell)
+                    typed.append((build, capacitor_notes(row.refs, cell, row.notes)))
                 if hint is None and not all(is_designator(ref) for ref in refs):
                     # A label the TYPE does not explain ('Screw | M3 x 5mm | For
                     # Nylon', Q-Tune's packing list) is left to the layout reader.
                     continue
-                value = _drop_restated_value(value)
-                value = capacitor_notes(row.refs, value, row.notes)
+                builds = typed
+                value = builds[0][1]
                 # An empty spot can be filled in another build ('(omit) |
                 # 100n for bass'), so its note matters too.
                 check_version_note(stats, row.refs, row.notes)
+                if row.builds:
+                    check_build_note(
+                        stats, row.refs, [c for _, c in row.builds], row.notes
+                    )
                 for ref in refs:
                     _check_typed_row(stats, ref, value, hint)
+            elif row.notes and _is_not_populated(value):
+                # '(omit) | | Formula 5F6: 4.7uF electrolytic' (Aion FX Triton):
+                # an empty spot with no TYPE is filled in another build.
+                check_version_note(stats, row.refs, row.notes)
             if hint is not None:
                 # A typed table describes every row, so a repeated label is
                 # another part (Aion FX: GAIN pot and GAIN switch, Vulcan's
@@ -937,13 +1064,15 @@ def _text_table_entries(
             entries += [
                 Entry(
                     ref,
-                    value,
+                    cell,
                     page_no,
                     line=row.line,
                     x0=row.x0,
                     table=page_no * _TABLES_PER_PAGE + row.table,
                     hint=hint,
+                    column=build,
                 )
+                for build, cell in builds
                 for ref in refs
             ]
     return entries, spans
@@ -1500,6 +1629,9 @@ def read_pages(
         stats,
     )
     check_footnotes(page_texts, stats)
+    check_numbered_footnotes(
+        [data.get("marked", []) for data in pages_data], page_texts, union, stats
+    )
     check_value_assignments(page_texts, union, stats)
     check_prose_pots(page_texts, union, stats)
     check_numbering_gaps(union, stats)
@@ -1619,7 +1751,9 @@ def parse_pedalpcb_pdf(filepath: str, source_name: str) -> ParseResult:
             pages_data: list[PDFPageExtraction] = []
             misread: set[int] = set()
             for number, raw_page in enumerate(pdf.pages):
-                page = _without_marks(_straighten(raw_page.filter(_readable)))
+                straight = _straighten(raw_page.filter(_readable))
+                marked = marked_labels(_page_words(straight))
+                page = _without_marks(straight)
                 page_words = _page_words(page)
                 if _misread(page_words):
                     # Read as an image page instead (see `ocr.py`).
@@ -1637,6 +1771,7 @@ def parse_pedalpcb_pdf(filepath: str, source_name: str) -> ParseResult:
                         "text": page.extract_text(),
                         "words": page_words,
                         "pictures": _pictures(raw_page),
+                        "marked": marked,
                     }
                 )
 
