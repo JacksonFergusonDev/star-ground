@@ -50,3 +50,13 @@ def test_regulators_get_no_socket() -> None:
     chip = categorize_part("IC1", "TL072")
     assert chip is not None
     assert chip.injected_key is not None
+
+
+def test_lettered_led_resistor_follows_its_type() -> None:
+    # Aion FX Ibex: 'LEDB | 4k7 | Metal film resistor'; a bare 'LEDB' stays an LED.
+    part = categorize_part("LEDB", "4k7", ComponentCategory.RESISTORS)
+    assert part is not None
+    assert part.category == ComponentCategory.RESISTORS
+    led = categorize_part("LEDB", "3mm red")
+    assert led is not None
+    assert led.category == ComponentCategory.DIODES

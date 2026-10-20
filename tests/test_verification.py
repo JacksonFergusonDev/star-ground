@@ -404,6 +404,9 @@ class TestAionChecks:
             "RC Booster and Bass RC jumper this.",
             "Bass RC omits this diode.",
             "Use 16k for original OD-2.",
+            # Aion FX Muramasa and Rift.
+            "V2: J201 (MMBFJ201)",
+            "Omit if using tone pot.",
         ],
     )
     def test_notes_that_name_another_build(self, note: str) -> None:
@@ -430,6 +433,7 @@ class TestAionChecks:
             "Use 100n for C4 if you want more bass.",
             "Original OD-2 uses 22n. See build notes.",
             "Galaxie mod: 10k. See build notes for full mod.",
+            "The HM-2 uses 2SK30A-Y (a Japanese equivalent).",
         ],
     )
     def test_notes_that_name_no_build(self, note: str) -> None:
@@ -729,3 +733,49 @@ def test_value_keyed_parts_list_cannot_be_read() -> None:
     quiet = create_empty_stats()
     check_value_keyed_list(["PART VALUE TYPE NOTES\nR1 10k Metal film"], quiet)
     assert quiet["warnings"] == []
+
+
+def test_version_footnote_and_change_instructions() -> None:
+    # Aion FX legacy Astra's footnote; Argus's 'here are the changes to make'.
+    text = "\n".join(
+        [
+            "1 Analogman values: The Analogman version of the Astrotone uses 1M2 for R1 "
+            "and R4, 470R for R6, and 470n for C1 and C4.",
+            "Mid-scoop mode",
+            "If you want triangle-wave mode instead, here are the changes to make:",
+            "• R15: omit (mid-scoop mode is 39k)",
+        ]
+    )
+    inventory = _listed(
+        *[(r, "1M", ComponentCategory.RESISTORS) for r in ("R1", "R4", "R6", "R15")],
+        *[(c, "47n", ComponentCategory.CAPACITORS) for c in ("C1", "C4")],
+    )
+    stats = create_empty_stats()
+    check_build_changes([text], inventory, stats)
+    assert sorted({w.ref for w in stats["warnings"]}) == [
+        "C1",
+        "C4",
+        "R1",
+        "R15",
+        "R4",
+        "R6",
+    ]
+
+
+def test_footnote_use_only_one_of_these() -> None:
+    # Aion FX legacy Aphelion: 'IC1 LM741 1', 'IC2 JRC4558 1'.
+    text = "IC1 LM741 1\nIC2 JRC4558 1\n1 Use only one of these. The original units use an LM741."
+    inventory = _listed(
+        ("IC1", "LM741", ComponentCategory.ICS),
+        ("IC2", "JRC4558", ComponentCategory.ICS),
+    )
+    stats = create_empty_stats()
+    check_numbered_footnotes([[("IC1", "1"), ("IC2", "1")]], [text], inventory, stats)
+    assert sorted(w.ref for w in stats["warnings"]) == ["IC1", "IC2"]
+
+
+def test_schematic_net_labels_are_not_listings() -> None:
+    # Aion FX legacy Astra's schematic: 'IN 1M 2N3565' beside R1.
+    stats = create_empty_stats()
+    check_unextracted_refs(["Schematic\nIN 1M 2N3565\nR1 1M"], _listed(), stats)
+    assert [w.ref for w in stats["warnings"]] == ["R1"]

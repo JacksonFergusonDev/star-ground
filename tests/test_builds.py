@@ -385,3 +385,24 @@ def test_two_repeated_lists_need_most_labels_to_repeat() -> None:
         )
         entries += [Entry(r, "1k", p, line=k + 1) for k, r in enumerate(listed)]
     assert plan_builds(entries, pages).variants == ()
+
+
+def test_slashed_cells_under_a_two_build_heading() -> None:
+    # Aion FX legacy Aphelion: 'Parts (Distortion+ / '79 Gray 250)', 'R2  1M / 470k'.
+    page = PageContext([], "Parts (Distortion+ / '79 Gray 250)\nResistors")
+    entries = [
+        Entry("R1", "10k", 0),
+        Entry("R2", "1M / 470k", 0),
+        Entry("R6", "Jumper / 100R", 0),
+        Entry("R7", "1M / 22k", 0),
+        Entry("C1", "1n / omit", 0),
+    ]
+    plan = plan_builds(entries, [page])
+    assert _names(plan) == ["Distortion+", "'79 Gray 250"]
+    assert [(e.ref, e.value) for e in plan.variants[1].entries] == [
+        ("R2", "470k"),
+        ("R6", "100R"),
+        ("R7", "22k"),
+        ("C1", "omit"),
+    ]
+    assert [e.ref for e in plan.common] == ["R1"]
