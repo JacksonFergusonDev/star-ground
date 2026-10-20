@@ -993,7 +993,13 @@ _REF_HEADERS = frozenset(
 # 'Value | Name | Qty' packing list).
 _NAME_HEADER = "NAME"
 # One VALUE column per build: 'VALUE (D+) | VALUE (250)' (Aion FX Aphelion).
-_BUILD_VALUE_HEADER = re.compile(r"VALUE \((?P<build>[^()]+)\)", re.IGNORECASE)
+# 'MXR Value | DOD Value' (GuitarPCB Emexar v4) names the build before the word;
+# 'Old Value | New Value' (Aion FX Comet), 'Stock Value | Parallel Value' (Aion FX
+# Protolith) describe changes or alternatives, not two builds.
+_BUILD_VALUE_HEADER = re.compile(
+    r"VALUE \((?P<build>[^()]+)\)|(?P<before>(?!(?:PART|REF|OLD|NEW|STOCK|MOD|PARALLEL|COMBINED|NEAREST|ORIGINAL|ALT|ALTERNATE|SUGGESTED|DEFAULT|KIT)\b)[A-Z0-9+]{2,8}) VALUE",
+    re.IGNORECASE,
+)
 _BOM_COLUMNS = {
     "VALUE": "value",
     "QUANTITY": "qty",
@@ -1090,7 +1096,7 @@ def _header_sections(cells: list[Cell]) -> list[list[_Column]]:
         build = _BUILD_VALUE_HEADER.fullmatch(cell.text)
         label = ""
         if build:
-            label = build.group("build").strip()
+            label = (build.group("build") or build.group("before")).strip()
             first = not any(col.field == "value" for col in current)
             field_name = "value" if first else f"build:{label}"
         elif name in _REF_HEADERS or (name == _NAME_HEADER and has_value):
@@ -1418,14 +1424,19 @@ def _build_values(
             if marking:
                 raw = raw[: marking.start()]
             cell = " ".join(raw.replace("*", " ").split()) or value
+            if cell in _SAME_AS_FIRST:
+                cell = value  # '_' (GuitarPCB Emexar v4): as the first build
         out.append((col.build, cell))
     return tuple(out)
 
 
 # 'CLR x1', 'CLR x 2': how many of the part to buy.
-_REF_COUNT = re.compile(r"\s+x\s*(\d+)$")
+# A build cell that repeats the first build's value.
+_SAME_AS_FIRST = frozenset({"_", "-", "\u2013", '"', "\u201d"})
+# 'CLR - 1' (GuitarPCB Cock-It-Wah) reads 'CLR-1' once its spacing is closed up.
+_REF_COUNT = re.compile(r"(?:\s+x\s*|(?<=\bCLR)-)(\d+)$")
 # 'ORDER switch', 'DEEP switch': the noun restates the category.
-_LABEL_NOUN = re.compile(r"(?<=[A-Z0-9]) (?:switch|pot|trimmer)$")
+_LABEL_NOUN = re.compile(r"(?<=[A-Za-z0-9]) (?:switch|pot|trimmer)$")
 # 'TR1-BIAS' names TR1's control; 'IC1-SOCKET' (Aion Amethyst) is a part of its own.
 _POLES_LABEL = re.compile(r"([A-Z]{1,4}\d{0,3}) ?- ?([SD34]P[SDT]T)")
 _NAMED_DESIGNATOR = re.compile(r"([A-Z]{1,4}\d{1,3})-(?!(?i:socket)\b)[A-Za-z]{3,}")

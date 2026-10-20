@@ -32,6 +32,7 @@ from src.bom_lib.layout import (
     bom_note_cells,
     bom_valueless_refs,
     clean_value,
+    drop_remarks,
     find_bom_rows,
     find_listings,
     footnote_marks,
@@ -614,6 +615,8 @@ def _table_entries(
     entries: list[Entry] = []
     seen_refs: set[str] = set()
     table_no = -1
+    titles: dict[int, tuple[int, str]] = {}
+    shaded_seen: set[tuple[int, str, str]] = set()
     for page_no, data in enumerate(pages_data):
         if only_pages is not None and page_no not in only_pages:
             continue
@@ -632,6 +635,11 @@ def _table_entries(
                 entries += grid
                 continue
 
+            # 'Dist +™' over 'Part | Value' (GuitarPCB EMEXAR): the table's title.
+            title = _table_title(table)
+            if title is not None:
+                titles[table_no] = (page_no, title)
+                table = table[1:]
             # Header mapping
             headers = [str(h).upper().strip() for h in table[0] if h]
             loc_idx = -1
@@ -659,9 +667,20 @@ def _table_entries(
             headerless = loc_idx == -1 or val_idx == -1
             if headerless:
                 loc_idx, val_idx, start_row_idx = 0, 1, 0
-                pairs = _shaded_pairs(table)
-                if pairs:
-                    table = pairs
+                # The table is also read pair by pair; those rows only fill in
+                # for the other readers (`_fill_in`).
+                for ref, value in _shaded_pairs(table) or []:
+                    value = drop_remarks(strip_asides(" ".join(value.split())))
+                    if (
+                        ref
+                        and value
+                        and not _is_ignored(value)  # 'BIAS | TP' is a test point
+                        and (page_no, ref, value) not in shaded_seen
+                    ):
+                        shaded_seen.add((page_no, ref, value))
+                        entries.append(
+                            Entry(ref, value, page_no, line=SHADED_LINE, table=table_no)
+                        )
 
             follows_or = False
             for row in table[start_row_idx:]:
@@ -691,6 +710,9 @@ def _table_entries(
                     # A footnote marker is no part of the designator ('*BOOST').
                     ref_raw = row_safe[loc_idx].replace("\n", " ").strip()
                     ref_raw = ref_raw.lstrip("*").strip() or ref_raw
+                    # 'Order switch' (GuitarPCB Wylde Child): the noun restates
+                    # the category, as in text tables.
+                    ref_raw = _RULED_LABEL_NOUN.sub("", ref_raw)
                     # 'IC1 / & / IC2' (GuitarPCB Disturbance): two designators.
                     pair = _REF_PAIR.fullmatch(ref_raw)
                     if pair and all(is_designator(g) for g in pair.groups()):
@@ -698,7 +720,16 @@ def _table_entries(
                     # 'TR1 (see text)', 'TR2 (Volume)' (GuitarPCB D'Lay): an aside
                     # on the designator.
                     aside = _REF_ASIDE.fullmatch(ref_raw)
-                    if aside and is_designator(aside.group(1)):
+                    note = (
+                        " ".join(_ZERO_WIDTH.sub("", aside.group(2)).split())
+                        if aside
+                        else ""
+                    )
+                    if (
+                        aside
+                        and is_designator(aside.group(1))
+                        and (note.lower().startswith("see ") or names_control(note))
+                    ):
                         ref_raw = aside.group(1)
                     val_raw = " ".join(row_safe[val_idx].split())
                     # Optional-part markers are not part of the value ('*27K*'),
@@ -759,6 +790,146 @@ def _table_entries(
                 continue
             seen_refs.update(e.ref for e in table_entries)
             entries += table_entries
+    return _titled_builds(entries, titles)
+
+
+_VARIANT_SHARE = 0.8
+_CONTINUED_ROWS = 3
+_TITLE_HEADERS = frozenset({"PART", "VALUE", "LOCATION", "REF"})
+_MAX_TITLE_WORDS_CELL = 4
+# Side-by-side titled tables are builds when there are this many, listing the
+# same designators: two boards side by side (GuitarPCB Tweed Fuzztone) are as
+# common as two builds, three identical lists are not.
+_MIN_TITLED_BUILDS = 3
+
+
+def _continues_list(data: PDFPageExtraction) -> bool:
+    """Whether a page opens with ruled tables of 'designator | value' rows."""
+    rows = [
+        [str(c).strip() for c in row if c and str(c).strip()]
+        for table in data["tables"]
+        for row in table
+    ]
+    rows = [r for r in rows if r]
+    listed = [
+        r for r in rows if len(r) == 2 and (is_designator(r[0]) or names_control(r[0]))
+    ]
+    return len(listed) >= _CONTINUED_ROWS and len(listed) * 2 >= len(rows)
+
+
+# Rows re-read from a shaded grid (`_shaded_pairs`) carry this line number.
+SHADED_LINE = -2
+
+
+def _fill_in(entries: list[Entry], shaded: list[Entry]) -> list[Entry]:
+    """Adds the re-read shaded-grid rows the other readers missed or ran on.
+
+    The text and layout readers read most shaded grids well, and their
+    positions place each part in its build (GuitarPCB Dr Phybes); the re-read
+    rows only add designators they lost (SWAH V4's controls) and replace a value
+    that ran into the next cell ('LM13700 P2-Sens B100k Lin').
+    """
+    if not shaded:
+        return entries
+    read = {(e.page, e.ref.upper()) for e in entries}
+    shaded_values = {(e.page, e.ref.upper()): e.value for e in shaded}
+    kept = [
+        e
+        for e in entries
+        if (key := (e.page, e.ref.upper())) not in shaded_values
+        or e.column is not None  # per-build columns already split 'MXR | DOD' values
+        or not (_runs_on(e.value) or _cut_short(e.value, shaded_values[key]))
+    ]
+    kept_keys = {(e.page, e.ref.upper()) for e in kept}
+    return kept + [
+        replace(e, line=-1)
+        for e in shaded
+        if (e.page, e.ref.upper()) not in kept_keys
+        or (e.page, e.ref.upper()) not in read
+    ]
+
+
+def _cut_short(value: str, reread: str) -> bool:
+    """Whether a value lost the second value its cell holds ('10k' of '10k 470k').
+
+    The older Tube Screaming Ultra marks its alternate values only by a fill
+    colour; keeping both lets the two-values check warn.
+    """
+    extra = reread.split()[len(value.split()) :]
+    return (
+        reread.startswith(value)
+        and len(extra) == 1
+        and parse_value_to_decimal(extra[0]) is not None
+    )
+
+
+def _runs_on(value: str) -> bool:
+    """Whether a value ran into the next cell: another label follows it."""
+    if names_control(value):
+        return True  # 'P1 | GAIN' read the control's name as its value
+    words = value.split()
+    return any(
+        not _JFET_PART.fullmatch(w)
+        and words[k - 1].lower() not in ("or", "/")  # 'J309 or J113' names alternatives
+        and (
+            is_designator(w)
+            or _NAMED_REF.match(w)
+            or (w.isupper() and names_control(w))
+        )
+        for k, w in enumerate(words)
+        if k
+    )
+
+
+def _table_title(table: list[list[str | None]]) -> str | None:
+    """A lone title cell above a table's 'Part | Value' header row."""
+    if len(table) < 2:
+        return None
+    filled = [str(c).strip() for c in table[0] if c and str(c).strip()]
+    header = {str(c).upper().strip() for c in table[1] if c}
+    if (
+        len(filled) == 1
+        and len(filled[0].split()) <= _MAX_TITLE_WORDS_CELL
+        and header & _TITLE_HEADERS
+    ):
+        return filled[0]
+    return None
+
+
+def _titled_builds(
+    entries: list[Entry], titles: dict[int, tuple[int, str]]
+) -> list[Entry]:
+    """Names each build of side-by-side titled tables that list the same parts.
+
+    GuitarPCB EMEXAR 2 prints 'Dist +™', 'MicroAmp™' and 'DOD 250™' tables side
+    by side, one per project for its one board; each table becomes a value
+    column (`builds._column_variants`). The untitled tables that continue them
+    on the next page ('GAIN | VOL'), as many and in the same order, follow.
+    """
+    by_table: dict[int, list[Entry]] = {}
+    for e in entries:
+        if e.table is not None:
+            by_table.setdefault(e.table, []).append(e)
+    for page in sorted({p for p, _ in titles.values()}):
+        tables = sorted(t for t, (p, _) in titles.items() if p == page)
+        refs = [{e.ref for e in by_table.get(t, [])} for t in tables]
+        if len(tables) < _MIN_TITLED_BUILDS or not all(refs):
+            continue
+        shared = set.intersection(*refs)
+        if len(shared) < _VARIANT_SHARE * max(len(r) for r in refs):
+            continue
+        names = {t: titles[t][1] for t in tables}
+        after = sorted(
+            t
+            for t, es in by_table.items()
+            if t > tables[-1] and t not in titles and es[0].page == page + 1
+        )
+        if len(after) == len(tables):
+            names |= {t: names[k] for t, k in zip(after, tables, strict=True)}
+        entries = [
+            replace(e, column=names[e.table]) if e.table in names else e
+            for e in entries
+        ]
     return entries
 
 
@@ -801,8 +972,12 @@ def _version_split(
 
 # A value that only points to the build notes.
 _POINTER_VALUE = re.compile(r"see (?:build )?(?:notes?|text)", re.IGNORECASE)
+# Lower case only: PedalPCB's 'TOGGLE SWITCH' is the part's whole name.
+_RULED_LABEL_NOUN = re.compile(r"(?<=[A-Za-z]{3}) (?:switch|pot|trimmer)$")
 _REF_PAIR = re.compile(r"(\w+)\s*(?:&|\band\b)\s*(\w+)", re.IGNORECASE)
-_REF_ASIDE = re.compile(r"([A-Za-z]{1,4}\d{1,3})\s*\(.*\)", re.DOTALL)
+# 'TR1 (see text)', 'TR2 (Volume)'; not 'RX2 (by IC1)' (Aion FX legacy Aurora names
+# two positions of RX2 apart) or 'IC1 (vintage)' (Comet legacy names a build).
+_REF_ASIDE = re.compile(r"([A-Za-z]{1,4}\d{1,3})\s*\(([^\d()]*)\)", re.DOTALL)
 
 
 def _alternate_spec_table(
@@ -914,12 +1089,12 @@ def names_builds(header: list[str]) -> bool:
 # A wide, headerless grid of 'Part | Value' pairs.
 _SHADED_MIN_COLUMNS = 6
 _JFET_PART = re.compile(r"J\d{3}")
-_BUY_COUNT = re.compile(r"(?<=[A-Z]) x ?\d+$")
+_BUY_COUNT = re.compile(r"^([A-Z]{2,4}) x ?\d+\b")
 _SPACED_RANGE = re.compile(r"\b([A-Z]{1,3}\d{1,3}) ?[-\u2013] ?([A-Z]{1,3}\d{1,3})\b")
 _SHADED_MIN_PAIRS = 8
 
 
-def _shaded_pairs(table: list[list[str | None]]) -> list[list[str | None]] | None:
+def _shaded_pairs(table: list[list[str | None]]) -> list[list[str]] | None:
     """Re-pairs a headerless 'Part | Value' grid whose shaded rows merge cells.
 
     GuitarPCB SWAH V4 prints its parts as side-by-side pairs with no header;
@@ -939,9 +1114,15 @@ def _shaded_pairs(table: list[list[str | None]]) -> list[list[str | None]] | Non
         named = _NAMED_REF.match(text)
         if named and " " not in text:
             return named.group(1)
-        if _JFET_PART.fullmatch(text):
-            return None  # 'J201' is the JFET, not jack J201
+        if _JFET_PART.fullmatch(text) or text.upper() == "TRIM":
+            return None  # 'J201' is the JFET, not jack J201; 'Trim 50K' a trimmer
         if REF_RANGE.fullmatch(text) or is_designator(text):
+            return text
+        words = text.replace(",", " ").split()
+        if len(words) > 1 and all(is_designator(w) for w in words):
+            return ",".join(words)  # 'D1 D2 | 1N4148' (GuitarPCB Fat Cat Fuzz)
+        # 'TONE | B10k' (GuitarPCB Anxiety Disorder): a control's name.
+        if text.isupper() and names_control(text):
             return text
         return None
 
@@ -962,33 +1143,88 @@ def _shaded_pairs(table: list[list[str | None]]) -> list[list[str | None]] | Non
             and not holds_pair(after)
         )
 
+    def stray(cells: list[str], k: int) -> bool:
+        """A lone value after a pair: its rating, or another build's value."""
+        text = cells[k]
+        return _RATING_CELL.fullmatch(text) is not None or (
+            text[:1].isdigit() and " " not in text and not starts_pair(cells, k)
+        )
+
     pairs: list[list[str | None]] = []
     for row in table:
         # '** Q2-Q6', 'D1 - D2' (GuitarPCB NostalgiTone 70s).
-        # '* CLR x3': how many to buy is no value.
+        # '* CLR x3': how many to buy is no value. A cell merged over two rows
+        # ('P2 TONE 10k Lin' / 'P3 VOL 500k Log', GuitarPCB Over Drive Circuit)
+        # is two cells.
+        texts: list[str] = []
+        for c in row:
+            if not c or not c.replace("*", "").strip():
+                continue
+            parts = [ln for ln in c.split("\n") if ln.strip()]
+            if len(parts) > 1 and all(holds_pair(ln) for ln in parts):
+                texts += parts
+            else:
+                texts.append(c)
         cells = [
             _BUY_COUNT.sub(
-                "", _SPACED_RANGE.sub(r"\1-\2", " ".join(c.replace("*", " ").split()))
+                r"\1",
+                _SPACED_RANGE.sub(r"\1-\2", " ".join(t.replace("*", " ").split())),
             )
-            for c in row
-            if c and c.replace("*", "").strip()
+            for t in texts
         ]
         k = 0
         while k < len(cells):
             head, _, rest = cells[k].partition(" ")
             whole = label(cells[k])
+            if (
+                whole
+                and k + 2 < len(cells)
+                and names_control(cells[k + 1])
+                and not starts_pair(cells, k + 2)
+                and label(cells[k + 2]) is None
+            ):
+                # 'P2 | VOL 2 | 100k Log' (GuitarPCB XX Double Shot).
+                pairs.append([whole, cells[k + 2]])
+                k += 3
+                continue
             if whole and k + 1 < len(cells) and not starts_pair(cells, k + 1):
                 value, k = cells[k + 1], k + 2
-                # 'C4 | 47n | 63V' (GuitarPCB DVF v3): the rating has a cell.
-                if k < len(cells) and _RATING_CELL.fullmatch(cells[k]):
+                digits, _, tail = value.partition(" ")
+                if digits.isdigit() and tail and is_designator(whole + digits):
+                    # 'R1 | 1 2k2' (GuitarPCB Bass Overthruster): the cell
+                    # boundary split 'R11'.
+                    whole, value = whole + digits, tail
+                # 'C4 | 47n | 63V' (GuitarPCB DVF v3): the rating has a cell;
+                # 'R5 | 10k | 470k' (older Tube Screaming Ultra) another build's
+                # value, kept so the two values are warned.
+                if k < len(cells) and stray(cells, k):
                     value, k = f"{value} {cells[k]}", k + 1
                 pairs.append([whole, value])
             elif rest and label(head):
-                pairs.append([label(head), rest])
+                after = cells[k + 1] if k + 1 < len(cells) else None
+                if names_control(rest) and after and not starts_pair(cells, k + 1):
+                    # 'P1 GAIN | 1M Log': the control's name, then its value.
+                    pairs.append([label(head), after])
+                    k += 2
+                    continue
+                name, _, tail = rest.partition(" ")
+                if tail and names_control(name):
+                    rest = tail  # 'P2 TONE 10k Lin': the control's name, then its value
                 k += 1
+                if k < len(cells) and stray(cells, k):
+                    rest, k = f"{rest} {cells[k]}", k + 1
+                pairs.append([label(head), rest])
             else:
                 k += 1
-    return pairs if len(pairs) >= _SHADED_MIN_PAIRS else None
+    if len(pairs) < _SHADED_MIN_PAIRS:
+        return None
+    # 'D1-D4 | 1N914' is four rows, so each designator is warned on its own.
+    return [
+        [ref, value]
+        for refs, value in pairs
+        if refs and value
+        for ref in (expand_refs(refs) if REF_RANGE.fullmatch(refs) else [refs])
+    ]
 
 
 def _value_column_grid(
@@ -1344,9 +1580,9 @@ def _layout_entries(
                     None if listing.x0 >= end > 0 else table_lines.get(listing.line)
                 )
                 if (
-                    ref in table_values
+                    ref.upper() in upper_values
                     # 'Q1-Q5' read whole by the table (GoldenFalk).
-                    or listing.ref in table_values
+                    or listing.ref.upper() in upper_values
                     or (
                         row_value is not None
                         and (
@@ -1697,7 +1933,18 @@ def read_pages(
     text_rows, row_ends = _text_table_entries(pages_data, stats)
     # Five Cats Tone Monarch heads its main table but not its daughterboard's.
     bom_pages = None if tables_only else ({row.page for row in text_rows} or None)
+    if bom_pages:
+        # A list that runs onto the next page in ruled tables alone (GuitarPCB
+        # EMEXAR's 'GAIN | C500k' rows) has no text table there.
+        bom_pages |= {
+            p + 1
+            for p in bom_pages
+            if p + 1 < len(pages_data) and _continues_list(pages_data[p + 1])
+        }
     entries = _table_entries(pages_data, stats, bom_pages)
+    # Re-paired shaded grids only fill in for the other readers (see `_fill_in`).
+    shaded = [e for e in entries if e.line == SHADED_LINE]
+    entries = [e for e in entries if e.line != SHADED_LINE]
     # A boxed 'Part | Value' grid is both a ruled table and a text table
     # (GuitarPCB); read it once, or every part would be bought twice.
     # The ruled cell keeps a value wrapped over two lines ('Bi-Color CA
@@ -1707,6 +1954,10 @@ def read_pages(
     # Another board's table on the page can list the same designator with its
     # own value (GuitarPCB Skyn-Tone: a ruled Compressor table above a text
     # WattAmp table); only the same row read twice is dropped.
+    # But a text row with one value per build ('MXR Value | DOD Value', GuitarPCB
+    # Emexar v4) keeps the builds apart, which the ruled cells run together.
+    by_build = {(r.page, _REPEAT.sub("", r.ref)) for r in text_rows if r.column}
+    entries = [e for e in entries if (e.page, e.ref) not in by_build]
     ruled: dict[tuple[int, str], list[str]] = {}
     for e in entries:
         ruled.setdefault((e.page, e.ref), []).append(e.value)
@@ -1745,6 +1996,7 @@ def read_pages(
         or not any(_wrapped(v, e.ref.rstrip("*")) for v in cells_on[e.page])
         or not any(_wrapped(v, e.value) for v in cells_on[e.page])
     ]
+    entries = _fill_in(entries, shaded)
 
     # --- BUILDS: variants and options ---
     pages = [
@@ -1867,7 +2119,8 @@ _PRESENTS = re.compile(r"GuitarPCB Presents?", re.IGNORECASE)
 # 'TIGHT BOX by GuitarPCB', 'GuitarPCB.com - MoRC v4 2020 & v3': the publisher's
 # byline is no part of the name.
 _BYLINE = re.compile(
-    r"\s+by GuitarPCB$|^GuitarPCB\.com\s+-\s+|^GuitarPCB Presents?\s+", re.IGNORECASE
+    r"\s+by GuitarPCB$|^GuitarPCB\.com(?:\s+-)?\s+|^GuitarPCB Presents?\s+",
+    re.IGNORECASE,
 )
 
 

@@ -1255,12 +1255,44 @@ def test_shaded_grid_is_read_pair_by_pair() -> None:
         ["R10", "6k8"],
         ["C4", "47n 63V"],
         ["TR1", "50k"],
-        ["Q2-Q6", "J201 (see notes)"],
-        ["D1-D2", "LED"],
+        *[[f"Q{n}", "J201 (see notes)"] for n in range(2, 7)],
+        ["D1", "LED"],
+        ["D2", "LED"],
         ["CLR", "1k8-4k7"],
     ]
     # A narrow table is left to the usual reading.
     assert _shaded_pairs([["R1", "1M"], ["R2", "2M"]]) is None
+
+
+def test_shaded_rows_fill_in_what_other_readers_lost() -> None:
+    # The re-read grid adds lost parts, replaces a value that ran into the next
+    # cell or lost its second value, and leaves per-build and complete values be.
+    from src.bom_lib.builds import Entry
+    from src.bom_lib.parser import _fill_in
+
+    entries = [
+        Entry("R1", "10k", 0, line=3),
+        Entry("IC1", "LM13700 P2-Sens B100k Lin", 0, line=4),
+        Entry("R5", "10k", 0, line=5),
+        Entry("Q1", "J309 or J113", 0),
+        Entry("R3", "1M", 0, line=6, column="MXR"),
+    ]
+    shaded = [
+        Entry("R1", "10k", 0),
+        Entry("IC1", "LM13700", 0),
+        Entry("R5", "10k 470k", 0),
+        Entry("Q1", "J309 or J113", 0),
+        Entry("R3", "1M 470k", 0),
+        Entry("VOL", "A100k", 0),
+    ]
+    assert {(e.ref, e.value) for e in _fill_in(entries, shaded)} == {
+        ("R1", "10k"),
+        ("IC1", "LM13700"),
+        ("R5", "10k 470k"),
+        ("Q1", "J309 or J113"),
+        ("R3", "1M"),
+        ("VOL", "A100k"),
+    }
 
 
 def test_mod_change_list_is_not_parts() -> None:

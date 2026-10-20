@@ -45,6 +45,9 @@ _VACTROL = re.compile(r"VTL\d|NSL-?\d")
 DIP_SWITCH = re.compile(r"\bDIP-\d+\b|\bDIP[- ]?\d+\b.*\bSWITCH|\bDIP SWITCH")
 _JACK_VALUE = re.compile(r"\b(?:TRS|JACK)\b")
 # A TO-92/TO-220 voltage regulator takes no DIP socket: '78L06', 'MC7815', 'LM317'.
+_FIXED_RESISTOR = re.compile(
+    r"(\d+(?:\.\d+)?[kKmMR]\d*) (?:fixed )?resistor\*?", re.IGNORECASE
+)
 _REGULATOR = re.compile(r"(?:L|LM|MC|UA|KA)?7[89]L?\d{2}\b|LM317\b")
 # Switchcraft jack part numbers: Aion FX legacy Blueshift's 'IN  111X'.
 _SWITCHCRAFT_JACK = re.compile(r"11[12][A-Z]?X\b")
@@ -270,6 +273,13 @@ def categorize_part(
     else:
         # A TYPE column states the category outright; the value is only a
         # guess (Aion FX: 'LEDR | 10k | Metal film resistor' is no pot).
+        fixed = _FIXED_RESISTOR.fullmatch(val_clean)
+        if fixed and category_hint is None:
+            # GuitarPCB EMEXAR's MicroAmp: 'VOL | 10k fixed resistor' replaces
+            # the pot with a resistor.
+            val_clean = fixed.group(1)
+            val_up = val_clean.upper()
+            category_hint = ComponentCategory.RESISTORS
         named = category_hint or _named_control_category(ref_up, val_up, val_clean)
         if named is None:
             return None

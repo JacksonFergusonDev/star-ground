@@ -13,6 +13,7 @@ from collections import Counter
 from decimal import Decimal
 
 from src.bom_lib import constants
+from src.bom_lib.designators import is_designator
 from src.bom_lib.enums import ComponentCategory, ParseWarningKind
 from src.bom_lib.types import Inventory, ParseWarning, StatsDict
 from src.bom_lib.utils import parse_value_to_decimal
@@ -303,6 +304,16 @@ def check_unextracted_refs(
             )
         ):
             continue
+        if not any(ch.isdigit() for ch in ref) and any(
+            m.group(1).upper() in extracted
+            for m in re.finditer(
+                rf"\b([A-Z]{{1,3}}\d{{1,3}})\s+{re.escape(ref)}\b",
+                joined,
+                re.IGNORECASE,
+            )
+        ):
+            # 'P1 GAIN 1M Log' (GuitarPCB Over Drive Circuit): the name labels P1.
+            continue
         section = _IC_SECTION.fullmatch(ref.upper())
         if section and section.group("chip") in extracted:
             # 'IC2A' on a schematic is one half of the dual op-amp IC2.
@@ -384,6 +395,49 @@ def check_numbering_gaps(inventory: Inventory, stats: StatsDict) -> None:
                 )
 
 
+# Words that describe a resistor or capacitor ('100n Film', '1u Tantalum').
+_PASSIVE_WORDS = frozenset(
+    {
+        "FILM",
+        "BOX",
+        "POLY",
+        "MLCC",
+        "CERAMIC",
+        "CERAMICS",
+        "TANTALUM",
+        "ELECTRO",
+        "ELECTROLYTIC",
+        "METAL",
+        "CARBON",
+        "BIPOLAR",
+        "AXIAL",
+        "RADIAL",
+        "LOW",
+        "ESR",
+        "NP",
+        "NPO",
+        "C0G",
+        "X7R",
+        "WIMA",
+        "MF",
+        "MKT",
+        "MKP",
+        "SILVER",
+        "MICA",
+        "TRIM",
+        "TRIMMER",
+        "LOG",
+        "LIN",
+        "REV",
+        "AUDIO",
+        "LINEAR",
+        "DUAL",
+        "MINI",
+        "SMD",
+    }
+)
+
+
 def check_two_values(inventory: Inventory, stats: StatsDict) -> None:
     """Warns about a resistor or capacitor whose value is two values side by side.
 
@@ -403,6 +457,26 @@ def check_two_values(inventory: Inventory, stats: StatsDict) -> None:
             continue
         tokens = key.value.split()
         if len(tokens) < 2 or tokens[1][-1:].upper() in ("V", "%"):
+            continue
+        if parse_value_to_decimal(tokens[0]) is not None and (
+            is_designator(tokens[1])
+            # One stray word; a remark ('620R Lower Value') is several.
+            or (
+                len(tokens) == 2
+                and tokens[1].isalpha()
+                and tokens[1].istitle()
+                and tokens[1].upper() not in _PASSIVE_WORDS
+            )
+        ):
+            # 'R12  1k  P3 LEVEL 100k Log', 'R14  10k  Buffer' (older GuitarPCB Tube
+            # Screaming Ultra): the value ran into the next cell.
+            for ref in data["refs"]:
+                _warn(
+                    stats,
+                    ParseWarningKind.UNPARSED_VALUE,
+                    ref,
+                    f"{ref} value '{key.value}' runs into other text: check its value.",
+                )
             continue
         first, second = (parse_value_to_decimal(t) for t in tokens[:2])
         if first is None or second is None or first == second:
@@ -768,6 +842,7 @@ def check_duplicate(
     if (
         remark
         and not any(ch.isdigit() for ch in remark)
+        and parse_value_to_decimal(head) is not None
         and _comparable(head) == _comparable(first_value)
     ):
         # '3k3 LED CLR' (GuitarPCB G-02 Animal's suggestion table): the same
