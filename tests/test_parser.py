@@ -1262,6 +1262,12 @@ def test_shaded_grid_is_read_pair_by_pair() -> None:
     ]
     # A narrow table is left to the usual reading.
     assert _shaded_pairs([["R1", "1M"], ["R2", "2M"]]) is None
+    # The Mule: a status LED and its CLR share one value cell.
+    mule: list[list[str | None]] = [
+        ["R6", "10k", "", "C6", "1n", "", "C19", "22n", "LED + *CLR", "Status"],
+        ["R7", "470k", "", "C7", "100pF", "", "C20", "1uF", "VOL", "B25K"],
+    ]
+    assert ["LED,CLR", "Status"] in (_shaded_pairs(mule) or [])
 
 
 def test_shaded_rows_fill_in_what_other_readers_lost() -> None:
