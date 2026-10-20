@@ -149,6 +149,10 @@ class TestFindListings:
         # Mini Heterodyne: a trailing link or remark.
         ("Mini 1P8T - https://www.pedalpcb.com/product/mini-1p8t/", "Mini 1P8T"),
         ("SPDT (On/On) - Short shaft toggle recommended", "SPDT (On/On)"),
+        # GuitarPCB: a pointer or a remark after the value; a pointer alone stays.
+        ("Status LED see text", "Status LED"),  # Tight Box
+        ("2k Option to R9", "2k"),  # Sriracha Fuzz
+        ("See Text", "See Text"),  # G-02 Animal
     ],
 )
 def test_clean_value(raw: str, clean: str) -> None:
@@ -547,6 +551,42 @@ class TestTextBillOfMaterials:
             ("C12,15,16", "100n", 3, "104"),
             ("R11,R13", "47R", 2, ""),
         ]
+
+    def test_value_set_half_a_line_off_its_label(self) -> None:
+        # GuitarPCB Tube Screaming Ultra: the last column's values sit a little
+        # above their labels; D'Lay wraps 'TL072 or' / 'NE5532' around 'IC1'.
+        header = self._row(
+            100, ("Part", 50), ("Value", 100), ("Part", 200), ("Value", 260)
+        )
+        words = (
+            header
+            + self._row(119, ("A100k", 260))
+            + self._row(121, ("R1", 50), ("1M", 100), ("LEVEL", 200))
+            + self._row(139, ("TL072 or", 260))
+            + self._row(141, ("R2", 50), ("1k", 100), ("IC1", 200))
+            + self._row(143, ("NE5532", 260))
+            + self._row(161, ("R3", 50), ("10k", 100), ("D4", 200), ("3mm", 260))
+        )
+        rows = find_bom_rows(words)
+        assert [(r.refs, r.value) for r in rows] == [
+            ("R1", "1M"),
+            ("LEVEL", "A100k"),
+            ("R2", "1k"),
+            ("IC1", "TL072 or NE5532"),
+            ("R3", "10k"),
+            ("D4", "3mm"),
+        ]
+
+    def test_designator_with_an_empty_value_cell_is_reported(self) -> None:
+        # GuitarPCB The Burner prints 'D2' with nothing beside it.
+        from src.bom_lib.layout import bom_valueless_refs
+
+        words = (
+            self._row(100, ("Part", 50), ("Value", 100), ("Part", 200), ("Value", 260))
+            + self._row(120, ("D1", 50), ("1N5817", 100), ("HEAT", 200), ("B50K", 260))
+            + self._row(140, ("D2", 50), ("FUEL", 200), ("A10K", 260))
+        )
+        assert bom_valueless_refs(words) == ["D2"]
 
     def test_no_header_no_rows(self) -> None:
         assert find_bom_rows(_line("R1", "10K", "C1", "100n")) == []

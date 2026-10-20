@@ -160,6 +160,13 @@ class TestCheckDuplicate:
         check_duplicate(stats, "MIX", "B5K", new_value)
         assert stats["warnings"] == []
 
+    def test_same_value_with_a_remark_does_not_warn(self) -> None:
+        # GuitarPCB G-02 Animal's suggestion table: 'R43 | 3k3 | LED CLR'.
+        stats = create_empty_stats()
+        check_duplicate(stats, "R43", "3k3", "3k3 LED CLR")
+        check_duplicate(stats, "R4", "200k", "200k 180k /220k")
+        assert [w.ref for w in stats["warnings"]] == ["R4"]
+
 
 class TestCheckClassification:
     """Tests for classifier contradiction detection."""
@@ -177,6 +184,12 @@ class TestCheckClassification:
             stats, "GAIN", "SPDT (On - On)", ComponentCategory.POTENTIOMETERS, "x"
         )
         assert _kinds(stats) == [ParseWarningKind.CATEGORY_CONFLICT]
+
+    def test_led_named_resistor_does_not_warn(self) -> None:
+        # Aion FX Heliosphere: 'LED1  10k  Metal film resistor' is the LED's resistor.
+        stats = create_empty_stats()
+        check_classification(stats, "LED1", "10k", ComponentCategory.RESISTORS, "10k")
+        assert stats["warnings"] == []
 
     def test_unparseable_passive_value(self) -> None:
         stats = create_empty_stats()
@@ -589,6 +602,37 @@ def test_either_part_note() -> None:
     }
 
 
+def test_either_part_install_notes() -> None:
+    # GuitarPCB Sriracha Fuzz and ColorTone Bass Fuzz (said twice, warned once).
+    from src.bom_lib.verification import check_either_part
+
+    inv = _inventory(
+        (ComponentCategory.RESISTORS, "1k", "R9"),
+        (ComponentCategory.POTENTIOMETERS, "2k", "TR1"),
+        (ComponentCategory.POTENTIOMETERS, "100k", "T2"),
+        (ComponentCategory.POTENTIOMETERS, "A100k", "BOOST"),
+    )
+    stats = create_empty_stats()
+    text = (
+        "* Install R9 or TR1 but do not install both.\n"
+        "If you want a simple pedal, only install T2 and not the Boost potentiometer. "
+        "Otherwise only install the Boost potentiometer and do not install T2."
+    )
+    check_either_part([text], inv, stats)
+    assert sorted(w.ref for w in stats["warnings"]) == ["BOOST", "R9", "T2", "TR1"]
+
+
+def test_pointer_value_warns() -> None:
+    from src.bom_lib.verification import check_pointer_value
+
+    stats = create_empty_stats()
+    check_pointer_value(stats, "Q1", "See Text")
+    check_pointer_value(stats, "R1", "10k")
+    assert [(w.kind, w.ref) for w in stats["warnings"]] == [
+        (ParseWarningKind.UNPARSED_VALUE, "Q1")
+    ]
+
+
 def test_alternative_part_number_is_no_missing_designator() -> None:
     # GuitarPCB FrontStage: 'Q1 | J309 or J113' names a JFET, not jack J113.
     inv = _inventory((ComponentCategory.TRANSISTORS, "J309", "Q1"))
@@ -686,6 +730,38 @@ def test_build_notes_change_list_for_another_version() -> None:
     stats = create_empty_stats()
     check_build_changes([text], inventory, stats)
     assert sorted(w.ref for w in stats["warnings"]) == ["C12", "D3", "R34", "R8"]
+
+
+def test_style_builds_change_values_inline() -> None:
+    # GuitarPCB Tube Screaming Ultra: an 808 build's exceptions inline, and the
+    # Robin Trower build's omissions, jumper, and value changes in prose.
+    text = "\n".join(
+        [
+            "2. Robin Trower Style build differs in that D2 is replaced by a jumper to",
+            "give symmetrical clipping. To remove the buffer do not install R1, R2 R3, C1 and Q1.",
+            "3. 808 Style Build: Use Landgraff values with these exceptions C4: 47n, R6: 51k",
+            "Finally, JUMPER D2",
+            "and change values of R4 to 1M, R5 to 470K & C2 to 22n. Pink area below.",
+        ]
+    )
+    refs = ("R1", "R2", "R3", "R4", "R5", "R6", "C1", "C2", "C4", "D2", "Q1", "R9")
+    inventory = _listed(*((r, "1k", ComponentCategory.RESISTORS) for r in refs))
+    stats = create_empty_stats()
+    check_build_changes([text], inventory, stats)
+    assert sorted({w.ref for w in stats["warnings"]}) == sorted(set(refs) - {"R9"})
+
+
+def test_parts_that_differ_between_covered_versions() -> None:
+    # GuitarPCB MoRC: 'The part list aside from IC1 and D4 is identical in both versions.'
+    text = "*The part list aside from IC1 and D4 is identical in both versions. You must use"
+    inventory = _listed(
+        ("IC1", "LM13700", ComponentCategory.ICS),
+        ("D4", "1N4001", ComponentCategory.DIODES),
+        ("D1", "1N914", ComponentCategory.DIODES),
+    )
+    stats = create_empty_stats()
+    check_build_changes([text], inventory, stats)
+    assert sorted(w.ref for w in stats["warnings"]) == ["D4", "IC1"]
 
 
 def test_part_numbered_version_swaps_its_part() -> None:
