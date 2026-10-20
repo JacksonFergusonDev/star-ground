@@ -670,8 +670,13 @@ def check_build_changes(
             k += 1
             if not _BUILD_PASSAGE.search(line) or _MODIFICATION.search(line):
                 continue
+            # A heading or a lead-in ('...the following substitutions:') opens a
+            # passage; a sentence ('The Park uses 2n2 for C6.') is its own scope.
+            sentence = not (_NOTE_HEADING.match(line) or line.endswith(":"))
             for n, body in enumerate(lines[k - 1 : k + _PASSAGE_LINES]):
                 if n and _NOTE_HEADING.match(body) and not _CHANGE_ITEM.match(body):
+                    break
+                if n and sentence and lines[k - 2 + n].rstrip().endswith("."):
                     break
                 labels = [m.group(1) for m in [_CHANGE_ITEM.match(body)] if m]
                 for m in _CHANGE_PROSE.finditer(body):
