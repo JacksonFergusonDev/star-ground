@@ -98,6 +98,16 @@ class TestUnextractedRefs:
         check_unextracted_refs([page], create_empty_inventory(), stats)
         assert stats["warnings"] == []
 
+    def test_bare_label_is_the_notes_only_numbered_one(self) -> None:
+        # NostalgiTone Compressor: the table's 'SW - SPDT' is the notes' 'SW1'.
+        inventory = create_empty_inventory()
+        inventory.add_part(
+            "T", make_component_key(ComponentCategory.SWITCHES, "SPDT"), "SW"
+        )
+        stats = create_empty_stats()
+        check_unextracted_refs(["SW SPDT\nSW1 UP: fastest"], inventory, stats)
+        assert stats["warnings"] == []
+
     def test_part_number_shaped_like_a_designator(self) -> None:
         # Golden Falk: 'Q1-Q5  J201  JFET transistor' lists J201 as a value.
         inventory = create_empty_inventory()
@@ -622,14 +632,23 @@ def test_either_part_install_notes() -> None:
     assert sorted(w.ref for w in stats["warnings"]) == ["BOOST", "R9", "T2", "TR1"]
 
 
+def test_wrapped_value_read_in_part_is_no_conflict() -> None:
+    # GuitarPCB Dr Phybes: one reader keeps 'CA Bi-colour LED', another its last line.
+    stats = create_empty_stats()
+    check_duplicate(stats, "D2", "CA Bi-colour LED", "LED")
+    assert stats["warnings"] == []
+
+
 def test_pointer_value_warns() -> None:
     from src.bom_lib.verification import check_pointer_value
 
     stats = create_empty_stats()
     check_pointer_value(stats, "Q1", "See Text")
+    check_pointer_value(stats, "Q2", "PNP\u2014See Text")  # PUFF v4
     check_pointer_value(stats, "R1", "10k")
     assert [(w.kind, w.ref) for w in stats["warnings"]] == [
-        (ParseWarningKind.UNPARSED_VALUE, "Q1")
+        (ParseWarningKind.UNPARSED_VALUE, "Q1"),
+        (ParseWarningKind.UNPARSED_VALUE, "Q2"),
     ]
 
 

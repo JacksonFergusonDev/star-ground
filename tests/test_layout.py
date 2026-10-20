@@ -41,6 +41,21 @@ def _line(*cells: str, top: float = 100.0) -> list[PDFWord]:
     return words
 
 
+def test_value_wrapped_around_its_designator() -> None:
+    # GuitarPCB Aeon Overdrive v2: 'CA Bi-colour' above D5's line, 'LED' below.
+    words = (
+        _line("R2", "1M", "C2", "220n", top=100)
+        + [
+            PDFWord(text=t, x0=x, x1=x + 30, top=110, size=SIZE)
+            for t, x in (("CA", 220.0), ("Bi-colour", 236.0))
+        ]
+        + _line("R3", "1M", "C3", "150n", top=120)
+        + [PDFWord(text="D5", x0=190.0, x1=202.0, top=120, size=SIZE)]
+        + [PDFWord(text="LED", x0=220.0, x1=238.0, top=130, size=SIZE)]
+    )
+    assert Listing("D5", "CA Bi-colour LED") in find_listings(words)
+
+
 class TestGrouping:
     """Tests for line grouping and cell splitting."""
 
@@ -153,6 +168,7 @@ class TestFindListings:
         ("Status LED see text", "Status LED"),  # Tight Box
         ("2k Option to R9", "2k"),  # Sriracha Fuzz
         ("See Text", "See Text"),  # G-02 Animal
+        ("1N5817 v4.5 only", "1N5817"),  # Sriracha Fuzz 4.5: the board revision
     ],
 )
 def test_clean_value(raw: str, clean: str) -> None:
@@ -551,6 +567,13 @@ class TestTextBillOfMaterials:
             ("C12,15,16", "100n", 3, "104"),
             ("R11,R13", "47R", 2, ""),
         ]
+
+    def test_designator_and_value_in_one_dashed_cell(self) -> None:
+        # GuitarPCB Blues Buster: 'R1 - 1M' centred under a 'Part Value' header.
+        header = self._row(100, ("Part", 50), ("Value", 100))
+        row = self._row(112, ("R1 - 1M", 60))
+        rows = find_bom_rows(header + row)
+        assert [(r.refs, r.value) for r in rows] == [("R1", "1M")]
 
     def test_value_set_half_a_line_off_its_label(self) -> None:
         # GuitarPCB Tube Screaming Ultra: the last column's values sit a little

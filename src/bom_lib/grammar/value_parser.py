@@ -22,6 +22,7 @@ SI_MULTIPLIERS: Final[dict[str, Decimal]] = {
     "µ": Decimal("1e-6"),  # micro (Unicode)
     "n": Decimal("1e-9"),  # nano
     "p": Decimal("1e-12"),  # pico
+    "P": Decimal("1e-12"),  # pico, upper case ('C3  5P', GuitarPCB Photon Phuzz)
     "R": Decimal("1"),  # Ohms (BS 1852 multiplier)
     "r": Decimal("1"),  # Ohms lowercase variant
 }

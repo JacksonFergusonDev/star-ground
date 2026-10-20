@@ -33,6 +33,10 @@ from src.bom_lib.enums import ComponentCategory as Cat
         ("RPD2", Cat.RESISTORS),
         ("RX1", Cat.RESISTORS),  # Aion FX optional-mod parts
         ("CX5", Cat.CAPACITORS),
+        ("CX", Cat.CAPACITORS),  # GuitarPCB Dr Rock's optional op-amp cap
+        ("R-A", Cat.RESISTORS),  # GuitarPCB D'Lay
+        ("SW 1", Cat.SWITCHES),  # GuitarPCB EA Tremelo
+        ("DA", Cat.DIODES),  # GuitarPCB Easy Order: two LEDs for one bi-colour
         ("QX1", Cat.TRANSISTORS),  # Aion FX legacy L5 Preamp
         ("RG1", Cat.ICS),  # voltage regulator (Aion FX legacy Blueshift)
         ("Z1", Cat.DIODES),  # zener

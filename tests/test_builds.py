@@ -49,6 +49,22 @@ class TestGrids:
         assert [e.value for e in plan.variants[1].entries] == ["39K", "82K"]
         assert plan.common == ()
 
+    def test_two_boards_side_by_side_are_not_versions(self) -> None:
+        # GuitarPCB Rock Hard: Boost and PlexAmp tables share rows; each column
+        # is headed only 'Part | Value'.
+        page = _page(
+            [("Part", 40), ("Value", 80), ("Part", 280), ("Value", 320)],
+            [("R1", 40), ("22M", 80), ("R1", 280), ("1M", 320)],
+            [("R2", 40), ("10M", 80), ("R2", 280), ("470k", 320)],
+        )
+        entries = [
+            Entry("R1", "22M", 0, line=1, x0=40),
+            Entry("R1", "1M", 0, line=1, x0=280),
+            Entry("R2", "10M", 0, line=2, x0=40),
+            Entry("R2", "470k", 0, line=2, x0=280),
+        ]
+        assert _names(plan_builds(entries, [page])) == []
+
     def test_grid_without_a_header_is_named_by_its_first_row(self) -> None:
         # Frost Drive: an alternate-pot table under a sentence ending '... accordingly.'
         page = _page(

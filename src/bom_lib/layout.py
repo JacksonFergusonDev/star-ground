@@ -156,6 +156,8 @@ _OPTION_TO = re.compile(
 )
 # A trailing unbracketed pointer to the build notes.
 _SEE_TEXT = re.compile(r"\s+see (?:build )?(?:notes?|text)$", re.IGNORECASE)
+# '1N5817 v4.5 only' (GuitarPCB Sriracha Fuzz): the board revision that has it.
+_VERSION_ONLY = re.compile(r"\s+v\d+(?:\.\d+)? only$", re.IGNORECASE)
 # Trailing words that only restate the component type.
 # A part supplied with the PCB is still a part: '24LC32A *Included' (Deflector).
 _INCLUDED = re.compile(r"\s*\*\s*Included(?: with (?:the )?PCB)?\s*$", re.IGNORECASE)
@@ -311,6 +313,11 @@ def ref_group(cell: str) -> str | None:
 def _ref_name(cell: str) -> str:
     """The designator a ref cell names; control names are upper case ('Volume')."""
     name = _unmarked(cell)
+    if name.startswith("SW "):
+        name = name.replace(" ", "")  # 'SW 1' (GuitarPCB EA Tremelo)
+    named = _NAMED_DESIGNATOR.fullmatch(name)
+    if named and "=" in name and is_designator(named.group(1)):
+        return named.group(1)  # 'P1=FUZZ' (GuitarPCB PUFF v4)
     group = ref_group(name)
     if group is not None:
         return group
@@ -377,6 +384,10 @@ def strip_asides(value: str) -> str:
     return drop_remarks(" ".join(_ASIDE.sub("", value).split()) or value)
 
 
+# 'R1 - 1M' (or an en dash): a designator and its value, a dash apart.
+_DASHED_LISTING = re.compile(r"(\S+)\s+[-\u2013\u2014]\s+(\S+)")
+
+
 def drop_remarks(value: str) -> str:
     """Removes a trailing remark that is no part of the value.
 
@@ -384,7 +395,7 @@ def drop_remarks(value: str) -> str:
     '2k Option to R9' (Sriracha Fuzz) names the part this one replaces. A value
     that is only a pointer ('See Text') stays, so it can be reported.
     """
-    return _OPTION_TO.sub("", _SEE_TEXT.sub("", value)) or value
+    return _VERSION_ONLY.sub("", _OPTION_TO.sub("", _SEE_TEXT.sub("", value))) or value
 
 
 _LEADING_DASH = re.compile(r"^[-\u2013]\s*(?=\d)")
@@ -688,6 +699,10 @@ def pictured_lists(words: list[PDFWord], pictures: list[Picture]) -> list[str]:
     return found
 
 
+# How far right of its designator a wrapped value may start, in ems.
+_WRAP_REACH_EM = 8
+
+
 def page_lines(words: list[PDFWord]) -> list[list[Cell]]:
     """The cells of every visual line on a page, numbered as `find_listings` numbers them."""
     return [split_cells(line) for line in group_lines(words)]
@@ -708,7 +723,35 @@ def find_listings(words: list[PDFWord]) -> list[Listing]:
     lines = page_lines(words)
     starts = Counter(round(listing.x0) for listing in _scan(words, frozenset()))
     columns = frozenset(x for x, n in starts.items() if n >= _MIN_COLUMN_REFS)
-    return _mark_trimmers(_scan(words, columns, _type_columns(lines)), lines)
+    listings = _scan(words, columns, _type_columns(lines))
+    return _mark_trimmers(_wrapped_values(listings, lines), lines)
+
+
+def _wrapped_values(listings: list[Listing], lines: list[list[Cell]]) -> list[Listing]:
+    """Gives a designator printed without a value the value wrapped around it.
+
+    A two-line cell centred on its row sets 'CA Bi-colour' on the line above
+    the designator and 'LED' on the line below (GuitarPCB Aeon Overdrive v2),
+    each alone on its line just right of the designator.
+    """
+    out = []
+    for listing in listings:
+        if listing.value:
+            out.append(listing)
+            continue
+        found = []
+        for nb in (listing.line - 1, listing.line + 1):
+            if not 0 <= nb < len(lines) or len(lines[nb]) != 1:
+                continue
+            [cell] = lines[nb]
+            if (
+                listing.x0 < cell.x0 <= listing.x0 + _WRAP_REACH_EM * cell.size
+                and not BOARD_REF.fullmatch(cell.text.split()[0])
+            ):
+                found.append(cell.text)
+        value = clean_value(" ".join(found))
+        out.append(replace(listing, value=value) if value else listing)
+    return out
 
 
 def starts_description(value: str, text: str) -> bool:
@@ -920,6 +963,8 @@ def names_control(text: str) -> bool:
     'Trim' is not: before a value it says the part is a trimmer ('RUETZ |
     Trim 100R', GuitarPCB Doomstortion).
     """
+    if not text.split():
+        return False
     name, *rest = text.upper().split()
     return (
         name != "TRIM"
@@ -1322,7 +1367,8 @@ def _read_bom(words: list[PDFWord]) -> tuple[list[BomRow], list[Cell], list[str]
                 end = cell.x0
                 break
             fields[target] = f"{fields.get(target, '')} {cell.text}".strip()
-            if target[1] == "refs":
+            if target[1] in ("refs", "value"):
+                # A row's x0 is its designator's; 'R1 - 1M' sits under Value.
                 first_x0.setdefault(target[0], cell.x0)
             if target[1] == "notes" and any(
                 col.field == "type" for col in sections[target[0]]
@@ -1337,6 +1383,17 @@ def _read_bom(words: list[PDFWord]) -> tuple[list[BomRow], list[Cell], list[str]
             if count:
                 refs = refs[: count.start()]
             refs = _LABEL_NOUN.sub("", refs)
+            whole = f"{fields.get((k, 'refs'), '')} {fields.get((k, 'value'), '')}"
+            dashed = _DASHED_LISTING.fullmatch(whole.strip())
+            if (
+                dashed
+                and is_designator(dashed.group(1))
+                and _VALUE_SHAPE.fullmatch(dashed.group(2))
+            ):
+                # 'R1 - 1M' centred under a 'Part Value' header (GuitarPCB Blues
+                # Buster): the designator and its value in one cell.
+                refs = dashed.group(1)
+                fields[(k, "value")] = dashed.group(2)
             # 'TR1 - BIAS' (GuitarPCB PURP): the control's name labels the
             # board designator.
             named = _NAMED_DESIGNATOR.fullmatch(refs)
@@ -1439,7 +1496,8 @@ _REF_COUNT = re.compile(r"(?:\s+x\s*|(?<=\bCLR)-)(\d+)$")
 _LABEL_NOUN = re.compile(r"(?<=[A-Za-z0-9]) (?:switch|pot|trimmer)$")
 # 'TR1-BIAS' names TR1's control; 'IC1-SOCKET' (Aion Amethyst) is a part of its own.
 _POLES_LABEL = re.compile(r"([A-Z]{1,4}\d{0,3}) ?- ?([SD34]P[SDT]T)")
-_NAMED_DESIGNATOR = re.compile(r"([A-Z]{1,4}\d{1,3})-(?!(?i:socket)\b)[A-Za-z]{3,}")
+# 'P1=FUZZ' (GuitarPCB PUFF v4) names the pot with an equals sign.
+_NAMED_DESIGNATOR = re.compile(r"([A-Z]{1,4}\d{1,3})[-=](?!(?i:socket)\b)[A-Za-z]{3,}")
 _DESIGNATOR_ROLE = re.compile(r"([A-Z]{1,3}\d{1,3}) [A-Z][a-z]+(?: [A-Z][a-z]+)*")
 # A part label in a typed table: 'VOL.', 'HI-MID FREQ', 'IC1-S', 'PRE-V. SEND',
 # '100HZ' (Aion FX Karkadann's 100 Hz EQ pot).

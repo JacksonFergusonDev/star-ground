@@ -66,7 +66,13 @@ _PREFIXES: tuple[tuple[str, ComponentCategory | None], ...] = (
 # Designators printed without a number or name suffix.
 # 'RX' is an optional resistor (GuitarPCB Mini-Me 'Rx  1M'), a lone 'IC' the
 # only chip besides IC1 (Tube Screaming Preamp), 'REG' the voltage regulator.
-_BARE = frozenset({"LED", "CLR", "RLED", "LEDR", "RPD", "TRIM", "RX", "IC", "REG"})
+_BARE = frozenset(
+    {"LED", "CLR", "RLED", "LEDR", "RPD", "TRIM", "RX", "CX", "IC", "REG"}
+)
+# A lettered resistor (GuitarPCB D'Lay's 'R-A') and a switch numbered a space
+# apart ('SW 1', GuitarPCB EA Tremelo).
+# 'DA' / 'DB' are two LEDs in place of one bi-colour D1 (GuitarPCB Easy Order).
+_LETTERED = re.compile(r"(R)-[A-Z]|(SW) \d{1,2}|(D)[AB]")
 
 # A channel suffix letter (R1A/R1B, D10a-D10d). K, M and R are excluded so a
 # C-taper pot value (C10K, C1M) is never mistaken for capacitor C10.
@@ -111,6 +117,10 @@ def parse_designator(ref: str) -> Designator | None:
         return Designator(upper, dict(_PREFIXES)[upper])
     if upper[:-1] in _BARE and upper[-1] in "ABCDEFGH":  # LEDA / LEDB channels
         return Designator(upper[:-1], dict(_PREFIXES)[upper[:-1]])
+    lettered = _LETTERED.fullmatch(upper)
+    if lettered:
+        prefix = next(g for g in lettered.groups() if g)
+        return Designator(prefix, dict(_PREFIXES)[prefix])
     for prefix, category in _PREFIXES:
         if upper.startswith(prefix) and _SUFFIX.fullmatch(token[len(prefix) :]):
             return Designator(prefix, category)

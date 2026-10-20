@@ -23,6 +23,7 @@ from src.bom_lib.grammar import (
         ("100n", Decimal("1e-7")),
         ("2.2M", Decimal("2.2e6")),
         ("100p", Decimal("100e-12")),
+        ("5P", Decimal("5e-12")),  # GuitarPCB Photon Phuzz
         ("10m", Decimal("0.01")),
         ("1G", Decimal("1e9")),
         ("4.7µ", Decimal("4.7e-6")),
