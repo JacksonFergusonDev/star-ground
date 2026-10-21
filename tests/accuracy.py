@@ -598,7 +598,8 @@ def score_doc(doc: GoldenDoc, ocr: bool = False) -> DocScore:
         # the app reports): every part is flagged.
         flagged.add(_EVERYTHING)
     if any(
-        w.kind == ParseWarningKind.IMAGE_PARTS_LIST and not w.ref
+        w.kind in (ParseWarningKind.IMAGE_PARTS_LIST, ParseWarningKind.QUANTITY_LIST)
+        and not w.ref
         for w in res.stats["warnings"]
     ):
         flagged.add(_MISSING)

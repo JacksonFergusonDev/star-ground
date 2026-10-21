@@ -408,6 +408,10 @@ def page_words(boxes: list[OcrBox]) -> PDFPageExtraction:
                         # A value's description starts a cell: 'TL072 | Dual
                         # Op Amp', in one box or two.
                         or starts_description(words[-1]["text"], " ".join(tokens[k:]))
+                        # So does the box after a designator, however close OCR
+                        # set it ('*D1 - D4' ending where '1N34A GE' starts,
+                        # GuitarPCB G2 Animal v3).
+                        or (not k and _starts_cell(words[-1]["text"].lstrip("*")))
                     )
                 ):
                     # A designator starts a cell, however close OCR set it to

@@ -445,6 +445,12 @@ class TestCellRepairs:
             Listing("D1-D2", "1N4148"),
         ]
 
+    def test_range_of_numbered_labels(self) -> None:
+        # GuitarPCB NostalgiTone, read by OCR: 'EFL1-3  Status LED'.
+        assert find_listings(_line("EFL1-3", "Status LED")) == [
+            Listing("EFL1-3", "Status LED")
+        ]
+
     def test_title_case_control_beside_a_tapered_pot(self) -> None:
         # GuitarPCB Tone TwEQ: 'R11  10k  Volume  A100k'.
         assert find_listings(_line("R11", "10k", "Volume", "A100k")) == [

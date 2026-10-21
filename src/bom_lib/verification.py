@@ -368,6 +368,9 @@ def check_numbering_gaps(inventory: Inventory, stats: StatsDict) -> None:
 
     Only a reading with no capacitors is checked: every circuit has some, so
     their absence says the parser read something other than the parts list.
+    The document as a whole is then warned too, so the parts the reading never
+    named are not missed silently (GuitarPCB G2 Animal v3 pictures its parts
+    list; the text layer holds only a table of substitute values).
 
     Args:
         inventory: The finished inventory for this document.
@@ -375,6 +378,7 @@ def check_numbering_gaps(inventory: Inventory, stats: StatsDict) -> None:
     """
     if any(key.category == ComponentCategory.CAPACITORS for key in inventory):
         return
+    sparse = False
     numbers: dict[tuple[str, int], set[int]] = {}
     for data in inventory.values():
         for ref in data["refs"]:
@@ -387,6 +391,7 @@ def check_numbering_gaps(inventory: Inventory, stats: StatsDict) -> None:
         span = max(ns) - first + 1
         if span < _SPARSE_MIN or len(ns) >= _SPARSE_SHARE * span:
             continue
+        sparse = True
         for n in range(first, max(ns)):
             if n not in ns:
                 _warn(
@@ -396,6 +401,15 @@ def check_numbering_gaps(inventory: Inventory, stats: StatsDict) -> None:
                     f"{prefix}{n} may be missing: the parts list numbers its "
                     f"{prefix} parts up to {prefix}{max(ns)} but lists only {len(ns)}.",
                 )
+    if sparse:
+        _warn(
+            stats,
+            ParseWarningKind.IMAGE_PARTS_LIST,
+            "",
+            "No capacitors were read and the parts are numbered sparsely, so the "
+            "parts list itself was likely not read: it may be printed as an image. "
+            "Check the document.",
+        )
 
 
 # Words that describe a resistor or capacitor ('100n Film', '1u Tantalum').
@@ -441,6 +455,11 @@ _PASSIVE_WORDS = frozenset(
 )
 
 
+# Two-value rows that make a list a table of substitutes.
+_PAIRED_MIN = 4
+_PAIRED_SHARE = 0.5
+
+
 def check_two_values(inventory: Inventory, stats: StatsDict) -> None:
     """Warns about a resistor or capacitor whose value is two values side by side.
 
@@ -452,6 +471,7 @@ def check_two_values(inventory: Inventory, stats: StatsDict) -> None:
         inventory: The finished inventory for this document.
         stats: Stats object that receives the warnings.
     """
+    paired: set[str] = set()
     for key, data in inventory.items():
         if key.category not in (
             ComponentCategory.RESISTORS,
@@ -485,11 +505,28 @@ def check_two_values(inventory: Inventory, stats: StatsDict) -> None:
         if first is None or second is None or first == second:
             continue
         for ref in data["refs"]:
+            paired.add(ref)
             _warn(
                 stats,
                 ParseWarningKind.VALUE_CHOICE,
                 ref,
                 f"{ref} lists two values ('{key.value}'): check which one to use.",
+            )
+    refs = [ref for data in inventory.values() for ref in data["refs"]]
+    if len(paired) < _PAIRED_MIN or len(paired) < _PAIRED_SHARE * len(refs):
+        return
+    # Most rows pair a value with a substitute: the list read is that table,
+    # and its other rows are no plainer ('R36  620R  Lower Value -Higher
+    # Gain', 'R43  3k3  LED CLR' in G2 Animal v3).
+    warned = {w.ref for w in stats["warnings"]}
+    for ref in refs:
+        if ref not in warned:
+            _warn(
+                stats,
+                ParseWarningKind.VALUE_CHOICE,
+                ref,
+                f"{ref} was read from a list where most parts give two values, "
+                "likely a table of substitutes: check its value in the parts list.",
             )
 
 
@@ -1529,6 +1566,47 @@ def check_value_keyed_list(page_texts: list[str], stats: StatsDict) -> None:
             "The parts list names its parts by value, not by designator ('PART | QTY | "
             "TYPE'), so it could not be read. Enter the parts by hand.",
         )
+
+
+# A parts list row that counts parts instead of naming them: '4 - 10k',
+# '2 - 0.082 µF' (Tonepad). The count is one or two digits; the value starts
+# with a digit and carries a multiplier or unit, and the dash is spaced:
+# '3-4' and '10-30k' are ranges.
+_QUANTITY_ROW = re.compile(
+    r"(?<![\w.\-])(\d{1,2})(?:\s+[-\u2013]\s*|[-\u2013]\s+)"
+    r"(\d[\d.,]*(?:[kKMR]\d*|\s?[pnuµμ]F|[pnuµμ]\d*))(?![\w.\-])"
+)
+_QUANTITY_MIN = 3
+
+
+def check_quantity_list(page_texts: list[str], stats: StatsDict) -> None:
+    """Tells the builder about parts counted by value instead of listed by designator.
+
+    Tonepad lists '4 - 10k' under a Resistors heading: four 10k resistors, no
+    designators. Those parts cannot be read (the parts list is keyed by
+    designator), so the document as a whole is warned. Parts the same list
+    does name ('IC1 - PT2399') are still read.
+
+    Args:
+        page_texts: Raw text of every page.
+        stats: Stats object that receives the warning.
+    """
+    rows = [
+        m.group(0)
+        for text in page_texts
+        for m in _QUANTITY_ROW.finditer(text)
+        if parse_value_to_decimal(m.group(2).replace(" ", "")) is not None
+    ]
+    if len(rows) < _QUANTITY_MIN:
+        return
+    _warn(
+        stats,
+        ParseWarningKind.QUANTITY_LIST,
+        "",
+        f"{len(rows)} lines of the parts list count parts by value ('{rows[0]}') "
+        "instead of naming them by designator, so those parts were not read. Enter "
+        "them by hand.",
+    )
 
 
 def check_pictured_lists(
