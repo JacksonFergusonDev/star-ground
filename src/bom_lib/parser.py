@@ -1801,6 +1801,40 @@ def _merge_warnings(target: StatsDict, source: StatsDict) -> None:
             target["warnings"].append(warning)
 
 
+# A part supplied with the PCB: 'IC3  24LC32A *Included' (PedalPCB Deflector),
+# 'IC2  RANDOMIZER  Random LFO microcontroller  Included with PCB' (Low Tide).
+# The designator is the last one before the marker: Deflector's line holds
+# three columns, 'R3 1K C3 1n IC3 24LC32A *Included'.
+_INCLUDED_ROW = re.compile(
+    r"\b([A-Z]{1,4}\d{1,3})\s(?:(?!\b[A-Z]{1,4}\d{1,3}\s).)*?"
+    r"(?i:\bincluded(?: with (?:the )?PCB)?)\s*$",
+    re.MULTILINE,
+)
+
+
+def included_refs(page_texts: list[str]) -> frozenset[str]:
+    """Designators the document says come with the PCB.
+
+    Args:
+        page_texts: Every page's text.
+
+    Returns:
+        The designators of parts supplied with the PCB.
+    """
+    return frozenset(
+        m.group(1)
+        for text in page_texts
+        for m in _INCLUDED_ROW.finditer(text)
+        if is_designator(m.group(1))
+    )
+
+
+def _mark_included(inventory: Inventory, refs: frozenset[str]) -> None:
+    """Counts the parts of an inventory that come with the PCB."""
+    for data in inventory.values():
+        data["included"] = sum(1 for r in data["refs"] if r in refs)
+
+
 def _assemble_builds(
     plan: BuildPlan, source_name: str, stats: StatsDict
 ) -> tuple[Inventory, tuple[BuildVariant, ...], tuple[OptionNote, ...], Inventory]:
@@ -2089,6 +2123,9 @@ def read_pages(
     ]
     plan = plan_builds(entries, pages)
     inventory, variants, options, union = _assemble_builds(plan, source_name, stats)
+    supplied = included_refs([data["text"] or "" for data in pages_data])
+    for parts in (inventory, *(v.inventory for v in variants)):
+        _mark_included(parts, supplied)
 
     # --- SELF-CHECK ---
     # Every designator listed in the document must be accounted for, in

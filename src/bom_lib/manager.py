@@ -22,6 +22,8 @@ from src.bom_lib.types import (
 def calculate_net_needs(bom: Inventory, stock: Inventory) -> Inventory:
     """Calculates the deficit between Required parts (BOM) and Owned parts (Stock).
 
+    Parts that come with a PCB (`PartData.included`) are not needed either.
+
     Args:
         bom: The requested build materials.
         stock: The user's current inventory.
@@ -33,7 +35,7 @@ def calculate_net_needs(bom: Inventory, stock: Inventory) -> Inventory:
     net_inv = Inventory()
 
     for key, data in bom.items():
-        gross_needed = data["qty"]
+        gross_needed = data["qty"] - data["included"]
 
         # Check stock
         stock_data = stock.get(key)

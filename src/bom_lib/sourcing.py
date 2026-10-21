@@ -364,7 +364,10 @@ def provided_hardware(inventory: Inventory) -> frozenset[HardwareRole]:
 
     Only explicit mentions count (a part described as a jack, a DC jack, a 3PDT
     footswitch, or an enclosure), so standard hardware is skipped only when the
-    document clearly supplies it.
+    document clearly supplies it. A status LED and its resistor count by their
+    designators: 'LED', 'LED1', 'EFL1' (GuitarPCB NostalgiTone) for the LED;
+    'CLR' (PedalPCB, GuitarPCB) and 'LEDR' (Aion FX) for the resistor. A
+    clipping LED is a numbered diode ('D1  3mm Red LED') and counts as neither.
 
     Args:
         inventory: One project's parsed inventory (before standard hardware).
@@ -387,6 +390,15 @@ def provided_hardware(inventory: Inventory) -> frozenset[HardwareRole]:
             and ("FOOTSWITCH" in text or any(r.startswith("FS") for r in data["refs"]))
         ):
             roles.add(HardwareRole.FOOTSWITCH)
+        refs = [r.upper() for r in data["refs"]]
+        if key.category == ComponentCategory.DIODES and any(
+            r.startswith(("LED", "EFL")) for r in refs
+        ):
+            roles.add(HardwareRole.STATUS_LED)
+        if key.category == ComponentCategory.RESISTORS and any(
+            r.startswith(("CLR", "RLED", "LED")) for r in refs
+        ):
+            roles.add(HardwareRole.LED_RESISTOR)
     return frozenset(roles)
 
 
@@ -434,8 +446,16 @@ def get_standard_hardware(
         inventory[key]["sources"][AUTO_INJECT_SOURCE].append(f"Auto-Inject ({note})")
 
     # 1. Smart Merges (Add to existing categories)
-    inject(ComponentCategory.RESISTORS, "3.3k", 1, "LED CLR")
-    inject(ComponentCategory.DIODES, "LED", 1, "Status Light")
+    inject(
+        ComponentCategory.RESISTORS,
+        "3.3k",
+        1,
+        "LED CLR",
+        role=HardwareRole.LED_RESISTOR,
+    )
+    inject(
+        ComponentCategory.DIODES, "LED", 1, "Status Light", role=HardwareRole.STATUS_LED
+    )
 
     # 2. Germanium Heuristic (Fuzz check)
     if any(
@@ -616,14 +636,9 @@ def build_shopping_list(
     Returns:
         List of structured ShoppingListRow dictionaries for display and export.
     """
-    if stock:
-        net_inventory = calculate_net_needs(inventory, stock)
-        display_source = inventory
-    else:
-        display_source = inventory
-        net_inventory = inventory
+    net_inventory = calculate_net_needs(inventory, stock or Inventory())
 
-    sorted_parts = sort_inventory(display_source)
+    sorted_parts = sort_inventory(inventory)
     shopping_list: list[ShoppingListRow] = []
 
     for part_key, item in sorted_parts:
@@ -653,16 +668,20 @@ def build_shopping_list(
             sources=sources,
             val_qty=val_qty,
         )
+        notes = resolved.notes
+        if item["included"]:
+            notes = f"📦 {item['included']} included with the PCB | {notes}"
 
         row: ShoppingListRow = {
             "Origin": resolved.origin,
             "Category": category.value,
             "Part": value,
             "BOM Qty": gross_qty,
+            "Included": item["included"],
             "In Stock": in_stock,
             "Net Need": net_qty,
             "Buy Qty": resolved.buy_qty,
-            "Notes": resolved.notes,
+            "Notes": notes,
             "Search Term": resolved.search_term,
             "Tayda_Link": resolved.supplier_url,
         }
