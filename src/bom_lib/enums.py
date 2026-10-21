@@ -35,6 +35,8 @@ class HardwareRole(StrEnum):
     DC_JACK = "DC jack"
     FOOTSWITCH = "Footswitch"
     ENCLOSURE = "Enclosure"
+    STATUS_LED = "Status LED"
+    LED_RESISTOR = "LED current-limiting resistor"
 
 
 class ParseWarningKind(StrEnum):

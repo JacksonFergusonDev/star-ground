@@ -167,12 +167,15 @@ class PartData(TypedDict):
                  None if the value is non-numeric (e.g. 'TL072').
         refs: List of designators (e.g., ['R1', 'R2']).
         sources: Mapping of project names to the specific refs they contributed.
+        included: How many of `qty` come with a PCB ('IC3  24LC32A *Included',
+            PedalPCB Deflector): listed, but not bought.
     """
 
     qty: int
     val_qty: pint.Quantity[Any] | Decimal | None
     refs: list[str]
     sources: dict[str, list[str]]
+    included: int
 
 
 @dataclass(frozen=True, slots=True)
@@ -418,6 +421,7 @@ ShoppingListRow = TypedDict(
         "Category": str,
         "Part": str,
         "BOM Qty": int,
+        "Included": int,
         "In Stock": NotRequired[int],
         "Net Need": NotRequired[int],
         "Buy Qty": int,
@@ -483,6 +487,7 @@ class Inventory(UserDict[ComponentKey, PartData]):
             "val_qty": None,
             "refs": [],
             "sources": defaultdict(list),
+            "included": 0,
         }
         self.data[key] = value
         return value
@@ -527,6 +532,7 @@ class Inventory(UserDict[ComponentKey, PartData]):
         """
         for key, data in other.items():
             self[key]["qty"] += data["qty"] * multiplier
+            self[key]["included"] += data["included"] * multiplier
             self[key]["refs"].extend(data["refs"])
             for src, refs in data["sources"].items():
                 self[key]["sources"][src].extend(refs * multiplier)

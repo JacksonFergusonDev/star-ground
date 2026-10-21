@@ -84,6 +84,8 @@ def generate_stock_update_csv(data: list[ShoppingListRow]) -> bytes:
     Logic:
         New Stock = (Current Stock + Buy Qty) - Used Qty
 
+    Parts that come with a PCB are used without coming from stock.
+
     This file is intended to be re-uploaded by the user next time they use
     the app, closing the logistics loop.
 
@@ -102,7 +104,7 @@ def generate_stock_update_csv(data: list[ShoppingListRow]) -> bytes:
         # Robustly handle potential string/int types from the UI
         current_stock = int(row.get("In Stock", 0))
         buy_qty = int(row.get("Buy Qty", 0))
-        used_qty = int(row.get("BOM Qty", 0))
+        used_qty = int(row.get("BOM Qty", 0)) - int(row.get("Included", 0))
 
         # Calculate the resulting inventory state
         new_qty = (current_stock + buy_qty) - used_qty
