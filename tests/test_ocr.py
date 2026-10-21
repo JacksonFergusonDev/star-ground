@@ -130,6 +130,24 @@ class TestPageWords:
                 ("D1-D2", "1N4148"),
             ]
 
+    def test_the_box_after_a_designator_starts_a_cell(self) -> None:
+        # G2 Animal v3: '*D1 - D4' ends where '1N34A GE' starts.
+        from src.bom_lib.layout import find_listings
+
+        words = page_words(
+            [
+                OcrBox("C12", 298, 320, 735, 745),
+                OcrBox("1n", 339, 356, 735, 745),
+                OcrBox("*D1 - D4", 377, 418, 735, 745),
+                OcrBox("1N34A GE", 418, 464, 735, 745),
+            ]
+        )["words"]
+        listings = find_listings(words)
+        assert [(lst.ref, lst.value) for lst in listings] == [
+            ("C12", "1n"),
+            ("D1-D4", "1N34A GE"),
+        ]
+
     def test_a_description_starts_a_cell(self) -> None:
         # Five Cats: 'TL072 Dual Op Amp' read as one box, and '1N914' 3pt
         # before 'Dual Op Amp'.

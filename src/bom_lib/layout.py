@@ -268,7 +268,11 @@ def _is_ref_cell(cell: str, next_cell: str | None) -> bool:
     if ref_group(cell) is not None:
         return next_cell is not None and not next_cell.isdigit()
     span = REF_RANGE.fullmatch(cell)
-    if span and is_designator(span.group(1)):
+    # A numbered label names a range too: 'EFL1-3  Status LED' (GuitarPCB
+    # NostalgiTone, read by OCR).
+    if span and (
+        is_designator(span.group(1)) or _NUMBERED_LABEL.fullmatch(span.group(1))
+    ):
         # Not before a bare count: 'D21 - D28  8' is a quantity column (Q-Tune).
         return next_cell is not None and not next_cell.isdigit()
     if (

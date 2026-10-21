@@ -77,6 +77,7 @@ from src.bom_lib.verification import (
     check_pictured_lists,
     check_pointer_value,
     check_prose_pots,
+    check_quantity_list,
     check_row_quantity,
     check_second_board,
     check_two_values,
@@ -2048,6 +2049,7 @@ def read_pages(
     ]
     check_parts_found(stats, sum(len(d["refs"]) for d in union.values()))
     check_value_keyed_list(page_texts, stats)
+    check_quantity_list(page_texts, stats)
     omitted = frozenset(
         r for e in entries if _is_not_populated(e.value) for r in expand_refs(e.ref)
     )

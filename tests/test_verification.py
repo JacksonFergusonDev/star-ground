@@ -535,8 +535,13 @@ def test_a_sparse_series_names_its_gaps() -> None:
     stats = create_empty_stats()
     check_numbering_gaps(_inventory(*parts), stats)
     assert {w.ref for w in stats["warnings"]} == {
-        f"R{n}" for n in (2, 3, 5, 6, 7, 9, 10, 11)
+        "",
+        *(f"R{n}" for n in (2, 3, 5, 6, 7, 9, 10, 11)),
     }
+    # The parts the reading never named are missed too, so the whole
+    # document is warned.
+    whole = [w for w in stats["warnings"] if not w.ref]
+    assert [w.kind for w in whole] == [ParseWarningKind.IMAGE_PARTS_LIST]
     # A list with a few gaps is complete enough.
     stats = create_empty_stats()
     dense = [
@@ -552,6 +557,27 @@ def test_a_sparse_series_names_its_gaps() -> None:
     assert stats["warnings"] == []
 
 
+def test_parts_counted_by_value_warn_the_document() -> None:
+    from src.bom_lib.verification import check_quantity_list
+
+    # Tonepad Rebote Delay: counts under each heading, a few named parts.
+    text = (
+        "Resistors     Capacitors     IC's\n"
+        "1 - 5M1       1 - 100 µF     IC1 - PT2399\n"
+        "4 - 10k       2 - 0.082 µF   Q1 - 2N5457\n"
+    )
+    stats = create_empty_stats()
+    check_quantity_list([text], stats)
+    assert [(w.kind, w.ref) for w in stats["warnings"]] == [
+        (ParseWarningKind.QUANTITY_LIST, "")
+    ]
+    assert stats["warnings"][0].message.startswith("4 lines")
+    # Ranges are not counts: 'pages 3-4', 'R 10-30k', 'steps 1 - 4'.
+    stats = create_empty_stats()
+    check_quantity_list(["see 3-4 and 10-30k, steps 1 - 4, 6 - 7, 8 - 9"], stats)
+    assert stats["warnings"] == []
+
+
 def test_two_values_side_by_side() -> None:
     inv = _inventory(
         (ComponentCategory.RESISTORS, "7.5k 8k2", "R6"),
@@ -561,6 +587,20 @@ def test_two_values_side_by_side() -> None:
     stats = create_empty_stats()
     check_two_values(inv, stats)
     assert [w.ref for w in stats["warnings"]] == ["R6"]
+
+
+def test_a_table_of_substitutes_warns_every_row() -> None:
+    # G2 Animal v3's text layer: value and substitute side by side, plus rows
+    # whose second cell is a remark ('620R  Lower Value -Higher Gain').
+    pairs = [("10M 1M", "R1"), ("7.5k 8k2", "R6"), ("20k 22k", "R7"), ("51 100R", "R8")]
+    inv = _inventory(
+        *[(ComponentCategory.RESISTORS, v, r) for v, r in pairs],
+        (ComponentCategory.RESISTORS, "620 Lower Value", "R36"),
+        (ComponentCategory.DIODES, "CLR", "LED"),
+    )
+    stats = create_empty_stats()
+    check_two_values(inv, stats)
+    assert {w.ref for w in stats["warnings"]} == {"R1", "R6", "R7", "R8", "R36", "LED"}
 
 
 def test_pictured_list_warns_document_and_shared_designators() -> None:
