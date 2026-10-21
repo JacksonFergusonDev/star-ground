@@ -73,6 +73,9 @@ _BARE = frozenset(
 # apart ('SW 1', GuitarPCB EA Tremelo).
 # 'DA' / 'DB' are two LEDs in place of one bi-colour D1 (GuitarPCB Easy Order).
 _LETTERED = re.compile(r"(R)-[A-Z]|(SW) \d{1,2}|(D)[AB]")
+# Tonepad letters the parts that differ between builds in lower case: 'Ra - 100',
+# 'Cb - 1 µF'. Upper case would take words ('RE', 'CD').
+_LOWER_LETTERED = re.compile(r"([RC])[a-e]")
 
 # A channel suffix letter (R1A/R1B, D10a-D10d). K, M and R are excluded so a
 # C-taper pot value (C10K, C1M) is never mistaken for capacitor C10.
@@ -117,7 +120,7 @@ def parse_designator(ref: str) -> Designator | None:
         return Designator(upper, dict(_PREFIXES)[upper])
     if upper[:-1] in _BARE and upper[-1] in "ABCDEFGH":  # LEDA / LEDB channels
         return Designator(upper[:-1], dict(_PREFIXES)[upper[:-1]])
-    lettered = _LETTERED.fullmatch(upper)
+    lettered = _LETTERED.fullmatch(upper) or _LOWER_LETTERED.fullmatch(token)
     if lettered:
         prefix = next(g for g in lettered.groups() if g)
         return Designator(prefix, dict(_PREFIXES)[prefix])

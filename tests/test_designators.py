@@ -100,3 +100,14 @@ def test_a_voltage_regulator() -> None:
     designator = parse_designator("REG")
     assert designator is not None
     assert designator.category == ComponentCategory.ICS
+
+
+def test_lower_case_lettered_parts() -> None:
+    # Tonepad letters the parts that differ between builds: 'Ra - 100', 'Cb - 1 µF'.
+    for token, category in (("Ra", Cat.RESISTORS), ("Cd", Cat.CAPACITORS)):
+        parsed = parse_designator(token)
+        assert parsed is not None
+        assert parsed.category == category
+    # Upper case is a word, not a part.
+    assert not is_designator("RE")
+    assert not is_designator("CD")

@@ -1352,3 +1352,46 @@ def test_a_named_label_used_twice_is_two_parts() -> None:
     refs = sorted(ref for data in inventory.values() for ref in data["refs"])
     assert refs == ["COMP", "Comp (2)"]
     assert stats["warnings"] == []
+
+
+def test_a_dashed_parts_list_drops_the_drawings_labels() -> None:
+    # Tonepad: 'R1 - 10k' listings, and the schematic's 'AC  ADAPTOR' and
+    # 'D1  47uF' labels on another page.
+    from src.bom_lib import create_empty_stats
+    from src.bom_lib.parser import read_pages
+
+    drawing = _words_page(
+        [(("D1", 50.0), ("47uF", 90.0)), (("AC", 50.0), ("100k", 90.0))]
+    )
+    parts = _words_page(
+        [
+            (("R1 - 10k", 50.0), ("C1 - 100n", 200.0)),
+            (("R2 - 22k", 50.0), ("C2 - 10n", 200.0)),
+            (("R3 - 1M", 50.0), ("C3 - 1u", 200.0)),
+            (("R4 - 4k7", 50.0), ("Q1 - 2N5088", 200.0)),
+        ]
+    )
+    inventory, _, _ = read_pages([drawing, parts], "Tonepad", create_empty_stats())
+    refs = {ref for data in inventory.values() for ref in data["refs"]}
+    assert refs == {"R1", "R2", "R3", "R4", "C1", "C2", "C3", "Q1"}
+
+
+def test_a_counted_list_does_not_warn_each_missing_designator() -> None:
+    # Tonepad Rat: '2 - 1N914' counts the diodes the text calls D1 and D2.
+    from src.bom_lib import ParseWarningKind, create_empty_stats
+    from src.bom_lib.parser import read_pages
+
+    page = _words_page(
+        [
+            (("Resistors", 50.0), ("Diodes", 200.0)),
+            (("2 - 1k", 50.0), ("2 - 1N914", 200.0)),
+            (("1 - 10k", 50.0), ("IC1 - LM308", 200.0)),
+            (("3 - 100k", 50.0),),
+        ],
+        text="D1 and D2 clip the signal.\n2 - 1k\n1 - 10k\n3 - 100k",
+    )
+    stats = create_empty_stats()
+    read_pages([page], "Tonepad", stats)
+    kinds = {w.kind for w in stats["warnings"]}
+    assert ParseWarningKind.QUANTITY_LIST in kinds
+    assert ParseWarningKind.UNEXTRACTED_REF not in kinds

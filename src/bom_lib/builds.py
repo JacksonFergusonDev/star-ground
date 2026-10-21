@@ -21,6 +21,7 @@ from collections import Counter
 from collections.abc import Iterable
 from dataclasses import dataclass, replace
 from itertools import pairwise
+from statistics import median
 
 from src.bom_lib import constants
 from src.bom_lib.enums import ComponentCategory
@@ -218,16 +219,38 @@ def _grid_variants(
         while line < len(page.lines):
             row = by_line.get(line, [])
             counts = Counter(e.ref for e in row)
-            ref, repeats = counts.most_common(1)[0] if counts else ("", 0)
+            repeats = max(counts.values(), default=0)
             if repeats < 2:
                 line += 1
                 continue
-            starts = sorted(e.x0 for e in row if e.ref == ref)
-            names = _column_names(
-                page.lines[line - 1] if line else [], starts, by_line, line - 1
+            # The leftmost repeated designator in the block starts each list:
+            # with 'C1 | C1' first (R1 blank) and 'R2 | C2 | R2 | C2' after, the
+            # C columns would put the second list's resistors in the first
+            # (Tonepad MAS Distortion's MXR and DOD lists).
+            end = line
+            while by_line.get(end):
+                end += 1
+            starts = min(
+                (
+                    sorted(e.x0 for e in by_line[k] if e.ref == r)
+                    for k in range(line, end)
+                    for r, n in Counter(e.ref for e in by_line[k]).items()
+                    if n == repeats
+                ),
+                key=lambda xs: xs[0],
             )
+            header = line - 1
+            if header > 0 and _section_header(page.lines[header]):
+                # 'Resistors | Capacitors' heads each list; the line above names
+                # it ('MXR PARTS LIST | DOD PARTS LIST').
+                header -= 1
+            names = _column_names(
+                page.lines[header] if header >= 0 else [], starts, by_line, header
+            )
+            names = [_HEADING_WORDS.sub("", name).strip() or name for name in names]
             # No header: name each column by its first listing ('MID C10K Dual'
             # / 'MID C100K Dual', Frost Drive's alternate pot).
+            ref = counts.most_common(1)[0][0]
             first = sorted((e for e in row if e.ref == ref), key=lambda e: e.x0)
             if all(set(name.upper().split()) <= _TABLE_HEADER_WORDS for name in names):
                 # Each column is headed only 'Part | Value': two boards' tables
@@ -247,6 +270,12 @@ def _grid_variants(
             for name, group in zip(names, groups, strict=True):
                 found.setdefault(name, []).extend(group)
     return [PlannedVariant(name, tuple(group)) for name, group in found.items()]
+
+
+def _section_header(cells: list[Cell]) -> bool:
+    """Whether a line holds only category headings ('Resistors | Capacitors')."""
+    words = [w.upper() for c in cells for w in c.text.split()]
+    return bool(words) and set(words) <= _SECTION_WORDS
 
 
 def _column_variants(entries: list[Entry]) -> list[PlannedVariant]:
@@ -336,11 +365,23 @@ def _repeat_variants(
         for k in range(builds)
     ]
     groups: list[list[Entry]] = [[] for _ in range(builds)]
-    for e in entries:
-        base = _REPEAT_SUFFIX.sub("", e.ref).upper()
-        k = _span_of(_position(e), spans, repeated=len(occurrences[base]) > 1)
-        if k is not None:
-            groups[k].append(replace(e, ref=_REPEAT_SUFFIX.sub("", e.ref)))
+    if any(a[1] >= b[0] for a, b in pairwise(sorted(spans))):
+        # The lists overlap in height: they sit side by side, offset (Tonepad
+        # Disto-Uno's TA7136P and TL072 lists), so position across the page
+        # says which list a listing is in.
+        lefts = sorted(
+            median(sorted(es, key=lambda e: e.x0)[k].x0 for es in complete)
+            for k in range(builds)
+        )
+        for e in entries:
+            nearest = min(range(builds), key=lambda k: abs(e.x0 - lefts[k]))
+            groups[nearest].append(replace(e, ref=_REPEAT_SUFFIX.sub("", e.ref)))
+    else:
+        for e in entries:
+            base = _REPEAT_SUFFIX.sub("", e.ref).upper()
+            k = _span_of(_position(e), spans, repeated=len(occurrences[base]) > 1)
+            if k is not None:
+                groups[k].append(replace(e, ref=_REPEAT_SUFFIX.sub("", e.ref)))
     # A named part listed once, with the first build only, is the board's: Aion
     # FX legacy Stratus lists its LED with the stock circuit, and its seven
     # alternative circuits' tables leave the LED out.
@@ -477,6 +518,12 @@ def _margin_label(group: list[Entry], pages: list[PageContext]) -> str | None:
 # A heading above a build's table: larger than its rows, within a few lines
 # (a description of up to three lines can sit between, Halo's Creamy Dreamer).
 _HEADING_LINES = 6
+# A heading that names its list outright, and how far above the rows it may be.
+_NAMED_LIST = re.compile(
+    r"(?P<name>\S.*?)\s+parts\s+list:?|parts\s+list\s*\((?P<paren>[^()]+)\)",
+    re.IGNORECASE,
+)
+_NAMED_LIST_LINES = 8
 _HEADING_SIZE = 1.05
 # Column headings between a build's heading and its rows ('Capacitors |
 # Resistors | Resistors, cont.').
@@ -513,6 +560,19 @@ def _heading_label(group: list[Entry], pages: list[PageContext]) -> str | None:
     first = min(e.line for e in group if e.page == page_no)
     if not 0 <= first < len(page.lines):
         return None
+    left = min(e.x0 for e in group if e.page == page_no)
+    for line in reversed(page.lines[max(0, first - _NAMED_LIST_LINES) : first]):
+        # 'MICROAMP PARTS LIST', 'Parts List (TL072)' (Tonepad): set in bold at
+        # body size, drawing labels may come between, and 'Parts List (common)'
+        # may share the line: the heading nearest the rows' column names them.
+        named = [
+            (abs(cell.x0 - left), m)
+            for cell in line
+            if (m := _NAMED_LIST.fullmatch(cell.text.strip()))
+        ]
+        if named:
+            m = min(named, key=lambda t: t[0])[1]
+            return (m.group("name") or m.group("paren")).strip()
     size = page.lines[first][0].words[0]["size"]
     for line in reversed(page.lines[max(0, first - _HEADING_LINES) : first]):
         words = [w for cell in line for w in cell.words]

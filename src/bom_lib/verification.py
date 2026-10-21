@@ -455,6 +455,7 @@ _PASSIVE_WORDS = frozenset(
 )
 
 
+_RUN_ON_LABEL = re.compile(r"[A-Za-z]{2,}\d{1,2}")
 # Two-value rows that make a list a table of substitutes.
 _PAIRED_MIN = 4
 _PAIRED_SHARE = 0.5
@@ -479,10 +480,12 @@ def check_two_values(inventory: Inventory, stats: StatsDict) -> None:
         ):
             continue
         tokens = key.value.split()
-        if len(tokens) < 2 or tokens[1][-1:].upper() in ("V", "%"):
+        if len(tokens) < 2 or tokens[1][-1:].upper() in ("V", "%", "W"):
             continue
         if parse_value_to_decimal(tokens[0]) is not None and (
             is_designator(tokens[1])
+            # A label from the next table: '330p  Pos1 33pF' (Tonepad Small Clone).
+            or _RUN_ON_LABEL.fullmatch(tokens[1]) is not None
             # One stray word; a remark ('620R Lower Value') is several.
             or (
                 len(tokens) == 2
@@ -1398,12 +1401,21 @@ _PART_PAIR = re.compile(
     rf"({_PART_CODE})\s*(?:/|\bor\b)\s*({_PART_CODE})"
     rf"|({_LISTED_CODE}),\s*({_LISTED_CODE})"
 )
-_VALUE_PAIR = re.compile(r"(\S+?)(?:\s+or\s+|\s*/\s*)(\S+)", re.IGNORECASE)
+# Words describing both values may follow: '4u7 or 5uF electro' (Tonepad).
+_VALUE_PAIR = re.compile(
+    r"(\S+?)(?:\s+or\s+|\s*/\s*)(\S+)((?:\s+[A-Za-z][A-Za-z.]*)*)", re.IGNORECASE
+)
 _UNIT = re.compile(r"[A-Za-zµΩ]")
 _VOLTAGE = re.compile(r"\d+(?:\.\d+)?V", re.IGNORECASE)
 _SINGLE_REF = re.compile(r"[^\s,]+")
+# Examples of a part type: 'Silicon diode (1N456, 1N4148, etc)' (Tonepad).
+_EXAMPLES = re.compile(r"\s*\(([^()]*),\s*etc\.?\)\s*$", re.IGNORECASE)
 # An alternative printed inside the value: '51pF (or 47pF) MLCC'.
-_OR_ALTERNATIVE = re.compile(r"\s*\(\s*or\s+([^()]+?)\s*\)", re.IGNORECASE)
+# Tonepad: 'NP4124 (use 2N3904)', '4558 (TL072 will also work)'.
+_OR_ALTERNATIVE = re.compile(
+    r"\s*\(\s*(?:or|use)\s+([^()]+?)\s*\)|\s*\(([^()]+?)\s+will\s+also\s+work\)",
+    re.IGNORECASE,
+)
 
 
 def resolve_value_choice(stats: StatsDict | None, ref: str, value: str) -> str:
@@ -1464,7 +1476,19 @@ def resolve_value_choice(stats: StatsDict | None, ref: str, value: str) -> str:
                 f"{ref}: the document allows {either.group(1)} or {either.group(2)}; "
                 f"{either.group(1)} is used.",
             )
-        return either.group(1)
+        return either.group(1) + either.group(3)
+    examples = _EXAMPLES.search(value)
+    if examples:
+        chosen = value[: examples.start()].strip()
+        if stats is not None:
+            _warn(
+                stats,
+                ParseWarningKind.VALUE_CHOICE,
+                ref,
+                f"{ref} is a type, not a part number ('{chosen}'); the document "
+                f"suggests {examples.group(1)}.",
+            )
+        return chosen
     alternative = _OR_ALTERNATIVE.search(value)
     if alternative:
         chosen = " ".join(_OR_ALTERNATIVE.sub(" ", value).split())
@@ -1473,7 +1497,8 @@ def resolve_value_choice(stats: StatsDict | None, ref: str, value: str) -> str:
                 stats,
                 ParseWarningKind.VALUE_CHOICE,
                 ref,
-                f"{ref}: the document also allows {alternative.group(1)}; "
+                f"{ref}: the document also allows "
+                f"{alternative.group(1) or alternative.group(2)}; "
                 f"{chosen} is used.",
             )
         return chosen
@@ -1576,7 +1601,7 @@ _QUANTITY_ROW = re.compile(
     r"(?<![\w.\-])(\d{1,2})(?:\s+[-\u2013]\s*|[-\u2013]\s+)"
     r"(\d[\d.,]*(?:[kKMR]\d*|\s?[pnuµμ]F|[pnuµμ]\d*))(?![\w.\-])"
 )
-_QUANTITY_MIN = 3
+_QUANTITY_MIN = 2
 
 
 def check_quantity_list(page_texts: list[str], stats: StatsDict) -> None:

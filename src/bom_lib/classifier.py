@@ -32,12 +32,19 @@ _TRIM_NOTE = re.compile(
     re.IGNORECASE,
 )
 _RESISTANCE = re.compile(r"\b\d+(?:\.\d+)?[KkMR]\d*\b")
+# A pot listed under a resistor designator: 'R7 - 100k lin pot', 'R20 - 50k Log
+# Pot', 'R13 - 500k Rev. Log' (Tonepad).
+_POT_NOTE = re.compile(r"\bpot\b|^\S+\s+(?:lin|log|rev)\b", re.IGNORECASE)
 _MILLIAMPS = re.compile(r"\dmA\b")
 _REPEAT_SUFFIX = re.compile(r"\s+\(\d+\)$")
 _LED_VALUE = re.compile(r"\bLED\b")
 _LED_SPEC = re.compile(r"\d+(?:\.\d+)?\s*MM\b(?: [A-Z]+)? LED\b")
 _NUMBERED_LABEL = re.compile(r"[A-Z]{2,5}\d{1,3}")
-_SLASH_RATING = re.compile(r"(?<=[\dpnuµF])/(\d+(?:\.\d+)?)\s*V\b", re.IGNORECASE)
+_SLASH_RATING = re.compile(r"(?<=[\dpnuµF])\s*/\s*(\d+(?:\.\d+)?)\s*V\b", re.IGNORECASE)
+# A capacitor's unit set apart from its number: '0.068 µF', '100 pF' (Tonepad).
+_SPACED_FARADS = re.compile(r"^(\d*[.,]?\d+)\s+([pnuµμ]F?|F)(?!\w)", re.IGNORECASE)
+# A bare fraction is in microfarads: '.01', '0.001' (Tonepad's MAS Distortion).
+_BARE_FRACTION = re.compile(r"^0?\.\d+(?=\s|$)")
 _OHMS = re.compile(r"(?<![\w.])\d+(?:\.\d+)?R\d*(?![\w.])")
 # Vactrols: VTL5C4 (Xvive/PerkinElmer), NSL-32 (Silonex).
 _VACTROL = re.compile(r"VTL\d|NSL-?\d")
@@ -60,6 +67,12 @@ _POT_VALUE = re.compile(
 )
 
 
+def _capacitor_head(value: str) -> str:
+    """Joins a capacitor's number and unit, and gives a bare fraction its unit."""
+    value = _SPACED_FARADS.sub(r"\1\2", value)
+    return _BARE_FRACTION.sub(lambda m: m.group(0) + "u", value)
+
+
 def normalize_value_to_quantity(
     category: ComponentCategory, val_raw: str
 ) -> pint.Quantity[Any] | Decimal | None:
@@ -76,6 +89,8 @@ def normalize_value_to_quantity(
     clean_val = val_raw.strip()
     if "mm" in clean_val.lower():
         return None
+    if category == ComponentCategory.CAPACITORS:
+        clean_val = _capacitor_head(clean_val)
 
     # Qualifiers after the number ('1u MLCC', '10u (25V or higher)') do not
     # change the nominal value.
@@ -91,6 +106,7 @@ def normalize_value_to_quantity(
     return dec
 
 
+_RESTATED = re.compile(r"\(\s*([^()\s]+)\s*\)\s*")
 _OHM_WORD = re.compile(r"^(\d+(?:\.\d+)?[kKM]?)\s*ohms?\b", re.IGNORECASE)
 
 
@@ -113,7 +129,7 @@ def normalize_value_by_category(category: ComponentCategory, val_raw: str) -> st
 
     if category == ComponentCategory.CAPACITORS:
         # '330uF/35V' (Aion FX) gives the voltage rating with the value.
-        clean_val = _SLASH_RATING.sub(r" \1V", clean_val)
+        clean_val = _capacitor_head(_SLASH_RATING.sub(r" \1V", clean_val))
 
     # Only normalize Passives (Resistors/Caps)
     if category in (ComponentCategory.RESISTORS, ComponentCategory.CAPACITORS):
@@ -125,6 +141,16 @@ def normalize_value_by_category(category: ComponentCategory, val_raw: str) -> st
         clean_val = _OHM_WORD.sub(r"\1", clean_val)
         head, _, rest = clean_val.partition(" ")
         dec = parse_value_to_decimal(head)
+        restated = _RESTATED.match(rest)
+        if dec is not None and restated:
+            # '8k2 (8.2k)', '4M7 (4.7M)' (Tonepad): the same value in other notation.
+            inner = parse_value_to_decimal(
+                _capacitor_head(restated.group(1))
+                if category == ComponentCategory.CAPACITORS
+                else restated.group(1)
+            )
+            if inner == dec:
+                rest = rest[restated.end() :]
         if dec is not None:
             clean_val = " ".join(
                 p for p in (float_to_search_string(float(dec)), rest.strip()) if p
@@ -259,7 +285,7 @@ def categorize_part(
                 ComponentCategory.HARDWARE_MISC,
                 ComponentCategory.DIODES,
             )
-            and _TRIM_NOTE.search(val_clean)
+            and (_TRIM_NOTE.search(val_clean) or _POT_NOTE.search(val_clean))
             and _RESISTANCE.search(val_clean)
         ):
             # CDXL Reissue lists trimmers R20/R23 under 'TRIM POTS (3362P Type)';
