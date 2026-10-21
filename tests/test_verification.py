@@ -1058,3 +1058,21 @@ def test_footnotes_that_build_another_version(text: str, refs: list[str]) -> Non
     stats = create_empty_stats()
     check_build_changes([text], inventory, stats)
     assert sorted(w.ref for w in stats["warnings"]) == refs
+
+
+def test_a_heading_for_building_without_a_stage() -> None:
+    # Aion FX Halo v1: the 3-transistor variant bypasses Q4.
+    text = "\n".join(
+        [
+            "Bypassing Q4",
+            "Halo PCB makes this easy to do: just jumper the pads and omit R20-23,",
+            "Q4, and C13. Also, use a 100n film capacitor for CX3 (normally jumpered).",
+        ]
+    )
+    refs = ("R20", "R21", "R22", "R23", "Q4", "C13", "R1")
+    inventory = _listed(*((r, "10k", ComponentCategory.RESISTORS) for r in refs))
+    stats = create_empty_stats()
+    check_build_changes([text], inventory, stats, frozenset({"CX3"}))
+    assert sorted(w.ref for w in stats["warnings"]) == sorted(
+        set(refs) - {"R1"} | {"CX3"}
+    )

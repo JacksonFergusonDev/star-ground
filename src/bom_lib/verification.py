@@ -752,7 +752,9 @@ _BUILD_PASSAGE = re.compile(
     # '808 Style Build: Use Landgraff Dynamic Overdrive values with these exceptions
     # C4: 47n, ...', '...JUMPER D2 and change values of R4 to 1M, R5 to 470K'
     # (GuitarPCB Tube Screaming Ultra).
-    r"|\bstyle build\b|\bchange values? of\b",
+    r"|\bstyle build\b|\bchange values? of\b"
+    # 'Bypassing Q4' (Aion FX Halo v1): a heading for building without a stage.
+    r"|^bypassing [A-Z]{1,3}\d{1,3}$",
     re.IGNORECASE,
 )
 _MODIFICATION = re.compile(r"\bmod(?:s|ification|ifications)?\b", re.IGNORECASE)
@@ -774,7 +776,8 @@ _CHANGE_PROSE = re.compile(
     rf"\b(?:use (?:an? \S*\d\S*(?: \w+){{0,2}}|\S+)|\S*\d\S*) for ({_DESIGNATOR})"
     rf"(?: and ({_DESIGNATOR}))?"
     rf"(?: and \S+ for ({_DESIGNATOR}))?"
-    rf"|\b(?:jumper|omit|leave off) ({_DESIGNATOR})(?: and ({_DESIGNATOR}))?\b"
+    # 'omit R20-23, Q4, and C13' (Aion FX Halo v1): a list.
+    rf"|\b(?:jumper|omit|leave off) ({_DESIGNATOR}(?:(?:,\s*|,?\s+and\s+){_DESIGNATOR})*)\b"
     # 'RX1/RX2: 1k → 500R; Sustain: 500kC → 250kB' (Aion FX legacy Aurora).
     rf"|\b({_DESIGNATOR})/({_DESIGNATOR}):"
     r"|\b([A-Z][a-z]+): \S+ \u2192"
@@ -886,7 +889,9 @@ def check_build_changes(
                 # A sentence wraps: 'use 470pF for' / 'CX2 and 1n for CX3'.
                 window = f"{body} {follows}" if n + 1 < len(passage) else body
                 for m in _CHANGE_PROSE.finditer(window):
-                    labels += [g for g in m.groups() if g]
+                    for g in filter(None, m.groups()):
+                        # A list of designators, or one control's name.
+                        labels += re.findall(_DESIGNATOR, g, re.IGNORECASE) or [g]
                 labels += [m.group(1) for m in _OMIT_CONTROL.finditer(body)]
                 for m in _OMIT_LIST.finditer(body):
                     labels += re.findall(_DESIGNATOR, m.group(1), re.IGNORECASE)
