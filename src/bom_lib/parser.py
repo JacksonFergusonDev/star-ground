@@ -24,7 +24,7 @@ from src.bom_lib.classifier import (
     normalize_value_by_category,
 )
 from src.bom_lib.designators import is_designator, parse_designator
-from src.bom_lib.enums import ComponentCategory
+from src.bom_lib.enums import ComponentCategory, ParseWarningKind
 from src.bom_lib.layout import (
     REF_RANGE,
     Cell,
@@ -32,6 +32,7 @@ from src.bom_lib.layout import (
     bom_note_cells,
     bom_valueless_refs,
     clean_value,
+    counted_rows,
     drop_remarks,
     find_bom_rows,
     find_listings,
@@ -1545,6 +1546,10 @@ def _is_ignored(value: str) -> bool:
     )
 
 
+# Dashed listings that make a document's parts list dashed.
+_DASHED_DOCUMENT = 8
+
+
 def _layout_entries(
     pages_data: list[PDFPageExtraction],
     stats: StatsDict,
@@ -1570,8 +1575,24 @@ def _layout_entries(
         One entry per listing, with its page position.
     """
     entries: list[Entry] = []
+    found = {
+        page_no: find_listings(data["words"])
+        for page_no, data in enumerate(pages_data)
+        if only_pages is None or page_no in only_pages
+    }
+    # A document whose parts list sets every listing with a dash ('R1 - 10k',
+    # Tonepad), or counts parts the same way ('2 - 1k'), prints no part without one: a listing without one is a label of
+    # its layout or schematic drawing.
+    dashed = sum(
+        listing.dashed for listings in found.values() for listing in listings
+    ) + sum(counted_rows(page_lines(pages_data[k]["words"])) for k in found)
+    if dashed >= _DASHED_DOCUMENT:
+        found = {
+            page_no: [lst for lst in listings if lst.dashed]
+            for page_no, listings in found.items()
+        }
     for page_no, data in enumerate(pages_data):
-        if only_pages is not None and page_no not in only_pages:
+        if page_no not in found:
             continue
         # A ruled table's rows are read by the table strategy; read as layout,
         # 'D1 | LED | 3mm Red LED' looks like a bare 'LED' listing (Bad Mamma
@@ -1588,7 +1609,7 @@ def _layout_entries(
             for k, cells in enumerate(lines)
             if cells and cells[0].text.upper() in upper_values
         }
-        for listing in find_listings(data["words"]):
+        for listing in found[page_no]:
             stats["lines_read"] += 1
             # A range lists each of its designators: 'D1-D2  1N4148'.
             refs = (
@@ -1860,6 +1881,38 @@ def _page_words(page: Page) -> list[PDFWord]:
     ]
 
 
+# Two copies of a character this close (points) are one glyph printed twice.
+_OVERPRINT_PT = 1.0
+
+
+def _without_overprint(page: Page) -> Page:
+    """Drops text printed twice a hair apart: board artwork, not the parts list.
+
+    Tonepad draws each document's transfer artwork with its labels printed
+    twice, offset by a fraction of a point; extracted, they read doubled
+    ('RR77' for R7, 'THRESHLD' beside it). Read once they would be a second,
+    conflicting list of the board's labels, so both copies are dropped.
+    """
+    kept = {id(c) for c in page.dedupe_chars(tolerance=_OVERPRINT_PT).chars}
+    doubled = {
+        (c["text"], round(c["x0"]), round(c["top"]))
+        for c in page.chars
+        if id(c) not in kept
+    }
+    if not doubled:
+        return page
+
+    def twin(c: dict[str, Any]) -> bool:
+        x, y = round(c["x0"]), round(c["top"])
+        return any(
+            (c["text"], x + dx, y + dy) in doubled
+            for dx in (-1, 0, 1)
+            for dy in (-1, 0, 1)
+        )
+
+    return page.filter(lambda obj: obj.get("object_type") != "char" or not twin(obj))
+
+
 def _straighten(page: Page) -> Page:
     """Marks characters with negligible rotation as upright, and rounds sizes.
 
@@ -2106,6 +2159,13 @@ def read_pages(
                     k, [(li.ref, li.value) for li in listings], read, stats
                 )
     check_bom_reconciliation(page_texts, union, stats)
+    if any(w.kind == ParseWarningKind.QUANTITY_LIST for w in stats["warnings"]):
+        # A list that counts parts ('3 - 1N914') names no designators for them,
+        # so the schematic's D1-D3 are 'missing' by design; the document is
+        # already told those parts were not read.
+        stats["warnings"][:] = [
+            w for w in stats["warnings"] if w.kind != ParseWarningKind.UNEXTRACTED_REF
+        ]
     return inventory, variants, options
 
 
@@ -2204,7 +2264,7 @@ def parse_pedalpcb_pdf(filepath: str, source_name: str) -> ParseResult:
             pages_data: list[PDFPageExtraction] = []
             misread: set[int] = set()
             for number, raw_page in enumerate(pdf.pages):
-                straight = _straighten(raw_page.filter(_readable))
+                straight = _straighten(_without_overprint(raw_page.filter(_readable)))
                 marked = marked_labels(_page_words(straight))
                 page = _without_marks(straight)
                 page_words = _page_words(page)
@@ -2238,7 +2298,7 @@ def parse_pedalpcb_pdf(filepath: str, source_name: str) -> ParseResult:
                 )
                 if first in misread:
                     raise ValueError("the title page's text is misread OCR")
-                p1 = pdf.pages[first]
+                p1 = _without_overprint(pdf.pages[first])
                 words = p1.extract_words(extra_attrs=["size"])
                 ignore = {
                     "PEDALPCB",

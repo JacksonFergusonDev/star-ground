@@ -35,8 +35,12 @@ _LINE_TOLERANCE_EM = 0.15
 
 # Unfamiliar numbered labels (CTRL1, FUZZ2) that are not standard designators.
 _NUMBERED_LABEL = re.compile(r"[A-Z]{1,5}\d{1,3}")
-# A designator range in a listing grid: 'D1-D2  1N4148' (GuitarPCB SWAH).
-REF_RANGE = re.compile(r"([A-Z]{1,4}\d{1,3}) ?[-\u2013] ?(?:[A-Z]{1,4})?\d{1,3}")
+# A designator range in a listing grid: 'D1-D2  1N4148' (GuitarPCB SWAH). A bare
+# upper end is short ('POT1 - 6'): 'R7 - 220' is a resistor's value, and
+# 'IC1 - TL072' a part number (Tonepad); both ends share a prefix.
+REF_RANGE = re.compile(
+    r"((?P<prefix>[A-Z]{1,4})\d{1,3}) ?[-\u2013] ?(?:(?P=prefix)\d{1,3}|\d{1,2})"
+)
 # Single letters (Blue Waffle's 'V  B500K') and slashes ('BASS/MIDS') occur.
 _CONTROL_NAME = re.compile(r"[A-Z](?:[A-Z0-9_/-]{1,11})?")
 # A control name in title case, recognized only beside a tapered pot value:
@@ -92,6 +96,9 @@ _LAYOUT_WORDS = frozenset(
 # Section headers that also appear beside values. Used only to stop a value
 # from absorbing them; 'TRIM' alone is still a designator.
 _HEADER_WORDS = _LAYOUT_WORDS | {
+    # Tonepad sets 'Schematic' and 'LAYOUT' headings on the parts list's lines.
+    "SCHEMATIC",
+    "LAYOUT",
     "TRIM",
     "POTS",
     "(3362P)",
@@ -203,12 +210,14 @@ class Listing:
         value: The full value, including qualifiers (e.g. '1u MLCC').
         line: Index of the visual line on the page (see `page_lines`).
         x0: Left edge of the designator, in points.
+        dashed: Whether a dash separates designator and value ('R1 - 10k').
     """
 
     ref: str
     value: str
     line: int = field(default=0, compare=False)
     x0: float = field(default=0.0, compare=False)
+    dashed: bool = field(default=False, compare=False)
 
 
 def group_lines(words: list[PDFWord]) -> list[list[PDFWord]]:
@@ -377,6 +386,10 @@ def _is_annotation(cell: str) -> bool:
     words = cell.split()
     return not (
         cell.startswith("*")
+        # A heading: 'C7 - 0.001uF | Reverse Sweep:' (Tonepad's notes column).
+        or cell.endswith(":")
+        # A drawing's pin or pad letters: 'A B E'.
+        or (len(words) > 1 and all(len(w) == 1 and w.isalpha() for w in words))
         or _is_prose(cell)
         or all(w.upper() in _HEADER_WORDS for w in words)
         or BOARD_REF.fullmatch(words[0]) is not None
@@ -457,6 +470,83 @@ def _join_numbered_names(cells: list[Cell]) -> list[Cell]:
     return joined
 
 
+def _retext(word: PDFWord, text: str, x1: float | None = None) -> PDFWord:
+    """A copy of a word with other text (and, for a joined range, another end)."""
+    return PDFWord(
+        text=text,
+        x0=word["x0"],
+        x1=word["x1"] if x1 is None else x1,
+        top=word["top"],
+        size=word["size"],
+    )
+
+
+def _dash_listing(cell: Cell) -> list[Cell] | None:
+    """Splits a 'designators - value' cell (Tonepad) into designators and value.
+
+    The designators are one ('R7 - 220'), a comma list ('R2, R7, R18, R20 -
+    47k', 'R11,R12 - 220k') or a range ('D1 - D5 - Silicon diode'). A bare
+    'R7 - 220' would otherwise read as a range, and a long value as prose.
+    """
+    words = tuple(
+        _retext(w, part)
+        for w in cell.words
+        for part in re.findall(r"[^,]+,?", w["text"]) or [w["text"]]
+    )
+    texts = [w["text"] for w in words]
+    if (
+        len(texts) > 4
+        and is_designator(texts[0])
+        and texts[1] in _DASHES
+        and is_designator(texts[2])
+        and texts[3] in _DASHES
+    ):
+        span = _retext(words[0], f"{texts[0]}-{texts[2]}", x1=words[2]["x1"])
+        return [Cell((span,)), Cell(words[4:])]
+    k = 0
+    while k < len(texts) - 1 and texts[k].endswith(","):
+        if not _listed_ref(texts[k].rstrip(",")):
+            return None
+        k += 1
+    if k + 2 >= len(texts) or texts[k + 1] not in _DASHES:
+        return None
+    if not _listed_ref(texts[k]) or is_designator(texts[k + 2]):
+        return None  # 'D21 - D28' is a range
+    if not k and texts[k + 2].isdigit() and len(texts[k + 2]) < 3 and len(texts) == 3:
+        return None  # 'POT1 - 6' is a range
+    refs = [_retext(w, w["text"].rstrip(",")) for w in words[: k + 1]]
+    value = list(words[k + 2 :])
+    # The next listing set against this one: 'R7 - 500k Rev. Log. pot. C7 -
+    # 0.001 µF' (Tonepad MAS Distortion).
+    nxt = next(
+        (
+            j
+            for j in range(1, len(value) - 2)
+            if is_designator(value[j]["text"]) and value[j + 1]["text"] in _DASHES
+        ),
+        None,
+    )
+    rest: list[Cell] = []
+    if nxt is not None:
+        rest = _dash_listing(Cell(tuple(value[nxt:]))) or [Cell(tuple(value[nxt:]))]
+        value = value[:nxt]
+    # A drawing's pad letters set against the value: '100µF / 16v A B E'.
+    letters = 0
+    while letters < len(value) and _PAD_LETTER.fullmatch(value[-1 - letters]["text"]):
+        letters += 1
+    if 2 <= letters < len(value):
+        value = value[:-letters]
+    return [Cell(tuple(refs)), Cell(tuple(value)), *rest]
+
+
+_PAD_LETTER = re.compile(r"[A-Z]")
+
+
+def _listed_ref(text: str) -> bool:
+    """A designator or numbered label ('S1') that starts a dashed listing."""
+    return is_designator(text) or _NUMBERED_LABEL.fullmatch(text) is not None
+
+
 def _split_merged(cell: Cell) -> list[Cell]:
     """Splits a 'NAME value' cell that a narrow gap failed to separate.
 
@@ -467,6 +557,9 @@ def _split_merged(cell: Cell) -> list[Cell]:
     """
     if REF_RANGE.fullmatch(cell.text) or ref_group(cell.text) is not None:
         return [cell]  # 'Q1 -Q4' is one range (Dr Phybes); 'D1 D2' one list
+    listed = _dash_listing(cell)
+    if listed is not None:
+        return listed
     words = cell.text.split()
     dashed = False
     paren = _PAREN_LABEL.fullmatch(words[1]) if len(words) > 2 else None
@@ -484,6 +577,8 @@ def _split_merged(cell: Cell) -> list[Cell]:
         and words[1] in _DASHES
         # Not a range: 'D21 - D28' (Q-Tune), 'POT1 - 6' (6 Band EQ).
         and not (words[2].isdigit() or is_designator(words[2]))
+        # Not a count: '1 - 25k lin.' (Tonepad).
+        and not words[0].isdigit()
     ):
         # 'MODE - 1P8T Mini Rotary' (HAARP): a dash separates name and value.
         cell = Cell((cell.words[0], *cell.words[2:]))
@@ -703,6 +798,13 @@ def pictured_lists(words: list[PDFWord], pictures: list[Picture]) -> list[str]:
     return found
 
 
+# A row that counts parts instead of naming them: '1 - 25k lin.' (Tonepad).
+_COUNTED_ROW = re.compile(r"\d{1,2}\s*[-\u2013]\s+\S")
+# Dashed listings that make a page's parts list dashed, as a count and a share.
+_DASHED_MIN = 4
+_DASHED_SHARE = 0.5
+# How far below its value's line a continuation may start, in ems.
+_WRAP_GAP_EM = 1.6
 # How far right of its designator a wrapped value may start, in ems.
 _WRAP_REACH_EM = 8
 
@@ -727,8 +829,41 @@ def find_listings(words: list[PDFWord]) -> list[Listing]:
     lines = page_lines(words)
     starts = Counter(round(listing.x0) for listing in _scan(words, frozenset()))
     columns = frozenset(x for x, n in starts.items() if n >= _MIN_COLUMN_REFS)
-    listings = _scan(words, columns, _type_columns(lines))
+    listings = _undashed_dropped(
+        _scan(words, columns, _type_columns(lines)), counted_rows(lines)
+    )
     return _mark_trimmers(_wrapped_values(listings, lines), lines)
+
+
+def counted_rows(lines: list[list[Cell]]) -> int:
+    """How many cells count parts by value ('2 - 1k', Tonepad)."""
+    return sum(_COUNTED_ROW.match(c.text) is not None for line in lines for c in line)
+
+
+def _dash_after(line: list[PDFWord], ref: Cell) -> bool:
+    """Whether the word after a designator cell on its line is a dash."""
+    end = ref.words[-1]["x1"]
+    after = [
+        w for w in line if w["x0"] >= end - 0.5 and w["text"] != ref.words[-1]["text"]
+    ]
+    if not after:
+        return False
+    nxt = min(after, key=lambda w: w["x0"])["text"]
+    # 'C3 -10n' (GuitarPCB Dr-Phybes): the dash set against the value.
+    return nxt in _DASHES or (nxt[:1] in _DASHES and nxt[1:2].isdigit())
+
+
+def _undashed_dropped(listings: list[Listing], counted: int) -> list[Listing]:
+    """Keeps only dashed listings on a page whose parts list writes 'R1 - 10k'.
+
+    Tonepad sets each listing with a dash, or counts parts by value ('2 - 1k'),
+    and draws the schematic on the same page; its labels ('AC  ADAPTOR',
+    'IC1a  1', 'LED  4k7') read as listings without one.
+    """
+    dashed = sum(listing.dashed for listing in listings) + counted
+    if dashed < _DASHED_MIN or dashed < _DASHED_SHARE * (len(listings) + counted):
+        return listings
+    return [listing for listing in listings if listing.dashed or not listing.value]
 
 
 def _wrapped_values(listings: list[Listing], lines: list[list[Cell]]) -> list[Listing]:
@@ -841,9 +976,7 @@ def _mark_trimmers(listings: list[Listing], lines: list[list[Cell]]) -> list[Lis
             and abs(x0 - listing.x0) <= _COLUMN_TOLERANCE_EM * size
         ]
         if above and above[-1] and not _TRIM_MARK.search(listing.value):
-            listing = Listing(
-                listing.ref, f"{listing.value} TRIM", listing.line, listing.x0
-            )
+            listing = replace(listing, value=f"{listing.value} TRIM")
         marked.append(listing)
     return marked
 
@@ -869,10 +1002,14 @@ def _scan(
     listings: list[Listing] = []
     # (value x-position, font size, index into listings) for the previous line.
     above: list[tuple[float, float, int]] = []
+    above_top = 0.0
     for line_no, line in enumerate(group_lines(words)):
         cells = _join_numbered_names(
             [part for cell in split_cells(line) for part in _split_merged(cell)]
         )
+        top = line[0]["top"]
+        if above and top - above_top > _WRAP_GAP_EM * line[0]["size"]:
+            above = []
         cells = _absorb_continuations(cells, above, listings)
         texts = [c.text for c in cells]
         current: list[tuple[float, float, int]] = []
@@ -919,6 +1056,14 @@ def _scan(
                 if (
                     _is_ref_cell(texts[j], following)
                     or _SPACED_REF.fullmatch(texts[j])
+                    # A counted part starts: 'IC1 - PT2399 | 1 - 25k lin.' (Tonepad).
+                    or _COUNTED_ROW.match(texts[j])
+                    # A drawing's pad letters: 'C7 - 100µF / 16v | A | B | E'.
+                    or (
+                        _PAD_LETTER.fullmatch(texts[j]) is not None
+                        and following is not None
+                        and _PAD_LETTER.fullmatch(following) is not None
+                    )
                     or not _is_annotation(texts[j])
                     or (complete and _in_column(cells[j].x0, cells[j].size, columns))
                 ):
@@ -937,12 +1082,17 @@ def _scan(
             value = clean_value(" ".join(parts))
             if value:
                 current.append((cells[i + 1].x0, cells[i + 1].size, len(listings)))
+                if _dash_after(line, cells[i]):
+                    # A dashed cell wraps under its start: 'IC3 - 5v positive
+                    # Regulator' / '(78L05)' (Tonepad Rebote 2.5).
+                    current.append((cells[i].x0, cells[i].size, len(listings)))
                 listings.append(
                     Listing(
                         ref=_ref_name(texts[i]),
                         value=value,
                         line=line_no,
                         x0=cells[i].x0,
+                        dashed=_dash_after(line, cells[i]),
                     )
                 )
             following = _text_at(texts, j + 1)
@@ -957,7 +1107,10 @@ def _scan(
                 # Its description names no part: '5K | 6mm Trim Pot'.
                 j = _description_end(cells, j, designators)
             i = j
-        above = current
+        # A line of another column between the rows (Tonepad's notes beside
+        # its parts list) does not part a value from its continuation.
+        if current:
+            above, above_top = current, top
     return listings
 
 
@@ -1025,8 +1178,8 @@ def _absorb_continuations(
         )
         if target is not None and _CONTINUATION.fullmatch(cell.text):
             prev = listings[target]
-            listings[target] = Listing(
-                prev.ref, clean_value(f"{prev.value} {cell.text}"), prev.line, prev.x0
+            listings[target] = replace(
+                prev, value=clean_value(f"{prev.value} {cell.text}")
             )
         else:
             remaining.append(cell)

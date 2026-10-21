@@ -49,6 +49,38 @@ class TestGrids:
         assert [e.value for e in plan.variants[1].entries] == ["39K", "82K"]
         assert plan.common == ()
 
+    def test_lists_side_by_side_are_anchored_on_their_first_column(self) -> None:
+        # Tonepad MAS Distortion: 'MXR PARTS LIST | DOD PARTS LIST' over
+        # 'Resistors | Capacitors' twice; the first repeated row is 'C1 | C1'.
+        page = _page(
+            [("MXR PARTS LIST", 40), ("DOD PARTS LIST", 280)],
+            [
+                ("Resistors", 40),
+                ("Capacitors", 160),
+                ("Resistors", 280),
+                ("Capacitors", 400),
+            ],
+            [("C1", 160), ("1u", 200), ("C1", 400), ("10u", 440)],
+            [
+                ("R2", 40),
+                ("1M", 80),
+                ("C2", 160),
+                ("10n", 200),
+                ("R2", 280),
+                ("20k", 320),
+            ],
+        )
+        entries = [
+            Entry("C1", "1u", 0, line=2, x0=160),
+            Entry("C1", "10u", 0, line=2, x0=400),
+            Entry("R2", "1M", 0, line=3, x0=40),
+            Entry("C2", "10n", 0, line=3, x0=160),
+            Entry("R2", "20k", 0, line=3, x0=280),
+        ]
+        plan = plan_builds(entries, [page])
+        assert _names(plan) == ["MXR", "DOD"]
+        assert [e.value for e in plan.variants[1].entries] == ["10u", "20k"]
+
     def test_two_boards_side_by_side_are_not_versions(self) -> None:
         # GuitarPCB Rock Hard: Boost and PlexAmp tables share rows; each column
         # is headed only 'Part | Value'.
