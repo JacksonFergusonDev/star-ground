@@ -54,6 +54,7 @@ class ParseWarningKind(StrEnum):
     MISREAD_TEXT = "Misread text layer"
     IMAGE_PARTS_LIST = "Parts list is an image"
     QUANTITY_LIST = "Parts listed by quantity"
+    UNREADABLE_ROW = "Unreadable designator"
 
 
 class OcrVerdict(StrEnum):

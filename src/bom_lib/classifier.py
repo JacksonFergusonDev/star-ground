@@ -61,6 +61,7 @@ _SWITCHCRAFT_JACK = re.compile(r"11[12][A-Z]?X\b")
 # A photo-FET optocoupler: Blueshift's 'OPTO  H11F1'.
 _OPTOCOUPLER = re.compile(r"H11F\d\b")
 _REVERB_BRICK = re.compile(r"BTDR-?\d")
+_POT_SIZE = re.compile(r"\s+(?:9|16|24)\s?mm$", re.IGNORECASE)
 _DC_JACK = re.compile(r"\b\d(?:\.\d)?\s*MM DC\b|\bDC (?:JACK|SOCKET)\b")
 _POT_VALUE = re.compile(
     r"(?<![\w.])(?:[ABCWG]\d+(?:\.\d+)?[KM][ABC]?|\d+(?:\.\d+)?[KM][ABCWG]?)(?![\w.])"
@@ -169,6 +170,9 @@ def normalize_value_by_category(category: ComponentCategory, val_raw: str) -> st
         # 'Trim - 50k' (GuitarPCB NostalgiTone Chorus) leaves no dash behind.
         trimmed = " ".join(_TRIM_NOTE.sub(" ", clean_val).split()).lstrip("-\u2013 ")
         clean_val = trimmed or clean_val
+        # A pot's body size is no part of its value: 'Fuzz  1kC 9mm' (Aion FX
+        # legacy Deimos).
+        clean_val = _POT_SIZE.sub("", clean_val) or clean_val
 
     return clean_val
 
@@ -284,6 +288,8 @@ def categorize_part(
                 ComponentCategory.RESISTORS,
                 ComponentCategory.HARDWARE_MISC,
                 ComponentCategory.DIODES,
+                # 'Q3B  50k trimmer' (Aion FX Phobos): Q3's bias trimmer.
+                ComponentCategory.TRANSISTORS,
             )
             and (_TRIM_NOTE.search(val_clean) or _POT_NOTE.search(val_clean))
             and _RESISTANCE.search(val_clean)

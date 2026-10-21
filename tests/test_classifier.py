@@ -94,3 +94,17 @@ def test_a_value_restated_in_parentheses() -> None:
     other = categorize_part("R5", "10k (bias)")
     assert other is not None
     assert other.clean_value == "10k (bias)"
+
+
+def test_a_trimmer_under_a_transistor_designator() -> None:
+    # Aion FX Phobos: 'Q3B  50k trimmer' biases Q3.
+    part = categorize_part("Q3B", "50k trimmer")
+    assert part is not None
+    assert part.category == ComponentCategory.POTENTIOMETERS
+
+
+def test_a_pots_body_size_is_no_part_of_its_value() -> None:
+    # Aion FX legacy Deimos: 'Fuzz  1kC 9mm'.
+    part = categorize_part("FUZZ", "1kC 9mm")
+    assert part is not None
+    assert part.clean_value == "1kC"

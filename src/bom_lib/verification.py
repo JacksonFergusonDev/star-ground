@@ -729,8 +729,26 @@ _BUILD_PASSAGE = re.compile(
     # 'The Analogman version of the Astrotone uses 1M2 for R1 and R4' (Aion FX
     # legacy Astra footnote).
     r"|\bversion\b[^.]*\buses \S*\d\S* for "
+    # '...if you do want to omit it, use 10k for R24 and then jumper all three pads
+    # of the Tone pot together' (Aion FX Fractal): building without a control.
+    r"|\bomit (?:it|them)\b[^.]*\buse \S*\d\S* for "
+    # 'The Bearfoot version changes the Nature control so it's more useful. Use
+    # 220n for C5 and 4k7 for RX1.' (Aion FX legacy Procyon)
+    r"|\b[A-Z]\w+ version\b[^.]*\.\s+Use \S*\d\S* for "
+    # 'If using the Body control, omit C1 and use CX2 and CX3.' (Aion FX legacy
+    # Solaris)
+    r"|\bif using the \w+ (?:control|pot), omit\b"
+    # 'if you do want to build the output section to Ross/Dyna specs, you can use a
+    # 47n film capacitor for CX1 and omit R22-24 and Q6' (Aion FX Aurora).
+    r"|\b(?:stock|specs?|version|circuit)\b[^.]*?, you can use\b"
     # 'If you want triangle-wave mode instead, here are the changes to make' (Aion FX Argus).
     r"|\bhere are the changes to make\b|\bmake the following (?:changes|substitutions)\b"
+    # 'If you'd like to build the original Runoffgroove circuit, which runs at 9V,
+    # the following values need to be changed.' (Aion FX Supreaux)
+    r"|\bthe following values need to be changed\b"
+    # 'Start with the Dyna Comp values above, and make the following
+    # replacements:' (Aion FX legacy Aurora's JangleBox).
+    r"|\bmake the following replacements\b"
     # '808 Style Build: Use Landgraff Dynamic Overdrive values with these exceptions
     # C4: 47n, ...', '...JUMPER D2 and change values of R4 to 1M, R5 to 470K'
     # (GuitarPCB Tube Screaming Ultra).
@@ -744,16 +762,31 @@ _PASSAGE_LINES = 25
 _DESIGNATOR = r"[A-Z]{1,3}\d{1,3}(?:-\d{1,3})?"
 # '• C5: 470n → 68n', '• R6: jumper', '• D2-8: omit (leave empty)'.
 _CHANGE_ITEM = re.compile(rf"^[•*-]?\s*({_DESIGNATOR})\s*:\s*\S")
+# '• Fuzz: 250kB' (Aion FX Phobos): a control, named.
+_CONTROL_ITEM = re.compile(r"^[•*-]\s*([A-Z][A-Za-z]+)\s*:\s*\d")
+# A lead-in sentence opens a passage of changes, as a colon does.
+_LEAD_IN = re.compile(
+    r"\bthe following (?:changes|substitutions|replacements|values)\b", re.IGNORECASE
+)
 # 'Use 22n for C12 instead of 27n', 'Use 16k for R36 and 14k for R37', 'Jumper R8',
 # '470R for R6, and 470n for C1 and C4'.
 _CHANGE_PROSE = re.compile(
-    rf"\b(?:use \S+|\S*\d\S*) for ({_DESIGNATOR})(?: and ({_DESIGNATOR}))?"
+    rf"\b(?:use (?:an? \S*\d\S*(?: \w+){{0,2}}|\S+)|\S*\d\S*) for ({_DESIGNATOR})"
+    rf"(?: and ({_DESIGNATOR}))?"
     rf"(?: and \S+ for ({_DESIGNATOR}))?"
-    rf"|\b(?:jumper|omit) ({_DESIGNATOR})\b"
+    rf"|\b(?:jumper|omit|leave off) ({_DESIGNATOR})(?: and ({_DESIGNATOR}))?\b"
+    # 'RX1/RX2: 1k → 500R; Sustain: 500kC → 250kB' (Aion FX legacy Aurora).
+    rf"|\b({_DESIGNATOR})/({_DESIGNATOR}):"
+    r"|\b([A-Z][a-z]+): \S+ \u2192"
     # 'exceptions C4: 47n, Gain Pot: B500k, R6: 51k', 'R4 to 1M, R5 to 470K',
     # 'D2 is replaced by a jumper'.
     rf"|\b({_DESIGNATOR}):\s*\d|\b({_DESIGNATOR}) to \d|\b({_DESIGNATOR}) is replaced\b",
     re.IGNORECASE,
+)
+# A control left out: 'jumper all three pads of the Tone pot together' (Aion FX
+# Fractal), whose designator is its name.
+_OMIT_CONTROL = re.compile(
+    r"\b(?:jumper|omit)\b[^.]*?\bthe (\w+) (?:pot|control)\b", re.IGNORECASE
 )
 # 'The part list aside from IC1 and D4 is identical in both versions' (GuitarPCB MoRC).
 _SAME_EXCEPT = re.compile(
@@ -782,7 +815,10 @@ def _designators(label: str) -> list[str]:
 
 
 def check_build_changes(
-    page_texts: list[str], inventory: Inventory, stats: StatsDict
+    page_texts: list[str],
+    inventory: Inventory,
+    stats: StatsDict,
+    omitted: frozenset[str] = frozenset(),
 ) -> None:
     """Warns about listed parts a build-notes passage changes for another version.
 
@@ -795,8 +831,12 @@ def check_build_changes(
         page_texts: Raw text of every page.
         inventory: The finished inventory for this document.
         stats: Stats object that receives the warnings.
+        omitted: Designators the list leaves empty, which another version may
+            fill ('CX1 | OMIT', Aion FX Aurora: 47n for the Ross/Dyna output).
     """
     listed = {ref.upper(): ref for data in inventory.values() for ref in data["refs"]}
+    listed |= {ref.upper(): ref for ref in omitted}
+    warned: set[str] = set()
     for text in page_texts:
         for m in _SAME_EXCEPT.finditer(" ".join((text or "").split())):
             for label in re.findall(_DESIGNATOR, m.group(1), re.IGNORECASE):
@@ -818,21 +858,43 @@ def check_build_changes(
                 continue
             # A heading or a lead-in ('...the following substitutions:') opens a
             # passage; a sentence ('The Park uses 2n2 for C6.') is its own scope.
-            sentence = not (_NOTE_HEADING.match(line) or line.endswith(":"))
-            for n, body in enumerate(lines[k - 1 : k + _PASSAGE_LINES]):
-                if n and _NOTE_HEADING.match(body) and not _CHANGE_ITEM.match(body):
+            sentence = not (
+                _NOTE_HEADING.match(line) or line.endswith(":") or _LEAD_IN.search(line)
+            )
+            passage = lines[k - 1 : k + _PASSAGE_LINES]
+            for n, body in enumerate(passage):
+                # A heading ends the passage, unless it names one of several
+                # builds whose changes follow ('Vox Tone Bender Mk III', then
+                # '• R1: 100k'; Aion FX Phobos).
+                follows = passage[n + 1] if n + 1 < len(passage) else ""
+                if (
+                    n
+                    and _NOTE_HEADING.match(body)
+                    and not _CHANGE_ITEM.match(body)
+                    and (
+                        not (
+                            _CHANGE_ITEM.match(follows) or _CONTROL_ITEM.match(follows)
+                        )
+                        or _MODIFICATION.search(body)
+                    )
+                ):
                     break
                 if n and sentence and lines[k - 2 + n].rstrip().endswith("."):
                     break
                 labels = [m.group(1) for m in [_CHANGE_ITEM.match(body)] if m]
-                for m in _CHANGE_PROSE.finditer(body):
+                labels += [m.group(1) for m in [_CONTROL_ITEM.match(body)] if m]
+                # A sentence wraps: 'use 470pF for' / 'CX2 and 1n for CX3'.
+                window = f"{body} {follows}" if n + 1 < len(passage) else body
+                for m in _CHANGE_PROSE.finditer(window):
                     labels += [g for g in m.groups() if g]
+                labels += [m.group(1) for m in _OMIT_CONTROL.finditer(body)]
                 for m in _OMIT_LIST.finditer(body):
                     labels += re.findall(_DESIGNATOR, m.group(1), re.IGNORECASE)
                 for label in dict.fromkeys(labels):
                     for name in _designators(label.upper()):
                         ref = listed.get(name)
-                        if ref:
+                        if ref and ref not in warned:
+                            warned.add(ref)
                             _warn(
                                 stats,
                                 ParseWarningKind.FOOTNOTE,
@@ -911,7 +973,8 @@ def check_duplicate(
 # ('Original uses MA856', 'Early units used 10k') name no build to choose.
 # 'Early units used 10k' is history, but 'Early G-2 uses 620R' names a build.
 _HISTORY = (
-    r"(?!(?i:the )?(?:(?i:original|older|some|most|many|factory|can|could|may|you)\b"
+    # 'Stock Ross/Dyna uses 500kB' (Aion FX Aurora) is the original unit too.
+    r"(?!(?i:the )?(?:(?i:original|stock|older|some|most|many|factory|can|could|may|you)\b"
     r"|(?i:early|earlier|later)\b(?! [\w-]*\d)))"
 )
 # A build named as a sentence's subject: capitalized words or model numbers
@@ -931,7 +994,8 @@ _BUILD_LABEL = (
 )
 _VERSION_NOTE = re.compile(
     rf"\b(?i:in|for) (?:the )?{_HISTORY}(?!(?i:this|stock|standard|any|all|every)\b)"
-    r"[\w' /.-]+? (?i:version|variant|specs?|circuit)\b"
+    # '1k2 in magazine project' (Aion FX Wyvern).
+    r"[\w' /.-]+? (?i:version|variant|specs?|circuit|project)\b"
     # 'Use a 100n film capacitor here if building a 3-transistor variant'.
     r"|\b(?i:if building)\b"
     # 'Analogman version uses 1.2M here', 'GC-1 uses 150k', 'G-2 uses 22uF'.
@@ -943,17 +1007,24 @@ _VERSION_NOTE = re.compile(
     # 'Use 16k for original OD-2' (Aion FX Aurum): a model number, not a part
     # ('Use 100n for C4').
     rf"|\b(?i:use) \d\S* (?:in|for) (?:the )?(?i:original )?(?![A-Z]{{1,3}}\d+\b)[A-Z][\w-]*\d"
+    # 'Use 220k for stock version' (Aion FX Particle): another version's value,
+    # though 'for stock version' alone restates the list.
+    r"|\b(?i:use) \d\S* (?:in|for) (?:the )?\w+ (?i:version|variant|build)\b"
     # 'Omit (leave empty) for P-2', 'Jumper for GC-1', 'Omit if using Morning Glory'.
     rf"|\b(?i:omit|jumper)\b[^.;]*?\b(?i:for|in|if using) {_HISTORY}(?:the )?[A-Z]"
     # '100pF in the SD-9M', '10M in Catalinbread and Orpheum'.
     rf"|\bin the {_HISTORY}[A-Z][\w-]*\d"
-    rf"|^\S*\d\S* (?:in|for) {_HISTORY}[A-Z]"
+    # '470pF MLCC for Aqua Puss' (Aion FX Amethyst): a value and its construction.
+    rf"|^\S*\d\S*(?: [A-Za-z]+)? (?:in|for) {_HISTORY}[A-Z]"
     # 'Orpheum: 10M; Axis/Foxey: omit (leave empty)'. Not a generic label:
     # 'Alternate: 4K7', 'Sub: MPSA18', 'Quantity: 2' (PedalPCB) name no build.
     r"|^(?!(?i:alt(?:ernat(?:e|ive))?|sub(?:stitute)?|quantity|qty|note|notes|"
     r"use|or|optional|alternate part|recommended|see)\s*:)"
     # 'Galaxie mod: 10k' (Aion FX Sapphire) is a modification, not a build.
     r"[A-Z][\w &/'-]{1,30}(?<!(?i: mod))(?<!(?i: mods)): [\w.]+(?:\s*[;.]|$)"
+    # One position, two parts: 'CX1 | 1uF | Alternative for C7', 'C7 | 4.7uF | Can
+    # instead use CX1 for a 1uF film cap' (Aion FX Helios).
+    r"|\b(?i:alternative (?:for|to)|can instead use) [A-Z]{1,3}X?\d"
     # 'Part of the optional Morning Glory gain stage.'
     r"|\b(?i:part of the optional)\b"
     # 'Carbon comp in original, measured value 560R Formula 5F6: 1k8 DLS Red: 1k'
@@ -1155,6 +1226,65 @@ def check_prose_pots(
                 f"{ref} ({m.group('value')}) is given in the document's notes, not its "
                 "parts list: add it by hand.",
             )
+
+
+_CHIP = r"[A-Z]{2,}\d{3,}[A-Z]*"
+# 'either the MN3005/MN3101 or the MN3205/MN3102 chipset' (Aion FX Amethyst): two
+# sets of chips, each part of one set taking the place of the other's.
+_CHIP_SETS = re.compile(
+    rf"\b({_CHIP})/\s?({_CHIP}) or (?:the )?({_CHIP})/\s?({_CHIP})\b"
+)
+
+
+def check_chip_sets(
+    page_texts: list[str], inventory: Inventory, stats: StatsDict
+) -> None:
+    """Warns about a listed chip the document offers a whole other set for.
+
+    Aion FX Amethyst lists the MN3005 and its MN3101 clock and says the board
+    takes 'either the MN3005/MN3101 or the MN3205/MN3102 chipset': IC4 is an
+    MN3102 in the other build, though its row says only 'See build notes'.
+
+    Args:
+        page_texts: Raw text of every page.
+        inventory: The finished inventory for this document.
+        stats: Stats object that receives the warnings.
+    """
+    text = " ".join(" ".join(page_texts).split())
+    other: dict[str, str] = {}
+    for m in _CHIP_SETS.finditer(text):
+        first, second = m.groups()[:2], m.groups()[2:]
+        for a, b in zip(first, second, strict=True):
+            other.setdefault(a, b)
+            other.setdefault(b, a)
+    for key, data in inventory.items():
+        swap = other.get(key.value.upper())
+        for ref in data["refs"] if swap else []:
+            _warn(
+                stats,
+                ParseWarningKind.FOOTNOTE,
+                ref,
+                f"{ref}: listed as {key.value}, but the document offers a set of "
+                f"chips with {swap} in its place; check which your build needs.",
+            )
+
+
+def check_unreadable_rows(rows: list[str], stats: StatsDict) -> None:
+    """Warns that a row of an OCR'd parts list names no part it could read.
+
+    Args:
+        rows: The rows' text (`layout.unreadable_rows`).
+        stats: Stats object that receives the warning.
+    """
+    if rows:
+        listed = "', '".join(rows)
+        _warn(
+            stats,
+            ParseWarningKind.UNREADABLE_ROW,
+            "",
+            f"The designator of '{listed}' could not be read, so that part is "
+            "missing from the list: check the document and add it by hand.",
+        )
 
 
 def check_unclassified_row(stats: StatsDict, ref: str, value: str) -> None:

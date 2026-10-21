@@ -32,6 +32,7 @@ from src.bom_lib.layout import (
     bom_note_cells,
     bom_valueless_refs,
     clean_value,
+    control_designator,
     counted_rows,
     drop_remarks,
     find_bom_rows,
@@ -43,6 +44,7 @@ from src.bom_lib.layout import (
     pictured_lists,
     ref_group,
     strip_asides,
+    unreadable_rows,
     valueless_refs,
 )
 from src.bom_lib.types import (
@@ -64,6 +66,7 @@ from src.bom_lib.verification import (
     check_bom_reconciliation,
     check_build_changes,
     check_build_note,
+    check_chip_sets,
     check_classification,
     check_duplicate,
     check_either_part,
@@ -84,6 +87,7 @@ from src.bom_lib.verification import (
     check_two_values,
     check_unclassified_row,
     check_unextracted_refs,
+    check_unreadable_rows,
     check_value_assignments,
     check_value_keyed_list,
     check_valueless_refs,
@@ -413,12 +417,17 @@ _TYPE_HINTS: tuple[tuple[str, ComponentCategory], ...] = (
 # 'VOL', 'GAIN 2'; title case too ('Input', 'Bias Trim', GuitarPCB DumbleTone).
 # The second word is a number or a word, never a value: 'C1 100n' is a
 # designator and its value run together (GuitarPCB ShoNuff).
-_CONTROL_LABEL = re.compile(r"[A-Z][A-Za-z0-9_/-]*(?: (?:\d+|[A-Za-z]+))?")
+# 'GAIN.BRT' (GuitarPCB Sunn-T) names one control.
+_CONTROL_LABEL = re.compile(
+    r"[A-Z][A-Za-z0-9_/-]*(?:\.[A-Z]{2,5})?(?: (?:\d+|[A-Za-z]+))?"
+)
 # Text tables are numbered page * this + header line, so two tables on one
 # page stay apart.
 _TABLES_PER_PAGE = 100
 # Longer than any value: a headerless 'table' cell holding prose.
 _PROSE_CHARS = 60
+# A designator cell holds at most this many words ('SW1 - SW2', 'IC1 & IC2').
+_REF_WORDS_MAX = 4
 _SOCKET = re.compile(r"\bsocket\b", re.IGNORECASE)
 _CHOOSE_ROW = re.compile(r"\s*choose between .+ or ", re.IGNORECASE)
 _NUMBERED_NAME = re.compile(r"[A-Z]{1,3}\d{1,3}")
@@ -593,7 +602,10 @@ def enrich_value_from_type(value: str, type_text: str, notes: str = "") -> str:
     if "CAPACITOR" in detail and any(ch.isdigit() for ch in value):
         # A note naming another part describes that part: 'Can omit and use
         # 4.7uF tantalum for C6' (Aion FX Dryad) on the 1uF film cap C5.
-        construction = type_text.upper() if _OTHER_PART.search(notes) else detail
+        # 'Original amp uses 2.7uF tantalum, but 2.2uF film will work the same'
+        # (Aion FX L4): the original's part, not this one.
+        other = _OTHER_PART.search(notes) or _ORIGINAL_PART.search(notes)
+        construction = type_text.upper() if other else detail
         for keyword, name in _DIELECTRICS:
             # 'Box/MLCC Capacitor' (Five Cats) leaves the choice open.
             either = re.search(rf"/\s*{keyword}|{keyword}\s*/", construction)
@@ -604,6 +616,7 @@ def enrich_value_from_type(value: str, type_text: str, notes: str = "") -> str:
 
 # A designator named in a NOTES cell: 'use 4.7uF tantalum for C6'.
 _OTHER_PART = re.compile(r"\b(?:for|in|with) [A-Z]{1,3}\d{1,3}\b")
+_ORIGINAL_PART = re.compile(r"\boriginal\b", re.IGNORECASE)
 
 
 def _table_entries(
@@ -732,6 +745,15 @@ def _table_entries(
                     named = _NAMED_REF.match(ref_raw)
                     if named and "=" in ref_raw:
                         ref_raw = named.group(1)  # 'P1=FUZZ' (GuitarPCB PUFF v4)
+                    # 'P2-Volume' (GuitarPCB Sho' Nuff).
+                    ref_raw = control_designator(ref_raw) or ref_raw
+                    # 'RX2 (by IC1)', 'RX2 (by switch)' (Aion FX legacy Aurora):
+                    # two positions printed with one designator.
+                    position = _POSITION_ASIDE.fullmatch(ref_raw)
+                    if position and is_designator(position.group(1)):
+                        ref_raw = position.group(1)
+                        if any(e.ref == ref_raw for e in table_entries):
+                            ref_raw = f"{ref_raw} (2)"
                     # 'TR1 (see text)', 'TR2 (Volume)' (GuitarPCB D'Lay): an aside
                     # on the designator.
                     aside = _REF_ASIDE.fullmatch(ref_raw)
@@ -776,6 +798,10 @@ def _table_entries(
                     # A page border drawn as a box reads as a one-cell 'table'
                     # holding the page's prose (GuitarPCB): not a parts row.
                     continue
+                if headerless and len(ref_raw.split()) > _REF_WORDS_MAX:
+                    # A box around board artwork reads as a 'table' of its
+                    # labels: '50k 50k trim p2 trim p1 int-ext ...' (Tonepad).
+                    continue
 
                 # Auditorium: 'TERMINAL BLOCK (Qty 3)'.
                 qty = 1
@@ -783,6 +809,16 @@ def _table_entries(
                 if quantity:
                     qty = int(quantity.group(1))
                     ref_raw = ref_raw[: quantity.start()].strip()
+
+                if versions and " / " not in val_raw:
+                    # 'Parts (Ross / Dyna values)' over 'R2 | 470k | jumper' (Aion
+                    # FX legacy Aurora): the second version's value in a column
+                    # of its own.
+                    second = next(
+                        (c.strip() for c in row_safe[val_idx + 1 :] if c.strip()), ""
+                    )
+                    if _SECOND_VALUE.fullmatch(second):
+                        val_raw = f"{val_raw} / {second}"
 
                 if ref_raw and val_raw:
                     for ref, value, version in _version_split(
@@ -952,6 +988,8 @@ def _titled_builds(
 # 'Parts (vintage / modern values)' (Aion FX legacy Comet): the page's 'A / B'
 # values are two builds'.
 _SLASH_VERSIONS = re.compile(r"\((\w+) / (\w+) values\)", re.IGNORECASE)
+# Another version's value beside the first: '1M', '470k', 'jumper', 'omit'.
+_SECOND_VALUE = re.compile(r"\d[\w.]*|omit|jumper", re.IGNORECASE)
 # 'IC1 (vintage)': a part in one build only; '1N914 (modern only)' likewise.
 _VERSION_REF = re.compile(r"(\S+) \((\w+)\)")
 _VERSION_ONLY = re.compile(r"(.+?) \((\w+) only\)", re.IGNORECASE)
@@ -995,8 +1033,10 @@ _POINTER_TAIL = re.compile(
 _RULED_LABEL_NOUN = re.compile(r"(?<=[A-Za-z]{3}) (?:switch|pot|trimmer)$")
 # 'IC1 & IC2'; 'LED + *CLR' (GuitarPCB The Mule: a status LED and its CLR).
 _REF_PAIR = re.compile(r"(\w+)\s*(?:&|\+|\band\b)\s*\*?(\w+)", re.IGNORECASE)
-# 'TR1 (see text)', 'TR2 (Volume)'; not 'RX2 (by IC1)' (Aion FX legacy Aurora names
-# two positions of RX2 apart) or 'IC1 (vintage)' (Comet legacy names a build).
+# 'RX2 (by IC1)': where on the board a position is.
+_POSITION_ASIDE = re.compile(r"([A-Za-z]{1,4}\d{1,3})\s*\(by [^()]+\)")
+# 'TR1 (see text)', 'TR2 (Volume)'; not 'RX2 (by IC1)' (`_POSITION_ASIDE`) or
+# 'IC1 (vintage)' (Comet legacy names a build).
 _REF_ASIDE = re.compile(r"([A-Za-z]{1,4}\d{1,3})\s*\(([^\d()]*)\)", re.DOTALL)
 
 
@@ -1615,7 +1655,7 @@ def _layout_entries(
             refs = (
                 expand_refs(listing.ref)
                 if REF_RANGE.fullmatch(listing.ref) or "," in listing.ref
-                else [listing.ref]
+                else [control_designator(listing.ref) or listing.ref]
             )
             value = listing.value
             end = (row_ends or {}).get((page_no, listing.line), -1)
@@ -2144,6 +2184,14 @@ def read_pages(
         r for e in entries if _is_not_populated(e.value) for r in expand_refs(e.ref)
     )
     check_unextracted_refs(listed_texts, union, stats, omitted)
+    # A build's list on its own page (Aion FX legacy Cerulean: 'DX1-2  ²' in the
+    # stock list, '1S1588' in King of Tone's) leaves a part empty although
+    # another build fills it.
+    read_on: dict[int, set[str]] = {}
+    for e in entries:
+        read_on.setdefault(e.page, set()).update(
+            r.upper() for r in expand_refs(_REPEAT.sub("", e.ref))
+        )
     check_valueless_refs(
         [
             ref
@@ -2153,19 +2201,27 @@ def read_pages(
                 *valueless_refs(data["words"]),
                 *bom_valueless_refs(data["words"]),
             ]
+            if not variants or ref.upper() not in read_on.get(k, set())
         ],
-        union,
+        union if not variants else create_empty_inventory(),
         stats,
     )
+    if tables_only:
+        check_unreadable_rows(
+            [row for data in pages_data for row in unreadable_rows(data["words"])],
+            stats,
+        )
     check_footnotes(page_texts, stats)
     check_numbered_footnotes(
         [data.get("marked", []) for data in pages_data], page_texts, union, stats
     )
-    if not variants:
-        # A document read as several builds already gives each its values.
-        check_build_changes(page_texts, union, stats)
+    # A document read as several builds may describe one more in its notes
+    # (Aion FX legacy Aurora: Ross and Dyna Comp columns, then the JangleBox's
+    # replacements); a part both read builds give is warned already.
+    check_build_changes(page_texts, union, stats, omitted)
     check_value_assignments(page_texts, union, stats)
     check_prose_pots(page_texts, union, stats)
+    check_chip_sets(page_texts, union, stats)
     check_numbering_gaps(union, stats)
     check_two_values(union, stats)
     check_either_part(page_texts, union, stats)

@@ -15,6 +15,7 @@ from src.bom_lib.verification import (
     check_bom_reconciliation,
     check_build_changes,
     check_build_note,
+    check_chip_sets,
     check_classification,
     check_duplicate,
     check_footnotes,
@@ -27,6 +28,7 @@ from src.bom_lib.verification import (
     check_row_quantity,
     check_two_values,
     check_unextracted_refs,
+    check_unreadable_rows,
     check_value_assignments,
     check_value_keyed_list,
     check_valueless_refs,
@@ -434,6 +436,12 @@ class TestAionChecks:
             # Aion FX Muramasa and Rift.
             "V2: J201 (MMBFJ201)",
             "Omit if using tone pot.",
+            # Aion FX Wyvern, Particle, Amethyst and Helios.
+            "1k2 in magazine project.",
+            "Albini specs. Use 220k for stock version. See build notes.",
+            "470pF MLCC for Aqua Puss.",
+            "Alternative for C7. No audible EQ difference.",
+            "Can instead use CX1 for a 1uF film cap.",
         ],
     )
     def test_notes_that_name_another_build(self, note: str) -> None:
@@ -461,6 +469,8 @@ class TestAionChecks:
             "Original OD-2 uses 22n. See build notes.",
             "Galaxie mod: 10k. See build notes for full mod.",
             "The HM-2 uses 2SK30A-Y (a Japanese equivalent).",
+            # Aion FX Aurora: the original unit's taper.
+            "Stock Ross/Dyna uses 500kB, but C (reverse audio) works better.",
         ],
     )
     def test_notes_that_name_no_build(self, note: str) -> None:
@@ -934,3 +944,117 @@ def test_schematic_net_labels_are_not_listings() -> None:
     stats = create_empty_stats()
     check_unextracted_refs(["Schematic\nIN 1M 2N3565\nR1 1M"], _listed(), stats)
     assert [w.ref for w in stats["warnings"]] == ["R1"]
+
+
+def test_build_notes_that_leave_out_a_control() -> None:
+    # Aion FX Fractal: 'omit it, use 10k for R24 and then jumper all three pads
+    # of the Tone pot together'.
+    text = "\n".join(
+        [
+            "Treble tone control",
+            "At zero, it is identical to the stock circuit, but if you do want to",
+            "omit it, use 10k for R24 and then jumper all three pads of the Tone pot together.",
+        ]
+    )
+    inventory = _listed(
+        ("R24", "470R", ComponentCategory.RESISTORS),
+        ("TONE", "10kB", ComponentCategory.POTENTIOMETERS),
+        ("R25", "10k", ComponentCategory.RESISTORS),
+    )
+    stats = create_empty_stats()
+    check_build_changes([text], inventory, stats)
+    assert sorted(w.ref for w in stats["warnings"]) == ["R24", "TONE"]
+
+
+def test_build_notes_fill_a_part_the_list_omits() -> None:
+    # Aion FX Aurora: CX1 is OMIT in the list; the Ross/Dyna output uses it.
+    text = "\n".join(
+        [
+            "(following the parts list directly) uses this mod. However, if you",
+            "Ross/Dyna specs, you can use a 47n film capacitor for CX1 and omit R22-24 and Q6.",
+        ]
+    )
+    refs = ("R22", "R23", "R24", "Q6", "R1")
+    inventory = _listed(*((r, "10k", ComponentCategory.RESISTORS) for r in refs))
+    stats = create_empty_stats()
+    check_build_changes([text], inventory, stats, frozenset({"CX1"}))
+    assert sorted(w.ref for w in stats["warnings"]) == [
+        "CX1",
+        "Q6",
+        "R22",
+        "R23",
+        "R24",
+    ]
+
+
+def test_a_listed_chip_another_chip_set_replaces() -> None:
+    # Aion FX Amethyst: IC4 is an MN3102 with the MN3205.
+    text = "either the MN3005/MN3101 or the MN3205/\nMN3102 chipset depending on availability"
+    inventory = _listed(
+        ("IC3", "MN3005", ComponentCategory.ICS),
+        ("IC4", "MN3101", ComponentCategory.ICS),
+        ("IC1", "TL072", ComponentCategory.ICS),
+    )
+    stats = create_empty_stats()
+    check_chip_sets([text], inventory, stats)
+    assert sorted(w.ref for w in stats["warnings"]) == ["IC3", "IC4"]
+
+
+def test_unreadable_rows_warn_the_document() -> None:
+    stats = create_empty_stats()
+    check_unreadable_rows(["60  MPF102"], stats)
+    assert _kinds(stats) == [ParseWarningKind.UNREADABLE_ROW]
+    stats = create_empty_stats()
+    check_unreadable_rows([], stats)
+    assert stats["warnings"] == []
+
+
+def test_build_notes_for_several_builds_under_headings() -> None:
+    # Aion FX Phobos: a lead-in sentence, then each build's heading and changes.
+    text = "\n".join(
+        [
+            "Variants",
+            "Start with the original parts list and make the following changes.",
+            "Vox Tone Bender Mk III",
+            "• R1: 100k",
+            "• C6: 2n (just use 2n2 here)",
+            "Park Fuzz Sound (2-knob)",
+            "• R10: 470k",
+            "Prescription Electronics Yard Box",
+            "• Fuzz: 250kB",
+            "Output volume",
+            "You can reduce R5 to 68k for more output.",
+        ]
+    )
+    refs = ("R1", "C6", "R10", "FUZZ", "R5")
+    inventory = _listed(*((r, "10k", ComponentCategory.RESISTORS) for r in refs))
+    stats = create_empty_stats()
+    check_build_changes([text], inventory, stats)
+    assert sorted(w.ref for w in stats["warnings"]) == ["C6", "FUZZ", "R1", "R10"]
+
+
+@pytest.mark.parametrize(
+    ("text", "refs"),
+    [
+        # Aion FX legacy Procyon and Solaris footnotes.
+        (
+            "3 The Bearfoot version changes the Nature control so it is more useful. "
+            "Use 220n for C5 and 4k7 for RX1.",
+            ["C5", "RX1"],
+        ),
+        ("2 If using the Body control, omit C1 and use CX2 and CX3.", ["C1"]),
+        # Aion FX legacy Aurora: a paragraph of replacements, wrapped.
+        (
+            "Start with the Dyna Comp values above, and make the following replacements:\n"
+            "C5: 1uF \u2192 2u2; RX1/RX2: 1k \u2192 500R; Sustain: 500kC \u2192 250kB.\n"
+            "Or leave off C9 entirely, use 470pF for\nCX2 and 1n for CX3.",
+            ["C5", "C9", "CX2", "CX3", "RX1", "RX2", "SUSTAIN"],
+        ),
+    ],
+)
+def test_footnotes_that_build_another_version(text: str, refs: list[str]) -> None:
+    listed = ("C1", "C5", "C9", "CX2", "CX3", "RX1", "RX2", "SUSTAIN", "R1")
+    inventory = _listed(*((r, "1k", ComponentCategory.RESISTORS) for r in listed))
+    stats = create_empty_stats()
+    check_build_changes([text], inventory, stats)
+    assert sorted(w.ref for w in stats["warnings"]) == refs
