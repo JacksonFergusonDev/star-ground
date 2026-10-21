@@ -1395,3 +1395,37 @@ def test_a_counted_list_does_not_warn_each_missing_designator() -> None:
     kinds = {w.kind for w in stats["warnings"]}
     assert ParseWarningKind.QUANTITY_LIST in kinds
     assert ParseWarningKind.UNEXTRACTED_REF not in kinds
+
+
+@pytest.mark.parametrize(
+    ("text", "refs"),
+    [
+        ("R3 1K C3 1n IC3 24LC32A *Included", {"IC3"}),  # Deflector: three columns
+        ("IC1 EXPRESSO Expresso Microcontroller *Included with PCB", {"IC1"}),
+        ("IC2 RANDOMIZER Random LFO microcontroller Included with PCB", {"IC2"}),
+        ("A drill template is included for enclosure layout.", set()),
+        ("R1 10k\nIncluded with each PCB purchase.", set()),
+    ],
+)
+def test_included_refs(text: str, refs: set[str]) -> None:
+    from src.bom_lib.parser import included_refs
+
+    assert included_refs([text]) == refs
+
+
+def test_a_part_included_with_the_pcb_is_listed_and_counted() -> None:
+    # PedalPCB Deflector: the EEPROM comes programmed with the board.
+    from src.bom_lib import create_empty_stats
+    from src.bom_lib.parser import read_pages
+
+    page = _words_page(
+        [
+            (("IC1", 50.0), ("TL072", 90.0)),
+            (("IC3", 50.0), ("24LC32A *Included", 90.0)),
+        ],
+        text="IC1 TL072\nIC3 24LC32A *Included",
+    )
+    inventory, _, _ = read_pages([page], "Deflector", create_empty_stats())
+    included = {k.value: d["included"] for k, d in inventory.items() if d["refs"]}
+    assert included["24LC32A"] == 1
+    assert included["TL072"] == 0

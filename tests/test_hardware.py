@@ -15,6 +15,8 @@ INPUT_JACK = ComponentKey(HW, "6.35MM JACK (STEREO)")
 DC_JACK = ComponentKey(HW, "DC POWER JACK 2.1MM")
 STOMP = ComponentKey(HW, "3PDT STOMP SWITCH")
 ENCLOSURE = ComponentKey(HW, "1590B Enclosure")
+STATUS_LED = ComponentKey(ComponentCategory.DIODES, "LED")
+LED_RESISTOR = ComponentKey(ComponentCategory.RESISTORS, "3.3k")
 
 
 def _inventory(*parts: tuple[ComponentCategory, str, str]) -> Inventory:
@@ -50,6 +52,21 @@ class TestProvidedHardware:
             (ComponentCategory.SWITCHES, "SPDT ON/ON", "SW1"),
         )
         assert provided_hardware(inventory) == frozenset()
+
+    def test_status_led_and_its_resistor(self) -> None:
+        inventory = _inventory(
+            (ComponentCategory.DIODES, "5mm LED", "LED"),
+            (ComponentCategory.RESISTORS, "4.7k", "LEDR"),  # Aion FX
+        )
+        assert provided_hardware(inventory) == {
+            HardwareRole.STATUS_LED,
+            HardwareRole.LED_RESISTOR,
+        }
+
+    def test_listed_resistor_without_the_led(self) -> None:
+        # PedalPCB lists 'CLR' and leaves the LED to the builder.
+        inventory = _inventory((ComponentCategory.RESISTORS, "4.7k", "CLR"))
+        assert provided_hardware(inventory) == {HardwareRole.LED_RESISTOR}
 
     def test_ordinary_parts_provide_nothing(self) -> None:
         inventory = _inventory(
@@ -89,3 +106,10 @@ class TestInjection:
             inventory, [BuildHardware(1, frozenset({HardwareRole.ENCLOSURE}))]
         )
         assert ENCLOSURE not in inventory
+
+    def test_status_led_a_project_lists_is_not_added_again(self) -> None:
+        inventory = Inventory()
+        listed = frozenset({HardwareRole.LED_RESISTOR})
+        get_standard_hardware(inventory, [BuildHardware(1, listed), BuildHardware(1)])
+        assert inventory[LED_RESISTOR]["qty"] == 1  # only the other project's
+        assert inventory[STATUS_LED]["qty"] == 2  # neither lists the LED

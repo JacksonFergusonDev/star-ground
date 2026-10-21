@@ -37,6 +37,7 @@ def test_generate_shopping_list_csv_standard() -> None:
             "Category": "Resistors",
             "Part": "10k",
             "BOM Qty": 4,
+            "Included": 0,
             "Buy Qty": 10,
             "Notes": "1/4W Metal Film",
             "Search Term": "10k ohm 1/4w metal film",
@@ -64,6 +65,7 @@ def test_generate_shopping_list_csv_with_stock_and_formula() -> None:
             "Category": "Capacitors",
             "Part": "100n",
             "BOM Qty": 5,
+            "Included": 0,
             "In Stock": 2,
             "Net Need": 3,
             "Buy Qty": 10,
@@ -100,6 +102,7 @@ def test_generate_stock_update_csv() -> None:
             "Category": "Resistors",
             "Part": "10k",
             "BOM Qty": 4,
+            "Included": 0,
             "In Stock": 2,
             "Net Need": 2,
             "Buy Qty": 10,
@@ -112,6 +115,7 @@ def test_generate_stock_update_csv() -> None:
             "Category": "ICs",
             "Part": "TL072",
             "BOM Qty": 2,
+            "Included": 0,
             "In Stock": 2,
             "Net Need": 0,
             "Buy Qty": 0,
@@ -129,3 +133,23 @@ def test_generate_stock_update_csv() -> None:
     assert "Category,Part,Qty" in decoded
     assert "Resistors,10k,8" in decoded
     assert "TL072" not in decoded
+
+
+def test_stock_update_does_not_spend_stock_on_included_parts() -> None:
+    """A part that comes with the PCB is used without coming from stock."""
+    rows: list[ShoppingListRow] = [
+        {
+            "Origin": ComponentOrigin.CIRCUIT_BOARD,
+            "Category": "ICs",
+            "Part": "24LC32A",
+            "BOM Qty": 2,
+            "Included": 1,
+            "In Stock": 3,
+            "Net Need": 0,
+            "Buy Qty": 0,
+            "Notes": "",
+            "Search Term": "24LC32A",
+            "Tayda_Link": "",
+        },
+    ]
+    assert "ICs,24LC32A,2" in generate_stock_update_csv(rows).decode("utf-8-sig")

@@ -158,3 +158,21 @@ def test_build_shopping_list_filtering() -> None:
     )
     assert len(circuit_only) == 1
     assert circuit_only[0]["Part"] == "10k"
+
+
+def test_build_shopping_list_part_included_with_the_pcb() -> None:
+    """A part that comes with the PCB stays listed but is not bought."""
+    key = ComponentKey(ComponentCategory.ICS, "24LC32A")
+    inventory = Inventory()
+    inventory.add_part("Deflector", key, "IC3")
+    inventory[key]["included"] = 1
+    other = Inventory()
+    other.add_part("Organ Donor", key, "IC2")
+    inventory.merge(other)  # a second project whose chip is bought
+
+    row = next(r for r in build_shopping_list(inventory) if r["Part"] == "24LC32A")
+    assert row["BOM Qty"] == 2
+    assert row["Included"] == 1
+    assert row["Net Need"] == 1
+    assert row["Buy Qty"] == 1
+    assert row["Notes"].startswith("📦 1 included with the PCB")
