@@ -385,6 +385,10 @@ class TestAionChecks:
             ("SPST or SPDT", "SPST"),
             ("15k or 22k", "15k"),
             ("270nF/220nF", "270nF"),  # Five Cats Albus
+            ("4.7u or 5uF electro", "4.7u electro"),  # Tonepad Revolcador
+            ("Silicon diode (1N456, 1N4148, etc)", "Silicon diode"),
+            ("NP4124 (use 2N3904)", "NP4124"),  # Tonepad Dos Ochenta
+            ("4558 (TL072 will also work)", "4558"),
         ],
     )
     def test_builder_choices_use_the_first_value(self, value: str, chosen: str) -> None:
@@ -587,6 +591,22 @@ def test_two_values_side_by_side() -> None:
     stats = create_empty_stats()
     check_two_values(inv, stats)
     assert [w.ref for w in stats["warnings"]] == ["R6"]
+
+
+def test_a_wattage_is_no_second_value() -> None:
+    # Tonepad Real McTube: 'R2 - 12 ohm 2W'.
+    stats = create_empty_stats()
+    check_two_values(_inventory((ComponentCategory.RESISTORS, "12 2W", "R2")), stats)
+    assert stats["warnings"] == []
+
+
+def test_a_value_running_into_a_label_warns() -> None:
+    # Tonepad Small Clone: 'C1 - 330pF' beside 'Pos1 - 33pF'.
+    stats = create_empty_stats()
+    check_two_values(
+        _inventory((ComponentCategory.CAPACITORS, "330p Pos1 33pF", "C1")), stats
+    )
+    assert _kinds(stats) == [ParseWarningKind.UNPARSED_VALUE]
 
 
 def test_a_table_of_substitutes_warns_every_row() -> None:

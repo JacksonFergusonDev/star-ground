@@ -445,6 +445,47 @@ class TestCellRepairs:
             Listing("D1-D2", "1N4148"),
         ]
 
+    @pytest.mark.parametrize(
+        ("cell", "ref", "value"),
+        [
+            ("R2, R7, R18, R20 - 47k", "R2,R7,R18,R20", "47k"),  # Tonepad Pulsar
+            ("R11,R12 \u2013 220k", "R11,R12", "220k"),  # Tonepad Revolcador
+            ("D1 - D5 \u2013 Silicon diode", "D1-D5", "Silicon diode"),
+            ("R7 \u2013 220", "R7", "220"),  # a value, not the range R7-R220
+            ("IC1 - TL072", "IC1", "TL072"),  # a part number, not a range
+        ],
+    )
+    def test_dashed_listings(self, cell: str, ref: str, value: str) -> None:
+        assert find_listings(_line(cell)) == [Listing(ref, value)]
+
+    def test_a_listing_set_against_the_next(self) -> None:
+        # Tonepad MAS Distortion: 'R7 - 500k pot. C7 - 0.001 µF' in one cell.
+        assert find_listings(_line("R7 - 500k pot. C7 - 0.001 µF")) == [
+            Listing("R7", "500k pot."),
+            Listing("C7", "0.001 µF"),
+        ]
+
+    def test_pad_letters_end_a_value(self) -> None:
+        # Tonepad Real McTube: 'C7 - 100µF / 16v | A | B | E' (the layout's pads).
+        assert find_listings(_line("C7 - 100µF / 16v", "A", "B", "E")) == [
+            Listing("C7", "100µF / 16v")
+        ]
+
+    def test_a_counted_row_ends_a_value(self) -> None:
+        # Tonepad Rebote 2.5: 'IC1 - PT2399 | 1 - 25k lin.' under two headings.
+        assert find_listings(_line("IC1 - PT2399", "1 - 25k lin.")) == [
+            Listing("IC1", "PT2399")
+        ]
+
+    def test_undashed_labels_on_a_dashed_page_are_drawing(self) -> None:
+        # Tonepad: the schematic on the parts list's page labels 'AC  ADAPTOR'.
+        words = [
+            *_line("R1 - 10k", "C1 - 100n", top=100),
+            *_line("R2 - 1M", "C2 - 10n", top=120),
+            *_line("Q1", "2N5088", top=300),
+        ]
+        assert [x.ref for x in find_listings(words)] == ["R1", "C1", "R2", "C2"]
+
     def test_range_of_numbered_labels(self) -> None:
         # GuitarPCB NostalgiTone, read by OCR: 'EFL1-3  Status LED'.
         assert find_listings(_line("EFL1-3", "Status LED")) == [

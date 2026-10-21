@@ -60,3 +60,37 @@ def test_lettered_led_resistor_follows_its_type() -> None:
     led = categorize_part("LEDB", "3mm red")
     assert led is not None
     assert led.category == ComponentCategory.DIODES
+
+
+def test_a_pot_under_a_resistor_designator() -> None:
+    # Tonepad: 'R7 - 100k lin pot', 'R13 - 500k Rev. Log'.
+    for value in ("100k lin pot", "50k Log Pot", "500k Rev. Log", "1M pot"):
+        result = categorize_part("R7", value)
+        assert result is not None
+        assert result.category == ComponentCategory.POTENTIOMETERS
+    fixed = categorize_part("R7", "100k")
+    assert fixed is not None
+    assert fixed.category == ComponentCategory.RESISTORS
+
+
+def test_capacitor_units_and_bare_fractions() -> None:
+    # Tonepad: '0.068 µF' with a space, '0.001' with no unit at all.
+    for value, clean in (
+        ("0.068 µF", "68n"),
+        ("100 pF", "100p"),
+        ("0.001", "1n"),
+        (".05", "50n"),
+    ):
+        result = categorize_part("C2", value)
+        assert result is not None
+        assert result.clean_value == clean
+
+
+def test_a_value_restated_in_parentheses() -> None:
+    # Tonepad: 'R5 - 8k2 (8.2k)'; a different value in parentheses stays.
+    restated = categorize_part("R5", "8k2 (8.2k)")
+    assert restated is not None
+    assert restated.clean_value == "8.2k"
+    other = categorize_part("R5", "10k (bias)")
+    assert other is not None
+    assert other.clean_value == "10k (bias)"
