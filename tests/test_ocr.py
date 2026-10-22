@@ -67,6 +67,7 @@ def _stats(*warnings: ParseWarning) -> StatsDict:
         "residuals": [],
         "extracted_title": None,
         "seen_refs": {},
+        "unread_counted": [],
         "errors": [],
         "warnings": list(warnings),
     }

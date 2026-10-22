@@ -62,6 +62,7 @@ In software, dependency resolution is **deterministic**: `uv sync` gives the sam
 - **Interchangeable parts** (through-hole or SMD, a bridge rectifier or four diodes): the document's first choice is used and the alternative is noted.
 - **Image-only parts lists** are read by OCR, but only after you opt in, and every part OCR read is listed for you to check.
 - **Parts that come with the PCB** are marked "included" and not bought.
+- **Lists that count parts by value** (`4 - 10k` under a Resistors heading, as Tonepad prints most of its lists): each row is bought by its count, with no designator. A row whose kind neither its heading nor its value states (`1 - 4k7` under "Millbypass") is not guessed: it is listed for you to enter by hand.
 
 ### Review warnings
 
@@ -71,7 +72,7 @@ The parser's priority is **no silent errors**. Self-checks re-read each document
 - a value that can't be parsed, or a part filed under the wrong category;
 - a footnote or build note that changes a part for another version;
 - a position offered with two parts ("install T2, not the Boost pot");
-- a parts list that counts parts by value, or rows OCR couldn't read.
+- a counted row (`1 - 4k7`) that couldn't be read, or rows OCR couldn't read.
 
 ### Outputs
 
@@ -253,10 +254,6 @@ uv run streamlit run app.py
 1. **Compare another frontend** (e.g., NiceGUI) on that API. Switch before launch only for capabilities that improve Star Ground itself, not just its look: for example, showing the document's own row beside each review warning, or reading image-only documents in the background with progress instead of freezing the page.
 1. **Launch on builder forums.** Collect failures, with the document attached, so each can be labeled and added to the regression suite.
 1. **Measure again on unseen documents.** Every held-out test set has now been used for tuning. An honest accuracy figure needs a fresh set: documents users submit, or ones published after this release, set aside before anyone looks at them.
-
-### Next: small, known gaps
-
-- **Lists that count parts by value** ("4 - 10k", about half of Tonepad's documents). These are flagged so you enter them by hand. Reading them means handling parts that have no designator.
 
 ### Later, if users ask
 

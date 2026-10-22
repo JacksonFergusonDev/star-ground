@@ -360,3 +360,76 @@ def categorize_part(
         clean_value=val_clean,
         injected_key=injection,
     )
+
+
+# A counted row's column heading names its category ('Resistors', 'Pots');
+# a mixed heading ('Transistors & ICs', 'Other') leaves it to the value.
+_COUNTED_HEADINGS = {
+    "resistors": ComponentCategory.RESISTORS,
+    "capacitors": ComponentCategory.CAPACITORS,
+    "pots": ComponentCategory.POTENTIOMETERS,
+    "potentiometers": ComponentCategory.POTENTIOMETERS,
+    "diodes": ComponentCategory.DIODES,
+    "diode": ComponentCategory.DIODES,
+    "transistors": ComponentCategory.TRANSISTORS,
+    "transistor": ComponentCategory.TRANSISTORS,
+    "ics": ComponentCategory.ICS,
+}
+# Words in a counted value that name its kind outright, whatever the heading
+# ('1 - 1n4001 diode' under ICs, Tonepad Octavia RM). First match wins.
+_COUNTED_VALUE_KINDS: tuple[tuple[re.Pattern[str], ComponentCategory], ...] = (
+    (re.compile(r"\d\s*[pnuµμ]F\b"), ComponentCategory.CAPACITORS),
+    (re.compile(r"VTL\d|\bLDR\b|vactrol", re.I), ComponentCategory.OPTOELECTRONICS),
+    # Hardware first: 'LED mounts' are no LEDs (Tonepad A/B Selector).
+    (
+        re.compile(r"\bjacks?\b|enclosure|battery|mounts?\b|bezel|knobs?\b", re.I),
+        ComponentCategory.HARDWARE_MISC,
+    ),
+    (re.compile(r"\bLEDs?\b"), ComponentCategory.DIODES),
+    (
+        re.compile(r"(?:lin|log)\b|trim|taper|\bpot", re.I),
+        ComponentCategory.POTENTIOMETERS,
+    ),
+    (re.compile(r"zener|diode|\b1N\d", re.I), ComponentCategory.DIODES),
+    (re.compile(r"\b42T[LM]\d|transformer", re.I), ComponentCategory.TRANSFORMERS),
+    (re.compile(r"crystal|\d\s*[kM]Hz", re.I), ComponentCategory.CRYSTALS_OSCILLATORS),
+    (re.compile(r"switch|\b[SD]P[SD]T\b|\b3PDT\b", re.I), ComponentCategory.SWITCHES),
+    (
+        re.compile(r"\bFET\b|\b2N\d|\bMPF\d|\bBC\d|\bJ\d{3}|transistor", re.I),
+        ComponentCategory.TRANSISTORS,
+    ),
+    (re.compile(r"resistor", re.I), ComponentCategory.RESISTORS),
+)
+# A chip's part number: letters, then digits ('LM308', 'CD4049', 'FV-1').
+_CHIP_NUMBER = re.compile(r"[A-Z]{2,4}-?\d[\w-]*")
+
+
+def counted_category(heading: str | None, value: str) -> ComponentCategory | None:
+    """The category of a part counted by value ('4 - 10k' under Resistors).
+
+    A word that names the part's kind wins over the heading; a bare value
+    takes its column heading's category. A chip's part number is an IC only
+    under a mixed heading such as 'Transistors & ICs'. Anything else is not
+    read: a bare '4k7' under 'Millbypass' could be a resistor or a trimmer.
+
+    Args:
+        heading: The column heading above the row, if any.
+        value: The counted value as printed.
+
+    Returns:
+        The category, or None when neither the heading nor the value says.
+    """
+    named = next((c for p, c in _COUNTED_VALUE_KINDS if p.search(value)), None)
+    if named is not None:
+        return named
+    key = re.sub(r"[^a-z]", "", (heading or "").lower())
+    if key in _COUNTED_HEADINGS:
+        return _COUNTED_HEADINGS[key]
+    # A designator prefix heads its parts: 'RX' over '5 - 2k' (Tonepad Small
+    # Stone's RX1-RX5).
+    prefix = parse_designator(f"{heading}1") if heading and heading.isalpha() else None
+    if prefix is not None and prefix.category is not None:
+        return prefix.category
+    if heading is not None and _CHIP_NUMBER.match(value.split()[0]):
+        return ComponentCategory.ICS
+    return None

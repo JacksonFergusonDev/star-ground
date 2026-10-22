@@ -1376,25 +1376,62 @@ def test_a_dashed_parts_list_drops_the_drawings_labels() -> None:
     assert refs == {"R1", "R2", "R3", "R4", "C1", "C2", "C3", "Q1"}
 
 
-def test_a_counted_list_does_not_warn_each_missing_designator() -> None:
+def test_a_counted_list_is_read_without_designators() -> None:
     # Tonepad Rat: '2 - 1N914' counts the diodes the text calls D1 and D2.
     from src.bom_lib import ParseWarningKind, create_empty_stats
     from src.bom_lib.parser import read_pages
 
     page = _words_page(
         [
-            (("Resistors", 50.0), ("Diodes", 200.0)),
-            (("2 - 1k", 50.0), ("2 - 1N914", 200.0)),
+            (("Resistors", 50.0), ("Diodes", 200.0), ("Pots", 350.0)),
+            (("2 - 1k", 50.0), ("2 - 1N914", 200.0), ("3 - 100k Log.", 350.0)),
             (("1 - 10k", 50.0), ("IC1 - LM308", 200.0)),
             (("3 - 100k", 50.0),),
         ],
         text="D1 and D2 clip the signal.\n2 - 1k\n1 - 10k\n3 - 100k",
     )
     stats = create_empty_stats()
-    read_pages([page], "Tonepad", stats)
+    inventory, _, _ = read_pages([page], "Tonepad", stats)
+    counted = {
+        (key.category, key.value): data["counted"]["Tonepad"]
+        for key, data in inventory.items()
+        if data["counted"]
+    }
+    assert counted == {
+        (ComponentCategory.RESISTORS, "1k"): 2,
+        (ComponentCategory.RESISTORS, "10k"): 1,
+        (ComponentCategory.RESISTORS, "100k"): 3,
+        (ComponentCategory.DIODES, "1N914"): 2,
+        (ComponentCategory.POTENTIOMETERS, "100k Log."): 3,
+    }
+    assert inventory[ComponentKey(ComponentCategory.DIODES, "1N914")]["refs"] == []
     kinds = {w.kind for w in stats["warnings"]}
-    assert ParseWarningKind.QUANTITY_LIST in kinds
     assert ParseWarningKind.UNEXTRACTED_REF not in kinds
+    assert ParseWarningKind.QUANTITY_LIST not in kinds
+
+
+def test_a_counted_row_of_unknown_kind_is_warned_not_guessed() -> None:
+    # Tonepad LPB-1: '1 - 4k7' under 'Millbypass' could be a resistor or a trim.
+    from src.bom_lib import ParseWarningKind, create_empty_stats
+    from src.bom_lib.parser import read_pages
+
+    page = _words_page(
+        [
+            (("Millbypass", 50.0), ("S1 = MIC", 200.0)),
+            (("1 - 4k7", 50.0), ("1 - Off Axis", 200.0)),
+            (("1 - LED", 50.0), ("2 - Center", 200.0)),
+        ],
+        text="1 - 4k7 1 - Off Axis\n1 - LED 2 - Center",
+    )
+    stats = create_empty_stats()
+    inventory, _, _ = read_pages([page], "Tonepad", stats)
+    assert {key.value for key, data in inventory.items() if data["counted"]} == {"LED"}
+    [warning] = [
+        w for w in stats["warnings"] if w.kind == ParseWarningKind.QUANTITY_LIST
+    ]
+    # A switch position ('1 - Off Axis') is no part to warn about.
+    assert "'1 - 4k7'" in warning.message
+    assert "Off Axis" not in warning.message
 
 
 @pytest.mark.parametrize(

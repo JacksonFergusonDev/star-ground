@@ -582,7 +582,7 @@ def test_a_sparse_series_names_its_gaps() -> None:
     assert stats["warnings"] == []
 
 
-def test_parts_counted_by_value_warn_the_document() -> None:
+def test_counted_rows_that_were_not_read_warn_the_document() -> None:
     from src.bom_lib.verification import check_quantity_list
 
     # Tonepad Rebote Delay: counts under each heading, a few named parts.
@@ -592,14 +592,31 @@ def test_parts_counted_by_value_warn_the_document() -> None:
         "4 - 10k       2 - 0.082 µF   Q1 - 2N5457\n"
     )
     stats = create_empty_stats()
-    check_quantity_list([text], stats)
+    check_quantity_list([text], ["1 - 5M1 (5.1M)", "1 - 100 µF"], [], stats)
     assert [(w.kind, w.ref) for w in stats["warnings"]] == [
         (ParseWarningKind.QUANTITY_LIST, "")
     ]
-    assert stats["warnings"][0].message.startswith("4 lines")
+    assert "'4 - 10k', '2 - 0.082 µF'" in stats["warnings"][0].message
+    # Every row read, with its count: nothing to warn.
+    stats = create_empty_stats()
+    read = ["1 - 5M1", "1 - 100µF", "4 - 10k", "2 - 0.082µF"]
+    check_quantity_list([text], read, [], stats)
+    assert stats["warnings"] == []
+    # A row read with another count is not the printed row.
+    stats = create_empty_stats()
+    check_quantity_list(
+        [text], ["1 - 5M1", "1 - 100µF", "3 - 10k", "2 - 0.082µF"], [], stats
+    )
+    assert "'4 - 10k'" in stats["warnings"][0].message
+    # A row the parser saw but could not classify is reported once.
+    stats = create_empty_stats()
+    check_quantity_list([text], read[:3], ["2 - 0.082 µF", "3 - jumpers"], stats)
+    assert stats["warnings"][0].message.startswith("2 row(s)")
     # Ranges are not counts: 'pages 3-4', 'R 10-30k', 'steps 1 - 4'.
     stats = create_empty_stats()
-    check_quantity_list(["see 3-4 and 10-30k, steps 1 - 4, 6 - 7, 8 - 9"], stats)
+    check_quantity_list(
+        ["see 3-4 and 10-30k, steps 1 - 4, 6 - 7, 8 - 9"], [], [], stats
+    )
     assert stats["warnings"] == []
 
 
