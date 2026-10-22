@@ -245,11 +245,10 @@ uv run streamlit run app.py
 
 ## 🔭 Roadmap
 
-### Now: a new frontend, then launch
+### Now: decouple, compare frontends, then launch
 
 1. **Decouple the backend from the frontend.** Parsing, sourcing and exports get a clean API that doesn't depend on Streamlit.
-1. **Try another frontend** (e.g., NiceGUI) on that API, and switch if it's worth it.
-1. **Move to paid hosting**, for a more polished app in line with my other projects.
+1. **Compare another frontend** (e.g., NiceGUI) on that API. Switch before launch only for capabilities that improve Star Ground itself, not just its look: for example, showing the document's own row beside each review warning, or reading image-only documents in the background with progress instead of freezing the page.
 1. **Launch on builder forums.** Collect failures, with the document attached, so each can be labeled and added to the regression suite.
 1. **Measure again on unseen documents.** Every held-out test set has now been used for tuning. An honest accuracy figure needs a fresh set: documents users submit, or ones published after this release, set aside before anyone looks at them.
 
@@ -263,6 +262,7 @@ uv run streamlit run app.py
 
 ### Later, if users ask
 
+- **Paid hosting**, and a frontend more in line with my other apps, once there are consistent users.
 - **More publishers**, chosen by what people upload. Each one gets its own labeled tuning set and an untouched test set before it is listed as supported.
 - **Live prices** from supplier APIs. This needs API keys and ongoing upkeep, so it waits until someone wants it.
 
