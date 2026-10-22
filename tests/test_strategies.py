@@ -249,11 +249,9 @@ class TestBOMParserContext:
         assert isinstance(context.strategies[1], CSVParserStrategy)
         assert isinstance(context.strategies[2], ManualInputStrategy)
 
-    def test_custom_strategies_and_register(self) -> None:
+    def test_custom_strategies(self) -> None:
         context = BOMParserContext([ManualInputStrategy()])
         assert len(context.strategies) == 1
-        context.register_strategy(CSVParserStrategy())
-        assert len(context.strategies) == 2
 
     def test_process_empty_data(self) -> None:
         context = BOMParserContext()

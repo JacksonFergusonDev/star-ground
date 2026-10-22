@@ -1,7 +1,7 @@
 """Static Knowledge Base for the Star Ground Engine.
 
 This module serves as the central repository for:
-1.  **Physical Constants:** SI prefix multipliers for component value normalization.
+1.  **Standards:** Potentiometer taper codes.
 2.  **Parsing Heuristics:** Keyword lists for identifying components, knobs, and switches
     in unstructured PDF text.
 3.  **Expert System Data:** "Silicon Sommelier" dictionaries that map generic parts
@@ -18,19 +18,10 @@ from typing import Any
 import pint
 
 from src.bom_lib.enums import ComponentCategory
-from src.bom_lib.grammar.value_parser import SI_MULTIPLIERS
 from src.bom_lib.types import AlternativeSpec
 from src.bom_lib.units import ureg
 
-# --- Physics & Standards ---
-
-# SI Prefix Multipliers
-# Re-exported from the grammar value parser engine to ensure a single source of truth.
-MULTIPLIERS: dict[str, Decimal] = SI_MULTIPLIERS
-
-# Core Component Designators (IPC Standard)
-# Used to validate if a text token is likely a component reference (e.g., "R1", "C10").
-CORE_PREFIXES = ("R", "C", "D", "Q", "U", "IC", "SW", "X", "Y", "J")
+# --- Standards ---
 
 # Potentiometer Taper Codes
 # Maps the suffix character to the taper curve description.
