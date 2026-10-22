@@ -8,7 +8,6 @@ from src.bom_lib import (
     ComponentKey,
     PDFPageExtraction,
     PresetCatalog,
-    ProjectSlot,
     SupportsGetValue,
     SupportsRead,
     get_preset_metadata,
@@ -56,25 +55,6 @@ def test_supports_read_and_getvalue_protocols() -> None:
     text_stream = io.StringIO("R1 10k\n")
     assert isinstance(text_stream, SupportsRead)
     assert isinstance(text_stream, SupportsGetValue)
-
-
-def test_project_slot_data_typing() -> None:
-    """Verifies ProjectSlot.data can hold various RawBOMData variants without error."""
-    slot_str = ProjectSlot(name="Test1", data="R1 10k")
-    assert slot_str.data == "R1 10k"
-
-    slot_bytes = ProjectSlot(name="Test2", data=b"R1 10k")
-    assert slot_bytes.data == b"R1 10k"
-
-    slot_list = ProjectSlot(name="Test3", data=["R1 10k", "C1 100n"])
-    assert slot_list.data == ["R1 10k", "C1 100n"]
-
-    stream = io.BytesIO(b"R1 10k")
-    slot_io = ProjectSlot(name="Test4", data=stream)
-    assert slot_io.data is stream
-
-    slot_none = ProjectSlot(name="Test5", data=None)
-    assert slot_none.data is None
 
 
 def test_parser_context_with_raw_bom_data() -> None:

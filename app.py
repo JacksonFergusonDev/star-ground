@@ -1,41 +1,35 @@
-import copy
 import io
 import logging
-import os
-import tempfile
 import uuid
-from typing import Any, cast
-from urllib.parse import unquote, urlsplit
+from typing import Any
 
 import streamlit as st
+from streamlit.runtime.uploaded_file_manager import UploadedFile
 
+from src.api import (
+    BuildNotChosenError,
+    MasterList,
+    document_key,
+    generate_master_list,
+    offered,
+    parts_to_review,
+    read_document,
+    read_stock,
+)
+from src.app_state import Inputs, ProjectSlot, SlotInputs
 from src.bom_lib import (
     BOM_PRESETS,
-    BOMParserContext,
-    BuildHardware,
     FeedbackRating,
+    FileUpload,
     InputMethod,
-    Inputs,
     OcrAttempt,
     OcrVerdict,
     ParseResult,
-    ParseWarning,
     ParseWarningKind,
-    ProjectSlot,
-    SlotInputs,
-    StatsDict,
-    build_shopping_list,
-    create_empty_inventory,
-    create_empty_stats,
     get_clean_name,
     get_preset_metadata,
     get_residual_report,
-    get_standard_hardware,
-    parse_user_inventory,
-    provided_hardware,
-    rename_source_in_inventory,
     sort_inventory,
-    status_leds,
 )
 from src.exporters import (
     generate_shopping_list_csv,
@@ -43,8 +37,7 @@ from src.exporters import (
     generate_supplier_cart_csv,
     get_shopping_list_columns,
 )
-from src.feedback import save_feedback
-from src.pdf_generator import generate_master_zip, generate_pdf_bundle
+from src.feedback import connect_feedback_sheet, save_feedback
 
 st.set_page_config(page_title="Star Ground", page_icon="⚡")
 
@@ -106,17 +99,9 @@ In circuit design, a **Star Ground** is the reference point where all signal pat
 This tool serves the same function for your logistics: it aggregates BOMs, subtracts inventory, and generates clean manufacturing data to eliminate the "noise" of disorganized spreadsheets.
 """)
 
-# Initialize session state for inventory and statistics
-if "inventory" not in st.session_state:
-    st.session_state.inventory = None
-if "stats" not in st.session_state:
-    st.session_state.stats = None
-if "parse_warnings" not in st.session_state:
-    st.session_state.parse_warnings = {}
-if "option_notes" not in st.session_state:
-    st.session_state.option_notes = {}
-if "build_hardware" not in st.session_state:
-    st.session_state.build_hardware = []
+# The master list on screen, if any.
+if "master" not in st.session_state:
+    st.session_state.master = None
 # The inputs the results on screen were made from (see `Inputs`).
 if "results_inputs" not in st.session_state:
     st.session_state.results_inputs = None
@@ -310,10 +295,9 @@ def _reset_slot_state(slot: ProjectSlot, new_method: InputMethod) -> None:
     # 2. Clear Metadata / Cache
     # ProjectSlot doesn't use pop(), we set to None
     slot.source_path = None
-    slot.cached_pdf_bytes = None
     slot.last_loaded_preset = None
-    slot.parsed = None
-    slot.parsed_key = None
+    slot.reading = None
+    slot.reading_key = None
     slot.variant = None
     slot.use_ocr = False
 
@@ -338,75 +322,26 @@ def _reset_slot_state(slot: ProjectSlot, new_method: InputMethod) -> None:
     slot.method = new_method
 
 
-# Source label used while a document is parsed ahead of Generate; replaced by the
-# project's final name when the master list is built.
-PENDING_SOURCE = "__pending__"
-
-
-def by_part(warnings: list[ParseWarning]) -> dict[str, list[ParseWarning]]:
-    """Groups a project's warnings by designator, in the order first warned.
-
-    One part can fail several self-checks (Aion Amethyst's C1 has a footnote
-    and a build note): it is one part to review, listed once.
-    """
-    groups: dict[str, list[ParseWarning]] = {}
-    for i, w in enumerate(warnings):
-        groups.setdefault(w.ref or f"#{i}", []).append(w)
-    return groups
-
-
-def file_title(slot: ProjectSlot) -> str | None:
-    """The document's file name, for a project whose document prints no title.
-
-    Five Cats prints its parts list as an image, so most of its documents
-    have no title to read: 'FCP-Tone-Monarch-V1-1' beats 'Project #1'.
-    """
-    if slot.method == InputMethod.UPLOAD_FILE and slot.data is not None:
-        name = str(
-            slot.data if isinstance(slot.data, str) else getattr(slot.data, "name", "")
-        )
-    elif slot.method == InputMethod.FROM_URL and slot.data:
-        name = unquote(urlsplit(str(slot.data).strip()).path)
-    else:
-        return None
-    return os.path.splitext(os.path.basename(name))[0] or None
-
-
-def input_key(slot: ProjectSlot) -> str | None:
-    """Identifies the slot's current input, for caching its parse result.
-
-    Only uploads and URLs are parsed ahead of time: they are the inputs that
-    can be multi-circuit PDFs. Pasted text and presets are parsed on Generate.
-    """
-    if slot.method == InputMethod.UPLOAD_FILE and isinstance(slot.data, str):
-        return f"file:{slot.data}"  # a path (strategies accept paths as uploads)
-    if slot.method == InputMethod.UPLOAD_FILE and slot.data is not None:
-        name = getattr(slot.data, "name", "")
-        file_id = getattr(slot.data, "file_id", None)
-        size = getattr(slot.data, "size", None)
-        return f"file:{file_id or name}:{size}"
-    if slot.method == InputMethod.FROM_URL and slot.data:
-        return f"url:{str(slot.data).strip()}"
-    return None
-
-
-def ensure_parsed(slot: ProjectSlot) -> ParseResult | None:
-    """Parses the slot's input once and caches the result on the slot."""
-    key = input_key(slot)
+def ensure_read(slot: ProjectSlot) -> ParseResult | None:
+    """Reads the slot's upload or link once and caches the reading on the slot."""
+    key = document_key(slot.method, slot.data)
     if key is None:
-        slot.parsed, slot.parsed_key, slot.variant = None, None, None
+        slot.reading, slot.reading_key, slot.variant = None, None, None
         return None
-    if slot.parsed_key != key:
+    if slot.reading_key != key:
         # An image-only document is read by OCR, which takes seconds.
         with st.spinner("Reading the document…"):
-            slot.parsed = BOMParserContext().process(
-                slot.method, slot.data, source_name=PENDING_SOURCE
-            )
-        slot.parsed_key = key
+            slot.reading = read_document(slot.method, slot.data)
+        slot.reading_key = key
         slot.variant = None
         slot.use_ocr = False
         st.session_state.pop(f"ocr_{slot.id}", None)
-    return slot.parsed
+    return slot.reading
+
+
+def as_upload(file: UploadedFile | None) -> FileUpload | None:
+    """The uploaded file as the backend takes it."""
+    return FileUpload(file.name, file.getvalue()) if file is not None else None
 
 
 def render_build_picker(slot: ProjectSlot, result: ParseResult) -> None:
@@ -432,17 +367,6 @@ def render_build_picker(slot: ProjectSlot, result: ParseResult) -> None:
         )
 
 
-def offered(slot: ProjectSlot) -> ParseResult | None:
-    """The slot's parse as the builder has it: with OCR's parts if accepted.
-
-    OCR can read several builds, so the build is chosen from this result.
-    """
-    parsed = slot.parsed
-    if parsed is not None and slot.use_ocr and parsed.ocr and parsed.ocr.has_parts:
-        return parsed.accept_ocr()
-    return parsed
-
-
 def render_ocr_offer(slot: ProjectSlot, attempt: OcrAttempt) -> None:
     """Tells the builder their parts list is an image, and offers OCR's reading.
 
@@ -464,7 +388,7 @@ def render_ocr_offer(slot: ProjectSlot, attempt: OcrAttempt) -> None:
     )
 
 
-def current_inputs(slots: list[ProjectSlot], stock: Any) -> Inputs:
+def current_inputs(slots: list[ProjectSlot], stock: FileUpload | None) -> Inputs:
     """Snapshots the inputs, to tell when results no longer match them."""
     return Inputs(
         tuple(
@@ -472,24 +396,15 @@ def current_inputs(slots: list[ProjectSlot], stock: Any) -> Inputs:
                 str(slot.name or ""),
                 slot.count,
                 slot.method,
-                input_key(slot) or (slot.data if isinstance(slot.data, str) else None),
+                document_key(slot.method, slot.data)
+                or (slot.data if isinstance(slot.data, str) else None),
                 slot.variant,
                 slot.use_ocr,
             )
             for slot in slots
         ),
-        f"{stock.file_id}:{stock.size}" if stock is not None else None,
+        stock.fingerprint if stock is not None else None,
     )
-
-
-def clear_results() -> None:
-    """Removes the master list and everything generated with it."""
-    st.session_state.inventory = None
-    st.session_state.stock = None
-    st.session_state.stats = None
-    st.session_state.parse_warnings = {}
-    st.session_state.option_notes = {}
-    st.session_state.build_hardware = []
 
 
 def on_method_change(slot_id: uuid.UUID) -> None:
@@ -598,10 +513,12 @@ for i, slot in enumerate(st.session_state.pedal_slots):
             )
 
         elif slot.method == InputMethod.UPLOAD_FILE:
-            slot.data = st.file_uploader(
-                "Upload BOM",
-                type=["csv", "pdf"],
-                key=f"file_{slot.id}",
+            slot.data = as_upload(
+                st.file_uploader(
+                    "Upload BOM",
+                    type=["csv", "pdf"],
+                    key=f"file_{slot.id}",
+                )
             )
 
         elif slot.method == InputMethod.FROM_URL:
@@ -614,7 +531,6 @@ for i, slot in enumerate(st.session_state.pedal_slots):
 
         elif slot.method == InputMethod.PRESET:
             # 1. The Selector (Hierarchical)
-            # Note: Ensure render_preset_selector is compatible with ProjectSlot objects
             render_preset_selector(slot, i)
 
             # 2. The Read-Only Preview
@@ -630,14 +546,14 @@ for i, slot in enumerate(st.session_state.pedal_slots):
                 label_visibility="collapsed",
             )
 
-        parsed = ensure_parsed(slot)
-        if parsed is not None:
-            if parsed.ocr is not None:
-                render_ocr_offer(slot, parsed.ocr)
-            builds = offered(slot)
-            if builds is not None and builds.requires_choice:
+        reading = ensure_read(slot)
+        if reading is not None:
+            if reading.ocr is not None:
+                render_ocr_offer(slot, reading.ocr)
+            builds = offered(reading, slot.use_ocr)
+            if builds.requires_choice:
                 render_build_picker(slot, builds)
-            for note in parsed.options:
+            for note in reading.options:
                 st.caption(f"Option: {note}")
 
         st.divider()
@@ -646,8 +562,10 @@ st.button("➕ Add Another Pedal", on_click=add_slot)  # noqa: RUF001
 
 st.divider()
 st.subheader("2. Inventory Check (Optional)")
-stock_file = st.file_uploader(
-    "📂 Upload Stock CSV", type=["csv"], help="Columns: Category, Part, Qty"
+stock_file = as_upload(
+    st.file_uploader(
+        "📂 Upload Stock CSV", type=["csv"], help="Columns: Category, Part, Qty"
+    )
 )
 st.divider()
 
@@ -662,8 +580,8 @@ if len(active_names) != len(set(active_names)):
 # Results made from other inputs would be ordered from by mistake: clear them
 # as soon as any input changes, rather than when Generate is next pressed.
 inputs = current_inputs(st.session_state.pedal_slots, stock_file)
-if st.session_state.results_inputs != inputs and st.session_state.inventory is not None:
-    clear_results()
+if st.session_state.results_inputs != inputs and st.session_state.master is not None:
+    st.session_state.master = None
     st.session_state.results_cleared = True
 st.session_state.results_inputs = inputs
 
@@ -671,145 +589,48 @@ generate = st.button("Generate Master List", type="primary", width="stretch")
 if st.session_state.results_cleared and not generate:
     st.caption("The inputs changed. Generate again for an updated master list.")
 if generate:
-    unchosen = [
-        str(slot.name or slot.parsed.title or f"Project #{i + 1}")
-        for i, slot in enumerate(st.session_state.pedal_slots)
-        if (result := offered(slot)) is not None
-        and result.requires_choice
-        and slot.variant not in result.variant_names
-    ]
-    if unchosen:
-        st.error(
-            "Choose which build before generating: "
-            + ", ".join(unchosen)
-            + ". Each build of these documents needs different parts."
+    try:
+        master = generate_master_list(
+            [slot.project() for slot in st.session_state.pedal_slots],
+            read_stock(stock_file) if stock_file else None,
         )
-        generate = False
-
-if generate:
-    # REFACTOR: Use the factory to get the new Inventory Class
-    from src.bom_lib.types import create_empty_inventory
-
-    inventory = create_empty_inventory()
-
-    stats: StatsDict = create_empty_stats()
-    parse_warnings: dict[str, list[ParseWarning]] = {}
-    option_notes: dict[str, list[str]] = {}
-    build_hardware: list[BuildHardware] = []
-
-    # Process Each Slot
-    parser_context = BOMParserContext()
-    for i, slot in enumerate(st.session_state.pedal_slots):
-        # Resolve Name
-        current_name = str(slot.name or "")
-        source = current_name if current_name.strip() else f"Project #{i + 1}"
-        qty_multiplier = slot.count
-
-        # Unified Processing via Strategy Pattern. Uploads and URLs were parsed
-        # when they arrived; work on a copy so the cached result stays pristine.
-        if slot.parsed is not None and slot.parsed_key == input_key(slot):
-            result = copy.deepcopy(offered(slot) or slot.parsed)
-            if result.requires_choice and slot.variant in result.variant_names:
-                result = result.select(str(slot.variant))
-            rename_source_in_inventory(result.inventory, PENDING_SOURCE, source)
-        else:
-            result = parser_context.process(slot.method, slot.data, source_name=source)
-        p_inv = result.inventory
-        p_stats = result.stats
-        detected_title = result.title or file_title(slot)
-        raw_content = result.raw_content
-
-        # Store the raw content in the slot if it was returned (i.e. it was a PDF)
-        if raw_content:
-            slot.cached_pdf_bytes = raw_content
-
-        # Auto-Rename Logic
-        label = source
-        if detected_title and not current_name.strip():
-            # Update Slot Name
-            slot.name = str(detected_title)
-            label = str(detected_title)
-        # Name the build in every output: 'Muffin Fuzz (Civil War)'.
-        if slot.variant and (built := offered(slot)) and built.requires_choice:
-            label = f"{label} ({slot.variant})"
-        if label != source:
-            rename_source_in_inventory(p_inv, source, label)
-
-        # Standard hardware is skipped for pedals whose document lists its own.
-        build_hardware.append(
-            BuildHardware(slot.count, provided_hardware(p_inv), status_leds(p_inv))
-        )
-
-        # REFACTOR: Use the .merge() method of the Inventory class
-        inventory.merge(p_inv, qty_multiplier)
-
-        stats["lines_read"] += p_stats.get("lines_read", 0)
-        stats["parts_found"] += p_stats.get("parts_found", 0)
-        stats["residuals"].extend(p_stats.get("residuals", []))
-
-        # Final Fallback: If name is still empty, lock in the placeholder
-        if not slot.name.strip():
-            slot.name = source
-
-        if p_stats.get("warnings"):
-            parse_warnings[label] = p_stats["warnings"]
-            stats["warnings"].extend(p_stats["warnings"])
-        if result.options:
-            option_notes[label] = [str(o) for o in result.options]
-
-        # Save the final resolved name (including the chosen build)
-        slot.locked_name = label
-
-    # Process Stock if uploaded
-    stock_inventory = None
-    if stock_file:
-        # Save temp to parse
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".csv") as tmp:
-            tmp.write(stock_file.getvalue())
-            tmp_path = tmp.name
-
-        try:
-            stock_inventory = parse_user_inventory(tmp_path)
-        finally:
-            if os.path.exists(tmp_path):
-                os.remove(tmp_path)
-
-    st.session_state.inventory = inventory
-    st.session_state.stock = stock_inventory  # Save to session
-    st.session_state.stats = stats
-    st.session_state.parse_warnings = parse_warnings
-    st.session_state.option_notes = option_notes
-    st.session_state.build_hardware = build_hardware
-    st.session_state.results_cleared = False
-
-    # Validation Logic
-    if stats["parts_found"] == 0:
-        st.error("❌ No parts found! Check your BOM text or file.")
-        if stats.get("errors"):
-            with st.expander("Show Errors", expanded=True):
-                for err in stats["errors"]:
-                    st.error(f"❌ {err}")
-
-    elif stats.get("errors"):
-        # Case: We found parts, but some files/lines failed (Partial Success)
-        st.warning("⚠️ Master List generated, but some inputs had errors.")
-        for err in stats["errors"]:
-            st.error(f"❌ {err}")
-
+    except BuildNotChosenError as e:
+        st.error(str(e))
     else:
-        st.toast("Master List Generated Successfully", icon="✅")
+        # Show each project under the name it was given on the master list.
+        for slot, built in zip(
+            st.session_state.pedal_slots, master.projects, strict=True
+        ):
+            slot.name = built.name
+        st.session_state.master = master
+        st.session_state.results_cleared = False
+
+        stats = master.stats
+        if stats["parts_found"] == 0:
+            st.error("❌ No parts found! Check your BOM text or file.")
+            if stats["errors"]:
+                with st.expander("Show Errors", expanded=True):
+                    for err in stats["errors"]:
+                        st.error(f"❌ {err}")
+        elif stats["errors"]:
+            # Case: We found parts, but some files/lines failed (Partial Success)
+            st.warning("⚠️ Master List generated, but some inputs had errors.")
+            for err in stats["errors"]:
+                st.error(f"❌ {err}")
+        else:
+            st.toast("Master List Generated Successfully", icon="✅")
 
 # Main Process Flow
-if st.session_state.inventory and st.session_state.stats:
-    inventory = copy.deepcopy(st.session_state.inventory)
-    stats = cast(StatsDict, st.session_state.stats)
+master_list: MasterList | None = st.session_state.master
+if master_list is not None and master_list.parts:
+    stats = master_list.stats
 
     # 1. Show Stats
     with st.container():
         c1, c2, c3 = st.columns(3)
         c1.metric("Lines Scanned", stats["lines_read"])
         c2.metric("Parts Found", stats["parts_found"])
-        unique_parts = len(sort_inventory(inventory))
+        unique_parts = len(sort_inventory(master_list.parts))
         c3.metric("Unique SKUs", unique_parts)
 
     st.divider()
@@ -819,21 +640,19 @@ if st.session_state.inventory and st.session_state.stats:
         st.stop()
 
     # Parser self-checks: places where the output may disagree with the source.
-    parse_warnings = cast(
-        dict[str, list[ParseWarning]], st.session_state.parse_warnings
-    )
+    parse_warnings = master_list.warnings
     if parse_warnings:
-        total = sum(len(by_part(ws)) for ws in parse_warnings.values())
+        total = sum(len(parts_to_review(ws)) for ws in parse_warnings.values())
         st.warning(
             f"⚠️ {total} part(s) need review. The parser's self-checks found "
             "places where this list may not match your document. Compare "
             "these against the original before ordering."
         )
         for project, warnings in parse_warnings.items():
-            with st.expander(f"{project}: {len(by_part(warnings))} to review"):
+            with st.expander(f"{project}: {len(parts_to_review(warnings))} to review"):
                 ocr = [w for w in warnings if w.kind == ParseWarningKind.OCR_READ]
                 checks = [w for w in warnings if w.kind != ParseWarningKind.OCR_READ]
-                for first, *more in by_part(checks).values():
+                for first, *more in parts_to_review(checks).values():
                     st.markdown(
                         "\n".join(
                             [f"- **{first.kind.value}**: {first.message}"]
@@ -848,7 +667,7 @@ if st.session_state.inventory and st.session_state.stats:
                     st.markdown("\n".join(f"- {w.message}" for w in ocr))
 
     # Interchangeable choices the parser resolved to the document's default.
-    option_notes = cast(dict[str, list[str]], st.session_state.option_notes)
+    option_notes = master_list.option_notes
     if option_notes:
         st.info(
             "Some documents offer interchangeable parts. The first option "
@@ -883,24 +702,13 @@ if st.session_state.inventory and st.session_state.stats:
     """)
 
     # 2. Build the Shopping List
-    get_standard_hardware(
-        inventory, cast(list[BuildHardware], st.session_state.build_hardware)
-    )
-
-    stock = st.session_state.get("stock")
-    final_data = build_shopping_list(
-        inventory=inventory,
-        stock=stock,
-        show_hardware=show_hardware,
-        show_extras=show_extras,
-    )
+    final_data = master_list.shopping_list(show_hardware, show_extras)
 
     # 3. Render
     st.subheader("🛒 Master Shopping List")
 
     # Dynamic Columns (Conditionally add stock columns)
-    display_cols = get_shopping_list_columns(has_stock=bool(stock))
-
+    display_cols = get_shopping_list_columns(has_stock=bool(master_list.stock))
     # Configure the dataframe
     st.dataframe(
         final_data,
@@ -971,7 +779,7 @@ if st.session_state.inventory and st.session_state.stats:
     with c_dwn3:
         st.download_button(
             "📖 Download Generated PDFs",
-            data=generate_pdf_bundle(inventory, st.session_state.pedal_slots),
+            data=master_list.pdf_bundle(),
             file_name="Star_Ground_Docs.zip",
             mime="application/zip",
             help="ZIP containing Field Manuals and Sticker Sheets.",
@@ -981,9 +789,7 @@ if st.session_state.inventory and st.session_state.stats:
     # Row 2: Everything
     st.download_button(
         "📚 Download Complete Build Pack (ZIP)",
-        data=generate_master_zip(
-            inventory, st.session_state.pedal_slots, csv_out, stock_update_csv
-        ),
+        data=master_list.build_pack(csv_out, stock_update_csv),
         file_name="Star_Ground_Artifacts.zip",
         mime="application/zip",
         help="Includes: Shopping List, Inventory, Field Manuals, Stickers, and Source Files.",
@@ -997,6 +803,13 @@ st.divider()
 
 # Checking if logs exist to decide whether to show the debug console and download button.
 logs = st.session_state.log_capture.getvalue()
+
+
+@st.cache_resource(ttl="1h")
+def feedback_sheet() -> Any:
+    """The feedback sheet, reconnected hourly with the app's secrets."""
+    return connect_feedback_sheet(st.secrets["gcp_service_account"])
+
 
 if "feedback_submitted" not in st.session_state:
     st.session_state.feedback_submitted = False
@@ -1034,7 +847,7 @@ with st.expander("🐞 Found a bug? / 📢 Feedback"):
                     st.warning("Please enter a comment.")
                 else:
                     try:
-                        save_feedback(rating, comment)
+                        save_feedback(feedback_sheet(), rating, comment)
                         st.session_state.feedback_submitted = True
                         st.rerun()
                     except Exception as e:

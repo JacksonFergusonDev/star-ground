@@ -1,24 +1,26 @@
 import datetime
-from typing import TYPE_CHECKING
-
-import streamlit as st
+from collections.abc import Mapping
+from typing import TYPE_CHECKING, Any
 
 from src.bom_lib.enums import FeedbackRating
 
 if TYPE_CHECKING:
     import gspread
 
+FEEDBACK_SHEET = "Star Ground Feedback"
 
-@st.cache_resource(ttl="1h")
-def get_gsheet_client() -> gspread.Client:
-    """Establishes a persistent connection to Google Sheets.
 
-    Uses Streamlit's resource caching to maintain a connection pool,
-    refreshing every hour. Requires `gcp_service_account` to be defined
-    in the Streamlit secrets.
+def connect_feedback_sheet(credentials: Mapping[str, Any]) -> gspread.Worksheet:
+    """Opens the Google Sheet that in-app feedback is appended to.
+
+    The frontend supplies the credentials (Streamlit reads them from its
+    secrets) and decides how long to reuse the connection.
+
+    Args:
+        credentials: A Google service account's key, as its JSON fields.
 
     Returns:
-        gspread.Client: An authenticated Google Sheets client.
+        gspread.Worksheet: The first worksheet of the feedback sheet.
     """
     import gspread
     from google.oauth2.service_account import Credentials
@@ -27,27 +29,23 @@ def get_gsheet_client() -> gspread.Client:
         "https://spreadsheets.google.com/feeds",
         "https://www.googleapis.com/auth/drive",
     ]
-    # Load credentials securely from Streamlit secrets
-    creds_dict = st.secrets["gcp_service_account"]
     creds = Credentials.from_service_account_info(  # type: ignore[no-untyped-call]
-        creds_dict, scopes=scope
+        dict(credentials), scopes=scope
     )
-    return gspread.authorize(creds)
+    return gspread.authorize(creds).open(FEEDBACK_SHEET).sheet1
 
 
-def save_feedback(rating: FeedbackRating, text: str) -> None:
-    """Appends a new feedback entry to the "Star Ground Feedback" Google Sheet.
+def save_feedback(sheet: gspread.Worksheet, rating: FeedbackRating, text: str) -> None:
+    """Appends a feedback entry to the feedback sheet.
 
     Args:
+        sheet: The sheet from `connect_feedback_sheet`.
         rating: The user's FeedbackRating enum (e.g., FeedbackRating.EXCELLENT).
         text: The user's comment or bug report.
 
     Raises:
-        Exception: If connection fails or sheet is not found.
+        Exception: If the sheet cannot be written.
     """
-    client = get_gsheet_client()
-    sheet = client.open("Star Ground Feedback").sheet1
-
     # Append timestamp, rating value, and comment as a new row
     row = [str(datetime.datetime.now()), rating.value, text]
     sheet.append_row(row)
