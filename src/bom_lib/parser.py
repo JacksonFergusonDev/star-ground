@@ -1592,6 +1592,10 @@ def _is_ignored(value: str) -> bool:
 _DASHED_DOCUMENT = 8
 
 
+# A switch's pads, as OCR reads 'A, B C' and 'D, E F': a letter or two.
+_PAD_LETTERS = re.compile(r"[A-Z]{1,2}")
+
+
 def _layout_entries(
     pages_data: list[PDFPageExtraction],
     stats: StatsDict,
@@ -1666,6 +1670,12 @@ def _layout_entries(
                 refs, value = [poles.group(1)], f"{poles.group(2)} {value}"
             end = (row_ends or {}).get((page_no, listing.line), -1)
             for ref in refs:
+                # A switch labeled by its pads is no wrapped cell, and a table
+                # row does not read it: 'A, B C | SPDT On/Off/On' (GuitarPCB DVF,
+                # read by OCR) beside 'R5 | 10k'.
+                pad_label = bool(_PAD_LETTERS.fullmatch(ref)) and bool(
+                    constants.SWITCH_VALUE_PATTERN.search(value.upper())
+                )
                 # A listing past the row's end is in a table beside it.
                 row_value = (
                     None if listing.x0 >= end > 0 else table_lines.get(listing.line)
@@ -1676,6 +1686,7 @@ def _layout_entries(
                     or listing.ref.upper() in upper_values
                     or (
                         row_value is not None
+                        and not pad_label
                         and (
                             # A known control name is no wrapped cell ('SPEED |
                             # *500k' in a cell the table merged over two lines,
@@ -1691,7 +1702,7 @@ def _layout_entries(
                             or (value and not _cell_value(lines[listing.line], listing))
                         )
                     )
-                    or listing.x0 < end
+                    or (listing.x0 < end and not pad_label)
                 ):
                     continue
                 entry = Entry(ref, value, page_no, line=listing.line, x0=listing.x0)

@@ -366,6 +366,19 @@ class TestUnlisted:
         listed = {"R1", "R2", "R3", "R4", "R5", "C1", "C2", "C3", "IC1", "D1", "D2"}
         assert _unlisted([block], listed) == {"PWR1"}
 
+    def test_the_rest_of_an_unread_series(self) -> None:
+        # Five Cats Tone Monarch: 'GainTog2' ran into the cell beside it.
+        boxes = [
+            *_grid_boxes(),
+            OcrBox("GainTog1 Gain-Mode-CH1", 180, 300, 500, 514),
+            OcrBox("SPDT Toggle", 310, 360, 500, 514),
+            OcrBox("16V GainTog2 Gain-Mode-CH2", 40, 210, 520, 534),
+            OcrBox("SPDT Toggle", 220, 270, 520, 534),
+        ]
+        block = table_block(page_words(boxes))
+        listed = {"R1", "R2", "R3", "R4", "R5", "C1", "C2", "C3", "IC1", "D1", "D2"}
+        assert {"GainTog1", "GainTog2"} <= _unlisted([block], listed)
+
 
 class TestRereadLabels:
     """Misread designator cells are read again on their own."""
@@ -472,6 +485,13 @@ class TestUnread:
             Q1=(ComponentCategory.TRANSISTORS, "MPF102"),
         )
         assert _unread(listed, {"J113", "J201"}) == set()
+
+    def test_an_unread_led_resistor(self) -> None:
+        # GuitarPCB Space Modulator prints 'CLR x3' under its table.
+        listed = self._listed(EFL1=(ComponentCategory.DIODES, "Status LED"))
+        assert _unread(listed, {"CLR"}) == {"CLR"}
+        listed["CLR"] = make_component_key(ComponentCategory.RESISTORS, "1k8")
+        assert _unread(listed, {"CLR"}) == set()
 
     def test_each_hundred_is_a_series(self) -> None:
         # Five Cats numbers the power section 'C100', 'C101' after 'C1'-'C13';
