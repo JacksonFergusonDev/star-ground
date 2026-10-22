@@ -49,6 +49,10 @@ test: sync
 accuracy *args: sync
     uv run python -m tests.accuracy -v {{ args }}
 
+# Fetch a real document from each publisher (needs the internet)
+test-network: sync
+    uv run pytest -m network -v
+
 # Run tests with coverage
 test-cov: sync
     @printf "\n{{ blue }}=== Running Tests with Coverage ==={{ nc }}\n"
