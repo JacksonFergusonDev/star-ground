@@ -110,6 +110,17 @@ class TestUnextractedRefs:
         check_unextracted_refs(["SW SPDT\nSW1 UP: fastest"], inventory, stats)
         assert stats["warnings"] == []
 
+    def test_a_bare_name_in_the_notes_is_the_numbered_parts(self) -> None:
+        # GuitarPCB Singles Tremolo: 'LED mounting: There are two LEDs.'
+        inventory = create_empty_inventory()
+        for ref in ("LED1", "LED2"):
+            inventory.add_part(
+                "T", make_component_key(ComponentCategory.DIODES, "5mm LED"), ref
+            )
+        stats = create_empty_stats()
+        check_unextracted_refs(["LED mounting: There are two LEDs."], inventory, stats)
+        assert stats["warnings"] == []
+
     def test_part_number_shaped_like_a_designator(self) -> None:
         # Golden Falk: 'Q1-Q5  J201  JFET transistor' lists J201 as a value.
         inventory = create_empty_inventory()

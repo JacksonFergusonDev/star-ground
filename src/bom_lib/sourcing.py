@@ -402,6 +402,30 @@ def provided_hardware(inventory: Inventory) -> frozenset[HardwareRole]:
     return frozenset(roles)
 
 
+def status_leds(inventory: Inventory) -> int:
+    """How many status LEDs a project's parts list lights, at least one.
+
+    Each needs a current-limiting resistor; a document that lists the LEDs
+    may print their resistors where they are not read ('CLR x3' under GuitarPCB
+    Space Modulator's table).
+
+    Args:
+        inventory: One project's parsed inventory (before standard hardware).
+
+    Returns:
+        The number of status LEDs ('LED', 'LED1', 'EFL1' designators).
+    """
+    return max(
+        1,
+        sum(
+            r.upper().startswith(("LED", "EFL"))
+            for key, data in inventory.items()
+            if key.category == ComponentCategory.DIODES
+            for r in data["refs"]
+        ),
+    )
+
+
 def get_standard_hardware(
     inventory: Inventory, builds: Sequence[BuildHardware]
 ) -> None:
@@ -446,11 +470,17 @@ def get_standard_hardware(
         inventory[key]["sources"][AUTO_INJECT_SOURCE].append(f"Auto-Inject ({note})")
 
     # 1. Smart Merges (Add to existing categories)
+    # One resistor per status LED: a document may list several LEDs.
     inject(
         ComponentCategory.RESISTORS,
         "3.3k",
         1,
         "LED CLR",
+        qty_override=sum(
+            b.count * b.status_leds
+            for b in builds
+            if HardwareRole.LED_RESISTOR not in b.provided
+        ),
         role=HardwareRole.LED_RESISTOR,
     )
     inject(

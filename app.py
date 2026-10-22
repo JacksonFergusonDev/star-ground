@@ -33,6 +33,7 @@ from src.bom_lib import (
     provided_hardware,
     rename_source_in_inventory,
     sort_inventory,
+    status_leds,
 )
 from src.exporters import (
     generate_shopping_list_csv,
@@ -689,7 +690,9 @@ if generate:
             rename_source_in_inventory(p_inv, source, label)
 
         # Standard hardware is skipped for pedals whose document lists its own.
-        build_hardware.append(BuildHardware(slot.count, provided_hardware(p_inv)))
+        build_hardware.append(
+            BuildHardware(slot.count, provided_hardware(p_inv), status_leds(p_inv))
+        )
 
         # REFACTOR: Use the .merge() method of the Inventory class
         inventory.merge(p_inv, qty_multiplier)

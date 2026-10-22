@@ -105,10 +105,13 @@ class BuildHardware:
     Attributes:
         count: Number of pedals of this project being built.
         provided: Hardware the project's own parts list already includes.
+        status_leds: Status LEDs per pedal, each with its own resistor
+            (GuitarPCB Space Modulator lights EFL1-3).
     """
 
     count: int
     provided: frozenset[HardwareRole] = frozenset()
+    status_leds: int = 1
 
 
 @dataclass(frozen=True, slots=True)

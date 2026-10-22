@@ -969,6 +969,10 @@ def _gap_share(refs: set[str]) -> float:
     return 1 - present / expected if expected else 0.0
 
 
+# A named, numbered label: 'GainTog1', 'DIPSW2'.
+_NAMED_SERIES = re.compile(r"([A-Za-z_]{3,})(\d{1,2})")
+
+
 def _unlisted(pages_data: list[PDFPageExtraction], listed: set[str]) -> set[str]:
     """Labels in a table's designator columns that were read as no part.
 
@@ -1006,6 +1010,20 @@ def _unlisted(pages_data: list[PDFPageExtraction], listed: set[str]) -> set[str]
                     and label.upper() not in _HEADERS
                 ):
                     unlisted.add(label)
+    # The rest of an unread series, wherever a cell ran it into its neighbour:
+    # 'Min 16V GainTog2 Gain-Mode-CH2' beside an unread 'GainTog1' (Five Cats
+    # Tone Monarch).
+    series = {
+        m.group(1).upper()
+        for label in unlisted
+        if (m := _NAMED_SERIES.fullmatch(label))
+    }
+    for data in pages_data:
+        for word in data["words"]:
+            for token in word["text"].split():
+                m = _NAMED_SERIES.fullmatch(token)
+                if m and m.group(1).upper() in series and token.upper() not in listed:
+                    unlisted.add(token)
     return unlisted
 
 
@@ -1048,6 +1066,11 @@ def _unread(listed: dict[str, ComponentKey], mentioned: set[str]) -> set[str]:
         key.category for ref, key in listed.items() if not _SERIAL_REF.fullmatch(ref)
     }
     for word in mentioned - values:
+        if word == "CLR" and not any(r.startswith(("CLR", "RLED")) for r in listed):
+            # The status LEDs' resistors, printed under the table ('CLR x3 (1k8
+            # to 4k7)', GuitarPCB Space Modulator) where OCR does not read.
+            unread.add(word)
+            continue
         m = _SERIAL_REF.fullmatch(word)
         designator = parse_designator(word) if m else None
         if m is None or designator is None or designator.category is None:

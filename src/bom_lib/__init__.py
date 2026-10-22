@@ -53,6 +53,7 @@ from .sourcing import (
     is_pure_hardware,
     provided_hardware,
     resolve_part_sourcing,
+    status_leds,
 )
 from .strategies import (
     BOMParserContext,
@@ -177,5 +178,6 @@ __all__ = [
     "resolve_part_sourcing",
     "serialize_inventory",
     "sort_inventory",
+    "status_leds",
     "ureg",
 ]
