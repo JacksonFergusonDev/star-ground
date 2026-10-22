@@ -59,6 +59,11 @@ test-cov: sync
     uv run pytest --cov
     @printf "{{ green }}✔ Coverage run complete{{ nc }}\n"
 
+# Find code nothing in the product calls (configured in [tool.vulture])
+deadcode: sync
+    @printf "\n{{ blue }}=== Finding Dead Code ==={{ nc }}\n"
+    uv run vulture
+
 # Run the fast local CI pipeline executed before pushing
 ci: lint typecheck test
     @printf "\n{{ green }}✔ Local CI pipeline completed successfully. Clear to push!{{ nc }}\n"

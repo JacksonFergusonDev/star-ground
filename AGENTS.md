@@ -33,6 +33,7 @@ The repository uses **`prek`** hooks (`.pre-commit-config.yaml`) for automated g
    - ATX headings only (`# Heading`, never underlined).
    - Dash markers (`-`) for unordered lists.
    - `1.` numbering for all ordered list items.
+1. **Dead Code (On Request):** When asked to look for dead code, run `just deadcode` (vulture, configured in `[tool.vulture]`). It is not a gate: it exits non-zero whenever it reports anything, and findings are leads to review, not errors to clear. It scans `app.py`, `src/`, and `tools/` but not `tests/`, so code only tests reach shows up. Confirm each finding before acting (grep for string keys, `getattr`, and hooks a library calls). Delete real dead code along with the tests that only exercise it. Add a confirmed false positive to `ignore_names` under a comment giving the reason, never a lower `min_confidence`.
 
 ## Pull Request & Architecture Documentation
 
