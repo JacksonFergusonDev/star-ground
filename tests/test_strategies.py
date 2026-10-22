@@ -2,7 +2,6 @@
 
 import os
 import tempfile
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, cast
 from unittest.mock import patch
@@ -18,21 +17,7 @@ from src.bom_lib.strategies import (
     ParseResult,
     PDFParserStrategy,
 )
-from src.bom_lib.types import ComponentKey
-
-
-@dataclass
-class MockUploadedFile:
-    """Mock representing Streamlit's UploadedFile object."""
-
-    name: str
-    _buffer: bytes
-
-    def getvalue(self) -> bytes:
-        return self._buffer
-
-    def read(self) -> bytes:
-        return self._buffer
+from src.bom_lib.types import ComponentKey, FileUpload
 
 
 class TestManualInputStrategy:
@@ -81,10 +66,10 @@ class TestCSVParserStrategy:
     def test_can_handle(self) -> None:
         strategy = CSVParserStrategy()
 
-        csv_file = MockUploadedFile(name="bom.csv", _buffer=b"")
-        tsv_file = MockUploadedFile(name="bom.tsv", _buffer=b"")
-        pdf_file = MockUploadedFile(name="bom.pdf", _buffer=b"%PDF-1.4")
-        other_file = MockUploadedFile(name="bom.unknown", _buffer=b"")
+        csv_file = FileUpload(name="bom.csv", content=b"")
+        tsv_file = FileUpload(name="bom.tsv", content=b"")
+        pdf_file = FileUpload(name="bom.pdf", content=b"%PDF-1.4")
+        other_file = FileUpload(name="bom.unknown", content=b"")
 
         assert strategy.can_handle(InputMethod.UPLOAD_FILE, csv_file) is True
         assert strategy.can_handle(InputMethod.UPLOAD_FILE, tsv_file) is True
@@ -106,7 +91,7 @@ class TestCSVParserStrategy:
     def test_parse_uploaded_file(self) -> None:
         strategy = CSVParserStrategy()
         csv_bytes = b"Designator,Value\nR1,10k\nR2,100k\nC1,47n\n"
-        mock_file = MockUploadedFile(name="pedal_bom.csv", _buffer=csv_bytes)
+        mock_file = FileUpload(name="pedal_bom.csv", content=csv_bytes)
 
         result = strategy.parse(mock_file, source_name="CSVPedal")
 
@@ -175,8 +160,8 @@ class TestPDFParserStrategy:
     def test_can_handle(self) -> None:
         strategy = PDFParserStrategy()
 
-        pdf_file = MockUploadedFile(name="pedal.pdf", _buffer=b"")
-        csv_file = MockUploadedFile(name="pedal.csv", _buffer=b"")
+        pdf_file = FileUpload(name="pedal.pdf", content=b"")
+        csv_file = FileUpload(name="pedal.csv", content=b"")
 
         assert strategy.can_handle(InputMethod.UPLOAD_FILE, pdf_file) is True
         assert strategy.can_handle(InputMethod.UPLOAD_FILE, csv_file) is False
@@ -213,7 +198,7 @@ class TestPDFParserStrategy:
         with open(sample_pdf_path, "rb") as f:
             pdf_bytes = f.read()
 
-        mock_file = MockUploadedFile(name="Cataclysm-PedalPCB.pdf", _buffer=pdf_bytes)
+        mock_file = FileUpload(name="Cataclysm-PedalPCB.pdf", content=pdf_bytes)
         result = strategy.parse(mock_file, source_name="Cataclysm")
 
         assert isinstance(result, ParseResult)
@@ -300,9 +285,7 @@ class TestBOMParserContext:
 
     def test_process_upload_file_csv(self) -> None:
         context = BOMParserContext()
-        mock_file = MockUploadedFile(
-            name="build.csv", _buffer=b"Designator,Value\nR1,10k\n"
-        )
+        mock_file = FileUpload(name="build.csv", content=b"Designator,Value\nR1,10k\n")
         result = context.process(InputMethod.UPLOAD_FILE, mock_file, "CSVPedal")
 
         assert isinstance(result, ParseResult)
@@ -311,7 +294,7 @@ class TestBOMParserContext:
 
     def test_process_upload_file_pdf(self, sample_pdf_bytes: bytes) -> None:
         context = BOMParserContext()
-        mock_file = MockUploadedFile(name="Cataclysm.pdf", _buffer=sample_pdf_bytes)
+        mock_file = FileUpload(name="Cataclysm.pdf", content=sample_pdf_bytes)
         result = context.process(InputMethod.UPLOAD_FILE, mock_file, "PDFPedal")
 
         assert isinstance(result, ParseResult)

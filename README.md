@@ -174,7 +174,7 @@ See [tests/README.md](tests/README.md) for how to run each layer.
 
 ```text
 .
-├── app.py                 <-- Streamlit web app
+├── app.py                 <-- Streamlit web app (a frontend on src/api.py)
 ├── assets/                <-- Images and demo
 ├── examples/              <-- Sample generated build pack
 ├── raw_boms/              <-- Source files for the presets library (PedalPCB, Tayda)
@@ -192,6 +192,8 @@ See [tests/README.md](tests/README.md) for how to run each layer.
 │   │   ├── grammar/       <-- Value grammar (pyparsing)
 │   │   ├── manager.py     <-- Inventory merging and net needs
 │   │   └── sourcing.py    <-- Buffers, buying notes, hardware kit
+│   ├── api.py             <-- The backend API every frontend calls
+│   ├── app_state.py       <-- The Streamlit app's session state
 │   ├── exporters.py       <-- CSV exports
 │   ├── feedback.py        <-- In-app feedback form (Google Sheets)
 │   └── pdf_generator.py   <-- Field manuals and sticker sheets
@@ -248,10 +250,9 @@ uv run streamlit run app.py
 
 ## 🔭 Roadmap
 
-### Now: decouple, compare frontends, then launch
+### Now: compare frontends, then launch
 
-1. **Decouple the backend from the frontend.** Parsing, sourcing and exports get a clean API that doesn't depend on Streamlit.
-1. **Compare another frontend** (e.g., NiceGUI) on that API. Switch before launch only for capabilities that improve Star Ground itself, not just its look: for example, showing the document's own row beside each review warning, or reading image-only documents in the background with progress instead of freezing the page.
+1. **Compare another frontend** (e.g., NiceGUI) on the backend API (`src/api.py`), which no longer depends on Streamlit. Switch before launch only for capabilities that improve Star Ground itself, not just its look: for example, showing the document's own row beside each review warning, or reading image-only documents in the background with progress instead of freezing the page.
 1. **Launch on builder forums.** Collect failures, with the document attached, so each can be labeled and added to the regression suite.
 1. **Measure again on unseen documents.** Every held-out test set has now been used for tuning. An honest accuracy figure needs a fresh set: documents users submit, or ones published after this release, set aside before anyone looks at them.
 

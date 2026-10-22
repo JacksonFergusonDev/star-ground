@@ -1,0 +1,175 @@
+"""Tests for the backend API a frontend calls (`src.api`)."""
+
+import ast
+import io
+import zipfile
+from dataclasses import replace
+from pathlib import Path
+
+import pytest
+
+from src.api import (
+    PENDING_SOURCE,
+    BuildNotChosenError,
+    Project,
+    document_key,
+    file_title,
+    generate_master_list,
+    read_document,
+    read_stock,
+)
+from src.bom_lib import ComponentCategory, ComponentKey, FileUpload, InputMethod
+from src.bom_lib.fetch import FetchError
+
+SAMPLES = Path(__file__).parent / "samples"
+SRC = Path(__file__).parent.parent / "src"
+
+R10K = ComponentKey(ComponentCategory.RESISTORS, "10k")
+
+
+def _upload(path: Path) -> FileUpload:
+    return FileUpload(path.name, path.read_bytes())
+
+
+def test_pasted_projects_merge_into_one_master_list() -> None:
+    master = generate_master_list(
+        [
+            Project(name="Fuzz", count=2, data="R1 10k\nC1 100n"),
+            Project(data="R1 10k"),
+        ]
+    )
+
+    assert [p.name for p in master.projects] == ["Fuzz", "Project #2"]
+    assert master.parts[R10K]["sources"] == {
+        "Fuzz": ["R1", "R1"],
+        "Project #2": ["R1"],
+    }
+    assert master.stats["parts_found"] == 3
+    # The hardware kit is added for all three pedals, not to the documents' parts.
+    assert len(master.kit) > len(master.parts)
+    row = next(r for r in master.shopping_list() if r["Part"] == "10k")
+    assert row["BOM Qty"] == 3
+
+
+def test_a_multi_circuit_document_has_no_default_build() -> None:
+    upload = _upload(SAMPLES / "dirty" / "Ungula.pdf")
+    reading = read_document(InputMethod.UPLOAD_FILE, upload)
+    assert reading is not None
+    assert reading.variant_names == ("Stock", "Cleft Mod")
+
+    project = Project(method=InputMethod.UPLOAD_FILE, data=upload, reading=reading)
+    with pytest.raises(BuildNotChosenError) as raised:
+        generate_master_list([project])
+    assert raised.value.projects == ["Ungula"]
+
+    cleft = generate_master_list([replace(project, variant="Cleft Mod")])
+    (built,) = cleft.projects
+    assert built.label == "Ungula (Cleft Mod)"
+    q1 = ComponentKey(ComponentCategory.TRANSISTORS, "2N5089")
+    assert "Q1" in cleft.parts[q1]["sources"]["Ungula (Cleft Mod)"]
+    assert built.document == upload.content
+
+    # The reading is reused untouched: another build can still be generated.
+    stock = generate_master_list([replace(project, variant="Stock")])
+    assert stock.projects[0].label == "Ungula (Stock)"
+    assert all(
+        set(d["sources"]) == {PENDING_SOURCE}
+        for v in reading.variants
+        for d in v.inventory.values()
+    )
+
+
+def test_input_errors_reach_the_master_list(monkeypatch: pytest.MonkeyPatch) -> None:
+    def refuse(url: str) -> None:
+        raise FetchError("The link opened a web page, not a parts list.")
+
+    monkeypatch.setattr("src.bom_lib.strategies.context.fetch_url", refuse)
+    master = generate_master_list(
+        [
+            Project(data="R1 10k"),
+            Project(method=InputMethod.FROM_URL, data="https://example.test/a.pdf"),
+        ]
+    )
+
+    assert master.stats["errors"] == ["The link opened a web page, not a parts list."]
+    assert master.stats["parts_found"] == 1
+
+
+def test_stock_is_subtracted_from_what_to_buy() -> None:
+    stock = read_stock(FileUpload("stock.csv", b"Category,Part,Qty\nResistors,10k,2\n"))
+    master = generate_master_list(
+        [Project(name="Fuzz", count=5, data="R1 10k")], stock=stock
+    )
+
+    row = next(r for r in master.shopping_list() if r["Part"] == "10k")
+    assert (row["BOM Qty"], row["In Stock"], row["Net Need"]) == (5, 2, 3)
+
+
+def test_documents_are_named_by_label_and_keep_the_source() -> None:
+    upload = _upload(SAMPLES / "clean" / "Kliche-PedalPCB.pdf")
+    master = generate_master_list(
+        [Project(name="Kliche", method=InputMethod.UPLOAD_FILE, data=upload)]
+    )
+
+    with zipfile.ZipFile(io.BytesIO(master.build_pack(b"list", b"stock"))) as zf:
+        names = set(zf.namelist())
+        assert zf.read("Source Documents/Kliche Source.pdf") == upload.content
+    assert {
+        "Shopping List.csv",
+        "Field Manuals/Kliche Field Manual.pdf",
+        "Sticker Sheets/Kliche Sticker Sheet.pdf",
+    } <= names
+
+    with zipfile.ZipFile(io.BytesIO(master.pdf_bundle())) as zf:
+        assert "Field Manuals/Kliche Field Manual.pdf" in zf.namelist()
+
+
+def test_an_upload_is_known_by_its_content() -> None:
+    a = FileUpload("bom.csv", b"R1,10k")
+    assert document_key(InputMethod.UPLOAD_FILE, a) == document_key(
+        InputMethod.UPLOAD_FILE, FileUpload("bom.csv", b"R1,10k")
+    )
+    assert document_key(InputMethod.UPLOAD_FILE, a) != document_key(
+        InputMethod.UPLOAD_FILE, FileUpload("bom.csv", b"R1,22k")
+    )
+    assert document_key(InputMethod.PASTE_TEXT, "R1 10k") is None
+    assert read_document(InputMethod.PASTE_TEXT, "R1 10k") is None
+
+
+@pytest.mark.parametrize(
+    ("method", "data", "title"),
+    [
+        (InputMethod.UPLOAD_FILE, FileUpload("FCP-Tone.pdf", b""), "FCP-Tone"),
+        (
+            InputMethod.FROM_URL,
+            "https://x.test/f/FCP-Tone%20Monarch.pdf",
+            "FCP-Tone Monarch",
+        ),
+        (InputMethod.PASTE_TEXT, "R1 10k", None),
+    ],
+)
+def test_file_title(method: InputMethod, data: object, title: str | None) -> None:
+    assert file_title(method, data) == title  # type: ignore[arg-type]
+
+
+def _imports(path: Path) -> set[str]:
+    modules: set[str] = set()
+    for node in ast.walk(ast.parse(path.read_text())):
+        if isinstance(node, ast.Import):
+            modules.update(a.name for a in node.names)
+        elif isinstance(node, ast.ImportFrom) and node.module:
+            modules.add(node.module)
+    return modules
+
+
+@pytest.mark.parametrize(
+    "path",
+    [p for p in SRC.rglob("*.py") if p.name != "app_state.py"],
+    ids=lambda p: str(p.relative_to(SRC)),
+)
+def test_the_backend_does_not_depend_on_a_frontend(path: Path) -> None:
+    """No backend module imports a UI framework or the Streamlit app's state."""
+    forbidden = {"streamlit", "src.app_state"}
+    assert not {
+        m for m in _imports(path) if m.split(".")[0] in forbidden or m in forbidden
+    }

@@ -2,7 +2,6 @@
 
 import logging
 import os
-from dataclasses import dataclass
 from urllib.parse import unquote, urlsplit
 
 from src.bom_lib.enums import InputMethod
@@ -11,26 +10,19 @@ from src.bom_lib.strategies.base import BOMParserStrategy, ParseResult
 from src.bom_lib.strategies.csv import CSVParserStrategy
 from src.bom_lib.strategies.manual import ManualInputStrategy
 from src.bom_lib.strategies.pdf import PDFParserStrategy
-from src.bom_lib.types import RawBOMData, create_empty_inventory, create_empty_stats
+from src.bom_lib.types import (
+    FileUpload,
+    RawBOMData,
+    create_empty_inventory,
+    create_empty_stats,
+)
 
 logger = logging.getLogger(__name__)
 
 _CSV_TYPES = frozenset({"text/csv", "text/tab-separated-values"})
 
 
-@dataclass(frozen=True, slots=True)
-class _Download:
-    """A fetched spreadsheet, handed to the strategies like an uploaded file."""
-
-    name: str
-    content: bytes
-
-    def getvalue(self) -> bytes:
-        """The file's bytes, as an upload exposes them."""
-        return self.content
-
-
-def _from_download(doc: FetchedDocument) -> str | bytes | _Download:
+def _from_download(doc: FetchedDocument) -> str | bytes | FileUpload:
     """What a downloaded document is parsed as: a PDF, a spreadsheet, or text.
 
     Raises:
@@ -48,7 +40,7 @@ def _from_download(doc: FetchedDocument) -> str | bytes | _Download:
     if doc.content_type in _CSV_TYPES or name.lower().endswith((".csv", ".tsv")):
         # Columns, not 'R1 10k' lines: pasted-text parsing would read
         # 'R1,10k,1' as a 10k,1 resistor.
-        return _Download(name if "." in name else "download.csv", doc.content)
+        return FileUpload(name if "." in name else "download.csv", doc.content)
     if doc.content_type == "application/pdf" or name.lower().endswith(".pdf"):
         raise FetchError("The link answered with a damaged PDF.")
     return doc.content.decode("utf-8", errors="replace")

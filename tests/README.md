@@ -43,7 +43,14 @@ Standard unit tests often suffer from "tester bias"—we only test the inputs we
 - **Mechanism:** Instead of manually typing test cases, we define **invariants**: the parser never crashes on arbitrary text, and the buying math scales soundly with quantity. Hypothesis generates the inputs to try to break them.
 - **The Guarantee:** Garbage input yields an empty or partial list, never a crash.
 
-### 4. Headless Integration
+### 4. The Backend API
+
+**File:** `tests/test_api.py`
+
+- **Mechanism:** Drives `src/api.py` as a frontend would, with no UI: merging projects, refusing an unchosen build and reusing a reading untouched, carrying input errors to the master list, subtracting stock, and the generated documents named by each project's label.
+- **The Boundary:** Scans the imports of every backend module and fails if one imports Streamlit or the app's session state.
+
+### 5. Headless Integration
 
 **File:** `tests/test_app.py`
 
@@ -52,7 +59,7 @@ To ensure the UI is decoupled from the browser state, we run headless simulation
 - **Mechanism:** The test runner instantiates the full application kernel in memory, simulates user interactions (clicks, uploads, form submissions), and asserts the state of the dataframes.
 - **Coverage:** Verifies the full "Paste → Parse → Download" lifecycle, choosing a build and accepting OCR's parts, without a browser driver (Selenium/Puppeteer).
 
-### 5. URL Fetching over Real Sockets
+### 6. URL Fetching over Real Sockets
 
 **Files:** `tests/test_fetch.py`, `tests/test_fetch_server.py`, `tests/test_fetch_live.py`
 
@@ -66,7 +73,7 @@ To ensure the UI is decoupled from the browser state, we run headless simulation
 uv run pytest -m network
 ```
 
-### 6. Package Integrity
+### 7. Package Integrity
 
 **File:** `tests/test_package.py`
 

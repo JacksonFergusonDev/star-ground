@@ -14,6 +14,7 @@ import os
 import re
 import zipfile
 from collections import defaultdict
+from collections.abc import Sequence
 from dataclasses import dataclass
 from decimal import Decimal
 from typing import Any
@@ -23,12 +24,12 @@ from fpdf import FPDF
 from fpdf.enums import XPos, YPos
 
 from src.bom_lib import (
+    BuiltProject,
     ChecklistPart,
     ComponentCategory,
     ComponentKey,
     ComponentSpec,
     Inventory,
-    ProjectSlot,
     RefDesignator,
     deduplicate_refs,
     get_spec_type,
@@ -405,15 +406,18 @@ def _sanitize_filename(name: str) -> str:
     return re.sub(r'[<>:"/\\|?*]', "", name).strip()
 
 
-def _get_unique_projects(slots: list[ProjectSlot]) -> list[tuple[str, ProjectSlot]]:
-    """Returns unique (project_name, slot) pairs, preserving first-seen order."""
+def _unique_projects(projects: Sequence[BuiltProject]) -> list[BuiltProject]:
+    """Each project listed once, by label, in first-seen order.
+
+    A project entered twice has its quantities summed on the master list, so
+    it gets one field manual, one sticker sheet and one source document.
+    """
     seen: set[str] = set()
-    unique: list[tuple[str, ProjectSlot]] = []
-    for slot in slots:
-        name = slot.locked_name or slot.name
-        if name and name not in seen:
-            seen.add(name)
-            unique.append((name, slot))
+    unique: list[BuiltProject] = []
+    for project in projects:
+        if project.label not in seen:
+            seen.add(project.label)
+            unique.append(project)
     return unique
 
 
@@ -469,10 +473,11 @@ def _get_project_parts(
 
 
 def _write_field_manuals(
-    zf: zipfile.ZipFile, inventory: Inventory, slots: list[ProjectSlot]
+    zf: zipfile.ZipFile, inventory: Inventory, projects: Sequence[BuiltProject]
 ) -> None:
     """Helper: Generates Field Manual PDFs and writes them to the ZIP archive."""
-    for project_name, _slot in _get_unique_projects(slots):
+    for project in _unique_projects(projects):
+        project_name = project.label
         pdf = FieldManual()
         project_parts: list[ChecklistPart] = []
 
@@ -512,10 +517,11 @@ def _write_field_manuals(
 
 
 def _write_stickers(
-    zf: zipfile.ZipFile, inventory: Inventory, slots: list[ProjectSlot]
+    zf: zipfile.ZipFile, inventory: Inventory, projects: Sequence[BuiltProject]
 ) -> None:
     """Helper: Generates Sticker Sheet PDFs and writes them to the ZIP archive."""
-    for project_name, _slot in _get_unique_projects(slots):
+    for project in _unique_projects(projects):
+        project_name = project.label
         project_parts = [
             (item.value, item.unique_refs, item.qty)
             for item in _get_project_parts(inventory, project_name)
@@ -538,26 +544,28 @@ def _write_stickers(
         )
 
 
-def generate_pdf_bundle(inventory: Inventory, slots: list[ProjectSlot]) -> bytes:
+def generate_pdf_bundle(
+    inventory: Inventory, projects: Sequence[BuiltProject]
+) -> bytes:
     """Generates a ZIP file containing only the generated PDFs (Manuals + Stickers).
 
     Args:
         inventory (Inventory): The master inventory object.
-        slots (list[dict]): The list of project slots.
+        projects: The projects on the master list.
 
     Returns:
         bytes: The binary content of the ZIP file.
     """
     zip_buffer = io.BytesIO()
     with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zf:
-        _write_field_manuals(zf, inventory, slots)
-        _write_stickers(zf, inventory, slots)
+        _write_field_manuals(zf, inventory, projects)
+        _write_stickers(zf, inventory, projects)
     return zip_buffer.getvalue()
 
 
 def generate_master_zip(
     inventory: Inventory,
-    slots: list[ProjectSlot],
+    projects: Sequence[BuiltProject],
     shopping_list_csv: bytes,
     stock_csv: bytes,
 ) -> bytes:
@@ -571,7 +579,7 @@ def generate_master_zip(
 
     Args:
         inventory (Inventory): The master inventory.
-        slots (list[dict]): The project slots.
+        projects: The projects on the master list.
         shopping_list_csv (bytes): The CSV bytes for the shopping list.
         stock_csv (bytes): The CSV bytes for the stock update.
 
@@ -601,27 +609,27 @@ def generate_master_zip(
         zf.writestr("info.txt", info_text)
 
         # 2. Generated PDFs
-        _write_field_manuals(zf, inventory, slots)
-        _write_stickers(zf, inventory, slots)
+        _write_field_manuals(zf, inventory, projects)
+        _write_stickers(zf, inventory, projects)
 
         # 3. Source Documents (Preservation Logic)
         used_filenames = set()
 
-        for project_name, slot in _get_unique_projects(slots):
-            safe_name = _sanitize_filename(project_name)
+        for project in _unique_projects(projects):
+            safe_name = _sanitize_filename(project.label)
 
             file_content = None
             dest_name = ""
 
-            # Strategy A: Use Cached Bytes (URL/Upload)
-            if slot.cached_pdf_bytes:
-                file_content = slot.cached_pdf_bytes
+            # Strategy A: The document's bytes (URL/Upload)
+            if project.document:
+                file_content = project.document
                 dest_name = f"Source Documents/{safe_name} Source.pdf"
 
             # Strategy B: Use Local Path (Preset)
-            elif slot.source_path:
+            elif project.source_path:
                 try:
-                    src_path = slot.source_path
+                    src_path = project.source_path
                     _, ext = os.path.splitext(src_path)
                     if not ext:
                         ext = ".txt"
