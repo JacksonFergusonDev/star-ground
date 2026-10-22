@@ -140,8 +140,9 @@ false alarms.
    Arkaim). Anything it does not list is out of scope; most documents state
    "common offboard components are not listed".
 1. **LEDs are Diodes; LDRs are Optoelectronics; trimmers are Potentiometers.**
-   Parts with no matching category (transformers, inductors, relays, jacks)
-   are Hardware/Misc.
+   Inductors, transformers and relays have their own categories (a lamp
+   numbered `L1` is not an inductor). Other parts with no matching category
+   (jacks, lamps, reverb bricks, sockets) are Hardware/Misc.
 1. **Trimmers record the resistance only** (`10K`, not `10K (3362P Trim)`).
 1. **Switches record poles/throws and positions** (`SPDT (On/On)`), completing a
    bare position value from the TYPE column; the printed form (`SPDT Toggle

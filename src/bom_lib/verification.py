@@ -1513,7 +1513,13 @@ def check_bom_reconciliation(
     if not entries:
         return
     for key, data in inventory.items():
-        if key.category in (ComponentCategory.PCB, ComponentCategory.HARDWARE_MISC):
+        if key.category in (
+            ComponentCategory.PCB,
+            ComponentCategory.HARDWARE_MISC,
+            ComponentCategory.INDUCTORS,
+            ComponentCategory.TRANSFORMERS,
+            ComponentCategory.RELAYS,
+        ):
             continue
         if key.value.upper() == "LED":
             # Distortr lists 'D3  LED'; its bill of materials says '3mm Red LED'.

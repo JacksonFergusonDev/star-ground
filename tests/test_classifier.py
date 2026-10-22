@@ -1,7 +1,10 @@
 """Tests for component classification of GuitarPCB test-document parts."""
 
+import pytest
+
 from src.bom_lib.classifier import categorize_part
 from src.bom_lib.enums import ComponentCategory
+from src.bom_lib.parser import category_from_type
 
 
 def test_trimmer_value_leaves_no_dash() -> None:
@@ -115,3 +118,37 @@ def test_a_pole_count_dip_switch() -> None:
     part = categorize_part("DIP1", "2-POLE_DIP")
     assert part is not None
     assert part.category == ComponentCategory.SWITCHES
+
+
+@pytest.mark.parametrize(
+    ("ref", "value", "category"),
+    [
+        ("L1", "100mH", ComponentCategory.INDUCTORS),
+        ("L1", "3mm LED", ComponentCategory.DIODES),  # some documents number LEDs L1-L4
+        ("L1", "2174 lamp", ComponentCategory.HARDWARE_MISC),
+        ("T1", "42TM018", ComponentCategory.TRANSFORMERS),
+        ("XFMR1", "42TM002", ComponentCategory.TRANSFORMERS),
+        ("T1", "10k Trim", ComponentCategory.POTENTIOMETERS),  # GuitarPCB trimmers
+        ("K1", "TQ2-L-5V", ComponentCategory.RELAYS),
+    ],
+)
+def test_inductors_transformers_and_relays_have_their_own_categories(
+    ref: str, value: str, category: ComponentCategory
+) -> None:
+    part = categorize_part(ref, value)
+    assert part is not None
+    assert part.category == category
+
+
+@pytest.mark.parametrize(
+    ("type_text", "category"),
+    [
+        ("Inductor, axial", ComponentCategory.INDUCTORS),
+        ("Audio transformer", ComponentCategory.TRANSFORMERS),
+        ("Single-Coil Latching Relay, 5V", ComponentCategory.RELAYS),
+    ],
+)
+def test_a_type_column_names_the_new_categories(
+    type_text: str, category: ComponentCategory
+) -> None:
+    assert category_from_type(type_text) == category
