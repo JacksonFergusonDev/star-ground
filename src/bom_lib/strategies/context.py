@@ -65,14 +65,6 @@ class BOMParserContext:
         else:
             self.strategies = list(strategies)
 
-    def register_strategy(self, strategy: BOMParserStrategy) -> None:
-        """Register a new strategy.
-
-        Args:
-            strategy: The BOMParserStrategy instance to register.
-        """
-        self.strategies.append(strategy)
-
     def process(
         self, method: InputMethod, data: RawBOMData, source_name: str
     ) -> ParseResult:
