@@ -2296,12 +2296,18 @@ _URL = re.compile(r"www\.|https?:", re.IGNORECASE)
 
 
 _DISCLAIMER = re.compile(r"\s*(?:WARNING|DISCLAIMER)\b")
-# 'GuitarPCB Presents' above a NostalgiTone title, a bare 'GuitarPCB.com' above V6's.
-_PRESENTS = re.compile(r"GuitarPCB(?: Presents?|\.com)", re.IGNORECASE)
+# 'GuitarPCB Presents' above a NostalgiTone title, a bare 'GuitarPCB.com' above V6's,
+# and section headings set larger than the title ('PARTS LIST Build Notes:',
+# GuitarPCB AfterBlaster).
+_PRESENTS = re.compile(
+    r"GuitarPCB(?: Presents?|\.com)|(?:PARTS LIST )?Build Notes:?", re.IGNORECASE
+)
 # 'TIGHT BOX by GuitarPCB', 'GuitarPCB.com - MoRC v4 2020 & v3': the publisher's
 # byline is no part of the name.
 _BYLINE = re.compile(
-    r"\s+by GuitarPCB(?:\.com)?$|^GuitarPCB\.com(?:\s+-)?\s+|^GuitarPCB Presents?\s+",
+    r"\s+by GuitarPCB(?:\.com)?$|^GuitarPCB\.com(?:\s+-)?\s+|^GuitarPCB Presents?\s+"
+    # 'Mini-Me Chorus Build Instructions', 'AfterBlaster - Build Instructions'.
+    r"|(?:\s+-)?\s+Build Instructions$",
     re.IGNORECASE,
 )
 
