@@ -92,29 +92,6 @@ def get_residual_report(stats: StatsDict) -> list[str]:
     return suspicious
 
 
-def get_injection_warnings(inventory: Inventory) -> list[str]:
-    """Generates user warnings based on automated hardware injections.
-
-    Args:
-        inventory: The current inventory state.
-
-    Returns:
-        A list of warning strings (e.g., checking SMD adapters).
-    """
-    warnings = []
-    smd_key = ComponentKey(ComponentCategory.HARDWARE_MISC, "SMD_ADAPTER_BOARD")
-    if inventory[smd_key]["qty"] > 0:
-        warnings.append(
-            "⚠️  SMD ADAPTERS: Added for MMBF5457. Check if your PCB has SOT-23 pads first."
-        )
-    dip_key = ComponentKey(ComponentCategory.HARDWARE_MISC, "8 PIN DIP SOCKET")
-    if inventory[dip_key]["qty"] > 0:
-        warnings.append(
-            "ℹ️  IC SOCKETS: Added sockets for chips. Optional but recommended."  # noqa: RUF001
-        )
-    return warnings
-
-
 def get_spec_type(
     category: ComponentCategory,
     val: str,
