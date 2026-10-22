@@ -11,7 +11,7 @@ The system enforces strict separation between **Ingestion**, **Normalization**, 
 ### 1. Ingestion Layer (The Senses)
 
 - **`bom_lib/strategies/`**: Input dispatch.
-  - **Role:** `BOMParserContext` picks a strategy by input (PDF, CSV, pasted text). A URL is first fetched by `bom_lib/fetch.py`, which accepts only public `http(s)` addresses, checks each redirect, connects to the address it checked (so DNS can't rebind the host in between), and caps the download at 30 MB, since the hosted app fetches on the user's behalf.
+  - **Role:** `BOMParserContext` picks a strategy by input (PDF, CSV, pasted text). A URL is first fetched by `bom_lib/fetch.py`, since the hosted app fetches on the user's behalf. A `FetchPolicy` sets its reach: `http(s)` on ports 80 and 443 only, every resolved address public (IPv4 inside IPv6 unwrapped), each redirect checked again and never from https to http, the connection pinned to the checked address (so DNS can't rebind the host in between) with TLS still verified against the hostname, 30 MB at most counted after decompression, and 30 seconds for the whole download. Share links (GitHub file pages, Google Drive, Dropbox) are rewritten to the file. The result is routed by content: a PDF, a CSV (read as columns), or text; a web page or a damaged PDF is explained to the builder.
 - **`bom_lib/parser.py`**: The entry point for dynamic data.
   - **Strategy:** Implements a **Hybrid Strategy**. It maps ruled PDF tables using `pdfplumber`, then runs a column-aware layout pass to recover everything the tables missed (or everything, for borderless multi-column parts lists).
 - **`bom_lib/layout.py`**: The layout reader.
