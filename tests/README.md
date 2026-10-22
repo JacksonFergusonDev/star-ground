@@ -40,8 +40,8 @@ hand-verified transcriptions of each sample PDF's parts list, so they can.
 Standard unit tests often suffer from "tester bias"—we only test the inputs we expect.
 
 - **Strategy:** We use the [Hypothesis](https://hypothesis.readthedocs.io/) library to "fuzz" our logic.
-- **Mechanism:** Instead of manually typing test cases, we define **invariants** (e.g., `net_needs` must never be negative). Hypothesis generates thousands of random, chaotic inputs (Unicode injection, edge-case floats, massive integers) to try and break these rules.
-- **The Guarantee:** The math holds true even when the input data is garbage.
+- **Mechanism:** Instead of manually typing test cases, we define **invariants**: the parser never crashes on arbitrary text, and the buying math scales soundly with quantity. Hypothesis generates the inputs to try to break them.
+- **The Guarantee:** Garbage input yields an empty or partial list, never a crash.
 
 ### 4. Headless Integration
 
@@ -50,7 +50,7 @@ Standard unit tests often suffer from "tester bias"—we only test the inputs we
 To ensure the UI is decoupled from the browser state, we run headless simulations using `Streamlit.AppTest`.
 
 - **Mechanism:** The test runner instantiates the full application kernel in memory, simulates user interactions (clicks, uploads, form submissions), and asserts the state of the dataframes.
-- **Coverage:** Verifies the full "Paste → Parse → Download" lifecycle without requiring a browser driver (Selenium/Puppeteer).
+- **Coverage:** Verifies the full "Paste → Parse → Download" lifecycle, choosing a build and accepting OCR's parts, without a browser driver (Selenium/Puppeteer).
 
 ### 5. Package Integrity
 
@@ -86,6 +86,12 @@ Print per-document accuracy, with every failure and whether it was warned:
 
 ```bash
 just accuracy
+```
+
+Score another corpus (for example a local, uncommitted one) with the same machinery. With `--ocr`, only the documents OCR reads are scored, with OCR's parts accepted as a builder would:
+
+```bash
+uv run python -m tests.accuracy --golden path/to/golden --samples path/to/pdfs --ocr -v
 ```
 
 ### Targeted Testing

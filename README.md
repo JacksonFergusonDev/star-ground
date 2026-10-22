@@ -33,180 +33,137 @@
 
 ## 📡 The Mission: Deterministic Procurement
 
-In software, dependency resolution is **deterministic**: `uv sync` guarantees the exact same environment every time. In hardware, procurement is currently stochastic: manual aggregation introduces human error, where a single forgotten $0.01 resistor causes a blocking failure weeks later.
+In software, dependency resolution is **deterministic**: `uv sync` gives the same environment every time. In hardware, procurement is still manual: you copy parts lists by hand from several build documents, and one forgotten $0.01 resistor stalls a build weeks later.
 
-*Star Ground* forces hardware logistics to behave like software. It rejects ambiguous inputs and treats physical inventory as a strict dependency tree. By enforcing a validated schema on unstructured data, it transforms procurement from **fragile manual aggregation** into a **deterministic data pipeline**.
+*Star Ground* makes hardware logistics behave like software. Give it the build documents for the guitar pedals you plan to build, and it returns one shopping list, net of the parts you already own, plus printable build checklists and bin labels. Where it can't be sure it read a document right, it tells you exactly what to check.
 
 **🚀 [Try the Live App](https://star-ground.streamlit.app/)**
 
 <img src="assets/demo.gif" alt="Demo"
      style="display:block;margin-left:auto;margin-right:auto;width:70%;" />
 
-> **Case Study:** This engine was utilized as the logistics backbone for [**Systems Audio Lab**](https://github.com/JacksonFergusonDev/systems-audio-lab), a project demonstrating the recursive engineering of physical instrumentation.
+> **Case Study:** This engine was the logistics backbone for [**Systems Audio Lab**](https://github.com/JacksonFergusonDev/systems-audio-lab), a project demonstrating the recursive engineering of physical instrumentation.
+
+---
+
+## 🛠 Features
+
+### Inputs
+
+- **Build documents (PDF):** upload a file or paste a link. The parser reads the build documents of five PCB publishers: **PedalPCB, GuitarPCB, Aion FX, Five Cats and Tonepad**. Links must be public `http(s)` addresses. Tonepad's file links open a download page, so download those PDFs and upload them.
+- **Pasted text and CSV:** any `REF VALUE` list (`R1 10k`, `C1-C3 100n`).
+- **Presets:** a library of PedalPCB and Tayda circuits, browsable by source and category.
+- **Your stock:** upload an inventory CSV, and only what you're missing is bought.
+
+### Reading build documents
+
+- **Ruled tables, borderless layouts and side-by-side lists**, including values that wrap onto a second line, ranges (`R1-R5`), lettered designators and named controls (`GAIN`, `P1-Crackle`).
+- **Several circuits in one document** (Muffin Fuzz's versions, a Germanium and a Silicon list, a "Cleft mod"): the app asks which one you're building, and has no default.
+- **Interchangeable parts** (through-hole or SMD, a bridge rectifier or four diodes): the document's first choice is used and the alternative is noted.
+- **Image-only parts lists** are read by OCR, but only after you opt in, and every part OCR read is listed for you to check.
+- **Parts that come with the PCB** are marked "included" and not bought.
+
+### Review warnings
+
+The parser's priority is **no silent errors**. Self-checks re-read each document independently and flag every place the shopping list might disagree with it, grouped by part:
+
+- a designator printed in the document but missing from the list;
+- a value that can't be parsed, or a part filed under the wrong category;
+- a footnote or build note that changes a part for another version;
+- a position offered with two parts ("install T2, not the Boost pot");
+- a parts list that counts parts by value, or rows OCR couldn't read.
+
+### Outputs
+
+- **Master shopping list**, merged across projects and quantities, with supplier search links and buying notes. It downloads as a CSV, with clickable Excel/Google Sheets links if you like.
+- **Updated inventory CSV**: your stock after this build.
+- **Field manuals:** printable checklists per project, sorted by component height (see below).
+- **Sticker sheets:** Avery 5160 labels with condensed references (`R1-R4`) for binning parts.
+- **Build pack:** one ZIP with all of the above and the source documents.
 
 ---
 
 ## ⚙️ Engineering Philosophy: Invariants over Inference
 
-This system is designed to bridge the gap between **Software Precision** and **Hardware Chaos**. The architectural choices prioritize data integrity and human ergonomics over simple automation.
-
 ### 1. Determinism over Probabilistic Models (Why not LLMs?)
 
 Supply chains have zero tolerance for hallucination. A 10k resistor cannot be "inferred" as 1k.
 
-- **The Decision:** Instead of using an LLM to parse PDFs, I implemented a **Hybrid Spatial Parser** (`src/bom_lib/parser.py`). It uses `pdfplumber` to extract table vectors (spatial analysis) and falls back to rigorous Regex pattern matching.
-- **The Result:** 100% reproducible ingestion. The system fails loudly on ambiguity rather than guessing silently.
+- **The Decision:** The parser reads word positions and table lines with `pdfplumber` and pairs designators with values by layout, with no language model involved. The same document always gives the same list.
+- **The Rule:** The parser may be wrong, but never *silently*. When a document is ambiguous, it raises a review warning instead of guessing.
 
-### 2. Physical-Digital Isomorphism (Z-Height Sorting)
+### 2. Measured, Not Assumed
 
-Most BOM tools sort lists alphabetically. **Star Ground** sorts by **Physical Z-Height**.
+Accuracy is graded against hand-labeled parts lists, not against the parser's own output.
 
-- **The Insight:** Efficient PCB assembly requires soldering low-profile components (Resistors, Diodes) before bulky ones (Electrolytic Capacitors, Switches) to keep the board flat on the workbench.
-- **The Implementation:** The PDF generation engine enforces a topological sort order on the output artifacts, optimizing the *human operator's* runtime performance.
+- **The corpus:** every build document of the five publishers, about 1,240 PDFs and 60,000 labeled parts, with a separate tuning set and held-out test set for each publisher.
+- **The metrics:** *silent errors* (a wrong or missing part with no warning) and *false alarms* (a warning on a correct part). On the labeled documents, both are zero.
+- **The ratchet:** a committed corpus of 19 documents runs in CI, and any new failure, lost warning or false alarm fails the build.
 
-### 3. Yield Management ("Nerd Economics")
+### 3. Physical-Digital Isomorphism (Z-Height Sorting)
 
-- **The Problem:** The cost of a "Stockout" (halting work) is infinite relative to the cost of inventory.
+Most BOM tools sort lists alphabetically. **Star Ground** sorts by **physical height**.
 
-- **The Algorithm:** The sourcing engine applies a **category-specific risk profile**. It automatically buffers cheap components (resistors rounded to nearest 10) while strictly calculating expensive ones (ICs), transforming purchasing logic from simple arithmetic into a risk-management strategy.
+- **The Insight:** PCB assembly goes best when low-profile parts (resistors, diodes) are soldered before tall ones (electrolytic capacitors, switches), so the board sits flat on the bench.
+- **The Implementation:** The field manuals (`src/pdf_generator.py`) list parts in that order, optimizing the *human operator's* runtime.
 
-### 4. Transparent Failure States (The "Loud" UI)
+### 4. Yield Management ("Nerd Economics")
 
-- **The Problem:** Most web apps swallow errors to "look clean," leaving users stranded when edge cases occur. In hardware, a silent failure (e.g., a parser dropping a line) results in a missing component and a failed build.
+The cost of a stockout (halting work for a $0.05 part) is far higher than the cost of a few spares. The sourcing engine applies a **category-specific buffer** to the net need only, never to parts you already own:
 
-- **The Solution:** I implemented a **User-Facing Debug Console** and **Log Artifact Generation**.
-  - The system strictly separates **"Residuals"** (noise) from **"Exceptions"** (logic failures).
-  - Critical errors are never suppressed; they are surfaced in the UI with full stack traces.
-  - Users can download a `debug.log` snapshot to attach to GitHub Issues, creating a deterministic feedback loop for bug reporting.
+| Category | Rule |
+|---|---|
+| Resistors | +5, rounded up to the next 10 |
+| Capacitors | +5; +10 for 100n bypass caps; +1 at 1µF and above |
+| Diodes | +5, at least 10 |
+| Transistors, crystals, optoelectronics | +1 (heat and fragile legs) |
+| ICs | exact count, with a socket recommended |
+
+A standard hardware kit (enclosure, jacks, DC jack, footswitch, status LED and its resistor, knobs, wire and so on) is added for each pedal. Anything the document lists itself is not added again.
+
+### 5. Exact Units
+
+Component values are written many ways (`4k7`, `4.7k`, `4700`, `4,700R`). A `pyparsing` grammar (`src/bom_lib/grammar/`) parses them into exact `Decimal` values, and `Pint` carries their units, so `4k7` and `4700` merge into one line and a voltage is never compared with a resistance.
+
+### 6. Transparent Failure States
+
+Errors are shown in the app, never swallowed. The in-app debug console shows the parser's log, and the log can be downloaded and attached to a GitHub issue.
 
 ---
 
 ## 🍷 Feature Spotlight: The "Silicon Sommelier"
 
-Beyond parsing, the engine functions as a domain expert system. It utilizes a lookup table of heuristic substitutions to suggest component upgrades based on audio engineering best practices.
+Beyond parsing, the shopping list carries expert notes from a table of substitutions based on audio engineering practice:
 
-- **Op-Amps:** Detects generic chips and suggests Hi-Fi alternatives (e.g., `TL072` → `OPA2134` for lower noise floor).
-- **Fuzz Logic:** Automatically detects "Fuzz" topologies and injects Germanium transistors with specific "Positive Ground" warnings.
-- **Texture Generation:** Maps clipping diodes to their sonic equivalents based on Forward Voltage ($V_f$) and Reverse Recovery Time ($t_{rr}$).
-
----
-
-## 🚀 The Problem
-
-Ordering parts for multiple analog circuits is error-prone.
-
-- **Format Inconsistency:** Every BOM uses different spacing, tabs, and naming conventions.
-- **Inventory Risk:** Buying parts you already own (waste) or forgetting a $0.01 resistor (shipping delay).
-- **Assembly Chaos:** Mixing up parts between three different projects on the same workbench.
-
-## 🛠 The Solution
-
-This tool treats BOM parsing as a data reduction problem. It doesn't just read lines; it verifies them against a stateful inventory model.
-
-### Key Features
-
-1. **Multi-Format Ingestion:**
-    - **PDF Parsing:** Extracts tables from PedalPCB build docs using visual layout analysis (hybrid grid/text strategy).
-    - **Smart Presets:** A hierarchical browser allowing filtering by Source (e.g., PedalPCB) and Category to load standard circuit definitions.
-    - **URL Ingestion:** Fetch BOMs directly from websites like PedalPCB.
-1. **Inventory Logistics (Net Needs):**
-    - Upload your current stock CSV.
-    - The engine calculates `Net Need = max(0, BOM_Qty - Stock_Qty)`.
-    - Safety buffers are only applied to the *deficit*, preventing over-ordering.
-1. **Manufacturing Outputs:**
-    - **Field Manuals:** Generates Z-height sorted printable PDF checklists (Resistors → Sockets → Caps) for streamlined assembly.
-    - **Sticker Sheets:** Generates Avery 5160 labels with condensed references (e.g., `R1-R4`) for part binning.
-    - **Master Bundle:** Downloads a single ZIP containing all source docs, shopping lists, and manual PDFs.
-1. **Smart Normalization:**
-    - Expands ranges automatically (`R1-R5` → `R1, R2, R3, R4, R5`).
-    - Detects potentiometers by value (`B100k`) even if labeled non-standardly.
-1. **Observability & Debugging:**
-    - **In-App Console:** Real-time visibility into the parsing kernel via a `st.session_state` log buffer.
-    - **Error Taxonomy:** Visual distinction between "Partial Success" (warnings) and "Critical Failure" (errors), ensuring the user always knows the integrity of their data.
-
----
-
-## 🧠 Engineering Architecture & Decisions
-
-This system is designed to bridge the gap between **Software Precision** and **Hardware Chaos**. The architectural choices prioritize data integrity and human ergonomics over simple automation.
-
-### 1. Physical-Digital Isomorphism (Z-Height Sorting)
-
-Most BOM tools sort lists alphabetically or by Reference ID (`C1, C2, R1...`). **Star Ground** sorts by **Physical Z-Height**.
-
-- **The Insight:** Efficient PCB assembly requires soldering low-profile components (Resistors/Diodes) before high-profile ones (Electrolytic Capacitors/Switches) to keep the board flat on the workbench.
-- **The Implementation:** The PDF generation engine (`src/pdf_generator.py`) enforces a strict topological sort order on the output artifacts. The software explicitly optimizes the *human operator's* runtime performance, reducing context switching and physical instability during assembly.
-
-### 2. Hybrid Spatial-Text Ingestion
-
-PDFs are visual documents, not data structures. A standard text scraper loses the row/column relationships defined by the grid lines.
-
-- **The Strategy:** I implemented a **Hybrid Parser** that utilizes `pdfplumber` to extract table vectors (spatial analysis) first.
-- **The Fallback:** If the spatial grid is ambiguous, the system gracefully degrades to a deterministic Regex scanner. This "Defense in Depth" strategy allows the engine to digest everything from pristine digital exports to legacy documents without hallucinating data.
-
-### 3. Yield Management ("Nerd Economics")
-
-In small-batch manufacturing, the cost of a "Stockout" (halting work for a $0.05 part) is effectively infinite relative to the cost of inventory.
-
-- **The Algorithm:** The sourcing engine applies a **category-specific risk profile** to the "Net Needs" calculation:
-  - *Resistors:* **Round up to nearest 10** (Economy of scale; cheaper to buy 10 than 1).
-  - *Discrete Silicon:* **+1 Safety Buffer** for Transistors/Oscillators (high risk of heat damage during soldering).
-  - *ICs:* **Exact Count** (Protected by sockets, reducing risk of installation failure).
-- This transforms the purchasing logic from simple arithmetic into a risk-management strategy.
-
-### 4. SI Unit Normalization Engine
-
-Electronic component values are notoriously inconsistent (`4k7`, `4.7k`, `4700`, `4,700R`). String matching fails here.
-
-- **The Mechanism:** The ingestion layer (`src/bom_lib/utils.py`) acts as a recursive parser for SI prefixes (`p`, `n`, `u`, `k`, `M`). It normalizes all inputs to floating-point primitives ($4.7 \times 10^3$) before any aggregation occurs.
-- **The Result:** `4k7` and `4700` are correctly aggregated as the exact same SKU, preventing duplicate orders that string-based parsers would miss.
+- **Op-amps:** suggests hi-fi alternatives to generic chips (e.g., `TL072` → `OPA2134` for a lower noise floor).
+- **Diodes:** suggests clipping diodes with a different character (e.g., `1N4148` → `1N4001` for a smoother clip, or an IR LED for more crunch).
+- **Capacitors:** recommends a type by value and role (C0G/NP0 ceramic, box film, bulk 100n bypass caps).
+- **Obsolete parts:** flags parts such as the `2N5457` and suggests replacements.
 
 ---
 
 ## 🛡️ Verification & Validation
 
-The reliability of the physical build depends entirely on the determinism of the data pipeline. To mitigate the "Logistical Entropy" of changing PDF formats, the system employs a multi-layered testing strategy:
+1. **Ground-truth accuracy:** hand-labeled parts lists in `tests/golden/` grade every designator (correct, missing, extra, wrong category, wrong value) and check that each failure is warned. A baseline only ratchets upward. See [tests/golden/README.md](tests/golden/README.md).
+1. **Snapshot regression:** sample PDFs are parsed in CI and diffed against stored JSON, so any change in output is reviewed.
+1. **Property-based testing:** `Hypothesis` throws generated input at the parser, which must never crash, and at the buying math, which must stay sound.
+1. **Headless integration:** `Streamlit.AppTest` drives the app (upload, build choice, OCR opt-in, Generate) without a browser.
 
-### 1. Golden Master Regression (Snapshot Testing)
-
-PDF parsing is inherently fragile. To ensure that updates to the parser do not silently break support for legacy formats, we utilize **Snapshot Testing**.
-
-- **Methodology:** The test suite parses a library of "Golden Master" PDFs (real-world build docs).
-- **Verification:** The resulting object model is serialized to JSON and diffed against a stored "Truth" file.
-- **Outcome:** Any deviation in the parsing logic—even a single changed resistor value—triggers a CI failure, guaranteeing 100% snapshot fidelity and regression prevention.
-
-### 2. Property-Based Testing (Hypothesis)
-
-Standard unit tests only check the "happy path." We use the **Hypothesis** library to perform property-based testing.
-
-- **Fuzzing:** The test runner generates thousands of semi-random inputs (malformed text, edge-case floats, Unicode injection) to "attack" the parser.
-- **Invariant Checking:** Ensures that `calculate_net_needs()` remains mathematically sound (e.g., `Net_Need >= 0`) regardless of input chaos.
-
-### 3. Headless Integration Testing
-
-We utilize `Streamlit.AppTest` to run headless simulations of the user interface during CI.
-
-- **Simulation:** The test runner instantiates the app kernel, mimics user clicks/uploads, and asserts the state of the dataframes.
-- **Scope:** Verifies the full "Paste → Parse → Download" lifecycle without requiring a browser driver.
+See [tests/README.md](tests/README.md) for how to run each layer.
 
 ---
 
 ## 🔬 Tech Stack
 
-- **Python 3.14** - Core language (Strictly typed & pinned)
-- **uv** - Ultra-fast dependency management and locking
-- **Streamlit** - Interactive web interface and state management
-- **pdfplumber** - PDF table extraction and layout analysis
-- **fpdf2** - Programmatic PDF generation
-- **Docker** - Containerized runtime environment
-- **GitHub Actions** - Continuous Integration enforcing strict quality gates:
-  - *Linting:* Ruff
-  - *Type Safety:* Mypy
-  - *Snapshot Regression Testing:* PDF "Golden Master" verification (ensures parser stability across legacy build docs)
-  - *Property-Based Testing:* Hypothesis (Fuzzing component values to ensure mathematical invariants)
-  - *Integration Testing:* Streamlit AppTest (Headless simulation of the full "Paste-to-PDF" user lifecycle)
-  - *Delivery:* Auto-publishes Docker images to GHCR on release
-  - *Environment:* Ubuntu Latest
+- **Python 3.14**: strictly typed (`mypy --strict`)
+- **uv**: dependency management and locking
+- **Streamlit**: web interface
+- **pdfplumber**: PDF words, lines and tables
+- **RapidOCR**: OCR for image-only parts lists (ONNX runtime)
+- **pyparsing, Pint**: value grammar and units
+- **fpdf2**: field manuals and sticker sheets
+- **Docker**: container image, published to GHCR on release
+- **GitHub Actions**: Ruff, Mypy and pytest (accuracy ratchet, snapshots, Hypothesis, AppTest) on every PR
 
 ---
 
@@ -214,43 +171,34 @@ We utilize `Streamlit.AppTest` to run headless simulations of the user interface
 
 ```text
 .
-├── app.py                 <-- Interface: Streamlit Web App
-├── assets/                <-- Static assets (images, demos)
-├── Dockerfile             <-- Container configuration
-├── examples/              <-- Output: Sample generated artifacts
-│   └── Star_Ground_Artifacts/
-│       ├── Field Manuals/
-│       ├── Sticker Sheets/
-│       ├── Source Documents/
-│       ├── Shopping List.csv
-│       └── My Inventory Updated.csv
-├── raw_boms/              <-- Input: Source files for the Presets Library
-│   ├── pedalpcb/
-│   └── tayda/
-├── src/                   <-- Application Core
-│   ├── bom_lib/           <-- Domain Logic Package
-│   │   ├── __init__.py    <-- Public API exposure
-│   │   ├── classifier.py  <-- Logic: Component identification heuristics
-│   │   ├── constants.py   <-- Data: Static lookups and regex patterns
-│   │   ├── enums.py       <-- Data: Domain enumerations (Categories, Specs, Input Methods)
-│   │   ├── manager.py     <-- Logic: Inventory mutation & net needs calculation
-│   │   ├── parser.py      <-- Logic: PDF/CSV ingestion engines
-│   │   ├── presets.py     <-- Data: Library of known pedal circuits
-│   │   ├── sourcing.py    <-- Logic: Purchasing rules, shopping list assembly & hardware injection
-│   │   ├── strategies/    <-- Logic: Strategy pattern for multi-format ingestion
-│   │   ├── types.py       <-- Data: Type definitions (Protocols, TypedDicts, NamedTuples, key utils)
-│   │   └── utils.py       <-- Logic: String parsing & normalization
-│   ├── exporters.py       <-- Logic: CSV/Excel generation
-│   ├── feedback.py        <-- Logic: Google Sheets API integration
-│   └── pdf_generator.py   <-- Output: Field Manuals & Sticker Sheets
-├── tests/                 <-- QA Suite
-│   ├── samples/           <-- Real-world PDF/Text inputs for regression
-│   └── snapshots/         <-- Golden Master JSONs for PDF testing
-├── tools/                 <-- Developer Utilities
-│   └── generate_presets.py
-├── CONTRIBUTING.md        <-- Dev guide
-├── pyproject.toml         <-- Project metadata & tool config (Ruff/Mypy/Pytest)
-└── uv.lock                <-- Exact dependency tree (Deterministic builds; Streamlit Cloud installs from it)
+├── app.py                 <-- Streamlit web app
+├── assets/                <-- Images and demo
+├── examples/              <-- Sample generated build pack
+├── raw_boms/              <-- Source files for the presets library (PedalPCB, Tayda)
+├── src/
+│   ├── bom_lib/           <-- Domain logic (see src/README.md)
+│   │   ├── strategies/    <-- Input dispatch: PDF, CSV, pasted text, URL
+│   │   ├── fetch.py       <-- Safe URL fetching
+│   │   ├── parser.py      <-- Build document reader
+│   │   ├── layout.py      <-- Word-position layout reader
+│   │   ├── builds.py      <-- Variants and options
+│   │   ├── ocr.py         <-- OCR for image-only parts lists
+│   │   ├── verification.py <-- Self-checks and review warnings
+│   │   ├── designators.py <-- What counts as a designator
+│   │   ├── classifier.py  <-- Component categories
+│   │   ├── grammar/       <-- Value grammar (pyparsing)
+│   │   ├── manager.py     <-- Inventory merging and net needs
+│   │   └── sourcing.py    <-- Buffers, buying notes, hardware kit
+│   ├── exporters.py       <-- CSV exports
+│   ├── feedback.py        <-- In-app feedback form (Google Sheets)
+│   └── pdf_generator.py   <-- Field manuals and sticker sheets
+├── tests/                 <-- Test suite, golden parts lists and samples
+├── tools/                 <-- Preset generator
+├── AGENTS.md              <-- Guidelines for AI coding agents
+├── CONTRIBUTING.md        <-- Development guide
+├── Dockerfile
+├── justfile               <-- Task runner (lint, test, accuracy)
+└── pyproject.toml
 ```
 
 ---
@@ -297,12 +245,12 @@ uv run streamlit run app.py
 
 ## 🔭 Roadmap
 
-Star Ground reads build documents from five publishers: PedalPCB, GuitarPCB, Aion FX, Five Cats and Tonepad. Image-only parts lists are read by OCR, after you opt in. Accuracy is measured against about 60,000 hand-labeled parts. On those documents, every wrong part is flagged for review, and no correct part is flagged.
+### Now: a new frontend, then launch
 
-### Now: launch and listen
-
-1. **Share it with builders** and see whether it saves them time.
-1. **Collect failures.** Each report should include the document, so it can be labeled and added to the regression suite.
+1. **Decouple the backend from the frontend.** Parsing, sourcing and exports get a clean API that doesn't depend on Streamlit.
+1. **Try another frontend** (e.g., NiceGUI) on that API, and switch if it's worth it.
+1. **Move to paid hosting**, for a more polished app in line with my other projects.
+1. **Launch on builder forums.** Collect failures, with the document attached, so each can be labeled and added to the regression suite.
 1. **Measure again on unseen documents.** Every held-out test set has now been used for tuning. An honest accuracy figure needs a fresh set: documents users submit, or ones published after this release, set aside before anyone looks at them.
 
 ### Next: small, known gaps
@@ -317,13 +265,6 @@ Star Ground reads build documents from five publishers: PedalPCB, GuitarPCB, Aio
 
 - **More publishers**, chosen by what people upload. Each one gets its own labeled tuning set and an untouched test set before it is listed as supported.
 - **Live prices** from supplier APIs. This needs API keys and ongoing upkeep, so it waits until someone wants it.
-
-### Not planned
-
-- **Checking values against the E-series (E24, E96).** Build documents use off-series values on purpose: tuned resistors, trimmer settings, published alternatives. Flagging them would bury real warnings under false ones.
-- **Per-part confidence scores.** A part either needs review or it doesn't. A score between 0 and 1 asks the builder to choose a cutoff, and the warnings already say what to check and why.
-- **Circuit-type inference** (fuzz, delay) from groups of parts. The advice it would trigger is generic, and a wrong guess is worse than none.
-- **Probabilistic stock buffers.** There is no data on component loss rates to fit them to. The fixed per-category buffers are simple and easy to predict.
 
 ---
 

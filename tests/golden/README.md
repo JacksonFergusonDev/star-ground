@@ -37,7 +37,13 @@ it. `tests/test_parser_accuracy.py` fails on any difference from it:
   warnings teach users to ignore them, so this must stay at zero.
 
 A document-level `NO_PARTS_LIST` warning (nothing with a designator could be
-read, e.g. an image-only parts table) flags every part of that document.
+read, e.g. an image-only parts table) flags every part of that document, and so
+does `UNREADABLE_ROW` (an OCR'd row whose designator could not be read).
+
+A part listed under a misread name is not a silent miss when the right part was
+read and warned: OCR reads `OUTPUT1` as `OUPUT1`, with the right value and a
+`Read by OCR` warning. A warned extra part of the same category and value stands
+in for one missing part. An unwarned extra never does.
 
 ## File Format
 
@@ -106,9 +112,11 @@ first choice is the document's default:
 
 Scoring: every variant is graded as its own build, so the score says whether a
 builder of *each* variant gets the right parts. Golden variants are paired
-one-to-one with the parser's builds by agreement (ties in document order); a
-variant the parser did not produce is graded against an empty build, and if the
-parser produced a single build, every variant is graded against it. Failures
+one-to-one with the parser's builds by agreement (ties in document order). A
+variant the parser did not produce (a third version described in prose as a
+list of replacements) is graded against the build it agrees with most, the
+list its builder would start from. If the parser produced a single build, every
+variant is graded against it. Failures
 are keyed `Build/REF`. An option group is satisfied by any one choice; emitting
 parts from two choices counts the second as extra, because the shopping list
 would buy both. Warnings on any of these designators are correct behavior, not

@@ -10,6 +10,8 @@ The system enforces strict separation between **Ingestion**, **Normalization**, 
 
 ### 1. Ingestion Layer (The Senses)
 
+- **`bom_lib/strategies/`**: Input dispatch.
+  - **Role:** `BOMParserContext` picks a strategy by input (PDF, CSV, pasted text). A URL is first fetched by `bom_lib/fetch.py`, which accepts only public `http(s)` addresses, checks each redirect, and caps the download at 30 MB, since the hosted app fetches on the user's behalf.
 - **`bom_lib/parser.py`**: The entry point for dynamic data.
   - **Strategy:** Implements a **Hybrid Strategy**. It maps ruled PDF tables using `pdfplumber`, then runs a column-aware layout pass to recover everything the tables missed (or everything, for borderless multi-column parts lists).
 - **`bom_lib/layout.py`**: The layout reader.
@@ -23,7 +25,7 @@ The system enforces strict separation between **Ingestion**, **Normalization**, 
 - **`bom_lib/verification.py`**: The self-checks.
   - **Role:** Independently re-reads the document and reports every place the output may disagree with it (unextracted designators, conflicting duplicates, category contradictions, unparseable values, bill-of-materials mismatches). The invariant: the parser may be wrong, but never *silently*.
 - **`bom_lib/presets.py`**: The entry point for static data.
-  - **Role:** Acts as the "Reference Library." It allows users to load pre-verified BOMs for known circuits (e.g., PedalPCB projects) without parsing a file.
+  - **Role:** Acts as the "Reference Library." It allows users to load pre-verified BOMs for known circuits (PedalPCB and Tayda projects) without parsing a file.
 - **`bom_lib/_presets_data.py`**: The static database.
   - **Note:** This file is **auto-generated** by `tools/generate_presets.py`. It contains the raw text blobs of valid BOMs to ensure the presets are immutable and version-controlled.
 
@@ -31,12 +33,14 @@ The system enforces strict separation between **Ingestion**, **Normalization**, 
 
 - **`bom_lib/classifier.py`**: The identification engine.
   - **Heuristics:** Uses reference designators (`R1`, `U1`) and value signatures to categorize components. It determines if `C1` is a Ceramic Disc (low profile) or an Electrolytic (high profile) based on value thresholds.
-- **`bom_lib/utils.py`**: The recursive SI parser.
-  - **Role:** The "Unit Enforcer." It converts chaotic strings (`4k7`, `4.7k`, `4,700R`) into floating-point primitives ($4.7 \times 10^3$) before storage, ensuring mathematical uniqueness.
+- **`bom_lib/grammar/value_parser.py`**: The value grammar.
+  - **Role:** The "Unit Enforcer." A `pyparsing` grammar converts chaotic strings (`4k7`, `4.7k`, `4,700R`, `0R1`) into exact `Decimal` values ($4.7 \times 10^3$), so equal values merge into one line.
+- **`bom_lib/units.py`**: The shared `Pint` unit registry, so a value always carries its unit and a voltage is never compared with a resistance.
+- **`bom_lib/utils.py`**: Designator helpers: range expansion (`R1-R5`), natural sorting, display strings.
 - **`bom_lib/constants.py`**: The knowledge base.
   - **Content:** Stores the "Silicon Sommelier" dictionaries (audio-grade substitutions), Regex patterns, and SI multipliers. This separates *configuration* from *logic*.
 - **`bom_lib/types.py`**: The schema definitions.
-  - **Role:** Defines `TypedDict` structures (`PartData`, `StatsDict`) to enforce strict typing across the pipeline, preventing "stringly typed" data errors.
+  - **Role:** Defines the pipeline's types: `Inventory` and `PartData`, `StatsDict`, `ParseWarning`, and `ParseResult` with its builds and OCR attempt. Discrete choices are enums (`bom_lib/enums.py`), never magic strings.
 
 ### 3. Logic Kernel (The Brain)
 
@@ -44,10 +48,13 @@ The system enforces strict separation between **Ingestion**, **Normalization**, 
   - **Role:** The "Controller." It calculates `Net Needs = BOM - Stock` and handles the merging of multiple projects into a single master list.
 
 - **`bom_lib/sourcing.py`**: Yield Management ("Nerd Economics").
-  - **Logic:** Applies category-specific risk profiles:
-    - *Resistors:* Round up to nearest 10 (Economy of Scale).
-    - *ICs:* Exact count (High cost).
-    - *Hardware Injection:* Automatically injects off-BOM parts (Jacks, Switches) based on the circuit topology (e.g., detecting "Fuzz" vs "Delay").
+  - **Logic:** Applies category-specific buffers to the net need:
+    - *Resistors:* +5, rounded up to the next 10 (economy of scale).
+    - *Capacitors:* +5; +10 for 100n bypass caps; +1 at 1µF and above.
+    - *Diodes:* +5, at least 10. *Transistors, crystals, optoelectronics:* +1.
+    - *ICs:* Exact count (high cost), with a socket recommended.
+  - **Parts included with the PCB** are subtracted from what to buy.
+  - **Hardware Injection:** Adds a standard kit per pedal (enclosure, jacks, footswitch, status LED with one resistor per LED, knobs, wire), skipping whatever the document lists itself (`provided_hardware`).
 
 ### 4. Output Layer (The Hands)
 
@@ -60,18 +67,20 @@ The system enforces strict separation between **Ingestion**, **Normalization**, 
 ### 5. Telemetry (The Nervous System)
 
 - **`feedback.py`**: User Loop.
-  - **Role:** Connects to Google Sheets to log user feedback and bug reports. It uses a connection pool with `st.cache_resource` to handle high-concurrency reporting.
+  - **Role:** Logs the in-app feedback form to Google Sheets, reusing one client through `st.cache_resource`.
 
 ---
 
 ## 🧬 Data Flow
 
-1. **Input:** User uploads a PDF OR selects a Preset (`presets.py`).
-1. **Parse:** `parser.py` extracts text $\rightarrow$ `classifier.py` tags it.
-1. **Normalize:** `utils.py` converts strings to Floats using `constants.py`.
-1. **Mutate:** `manager.py` aggregates quantities and subtracts Stock.
-1. **Enrich:** `sourcing.py` injects missing hardware (Jacks/Footswitches).
-1. **Render:** `pdf_generator.py` sorts by Z-Height and draws the PDF.
+1. **Input:** The user uploads a PDF or CSV, pastes text or a link, or picks a preset; `strategies/` dispatches it.
+1. **Parse:** `parser.py` and `layout.py` read the parts list; `builds.py` separates variants and options; `ocr.py` offers a reading of image-only lists.
+1. **Verify:** `verification.py` re-reads the document and attaches review warnings.
+1. **Classify & Normalize:** `classifier.py` tags each part; the grammar parses its value to a `Decimal`.
+1. **Choose:** The app asks which build to make, and whether to use OCR's parts.
+1. **Mutate:** `manager.py` merges projects and subtracts stock and parts included with the PCB.
+1. **Enrich:** `sourcing.py` applies buffers and buying notes, and adds the hardware kit.
+1. **Render:** `exporters.py` writes the CSVs; `pdf_generator.py` sorts by Z-height and draws the field manuals and sticker sheets.
 
 ## 🛠 Type Safety
 
@@ -80,6 +89,8 @@ We utilize `TypedDict` structures defined in `bom_lib/types.py` to enforce schem
 ```python
 class PartData(TypedDict):
     qty: int
+    val_qty: pint.Quantity[Any] | Decimal | None  # 10000 ohm for '10k'
     refs: list[str]  # ["R1", "R2"]
     sources: dict[str, list[str]]  # Traceability back to origin PDF
+    included: int  # Of qty, how many come with the PCB
 ```
