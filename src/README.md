@@ -4,6 +4,8 @@ The `src/` directory is structured as a unidirectional data pipeline. Data flows
 
 The system enforces strict separation between **Ingestion**, **Normalization**, **State Management**, and **Presentation**.
 
+Everything in `src/` except `app_state.py` is the **backend**: it imports no UI framework, and a frontend reaches it through `api.py`. `tests/test_api.py` fails if a backend module imports Streamlit or the app's state.
+
 ---
 
 ## 📂 Module Map
@@ -70,7 +72,14 @@ The system enforces strict separation between **Ingestion**, **Normalization**, 
 ### 5. Telemetry (The Nervous System)
 
 - **`feedback.py`**: User Loop.
-  - **Role:** Logs the in-app feedback form to Google Sheets, reusing one client through `st.cache_resource`.
+  - **Role:** Appends the in-app feedback form to a Google Sheet. The frontend supplies the service account's credentials and decides how long to reuse the connection (the Streamlit app reads its secrets and reconnects hourly).
+
+### 6. The API (The Front Door)
+
+- **`api.py`**: What a frontend calls.
+  - **Flow:** The frontend gathers each project into a `Project` (name, count, input method, and the text, link or `FileUpload`). It may read uploads and links ahead of time with `read_document`, to ask which build or whether to use OCR's parts, and passes the reading back on the `Project`. `generate_master_list` returns a `MasterList`: the merged parts, the parts plus the hardware kit, the totals with every input's errors, and each project as a `BuiltProject` (its final name and label, warnings, options and source document). The `MasterList` gives the shopping list, the PDF bundle and the build pack; the CSVs come from `exporters.py`.
+  - **Invariants:** The backend never sees a UI framework's objects: uploads arrive as `FileUpload` (name and bytes). A multi-circuit document's build has no default, so `generate_master_list` raises `BuildNotChosenError` until each one is chosen. A reading passed in is never mutated, so the frontend can keep it between runs.
+- **`app_state.py`**: The Streamlit app's session state (`ProjectSlot`, `Inputs`). Frontend state, kept out of the app script because Streamlit re-executes it on every rerun. Each `ProjectSlot` turns itself into a `Project`.
 
 ---
 
@@ -80,7 +89,7 @@ The system enforces strict separation between **Ingestion**, **Normalization**, 
 1. **Parse:** `parser.py` and `layout.py` read the parts list; `builds.py` separates variants and options; `ocr.py` offers a reading of image-only lists.
 1. **Verify:** `verification.py` re-reads the document and attaches review warnings.
 1. **Classify & Normalize:** `classifier.py` tags each part; the grammar parses its value to a `Decimal`.
-1. **Choose:** The app asks which build to make, and whether to use OCR's parts.
+1. **Choose:** The frontend asks which build to make, and whether to use OCR's parts; `api.py` refuses to guess.
 1. **Mutate:** `manager.py` merges projects and subtracts stock and parts included with the PCB.
 1. **Enrich:** `sourcing.py` applies buffers and buying notes, and adds the hardware kit.
 1. **Render:** `exporters.py` writes the CSVs; `pdf_generator.py` sorts by Z-height and draws the field manuals and sticker sheets.

@@ -5,10 +5,10 @@ parsing and sourcing pipeline to ensure consistent data passing.
 """
 
 import copy
+import hashlib
 import re
-import uuid
 from collections import UserDict, defaultdict
-from dataclasses import dataclass, field, replace
+from dataclasses import dataclass, replace
 from decimal import Decimal
 from typing import (
     Any,
@@ -27,7 +27,6 @@ from src.bom_lib.enums import (
     ComponentOrigin,
     ComponentSpec,
     HardwareRole,
-    InputMethod,
     OcrVerdict,
     ParseWarningKind,
 )
@@ -70,69 +69,29 @@ RawBOMData = (
 )
 
 
-@dataclass
-class ProjectSlot:
-    """Represents the UI state for a single pedal project slot.
-
-    Shared between the Streamlit frontend and PDF generation backend.
-    """
-
-    id: uuid.UUID = field(default_factory=uuid.uuid4)
-    name: str = ""
-    method: InputMethod = InputMethod.PASTE_TEXT
-    count: int = 1
-    data: RawBOMData = None
-
-    # Cache fields
-    last_loaded_preset: str | None = None
-    cached_pdf_bytes: bytes | None = None
-    source_path: str | None = None
-    locked_name: str | None = None
-
-    # Parsed as soon as the input arrives, so a multi-circuit document can ask
-    # which build before the master list is generated.
-    parsed: ParseResult | None = None
-    parsed_key: str | None = None
-    variant: str | None = None
-    # The builder chose to add the parts OCR read (see `ParseResult.ocr`).
-    use_ocr: bool = False
-
-
 @dataclass(frozen=True, slots=True)
-class SlotInputs:
-    """What one project contributes to the master list, as the builder set it.
+class FileUpload:
+    """A file the builder gave, whatever the frontend received it as.
+
+    Frontends hand uploads to the backend in this form, so no strategy ever
+    sees a UI framework's file object.
 
     Attributes:
-        name: The project name typed in.
-        count: Number of pedals.
-        method: How the parts list is given.
-        source: The document's identity, or the pasted or preset text.
-        variant: The build chosen from a multi-circuit document.
-        use_ocr: Whether OCR's parts were accepted.
+        name: The file's name, whose extension picks the parser.
+        content: The file's bytes.
     """
 
     name: str
-    count: int
-    method: InputMethod
-    source: str | None
-    variant: str | None
-    use_ocr: bool
+    content: bytes
 
+    def getvalue(self) -> bytes:
+        """The file's bytes, as a file buffer exposes them."""
+        return self.content
 
-@dataclass(frozen=True, slots=True)
-class Inputs:
-    """Everything the master list is generated from.
-
-    Lives here, not in the app script: Streamlit re-executes the script on
-    every rerun, and a class defined there never equals the last run's.
-
-    Attributes:
-        slots: Each project's inputs, in order.
-        stock: The uploaded stock file's identity, if any.
-    """
-
-    slots: tuple[SlotInputs, ...]
-    stock: str | None
+    @property
+    def fingerprint(self) -> str:
+        """Identifies the file by name and content, to tell when it changed."""
+        return f"{self.name}:{hashlib.sha256(self.content).hexdigest()[:16]}"
 
 
 @dataclass(frozen=True, slots=True)
@@ -149,6 +108,31 @@ class BuildHardware:
     count: int
     provided: frozenset[HardwareRole] = frozenset()
     status_leds: int = 1
+
+
+@dataclass(frozen=True, slots=True)
+class BuiltProject:
+    """One project as it went onto the master list.
+
+    Attributes:
+        name: The project's name: as typed, else the document's title or
+            file name, else its place in the list ('Project #2').
+        label: The name with the chosen build ('Muffin Fuzz (Civil War)'):
+            how the parts' sources and every output name the project.
+        hardware: What it needs from the standard hardware kit.
+        warnings: Its parser self-check failures, to review.
+        options: Interchangeable choices resolved to the document's default.
+        document: The source PDF's bytes, for the build pack.
+        source_path: A preset's source document on disk, for the build pack.
+    """
+
+    name: str
+    label: str
+    hardware: BuildHardware
+    warnings: tuple[ParseWarning, ...] = ()
+    options: tuple[str, ...] = ()
+    document: bytes | None = None
+    source_path: str | None = None
 
 
 @dataclass(frozen=True, slots=True)

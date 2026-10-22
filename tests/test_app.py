@@ -4,34 +4,19 @@ import uuid
 import pytest
 from streamlit.testing.v1 import AppTest
 
+from src.api import MasterList
+from src.app_state import ProjectSlot
 from src.bom_lib import (
     BOM_PRESETS,
+    BuildHardware,
+    BuiltProject,
     ComponentCategory,
     ComponentKey,
     InputMethod,
-    ProjectSlot,
+    create_empty_stats,
 )
 from src.bom_lib.fetch import FetchedDocument
 from src.bom_lib.types import Inventory
-
-
-# --- Helpers ---
-class MockFile:
-    """
-    Fake file object used to simulate file uploads in tests.
-
-    Attributes:
-        name (str): The filename.
-        content (bytes): The file content encoded as bytes.
-    """
-
-    def __init__(self, name, content):
-        self.name = name
-        self.content = content.encode("utf-8")
-
-    def getvalue(self):
-        """Returns the byte content of the mock file."""
-        return self.content
 
 
 # --- Fixtures ---
@@ -100,12 +85,17 @@ def test_csv_processing_via_state_injection(app):
     mock_stock = Inventory()
     mock_stock[k_res]["qty"] = 2
 
-    mock_stats = {"lines_read": 7, "parts_found": 7, "residuals": []}
+    mock_stats = create_empty_stats()
+    mock_stats["lines_read"] = mock_stats["parts_found"] = 7
 
-    # 2. Inject into session state
-    app.session_state["inventory"] = mock_inventory
-    app.session_state["stock"] = mock_stock  # Inject Stock to trigger "Net Need" logic
-    app.session_state["stats"] = mock_stats
+    # 2. Inject into session state, with stock to trigger the "Net Need" logic
+    app.session_state["master"] = MasterList(
+        parts=mock_inventory,
+        kit=mock_inventory,
+        stats=mock_stats,
+        projects=(BuiltProject("Mock Project", "Mock Project", BuildHardware(1)),),
+        stock=mock_stock,
+    )
 
     # Ensure at least one slot exists to prevent UI errors
     if "pedal_slots" not in app.session_state:
@@ -169,7 +159,7 @@ def test_source_ref_duplication_on_merge(app):
     # 3. Inspect the BACKEND inventory directly
     # We inspect the session state because the dataframe aggregates counts,
     # hiding the underlying source list structure we want to verify.
-    inventory = app.session_state["inventory"]
+    inventory = app.session_state["master"].parts
 
     # We expect the source list to be ['R1', 'R1'] because count was 2
     k_res = ComponentKey(ComponentCategory.RESISTORS, "10k")
@@ -263,12 +253,12 @@ def test_multi_circuit_pdf_requires_a_build_choice(app, monkeypatch):
     generate = next(b for b in app.button if b.label == "Generate Master List")
     generate.click().run()
     assert any("Choose which build" in e.value for e in app.error)
-    assert not app.session_state.inventory
+    assert app.session_state.master is None
 
     picker.select("Cleft Mod").run()
     next(b for b in app.button if b.label == "Generate Master List").click().run()
     assert not app.error
-    inventory = app.session_state.inventory
+    inventory = app.session_state["master"].parts
     cleft_q1 = ComponentKey(ComponentCategory.TRANSISTORS, "2N5089")
     assert "Q1" in inventory[cleft_q1]["sources"]["Ungula (Cleft Mod)"]
     # The Cleft mod omits C6.
@@ -331,7 +321,7 @@ def test_ocr_builds_are_chosen_after_accepting_them(app, monkeypatch):
     picker.select("Vintage").run()
     next(b for b in app.button if b.label == "Generate Master List").click().run()
     assert not app.error
-    inventory = app.session_state.inventory
+    inventory = app.session_state.master.parts
     one_k = ComponentKey(ComponentCategory.RESISTORS, "1k")
     assert any("Vintage" in source for source in inventory[one_k]["sources"])
 
@@ -421,7 +411,7 @@ def test_changing_an_input_clears_the_old_results(app, change):
 
     assert not app.exception
     assert len(app.dataframe) == 0
-    assert app.session_state["inventory"] is None
+    assert app.session_state["master"] is None
     assert any("inputs changed" in c.value for c in app.caption)
 
     if app.text_area:
