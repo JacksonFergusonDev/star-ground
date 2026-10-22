@@ -122,6 +122,18 @@ parts from two choices counts the second as extra, because the shopping list
 would buy both. Warnings on any of these designators are correct behavior, not
 false alarms.
 
+Parts a list counts by value (`4 - 10k`, Tonepad) have no designator. They are
+keyed `#<Category> <value>` with their `count`, and graded by category and
+value against the parser's counted parts, then by count:
+
+```json
+"#Resistors 10k": {"category": "Resistors", "value": "10k", "count": 4}
+```
+
+Rows of the same part in one build add up. A row that names its designator
+(`1 - 150k (Ra)`) is keyed by it. Switch positions (`1 - Off Axis` under
+`S1 = MIC`) and wire jumpers are not parts.
+
 ## Labeling Rules
 
 1. **Record what the builder must buy.** When the document gives a more specific

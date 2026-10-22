@@ -388,3 +388,24 @@ def test_supports_name_protocol() -> None:
     assert isinstance(NamedItem("test.csv"), SupportsName)
     assert not isinstance(UnnamedItem(), SupportsName)
     assert not isinstance("raw_string", SupportsName)
+
+
+def test_counted_parts_reach_each_projects_field_manual() -> None:
+    """Parts counted by value ('4 - 10k', Tonepad) have no designator, but the
+    project still needs them: its checklist counts them per project."""
+    from src.bom_lib.manager import rename_source_in_inventory
+    from src.pdf_generator import _get_project_parts
+
+    inventory = Inventory()
+    key = ComponentKey(ComponentCategory.RESISTORS, "10k")
+    inventory.add_counted("Rat", key, 4)
+    inventory.add_part("Rat", key, "R9")
+    inventory.add_counted("Muff", key, 2)
+    rename_source_in_inventory(inventory, "Rat", "La Rata")
+
+    totals = Inventory()
+    totals.merge(inventory, multiplier=2)
+    rata = {item.value: item for item in _get_project_parts(totals, "La Rata")}
+    assert rata["10k"].qty == 5  # one pedal's checklist: 4 counted + R9
+    assert rata["10k"].unique_refs == ["R9"]
+    assert totals[key]["qty"] == 14

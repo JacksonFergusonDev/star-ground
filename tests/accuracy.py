@@ -445,11 +445,24 @@ def _grade(expected: ExpectedPart, actual: ActualPart) -> Outcome:
     return Outcome.CORRECT
 
 
+# Parts counted by value ('4 - 10k', Tonepad) have no designator: a golden
+# keys each one '#<Category> <value>' with its `count`, and the parser's are
+# paired with them by category and value (see `_pair_counted`).
+COUNTED_PREFIX = "#"
+# The socket the parser adds for a chip, which no golden lists.
+_INJECTED_SOCKET = "DIP SOCKET (Check Size)"
+
+
 def _actual_parts(inventory: Inventory) -> dict[str, ActualPart]:
     actual: dict[str, ActualPart] = {}
     for key, data in inventory.items():
         if key.category == ComponentCategory.PCB:
             continue
+        counted = sum(data["counted"].values())
+        if counted and key.value != _INJECTED_SOCKET:
+            actual[f"{COUNTED_PREFIX}{key.category.value} {key.value}"] = ActualPart(
+                category=key.category, value=key.value, count=counted
+            )
         for ref in data["refs"]:
             if "(Inj)" in ref:
                 continue
@@ -680,9 +693,47 @@ def _resolve_options(
     return expected
 
 
+def _pair_counted(
+    expected: dict[str, ExpectedPart], actual: dict[str, ActualPart]
+) -> dict[str, ActualPart]:
+    """Keys each counted part read under the golden's key for the same part.
+
+    A counted part has no designator, so it is matched by category and value;
+    its count is then graded like a designator's.
+    """
+    golden = {
+        k: e
+        for k, e in expected.items()
+        if k.startswith(COUNTED_PREFIX) and k not in actual
+    }
+    out = {k: a for k, a in actual.items() if not k.startswith(COUNTED_PREFIX)}
+    for k, a in actual.items():
+        if not k.startswith(COUNTED_PREFIX):
+            continue
+        if k in expected:
+            out[k] = a
+            continue
+        match = next(
+            (
+                gk
+                for gk, e in golden.items()
+                if e.category == a.category
+                and any(
+                    values_match(e.category, c, a.value) for c in (e.value, *e.accept)
+                )
+            ),
+            None,
+        )
+        if match is not None:
+            del golden[match]
+        out[match or k] = a
+    return out
+
+
 def _grade_variant(
     variant: Variant, actual: dict[str, ActualPart], flagged: set[str]
 ) -> tuple[RefResult, ...]:
+    actual = _pair_counted(variant.parts, actual)
     expected = _resolve_options(variant, actual)
     results: list[RefResult] = []
     for ref, exp in expected.items():

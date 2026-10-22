@@ -157,6 +157,19 @@ def get_spec_type(
     return ComponentSpec.NONE
 
 
+# A pot's resistance, with a taper letter before or after it: 'B100K',
+# '100kB', '100K-A'.
+_POT_RESISTANCE = re.compile(
+    r"(?<![A-Z0-9])([ABCWG])?(\d+(?:\.\d+)?[KM]?\d*)(?:-?([ABCWG])(?![A-Z]))?"
+)
+# A taper spelled as a word. Reverse log before log.
+_POT_TAPER_WORDS = (
+    (re.compile(r"REV(?:ERSE)?\.?\s*LOG"), "Reverse Log"),
+    (re.compile(r"\bLOG"), "Logarithmic"),
+    (re.compile(r"\bLIN"), "Linear"),
+)
+
+
 def generate_search_term(
     category: ComponentCategory,
     val: str,
@@ -189,26 +202,18 @@ def generate_search_term(
         return val
 
     if category == ComponentCategory.POTENTIOMETERS:
-        taper = "Linear"  # Default
         val_upper = val.upper()
         is_dual = "DUAL" in val_upper or "STEREO" in val_upper
-
-        for code, name in constants.POT_TAPER_MAP.items():
-            if code in val_upper:
-                taper = name
-                break
-
-        # Clean "B100k" -> "100k"
-        taper_chars = "".join(constants.POT_TAPER_MAP.keys())
-        clean_raw = re.sub(rf"[{taper_chars}\-\s]", "", val_upper)
-        dec = parse_value_to_decimal(clean_raw)
-
-        if dec is not None:
-            clean_val = float_to_search_string(float(dec))
-        else:
-            clean_val = clean_raw if clean_raw else val
-
-        base_term = f"{clean_val} ohm {taper} potentiometer"
+        resistance = _POT_RESISTANCE.search(val_upper)
+        dec = parse_value_to_decimal(resistance.group(2)) if resistance else None
+        if resistance is None or dec is None:
+            return val  # 'Wah pot' names the part itself
+        # A taper is a letter by the value ('B100K', '100kB', '100k-A') or a
+        # word ('100k Log.', '500k Rev. Log', Tonepad).
+        code = resistance.group(1) or resistance.group(3)
+        word = next((t for p, t in _POT_TAPER_WORDS if p.search(val_upper)), None)
+        taper = word or constants.POT_TAPER_MAP.get(code or "B", "Linear")
+        base_term = f"{float_to_search_string(float(dec))} ohm {taper} potentiometer"
         return f"Dual Gang {base_term}" if is_dual else base_term
 
     if category == ComponentCategory.DIODES:

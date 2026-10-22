@@ -1764,33 +1764,58 @@ _QUANTITY_ROW = re.compile(
 _QUANTITY_MIN = 2
 
 
-def check_quantity_list(page_texts: list[str], stats: StatsDict) -> None:
-    """Tells the builder about parts counted by value instead of listed by designator.
+def _quantity_rows(text: str) -> list[tuple[int, Decimal]]:
+    """The rows of a text that count parts by value, as (count, value) pairs."""
+    rows = []
+    for m in _QUANTITY_ROW.finditer(text):
+        value = parse_value_to_decimal(m.group(2).replace(" ", ""))
+        if value is not None:
+            rows.append((int(m.group(1)), value))
+    return rows
+
+
+def check_quantity_list(
+    page_texts: list[str], counted: list[str], unread: list[str], stats: StatsDict
+) -> None:
+    """Tells the builder about rows counting parts by value that were not read.
 
     Tonepad lists '4 - 10k' under a Resistors heading: four 10k resistors, no
-    designators. Those parts cannot be read (the parts list is keyed by
-    designator), so the document as a whole is warned. Parts the same list
-    does name ('IC1 - PT2399') are still read.
+    designators. The parser reads such rows when it can tell their category;
+    this check finds them again in the raw text, independently, and warns the
+    document about every one that was not read with the same count and value.
 
     Args:
         page_texts: Raw text of every page.
+        counted: The counted rows the parser read, as printed ('4 - 10k').
+        unread: Counted rows the parser saw in a parts list column but could
+            not classify ('3 - jumpers').
         stats: Stats object that receives the warning.
     """
+    unread = list(unread)
     rows = [
-        m.group(0)
+        (m.group(0), row)
         for text in page_texts
         for m in _QUANTITY_ROW.finditer(text)
-        if parse_value_to_decimal(m.group(2).replace(" ", "")) is not None
+        for row in _quantity_rows(m.group(0))
     ]
-    if len(rows) < _QUANTITY_MIN:
+    read = Counter(row for text in counted for row in _quantity_rows(text))
+    # A row the parser already reported unread is not reported twice.
+    listed = Counter(row for text in unread for row in _quantity_rows(text))
+    for printed, row in rows if len(rows) >= _QUANTITY_MIN else []:
+        if read[row]:
+            read[row] -= 1
+        elif listed[row]:
+            listed[row] -= 1
+        else:
+            unread.append(printed)
+    if not unread:
         return
     _warn(
         stats,
         ParseWarningKind.QUANTITY_LIST,
         "",
-        f"{len(rows)} lines of the parts list count parts by value ('{rows[0]}') "
-        "instead of naming them by designator, so those parts were not read. Enter "
-        "them by hand.",
+        f"{len(unread)} row(s) of the parts list count parts by value and were "
+        f"not read ('{"', '".join(unread[:3])}'). Enter them by hand.",
     )
 
 

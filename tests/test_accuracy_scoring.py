@@ -261,3 +261,34 @@ class TestStandIns:
         actual = {"OUPUT1": ActualPart(POT, "A100K")}
         warned = {r.ref: r.flagged for r in _grade_variant(variant, actual, set())}
         assert warned == {"OUTPUT1": False, "OUPUT1": False}
+
+
+def test_counted_parts_are_paired_by_category_and_value(tmp_path: Path) -> None:
+    """Parts counted by value ('4 - 10k') have no designator: the golden's
+    '#...' key is matched to the parser's part by category and value."""
+    doc = load_golden(
+        _write(
+            tmp_path,
+            {
+                "parts": {
+                    "#Resistors 10k": {**_part(R, "10k"), "count": 4},
+                    "#Resistors 1k5": {**_part(R, "1k5"), "count": 1},
+                    "#Diodes 1N914": {**_part(D, "1N914"), "count": 2},
+                }
+            },
+        )
+    )
+    [variant] = doc.variants
+    actual = {
+        "#Resistors 10k": ActualPart(R, "10k", count=4),
+        "#Resistors 1.5k": ActualPart(R, "1.5k", count=1),
+        "#Diodes 1N914": ActualPart(D, "1N914", count=1),
+        "#Transistors 2N5088": ActualPart(Q, "2N5088", count=1),
+    }
+    outcomes = _outcomes(_grade_variant(variant, actual, set()))
+    assert outcomes == {
+        "#RESISTORS 10K": Outcome.CORRECT,
+        "#RESISTORS 1K5": Outcome.CORRECT,
+        "#DIODES 1N914": Outcome.WRONG_COUNT,
+        "#Transistors 2N5088": Outcome.EXTRA,
+    }
