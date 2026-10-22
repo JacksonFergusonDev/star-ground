@@ -1059,7 +1059,9 @@ def _unread(listed: dict[str, ComponentKey], mentioned: set[str]) -> set[str]:
                 series[prefix, n // _SERIES]
             ):
                 unread.add(word)
-        elif designator.category not in named:
+        elif designator.category not in named and BOARD_REF.fullmatch(word):
+            # A new kind of part only by a board designator: 'J113' and 'J201'
+            # in AfterBlaster's build notes are JFETs, not jacks.
             unread.add(word)
     return unread - set(listed)
 

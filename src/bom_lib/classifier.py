@@ -49,7 +49,10 @@ _OHMS = re.compile(r"(?<![\w.])\d+(?:\.\d+)?R\d*(?![\w.])")
 # Vactrols: VTL5C4 (Xvive/PerkinElmer), NSL-32 (Silonex).
 _VACTROL = re.compile(r"VTL\d|NSL-?\d")
 # A DIP switch, written with a dash ('DIP-5'), unlike socket sizes ('DIP8').
-DIP_SWITCH = re.compile(r"\bDIP-\d+\b|\bDIP[- ]?\d+\b.*\bSWITCH|\bDIP SWITCH")
+# 'DIP-5 Dip Switch' (PedalPCB Muffin Factory), '2-POLE_DIP' (GuitarPCB Afterblaster).
+DIP_SWITCH = re.compile(
+    r"\bDIP-\d+\b|\bDIP[- ]?\d+\b.*\bSWITCH|\bDIP SWITCH|\b\d-POLE[_ ]DIP\b"
+)
 _JACK_VALUE = re.compile(r"\b(?:TRS|JACK)\b")
 # A TO-92/TO-220 voltage regulator takes no DIP socket: '78L06', 'MC7815', 'LM317'.
 _FIXED_RESISTOR = re.compile(

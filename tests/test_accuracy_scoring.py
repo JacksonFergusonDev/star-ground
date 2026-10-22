@@ -237,3 +237,27 @@ class TestCountsAndRepeats:
         (result,) = _grade_variant(doc.variants[0], {}, {"*"})
         assert result.outcome == Outcome.MISSING
         assert result.flagged
+
+
+POT = ComponentCategory.POTENTIOMETERS
+
+
+class TestStandIns:
+    """A warned part under a misread name covers the golden's missing name."""
+
+    def test_a_warned_stand_in_covers_the_missing_name(self, tmp_path: Path) -> None:
+        # Five Cats Dirty Aztec: OCR read OUTPUT1 as 'OUPUT1', and warned it.
+        (variant,) = load_golden(
+            _write(tmp_path, {"parts": {"OUTPUT1": _part(POT, "A100K")}}), tmp_path
+        ).variants
+        actual = {"OUPUT1": ActualPart(POT, "A100K")}
+        warned = {r.ref: r.flagged for r in _grade_variant(variant, actual, {"OUPUT1"})}
+        assert warned == {"OUTPUT1": True, "OUPUT1": True}
+
+    def test_an_unwarned_stand_in_covers_nothing(self, tmp_path: Path) -> None:
+        (variant,) = load_golden(
+            _write(tmp_path, {"parts": {"OUTPUT1": _part(POT, "A100K")}}), tmp_path
+        ).variants
+        actual = {"OUPUT1": ActualPart(POT, "A100K")}
+        warned = {r.ref: r.flagged for r in _grade_variant(variant, actual, set())}
+        assert warned == {"OUTPUT1": False, "OUPUT1": False}

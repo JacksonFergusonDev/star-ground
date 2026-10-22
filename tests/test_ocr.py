@@ -465,6 +465,14 @@ class TestUnread:
         )
         assert _unread(listed, {"J201", "R60"}) == set()
 
+    def test_a_part_number_in_the_notes_is_no_designator(self) -> None:
+        # GuitarPCB AfterBlaster's notes offer a J113 or J201 for Q1 (an MPF102).
+        listed = self._listed(
+            R1=(ComponentCategory.RESISTORS, "10k"),
+            Q1=(ComponentCategory.TRANSISTORS, "MPF102"),
+        )
+        assert _unread(listed, {"J113", "J201"}) == set()
+
     def test_each_hundred_is_a_series(self) -> None:
         # Five Cats numbers the power section 'C100', 'C101' after 'C1'-'C13';
         # the enclosure badge's 'C60' is no capacitor.
