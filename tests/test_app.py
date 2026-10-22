@@ -1,6 +1,5 @@
 import os
 import uuid
-from unittest import mock
 
 import pytest
 from streamlit.testing.v1 import AppTest
@@ -246,14 +245,11 @@ def test_multi_circuit_pdf_requires_a_build_choice(app, monkeypatch):
     then builds exactly the chosen variant, labeled with its name."""
     samples = os.path.join(os.path.dirname(__file__), "samples", "dirty")
 
-    def fake_get(url, timeout=10):
-        response = mock.Mock()
+    def fake_fetch(url):
         with open(os.path.join(samples, url.rsplit("/", 1)[-1]), "rb") as f:
-            response.content = f.read()
-        response.raise_for_status = lambda: None
-        return response
+            return f.read()
 
-    monkeypatch.setattr("requests.get", fake_get)
+    monkeypatch.setattr("src.bom_lib.strategies.context.fetch_url", fake_fetch)
     slot = ProjectSlot(method=InputMethod.FROM_URL)
     app.session_state.pedal_slots = [slot]
     app.session_state[f"method_{slot.id}"] = InputMethod.FROM_URL

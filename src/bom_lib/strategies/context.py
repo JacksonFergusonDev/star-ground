@@ -2,9 +2,8 @@
 
 import logging
 
-import requests
-
 from src.bom_lib.enums import InputMethod
+from src.bom_lib.fetch import FetchError, fetch_url
 from src.bom_lib.strategies.base import BOMParserStrategy, ParseResult
 from src.bom_lib.strategies.csv import CSVParserStrategy
 from src.bom_lib.strategies.manual import ManualInputStrategy
@@ -67,13 +66,17 @@ class BOMParserContext:
 
             if method == InputMethod.FROM_URL:
                 url = str(data).strip()
-                response = requests.get(url, timeout=10)
-                response.raise_for_status()
-
-                is_pdf = url.lower().endswith(".pdf") or response.content.startswith(
-                    b"%PDF"
+                content = fetch_url(url)
+                is_pdf = url.lower().endswith(".pdf") or content.startswith(b"%PDF")
+                if not is_pdf and content.lstrip()[:1] == b"<":
+                    # Tonepad's file links answer with a download-warning page.
+                    raise FetchError(
+                        "The link opened a web page, not a parts list. "
+                        "Download the PDF and upload it instead."
+                    )
+                data_to_parse = (
+                    content if is_pdf else content.decode("utf-8", errors="replace")
                 )
-                data_to_parse = response.content if is_pdf else response.text
 
             for strategy in self.strategies:
                 if strategy.can_handle(method, data_to_parse):
