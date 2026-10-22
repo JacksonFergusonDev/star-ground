@@ -1429,3 +1429,58 @@ def test_a_part_included_with_the_pcb_is_listed_and_counted() -> None:
     included = {k.value: d["included"] for k, d in inventory.items() if d["refs"]}
     assert included["24LC32A"] == 1
     assert included["TL072"] == 0
+
+
+def test_a_box_around_board_artwork_is_no_parts_table() -> None:
+    # Tonepad FraVerb: the artwork's labels read as a headerless one-row 'table'.
+    from src.bom_lib import create_empty_stats
+    from src.bom_lib.parser import read_pages
+
+    page: PDFPageExtraction = {
+        "tables": [[["50k 50k trim p2 trim p1 int-ext 32768", "50k trim p2"]]],
+        "text": "",
+        "words": [],
+    }
+    inventory, _, _ = read_pages([page], "Tonepad", create_empty_stats())
+    assert not any(data["refs"] for data in inventory.values())
+
+
+@pytest.mark.parametrize("value", ["Jumper to VR", "Jumper to GND", "JUMPER"])
+def test_a_jumper_wire_is_not_populated(value: str) -> None:
+    # Aion FX legacy Cerulean: 'J1  Jumper to VR' says where the wire goes.
+    from src.bom_lib.builds import Entry
+
+    assert Entry("J1", value, 0).not_populated
+
+
+def test_a_second_versions_value_in_its_own_column() -> None:
+    # Aion FX legacy Aurora: 'Parts (Ross / Dyna values)' over 'R2 | 470k | jumper'.
+    from src.bom_lib import create_empty_stats
+    from src.bom_lib.parser import read_pages
+
+    page: PDFPageExtraction = {
+        "tables": [
+            [
+                ["R1", "10k", None],
+                ["R2", "470k", "jumper"],
+                ["R3", "470k", "1M"],
+                ["RX2 (by IC1)", "1k", None],
+                ["RX2 (by switch)", "150k", None],
+            ]
+        ],
+        "text": "Parts (Ross / Dyna values)",
+        "words": [],
+    }
+    _, variants, _ = read_pages([page], "Aurora", create_empty_stats())
+    builds = {
+        v.name: {r: k.value for k, d in v.inventory.items() for r in d["refs"]}
+        for v in variants
+    }
+    assert builds["Ross"] == {
+        "R1": "10k",
+        "R2": "470k",
+        "R3": "470k",
+        "RX2": "1k",
+        "RX2 (2)": "150k",
+    }
+    assert builds["Dyna"] == {"R1": "10k", "R3": "1M", "RX2": "1k", "RX2 (2)": "150k"}

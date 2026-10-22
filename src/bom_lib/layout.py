@@ -19,9 +19,11 @@ import math
 import re
 from collections import Counter
 from dataclasses import dataclass, field, replace
+from itertools import pairwise
 
 from src.bom_lib import constants
-from src.bom_lib.designators import BOARD_REF, is_designator
+from src.bom_lib.designators import BOARD_REF, is_designator, parse_designator
+from src.bom_lib.enums import ComponentCategory
 from src.bom_lib.types import PDFWord, Picture
 from src.bom_lib.utils import expand_refs
 
@@ -42,7 +44,8 @@ REF_RANGE = re.compile(
     r"((?P<prefix>[A-Z]{1,4})\d{1,3}) ?[-\u2013] ?(?:(?P=prefix)\d{1,3}|\d{1,2})"
 )
 # Single letters (Blue Waffle's 'V  B500K') and slashes ('BASS/MIDS') occur.
-_CONTROL_NAME = re.compile(r"[A-Z](?:[A-Z0-9_/-]{1,11})?")
+# 'GAIN.BRT' (GuitarPCB Sunn-T: the bright channel's gain) names one control.
+_CONTROL_NAME = re.compile(r"[A-Z](?:[A-Z0-9_/-]{1,11})?(?:\.[A-Z]{2,5})?")
 # A control name in title case, recognized only beside a tapered pot value:
 # 'Volume  A100k', 'Mid  B100k' (GuitarPCB Tone TwEQ).
 _TITLE_NAME = re.compile(r"[A-Z][a-z]{2,11}")
@@ -265,6 +268,37 @@ def _has_digit(cell: str | None) -> bool:
     return cell is not None and any(ch.isdigit() for ch in cell)
 
 
+# 'P1-Crackle', 'P2-Volume' (GuitarPCB Sho' Nuff): a control's designator, then
+# its name. Not a socket ('IC1-S') or a range ('D1-D4').
+_NAMED_CONTROL = re.compile(
+    r"([A-Z]{1,3}\d{1,3})[-=](?![A-Z]{1,3}\d)[A-Za-z][A-Za-z/]*"
+)
+
+
+def control_designator(cell: str) -> str | None:
+    """The designator of a control named after it ('P1-Crackle' -> 'P1').
+
+    Args:
+        cell: A cell's text.
+
+    Returns:
+        The designator, or None if the cell is no pot or switch named this way.
+    """
+    m = _NAMED_CONTROL.fullmatch(cell)
+    designator = parse_designator(m.group(1)) if m else None
+    if (
+        m
+        and designator is not None
+        and designator.category
+        in (
+            ComponentCategory.POTENTIOMETERS,
+            ComponentCategory.SWITCHES,
+        )
+    ):
+        return m.group(1)
+    return None
+
+
 def _is_ref_cell(cell: str, next_cell: str | None) -> bool:
     # An optional-part marker is not part of the name: 'TREBLE*' (Fuchsia).
     cell = _unmarked(cell)
@@ -274,6 +308,8 @@ def _is_ref_cell(cell: str, next_cell: str | None) -> bool:
         return _is_bare_value(next_cell)
     if is_designator(cell) or _NUMBERED_LABEL.fullmatch(cell):
         return True
+    if control_designator(cell) is not None:
+        return next_cell is not None and _CONTROL_VALUE.match(next_cell) is not None
     if ref_group(cell) is not None:
         return next_cell is not None and not next_cell.isdigit()
     span = REF_RANGE.fullmatch(cell)
@@ -316,6 +352,10 @@ def ref_group(cell: str) -> str | None:
     """A designator list or range written with spaces, as 'D1,D2' or 'LDR1-LDR4'."""
     if _SPACED_REFS.fullmatch(cell) and all(is_designator(r) for r in cell.split()):
         return ",".join(cell.split())
+    # 'Q1/Q2  germanium' (Aion FX legacy Solaris).
+    pair = cell.split("/")
+    if len(pair) == 2 and all(is_designator(r) for r in pair):
+        return ",".join(pair)
     span = _SPACED_RANGE.fullmatch(cell)
     if span and is_designator(span.group(1) + span.group(2)):
         prefix = span.group(1)
@@ -695,6 +735,8 @@ def marked_labels(words: list[PDFWord]) -> list[tuple[str, str]]:
 
 # A designator column holds at least this many listings.
 _VALUELESS_COLUMN = 3
+# A footnote number is set at most this fraction of its row's type size.
+_MARKER_SIZE = 0.8
 _VALUELESS_ALIGN_PT = 2.0
 
 
@@ -736,7 +778,13 @@ def valueless_refs(words: list[PDFWord]) -> list[str]:
             if not (ranged or is_designator(text)):
                 continue
             after = cells[k + 1] if k + 1 < len(cells) else None
-            if after is not None and not in_column(after):
+            # A cell beside it is its value, unless it is only a footnote
+            # number: 'DX1-2  ²' (Aion FX legacy Cerulean).
+            if (
+                after is not None
+                and not in_column(after)
+                and not _is_marker(after, cell)
+            ):
                 continue
             # A value in smaller type sits a little off the line ('RX2  jumper¹').
             end, middle = cell.words[-1]["x1"], _middle(cell.words[0])
@@ -749,6 +797,65 @@ def valueless_refs(words: list[PDFWord]) -> list[str]:
                 continue
             refs += expand_refs(text) if ranged else [text]
     return refs
+
+
+# OCR's boxes start this far apart within one column.
+_OCR_ALIGN_PT = 6.0
+# A misread designator is short: 'Q9' read as '60'.
+_UNREADABLE_CHARS = 4
+# A part number ('MPF102', '2N5457', 'TL072') or a value ('4k7', '100n').
+_PART_LIKE = re.compile(
+    r"[A-Z]{1,4}-?\d{2,}[A-Z0-9-]*|\d+[A-Z]\d+[A-Z]*|\d+(?:\.\d+)?[pnuµkKMR]\w*"
+)
+
+
+def unreadable_rows(words: list[PDFWord]) -> list[str]:
+    """Rows of a parts table whose designator cell is no designator.
+
+    OCR reads GuitarPCB Guitar/Bass Driver's 'Q9  MPF102' as '60  MPF102': the
+    value sits in the value column, but nothing names its part, so the row
+    is dropped. Only for OCR'd pages, whose text is uncertain.
+
+    Args:
+        words: Words read from one page.
+
+    Returns:
+        Each such row's text.
+    """
+    lines = page_lines(words)
+    values: list[float] = []
+    for lst in find_listings(words):
+        cells = lines[lst.line]
+        k = next(
+            (
+                i
+                for i, c in enumerate(cells)
+                if abs(c.x0 - lst.x0) <= _VALUELESS_ALIGN_PT
+            ),
+            None,
+        )
+        if k is not None and k + 1 < len(cells):
+            values.append(cells[k + 1].x0)
+    rows: list[str] = []
+    for cells in lines:
+        for label, value in pairwise(cells):
+            aligned = sum(abs(value.x0 - x) <= _OCR_ALIGN_PT for x in values)
+            text = label.text
+            if (
+                aligned >= _VALUELESS_COLUMN
+                and len(text) <= _UNREADABLE_CHARS
+                and any(ch.isdigit() for ch in text)
+                and not _is_ref_cell(text, value.text)
+                and _PART_LIKE.fullmatch(value.text) is not None
+            ):
+                rows.append(f"{text}  {value.text}")
+    return rows
+
+
+def _is_marker(cell: Cell, beside: Cell) -> bool:
+    """Whether a cell is only a footnote number, in smaller type than its row."""
+    size = beside.words[0]["size"] * _MARKER_SIZE
+    return cell.text.isdigit() and all(w["size"] < size for w in cell.words)
 
 
 def _middle(word: PDFWord) -> float:
