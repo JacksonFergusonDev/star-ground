@@ -294,6 +294,10 @@ def check_unextracted_refs(
             # FX legacy documents); 'SW - SPDT' is the notes' only 'SW1'
             # (GuitarPCB NostalgiTone Compressor).
             extracted.add(f"{bare}1")
+    # The other way round, a bare 'LED' in the notes ('LED mounting: There are
+    # two LEDs', GuitarPCB Singles Tremolo) is the numbered LEDs the list has.
+    numbered = {m.group(1) for r in extracted if (m := _SERIES_REF.fullmatch(r))}
+    extracted |= {r.upper() for r in listed if r.isalpha() and r.upper() in numbered}
     joined = " ".join(" ".join(page_texts).split())
     for ref in sorted(r for r in listed if r.upper() not in extracted):
         if ref.upper() in values:

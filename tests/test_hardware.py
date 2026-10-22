@@ -8,6 +8,7 @@ from src.bom_lib import (
     Inventory,
     get_standard_hardware,
     provided_hardware,
+    status_leds,
 )
 
 HW = ComponentCategory.HARDWARE_MISC
@@ -113,3 +114,20 @@ class TestInjection:
         get_standard_hardware(inventory, [BuildHardware(1, listed), BuildHardware(1)])
         assert inventory[LED_RESISTOR]["qty"] == 1  # only the other project's
         assert inventory[STATUS_LED]["qty"] == 2  # neither lists the LED
+
+    def test_each_listed_status_led_gets_a_resistor(self) -> None:
+        # GuitarPCB Space Modulator lights EFL1-3; their 'CLR x3' is unread.
+        leds = _inventory(
+            *((ComponentCategory.DIODES, "Status LED", f"EFL{n}") for n in (1, 2, 3))
+        )
+        assert status_leds(leds) == 3
+        inventory = Inventory()
+        provided = provided_hardware(leds)
+        get_standard_hardware(
+            inventory, [BuildHardware(2, provided, status_leds(leds))]
+        )
+        assert inventory[LED_RESISTOR]["qty"] == 6
+        assert STATUS_LED not in inventory
+
+    def test_a_clipping_led_is_no_status_led(self) -> None:
+        assert status_leds(_inventory((ComponentCategory.DIODES, "Red LED", "D1"))) == 1

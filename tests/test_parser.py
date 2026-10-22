@@ -1506,3 +1506,13 @@ def test_a_section_heading_is_no_title() -> None:
 
     assert _PRESENTS.fullmatch("PARTS LIST Build Notes:")
     assert _PRESENTS.fullmatch("Build Notes:")
+
+
+def test_a_switch_pad_label_is_a_letter_or_two() -> None:
+    # GuitarPCB DVF's 'A, B C | SPDT On/Off/On' reads as 'C'; PedalPCB Fornicus's
+    # 'MOMENTARY | SPST Footswitch' line is prose, not a pad label.
+    from src.bom_lib.parser import _PAD_LETTERS
+
+    assert _PAD_LETTERS.fullmatch("C")
+    assert _PAD_LETTERS.fullmatch("EF")
+    assert not _PAD_LETTERS.fullmatch("MOMENTARY")
