@@ -1,19 +1,19 @@
 # Preset Generator Tool
 
-This tool automates the creation of `src/presets.py` by scraping a folder of local BOM files.
+`tools/generate_presets.py` builds the app's presets library, `src/bom_lib/_presets_data.py`, from the BOM files in `raw_boms/`.
 
 ## Usage
 
-1. Create a folder named `raw_boms` in the project root.
-1. Place your `.pdf` (PedalPCB) or `.csv` BOM files into that folder.
-1. Run the script:
+1. Put the files under `raw_boms/<source>/<category>/`, e.g. `raw_boms/pedalpcb/fuzz/Sunflower-PedalPCB.pdf`. The folder names become the source and category the app's preset browser filters by.
+1. Run the script from the project root:
 
    ```bash
-   python tools/generate_presets.py
+   uv run python tools/generate_presets.py
+   ```
 
-1. The script will parse all files, flatten them into standard text format, and overwrite `src/presets.py`.
+1. Review the diff of `src/bom_lib/_presets_data.py` and commit it. Never edit that file by hand.
 
 ## Supported Formats
 
-- **PedalPCB PDFs:** Uses `pdfplumber` to extract BOM tables.
-- **CSV:** Expects columns `Ref` and `Value`.
+- **PDF build documents:** parsed with the app's own parser. A document that describes several circuits becomes one preset per build, named "Title: Build".
+- **Text (`.txt`):** a `REF VALUE` list, used as written (the Tayda presets).
