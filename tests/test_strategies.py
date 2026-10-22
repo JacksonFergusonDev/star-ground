@@ -5,7 +5,7 @@ import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, cast
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 import requests
@@ -322,11 +322,9 @@ class TestBOMParserContext:
     def test_process_from_url_pdf(self, sample_pdf_bytes: bytes) -> None:
         context = BOMParserContext()
 
-        mock_resp = MagicMock()
-        mock_resp.content = sample_pdf_bytes
-        mock_resp.raise_for_status = MagicMock()
-
-        with patch("requests.get", return_value=mock_resp):
+        with patch(
+            "src.bom_lib.strategies.context.fetch_url", return_value=sample_pdf_bytes
+        ):
             result = context.process(
                 InputMethod.FROM_URL, "https://example.com/Cataclysm.pdf", "URLPedal"
             )
@@ -339,12 +337,10 @@ class TestBOMParserContext:
     def test_process_from_url_text(self) -> None:
         context = BOMParserContext()
 
-        mock_resp = MagicMock()
-        mock_resp.content = b"R1 10k\nR2 100k\n"
-        mock_resp.text = "R1 10k\nR2 100k\n"
-        mock_resp.raise_for_status = MagicMock()
-
-        with patch("requests.get", return_value=mock_resp):
+        with patch(
+            "src.bom_lib.strategies.context.fetch_url",
+            return_value=b"R1 10k\nR2 100k\n",
+        ):
             result = context.process(
                 InputMethod.FROM_URL, "https://example.com/raw_bom.txt", "URLPedal"
             )
@@ -353,11 +349,26 @@ class TestBOMParserContext:
         assert result.stats["parts_found"] == 2
         assert ComponentKey(ComponentCategory.RESISTORS, "10k") in result.inventory
 
+    def test_process_from_url_web_page(self) -> None:
+        # Tonepad's file links answer with a download-warning page.
+        context = BOMParserContext()
+
+        with patch(
+            "src.bom_lib.strategies.context.fetch_url",
+            return_value=b"\r\n<!DOCTYPE html><title>download warning</title>",
+        ):
+            result = context.process(
+                InputMethod.FROM_URL, "https://tonepad.com/getFile.asp?id=36", "Tp"
+            )
+
+        assert result.stats["parts_found"] == 0
+        assert "Download the PDF" in result.stats["errors"][0]
+
     def test_process_from_url_network_error(self) -> None:
         context = BOMParserContext()
 
         with patch(
-            "requests.get",
+            "src.bom_lib.strategies.context.fetch_url",
             side_effect=requests.RequestException("Connection timed out"),
         ):
             result = context.process(
