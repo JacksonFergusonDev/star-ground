@@ -299,9 +299,17 @@ def control_designator(cell: str) -> str | None:
     return None
 
 
+# 'VOL1 - Trim  50k' (GuitarPCB NostalgiTone Space Modulator, read by OCR): the
+# part's kind after its designator.
+_KIND_SUFFIX = re.compile(r"(\S+) [-\u2013] (?:Trim|Trimmer|Pot)", re.IGNORECASE)
+
+
 def _is_ref_cell(cell: str, next_cell: str | None) -> bool:
     # An optional-part marker is not part of the name: 'TREBLE*' (Fuchsia).
     cell = _unmarked(cell)
+    kind = _KIND_SUFFIX.fullmatch(cell)
+    if kind:
+        cell = kind.group(1)
     if cell in _LAYOUT_WORDS:
         return False
     if cell in constants.BARE_DESIGNATORS:
@@ -366,6 +374,9 @@ def ref_group(cell: str) -> str | None:
 def _ref_name(cell: str) -> str:
     """The designator a ref cell names; control names are upper case ('Volume')."""
     name = _unmarked(cell)
+    kind = _KIND_SUFFIX.fullmatch(name)
+    if kind:
+        name = kind.group(1)
     if name.startswith("SW "):
         name = name.replace(" ", "")  # 'SW 1' (GuitarPCB EA Tremelo)
     named = _NAMED_DESIGNATOR.fullmatch(name)
@@ -1762,7 +1773,10 @@ _LABEL_NOUN = re.compile(r"(?<=[A-Za-z0-9]) (?:switch|pot|trimmer)$")
 _POLES_LABEL = re.compile(r"([A-Z]{1,4}\d{0,3}) ?- ?([SD34]P[SDT]T)")
 # 'P1=FUZZ' (GuitarPCB PUFF v4) names the pot with an equals sign.
 _NAMED_DESIGNATOR = re.compile(r"([A-Z]{1,4}\d{1,3})[-=](?!(?i:socket)\b)[A-Za-z]{3,}")
-_DESIGNATOR_ROLE = re.compile(r"([A-Z]{1,3}\d{1,3}) [A-Z][a-z]+(?: [A-Z][a-z]+)*")
+# 'S2 PWM Speed Cycle': a role may start with an acronym.
+_DESIGNATOR_ROLE = re.compile(
+    r"([A-Z]{1,3}\d{1,3}) (?:[A-Z][a-z]+|[A-Z]{2,4})(?: [A-Z][a-z]+)*"
+)
 # A part label in a typed table: 'VOL.', 'HI-MID FREQ', 'IC1-S', 'PRE-V. SEND',
 # '100HZ' (Aion FX Karkadann's 100 Hz EQ pot).
 _PART_LABEL = re.compile(

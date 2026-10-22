@@ -108,3 +108,10 @@ def test_a_pots_body_size_is_no_part_of_its_value() -> None:
     part = categorize_part("FUZZ", "1kC 9mm")
     assert part is not None
     assert part.clean_value == "1kC"
+
+
+def test_a_pole_count_dip_switch() -> None:
+    # GuitarPCB Afterblaster: 'DIP1-DIP2  2-POLE_DIP'.
+    part = categorize_part("DIP1", "2-POLE_DIP")
+    assert part is not None
+    assert part.category == ComponentCategory.SWITCHES

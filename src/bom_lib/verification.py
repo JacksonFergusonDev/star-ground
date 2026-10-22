@@ -1346,6 +1346,12 @@ def check_pointer_value(stats: StatsDict, ref: str, raw_value: str) -> None:
         )
 
 
+# 'D4  Jumper with MN3007' (GuitarPCB Mini-Me): a 1N4148 with the V3207.
+_CONDITIONAL_LINK = re.compile(
+    r"(?:jumper|link|omit)\s+(?:with|for|if)\b", re.IGNORECASE
+)
+
+
 def check_classification(
     stats: StatsDict, ref: str, raw_value: str, category: ComponentCategory, value: str
 ) -> None:
@@ -1358,6 +1364,15 @@ def check_classification(
         category: The category the classifier chose.
         value: The normalized value the classifier produced.
     """
+    if _CONDITIONAL_LINK.match(raw_value):
+        _warn(
+            stats,
+            ParseWarningKind.VALUE_CHOICE,
+            ref,
+            f"{ref} is '{raw_value}': it is a wire link in one build and a part in "
+            "another. Check the document for what your build needs.",
+        )
+        return
     if not any(ch.isalnum() for ch in raw_value):
         # A placeholder ('***' with "Refer to Page 3") names no part at all.
         _warn(
@@ -1896,7 +1911,9 @@ _EITHER_PART = re.compile(
 # Fuzz): a trimmer or a pot in one place.
 _ONLY_INSTALL = re.compile(
     r"\bonly install (?:the )?(\w+)(?: potentiometer| pot| trimmer| trim ?pot)? and "
-    r"(?:do )?not (?:install )?(?:the )?(\w+)",
+    r"(?:do )?not (?:install )?(?:the )?(\w+)"
+    # 'Install the Trimpot T2 (not the Boost pot)' (GuitarPCB CT Bass Fuzz).
+    r"|\binstall (?:the )?(?:trim ?pot |trimmer )?(\w+) \(not the (\w+)",
     re.IGNORECASE,
 )
 
@@ -1914,9 +1931,10 @@ def check_either_part(
     listed = {ref.upper() for data in inventory.values() for ref in data["refs"]}
     warned: set[frozenset[str]] = set()
     for text in page_texts:
-        flat = " ".join(text.split())
+        # GuitarPCB pads its prose with zero-width spaces.
+        flat = " ".join(re.sub("[\u200b-\u200d\ufeff]", "", text).split())
         for m in [*_EITHER_PART.finditer(flat), *_ONLY_INSTALL.finditer(flat)]:
-            a, b = m.group(1).upper(), m.group(2).upper()
+            a, b = (g.upper() for g in m.groups() if g)
             # The notes often say it twice, once for each choice.
             if a == b or frozenset((a, b)) in warned:
                 continue

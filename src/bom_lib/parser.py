@@ -426,6 +426,8 @@ _CONTROL_LABEL = re.compile(
 _TABLES_PER_PAGE = 100
 # Longer than any value: a headerless 'table' cell holding prose.
 _PROSE_CHARS = 60
+# A control's name with its pole type: 'CLIP-SPDT'.
+_POLES_SUFFIX = re.compile(r"([A-Z][A-Z0-9]+)-((?:[SD3]P[DS]T))", re.IGNORECASE)
 # A designator cell holds at most this many words ('SW1 - SW2', 'IC1 & IC2').
 _REF_WORDS_MAX = 4
 _SOCKET = re.compile(r"\bsocket\b", re.IGNORECASE)
@@ -1658,6 +1660,10 @@ def _layout_entries(
                 else [control_designator(listing.ref) or listing.ref]
             )
             value = listing.value
+            poles = _POLES_SUFFIX.fullmatch(listing.ref)
+            if poles:
+                # 'CLIP-SPDT  On/Off/On' (GuitarPCB Doom Prophet, read by OCR).
+                refs, value = [poles.group(1)], f"{poles.group(2)} {value}"
             end = (row_ends or {}).get((page_no, listing.line), -1)
             for ref in refs:
                 # A listing past the row's end is in a table beside it.

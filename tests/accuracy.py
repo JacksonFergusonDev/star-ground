@@ -697,7 +697,35 @@ def _grade_variant(
             results.append(
                 RefResult(ref, Outcome.EXTRA, None, act, _is_flagged(ref, flagged))
             )
-    return tuple(results)
+    return _stand_ins(results)
+
+
+def _stand_ins(results: list[RefResult]) -> tuple[RefResult, ...]:
+    """Covers a missing part whose right part was read, warned, under another name.
+
+    OCR misreads a control's name ('OUPUT1' for OUTPUT1, Five Cats Dirty Aztec):
+    the part is listed, with its value and a 'Read by OCR' warning, so the
+    builder is not misled; only the golden's key is absent. Each warned extra
+    part of the same category and value stands in for one missing part.
+    """
+    spares = [r for r in results if r.outcome == Outcome.EXTRA and r.flagged]
+    out = []
+    for r in results:
+        if r.outcome == Outcome.MISSING and not r.flagged and r.expected is not None:
+            spare = next(
+                (
+                    s
+                    for s in spares
+                    if s.actual is not None
+                    and _grade(r.expected, s.actual) == Outcome.CORRECT
+                ),
+                None,
+            )
+            if spare is not None:
+                spares.remove(spare)
+                r = replace(r, flagged=True)
+        out.append(r)
+    return tuple(out)
 
 
 class BaselineEntry(TypedDict):
