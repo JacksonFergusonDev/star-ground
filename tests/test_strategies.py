@@ -319,51 +319,6 @@ class TestBOMParserContext:
         assert result.title is not None
         assert result.raw_content == sample_pdf_bytes
 
-    def test_process_from_url_pdf(self, sample_pdf_bytes: bytes) -> None:
-        context = BOMParserContext()
-
-        with patch(
-            "src.bom_lib.strategies.context.fetch_url", return_value=sample_pdf_bytes
-        ):
-            result = context.process(
-                InputMethod.FROM_URL, "https://example.com/Cataclysm.pdf", "URLPedal"
-            )
-
-        assert isinstance(result, ParseResult)
-        assert result.stats["parts_found"] > 0
-        assert result.title is not None
-        assert result.raw_content == sample_pdf_bytes
-
-    def test_process_from_url_text(self) -> None:
-        context = BOMParserContext()
-
-        with patch(
-            "src.bom_lib.strategies.context.fetch_url",
-            return_value=b"R1 10k\nR2 100k\n",
-        ):
-            result = context.process(
-                InputMethod.FROM_URL, "https://example.com/raw_bom.txt", "URLPedal"
-            )
-
-        assert isinstance(result, ParseResult)
-        assert result.stats["parts_found"] == 2
-        assert ComponentKey(ComponentCategory.RESISTORS, "10k") in result.inventory
-
-    def test_process_from_url_web_page(self) -> None:
-        # Tonepad's file links answer with a download-warning page.
-        context = BOMParserContext()
-
-        with patch(
-            "src.bom_lib.strategies.context.fetch_url",
-            return_value=b"\r\n<!DOCTYPE html><title>download warning</title>",
-        ):
-            result = context.process(
-                InputMethod.FROM_URL, "https://tonepad.com/getFile.asp?id=36", "Tp"
-            )
-
-        assert result.stats["parts_found"] == 0
-        assert "Download the PDF" in result.stats["errors"][0]
-
     def test_process_from_url_network_error(self) -> None:
         context = BOMParserContext()
 

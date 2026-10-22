@@ -11,6 +11,7 @@ from src.bom_lib import (
     InputMethod,
     ProjectSlot,
 )
+from src.bom_lib.fetch import FetchedDocument
 from src.bom_lib.types import Inventory
 
 
@@ -246,7 +247,7 @@ def test_multi_circuit_pdf_requires_a_build_choice(app, monkeypatch):
 
     def fake_fetch(url):
         with open(os.path.join(samples, url.rsplit("/", 1)[-1]), "rb") as f:
-            return f.read()
+            return FetchedDocument(f.read(), "application/pdf", url)
 
     monkeypatch.setattr("src.bom_lib.strategies.context.fetch_url", fake_fetch)
     slot = ProjectSlot(method=InputMethod.FROM_URL)
@@ -339,7 +340,8 @@ def test_an_untitled_document_is_named_after_its_file(app, monkeypatch):
     """A document that prints no title (Five Cats' image inserts) names its
     project after the file, not 'Project #1'."""
     monkeypatch.setattr(
-        "src.bom_lib.strategies.context.fetch_url", lambda url: b"R1 10k\nC1 100n\n"
+        "src.bom_lib.strategies.context.fetch_url",
+        lambda url: FetchedDocument(b"R1 10k\nC1 100n\n", "text/plain", url),
     )
     slot = ProjectSlot(method=InputMethod.FROM_URL)
     app.session_state.pedal_slots = [slot]

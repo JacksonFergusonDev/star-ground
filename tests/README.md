@@ -52,7 +52,21 @@ To ensure the UI is decoupled from the browser state, we run headless simulation
 - **Mechanism:** The test runner instantiates the full application kernel in memory, simulates user interactions (clicks, uploads, form submissions), and asserts the state of the dataframes.
 - **Coverage:** Verifies the full "Paste → Parse → Download" lifecycle, choosing a build and accepting OCR's parts, without a browser driver (Selenium/Puppeteer).
 
-### 5. Package Integrity
+### 5. URL Fetching over Real Sockets
+
+**Files:** `tests/test_fetch.py`, `tests/test_fetch_server.py`, `tests/test_fetch_live.py`
+
+"From URL" fetches on the hosted server's behalf, so its safety rules are tested against real connections, not mocks.
+
+- **Rules** (`test_fetch.py`): which schemes, ports and addresses are allowed (IPv4-mapped and NAT64 forms of private addresses included), share-link rewriting, and the pinned URL and TLS hostname.
+- **Local servers** (`test_fetch_server.py`): an HTTP and an HTTPS server on 127.0.0.1, with a test certificate authority from `trustme`. Only name resolution is replaced (`*.test` names); requests, urllib3, TLS, redirects and streaming run for real. Covers DNS rebinding, certificate name checks, https-to-http redirects, redirect loops, declared, streamed and gzip-bomb size limits, a trickling server against the deadline, a stalled server, error statuses, and the whole "From URL" parse of a PDF, a CSV and a web page. Nothing leaves the machine.
+- **Live** (`test_fetch_live.py`, marker `network`): one real document per publisher, a GitHub file page, Tonepad's download page, and a public name that resolves to 127.0.0.1. Deselected by default; run them before a release or when a publisher's site changes:
+
+```bash
+uv run pytest -m network
+```
+
+### 6. Package Integrity
 
 **File:** `tests/test_package.py`
 
