@@ -646,7 +646,8 @@ class OcrAttempt:
         if self.variants:
             found += f", in {len(self.variants)} builds"
         if self.verdict == OcrVerdict.PARTIAL:
-            wrong = f", and {self.suspect} look wrong" if self.suspect else ""
+            verb = "looks" if self.suspect == 1 else "look"
+            wrong = f", and {self.suspect} {verb} wrong" if self.suspect else ""
             return (
                 f"{where}. {found}{wrong}, but the reading looks incomplete, so "
                 "OCR is unlikely to be reliable here. You can add these parts, "

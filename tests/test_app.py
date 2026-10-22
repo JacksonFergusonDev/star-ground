@@ -334,3 +334,58 @@ def test_ocr_builds_are_chosen_after_accepting_them(app, monkeypatch):
     inventory = app.session_state.inventory
     one_k = ComponentKey(ComponentCategory.RESISTORS, "1k")
     assert any("Vintage" in source for source in inventory[one_k]["sources"])
+
+
+def test_an_untitled_document_is_named_after_its_file(app, monkeypatch):
+    """A document that prints no title (Five Cats' image inserts) names its
+    project after the file, not 'Project #1'."""
+    monkeypatch.setattr(
+        "src.bom_lib.strategies.context.fetch_url", lambda url: b"R1 10k\nC1 100n\n"
+    )
+    slot = ProjectSlot(method=InputMethod.FROM_URL)
+    app.session_state.pedal_slots = [slot]
+    app.session_state[f"method_{slot.id}"] = InputMethod.FROM_URL
+    app.session_state[f"url_{slot.id}"] = (
+        "https://example.test/files/FCP-Tone%20Monarch.txt"
+    )
+    app.run()
+
+    next(b for b in app.button if b.label == "Generate Master List").click().run()
+    assert app.session_state.pedal_slots[0].name == "FCP-Tone Monarch"
+
+
+def test_a_part_with_several_warnings_is_one_part_to_review(app, monkeypatch):
+    """Aion Amethyst's C1 has a footnote and a build note: one part to review,
+    listed once with both reasons."""
+    from src.bom_lib import create_empty_inventory, create_empty_stats
+    from src.bom_lib.enums import ParseWarningKind
+    from src.bom_lib.types import ParseResult, ParseWarning, make_component_key
+
+    def fake_process(self, method, data, source_name):
+        inventory = create_empty_inventory()
+        inventory.add_part(
+            source_name, make_component_key(ComponentCategory.CAPACITORS, "1n"), "C1", 1
+        )
+        stats = create_empty_stats()
+        stats["parts_found"] = 1
+        stats["warnings"] = [
+            ParseWarning(
+                ParseWarningKind.FOOTNOTE, "C1", "'470pF MLCC for Aqua Puss.'"
+            ),
+            ParseWarning(ParseWarningKind.FOOTNOTE, "C1", "the build notes change it"),
+        ]
+        return ParseResult(inventory, stats, title="Amethyst")
+
+    monkeypatch.setattr(
+        "src.bom_lib.strategies.context.BOMParserContext.process", fake_process
+    )
+    slot = ProjectSlot(method=InputMethod.PASTE_TEXT)
+    app.session_state.pedal_slots = [slot]
+    app.session_state[f"text_{slot.id}"] = "C1 1n"
+    app.run()
+    next(b for b in app.button if b.label == "Generate Master List").click().run()
+
+    assert any("1 part(s) need review" in w.value for w in app.warning)
+    assert [e.label for e in app.expander if "to review" in e.label] == [
+        "Amethyst: 1 to review"
+    ]

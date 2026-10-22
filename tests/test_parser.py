@@ -1484,3 +1484,25 @@ def test_a_second_versions_value_in_its_own_column() -> None:
         "RX2 (2)": "150k",
     }
     assert builds["Dyna"] == {"R1": "10k", "R3": "1M", "RX2": "1k", "RX2 (2)": "150k"}
+
+
+@pytest.mark.parametrize(
+    ("printed", "title"),
+    [
+        ("Mini-Me Chorus Build Instructions", "Mini-Me Chorus"),
+        ("AfterBlaster - Build Instructions", "AfterBlaster"),
+        ("TIGHT BOX by GuitarPCB", "TIGHT BOX"),
+    ],
+)
+def test_a_title_drops_the_publishers_wording(printed: str, title: str) -> None:
+    from src.bom_lib.parser import _BYLINE
+
+    assert _BYLINE.sub("", printed) == title
+
+
+def test_a_section_heading_is_no_title() -> None:
+    # GuitarPCB AfterBlaster sets 'PARTS LIST' / 'Build Notes:' above its title's size.
+    from src.bom_lib.parser import _PRESENTS
+
+    assert _PRESENTS.fullmatch("PARTS LIST Build Notes:")
+    assert _PRESENTS.fullmatch("Build Notes:")

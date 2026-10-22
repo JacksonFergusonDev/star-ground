@@ -5,6 +5,7 @@ import os
 import tempfile
 import uuid
 from typing import Any, cast
+from urllib.parse import unquote, urlsplit
 
 import streamlit as st
 
@@ -333,6 +334,35 @@ def _reset_slot_state(slot: ProjectSlot, new_method: InputMethod) -> None:
 PENDING_SOURCE = "__pending__"
 
 
+def by_part(warnings: list[ParseWarning]) -> dict[str, list[ParseWarning]]:
+    """Groups a project's warnings by designator, in the order first warned.
+
+    One part can fail several self-checks (Aion Amethyst's C1 has a footnote
+    and a build note): it is one part to review, listed once.
+    """
+    groups: dict[str, list[ParseWarning]] = {}
+    for i, w in enumerate(warnings):
+        groups.setdefault(w.ref or f"#{i}", []).append(w)
+    return groups
+
+
+def file_title(slot: ProjectSlot) -> str | None:
+    """The document's file name, for a project whose document prints no title.
+
+    Five Cats prints its parts list as an image, so most of its documents
+    have no title to read: 'FCP-Tone-Monarch-V1-1' beats 'Project #1'.
+    """
+    if slot.method == InputMethod.UPLOAD_FILE and slot.data is not None:
+        name = str(
+            slot.data if isinstance(slot.data, str) else getattr(slot.data, "name", "")
+        )
+    elif slot.method == InputMethod.FROM_URL and slot.data:
+        name = unquote(urlsplit(str(slot.data).strip()).path)
+    else:
+        return None
+    return os.path.splitext(os.path.basename(name))[0] or None
+
+
 def input_key(slot: ProjectSlot) -> str | None:
     """Identifies the slot's current input, for caching its parse result.
 
@@ -358,9 +388,11 @@ def ensure_parsed(slot: ProjectSlot) -> ParseResult | None:
         slot.parsed, slot.parsed_key, slot.variant = None, None, None
         return None
     if slot.parsed_key != key:
-        slot.parsed = BOMParserContext().process(
-            slot.method, slot.data, source_name=PENDING_SOURCE
-        )
+        # An image-only document is read by OCR, which takes seconds.
+        with st.spinner("Reading the document…"):
+            slot.parsed = BOMParserContext().process(
+                slot.method, slot.data, source_name=PENDING_SOURCE
+            )
         slot.parsed_key = key
         slot.variant = None
         slot.use_ocr = False
@@ -637,7 +669,7 @@ if generate:
             result = parser_context.process(slot.method, slot.data, source_name=source)
         p_inv = result.inventory
         p_stats = result.stats
-        detected_title = result.title
+        detected_title = result.title or file_title(slot)
         raw_content = result.raw_content
 
         # Store the raw content in the slot if it was returned (i.e. it was a PDF)
@@ -741,18 +773,23 @@ if st.session_state.inventory and st.session_state.stats:
         dict[str, list[ParseWarning]], st.session_state.parse_warnings
     )
     if parse_warnings:
-        total = sum(len(ws) for ws in parse_warnings.values())
+        total = sum(len(by_part(ws)) for ws in parse_warnings.values())
         st.warning(
             f"⚠️ {total} part(s) need review. The parser's self-checks found "
             "places where this list may not match your document. Compare "
             "these against the original before ordering."
         )
         for project, warnings in parse_warnings.items():
-            with st.expander(f"{project}: {len(warnings)} to review"):
+            with st.expander(f"{project}: {len(by_part(warnings))} to review"):
                 ocr = [w for w in warnings if w.kind == ParseWarningKind.OCR_READ]
-                for w in warnings:
-                    if w.kind != ParseWarningKind.OCR_READ:
-                        st.markdown(f"- **{w.kind.value}**: {w.message}")
+                checks = [w for w in warnings if w.kind != ParseWarningKind.OCR_READ]
+                for first, *more in by_part(checks).values():
+                    st.markdown(
+                        "\n".join(
+                            [f"- **{first.kind.value}**: {first.message}"]
+                            + [f"  - **{w.kind.value}**: {w.message}" for w in more]
+                        )
+                    )
                 if ocr:
                     st.markdown(
                         f"**{len(ocr)} part(s) read by OCR.** Check each against "

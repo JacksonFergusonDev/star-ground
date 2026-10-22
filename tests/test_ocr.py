@@ -31,7 +31,13 @@ from src.bom_lib.ocr import (
     table_block,
 )
 from src.bom_lib.parser import parse_pedalpcb_pdf
-from src.bom_lib.types import BuildVariant, ParseResult, ParseWarning, StatsDict
+from src.bom_lib.types import (
+    BuildVariant,
+    OcrAttempt,
+    ParseResult,
+    ParseWarning,
+    StatsDict,
+)
 
 # A parts table as RapidOCR reads it: one box per cell, 20pt rows, two
 # designator columns.
@@ -636,6 +642,21 @@ class TestAttemptOcr:
         assert attempt is not None
         assert attempt.verdict == OcrVerdict.UNUSABLE
         assert "even with OCR" in attempt.message
+
+    @pytest.mark.parametrize(("suspect", "phrase"), [(1, "1 looks"), (2, "2 look")])
+    def test_suspect_count_agrees_with_its_verb(
+        self, suspect: int, phrase: str
+    ) -> None:
+        attempt = OcrAttempt(
+            verdict=OcrVerdict.PARTIAL,
+            inventory=create_empty_inventory(),
+            warnings=(),
+            pages=(0,),
+            parts_read=13,
+            suspect=suspect,
+            supplements=False,
+        )
+        assert f"and {phrase} wrong" in attempt.message
 
     def test_clean_parse_is_not_read(self, tmp_path: Path) -> None:
         def fail(*_: object) -> list[OcrBox]:
