@@ -988,3 +988,5 @@ def test_a_designators_role_may_start_with_an_acronym() -> None:
     role = _DESIGNATOR_ROLE.fullmatch("S2 PWM Speed Cycle")
     assert role is not None
     assert role.group(1) == "S2"
+    # Aion Plexus: 'Q5 BIAS' is the trimmer's name.
+    assert _DESIGNATOR_ROLE.fullmatch("Q5 BIAS") is None

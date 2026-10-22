@@ -1773,9 +1773,10 @@ _LABEL_NOUN = re.compile(r"(?<=[A-Za-z0-9]) (?:switch|pot|trimmer)$")
 _POLES_LABEL = re.compile(r"([A-Z]{1,4}\d{0,3}) ?- ?([SD34]P[SDT]T)")
 # 'P1=FUZZ' (GuitarPCB PUFF v4) names the pot with an equals sign.
 _NAMED_DESIGNATOR = re.compile(r"([A-Z]{1,4}\d{1,3})[-=](?!(?i:socket)\b)[A-Za-z]{3,}")
-# 'S2 PWM Speed Cycle': a role may start with an acronym.
+# 'S2 PWM Speed Cycle': a role may start with an acronym. A capitalized word alone
+# ('Q5 BIAS', 'LFO1 RATE', Aion) is the control's name, not a role.
 _DESIGNATOR_ROLE = re.compile(
-    r"([A-Z]{1,3}\d{1,3}) (?:[A-Z][a-z]+|[A-Z]{2,4})(?: [A-Z][a-z]+)*"
+    r"([A-Z]{1,3}\d{1,3}) (?:[A-Z][a-z]+|[A-Z]{2,4}(?= [A-Z][a-z]))(?: [A-Z][a-z]+)*"
 )
 # A part label in a typed table: 'VOL.', 'HI-MID FREQ', 'IC1-S', 'PRE-V. SEND',
 # '100HZ' (Aion FX Karkadann's 100 Hz EQ pot).
