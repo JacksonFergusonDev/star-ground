@@ -258,7 +258,6 @@ uv run streamlit run app.py
 - **Categories for inductors, transformers and relays.** Today they are filed under Hardware/Misc.
 - **Supplier cart files.** Export the shopping list in a format a supplier's bulk order or BOM upload page accepts, so ordering doesn't mean clicking through search links one part at a time.
 - **Clear old results when the input changes.** Today they stay on screen until Generate is pressed again.
-- **Pin the checked address when fetching a URL.** The host is checked before the fetch but resolved again for it, which leaves a small DNS-rebinding window.
 
 ### Later, if users ask
 
