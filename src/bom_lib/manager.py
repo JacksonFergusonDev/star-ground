@@ -119,6 +119,8 @@ def rename_source_in_inventory(
     for part in inventory.values():
         if old_name in part["sources"]:
             part["sources"][new_name] = part["sources"].pop(old_name)
+        if old_name in part["counted"]:
+            part["counted"][new_name] = part["counted"].pop(old_name)
 
 
 def serialize_inventory(inventory: Inventory) -> str:

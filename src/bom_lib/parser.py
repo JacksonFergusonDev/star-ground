@@ -21,6 +21,7 @@ from src.bom_lib.builds import BuildPlan, Entry, PageContext, plan_builds
 from src.bom_lib.classifier import (
     DIP_SWITCH,
     categorize_part,
+    counted_category,
     normalize_value_by_category,
 )
 from src.bom_lib.designators import is_designator, parse_designator
@@ -33,6 +34,7 @@ from src.bom_lib.layout import (
     bom_valueless_refs,
     clean_value,
     control_designator,
+    counted_parts,
     counted_rows,
     drop_remarks,
     find_bom_rows,
@@ -1732,7 +1734,107 @@ def _layout_entries(
                     check_unclassified_row(stats, ref, value)
                     continue
                 entries.append(entry)
+        entries += _counted_entries(page_no, data["words"], stats)
     return entries
+
+
+# Rows this close (points) at their left edge share a column.
+_COUNTED_COLUMN_PT = 12.0
+# A counted value naming its designator: '150k (Ra)'.
+_NAMED_COUNT = re.compile(r"(?P<value>.+?)\s*\((?P<ref>[A-Za-z]{1,3}\d*[a-z]?)\)")
+# The part's kind restated after its value: '2.2k resistor', '4k7 (4.7k resistor)'.
+_RESTATED_KIND = re.compile(r"\s*\bresistors?\b", re.I)
+# A decimal comma: '0,01µF' (Tonepad Wah). Only after a zero: '1,000µF' is
+# a thousand.
+_DECIMAL_COMMA = re.compile(r"(?<![\d,.])0,(?=\d)")
+# 'Meg' for mega: '1Meg' (Tonepad Wah).
+_MEG = re.compile(r"(?<=\d)Meg\b", re.I)
+# A trimmer's taper means nothing to buy: '10k lin. trim' is a 10k trimmer.
+_TRIM_TAPER = re.compile(r"\s*\b(?:lin|log)\b\.?(?=.*\btrim)", re.I)
+
+
+def _counted_value(printed: str) -> str:
+    """A counted row's value as a part to buy, without restatements."""
+    value = _RESTATED_KIND.sub("", clean_value(printed))
+    value = _MEG.sub("M", _DECIMAL_COMMA.sub("0.", value))
+    return " ".join(_TRIM_TAPER.sub("", value).split())
+
+
+def _counted_entries(
+    page_no: int, words: list[PDFWord], stats: StatsDict
+) -> list[Entry]:
+    """Reads the rows of a page that count parts by value ('4 - 10k', Tonepad).
+
+    A row whose category neither its heading nor its value states is not
+    read. Where its column has rows that were read, it is a part of the list
+    ('3 - jumpers' under Other), and is kept in `stats["unread_counted"]` for
+    `check_quantity_list`; elsewhere it is a switch position ('1 - Off Axis'
+    under 'S1 = MIC', Tonepad SansAmp).
+    """
+    rows = counted_parts(words)
+    values = [_counted_value(row.value) for row in rows]
+    # Classified as printed: '2k2 (2.2k resistor)' under 'Millennium' says
+    # what it is (Tonepad DOD 280 Comp).
+    categories = [
+        counted_category(row.heading, clean_value(row.value)) if value else None
+        for row, value in zip(rows, values, strict=True)
+    ]
+    read_columns = {
+        round(row.x0) for row, cat in zip(rows, categories, strict=True) if cat
+    }
+    entries = []
+    for row, value, category in zip(rows, values, categories, strict=True):
+        if category is None:
+            if any(abs(row.x0 - x) <= _COUNTED_COLUMN_PT for x in read_columns):
+                stats["unread_counted"].append(row.text)
+            continue
+        named = _NAMED_COUNT.fullmatch(value)
+        if row.count == 1 and named and is_designator(named.group("ref")):
+            # '1 - 150k (Ra)*' (Tonepad Noise Gate) names its designator.
+            entries.append(
+                Entry(
+                    named.group("ref"),
+                    named.group("value"),
+                    page_no,
+                    line=row.line,
+                    x0=row.x0,
+                    hint=category,
+                )
+            )
+            continue
+        entries.append(
+            Entry(
+                f"#{row.text}",
+                value,
+                page_no,
+                line=row.line,
+                x0=row.x0,
+                hint=category,
+                qty=row.count,
+                counted=True,
+            )
+        )
+    return entries
+
+
+def _ingest_counted(
+    inventory: Inventory, source_name: str, entry: Entry, inject: bool
+) -> int:
+    """Buys a counted row's parts, with no designator: '4 - 10k' is four 10k.
+
+    Returns:
+        The number of parts recorded.
+    """
+    value = resolve_value_choice(None, entry.ref, entry.value)
+    result = categorize_part("", value, entry.hint)
+    if result is None:
+        return 0
+    inventory.add_counted(
+        source_name, make_component_key(result.category, result.clean_value), entry.qty
+    )
+    if result.injected_key and inject:
+        inventory.add_counted(source_name, result.injected_key, entry.qty)
+    return entry.qty
 
 
 def _cell_value(cells: list[Cell], listing: Listing) -> bool:
@@ -1775,6 +1877,11 @@ def _ingest_entries(
     table_of: dict[str, int] = {}
     lists_sockets = any(_SOCKET.search(entry.value) for entry in entries)
     for entry in entries:
+        if entry.counted:
+            stats["parts_found"] += _ingest_counted(
+                inventory, source_name, entry, inject=not lists_sockets
+            )
+            continue
         if entry.not_populated:
             _record_not_populated(stats, entry.ref, entry.value)
             continue
@@ -2194,9 +2301,12 @@ def read_pages(
         _without_note_cells(data, text) if bom_pages is None or k in bom_pages else ""
         for k, (data, text) in enumerate(zip(pages_data, page_texts, strict=True))
     ]
-    check_parts_found(stats, sum(len(d["refs"]) for d in union.values()))
+    check_parts_found(
+        stats, sum(len(d["refs"]) + sum(d["counted"].values()) for d in union.values())
+    )
     check_value_keyed_list(page_texts, stats)
-    check_quantity_list(page_texts, stats)
+    counted = [e.ref.removeprefix("#") for e in entries if e.counted]
+    check_quantity_list(page_texts, counted, stats["unread_counted"], stats)
     omitted = frozenset(
         r for e in entries if _is_not_populated(e.value) for r in expand_refs(e.ref)
     )
@@ -2269,10 +2379,12 @@ def read_pages(
                     k, [(li.ref, li.value) for li in listings], read, stats
                 )
     check_bom_reconciliation(page_texts, union, stats)
-    if any(w.kind == ParseWarningKind.QUANTITY_LIST for w in stats["warnings"]):
+    if counted or any(
+        w.kind == ParseWarningKind.QUANTITY_LIST for w in stats["warnings"]
+    ):
         # A list that counts parts ('3 - 1N914') names no designators for them,
-        # so the schematic's D1-D3 are 'missing' by design; the document is
-        # already told those parts were not read.
+        # so the schematic's D1-D3 are 'missing' by design: the parts were read
+        # by count, or the document is told they were not read.
         stats["warnings"][:] = [
             w for w in stats["warnings"] if w.kind != ParseWarningKind.UNEXTRACTED_REF
         ]

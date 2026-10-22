@@ -427,6 +427,8 @@ class ProjectPartItem:
         value: The normalized component value string.
         unique_refs: Deduplicated designator references in the project.
         val_qty: The cached physical quantity or Decimal value, if available.
+        counted: How many the project's document counts by value, with no
+            designator ('4 - 10k', Tonepad).
     """
 
     key: ComponentKey
@@ -434,6 +436,12 @@ class ProjectPartItem:
     value: str
     unique_refs: list[str]
     val_qty: pint.Quantity[Any] | Decimal | None = None
+    counted: int = 0
+
+    @property
+    def qty(self) -> int:
+        """How many of the part the project needs."""
+        return len(self.unique_refs) + self.counted
 
 
 def _get_project_parts(
@@ -445,7 +453,8 @@ def _get_project_parts(
         sources = data["sources"]
         if project_name in sources:
             unique_refs = deduplicate_refs(sources[project_name])
-            if unique_refs:
+            counted = data["counted"].get(project_name, 0)
+            if unique_refs or counted:
                 results.append(
                     ProjectPartItem(
                         key=key,
@@ -453,6 +462,7 @@ def _get_project_parts(
                         value=key.value,
                         unique_refs=unique_refs,
                         val_qty=data.get("val_qty"),
+                        counted=counted,
                     )
                 )
     return results
@@ -482,7 +492,7 @@ def _write_field_manuals(
                 {
                     "category": item.category,
                     "value": item.value,
-                    "qty": len(item.unique_refs),
+                    "qty": item.qty,
                     "refs": item.unique_refs,
                     "notes": row_notes,
                     "polarized": is_polarized,
@@ -507,7 +517,7 @@ def _write_stickers(
     """Helper: Generates Sticker Sheet PDFs and writes them to the ZIP archive."""
     for project_name, _slot in _get_unique_projects(slots):
         project_parts = [
-            (item.value, item.unique_refs)
+            (item.value, item.unique_refs, item.qty)
             for item in _get_project_parts(inventory, project_name)
         ]
 
@@ -519,8 +529,8 @@ def _write_stickers(
         code = "".join([c for c in project_name if c.isalnum()]).upper()[:4]
         project_parts.sort(key=lambda x: x[0])
 
-        for val, refs in project_parts:
-            pdf.add_sticker(code, val, refs, len(refs))
+        for val, refs, qty in project_parts:
+            pdf.add_sticker(code, val, refs, qty)
 
         safe_name = _sanitize_filename(project_name)
         zf.writestr(

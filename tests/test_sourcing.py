@@ -184,3 +184,16 @@ def test_an_inductor_is_searched_for_by_its_part_type() -> None:
         generate_search_term(ComponentCategory.INDUCTORS, "100mH") == "100mH inductor"
     )
     assert generate_search_term(ComponentCategory.RELAYS, "TQ2-L-5V") == "TQ2-L-5V"
+
+
+def test_a_pot_taper_written_as_a_word_is_searched_for() -> None:
+    # Tonepad counts pots as '3 - 100k Log.' and '1 - 500k Rev. Log'.
+    pot = ComponentCategory.POTENTIOMETERS
+    assert (
+        generate_search_term(pot, "100k Log.") == "100k ohm Logarithmic potentiometer"
+    )
+    assert generate_search_term(pot, "500k Rev. Log") == (
+        "500k ohm Reverse Log potentiometer"
+    )
+    assert generate_search_term(pot, "100kB") == "100k ohm Linear potentiometer"
+    assert generate_search_term(pot, "Wah pot") == "Wah pot"

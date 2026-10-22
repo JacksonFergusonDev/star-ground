@@ -184,6 +184,8 @@ class StatsDict(TypedDict):
         extracted_title: Heuristic guess at the project title (PDF only).
         seen_refs: Raw value recorded for each reference seen so far, used to
             prevent duplicate counting and to detect conflicting duplicates.
+        unread_counted: Rows counting parts by value ('3 - jumpers') that sat
+            in a parts list but could not be classified.
         errors: Fatal problems that aborted all or part of the parse.
         warnings: Self-check failures where the output may be incomplete.
     """
@@ -193,6 +195,7 @@ class StatsDict(TypedDict):
     residuals: list[str]
     extracted_title: str | None
     seen_refs: dict[str, str]
+    unread_counted: list[str]
     errors: list[str]
     warnings: list[ParseWarning]
 
@@ -209,6 +212,9 @@ class PartData(TypedDict):
         sources: Mapping of project names to the specific refs they contributed.
         included: How many of `qty` come with a PCB ('IC3  24LC32A *Included',
             PedalPCB Deflector): listed, but not bought.
+        counted: How many one build of each source counts by value, with no
+            designator ('4 - 10k', Tonepad). Like a source's designators, it
+            describes one pedal, whatever the number built.
     """
 
     qty: int
@@ -216,6 +222,7 @@ class PartData(TypedDict):
     refs: list[str]
     sources: dict[str, list[str]]
     included: int
+    counted: dict[str, int]
 
 
 @dataclass(frozen=True, slots=True)
@@ -528,6 +535,7 @@ class Inventory(UserDict[ComponentKey, PartData]):
             "refs": [],
             "sources": defaultdict(list),
             "included": 0,
+            "counted": {},
         }
         self.data[key] = value
         return value
@@ -563,6 +571,19 @@ class Inventory(UserDict[ComponentKey, PartData]):
             part["refs"].append(ref)
             part["sources"][source].append(ref)
 
+    def add_counted(self, source: str, key: ComponentKey, qty: int) -> None:
+        """Records parts the document counts by value, with no designator.
+
+        Args:
+            source: Source identifier (e.g., "Big Muff").
+            key: The unique component key.
+            qty: How many to buy.
+        """
+        self.add_part(source, key, "", qty)
+        part = self[key]
+        part["counted"][source] = part["counted"].get(source, 0) + qty
+        part["sources"].setdefault(source, [])
+
     def merge(self, other: Inventory, multiplier: int = 1) -> None:
         """Merges another inventory into this one.
 
@@ -573,6 +594,9 @@ class Inventory(UserDict[ComponentKey, PartData]):
         for key, data in other.items():
             self[key]["qty"] += data["qty"] * multiplier
             self[key]["included"] += data["included"] * multiplier
+            for src, n in data["counted"].items():
+                counted = self[key]["counted"]
+                counted[src] = max(counted.get(src, 0), n)
             self[key]["refs"].extend(data["refs"])
             for src, refs in data["sources"].items():
                 self[key]["sources"][src].extend(refs * multiplier)
@@ -586,6 +610,7 @@ def create_empty_stats() -> StatsDict:
         "residuals": [],
         "extracted_title": None,
         "seen_refs": {},
+        "unread_counted": [],
         "errors": [],
         "warnings": [],
     }

@@ -75,6 +75,9 @@ class Entry:
         qty: How many of each designator to buy ('TERMINAL BLOCK (Qty 3)').
         column: The version column of a value-column grid the value sits in
             (MUFF'N's 'Ram', 'Triangle', ...); None for ordinary rows.
+        counted: A row that counts parts by value ('4 - 10k'): `ref` is the
+            row as printed, `qty` its count and `hint` its category, and the
+            parts are bought without a designator.
     """
 
     ref: str
@@ -87,6 +90,7 @@ class Entry:
     follows_or: bool = False
     qty: int = 1
     column: str | None = None
+    counted: bool = False
 
     @property
     def not_populated(self) -> bool:
@@ -162,6 +166,10 @@ def plan_builds(entries: list[Entry], pages: list[PageContext]) -> BuildPlan:
     Returns:
         The build plan. A single-circuit document has no variants.
     """
+    # Counted rows ('4 - 10k') name no designator, so they take no part in
+    # telling builds apart; each joins the build whose list it sits in.
+    counted = [e for e in entries if e.counted]
+    entries = [e for e in entries if not e.counted]
     variants = (
         _column_variants(entries)
         # Before grids: a mod table beside the parts list shares its lines.
@@ -190,7 +198,95 @@ def plan_builds(entries: list[Entry], pages: list[PageContext]) -> BuildPlan:
     )
     in_options = {id(e) for o in options for _, c in o.choices for e in c}
     common = [e for e in common if id(e) not in in_options]
-    return BuildPlan(tuple(common), tuple(variants), tuple(options))
+    if not variants:
+        variants, counted = _titled_counted_variants(counted, pages)
+    variants, shared = _place_counted(variants, counted)
+    return BuildPlan(tuple(common + shared), tuple(variants), tuple(options))
+
+
+# A parts list's title naming its build: 'Parts List (Llama mod)'.
+_LIST_TITLE = re.compile(r"parts list \((?P<name>[^()]+)\)", re.I)
+
+
+def _titled_counted_variants(
+    counted: list[Entry], pages: list[PageContext]
+) -> tuple[list[PlannedVariant], list[Entry]]:
+    """Builds from counted lists printed side by side under their own titles.
+
+    Tonepad Tube Sound Fuzz sets 'Parts List (CA Tube Sound Fuzz)' beside
+    'Parts List (Llama mod)', both counting parts by value: two circuits, not
+    one list. Each row belongs to the title above it nearest across the page
+    (a list's first column may start left of its centred title).
+
+    Returns:
+        The builds (none unless one page has two titled lists with rows), and
+        the rows under no title.
+    """
+    titles: dict[int, list[tuple[int, float, str]]] = {}
+    for row in counted:
+        if row.page in titles:
+            continue
+        titles[row.page] = [
+            (k, cell.x0, m.group("name").strip())
+            for k, cells in enumerate(pages[row.page].lines)
+            for cell in cells
+            if (m := _LIST_TITLE.fullmatch(cell.text.strip()))
+        ]
+    groups: dict[tuple[int, str], list[Entry]] = {}
+    rest = []
+    for row in counted:
+        above = [t for t in titles[row.page] if t[0] < row.line]
+        if not above:
+            rest.append(row)
+            continue
+        _, _, name = min(above, key=lambda t: (abs(t[1] - row.x0), -t[0]))
+        groups.setdefault((row.page, name), []).append(row)
+    if len({page for page, _ in groups}) != 1 or len(groups) < 2:
+        return [], counted
+    return [
+        PlannedVariant(name, tuple(rows)) for (_, name), rows in groups.items()
+    ], rest
+
+
+def _place_counted(
+    variants: list[PlannedVariant], counted: list[Entry]
+) -> tuple[list[PlannedVariant], list[Entry]]:
+    """Gives counted rows to builds: each its own copy, or common to all.
+
+    A row every build's list repeats belongs to each build once (Tonepad Big
+    Muff's three lists each count '2 - 100k-A'): the copies are paired with
+    the builds in reading order. Any other row is common: 'Common parts'
+    beside the TS-808 and TS-9 columns (Tonepad Tube Screamer), a Millennium
+    Bypass column beside two lists (Range Master).
+
+    Returns:
+        The variants with their counted rows added, and the common rows.
+    """
+    if not variants:
+        return variants, counted
+
+    def position(e: Entry) -> tuple[int, int, float]:
+        return (e.page, e.line, e.x0)
+
+    order = sorted(
+        range(len(variants)),
+        key=lambda k: min(map(position, variants[k].entries), default=(0, 0, 0.0)),
+    )
+    copies: dict[str, list[Entry]] = {}
+    for row in counted:
+        copies.setdefault(row.ref, []).append(row)
+    own: dict[int, list[Entry]] = {k: [] for k in range(len(variants))}
+    shared = []
+    for rows in copies.values():
+        if len(rows) == len(variants):
+            for k, row in zip(order, sorted(rows, key=position), strict=True):
+                own[k].append(row)
+        else:
+            shared += rows
+    placed = [
+        replace(v, entries=v.entries + tuple(own[k])) for k, v in enumerate(variants)
+    ]
+    return placed, shared
 
 
 # --------------------------------------------------------------------- grids
@@ -262,7 +358,11 @@ def _grid_variants(
             groups: list[list[Entry]] = [[] for _ in starts]
             for k in block:
                 for e in by_line[k]:
-                    groups[_column_of(e.x0, starts)].append(e)
+                    # A list left of the grid is common to every build: 'IC1 -
+                    # CA3080' under the common parts beside the Dyna and Ross
+                    # columns (Tonepad CompaRous).
+                    if e.x0 >= starts[0] - _COLUMN_TOLERANCE_PT:
+                        groups[_column_of(e.x0, starts)].append(e)
             line = block[-1] + 1
             for name, group in zip(names, groups, strict=True):
                 found.setdefault(name, []).extend(group)
@@ -344,8 +444,9 @@ def _column_names(
     names = [f"Variant {k + 1}" for k in range(len(starts))]
     if header_line < 0 or by_line.get(header_line):
         return names
+    in_grid = [c for c in header if c.x0 >= starts[0] - _COLUMN_TOLERANCE_PT]
     for k in range(len(starts)):
-        text = " ".join(c.text for c in header if _column_of(c.x0, starts) == k)
+        text = " ".join(c.text for c in in_grid if _column_of(c.x0, starts) == k)
         # The end of a sentence is not a name ('... scaled accordingly.').
         if text and not text.endswith(".") and not text[0].islower():
             names[k] = text
