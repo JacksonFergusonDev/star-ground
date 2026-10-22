@@ -249,7 +249,6 @@ We utilize `Streamlit.AppTest` to run headless simulations of the user interface
 ├── tools/                 <-- Developer Utilities
 │   └── generate_presets.py
 ├── CONTRIBUTING.md        <-- Dev guide
-├── ROADMAP.md             <-- Technical architectural plans
 ├── pyproject.toml         <-- Project metadata & tool config (Ruff/Mypy/Pytest)
 └── uv.lock                <-- Exact dependency tree (Deterministic builds; Streamlit Cloud installs from it)
 ```
@@ -298,15 +297,33 @@ uv run streamlit run app.py
 
 ## 🔭 Roadmap
 
-We are aggressively moving from a simple regex script to a context-aware physics engine.
+Star Ground reads build documents from five publishers: PedalPCB, GuitarPCB, Aion FX, Five Cats and Tonepad. Image-only parts lists are read by OCR, after you opt in. Accuracy is measured against about 60,000 hand-labeled parts. On those documents, every wrong part is flagged for review, and no correct part is flagged.
 
-**Key Upcoming Initiatives:**
+### Now: launch and listen
 
-- **Architecture:** Migrating to a Strategy Pattern and Context-Free Grammars for parsing.
-- **Intelligence:** Topology inference (detecting "Fuzz" vs "Delay" circuits based on component clusters).
-- **Finance:** Real-time pricing integration (Octopart/DigiKey) and volume arbitrage.
+1. **Share it with builders** and see whether it saves them time.
+1. **Collect failures.** Each report should include the document, so it can be labeled and added to the regression suite.
+1. **Measure again on unseen documents.** Every held-out test set has now been used for tuning. An honest accuracy figure needs a fresh set: documents users submit, or ones published after this release, set aside before anyone looks at them.
 
-For the detailed technical breakdown and milestones, see **[ROADMAP.md](ROADMAP.md)**.
+### Next: small, known gaps
+
+- **Lists that count parts by value** ("4 - 10k", about half of Tonepad's documents). These are flagged so you enter them by hand. Reading them means handling parts that have no designator.
+- **Categories for inductors, transformers and relays.** Today they are filed under Hardware/Misc.
+- **Supplier cart files.** Export the shopping list in a format a supplier's bulk order or BOM upload page accepts, so ordering doesn't mean clicking through search links one part at a time.
+- **Clear old results when the input changes.** Today they stay on screen until Generate is pressed again.
+- **Pin the checked address when fetching a URL.** The host is checked before the fetch but resolved again for it, which leaves a small DNS-rebinding window.
+
+### Later, if users ask
+
+- **More publishers**, chosen by what people upload. Each one gets its own labeled tuning set and an untouched test set before it is listed as supported.
+- **Live prices** from supplier APIs. This needs API keys and ongoing upkeep, so it waits until someone wants it.
+
+### Not planned
+
+- **Checking values against the E-series (E24, E96).** Build documents use off-series values on purpose: tuned resistors, trimmer settings, published alternatives. Flagging them would bury real warnings under false ones.
+- **Per-part confidence scores.** A part either needs review or it doesn't. A score between 0 and 1 asks the builder to choose a cutoff, and the warnings already say what to check and why.
+- **Circuit-type inference** (fuzz, delay) from groups of parts. The advice it would trigger is generic, and a wrong guess is worse than none.
+- **Probabilistic stock buffers.** There is no data on component loss rates to fit them to. The fixed per-category buffers are simple and easy to predict.
 
 ---
 
