@@ -257,7 +257,6 @@ uv run streamlit run app.py
 - **Lists that count parts by value** ("4 - 10k", about half of Tonepad's documents). These are flagged so you enter them by hand. Reading them means handling parts that have no designator.
 - **Categories for inductors, transformers and relays.** Today they are filed under Hardware/Misc.
 - **Supplier cart files.** Export the shopping list in a format a supplier's bulk order or BOM upload page accepts, so ordering doesn't mean clicking through search links one part at a time.
-- **Clear old results when the input changes.** Today they stay on screen until Generate is pressed again.
 
 ### Later, if users ask
 

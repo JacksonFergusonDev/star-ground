@@ -99,6 +99,43 @@ class ProjectSlot:
 
 
 @dataclass(frozen=True, slots=True)
+class SlotInputs:
+    """What one project contributes to the master list, as the builder set it.
+
+    Attributes:
+        name: The project name typed in.
+        count: Number of pedals.
+        method: How the parts list is given.
+        source: The document's identity, or the pasted or preset text.
+        variant: The build chosen from a multi-circuit document.
+        use_ocr: Whether OCR's parts were accepted.
+    """
+
+    name: str
+    count: int
+    method: InputMethod
+    source: str | None
+    variant: str | None
+    use_ocr: bool
+
+
+@dataclass(frozen=True, slots=True)
+class Inputs:
+    """Everything the master list is generated from.
+
+    Lives here, not in the app script: Streamlit re-executes the script on
+    every rerun, and a class defined there never equals the last run's.
+
+    Attributes:
+        slots: Each project's inputs, in order.
+        stock: The uploaded stock file's identity, if any.
+    """
+
+    slots: tuple[SlotInputs, ...]
+    stock: str | None
+
+
+@dataclass(frozen=True, slots=True)
 class BuildHardware:
     """What one project needs from the app's standard hardware kit.
 

@@ -389,3 +389,43 @@ def test_a_part_with_several_warnings_is_one_part_to_review(app, monkeypatch):
     assert [e.label for e in app.expander if "to review" in e.label] == [
         "Amethyst: 1 to review"
     ]
+
+
+def test_results_stay_while_the_inputs_are_unchanged(app):
+    app.text_area[0].set_value("R1 10k\nC1 100n").run()
+    app.button[1].click().run()
+    assert len(app.dataframe) == 1
+
+    app.run()
+    assert len(app.dataframe) == 1
+    assert not app.caption or "inputs changed" not in app.caption[-1].value
+
+
+@pytest.mark.parametrize(
+    "change",
+    [
+        lambda at: at.text_area[0].set_value("R1 22k\nC1 100n"),
+        lambda at: at.number_input[0].set_value(2),
+        lambda at: at.text_input[0].set_value("Renamed"),
+        lambda at: at.radio[0].set_value(InputMethod.FROM_URL),
+    ],
+    ids=["text", "qty", "name", "method"],
+)
+def test_changing_an_input_clears_the_old_results(app, change):
+    app.text_area[0].set_value("R1 10k\nC1 100n").run()
+    app.button[1].click().run()
+    assert len(app.dataframe) == 1
+
+    change(app).run()
+
+    assert not app.exception
+    assert len(app.dataframe) == 0
+    assert app.session_state["inventory"] is None
+    assert any("inputs changed" in c.value for c in app.caption)
+
+    if app.text_area:
+        app.text_area[0].set_value("R1 10k").run()
+    else:
+        app.text_input[1].set_value("").run()
+    app.button[1].click().run()
+    assert not any("inputs changed" in c.value for c in app.caption)

@@ -15,12 +15,14 @@ from src.bom_lib import (
     BuildHardware,
     FeedbackRating,
     InputMethod,
+    Inputs,
     OcrAttempt,
     OcrVerdict,
     ParseResult,
     ParseWarning,
     ParseWarningKind,
     ProjectSlot,
+    SlotInputs,
     StatsDict,
     build_shopping_list,
     create_empty_inventory,
@@ -114,6 +116,11 @@ if "option_notes" not in st.session_state:
     st.session_state.option_notes = {}
 if "build_hardware" not in st.session_state:
     st.session_state.build_hardware = []
+# The inputs the results on screen were made from (see `Inputs`).
+if "results_inputs" not in st.session_state:
+    st.session_state.results_inputs = None
+if "results_cleared" not in st.session_state:
+    st.session_state.results_cleared = False
 
 # Initialize session state for pedal slots
 if "pedal_slots" not in st.session_state:
@@ -456,6 +463,34 @@ def render_ocr_offer(slot: ProjectSlot, attempt: OcrAttempt) -> None:
     )
 
 
+def current_inputs(slots: list[ProjectSlot], stock: Any) -> Inputs:
+    """Snapshots the inputs, to tell when results no longer match them."""
+    return Inputs(
+        tuple(
+            SlotInputs(
+                str(slot.name or ""),
+                slot.count,
+                slot.method,
+                input_key(slot) or (slot.data if isinstance(slot.data, str) else None),
+                slot.variant,
+                slot.use_ocr,
+            )
+            for slot in slots
+        ),
+        f"{stock.file_id}:{stock.size}" if stock is not None else None,
+    )
+
+
+def clear_results() -> None:
+    """Removes the master list and everything generated with it."""
+    st.session_state.inventory = None
+    st.session_state.stock = None
+    st.session_state.stats = None
+    st.session_state.parse_warnings = {}
+    st.session_state.option_notes = {}
+    st.session_state.build_hardware = []
+
+
 def on_method_change(slot_id: uuid.UUID) -> None:
     """Callback to handle input method switches (Paste, Upload, URL, Preset)."""
     slot = next((s for s in st.session_state.pedal_slots if s.id == slot_id), None)
@@ -623,7 +658,17 @@ if len(active_names) != len(set(active_names)):
         "⚠️ Duplicate projects detected. Quantities will be summed, but source documents will only be included once."
     )
 
+# Results made from other inputs would be ordered from by mistake: clear them
+# as soon as any input changes, rather than when Generate is next pressed.
+inputs = current_inputs(st.session_state.pedal_slots, stock_file)
+if st.session_state.results_inputs != inputs and st.session_state.inventory is not None:
+    clear_results()
+    st.session_state.results_cleared = True
+st.session_state.results_inputs = inputs
+
 generate = st.button("Generate Master List", type="primary", width="stretch")
+if st.session_state.results_cleared and not generate:
+    st.caption("The inputs changed. Generate again for an updated master list.")
 if generate:
     unchosen = [
         str(slot.name or slot.parsed.title or f"Project #{i + 1}")
@@ -734,6 +779,7 @@ if generate:
     st.session_state.parse_warnings = parse_warnings
     st.session_state.option_notes = option_notes
     st.session_state.build_hardware = build_hardware
+    st.session_state.results_cleared = False
 
     # Validation Logic
     if stats["parts_found"] == 0:
