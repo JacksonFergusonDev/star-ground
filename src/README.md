@@ -53,6 +53,7 @@ The system enforces strict separation between **Ingestion**, **Normalization**, 
     - *Capacitors:* +5; +10 for 100n bypass caps; +1 at 1µF and above.
     - *Diodes:* +5, at least 10. *Transistors, crystals, optoelectronics:* +1.
     - *ICs:* Exact count (high cost), with a socket recommended.
+    - *Inductors, transformers, relays:* Exact count.
   - **Parts included with the PCB** are subtracted from what to buy.
   - **Hardware Injection:** Adds a standard kit per pedal (enclosure, jacks, footswitch, status LED with one resistor per LED, knobs, wire), skipping whatever the document lists itself (`provided_hardware`).
 

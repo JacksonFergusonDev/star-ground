@@ -130,4 +130,4 @@ def test_a_numbered_t_with_a_resistance_is_a_trimmer() -> None:
     assert trimmer is not None
     assert trimmer.category == ComponentCategory.POTENTIOMETERS
     assert transformer is not None
-    assert transformer.category == ComponentCategory.HARDWARE_MISC
+    assert transformer.category == ComponentCategory.TRANSFORMERS

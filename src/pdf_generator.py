@@ -367,9 +367,12 @@ def sort_by_z_height(part_list: list[ChecklistPart]) -> list[ChecklistPart]:
         # Sockets will be injected at 18
         ComponentCategory.CRYSTALS_OSCILLATORS: 30,
         ComponentCategory.CAPACITORS: 40,  # Default (Small)
+        ComponentCategory.INDUCTORS: 45,
         ComponentCategory.TRANSISTORS: 50,
         # Electros will be injected at 60
+        ComponentCategory.RELAYS: 65,
         ComponentCategory.SWITCHES: 70,
+        ComponentCategory.TRANSFORMERS: 75,
         ComponentCategory.POTENTIOMETERS: 80,  # "Second Last" (Mechanicals)
         ComponentCategory.HARDWARE_MISC: 85,  # Jacks, etc.
         ComponentCategory.ICS: 90,  # "Last" (Chip Insertion)
