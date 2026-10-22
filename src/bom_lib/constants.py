@@ -341,8 +341,11 @@ NOT_POPULATED_VALUES = frozenset(
         "NONE",
     }
 )
-# 'Omit - jumper pads 2+3' (Five Cats Octavia): unpopulated, with how.
-NOT_POPULATED_REMARK = re.compile(r"(?:OMIT|DNP|JUMPER)\s*[-\u2013(:]", re.IGNORECASE)
+# 'Omit - jumper pads 2+3' (Five Cats Octavia): unpopulated, with how. 'Jumper to
+# VR' (Aion FX legacy Cerulean): a wire link, with where it goes.
+NOT_POPULATED_REMARK = re.compile(
+    r"(?:OMIT|DNP|JUMPER)\s*[-\u2013(:]|JUMPER TO \w+$", re.IGNORECASE
+)
 
 # Switch specifications: pole/throw codes (SPDT, 1P8T) and positions (ON/OFF/ON),
 # also in a KiCad symbol name ('SW_SPDT', Five Cats).

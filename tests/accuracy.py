@@ -470,8 +470,10 @@ def _pair_builds(
     """Pairs each golden variant with the parser build it agrees with most.
 
     Pairing is one-to-one and greedy on the number of correct parts. A golden
-    variant left without a build is paired with an empty one (everything
-    missing); builds left without a golden variant are returned separately.
+    variant left without a build (the document describes more builds than the
+    parser offers, as a prose list of replacements) is graded against the build
+    it agrees with most: the list its builder would start from. Builds left
+    without a golden variant are returned separately.
     When the parser produced a single build, every golden variant is graded
     against it: that is the list a builder of any variant would receive.
     """
@@ -497,6 +499,11 @@ def _pair_builds(
         if gi not in golden_to_build and bi not in used:
             golden_to_build[gi] = bi
             used.add(bi)
+    for gi, v in enumerate(golden):
+        if gi not in golden_to_build and builds:
+            golden_to_build[gi] = max(
+                range(len(builds)), key=lambda bi: (correct(v, builds[bi]), -bi)
+            )
     pairs = [
         (v, builds[golden_to_build[gi]] if gi in golden_to_build else {})
         for gi, v in enumerate(golden)
@@ -598,7 +605,12 @@ def score_doc(doc: GoldenDoc, ocr: bool = False) -> DocScore:
         # the app reports): every part is flagged.
         flagged.add(_EVERYTHING)
     if any(
-        w.kind in (ParseWarningKind.IMAGE_PARTS_LIST, ParseWarningKind.QUANTITY_LIST)
+        w.kind
+        in (
+            ParseWarningKind.IMAGE_PARTS_LIST,
+            ParseWarningKind.QUANTITY_LIST,
+            ParseWarningKind.UNREADABLE_ROW,
+        )
         and not w.ref
         for w in res.stats["warnings"]
     ):

@@ -178,12 +178,16 @@ class TestBuildPairing:
         assert {v.name: b for v, b in pairs} == {"Stock": stock, "Cleft": wrong}
         assert unmatched == []
 
-    def test_a_missing_build_is_graded_as_empty(self, tmp_path: Path) -> None:
+    def test_a_missing_build_is_graded_against_the_closest(
+        self, tmp_path: Path
+    ) -> None:
+        # A build described only in prose (Aion FX legacy Aurora's JangleBox):
+        # its builder starts from the offered build it agrees with most.
         golden = self._golden(tmp_path)
         builds = [{"Q1": ActualPart(Q, "2N3904")}, {"Q1": ActualPart(Q, "2N5089")}]
         three = (*golden, golden[0])  # a third golden variant the parser never produced
         pairs, _ = _pair_builds(three, builds, set())
-        assert pairs[2][1] == {}
+        assert pairs[2][1] == pairs[0][1]
 
     def test_a_single_build_is_graded_against_every_variant(
         self, tmp_path: Path

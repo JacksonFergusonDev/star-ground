@@ -912,3 +912,55 @@ def test_pole_type_in_label_joins_the_value() -> None:
     assert [(r.refs, r.value) for r in find_bom_rows(words)] == [
         ("SW", "SPDT On-Off_On")
     ]
+
+
+def test_a_footnote_marker_is_no_value() -> None:
+    # Aion FX legacy Cerulean: 'DX1-2  ²' leaves the diodes to the builder.
+    from src.bom_lib.layout import valueless_refs
+
+    words = (
+        _line("D1", "1N914", top=100)
+        + _line("D2", "1N914", top=114)
+        + _line("D3", "1N914", top=128)
+        + _line("D4-5", top=142)
+        + [PDFWord(text="2", x0=82.0, x1=86.0, top=142, size=6.4)]
+    )
+    assert valueless_refs(words) == ["D4", "D5"]
+
+
+@pytest.mark.parametrize(
+    ("cell", "ref"),
+    [
+        ("P1-Crackle", "P1"),  # GuitarPCB Sho' Nuff
+        ("P2-Volume", "P2"),
+        ("SW1-Mode", "SW1"),
+        ("IC1-S", None),  # an IC socket
+        ("D1-D4", None),  # a range
+        ("R1-Bias", None),  # not a control
+    ],
+)
+def test_control_designator(cell: str, ref: str | None) -> None:
+    from src.bom_lib.layout import control_designator
+
+    assert control_designator(cell) == ref
+
+
+def test_an_unreadable_designator_beside_a_value() -> None:
+    # OCR read GuitarPCB Guitar/Bass Driver's 'Q9  MPF102' as '60  MPF102'.
+    from src.bom_lib.layout import unreadable_rows
+
+    words = (
+        _line("Q1", "2N5457", top=100)
+        + _line("Q2", "2N5457", top=114)
+        + _line("Q3", "J201", top=128)
+        + _line("60", "MPF102", top=142)
+    )
+    assert unreadable_rows(words) == ["60  MPF102"]
+
+
+def test_a_slash_pair_of_designators() -> None:
+    # Aion FX legacy Solaris: 'Q1/Q2  germanium'.
+    from src.bom_lib.layout import ref_group
+
+    assert ref_group("Q1/Q2") == "Q1,Q2"
+    assert ref_group("1/4W") is None

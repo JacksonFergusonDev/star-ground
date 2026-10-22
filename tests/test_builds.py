@@ -32,6 +32,33 @@ def _names(plan) -> list[str]:
 class TestGrids:
     """Side-by-side parts lists (Muffin Fuzz, FX5X)."""
 
+    def test_lines_set_between_the_rows_stay_in_the_grid(self) -> None:
+        # Tonepad Range Maistro: a column of counted parts ('1 - FET**') sits
+        # half a line off the two lists' rows.
+        tops = [0, 14, 21, 28, 35, 42]
+        texts = [
+            [("Range Master", 40), ("Brian May", 280)],
+            [("R1", 40), ("100", 80), ("R1", 280), ("1k", 320)],
+            [("1 - FET**", 200)],
+            [("R2", 40), ("1M", 80), ("R2", 280), ("120k", 320)],
+            [("1 - 4k7**", 200)],
+            [("R3", 40), ("470k", 80), ("R3", 280), ("100k", 320)],
+        ]
+        lines = [
+            [Cell(tuple({**w, "top": top} for w in _cell(t, x).words)) for t, x in line]
+            for line, top in zip(texts, tops, strict=True)
+        ]
+        page = PageContext(lines, "")
+        entries = [
+            Entry(r, v, 0, line=n, x0=x)
+            for n, line in enumerate(texts)
+            for (r, x), (v, _) in zip(line[::2], line[1::2], strict=False)
+            if r[1:].isdigit()
+        ]
+        plan = plan_builds(entries, [page])
+        assert _names(plan) == ["Range Master", "Brian May"]
+        assert [len(v.entries) for v in plan.variants] == [3, 3]
+
     def test_repeated_designators_with_a_header_become_variants(self) -> None:
         page = _page(
             [("Green Russian", 40), ("Civil War", 280)],

@@ -66,6 +66,13 @@ def test_enrich_value_from_type(value: str, type_text: str, expected: str) -> No
         ("SANDED", "Dual op-amp, DIP8", "(JRC4558, etc)", "JRC4558"),
         ("GE", "Germanium diode", "1N34A, 1N270, D9E, etc", "1N34A"),
         ("EXPRESSO", "Expresso Microcontroller", "*Included with PCB", "EXPRESSO"),
+        # Aion FX L4: the note describes the original amp's part, not this one.
+        (
+            "2.2uF",
+            "Film capacitor, 7.2 x 5.5mm",
+            "Original amp uses 2.7uF tantalum, but 2.2uF film will work the same.",
+            "2.2uF",
+        ),
     ],
 )
 def test_enrich_value_from_type_and_notes(

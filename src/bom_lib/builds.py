@@ -227,13 +227,11 @@ def _grid_variants(
             # with 'C1 | C1' first (R1 blank) and 'R2 | C2 | R2 | C2' after, the
             # C columns would put the second list's resistors in the first
             # (Tonepad MAS Distortion's MXR and DOD lists).
-            end = line
-            while by_line.get(end):
-                end += 1
+            block = _grid_block(page, by_line, line)
             starts = min(
                 (
                     sorted(e.x0 for e in by_line[k] if e.ref == r)
-                    for k in range(line, end)
+                    for k in block
                     for r, n in Counter(e.ref for e in by_line[k]).items()
                     if n == repeats
                 ),
@@ -255,21 +253,57 @@ def _grid_variants(
             if all(set(name.upper().split()) <= _TABLE_HEADER_WORDS for name in names):
                 # Each column is headed only 'Part | Value': two boards' tables
                 # side by side, not versions (GuitarPCB Rock Hard Dual Combo).
-                while by_line.get(line):
-                    line += 1
+                line = block[-1] + 1
                 continue
             names = [
                 f"{e.ref} {e.value}" if name == f"Variant {k + 1}" else name
                 for k, (name, e) in enumerate(zip(names, first, strict=True))
             ]
             groups: list[list[Entry]] = [[] for _ in starts]
-            while by_line.get(line):
-                for e in by_line[line]:
+            for k in block:
+                for e in by_line[k]:
                     groups[_column_of(e.x0, starts)].append(e)
-                line += 1
+            line = block[-1] + 1
             for name, group in zip(names, groups, strict=True):
                 found.setdefault(name, []).extend(group)
     return [PlannedVariant(name, tuple(group)) for name, group in found.items()]
+
+
+# A line without listings inside a grid is set between its rows when the rows
+# around it are at most this many type sizes apart.
+_INTERLEAVED_EM = 1.6
+
+
+def _grid_block(
+    page: PageContext, by_line: dict[int, list[Entry]], line: int
+) -> list[int]:
+    """The lines of a side-by-side grid that starts at `line`.
+
+    Tonepad Range Maistro sets a column of counted parts ('1 - FET**') half a
+    line off the two lists' rows, so lines without listings interleave them.
+    """
+    block = [line]
+    k = line + 1
+    while k < len(page.lines):
+        if by_line.get(k):
+            block.append(k)
+            k += 1
+            continue
+        after = next((j for j in range(k + 1, len(page.lines)) if by_line.get(j)), None)
+        if after is None or max(Counter(e.ref for e in by_line[after]).values()) < 2:
+            break
+        size = page.lines[block[-1]][0].words[0]["size"]
+        if (
+            _top(page.lines[after]) - _top(page.lines[block[-1]])
+            > _INTERLEAVED_EM * size
+        ):
+            break
+        k = after
+    return block
+
+
+def _top(cells: list[Cell]) -> float:
+    return min(w["top"] for cell in cells for w in cell.words)
 
 
 def _section_header(cells: list[Cell]) -> bool:
