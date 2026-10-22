@@ -964,3 +964,29 @@ def test_a_slash_pair_of_designators() -> None:
 
     assert ref_group("Q1/Q2") == "Q1,Q2"
     assert ref_group("1/4W") is None
+
+
+@pytest.mark.parametrize(
+    ("cell", "value"),
+    [
+        ("VOL1 - Trim", "50k"),  # GuitarPCB Space Modulator, read by OCR
+    ],
+)
+def test_a_designator_with_its_kind_or_role(cell: str, value: str) -> None:
+    from src.bom_lib.layout import find_listings
+
+    words = _line("R1", "10k", top=100) + _line(cell, value, top=114)
+    refs = [lst.ref for lst in find_listings(words)]
+    assert refs[0] == "R1"
+    assert len(refs) == 2
+
+
+def test_a_designators_role_may_start_with_an_acronym() -> None:
+    # GuitarPCB D'Lay: 'S2 PWM Speed Cycle | SPST' in a 'Part Value' table.
+    from src.bom_lib.layout import _DESIGNATOR_ROLE
+
+    role = _DESIGNATOR_ROLE.fullmatch("S2 PWM Speed Cycle")
+    assert role is not None
+    assert role.group(1) == "S2"
+    # Aion Plexus: 'Q5 BIAS' is the trimmer's name.
+    assert _DESIGNATOR_ROLE.fullmatch("Q5 BIAS") is None

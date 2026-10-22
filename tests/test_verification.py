@@ -1076,3 +1076,30 @@ def test_a_heading_for_building_without_a_stage() -> None:
     assert sorted(w.ref for w in stats["warnings"]) == sorted(
         set(refs) - {"R1"} | {"CX3"}
     )
+
+
+def test_install_one_not_the_other() -> None:
+    # GuitarPCB CT Bass Fuzz: a trimmer or a pot, with zero-width padding.
+    from src.bom_lib.verification import check_either_part
+
+    text = "Install the Trimpot​ T2 (not the Boost pot) if you want a 3-knob pedal."
+    inventory = _listed(
+        ("T2", "100k", ComponentCategory.POTENTIOMETERS),
+        ("BOOST", "100kA", ComponentCategory.POTENTIOMETERS),
+    )
+    stats = create_empty_stats()
+    check_either_part([text], inventory, stats)
+    assert sorted(w.ref for w in stats["warnings"]) == ["BOOST", "T2"]
+
+
+def test_a_wire_link_in_one_build() -> None:
+    # GuitarPCB Mini-Me: 'D4  Jumper with MN3007' is a 1N4148 with the V3207.
+    stats = create_empty_stats()
+    check_classification(
+        stats,
+        "D4",
+        "Jumper with MN3007",
+        ComponentCategory.DIODES,
+        "Jumper with MN3007",
+    )
+    assert _kinds(stats) == [ParseWarningKind.VALUE_CHOICE]
