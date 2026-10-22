@@ -76,6 +76,9 @@ def sort_inventory(inventory: Inventory) -> list[tuple[ComponentKey, PartData]]:
         ComponentCategory.SWITCHES,
         ComponentCategory.CAPACITORS,
         ComponentCategory.RESISTORS,
+        ComponentCategory.INDUCTORS,
+        ComponentCategory.TRANSFORMERS,
+        ComponentCategory.RELAYS,
         ComponentCategory.HARDWARE_MISC,
     ]
     # Map category to index for sorting efficiency

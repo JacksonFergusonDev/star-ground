@@ -118,6 +118,7 @@ The cost of a stockout (halting work for a $0.05 part) is far higher than the co
 | Diodes | +5, at least 10 |
 | Transistors, crystals, optoelectronics | +1 (heat and fragile legs) |
 | ICs | exact count, with a socket recommended |
+| Inductors, transformers, relays | exact count |
 
 A standard hardware kit (enclosure, jacks, DC jack, footswitch, status LED and its resistor, knobs, wire and so on) is added for each pedal. Anything the document lists itself is not added again.
 
@@ -255,7 +256,6 @@ uv run streamlit run app.py
 ### Next: small, known gaps
 
 - **Lists that count parts by value** ("4 - 10k", about half of Tonepad's documents). These are flagged so you enter them by hand. Reading them means handling parts that have no designator.
-- **Categories for inductors, transformers and relays.** Today they are filed under Hardware/Misc.
 - **Supplier cart files.** Export the shopping list in a format a supplier's bulk order or BOM upload page accepts, so ordering doesn't mean clicking through search links one part at a time.
 
 ### Later, if users ask

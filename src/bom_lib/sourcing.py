@@ -216,6 +216,10 @@ def generate_search_term(
             return "LED 3mm"
         return val
 
+    # A bare '100mH' finds nothing; the part type does.
+    if category == ComponentCategory.INDUCTORS and "INDUCTOR" not in val.upper():
+        return f"{val} inductor"
+
     # Overrides
     if val == "8 PIN DIP SOCKET":
         return "8 pin DIP IC Socket Adaptor Solder Type"

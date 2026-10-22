@@ -268,12 +268,16 @@ def categorize_part(
     # 'R1 (2)' is R1's second listing (another board, or a repeated label).
     designator = parse_designator(_REPEAT_SUFFIX.sub("", ref.strip()))
     if designator is not None:
-        # L is an inductor, except where a document numbers its LEDs L1-L4.
-        category = designator.category or (
-            ComponentCategory.DIODES
-            if "LED" in val_up
-            else ComponentCategory.HARDWARE_MISC
-        )
+        # L is an inductor, except where a document numbers its LEDs L1-L4 or
+        # its lamps ('L1  2174 lamp', Aion FX Straylight).
+        if designator.category is not None:
+            category = designator.category
+        elif "LED" in val_up:
+            category = ComponentCategory.DIODES
+        elif "LAMP" in val_up:
+            category = ComponentCategory.HARDWARE_MISC
+        else:
+            category = ComponentCategory.INDUCTORS
         if (
             designator.prefix == "LED"
             and ref_up != "LED"
@@ -290,6 +294,7 @@ def categorize_part(
             in (
                 ComponentCategory.RESISTORS,
                 ComponentCategory.HARDWARE_MISC,
+                ComponentCategory.TRANSFORMERS,
                 ComponentCategory.DIODES,
                 # 'Q3B  50k trimmer' (Aion FX Phobos): Q3's bias trimmer.
                 ComponentCategory.TRANSISTORS,

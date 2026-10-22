@@ -7,6 +7,7 @@ from src.bom_lib.enums import ComponentCategory, ComponentOrigin
 from src.bom_lib.sourcing import (
     build_shopping_list,
     determine_origin,
+    generate_search_term,
     is_extra_part,
     is_pure_hardware,
     resolve_part_sourcing,
@@ -176,3 +177,10 @@ def test_build_shopping_list_part_included_with_the_pcb() -> None:
     assert row["Net Need"] == 1
     assert row["Buy Qty"] == 1
     assert row["Notes"].startswith("📦 1 included with the PCB")
+
+
+def test_an_inductor_is_searched_for_by_its_part_type() -> None:
+    assert (
+        generate_search_term(ComponentCategory.INDUCTORS, "100mH") == "100mH inductor"
+    )
+    assert generate_search_term(ComponentCategory.RELAYS, "TQ2-L-5V") == "TQ2-L-5V"

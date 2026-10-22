@@ -23,8 +23,8 @@ _CAT = ComponentCategory
 _PREFIXES: tuple[tuple[str, ComponentCategory | None], ...] = (
     ("JACK", _CAT.HARDWARE_MISC),
     ("TRIM", _CAT.POTENTIOMETERS),
-    ("XFMR", _CAT.HARDWARE_MISC),  # transformers (Aion FX: 'XFM1  42TM018')
-    ("XFM", _CAT.HARDWARE_MISC),
+    ("XFMR", _CAT.TRANSFORMERS),  # transformers (Aion FX: 'XFM1  42TM018')
+    ("XFM", _CAT.TRANSFORMERS),
     ("RLED", _CAT.RESISTORS),
     ("LEDR", _CAT.RESISTORS),  # Aion FX: LED current-limiting resistor
     ("RPD", _CAT.RESISTORS),  # Aion FX: input pulldown resistor
@@ -56,9 +56,9 @@ _PREFIXES: tuple[tuple[str, ComponentCategory | None], ...] = (
     ("X", _CAT.CRYSTALS_OSCILLATORS),
     ("Y", _CAT.CRYSTALS_OSCILLATORS),
     ("J", _CAT.HARDWARE_MISC),
-    ("T", _CAT.HARDWARE_MISC),  # transformers
+    ("T", _CAT.TRANSFORMERS),
     ("V", _CAT.HARDWARE_MISC),  # vacuum tubes (SuperNuva: 'V1  Korg Nutube')
-    ("K", _CAT.HARDWARE_MISC),  # relays
+    ("K", _CAT.RELAYS),
     ("L", None),  # inductors, but some documents number LEDs L1-L4
     ("P", _CAT.POTENTIOMETERS),  # GuitarPCB: 'P1  GAIN 100k Lin'
 )

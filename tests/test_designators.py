@@ -21,8 +21,8 @@ from src.bom_lib.enums import ComponentCategory as Cat
         ("TR1", Cat.POTENTIOMETERS),
         ("LDR1A", Cat.OPTOELECTRONICS),
         ("SW_C", Cat.SWITCHES),
-        ("T1", Cat.HARDWARE_MISC),  # transformer
-        ("K1", Cat.HARDWARE_MISC),  # relay
+        ("T1", Cat.TRANSFORMERS),
+        ("K1", Cat.RELAYS),
         ("V1", Cat.HARDWARE_MISC),  # vacuum tube
         ("RV1", Cat.POTENTIOMETERS),  # KiCad variable resistor (Sheepylove)
         ("PNP1", Cat.TRANSISTORS),  # Twin Face
@@ -40,7 +40,7 @@ from src.bom_lib.enums import ComponentCategory as Cat
         ("QX1", Cat.TRANSISTORS),  # Aion FX legacy L5 Preamp
         ("RG1", Cat.ICS),  # voltage regulator (Aion FX legacy Blueshift)
         ("Z1", Cat.DIODES),  # zener
-        ("XFM1", Cat.HARDWARE_MISC),  # transformer
+        ("XFM1", Cat.TRANSFORMERS),
         ("r1", Cat.RESISTORS),
     ],
 )
