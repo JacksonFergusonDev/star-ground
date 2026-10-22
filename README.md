@@ -76,6 +76,7 @@ The parser's priority is **no silent errors**. Self-checks re-read each document
 ### Outputs
 
 - **Master shopping list**, merged across projects and quantities, with supplier search links and buying notes. It downloads as a CSV, with clickable Excel/Google Sheets links if you like.
+- **Supplier cart file**: the parts to buy as a CSV for Mouser's or Digi-Key's BOM upload page. Parts named by a part number (`TL072`, `2N5088`) match directly; generic parts (resistors, capacitors, pots) come with a description to pick a match from.
 - **Updated inventory CSV**: your stock after this build.
 - **Field manuals:** printable checklists per project, sorted by component height (see below).
 - **Sticker sheets:** Avery 5160 labels with condensed references (`R1-R4`) for binning parts.
@@ -256,7 +257,6 @@ uv run streamlit run app.py
 ### Next: small, known gaps
 
 - **Lists that count parts by value** ("4 - 10k", about half of Tonepad's documents). These are flagged so you enter them by hand. Reading them means handling parts that have no designator.
-- **Supplier cart files.** Export the shopping list in a format a supplier's bulk order or BOM upload page accepts, so ordering doesn't mean clicking through search links one part at a time.
 
 ### Later, if users ask
 

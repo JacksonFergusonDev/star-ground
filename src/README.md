@@ -64,6 +64,7 @@ The system enforces strict separation between **Ingestion**, **Normalization**, 
 
 - **`exporters.py`**: Digital serialization.
   - **Feature:** Generates CSVs and Excel-compatible strings, injecting `=HYPERLINK()` formulas for one-click purchasing.
+  - **Supplier cart:** A `Quantity, Manufacturer Part Number, Description` CSV for Mouser's and Digi-Key's BOM upload pages. Only values in part-number categories (ICs, transistors, diodes, optoelectronics, transformers, relays) that look like one word of letters and digits are given as part numbers.
 
 ### 5. Telemetry (The Nervous System)
 

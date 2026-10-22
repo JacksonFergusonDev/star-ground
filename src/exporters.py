@@ -1,6 +1,8 @@
 import csv
 import io
+import re
 
+from src.bom_lib.enums import ComponentCategory
 from src.bom_lib.types import ShoppingListRow
 
 BASE_SHOPPING_LIST_COLS = [
@@ -116,3 +118,67 @@ def generate_stock_update_csv(data: list[ShoppingListRow]) -> bytes:
             )
 
     return stock_update_buf.getvalue().encode("utf-8-sig")
+
+
+# Columns of the supplier cart file. Mouser's and Digi-Key's BOM upload pages
+# ask which column holds what, so the names only need to be self-explanatory.
+SUPPLIER_CART_COLS = ["Quantity", "Manufacturer Part Number", "Description"]
+
+# Only these categories name parts by part number ('TL072', '2N5088',
+# '42TM018'); a resistor's or capacitor's value never is one.
+_PART_NUMBER_CATEGORIES = frozenset(
+    {
+        ComponentCategory.ICS,
+        ComponentCategory.TRANSISTORS,
+        ComponentCategory.DIODES,
+        ComponentCategory.OPTOELECTRONICS,
+        ComponentCategory.TRANSFORMERS,
+        ComponentCategory.RELAYS,
+    }
+)
+# One word with letters and digits: '1N4148', 'TQ2-L-5V', 'VTL5C1/2'.
+_PART_NUMBER = re.compile(r"(?=.*[A-Z])(?=.*\d)[A-Z0-9][A-Z0-9./-]{2,}")
+
+
+def manufacturer_part_number(category: ComponentCategory, part: str) -> str:
+    """The part number a supplier's BOM tool can match, or '' for a generic part.
+
+    Args:
+        category: The part's category.
+        part: The part's value as listed ('TL072', '10k', '3mm Red LED').
+
+    Returns:
+        The value itself when it is a part number, else an empty string.
+    """
+    if category in _PART_NUMBER_CATEGORIES and _PART_NUMBER.fullmatch(part.upper()):
+        return part
+    return ""
+
+
+def generate_supplier_cart_csv(data: list[ShoppingListRow]) -> bytes:
+    """Generates a cart file for a supplier's BOM upload page (Mouser, Digi-Key).
+
+    One line per part to buy. Parts named by a part number carry it, so the
+    supplier matches them directly; generic parts (resistors, capacitors,
+    pots, hardware) carry a description to choose a match from.
+
+    Args:
+        data: The shopping list rows.
+
+    Returns:
+        The CSV content encoded as utf-8 (no BOM signature: upload pages
+        read it as part of the first header).
+    """
+    buf = io.StringIO()
+    writer = csv.writer(buf)
+    writer.writerow(SUPPLIER_CART_COLS)
+    for row in data:
+        if int(row.get("Buy Qty", 0)) <= 0:
+            continue
+        category = ComponentCategory(row["Category"])
+        part_number = manufacturer_part_number(category, row["Part"])
+        description = row.get("Search Term") or row["Part"]
+        writer.writerow(
+            [row["Buy Qty"], part_number, f"{category.value}: {description}"]
+        )
+    return buf.getvalue().encode("utf-8")

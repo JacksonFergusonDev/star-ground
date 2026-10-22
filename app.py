@@ -40,6 +40,7 @@ from src.bom_lib import (
 from src.exporters import (
     generate_shopping_list_csv,
     generate_stock_update_csv,
+    generate_supplier_cart_csv,
     get_shopping_list_columns,
 )
 from src.feedback import save_feedback
@@ -932,7 +933,7 @@ if st.session_state.inventory and st.session_state.stats:
     stock_update_csv = generate_stock_update_csv(final_data)
 
     # Row 1: Specific Downloads
-    c_dwn1, c_dwn2, c_dwn3 = st.columns(3)
+    c_dwn1, c_cart, c_dwn2, c_dwn3 = st.columns(4)
 
     with c_dwn1:
         st.download_button(
@@ -940,6 +941,20 @@ if st.session_state.inventory and st.session_state.stats:
             data=csv_out,
             file_name="shopping_list.csv",
             mime="text/csv",
+            use_container_width=True,
+        )
+
+    with c_cart:
+        st.download_button(
+            "🧾 Download Supplier Cart",
+            data=generate_supplier_cart_csv(final_data),
+            file_name="supplier_cart.csv",
+            mime="text/csv",
+            help=(
+                "Upload to Mouser's or Digi-Key's BOM tool. Parts with a part "
+                "number match directly; for resistors, capacitors and other "
+                "generic parts, pick a match from the description."
+            ),
             use_container_width=True,
         )
 

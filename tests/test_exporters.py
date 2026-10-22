@@ -1,12 +1,16 @@
 """Tests for CSV exporters using typed ShoppingListRow."""
 
-from src.bom_lib.enums import ComponentOrigin
+import pytest
+
+from src.bom_lib.enums import ComponentCategory, ComponentOrigin
 from src.bom_lib.types import ShoppingListRow
 from src.exporters import (
     BASE_SHOPPING_LIST_COLS,
     generate_shopping_list_csv,
     generate_stock_update_csv,
+    generate_supplier_cart_csv,
     get_shopping_list_columns,
+    manufacturer_part_number,
 )
 
 
@@ -153,3 +157,54 @@ def test_stock_update_does_not_spend_stock_on_included_parts() -> None:
         },
     ]
     assert "ICs,24LC32A,2" in generate_stock_update_csv(rows).decode("utf-8-sig")
+
+
+def _row(category: str, part: str, buy: int, search: str = "") -> ShoppingListRow:
+    return {
+        "Origin": ComponentOrigin.CIRCUIT_BOARD,
+        "Category": category,
+        "Part": part,
+        "BOM Qty": buy,
+        "Included": 0,
+        "In Stock": 0,
+        "Net Need": buy,
+        "Buy Qty": buy,
+        "Notes": "",
+        "Search Term": search or part,
+        "Tayda_Link": "",
+    }
+
+
+@pytest.mark.parametrize(
+    ("category", "part", "expected"),
+    [
+        (ComponentCategory.ICS, "TL072", "TL072"),
+        (ComponentCategory.DIODES, "1N4148", "1N4148"),
+        (ComponentCategory.TRANSISTORS, "2N5088", "2N5088"),
+        (ComponentCategory.RELAYS, "TQ2-L-5V", "TQ2-L-5V"),
+        (ComponentCategory.TRANSFORMERS, "42TM018", "42TM018"),
+        (ComponentCategory.DIODES, "LED", ""),
+        (ComponentCategory.DIODES, "3mm Red LED", ""),
+        (ComponentCategory.RESISTORS, "10k", ""),
+        (ComponentCategory.CAPACITORS, "100n", ""),
+        (ComponentCategory.TRANSISTORS, "Germanium PNP", ""),
+    ],
+)
+def test_only_real_part_numbers_are_given_to_the_supplier(
+    category: ComponentCategory, part: str, expected: str
+) -> None:
+    assert manufacturer_part_number(category, part) == expected
+
+
+def test_the_supplier_cart_lists_what_to_buy() -> None:
+    rows = [
+        _row("ICs", "TL072", 2),
+        _row("Resistors", "10k", 10, "10k ohm 1/4w metal film"),
+        _row("Capacitors", "100n", 0),  # in stock: nothing to buy
+    ]
+    text = generate_supplier_cart_csv(rows).decode("utf-8")
+    assert text.splitlines() == [
+        "Quantity,Manufacturer Part Number,Description",
+        "2,TL072,ICs: TL072",
+        "10,,Resistors: 10k ohm 1/4w metal film",
+    ]
