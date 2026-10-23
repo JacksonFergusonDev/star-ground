@@ -1,3 +1,7 @@
+# A vendored release must stay byte-for-byte identical to its tag.
+# CI verifies it with `just sync-house-style --check`.
+exclude: ^house/
+
 default_install_hook_types:
   - pre-commit
   - commit-msg

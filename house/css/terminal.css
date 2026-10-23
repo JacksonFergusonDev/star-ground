@@ -1,0 +1,147 @@
+/*
+ * A terminal window for recordings and screenshots:
+ *
+ *   <div class="hs-terminal">
+ *     <div class="hs-terminal-bar">
+ *       <div class="hs-terminal-dots" aria-hidden="true">
+ *         <span class="dot dot-close"></span>
+ *         <span class="dot dot-minimize"></span>
+ *         <span class="dot dot-maximize"></span>
+ *       </div>
+ *       <span class="hs-terminal-title">title</span>
+ *     </div>
+ *     <div class="hs-terminal-screen" data-asciinema="demo.cast"></div>
+ *   </div>
+ *
+ * The .ap-* rules skin asciinema-player inside the screen; js/cast.js mounts it.
+ */
+.hs-terminal {
+  border: 1px solid #2d3c43;
+  border-radius: 8px;
+  background: #090e11;
+  align-self: start;
+  width: 100%;
+  overflow: hidden;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45);
+}
+.hs-terminal-bar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  position: relative;
+  border-bottom: 1px solid #243138;
+  padding: 8px 14px;
+  background: #11171c;
+  min-height: 28px;
+  box-sizing: border-box;
+}
+.hs-terminal-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  z-index: 1;
+}
+.hs-terminal-dots .dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  box-sizing: border-box;
+}
+.hs-terminal-dots .dot-close {
+  background: #ff5f56;
+  border: 1px solid #e0443e;
+}
+.hs-terminal-dots .dot-minimize {
+  background: #ffbd2e;
+  border: 1px solid #dea123;
+}
+.hs-terminal-dots .dot-maximize {
+  background: #27c93f;
+  border: 1px solid #1aab29;
+}
+.hs-terminal-title {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.5px;
+  color: #7a909c;
+  max-width: calc(100% - 90px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  pointer-events: none;
+  text-align: center;
+}
+.hs-terminal-screen {
+  width: 100%;
+  min-height: 280px;
+  overflow: hidden;
+  position: relative;
+}
+.hs-terminal-screen .ap-wrapper {
+  border-radius: 0;
+  box-shadow: none;
+}
+.hs-terminal-screen .ap-player {
+  position: relative;
+  height: auto !important;
+  background: #0a0f1f;
+}
+/* The control bar overlays the recording's last rows and shows on hover or focus. */
+.hs-terminal-screen .ap-control-bar,
+.hs-terminal-screen .ap-wrapper.ap-hud .ap-control-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  background: rgba(10, 15, 31, 0.92);
+  backdrop-filter: blur(4px);
+}
+.hs-terminal:hover .ap-control-bar,
+.hs-terminal:hover .ap-wrapper.ap-hud .ap-control-bar,
+.hs-terminal:focus-within .ap-control-bar,
+.hs-terminal:focus-within .ap-wrapper.ap-hud .ap-control-bar {
+  opacity: 1;
+  pointer-events: auto;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hs-terminal-screen .ap-control-bar {
+    transition: none;
+  }
+}
+@media (max-width: 800px) {
+  .hs-terminal-bar {
+    font-size: 9px;
+  }
+}
+@media (max-width: 560px) {
+  .hs-terminal-bar {
+    padding: 6px 10px;
+    min-height: 24px;
+  }
+  .hs-terminal-dots .dot {
+    width: 8px;
+    height: 8px;
+  }
+  .hs-terminal-title {
+    font-size: 8px;
+    max-width: calc(100% - 75px);
+  }
+  .hs-terminal-screen {
+    min-height: 0;
+  }
+}
+/* Touch screens can't hover, so the controls stay visible. */
+@media (hover: none) {
+  .hs-terminal-screen .ap-control-bar,
+  .hs-terminal-screen .ap-wrapper.ap-hud .ap-control-bar {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
