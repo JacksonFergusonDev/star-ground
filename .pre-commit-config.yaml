@@ -77,9 +77,10 @@ repos:
 
       - id: zizmor
         name: zizmor
-        entry: uv run zizmor
+        entry: uv run zizmor --offline .github/
         language: system
-        files: ^\.github/workflows/.*\.ya?ml$
+        pass_filenames: false
+        files: ^\.github/(workflows/.*\.ya?ml|actions/.*)$
 
       - id: pytest
         name: pytest
