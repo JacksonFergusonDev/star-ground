@@ -1,0 +1,83 @@
+/*
+ * The house icons as CSS, for pages that can't inline SVG:
+ *
+ *   <span class="hs-icon hs-icon-arrow-right" aria-hidden="true"></span>
+ *
+ * An icon takes the text's color and size (1em). Each class draws the file of
+ * the same name in icons/, which a site that can inline SVG uses directly.
+ * GUIDELINES.md says which arrow a link takes.
+ */
+.hs-icon {
+  display: inline-block;
+  flex-shrink: 0;
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.125em;
+  background-color: currentColor;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+}
+.hs-icon-arrow-down {
+  -webkit-mask-image: url('../icons/arrow-down.svg');
+  mask-image: url('../icons/arrow-down.svg');
+}
+.hs-icon-arrow-left {
+  -webkit-mask-image: url('../icons/arrow-left.svg');
+  mask-image: url('../icons/arrow-left.svg');
+}
+.hs-icon-arrow-right {
+  -webkit-mask-image: url('../icons/arrow-right.svg');
+  mask-image: url('../icons/arrow-right.svg');
+}
+.hs-icon-arrow-up {
+  -webkit-mask-image: url('../icons/arrow-up.svg');
+  mask-image: url('../icons/arrow-up.svg');
+}
+.hs-icon-arrow-up-right {
+  -webkit-mask-image: url('../icons/arrow-up-right.svg');
+  mask-image: url('../icons/arrow-up-right.svg');
+}
+.hs-icon-brand-email {
+  -webkit-mask-image: url('../icons/brand-email.svg');
+  mask-image: url('../icons/brand-email.svg');
+}
+.hs-icon-brand-github {
+  -webkit-mask-image: url('../icons/brand-github.svg');
+  mask-image: url('../icons/brand-github.svg');
+}
+.hs-icon-brand-linkedin {
+  -webkit-mask-image: url('../icons/brand-linkedin.svg');
+  mask-image: url('../icons/brand-linkedin.svg');
+}
+.hs-icon-brand-python {
+  -webkit-mask-image: url('../icons/brand-python.svg');
+  mask-image: url('../icons/brand-python.svg');
+}
+.hs-icon-close {
+  -webkit-mask-image: url('../icons/close.svg');
+  mask-image: url('../icons/close.svg');
+}
+.hs-icon-collection {
+  -webkit-mask-image: url('../icons/collection.svg');
+  mask-image: url('../icons/collection.svg');
+}
+.hs-icon-github {
+  -webkit-mask-image: url('../icons/github.svg');
+  mask-image: url('../icons/github.svg');
+}
+.hs-icon-mail {
+  -webkit-mask-image: url('../icons/mail.svg');
+  mask-image: url('../icons/mail.svg');
+}
+.hs-icon-pause {
+  -webkit-mask-image: url('../icons/pause.svg');
+  mask-image: url('../icons/pause.svg');
+}
+.hs-icon-play {
+  -webkit-mask-image: url('../icons/play.svg');
+  mask-image: url('../icons/play.svg');
+}
