@@ -42,6 +42,28 @@ This project uses [uv](https://github.com/astral-sh/uv) for dependency managemen
    prek install
    ```
 
+## Shared Design and Writing
+
+The `house/` directory is a committed release of [house-style](https://github.com/JacksonFergusonDev/house-style). Its `GUIDELINES.txt` is the design and writing contract. The `house_style` variable in the `justfile` is the release pin, and `branding/theme.css` supplies Star Ground's green accent.
+
+To adopt a newer release, change the pin, then run:
+
+```sh
+just sync-house-style
+just sync-house-style --check
+```
+
+Commit the pin and the complete vendored copy together. CI runs the check and fails if files were changed, added, or removed. Never edit `house/` directly; make shared design changes in house-style and adopt its release here.
+
+The current Streamlit app keeps its native theme in `.streamlit/config.toml`, using the product palette's navy background, panel, and text colors with Star Ground's green accent. The vendored CSS is not loaded into Streamlit. This setup leaves the current app's fonts and layout unchanged.
+
+The JavaScript/React frontend and Zensical documentation have not been created. They will share this same pinned copy:
+
+- The frontend should import `house/css/fonts.css`, `house/css/tokens.css`, `house/css/product.css`, and the component styles it uses, then `branding/theme.css` and its layout styles. Let the bundler copy and fingerprint referenced fonts and icons.
+- The docs build should copy `house/` unchanged to an ignored `docs/house/` staging directory and copy `branding/theme.css` to its own served assets. Load the house files first, then the brand stylesheet and the documentation theme adapter. Disable the theme's external font loading and use the house fonts. Protostar's `zensical.toml` and `docs/stylesheets/extra.css` show how to map house tokens to Zensical.
+
+Keep the release pin and vendored source shared rather than maintaining separate copies for each build. Site-specific CSS handles layout and the brand accent; shared components and rules change upstream.
+
 ## Running Tests
 
 We use `pytest` for the test suite.

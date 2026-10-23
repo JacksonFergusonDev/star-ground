@@ -1,0 +1,4 @@
+/* Load after house/css/tokens.css and house/css/product.css in future sites. */
+:root {
+  --accent: #4ade80;
+}
