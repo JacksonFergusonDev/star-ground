@@ -459,7 +459,6 @@ BOM_PRESETS = {
             R49 1M
             R1 2M
             R5 2M
-            IC1 (Inj) DIP SOCKET (Check Size)
             IC2 (Inj) DIP SOCKET (Check Size)
             IC3 (Inj) DIP SOCKET (Check Size)
             IC4 (Inj) DIP SOCKET (Check Size)
@@ -743,7 +742,6 @@ BOM_PRESETS = {
             R1 1M
             IC1 (Inj) DIP SOCKET (Check Size)
             IC2 (Inj) DIP SOCKET (Check Size)
-            IC3 (Inj) DIP SOCKET (Check Size)
         """,
         "source_path": "raw_boms/pedalpcb/time/Cataclysm-PedalPCB.pdf",
         "is_pdf": True,
