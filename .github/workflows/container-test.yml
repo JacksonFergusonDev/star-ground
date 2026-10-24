@@ -80,8 +80,13 @@ jobs:
             "docker-archive:${RUNNER_TEMP}/runtime.tar:star-ground:smoke"
           docker load --input "${RUNNER_TEMP}/runtime.tar"
           rm "${RUNNER_TEMP}/runtime.tar"
-          # Image IDs hash the config, which includes all uncompressed layer digests.
-          test "$(docker image inspect --format '{{.Id}}' star-ground:smoke)" = "$config"
+          # Docker versions disagree on .Id; hash the exported config bytes instead.
+          # The config includes the runtime settings and every uncompressed layer digest.
+          docker image save --output "${RUNNER_TEMP}/loaded.tar" star-ground:smoke
+          loaded_config="$(tar -xOf "${RUNNER_TEMP}/loaded.tar" manifest.json | jq -er '.[0].Config')"
+          actual_config="sha256:$(tar -xOf "${RUNNER_TEMP}/loaded.tar" "$loaded_config" | sha256sum | cut -d ' ' -f 1)"
+          test "$actual_config" = "$config"
+          rm "${RUNNER_TEMP}/loaded.tar"
           test "$(docker image inspect --format '{{.Architecture}}' star-ground:smoke)" = "$ARCH"
           uv run --no-sync python tools/smoke_container.py star-ground:smoke \
             --artifacts "${RUNNER_TEMP}/browser" 2>&1 | tee "${RUNNER_TEMP}/smoke.log"
