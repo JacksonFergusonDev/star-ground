@@ -46,6 +46,13 @@ def _from_download(doc: FetchedDocument) -> str | bytes | FileUpload:
     return doc.content.decode("utf-8", errors="replace")
 
 
+def _failed(error: str) -> ParseResult:
+    """An empty reading that reports why it is empty."""
+    stats = create_empty_stats()
+    stats["errors"].append(error)
+    return ParseResult(inventory=create_empty_inventory(), stats=stats)
+
+
 class BOMParserContext:
     """Orchestrates strategy selection, I/O handling, and BOM parsing."""
 
@@ -96,22 +103,15 @@ class BOMParserContext:
                 if strategy.can_handle(method, data_to_parse):
                     return strategy.parse(data_to_parse, source_name=source_name)
 
-            err_stats = create_empty_stats()
-            err_stats["errors"].append("Unknown Method")
-            return ParseResult(
-                inventory=create_empty_inventory(),
-                stats=err_stats,
-                title=None,
-                raw_content=None,
-            )
+            return _failed("Unknown Method")
 
-        except Exception as e:
-            logger.error(f"Error processing {source_name}: {e}")
-            err_stats = create_empty_stats()
-            err_stats["errors"].append(str(e))
-            return ParseResult(
-                inventory=create_empty_inventory(),
-                stats=err_stats,
-                title=None,
-                raw_content=None,
+        except FetchError as e:
+            # Written for the builder: a link the app won't or can't fetch.
+            return _failed(str(e))
+        except Exception:
+            # A bug, not the builder's input: log it whole, and say so.
+            logger.exception("Reading %s failed", source_name)
+            return _failed(
+                "Star Ground couldn't read this parts list because of a bug. "
+                "It has been logged; please report it with the document."
             )

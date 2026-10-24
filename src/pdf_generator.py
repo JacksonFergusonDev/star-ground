@@ -10,6 +10,7 @@ ZIP archives for user download.
 
 import datetime
 import io
+import logging
 import os
 import re
 import zipfile
@@ -34,6 +35,8 @@ from src.bom_lib import (
     deduplicate_refs,
     get_spec_type,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def condense_refs(refs: list[str]) -> str:
@@ -637,8 +640,10 @@ def generate_master_zip(
                     with open(src_path, "rb") as f:
                         file_content = f.read()
                     dest_name = f"Source Documents/{safe_name} Source{ext}"
-                except Exception:
-                    pass
+                except OSError:
+                    logger.warning(
+                        "Preset source document missing: %s", project.source_path
+                    )
 
             if file_content and dest_name and dest_name not in used_filenames:
                 zf.writestr(dest_name, file_content)

@@ -92,28 +92,25 @@ def _expand_range(ref_raw: str) -> list[str]:
     if "-" not in ref_raw:
         return [ref_raw]
 
-    try:
-        # Match pattern: Prefix1, StartNum, optional Prefix2, EndNum
-        # 'POT1 - 6' (6 Band EQ) spaces the dash.
-        m = re.match(r"^([a-zA-Z]+)(\d+)\s*-\s*([a-zA-Z]+)?(\d+)$", ref_raw)
-        if m:
-            prefix1 = m.group(1)
-            start = int(m.group(2))
-            prefix2 = m.group(3)
-            end = int(m.group(4))
+    # Match pattern: Prefix1, StartNum, optional Prefix2, EndNum
+    # 'POT1 - 6' (6 Band EQ) spaces the dash.
+    m = re.match(r"^([a-zA-Z]+)(\d+)\s*-\s*([a-zA-Z]+)?(\d+)$", ref_raw)
+    if m:
+        prefix1 = m.group(1)
+        start = int(m.group(2))
+        prefix2 = m.group(3)
+        end = int(m.group(4))
 
-            # If a second prefix is provided, it must match the first prefix
-            if prefix2 and prefix2.upper() != prefix1.upper():
-                return [ref_raw]
+        # If a second prefix is provided, it must match the first prefix
+        if prefix2 and prefix2.upper() != prefix1.upper():
+            return [ref_raw]
 
-            # Sanity check: Avoid accidental explosion of massive numbers
-            if 0 <= (end - start) < 50:
-                return [
-                    str(RefDesignator(prefix=prefix1, number=i))
-                    for i in range(start, end + 1)
-                ]
-    except Exception:
-        pass
+        # Sanity check: Avoid accidental explosion of massive numbers
+        if 0 <= (end - start) < 50:
+            return [
+                str(RefDesignator(prefix=prefix1, number=i))
+                for i in range(start, end + 1)
+            ]
 
     return [ref_raw]
 

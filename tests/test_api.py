@@ -242,3 +242,23 @@ def test_a_board_is_bought_where_the_preset_says_whatever_its_name() -> None:
     }
     assert links["Triangulum Boost PCB"].startswith("https://www.pedalpcb.com")
     assert links["Clone PCB"].startswith("https://www.taydaelectronics.com")
+
+
+def test_a_missing_preset_document_is_logged(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    gone = tmp_path / "gone.pdf"
+    master = generate_master_list(
+        [
+            Project(
+                name="Boost",
+                method=InputMethod.PRESET,
+                data="R1 10k",
+                source_path=str(gone),
+            )
+        ]
+    )
+
+    with zipfile.ZipFile(io.BytesIO(master.build_pack(b"", b""))) as zf:
+        assert not any(n.startswith("Source Documents/") for n in zf.namelist())
+    assert f"Preset source document missing: {gone}" in caplog.text
