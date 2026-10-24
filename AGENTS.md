@@ -9,6 +9,10 @@ Guidelines and architectural invariants for AI agents working in the Star Ground
 - **Break and delete cleanly:** If an internal or public API, CLI flag, schema, or configuration model needs improvement, change or break it directly. Delete obsolete code and dead parameters outright rather than carrying tech debt.
 - **Prioritize ergonomics:** Clean, simple, and idiomatic architecture always takes precedence over historical continuity.
 
+## Current Work: The Rebuild Plan
+
+[`PLAN.md`](PLAN.md) holds the plan for replacing Streamlit with FastAPI, Astro and Svelte: its decisions, steps and status. Read it before working on the rebuild, follow its decisions rather than reopening them, and update its status table in the same PR that finishes a step. A decision changes only by editing `PLAN.md` with the reason.
+
 ## Pre-Commit & Pre-Push Hooks (Avoid Redundant Checks)
 
 The repository uses **`prek`** hooks (`.pre-commit-config.yaml`) for automated gating:
