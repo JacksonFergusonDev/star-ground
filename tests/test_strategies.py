@@ -10,6 +10,7 @@ import pytest
 import requests
 
 from src.bom_lib.enums import ComponentCategory, InputMethod
+from src.bom_lib.fetch import FetchedDocument
 from src.bom_lib.strategies import (
     BOMParserContext,
     CSVParserStrategy,
@@ -76,9 +77,7 @@ class TestCSVParserStrategy:
         assert strategy.can_handle(InputMethod.UPLOAD_FILE, pdf_file) is False
         assert strategy.can_handle(InputMethod.UPLOAD_FILE, other_file) is True
 
-        assert strategy.can_handle(InputMethod.UPLOAD_FILE, "project/bom.csv") is True
-        assert strategy.can_handle(InputMethod.UPLOAD_FILE, "project/bom.tsv") is True
-        assert strategy.can_handle(InputMethod.UPLOAD_FILE, "project/bom.pdf") is False
+        assert strategy.can_handle(InputMethod.PASTE_TEXT, "project/bom.csv") is False
 
         assert (
             strategy.can_handle(InputMethod.UPLOAD_FILE, b"Designator,Value\nR1,10k")
@@ -107,17 +106,6 @@ class TestCSVParserStrategy:
         csv_bytes = b"Ref,Val\nR1,10k\n"
 
         result = strategy.parse(csv_bytes, source_name="BytesPedal")
-
-        assert isinstance(result, ParseResult)
-        assert result.stats["parts_found"] == 1
-        assert ComponentKey(ComponentCategory.RESISTORS, "10k") in result.inventory
-
-    def test_parse_file_path(self, tmp_path: Any) -> None:
-        strategy = CSVParserStrategy()
-        csv_file = tmp_path / "test.csv"
-        csv_file.write_text("Ref,Value\nR1,10k\n", encoding="utf-8")
-
-        result = strategy.parse(str(csv_file), source_name="PathPedal")
 
         assert isinstance(result, ParseResult)
         assert result.stats["parts_found"] == 1
@@ -166,11 +154,7 @@ class TestPDFParserStrategy:
         assert strategy.can_handle(InputMethod.UPLOAD_FILE, pdf_file) is True
         assert strategy.can_handle(InputMethod.UPLOAD_FILE, csv_file) is False
 
-        assert strategy.can_handle(InputMethod.UPLOAD_FILE, "path/to/pedal.pdf") is True
-        assert strategy.can_handle(InputMethod.UPLOAD_FILE, "path/to/pedal.PDF") is True
-        assert (
-            strategy.can_handle(InputMethod.UPLOAD_FILE, "path/to/pedal.csv") is False
-        )
+        assert strategy.can_handle(InputMethod.PASTE_TEXT, "path/to/pedal.pdf") is False
 
         assert (
             strategy.can_handle(InputMethod.UPLOAD_FILE, b"%PDF-1.4 binary data")
@@ -180,18 +164,6 @@ class TestPDFParserStrategy:
             strategy.can_handle(InputMethod.UPLOAD_FILE, b"Designator,Value\nR1,10k")
             is False
         )
-
-    def test_parse_file_path(self, sample_pdf_path: str) -> None:
-        strategy = PDFParserStrategy()
-
-        result = strategy.parse(sample_pdf_path, source_name="Cataclysm")
-
-        assert isinstance(result, ParseResult)
-        assert result.stats["parts_found"] > 0
-        assert result.title is not None
-        assert "Cataclysm" in result.title
-        assert result.raw_content is not None
-        assert result.raw_content.startswith(b"%PDF")
 
     def test_parse_uploaded_file(self, sample_pdf_path: str) -> None:
         strategy = PDFParserStrategy()
@@ -299,6 +271,37 @@ class TestBOMParserContext:
         assert result.stats["parts_found"] > 0
         assert result.title is not None
         assert result.raw_content == sample_pdf_bytes
+
+    @pytest.mark.parametrize("name", ["bom.pdf", "bom.csv", "bom.tsv"])
+    def test_pasted_text_is_never_read_as_a_server_path(
+        self, tmp_path: Path, sample_pdf_bytes: bytes, name: str
+    ) -> None:
+        # A path typed into the text box must not open a file on the server
+        # (its bytes would come back in the build pack).
+        secret = tmp_path / name
+        secret.write_bytes(
+            sample_pdf_bytes if name.endswith(".pdf") else b"Ref,Value\nR1,10k\n"
+        )
+
+        for method in (InputMethod.PASTE_TEXT, InputMethod.PRESET):
+            result = BOMParserContext().process(method, str(secret), "Pasted")
+            assert result.raw_content is None
+            assert result.stats["parts_found"] == 0
+
+    def test_a_downloaded_path_is_never_read_as_a_server_path(
+        self, tmp_path: Path, sample_pdf_bytes: bytes
+    ) -> None:
+        secret = tmp_path / "bom.pdf"
+        secret.write_bytes(sample_pdf_bytes)
+        doc = FetchedDocument(str(secret).encode(), "text/plain", "https://x.test/a")
+
+        with patch("src.bom_lib.strategies.context.fetch_url", return_value=doc):
+            result = BOMParserContext().process(
+                InputMethod.FROM_URL, "https://x.test/a", "Linked"
+            )
+
+        assert result.raw_content is None
+        assert result.stats["parts_found"] == 0
 
     def test_process_from_url_network_error(self) -> None:
         context = BOMParserContext()
