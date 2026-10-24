@@ -18,6 +18,7 @@ from .enums import (
     InputMethod,
     OcrVerdict,
     ParseWarningKind,
+    PcbShop,
 )
 from .manager import (
     calculate_net_needs,
@@ -133,6 +134,7 @@ __all__ = [
     "ParseWarning",
     "ParseWarningKind",
     "PartData",
+    "PcbShop",
     "PresetCatalog",
     "PresetData",
     "PresetLookupEntry",

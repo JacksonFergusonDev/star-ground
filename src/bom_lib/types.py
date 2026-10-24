@@ -29,6 +29,7 @@ from src.bom_lib.enums import (
     HardwareRole,
     OcrVerdict,
     ParseWarningKind,
+    PcbShop,
 )
 
 
@@ -128,6 +129,7 @@ class BuiltProject:
         options: Interchangeable choices resolved to the document's default.
         document: The source PDF's bytes, for the build pack.
         source_path: A preset's source document on disk, for the build pack.
+        pcb_shop: Where its board is bought, when a shop sells it.
     """
 
     name: str
@@ -137,6 +139,7 @@ class BuiltProject:
     options: tuple[str, ...] = ()
     document: bytes | None = None
     source_path: str | None = None
+    pcb_shop: PcbShop | None = None
 
 
 @dataclass(frozen=True, slots=True)

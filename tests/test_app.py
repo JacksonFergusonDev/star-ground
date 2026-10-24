@@ -13,6 +13,7 @@ from src.bom_lib import (
     ComponentCategory,
     ComponentKey,
     InputMethod,
+    PcbShop,
     create_empty_stats,
 )
 from src.bom_lib.fetch import FetchedDocument
@@ -420,3 +421,20 @@ def test_changing_an_input_clears_the_old_results(app, change):
         app.text_input[1].set_value("").run()
     app.button[1].click().run()
     assert not any("inputs changed" in c.value for c in app.caption)
+
+
+@pytest.mark.parametrize(
+    ("method", "preset", "shop"),
+    [
+        (InputMethod.PRESET, "[PedalPCB] [Boost] Triangulum Boost", PcbShop.PEDALPCB),
+        (InputMethod.PRESET, "[Tayda] [Fuzz] Fuzz Face", None),
+        # The preset was loaded, then the builder switched to pasting.
+        (InputMethod.PASTE_TEXT, "[PedalPCB] [Boost] Triangulum Boost", None),
+    ],
+)
+def test_a_preset_slot_names_the_shop_that_sells_its_board(
+    method: InputMethod, preset: str, shop: PcbShop | None
+) -> None:
+    slot = ProjectSlot(method=method, data="R1 10k", last_loaded_preset=preset)
+
+    assert slot.project().pcb_shop == shop
