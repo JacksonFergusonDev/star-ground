@@ -1,0 +1,1105 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Star Ground API",
+    "summary": "Merges guitar pedal build documents into one shopping list.",
+    "version": "0"
+  },
+  "paths": {
+    "/api/health": {
+      "get": {
+        "tags": [
+          "service"
+        ],
+        "summary": "Health",
+        "description": "Answers once the server is up; the frontend calls it to wake it.",
+        "operationId": "health_api_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/presets": {
+      "get": {
+        "tags": [
+          "presets"
+        ],
+        "summary": "Presets",
+        "description": "The preset library, for browsing by source and category.",
+        "operationId": "presets_api_presets_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PresetCatalog"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/documents/read": {
+      "post": {
+        "tags": [
+          "documents"
+        ],
+        "summary": "Read",
+        "description": "Reads an upload or link ahead of building the master list.\n\nThe reading says which builds a multi-circuit document offers, and\nwhether OCR read parts from image pages. Image-only documents take\nseconds a page, so progress streams as server-sent events.",
+        "operationId": "read_api_documents_read_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_read_api_documents_read_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "`queued` and `reading` events, then `result` or `error`. Each event's data is one `ReadEvent`.",
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadEvent"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/master-list": {
+      "post": {
+        "tags": [
+          "master list"
+        ],
+        "summary": "Build Master List",
+        "description": "Merges the projects into one master list.\n\nUploads are sent as `files`, named as their projects' `file` says;\n`stock` is the builder's stock CSV (columns Category, Part, Qty).",
+        "operationId": "build_master_list_api_master_list_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_build_master_list_api_master_list_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MasterListResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/BuildNotChosen"
+                    },
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "title": "Response 422 Build Master List Api Master List Post"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/exports/{kind}": {
+      "post": {
+        "tags": [
+          "master list"
+        ],
+        "summary": "Export",
+        "description": "Exports the master list as a CSV or ZIP, from the same request body.\n\n`links` sets how the shopping list (alone or in the build pack)\nwrites supplier links: as plain URLs, or as Excel `HYPERLINK`s.",
+        "operationId": "export_api_exports__kind__post",
+        "parameters": [
+          {
+            "name": "kind",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ExportKind"
+            }
+          },
+          {
+            "name": "links",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/LinkFormat",
+              "default": "plain"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_export_api_exports__kind__post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The file, as an attachment.",
+            "content": {
+              "application/json": {
+                "schema": {}
+              },
+              "text/csv": {},
+              "application/zip": {}
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/BuildNotChosen"
+                    },
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "title": "Response 422 Export Api Exports  Kind  Post"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          }
+        }
+      }
+    },
+    "/api/feedback": {
+      "post": {
+        "tags": [
+          "feedback"
+        ],
+        "summary": "Send Feedback",
+        "description": "Records a rating and comment from the app.",
+        "operationId": "send_feedback_api_feedback_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FeedbackIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Body_build_master_list_api_master_list_post": {
+        "properties": {
+          "request": {
+            "type": "string",
+            "title": "Request",
+            "description": "A `MasterListRequest`, as JSON."
+          },
+          "files": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string",
+                  "contentMediaType": "application/octet-stream"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Files"
+          },
+          "stock": {
+            "anyOf": [
+              {
+                "type": "string",
+                "contentMediaType": "application/octet-stream"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stock"
+          }
+        },
+        "type": "object",
+        "required": [
+          "request"
+        ],
+        "title": "Body_build_master_list_api_master_list_post"
+      },
+      "Body_export_api_exports__kind__post": {
+        "properties": {
+          "request": {
+            "type": "string",
+            "title": "Request",
+            "description": "A `MasterListRequest`, as JSON."
+          },
+          "files": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string",
+                  "contentMediaType": "application/octet-stream"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Files"
+          },
+          "stock": {
+            "anyOf": [
+              {
+                "type": "string",
+                "contentMediaType": "application/octet-stream"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stock"
+          }
+        },
+        "type": "object",
+        "required": [
+          "request"
+        ],
+        "title": "Body_export_api_exports__kind__post"
+      },
+      "Body_read_api_documents_read_post": {
+        "properties": {
+          "file": {
+            "anyOf": [
+              {
+                "type": "string",
+                "contentMediaType": "application/octet-stream"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2048
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          }
+        },
+        "type": "object",
+        "title": "Body_read_api_documents_read_post"
+      },
+      "BuildNotChosen": {
+        "properties": {
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "projects": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Projects"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "message",
+          "projects"
+        ],
+        "title": "BuildNotChosen",
+        "description": "A multi-circuit document's build wasn't chosen."
+      },
+      "ComponentOrigin": {
+        "type": "string",
+        "enum": [
+          "Circuit Board",
+          "Hardware Kit",
+          "Extras"
+        ],
+        "title": "ComponentOrigin",
+        "description": "Purchasing origins for bill-of-materials components."
+      },
+      "ExportKind": {
+        "type": "string",
+        "enum": [
+          "shopping-list",
+          "supplier-cart",
+          "stock-update",
+          "field-manuals",
+          "build-pack"
+        ],
+        "title": "ExportKind",
+        "description": "The files a master list exports."
+      },
+      "FeedbackIn": {
+        "properties": {
+          "rating": {
+            "type": "integer",
+            "maximum": 5.0,
+            "minimum": 1.0,
+            "title": "Rating",
+            "description": "1 (terrible) to 5 (excellent)."
+          },
+          "comment": {
+            "type": "string",
+            "maxLength": 5000,
+            "title": "Comment",
+            "default": ""
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "rating"
+        ],
+        "title": "FeedbackIn",
+        "description": "A rating and comment from the app."
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "Health": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "ok",
+            "title": "Status",
+            "default": "ok"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "Health",
+        "description": "The service is up."
+      },
+      "LinkFormat": {
+        "type": "string",
+        "enum": [
+          "plain",
+          "excel"
+        ],
+        "title": "LinkFormat",
+        "description": "How the shopping list CSV writes supplier links."
+      },
+      "MasterListResult": {
+        "properties": {
+          "projects": {
+            "items": {
+              "$ref": "#/components/schemas/ProjectResult"
+            },
+            "type": "array",
+            "title": "Projects"
+          },
+          "shopping_list": {
+            "items": {
+              "$ref": "#/components/schemas/ShoppingRow"
+            },
+            "type": "array",
+            "title": "Shopping List"
+          },
+          "stats": {
+            "$ref": "#/components/schemas/Stats"
+          },
+          "ignored_lines": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Ignored Lines",
+            "description": "Skipped lines that looked like parts."
+          },
+          "has_stock": {
+            "type": "boolean",
+            "title": "Has Stock"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "projects",
+          "shopping_list",
+          "stats",
+          "ignored_lines",
+          "has_stock"
+        ],
+        "title": "MasterListResult",
+        "description": "Every project's parts, merged, with what to buy."
+      },
+      "ParseWarningKind": {
+        "type": "string",
+        "enum": [
+          "Unextracted designator",
+          "Conflicting duplicate",
+          "Category conflict",
+          "Unparsed value",
+          "Bill of materials mismatch",
+          "Footnote",
+          "Builder's choice",
+          "No parts list",
+          "Read by OCR",
+          "Misread text layer",
+          "Parts list is an image",
+          "Parts listed by quantity",
+          "Unreadable designator"
+        ],
+        "title": "ParseWarningKind",
+        "description": "Categories of parser self-check failures surfaced to the user."
+      },
+      "PartReview": {
+        "properties": {
+          "ref": {
+            "type": "string",
+            "title": "Ref"
+          },
+          "warnings": {
+            "items": {
+              "$ref": "#/components/schemas/PartWarning"
+            },
+            "type": "array",
+            "title": "Warnings"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "ref",
+          "warnings"
+        ],
+        "title": "PartReview",
+        "description": "One part the self-checks flagged, with every check it failed."
+      },
+      "PartWarning": {
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/ParseWarningKind"
+          },
+          "ref": {
+            "type": "string",
+            "title": "Ref"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "kind",
+          "ref",
+          "message"
+        ],
+        "title": "PartWarning",
+        "description": "A place where the parts list may disagree with its document."
+      },
+      "Preset": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "category": {
+            "type": "string",
+            "title": "Category"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "key",
+          "source",
+          "category",
+          "name"
+        ],
+        "title": "Preset",
+        "description": "A circuit in the preset library."
+      },
+      "PresetCatalog": {
+        "properties": {
+          "sources": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Sources"
+          },
+          "categories": {
+            "additionalProperties": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "type": "object",
+            "title": "Categories"
+          },
+          "presets": {
+            "items": {
+              "$ref": "#/components/schemas/Preset"
+            },
+            "type": "array",
+            "title": "Presets"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "sources",
+          "categories",
+          "presets"
+        ],
+        "title": "PresetCatalog",
+        "description": "The preset library."
+      },
+      "Problem": {
+        "properties": {
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "message"
+        ],
+        "title": "Problem",
+        "description": "Why a request couldn't be served."
+      },
+      "ProjectResult": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "title": "Label",
+            "description": "The name with its build: 'Muffin Fuzz (Ram)'."
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "reviews": {
+            "items": {
+              "$ref": "#/components/schemas/PartReview"
+            },
+            "type": "array",
+            "title": "Reviews"
+          },
+          "ocr_reads": {
+            "items": {
+              "$ref": "#/components/schemas/PartWarning"
+            },
+            "type": "array",
+            "title": "Ocr Reads",
+            "description": "Parts read by OCR, to check."
+          },
+          "options": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Options"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "label",
+          "name",
+          "reviews",
+          "ocr_reads",
+          "options"
+        ],
+        "title": "ProjectResult",
+        "description": "One project as it went onto the master list."
+      },
+      "ShoppingRow": {
+        "properties": {
+          "origin": {
+            "$ref": "#/components/schemas/ComponentOrigin"
+          },
+          "category": {
+            "type": "string",
+            "title": "Category"
+          },
+          "part": {
+            "type": "string",
+            "title": "Part"
+          },
+          "bom_qty": {
+            "type": "integer",
+            "title": "Bom Qty"
+          },
+          "included": {
+            "type": "integer",
+            "title": "Included"
+          },
+          "in_stock": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "In Stock"
+          },
+          "net_need": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Net Need"
+          },
+          "buy_qty": {
+            "type": "integer",
+            "title": "Buy Qty"
+          },
+          "notes": {
+            "type": "string",
+            "title": "Notes"
+          },
+          "search_term": {
+            "type": "string",
+            "title": "Search Term"
+          },
+          "supplier_url": {
+            "type": "string",
+            "title": "Supplier Url"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "origin",
+          "category",
+          "part",
+          "bom_qty",
+          "included",
+          "in_stock",
+          "net_need",
+          "buy_qty",
+          "notes",
+          "search_term",
+          "supplier_url"
+        ],
+        "title": "ShoppingRow",
+        "description": "One part to buy."
+      },
+      "Stats": {
+        "properties": {
+          "lines_read": {
+            "type": "integer",
+            "title": "Lines Read"
+          },
+          "parts_found": {
+            "type": "integer",
+            "title": "Parts Found"
+          },
+          "errors": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Errors"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "lines_read",
+          "parts_found",
+          "errors"
+        ],
+        "title": "Stats",
+        "description": "Totals across projects."
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "DocumentReading": {
+        "additionalProperties": false,
+        "description": "An upload or link, read ahead of building the master list.",
+        "properties": {
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The title the document prints.",
+            "title": "Title"
+          },
+          "file_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The file's name, as a fallback.",
+            "title": "File Title"
+          },
+          "parts_found": {
+            "title": "Parts Found",
+            "type": "integer"
+          },
+          "builds": {
+            "description": "The builds to choose from; empty when there's only one.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Builds",
+            "type": "array"
+          },
+          "ocr_builds": {
+            "description": "The builds to choose from if OCR's parts are accepted.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Ocr Builds",
+            "type": "array"
+          },
+          "ocr": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OcrReading"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "options": {
+            "description": "Interchangeable parts, resolved.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Options",
+            "type": "array"
+          },
+          "errors": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Errors",
+            "type": "array"
+          }
+        },
+        "required": [
+          "title",
+          "file_title",
+          "parts_found",
+          "builds",
+          "ocr_builds",
+          "ocr",
+          "options",
+          "errors"
+        ],
+        "title": "DocumentReading",
+        "type": "object"
+      },
+      "OcrReading": {
+        "additionalProperties": false,
+        "description": "What OCR read from a document's image pages, offered to the builder.",
+        "properties": {
+          "verdict": {
+            "$ref": "#/components/schemas/OcrVerdict"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "parts_read": {
+            "title": "Parts Read",
+            "type": "integer"
+          },
+          "suspect": {
+            "title": "Suspect",
+            "type": "integer"
+          },
+          "pages": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Pages",
+            "type": "array"
+          },
+          "has_parts": {
+            "title": "Has Parts",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "verdict",
+          "message",
+          "parts_read",
+          "suspect",
+          "pages",
+          "has_parts"
+        ],
+        "title": "OcrReading",
+        "type": "object"
+      },
+      "OcrVerdict": {
+        "description": "How far an OCR reading of an image parts list can be trusted.",
+        "enum": [
+          "Looks complete",
+          "Partial",
+          "Unusable"
+        ],
+        "title": "OcrVerdict",
+        "type": "string"
+      },
+      "ReadDone": {
+        "additionalProperties": false,
+        "description": "The document's reading.",
+        "properties": {
+          "event": {
+            "const": "result",
+            "default": "result",
+            "title": "Event",
+            "type": "string"
+          },
+          "reading": {
+            "$ref": "#/components/schemas/DocumentReading"
+          }
+        },
+        "required": [
+          "reading"
+        ],
+        "title": "ReadDone",
+        "type": "object"
+      },
+      "ReadFailed": {
+        "additionalProperties": false,
+        "description": "The document couldn't be read.",
+        "properties": {
+          "event": {
+            "const": "error",
+            "default": "error",
+            "title": "Event",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "title": "ReadFailed",
+        "type": "object"
+      },
+      "ReadQueued": {
+        "additionalProperties": false,
+        "description": "The read is waiting for a free reader; OCR is limited per server.",
+        "properties": {
+          "event": {
+            "const": "queued",
+            "default": "queued",
+            "title": "Event",
+            "type": "string"
+          },
+          "position": {
+            "title": "Position",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "position"
+        ],
+        "title": "ReadQueued",
+        "type": "object"
+      },
+      "ReadStarted": {
+        "additionalProperties": false,
+        "description": "The document is being read.",
+        "properties": {
+          "event": {
+            "const": "reading",
+            "default": "reading",
+            "title": "Event",
+            "type": "string"
+          }
+        },
+        "title": "ReadStarted",
+        "type": "object"
+      },
+      "ReadEvent": {
+        "discriminator": {
+          "mapping": {
+            "error": "#/components/schemas/ReadFailed",
+            "queued": "#/components/schemas/ReadQueued",
+            "reading": "#/components/schemas/ReadStarted",
+            "result": "#/components/schemas/ReadDone"
+          },
+          "propertyName": "event"
+        },
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/ReadQueued"
+          },
+          {
+            "$ref": "#/components/schemas/ReadStarted"
+          },
+          {
+            "$ref": "#/components/schemas/ReadDone"
+          },
+          {
+            "$ref": "#/components/schemas/ReadFailed"
+          }
+        ]
+      }
+    }
+  }
+}

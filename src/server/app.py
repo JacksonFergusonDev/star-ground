@@ -1,0 +1,655 @@
+"""The HTTP API over the backend (`src.api`), for the web frontend.
+
+Every request carries what it needs: projects, uploads and stock arrive with
+each master list or export request, and the browser keeps the user's state.
+Uploads and links are read through a cache (`ReadingCache`), so sending a
+document again costs a lookup, not another reading.
+
+Run it with `just serve-api`, or `uvicorn src.server:app`.
+"""
+
+import json
+import logging
+import os
+import threading
+import time
+from collections.abc import Callable, Iterator, Mapping, Sequence
+from dataclasses import dataclass, replace
+from typing import Annotated, Any, assert_never
+
+from fastapi import FastAPI, File, Form, Request, UploadFile
+from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.openapi.utils import get_openapi
+from fastapi.responses import JSONResponse, Response, StreamingResponse
+from pydantic import BaseModel, TypeAdapter, ValidationError
+
+from src.api import (
+    BuildNotChosenError,
+    MasterList,
+    Project,
+    ProjectData,
+    document_key,
+    file_title,
+    generate_master_list,
+    offered,
+    parts_to_review,
+    read_document,
+    read_stock,
+)
+from src.bom_lib import (
+    BOM_PRESETS,
+    FeedbackRating,
+    FileUpload,
+    InputMethod,
+    ParseResult,
+    ParseWarning,
+    ParseWarningKind,
+    PcbShop,
+    ShoppingListRow,
+    get_preset_metadata,
+    get_residual_report,
+    parse_preset_key,
+)
+from src.exporters import (
+    generate_shopping_list_csv,
+    generate_stock_update_csv,
+    generate_supplier_cart_csv,
+)
+from src.server.limits import BodySizeLimit, RateLimiter, ReadGate, ReadingCache
+from src.server.models import (
+    BuildNotChosen,
+    DocumentReading,
+    ExportKind,
+    FeedbackIn,
+    Health,
+    LinkFormat,
+    MasterListRequest,
+    MasterListResult,
+    OcrReading,
+    PartReview,
+    PartWarning,
+    PasteProject,
+    Preset,
+    PresetCatalog,
+    PresetProject,
+    Problem,
+    ProjectIn,
+    ProjectResult,
+    ReadDone,
+    ReadEvent,
+    ReadFailed,
+    ReadQueued,
+    ReadStarted,
+    ShoppingRow,
+    Stats,
+    UploadProject,
+    UrlProject,
+)
+
+logger = logging.getLogger(__name__)
+
+type FeedbackSink = Callable[[FeedbackRating, str], None]
+"""Records a rating and comment (the Google Sheet, in production)."""
+
+
+@dataclass(frozen=True, slots=True)
+class Settings:
+    """How a server instance is configured.
+
+    Attributes:
+        cors_origins: Browser origins allowed to call the API (the GitHub
+            Pages site); none when the site is served from the same origin.
+        max_body_bytes: The largest request body accepted.
+        read_slots: Documents read at once (see `ReadGate`).
+        requests_per_minute: Each client's limit on the API's working routes.
+        trust_proxy: Take the client's address from `X-Forwarded-For`, as
+            set by the platform's proxy (Cloud Run).
+        cache_bytes: The reading cache's budget (see `ReadingCache`).
+    """
+
+    cors_origins: tuple[str, ...] = ()
+    max_body_bytes: int = 50_000_000
+    read_slots: int = 2
+    requests_per_minute: int = 30
+    trust_proxy: bool = False
+    cache_bytes: int = 200_000_000
+
+    @classmethod
+    def from_env(cls, env: Mapping[str, str] = os.environ) -> Settings:
+        """Reads the settings from `STAR_GROUND_*` environment variables.
+
+        Args:
+            env: The environment.
+
+        Returns:
+            The settings, with defaults for anything unset.
+        """
+        defaults = cls()
+        origins = env.get("STAR_GROUND_CORS_ORIGINS", "")
+        return cls(
+            cors_origins=tuple(o.strip() for o in origins.split(",") if o.strip()),
+            read_slots=int(env.get("STAR_GROUND_READ_SLOTS", defaults.read_slots)),
+            requests_per_minute=int(
+                env.get("STAR_GROUND_REQUESTS_PER_MINUTE", defaults.requests_per_minute)
+            ),
+            trust_proxy=env.get("STAR_GROUND_TRUST_PROXY", "") == "1",
+        )
+
+
+class FeedbackSheet:
+    """Appends feedback to the Google Sheet, reconnecting hourly.
+
+    Args:
+        credentials: A Google service account's key, as its JSON fields.
+    """
+
+    def __init__(self, credentials: Mapping[str, Any]) -> None:
+        self._credentials = credentials
+        self._sheet: Any = None
+        self._connected = 0.0
+        self._lock = threading.Lock()
+
+    def __call__(self, rating: FeedbackRating, comment: str) -> None:
+        """Appends one rating and comment."""
+        from src.feedback import connect_feedback_sheet, save_feedback
+
+        with self._lock:
+            if self._sheet is None or time.monotonic() - self._connected > 3600:
+                self._sheet = connect_feedback_sheet(self._credentials)
+                self._connected = time.monotonic()
+            save_feedback(self._sheet, rating, comment)
+
+
+def feedback_from_env(env: Mapping[str, str] = os.environ) -> FeedbackSink | None:
+    """The feedback sheet, if `STAR_GROUND_FEEDBACK_CREDENTIALS` holds a key.
+
+    Args:
+        env: The environment.
+
+    Returns:
+        The sink, or None when feedback isn't configured.
+    """
+    raw = env.get("STAR_GROUND_FEEDBACK_CREDENTIALS")
+    return FeedbackSheet(json.loads(raw)) if raw else None
+
+
+class RefusedError(Exception):
+    """A request the API refuses, with the body to answer it with.
+
+    Args:
+        status: The HTTP status.
+        body: The response body.
+    """
+
+    def __init__(self, status: int, body: Problem) -> None:
+        super().__init__(body.message)
+        self.status = status
+        self.body = body
+
+
+@dataclass(frozen=True, slots=True)
+class _Exports:
+    content: bytes
+    media_type: str
+    filename: str
+
+
+@dataclass(frozen=True, slots=True)
+class _Services:
+    settings: Settings
+    limiter: RateLimiter
+    gate: ReadGate
+    cache: ReadingCache
+    feedback: FeedbackSink | None
+
+
+def _client(request: Request, trust_proxy: bool) -> str:
+    """The client's address; behind a proxy, the last hop it appended."""
+    forwarded = request.headers.get("x-forwarded-for")
+    if trust_proxy and forwarded:
+        return forwarded.split(",")[-1].strip()
+    return request.client.host if request.client else "unknown"
+
+
+def _read(services: _Services, method: InputMethod, data: ProjectData) -> ParseResult:
+    """An upload or link's reading, from the cache or read now."""
+    key = document_key(method, data)
+    if key is None:
+        raise ValueError(f"{method} isn't read ahead of time")
+    reading = services.cache.get(key)
+    if reading is None:
+        with services.gate.slot():
+            reading = read_document(method, data)
+        if reading is None:
+            raise ValueError(f"{method} isn't read ahead of time")
+        services.cache.put(key, reading)
+    return reading
+
+
+def _document_reading(
+    reading: ParseResult, method: InputMethod, data: ProjectData
+) -> DocumentReading:
+    ocr = reading.ocr
+    return DocumentReading(
+        title=reading.title,
+        file_title=file_title(method, data),
+        parts_found=reading.stats["parts_found"],
+        builds=list(reading.variant_names),
+        ocr_builds=list(offered(reading, use_ocr=True).variant_names),
+        ocr=OcrReading(
+            verdict=ocr.verdict,
+            message=ocr.message,
+            parts_read=ocr.parts_read,
+            suspect=ocr.suspect,
+            pages=list(ocr.pages),
+            has_parts=ocr.has_parts,
+        )
+        if ocr is not None
+        else None,
+        options=[str(o) for o in reading.options],
+        errors=list(reading.stats["errors"]),
+    )
+
+
+def _project(
+    services: _Services, project: ProjectIn, uploads: Mapping[str, FileUpload]
+) -> Project:
+    """The request's project as the backend takes it."""
+    base = Project(
+        name=project.name,
+        count=project.count,
+        variant=project.variant,
+        use_ocr=project.use_ocr,
+    )
+    match project:
+        case PasteProject():
+            return replace(base, method=InputMethod.PASTE_TEXT, data=project.text)
+        case PresetProject():
+            preset = BOM_PRESETS.get(project.preset)
+            parsed = parse_preset_key(project.preset)
+            if preset is None or parsed is None:
+                raise RefusedError(
+                    422, Problem(message=f"There's no preset '{project.preset}'.")
+                )
+            shop = PcbShop(parsed[0]) if parsed[0] in PcbShop else None
+            return replace(
+                base,
+                # A blank name takes the preset's, as the library lists it.
+                name=project.name or parsed[2],
+                method=InputMethod.PRESET,
+                data=preset["bom_text"],
+                source_path=preset.get("source_path"),
+                source_url=preset.get("source_url"),
+                pcb_shop=shop,
+            )
+        case UrlProject():
+            reading = _read(services, InputMethod.FROM_URL, project.url)
+            return replace(
+                base, method=InputMethod.FROM_URL, data=project.url, reading=reading
+            )
+        case UploadProject():
+            upload = uploads.get(project.file)
+            if upload is None:
+                raise RefusedError(
+                    422,
+                    Problem(message=f"No file named '{project.file}' was sent."),
+                )
+            reading = _read(services, InputMethod.UPLOAD_FILE, upload)
+            return replace(
+                base, method=InputMethod.UPLOAD_FILE, data=upload, reading=reading
+            )
+        case _:
+            assert_never(project)
+
+
+def _warning(w: ParseWarning) -> PartWarning:
+    return PartWarning(kind=w.kind, ref=w.ref, message=w.message)
+
+
+def _row(row: ShoppingListRow) -> ShoppingRow:
+    return ShoppingRow(
+        origin=row["Origin"],
+        category=row["Category"],
+        part=row["Part"],
+        bom_qty=row["BOM Qty"],
+        included=row["Included"],
+        in_stock=row.get("In Stock"),
+        net_need=row.get("Net Need"),
+        buy_qty=row["Buy Qty"],
+        notes=row["Notes"],
+        search_term=row["Search Term"],
+        supplier_url=row["Tayda_Link"],
+    )
+
+
+def _result(master: MasterList, request: MasterListRequest) -> MasterListResult:
+    projects = []
+    for p in master.projects:
+        ocr = [w for w in p.warnings if w.kind == ParseWarningKind.OCR_READ]
+        checks = [w for w in p.warnings if w.kind != ParseWarningKind.OCR_READ]
+        projects.append(
+            ProjectResult(
+                label=p.label,
+                name=p.name,
+                reviews=[
+                    PartReview(ref=ref, warnings=[_warning(w) for w in ws])
+                    for ref, ws in parts_to_review(checks).items()
+                ],
+                ocr_reads=[_warning(w) for w in ocr],
+                options=list(p.options),
+            )
+        )
+    stats = master.stats
+    return MasterListResult(
+        projects=projects,
+        shopping_list=[
+            _row(r)
+            for r in master.shopping_list(request.show_hardware, request.show_extras)
+        ],
+        stats=Stats(
+            lines_read=stats["lines_read"],
+            parts_found=stats["parts_found"],
+            errors=list(stats["errors"]),
+        ),
+        ignored_lines=get_residual_report(stats),
+        has_stock=master.stock is not None,
+    )
+
+
+def _sse(event: BaseModel) -> str:
+    name = event.model_dump()["event"]
+    return f"event: {name}\ndata: {event.model_dump_json()}\n\n"
+
+
+def _upload(file: UploadFile) -> FileUpload:
+    return FileUpload(file.filename or "upload", file.file.read())
+
+
+def _parse_request(raw: str) -> MasterListRequest:
+    try:
+        return MasterListRequest.model_validate_json(raw)
+    except ValidationError as e:
+        raise RequestValidationError(e.errors()) from e
+
+
+def _uploads(files: Sequence[UploadFile]) -> dict[str, FileUpload]:
+    uploads: dict[str, FileUpload] = {}
+    for f in files:
+        upload = _upload(f)
+        if upload.name in uploads:
+            raise RefusedError(
+                422, Problem(message=f"Two files are named '{upload.name}'.")
+            )
+        uploads[upload.name] = upload
+    return uploads
+
+
+_EXPORT_RESPONSES: dict[int | str, dict[str, Any]] = {
+    200: {
+        "content": {"text/csv": {}, "application/zip": {}},
+        "description": "The file, as an attachment.",
+    },
+    422: {"model": BuildNotChosen | Problem},
+}
+
+
+def create_app(
+    settings: Settings | None = None, feedback: FeedbackSink | None = None
+) -> FastAPI:
+    """Builds the API.
+
+    Args:
+        settings: The instance's configuration; defaults if omitted.
+        feedback: Where feedback goes; the feedback route answers 503
+            without one.
+
+    Returns:
+        The FastAPI application.
+    """
+    settings = settings or Settings()
+    services = _Services(
+        settings=settings,
+        limiter=RateLimiter(settings.requests_per_minute),
+        gate=ReadGate(settings.read_slots),
+        cache=ReadingCache(settings.cache_bytes),
+        feedback=feedback,
+    )
+    app = FastAPI(
+        title="Star Ground API",
+        summary="Merges guitar pedal build documents into one shopping list.",
+        version="0",
+        docs_url="/api/docs",
+        redoc_url=None,
+        openapi_url="/api/openapi.json",
+    )
+    app.add_middleware(BodySizeLimit, max_bytes=settings.max_body_bytes)
+    if settings.cors_origins:
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=list(settings.cors_origins),
+            allow_methods=["GET", "POST"],
+            allow_headers=["content-type"],
+            expose_headers=["content-disposition"],
+        )
+
+    @app.exception_handler(RefusedError)
+    async def _problem(request: Request, exc: RefusedError) -> JSONResponse:
+        return JSONResponse(exc.body.model_dump(), status_code=exc.status)
+
+    def limited(request: Request) -> None:
+        if not services.limiter.allow(_client(request, settings.trust_proxy)):
+            raise RefusedError(
+                429, Problem(message="Too many requests. Try again in a minute.")
+            )
+
+    def master_list(
+        request: MasterListRequest,
+        files: Sequence[UploadFile],
+        stock: UploadFile | None,
+    ) -> MasterList:
+        uploads = _uploads(files)
+        projects = [_project(services, p, uploads) for p in request.projects]
+        try:
+            return generate_master_list(
+                projects, read_stock(_upload(stock)) if stock else None
+            )
+        except BuildNotChosenError as e:
+            raise RefusedError(
+                422, BuildNotChosen(message=str(e), projects=e.projects)
+            ) from e
+
+    @app.get("/api/health", tags=["service"])
+    def health() -> Health:
+        """Answers once the server is up; the frontend calls it to wake it."""
+        return Health()
+
+    @app.get("/api/presets", tags=["presets"])
+    def presets() -> PresetCatalog:
+        """The preset library, for browsing by source and category."""
+        catalog = get_preset_metadata()
+        return PresetCatalog(
+            sources=catalog.sources,
+            categories=catalog.categories,
+            presets=[
+                Preset(
+                    key=e["full_key"],
+                    source=e["source"],
+                    category=e["category"],
+                    name=e["name"],
+                )
+                for e in catalog.lookup
+            ],
+        )
+
+    @app.post(
+        "/api/documents/read",
+        tags=["documents"],
+        response_class=StreamingResponse,
+        responses={
+            200: {
+                "content": {
+                    "text/event-stream": {
+                        "schema": {"$ref": "#/components/schemas/ReadEvent"}
+                    }
+                },
+                "description": "`queued` and `reading` events, then `result` "
+                "or `error`. Each event's data is one `ReadEvent`.",
+            }
+        },
+    )
+    def read(
+        request: Request,
+        file: Annotated[UploadFile | None, File()] = None,
+        url: Annotated[str | None, Form(max_length=2048)] = None,
+    ) -> StreamingResponse:
+        """Reads an upload or link ahead of building the master list.
+
+        The reading says which builds a multi-circuit document offers, and
+        whether OCR read parts from image pages. Image-only documents take
+        seconds a page, so progress streams as server-sent events.
+        """
+        limited(request)
+        if (file is None) == (url is None):
+            raise RefusedError(422, Problem(message="Send either a file or a url."))
+        method, data = (
+            (InputMethod.UPLOAD_FILE, _upload(file))
+            if file is not None
+            else (InputMethod.FROM_URL, str(url).strip())
+        )
+
+        def events() -> Iterator[str]:
+            key = document_key(method, data)
+            reading = services.cache.get(key) if key else None
+            if reading is None:
+                if position := services.gate.queue_position():
+                    yield _sse(ReadQueued(position=position))
+                with services.gate.slot():
+                    yield _sse(ReadStarted())
+                    try:
+                        reading = read_document(method, data)
+                    except Exception:
+                        logger.exception("Reading %s failed", key)
+                        yield _sse(
+                            ReadFailed(
+                                message="The document couldn't be read. "
+                                "It has been logged for a look."
+                            )
+                        )
+                        return
+                if reading is None or key is None:
+                    return
+                services.cache.put(key, reading)
+            yield _sse(ReadDone(reading=_document_reading(reading, method, data)))
+
+        return StreamingResponse(events(), media_type="text/event-stream")
+
+    @app.post(
+        "/api/master-list",
+        tags=["master list"],
+        responses={422: {"model": BuildNotChosen | Problem}},
+    )
+    def build_master_list(
+        http: Request,
+        request: Annotated[str, Form(description="A `MasterListRequest`, as JSON.")],
+        files: Annotated[list[UploadFile] | None, File()] = None,
+        stock: Annotated[UploadFile | None, File()] = None,
+    ) -> MasterListResult:
+        """Merges the projects into one master list.
+
+        Uploads are sent as `files`, named as their projects' `file` says;
+        `stock` is the builder's stock CSV (columns Category, Part, Qty).
+        """
+        limited(http)
+        parsed = _parse_request(request)
+        return _result(master_list(parsed, files or [], stock), parsed)
+
+    @app.post("/api/exports/{kind}", tags=["master list"], responses=_EXPORT_RESPONSES)
+    def export(
+        http: Request,
+        kind: ExportKind,
+        request: Annotated[str, Form(description="A `MasterListRequest`, as JSON.")],
+        files: Annotated[list[UploadFile] | None, File()] = None,
+        stock: Annotated[UploadFile | None, File()] = None,
+        links: LinkFormat = LinkFormat.PLAIN,
+    ) -> Response:
+        """Exports the master list as a CSV or ZIP, from the same request body.
+
+        `links` sets how the shopping list (alone or in the build pack)
+        writes supplier links: as plain URLs, or as Excel `HYPERLINK`s.
+        """
+        limited(http)
+        parsed = _parse_request(request)
+        master = master_list(parsed, files or [], stock)
+        rows = master.shopping_list(parsed.show_hardware, parsed.show_extras)
+        excel = links == LinkFormat.EXCEL
+        match kind:
+            case ExportKind.SHOPPING_LIST:
+                out = _Exports(
+                    generate_shopping_list_csv(rows, use_excel_formulas=excel),
+                    "text/csv",
+                    "shopping-list.csv",
+                )
+            case ExportKind.SUPPLIER_CART:
+                out = _Exports(
+                    generate_supplier_cart_csv(rows), "text/csv", "supplier-cart.csv"
+                )
+            case ExportKind.STOCK_UPDATE:
+                out = _Exports(
+                    generate_stock_update_csv(rows), "text/csv", "stock-update.csv"
+                )
+            case ExportKind.FIELD_MANUALS:
+                out = _Exports(
+                    master.pdf_bundle(), "application/zip", "field-manuals.zip"
+                )
+            case ExportKind.BUILD_PACK:
+                out = _Exports(
+                    master.build_pack(
+                        generate_shopping_list_csv(rows, use_excel_formulas=excel),
+                        generate_stock_update_csv(rows),
+                    ),
+                    "application/zip",
+                    "build-pack.zip",
+                )
+        return Response(
+            out.content,
+            media_type=out.media_type,
+            headers={"content-disposition": f'attachment; filename="{out.filename}"'},
+        )
+
+    @app.post(
+        "/api/feedback",
+        tags=["feedback"],
+        status_code=204,
+        responses={503: {"model": Problem}},
+    )
+    def send_feedback(http: Request, body: FeedbackIn) -> None:
+        """Records a rating and comment from the app."""
+        limited(http)
+        if services.feedback is None:
+            raise RefusedError(
+                503, Problem(message="Feedback isn't set up on this server.")
+            )
+        services.feedback(list(FeedbackRating)[body.rating - 1], body.comment)
+
+    def openapi() -> dict[str, Any]:
+        if app.openapi_schema is None:
+            schema = get_openapi(
+                title=app.title,
+                version=app.version,
+                summary=app.summary,
+                routes=app.routes,
+            )
+            # The read stream's events aren't a route's body, so FastAPI
+            # doesn't list them; add them for the frontend's types.
+            events = TypeAdapter(ReadEvent).json_schema(
+                ref_template="#/components/schemas/{model}"
+            )
+            components = schema.setdefault("components", {}).setdefault("schemas", {})
+            components.update(events.pop("$defs", {}))
+            components["ReadEvent"] = events
+            app.openapi_schema = schema
+        return app.openapi_schema
+
+    app.openapi = openapi  # type: ignore[method-assign]
+    return app

@@ -27,7 +27,7 @@ Decided 2026-10-22 to 2026-10-24. A decision here changes only by editing this f
 - **Frontend:** GitHub Pages at `star-ground.jacksonferguson.me`. Free, served from a CDN, and never waits on the backend.
 - **API:** Google Cloud Run, scaling to zero, 2 GiB and 2 vCPU per instance, max instances capped (the hard cost ceiling), with a budget alert.
 - **Expected cost:** about $0 a month. Measured on an M3: a text PDF takes about 0.25 s and 160 MB; an OCR document takes 4 to 10 s, about 16 CPU-seconds and a 1.2 to 1.4 GB peak. Cloud Run's free tier (180k vCPU-seconds, 360k GiB-seconds a month) covers about 6,000 OCR documents a month.
-- **Cold starts:** about 2 to 5 s for the first API call after idle (an estimate until measured). The page pings `/health` on load, so the backend is warm by the time a user has picked a document.
+- **Cold starts:** about 2 to 5 s for the first API call after idle (an estimate until measured). The page pings `/api/health` on load, so the backend is warm by the time a user has picked a document.
 - **Concurrency:** one container serves many users; Cloud Run adds instances past a concurrency of about 4. OCR runs at most one or two jobs per container behind a semaphore, with the rest shown as queued.
 - **Docker image:** one multi-stage image (Node builds the site, Python serves it) holds the API and the built site. FastAPI serves the site at `/` and the API at `/api` when the site is present, so `docker run -p 8000:8000 ghcr.io/jacksonfergusondev/star-ground` is a full self-hosted Star Ground. Cloud Run runs the same image, pushed to Artifact Registry. It listens on `${PORT:-8000}`.
 
@@ -74,12 +74,12 @@ The public repository holds publisher PDFs in `raw_boms/` (11, the presets' sour
 
 ### 2. API service
 
-1. `src/server.py`: a FastAPI app over `src/api.py`.
+1. `src/server/`: a FastAPI app over `src/api.py`.
     - `POST /api/documents/read`: read an upload or link ahead of time (build choice, OCR offer).
     - `POST /api/master-list`: projects in, master list out (shopping list, warnings, option notes, stats).
     - Exports: shopping list CSV, supplier cart CSV, stock update CSV, PDF bundle, build pack.
-    - OCR progress as server-sent events.
-    - `GET /health` for the warm-up ping.
+    - Read progress as server-sent events: `queued` (waiting for a reader), `reading`, then `result` or `error`. Per-page OCR progress would need a hook in the OCR loop; add it in step 5 if the wait feels opaque.
+    - `GET /api/health` for the warm-up ping, and `GET /api/presets` for the preset library.
     - Feedback reports appended to the Google Sheet, with the service account kept server-side.
 1. Pydantic response models from the backend's dataclasses, and an OpenAPI schema checked into the repo for type generation.
 1. Limits: the 50 MB upload cap, a cap on pages sent to OCR, an OCR semaphore, per-IP rate limiting, and CORS for the Pages origin only.
@@ -98,6 +98,7 @@ The public repository holds publisher PDFs in `raw_boms/` (11, the presets' sour
 1. The multi-stage Docker image and the self-host path.
 1. Cloud Run deploy from a tag (Artifact Registry, max instances, budget alert), and GitHub Pages deploy with the `CNAME`.
 1. One end-to-end path live: paste a parts list, see the shopping list.
+1. Confirm Cloud Run appends the client's address as the last `X-Forwarded-For` entry, which the rate limiter trusts with `STAR_GROUND_TRUST_PROXY=1`.
 1. Measure real cold starts and OCR times on Cloud Run, and record them here.
 
 **Done when** the deployed slice works and costs are confirmed.
@@ -168,7 +169,7 @@ Probed on 2026-10-24: board renders in PedalPCB, GuitarPCB and Tonepad documents
 | --- | --- | --- |
 | Plan | Done | This plan's PR |
 | 1. Remove publisher PDFs | Done 2026-10-24: history rewritten, `main` and 15 tags force-pushed, old images deleted | #201 |
-| 2. API service | Not started | |
+| 2. API service | Done 2026-10-24 | This step's PR |
 | 3. Frontend foundation | Not started | |
 | 4. Walking skeleton | Not started | |
 | 5. Build workspace | Not started | |

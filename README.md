@@ -192,6 +192,7 @@ See [tests/README.md](tests/README.md) for how to run each layer.
 │   │   ├── grammar/       <-- Value grammar (pyparsing)
 │   │   ├── manager.py     <-- Inventory merging and net needs
 │   │   └── sourcing.py    <-- Buffers, buying notes, hardware kit
+│   ├── server/            <-- HTTP API over api.py, for the web frontend
 │   ├── api.py             <-- The backend API every frontend calls
 │   ├── app_state.py       <-- The Streamlit app's session state
 │   ├── exporters.py       <-- CSV exports
@@ -203,6 +204,7 @@ See [tests/README.md](tests/README.md) for how to run each layer.
 ├── CONTRIBUTING.md        <-- Development guide
 ├── Dockerfile
 ├── PLAN.md                <-- The frontend rebuild plan and its status
+├── openapi.json           <-- The HTTP API's schema (just openapi)
 ├── justfile               <-- Task runner (lint, test, accuracy)
 └── pyproject.toml
 ```
