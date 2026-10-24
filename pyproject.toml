@@ -40,6 +40,7 @@ dev = [
 ci = [
     "hypothesis==6.165.10",
     "mypy==2.3.1",
+    "playwright==1.64.1",
     "pytest==9.1.1",
     "pytest-github-actions-annotate-failures==0.4.2",
     "pytest-xdist==3.8.0",

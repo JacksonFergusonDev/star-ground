@@ -1,36 +1,29 @@
 FROM python:3.14-slim@sha256:ce40764625a4ff50df3548277632e7f96c4e77fe75fa848aae9885476e7df5a4
 
-# 1. Install 'uv' from the official image
-COPY --from=ghcr.io/astral-sh/uv:latest@sha256:e85be844203885286c60ffad8a858d48afb6c5a5c237ca0e67f12e74b8f174b1 /uv /uvx /bin/
+COPY --from=ghcr.io/astral-sh/uv:latest@sha256:e85be844203885286c60ffad8a858d48afb6c5a5c237ca0e67f12e74b8f174b1 /uv /bin/uv
 
-# Prevent Python from writing pyc files and buffering stdout
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    UV_LINK_MODE=copy \
+    PATH="/app/.venv/bin:$PATH"
 
 WORKDIR /app
-
-# 2. Copy dependency files first (for Docker layer caching)
 COPY pyproject.toml uv.lock ./
+RUN uv sync --locked --no-dev --no-install-project --no-cache
 
-# 3. Install dependencies using uv
-# --frozen: fail if the lockfile is out of sync
-# --no-dev: production only (skips pytest, ruff, etc.)
-# --no-install-project: install libs first, project code comes later
-RUN uv sync --frozen --no-dev --no-install-project
+# Models belong to the image, not a first user's network connection or cache.
+RUN .venv/bin/python -c 'from rapidocr import RapidOCR; RapidOCR()'
 
-# 4. Copy the rest of the application
-COPY . .
+COPY app.py ./
+COPY src/ src/
+COPY raw_boms/ raw_boms/
+COPY .streamlit/config.toml .streamlit/config.toml
 
-# 5. Add the virtual environment to PATH
-# uv creates the venv at /app/.venv by default
-ENV PATH="/app/.venv/bin:$PATH"
+RUN groupadd --gid 10001 app && useradd --uid 10001 --gid app --create-home app
+USER app
 
 EXPOSE 8501
+HEALTHCHECK --interval=5s --timeout=3s --start-period=10s --retries=6 \
+    CMD ["python", "-c", "import urllib.request; r = urllib.request.urlopen('http://127.0.0.1:8501/_stcore/health', timeout=2); assert r.status == 200 and r.read() == b'ok'"]
 
-# Note: Ensure 'curl' is installed if you keep this healthcheck,
-# as python:slim images often lack it.
-RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
-
-HEALTHCHECK CMD curl --fail http://localhost:8501/_stcore/health || exit 1
-
-CMD ["streamlit", "run", "app.py", "--server.address=0.0.0.0"]
+CMD ["streamlit", "run", "app.py", "--server.address=0.0.0.0", "--server.headless=true"]

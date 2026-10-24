@@ -216,7 +216,7 @@ See [tests/README.md](tests/README.md) for how to run each layer.
 
 ### Option 2: Run via Docker
 
-You can pull the pre-built image directly from the GitHub Container Registry without building it yourself.
+You can pull the pre-built image directly from the GitHub Container Registry without building it yourself. Images support Linux on x86-64 (`linux/amd64`) and 64-bit ARM (`linux/arm64`). Docker selects the matching architecture on Linux hosts and in the Linux VM used by Docker Desktop on macOS and Windows.
 
 ```bash
 # Run latest stable release
