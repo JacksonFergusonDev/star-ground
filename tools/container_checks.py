@@ -59,12 +59,14 @@ def check_backend() -> None:
 
 
 def check_presets() -> None:
-    """Require the catalog and every referenced source document to be packaged."""
+    """Require the catalog, and every typed parts list it names, to be packaged."""
     assert BOM_PRESETS, "Preset catalog is empty"
     for preset in BOM_PRESETS.values():
         assert preset["bom_text"].strip(), preset
         if source := preset.get("source_path"):
             assert Path(source).is_file(), source
+        if url := preset.get("source_url"):
+            assert url.startswith("https://"), url
 
 
 def check_ocr() -> None:

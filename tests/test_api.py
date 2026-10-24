@@ -244,6 +244,25 @@ def test_a_board_is_bought_where_the_preset_says_whatever_its_name() -> None:
     assert links["Clone PCB"].startswith("https://www.taydaelectronics.com")
 
 
+def test_a_presets_publisher_document_is_linked_not_bundled() -> None:
+    url = "https://docs.pedalpcb.com/project/Kliche-PedalPCB.pdf"
+    master = generate_master_list(
+        [
+            Project(
+                name="Kliche",
+                method=InputMethod.PRESET,
+                data="R1 10k",
+                source_url=url,
+            )
+        ]
+    )
+
+    with zipfile.ZipFile(io.BytesIO(master.build_pack(b"", b""))) as zf:
+        sources = [n for n in zf.namelist() if n.startswith("Source Documents/")]
+        assert sources == ["Source Documents/Kliche Source Link.txt"]
+        assert url in zf.read(sources[0]).decode()
+
+
 def test_a_missing_preset_document_is_logged(
     tmp_path: Path, caplog: pytest.LogCaptureFixture
 ) -> None:

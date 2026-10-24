@@ -47,14 +47,18 @@ typecheck: sync
     uv run mypy
     @printf "{{ green }}✔ Type checking passed{{ nc }}\n"
 
+# Download the test corpus's build documents from their publishers
+fetch-samples: sync
+    uv run python -m tools.fetch_samples
+
 # Run the full automated testing matrix
-test: sync
+test: sync fetch-samples
     @printf "\n{{ blue }}=== Running Tests ==={{ nc }}\n"
     uv run pytest -n auto
     @printf "{{ green }}✔ All tests passed{{ nc }}\n"
 
 # Print the parser accuracy scorecard against the golden parts lists
-accuracy *args: sync
+accuracy *args: sync fetch-samples
     uv run python -m tests.accuracy -v {{ args }}
 
 # Fetch a real document from each publisher (needs the internet)
@@ -62,7 +66,7 @@ test-network: sync
     uv run pytest -m network -v
 
 # Run tests with coverage
-test-cov: sync
+test-cov: sync fetch-samples
     @printf "\n{{ blue }}=== Running Tests with Coverage ==={{ nc }}\n"
     uv run pytest --cov
     @printf "{{ green }}✔ Coverage run complete{{ nc }}\n"

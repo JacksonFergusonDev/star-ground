@@ -16,7 +16,7 @@ RUN .venv/bin/python -c 'from rapidocr import RapidOCR; RapidOCR()'
 
 COPY app.py ./
 COPY src/ src/
-COPY raw_boms/ raw_boms/
+COPY raw_boms/tayda/ raw_boms/tayda/
 COPY .streamlit/config.toml .streamlit/config.toml
 
 RUN groupadd --gid 10001 app && useradd --uid 10001 --gid app --create-home app

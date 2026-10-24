@@ -114,6 +114,17 @@ jobs:
       - name: Install dependencies
         run: uv sync --group ci --no-dev
 
+      # The corpus's PDFs belong to their publishers, so they're downloaded,
+      # once per manifest change, instead of kept in the repository.
+      - name: Restore test samples
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: tests/samples/**/*.pdf
+          key: samples-${{ hashFiles('tests/samples/manifest.json') }}
+
+      - name: Fetch test samples
+        run: uv run python -m tools.fetch_samples
+
       - name: Test with pytest
         run: uv run pytest -n auto
 

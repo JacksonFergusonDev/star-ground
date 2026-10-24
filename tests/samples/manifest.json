@@ -1,0 +1,99 @@
+{
+  "documents": [
+    {
+      "path": "clean/Cataclysm-PedalPCB.pdf",
+      "url": "https://docs.pedalpcb.com/project/Cataclysm-PedalPCB.pdf",
+      "sha256": "39315bc3404cdd81df552c3d547d3ae039d90b997ffcc0ab14f4e8dd603bcc37"
+    },
+    {
+      "path": "clean/Gravitation-PedalPCB.pdf",
+      "url": "https://docs.pedalpcb.com/project/Gravitation-PedalPCB.pdf",
+      "sha256": "f895e39c0a0fb2caae0b1fc5ca072a984b28f59521204e8ae993c6979bddc2d6"
+    },
+    {
+      "path": "clean/Kliche-PedalPCB.pdf",
+      "url": "https://docs.pedalpcb.com/project/Kliche-PedalPCB.pdf",
+      "sha256": "7b00204095f0fd13f41051863a5058ec57030dfff5fa853579ccbebae1156d6c"
+    },
+    {
+      "path": "clean/LowTide-PedalPCB.pdf",
+      "url": "https://docs.pedalpcb.com/project/LowTide-PedalPCB.pdf",
+      "sha256": "dc6d95fdfe865c6b1f579f2fe750ad600d521c15240b81e56d83292b2b9bcd8b"
+    },
+    {
+      "path": "clean/PaperScratcher-PedalPCB.pdf",
+      "url": "https://docs.pedalpcb.com/project/PaperScratcher-PedalPCB.pdf",
+      "sha256": "01046ee7104788b5dda0658085f29f0b43635dcf702692317bfdad1229cd7319"
+    },
+    {
+      "path": "clean/Sunflower-PedalPCB.pdf",
+      "url": "https://docs.pedalpcb.com/project/Sunflower-PedalPCB.pdf",
+      "sha256": "ebd0e56f5285d825463a97624c4f4a550d24c11779c14e72b9fc418b688b0ad0"
+    },
+    {
+      "path": "dirty/Abyss.pdf",
+      "url": "https://docs.pedalpcb.com/project/Abyss.pdf",
+      "sha256": "a7328904614ceff3f6469e5e0eb5d21a295b3769e034ce36459e17fa78e138af"
+    },
+    {
+      "path": "dirty/Arachnid.pdf",
+      "url": "https://docs.pedalpcb.com/project/Arachnid.pdf",
+      "sha256": "45e237b21f441c575500665b170bb66e2e314b888b1ac2a6044756edbe261088"
+    },
+    {
+      "path": "dirty/BSideFuzz.pdf",
+      "url": "https://docs.pedalpcb.com/project/BSideFuzz.pdf",
+      "sha256": "e1d0ebec4c11c9e6bd195947ac34aacb6b64b351e2be8d46d9a59b8f34a0755a"
+    },
+    {
+      "path": "dirty/Blender.pdf",
+      "url": "https://docs.pedalpcb.com/project/Blender.pdf",
+      "sha256": "b867d4a0c1dd3e238cefac4a5d813885742300ac7ed000a399ae331ec03034af"
+    },
+    {
+      "path": "dirty/CelestialDrive.pdf",
+      "url": "https://docs.pedalpcb.com/project/CelestialDrive.pdf",
+      "sha256": "6ca01be994e37a48fad3d896908a9569953da4ff10936cae5c75f52aa79d3b00"
+    },
+    {
+      "path": "dirty/Circulator.pdf",
+      "url": "https://docs.pedalpcb.com/project/Circulator.pdf",
+      "sha256": "293ceeeb6e525cb2c0024a6a566b545a3d918ba91cb16712b494e3f37dfd022a"
+    },
+    {
+      "path": "dirty/Distortr.pdf",
+      "url": "https://docs.pedalpcb.com/project/Distortr.pdf",
+      "sha256": "e5b266416fd23c9e993b0e5aec7a78643f81300543e4b1c0dd0effeb79898770"
+    },
+    {
+      "path": "dirty/Parentheses.pdf",
+      "url": "https://docs.pedalpcb.com/project/Parentheses.pdf",
+      "sha256": "d3cd9eb6e26d0969b5e97a15db0ad15ff37d91862fe472f2a51c9e9757687c9b"
+    },
+    {
+      "path": "dirty/PedalPCB-ToneVendorMKI.pdf",
+      "url": "https://docs.pedalpcb.com/project/PedalPCB-ToneVendorMKI.pdf",
+      "sha256": "1f1e184cd7fd87f9b619eb5e83971ebf3275dd5e69f071a8ce7c433ba386c641"
+    },
+    {
+      "path": "dirty/PedalPCB-Triangulum.pdf",
+      "url": "https://docs.pedalpcb.com/project/PedalPCB-Triangulum.pdf",
+      "sha256": "44e8488af18963ef736f77075319e686f04159aaa7cd775d158fd36e1a52524d"
+    },
+    {
+      "path": "dirty/Pythagoras.pdf",
+      "url": "https://docs.pedalpcb.com/project/Pythagoras.pdf",
+      "sha256": "ffb9a4968a8d92cad8e5dd9b6c86d282e6207ed92a3ac8711d66789cbdb03961"
+    },
+    {
+      "path": "dirty/Raincoat.pdf",
+      "url": "https://docs.pedalpcb.com/project/Raincoat.pdf",
+      "sha256": "526938a3b52a50ac22cc7e7947a964ecacb51e9d087eb8524f73342a27ad2291"
+    },
+    {
+      "path": "dirty/Ungula.pdf",
+      "url": "https://docs.pedalpcb.com/project/Ungula.pdf",
+      "sha256": "3ed2b43d7484f8e37c14a154cc348f449fa5e48dd2feb67b92807288eb05747f"
+    }
+  ]
+}

@@ -66,10 +66,10 @@ Keep the release pin and vendored source shared rather than maintaining separate
 
 ## Running Tests
 
-We use `pytest` for the test suite.
+We use `pytest` for the test suite. The test corpus's PDFs belong to their publishers and aren't in the repository: `just test` downloads them first (listed with their hashes in `tests/samples/manifest.json`), and `just fetch-samples` does only that.
 
 ```bash
-uv run pytest
+just test
 ```
 
 Parser changes are graded against hand-labeled parts lists; print the scorecard with `just accuracy`. See [tests/README.md](tests/README.md) and [tests/golden/README.md](tests/golden/README.md).
@@ -91,7 +91,7 @@ Parser changes are graded against hand-labeled parts lists; print the scorecard 
    Run the tests locally. The hooks lint and type-check on commit, so there's no need to run those by hand.
 
    ```bash
-   uv run pytest
+   just test
    ```
 
 1. **Commit & Push**

@@ -10,13 +10,14 @@ class PresetData(TypedDict):
 
     Attributes:
         bom_text: The complete text content of the parsed BOM preset.
-        source_path: The file path to the original BOM source document.
-        is_pdf: True if the source document was a PDF.
+        source_path: A typed parts list's file in the repository (Tayda's kits).
+        source_url: The publisher's build document, which the repository
+            doesn't keep.
     """
 
     bom_text: str
     source_path: NotRequired[str]
-    is_pdf: NotRequired[bool]
+    source_url: NotRequired[str]
 
 
 BOM_PRESETS: dict[str, PresetData]

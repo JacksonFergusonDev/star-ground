@@ -1,7 +1,7 @@
 # Golden Parts Lists
 
 Each `*.json` file here is a hand-verified transcription of one sample PDF in
-`tests/samples/`. These files are the ground truth the parser is graded against
+`tests/samples/` (downloaded by `just fetch-samples`). These files are the ground truth the parser is graded against
 by `tests/accuracy.py`. Unlike the snapshots in `tests/snapshots/`, they are
 never generated from parser output.
 
@@ -165,7 +165,9 @@ Rows of the same part in one build add up. A row that names its designator
 
 ## Adding a Document
 
-1. Drop the PDF into `tests/samples/clean/` or `tests/samples/dirty/`.
+1. Add the document's publisher URL, its path under `clean/` or `dirty/`, and
+   its SHA-256 to `tests/samples/manifest.json`, then run `just fetch-samples`.
+   Never commit the PDF: publishers' documents stay out of the repository.
 1. Transcribe its parts list into `tests/golden/<folder>__<name>.json` from the
    rendered page, not from parser output. Record every judgment call in
    `notes`.
