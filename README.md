@@ -202,6 +202,7 @@ See [tests/README.md](tests/README.md) for how to run each layer.
 ├── AGENTS.md              <-- Guidelines for AI coding agents
 ├── CONTRIBUTING.md        <-- Development guide
 ├── Dockerfile
+├── PLAN.md                <-- The frontend rebuild plan and its status
 ├── justfile               <-- Task runner (lint, test, accuracy)
 └── pyproject.toml
 ```
@@ -250,15 +251,15 @@ uv run streamlit run app.py
 
 ## 🔭 Roadmap
 
-### Now: compare frontends, then launch
+### Now: rebuild the frontend, then launch
 
-1. **Compare another frontend** (e.g., NiceGUI) on the backend API (`src/api.py`), which no longer depends on Streamlit. Switch before launch only for capabilities that improve Star Ground itself, not just its look: for example, showing the document's own row beside each review warning, or reading image-only documents in the background with progress instead of freezing the page.
-1. **Launch on builder forums.** Collect failures, with the document attached, so each can be labeled and added to the regression suite.
+1. **Replace Streamlit** with a FastAPI service over the backend API (`src/api.py`) and an Astro site with Svelte for the app, in the shared house style of my other sites. This is a redesign, not a port: a build workspace instead of a one-shot form, review warnings shown on the document itself, a catalog of supported circuits, and a bench mode for building. The steps, decisions and status are in [PLAN.md](PLAN.md).
+1. **Launch on builder forums**, once the new frontend is up, so feedback is about the app people will keep using. Collect failures, with the document attached, so each can be labeled and added to the regression suite.
 1. **Measure again on unseen documents.** Every held-out test set has now been used for tuning. An honest accuracy figure needs a fresh set: documents users submit, or ones published after this release, set aside before anyone looks at them.
 
 ### Later, if users ask
 
-- **Paid hosting**, and a frontend more in line with my other apps, once there are consistent users.
+- **Accounts and sync.** The app keeps your stock, builds and checklists in your browser, with no sign-up. Accounts would sync them across devices and keep them safe from a cleared browser. This needs sign-in, a small per-user database, and a privacy policy with account deletion.
 - **More publishers**, chosen by what people upload. Each one gets its own labeled tuning set and an untouched test set before it is listed as supported.
 - **Live prices** from supplier APIs. This needs API keys and ongoing upkeep, so it waits until someone wants it.
 
