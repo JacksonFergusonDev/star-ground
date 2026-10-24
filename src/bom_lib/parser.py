@@ -2495,13 +2495,7 @@ def parse_pedalpcb_pdf(filepath: str, source_name: str) -> ParseResult:
         A ParseResult containing updated inventory, parsing statistics, and extracted title.
     """
     # Lazy import to avoid loading heavy PDF libraries unless needed
-    try:
-        import pdfplumber
-    except ImportError:
-        logger.error("pdfplumber not installed.")
-        err_stats = create_empty_stats()
-        err_stats["errors"].append("Missing dependency: pdfplumber")
-        return ParseResult(inventory=create_empty_inventory(), stats=err_stats)
+    import pdfplumber
 
     inventory = create_empty_inventory()
     stats: StatsDict = create_empty_stats()

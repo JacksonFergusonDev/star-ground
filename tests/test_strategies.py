@@ -7,10 +7,9 @@ from typing import Any, cast
 from unittest.mock import patch
 
 import pytest
-import requests
 
 from src.bom_lib.enums import ComponentCategory, InputMethod
-from src.bom_lib.fetch import FetchedDocument
+from src.bom_lib.fetch import FetchedDocument, FetchError
 from src.bom_lib.strategies import (
     BOMParserContext,
     CSVParserStrategy,
@@ -335,7 +334,7 @@ class TestBOMParserContext:
 
         with patch(
             "src.bom_lib.strategies.context.fetch_url",
-            side_effect=requests.RequestException("Connection timed out"),
+            side_effect=FetchError("example.com took too long to answer."),
         ):
             result = context.process(
                 InputMethod.FROM_URL, "https://example.com/bad.pdf", "ErrPedal"
@@ -344,7 +343,23 @@ class TestBOMParserContext:
         assert isinstance(result, ParseResult)
         assert result.stats["parts_found"] == 0
         assert len(result.stats["errors"]) == 1
-        assert "Connection timed out" in result.stats["errors"][0]
+        assert result.stats["errors"] == ["example.com took too long to answer."]
+
+    def test_a_bug_is_logged_and_reported_as_one(
+        self, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        strategy = ManualInputStrategy()
+        with patch.object(strategy, "parse", side_effect=KeyError("oops")):
+            result = BOMParserContext([strategy]).process(
+                InputMethod.PASTE_TEXT, "R1 10k", "Buggy"
+            )
+
+        assert result.stats["errors"] == [
+            "Star Ground couldn't read this parts list because of a bug. "
+            "It has been logged; please report it with the document."
+        ]
+        assert "Reading Buggy failed" in caplog.text
+        assert "KeyError" in caplog.text  # with its traceback
 
     def test_process_unknown_method(self) -> None:
         context = BOMParserContext([])
