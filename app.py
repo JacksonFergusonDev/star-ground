@@ -516,7 +516,7 @@ for i, slot in enumerate(st.session_state.pedal_slots):
             slot.data = as_upload(
                 st.file_uploader(
                     "Upload BOM",
-                    type=["csv", "pdf"],
+                    type=["pdf", "csv", "tsv", "txt"],
                     key=f"file_{slot.id}",
                 )
             )
@@ -564,7 +564,9 @@ st.divider()
 st.subheader("2. Inventory Check (Optional)")
 stock_file = as_upload(
     st.file_uploader(
-        "📂 Upload Stock CSV", type=["csv"], help="Columns: Category, Part, Qty"
+        "📂 Upload Stock CSV",
+        type=["csv", "tsv"],
+        help="Columns: Category, Part, Qty",
     )
 )
 st.divider()

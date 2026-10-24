@@ -73,6 +73,11 @@ class Project:
     reading: ParseResult | None = None
     source_path: str | None = None
 
+    def __post_init__(self) -> None:
+        """Refuses a count that would buy no parts, or a negative number."""
+        if self.count < 1:
+            raise ValueError(f"A project needs at least one pedal, not {self.count}")
+
 
 class BuildNotChosenError(ValueError):
     """A multi-circuit document's build was not chosen.

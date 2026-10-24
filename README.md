@@ -51,7 +51,7 @@ In software, dependency resolution is **deterministic**: `uv sync` gives the sam
 ### Inputs
 
 - **Build documents (PDF):** upload a file or paste a link. The parser reads the build documents of five PCB publishers: **PedalPCB, GuitarPCB, Aion FX, Five Cats and Tonepad**. Links must be public `http(s)` addresses; GitHub, Google Drive and Dropbox share links work too. Tonepad's file links open a download page, so download those PDFs and upload them.
-- **Pasted text and CSV:** any `REF VALUE` list (`R1 10k`, `C1-C3 100n`).
+- **Pasted text, text files and spreadsheets:** any `REF VALUE` list (`R1 10k`, `C1-C3 100n`), pasted or uploaded as a `.txt` file, or a `.csv` or `.tsv` export with reference and value columns.
 - **Presets:** a library of PedalPCB and Tayda circuits, browsable by source and category.
 - **Your stock:** upload an inventory CSV, and only what you're missing is bought.
 

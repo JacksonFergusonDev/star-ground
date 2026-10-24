@@ -173,3 +173,17 @@ def test_the_backend_does_not_depend_on_a_frontend(path: Path) -> None:
     assert not {
         m for m in _imports(path) if m.split(".")[0] in forbidden or m in forbidden
     }
+
+
+def test_a_short_stock_row_is_skipped() -> None:
+    stock = read_stock(
+        FileUpload("stock.csv", b"Category,Part,Qty\nResistors,10k\nResistors,22k,4\n")
+    )
+
+    assert {k.value: d["qty"] for k, d in stock.items()} == {"22k": 4}
+
+
+@pytest.mark.parametrize("count", [0, -2])
+def test_a_project_needs_at_least_one_pedal(count: int) -> None:
+    with pytest.raises(ValueError, match="at least one pedal"):
+        Project(name="Fuzz", count=count, data="R1 10k")
