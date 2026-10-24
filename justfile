@@ -97,3 +97,8 @@ clean:
 serve: sync
     @printf "\n{{ blue }}=== Launching Streamlit App ==={{ nc }}\n"
     uv run streamlit run app.py
+
+# Refresh presets, offer to wait for CI, and verify local state before bumping
+bump part:
+    uv run python -m tools.prepare_release
+    uv run --refresh https://raw.githubusercontent.com/JacksonFergusonDev/ci-cd-release-infrastructure/refs/heads/main/scripts/release.py {{ part }}

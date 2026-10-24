@@ -9,6 +9,7 @@ This allows the Streamlit app to load verified BOMs instantly without
 needing to parse files on-the-fly during runtime.
 """
 
+import json
 import os
 
 from src.bom_lib import (
@@ -145,10 +146,10 @@ def main() -> None:
             # We indent deeply (12 spaces) to align inside the dict structure.
             content = str(data["bom_text"]).strip().replace("\n", "\n            ")
 
-            f.write(f"    {k!r}: {{\n")
-            f.write(f'        \'bom_text\': """\n            {content}\n        """,\n')
-            f.write(f"        'source_path': {data['source_path']!r},\n")
-            f.write(f"        'is_pdf': {data['is_pdf']},\n")
+            f.write(f"    {json.dumps(k)}: {{\n")
+            f.write(f'        "bom_text": """\n            {content}\n        """,\n')
+            f.write(f'        "source_path": {json.dumps(data["source_path"])},\n')
+            f.write(f'        "is_pdf": {data["is_pdf"]},\n')
             f.write("    },\n")
 
         f.write("}\n")
