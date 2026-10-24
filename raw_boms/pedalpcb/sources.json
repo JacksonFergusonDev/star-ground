@@ -1,0 +1,48 @@
+{
+  "documents": [
+    {
+      "category": "boost",
+      "url": "https://docs.pedalpcb.com/project/PedalPCB-Triangulum.pdf"
+    },
+    {
+      "category": "fuzz",
+      "url": "https://docs.pedalpcb.com/project/PaperScratcher-PedalPCB.pdf"
+    },
+    {
+      "category": "fuzz",
+      "url": "https://docs.pedalpcb.com/project/Parentheses.pdf"
+    },
+    {
+      "category": "fuzz",
+      "url": "https://docs.pedalpcb.com/project/Sunflower-PedalPCB.pdf"
+    },
+    {
+      "category": "modulation",
+      "url": "https://docs.pedalpcb.com/project/Abyss.pdf"
+    },
+    {
+      "category": "modulation",
+      "url": "https://docs.pedalpcb.com/project/Circulator.pdf"
+    },
+    {
+      "category": "modulation",
+      "url": "https://docs.pedalpcb.com/project/LowTide-PedalPCB.pdf"
+    },
+    {
+      "category": "overdrive",
+      "url": "https://docs.pedalpcb.com/project/Kliche-PedalPCB.pdf"
+    },
+    {
+      "category": "time",
+      "url": "https://docs.pedalpcb.com/project/Arachnid.pdf"
+    },
+    {
+      "category": "time",
+      "url": "https://docs.pedalpcb.com/project/Cataclysm-PedalPCB.pdf"
+    },
+    {
+      "category": "time",
+      "url": "https://docs.pedalpcb.com/project/Gravitation-PedalPCB.pdf"
+    }
+  ]
+}

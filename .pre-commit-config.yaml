@@ -84,7 +84,7 @@ repos:
 
       - id: pytest
         name: pytest
-        entry: uv run pytest -n auto
+        entry: uv run just test
         language: system
         pass_filenames: false
         stages: [pre-push]

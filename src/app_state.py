@@ -24,7 +24,8 @@ class ProjectSlot:
         data: Pasted or preset text, a URL, or an uploaded file.
         last_loaded_preset: The preset last loaded, to rename the project
             only while its name is still the preset's.
-        source_path: The loaded preset's source document.
+        source_path: The loaded preset's typed parts list.
+        source_url: The loaded preset's build document at its publisher.
         reading: The upload or link as `read_document` read it.
         reading_key: The `document_key` the reading was made from.
         variant: The build chosen from a multi-circuit document.
@@ -38,6 +39,7 @@ class ProjectSlot:
     data: ProjectData = None
     last_loaded_preset: str | None = None
     source_path: str | None = None
+    source_url: str | None = None
     reading: ParseResult | None = None
     reading_key: str | None = None
     variant: str | None = None
@@ -67,6 +69,7 @@ class ProjectSlot:
             if key is not None and key == self.reading_key
             else None,
             source_path=self.source_path,
+            source_url=self.source_url,
             pcb_shop=shop,
         )
 

@@ -62,7 +62,9 @@ class Project:
         use_ocr: Whether to add the parts OCR read from image pages.
         reading: The document as `read_document` read it, if it was read
             ahead of time; it is read again otherwise.
-        source_path: A preset's source document, for the build pack.
+        source_path: A preset's typed parts list, for the build pack.
+        source_url: A preset's build document at its publisher, for the
+            build pack's link.
         pcb_shop: The shop that sells a preset's board.
     """
 
@@ -74,6 +76,7 @@ class Project:
     use_ocr: bool = False
     reading: ParseResult | None = None
     source_path: str | None = None
+    source_url: str | None = None
     pcb_shop: PcbShop | None = None
 
     def __post_init__(self) -> None:
@@ -401,6 +404,7 @@ def generate_master_list(
                 options=tuple(str(o) for o in result.options),
                 document=result.raw_content,
                 source_path=project.source_path,
+                source_url=project.source_url,
                 pcb_shop=project.pcb_shop,
             )
         )

@@ -257,6 +257,7 @@ def update_from_preset(slot_id: uuid.UUID) -> None:
 
         slot.data = preset_obj["bom_text"]
         slot.source_path = preset_obj.get("source_path")
+        slot.source_url = preset_obj.get("source_url")
 
         # Force the text area to reflect this new data
         st.session_state[f"text_preset_{slot_id}"] = slot.data
@@ -295,6 +296,7 @@ def _reset_slot_state(slot: ProjectSlot, new_method: InputMethod) -> None:
     # 2. Clear Metadata / Cache
     # ProjectSlot doesn't use pop(), we set to None
     slot.source_path = None
+    slot.source_url = None
     slot.last_loaded_preset = None
     slot.reading = None
     slot.reading_key = None
@@ -424,6 +426,7 @@ def on_method_change(slot_id: uuid.UUID) -> None:
 
         slot.data = preset_obj["bom_text"]
         slot.source_path = preset_obj.get("source_path")
+        slot.source_url = preset_obj.get("source_url")
 
         slot.last_loaded_preset = first_preset
 

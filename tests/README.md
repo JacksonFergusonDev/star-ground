@@ -12,7 +12,7 @@ This test suite is designed to enforce the **Deterministic** nature of the Star 
 
 PDF parsing is inherently fragile. A minor update to a regex pattern could silently break support for a legacy PDF format. To prevent this, we use **Snapshot Testing**.
 
-- **Strategy:** We maintain a library of "Golden Master" PDFs (`tests/samples/`) and their expected JSON outputs (`tests/snapshots/`).
+- **Strategy:** We maintain a library of "Golden Master" PDFs (`tests/samples/`) and their expected JSON outputs (`tests/snapshots/`). The PDFs belong to their publishers, so the repository keeps only `tests/samples/manifest.json` (each document's URL and SHA-256); `just fetch-samples` downloads and verifies them, and `just test` does so first.
 - **Mechanism:** Every CI run parses the raw PDFs and diffs the output against the stored JSON.
 - **The Guarantee:** Zero regression. If a single resistor value changes in the output, the build fails immediately.
 

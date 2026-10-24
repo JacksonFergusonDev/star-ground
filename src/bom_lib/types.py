@@ -128,7 +128,9 @@ class BuiltProject:
         warnings: Its parser self-check failures, to review.
         options: Interchangeable choices resolved to the document's default.
         document: The source PDF's bytes, for the build pack.
-        source_path: A preset's source document on disk, for the build pack.
+        source_path: A preset's typed parts list on disk, for the build pack.
+        source_url: A preset's build document at its publisher, linked from
+            the build pack.
         pcb_shop: Where its board is bought, when a shop sells it.
     """
 
@@ -139,6 +141,7 @@ class BuiltProject:
     options: tuple[str, ...] = ()
     document: bytes | None = None
     source_path: str | None = None
+    source_url: str | None = None
     pcb_shop: PcbShop | None = None
 
 

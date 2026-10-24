@@ -59,8 +59,7 @@ BOM_PRESETS = {
             IC1 (Inj) DIP SOCKET (Check Size)
             IC100 (Inj) DIP SOCKET (Check Size)
         """,
-        "source_path": "raw_boms/pedalpcb/boost/PedalPCB-Triangulum.pdf",
-        "is_pdf": True,
+        "source_url": "https://docs.pedalpcb.com/project/PedalPCB-Triangulum.pdf",
     },
     "[PedalPCB] [Fuzz] Paper Scratcher Fuzz": {
         "bom_text": """
@@ -123,8 +122,7 @@ BOM_PRESETS = {
             R2 2.2M
             IC1 (Inj) DIP SOCKET (Check Size)
         """,
-        "source_path": "raw_boms/pedalpcb/fuzz/PaperScratcher-PedalPCB.pdf",
-        "is_pdf": True,
+        "source_url": "https://docs.pedalpcb.com/project/PaperScratcher-PedalPCB.pdf",
     },
     "[PedalPCB] [Fuzz] Parentheses Fuzz": {
         "bom_text": """
@@ -211,8 +209,7 @@ BOM_PRESETS = {
             R26 1M
             IC1 (Inj) DIP SOCKET (Check Size)
         """,
-        "source_path": "raw_boms/pedalpcb/fuzz/Parentheses.pdf",
-        "is_pdf": True,
+        "source_url": "https://docs.pedalpcb.com/project/Parentheses.pdf",
     },
     "[PedalPCB] [Fuzz] Sunflower Fuzz": {
         "bom_text": """
@@ -238,8 +235,7 @@ BOM_PRESETS = {
             R1 100k
             IC1 (Inj) DIP SOCKET (Check Size)
         """,
-        "source_path": "raw_boms/pedalpcb/fuzz/Sunflower-PedalPCB.pdf",
-        "is_pdf": True,
+        "source_url": "https://docs.pedalpcb.com/project/Sunflower-PedalPCB.pdf",
     },
     "[PedalPCB] [Modulation] Circulator": {
         "bom_text": """
@@ -316,8 +312,7 @@ BOM_PRESETS = {
             IC4 (Inj) DIP SOCKET (Check Size)
             IC5 (Inj) DIP SOCKET (Check Size)
         """,
-        "source_path": "raw_boms/pedalpcb/modulation/Circulator.pdf",
-        "is_pdf": True,
+        "source_url": "https://docs.pedalpcb.com/project/Circulator.pdf",
     },
     "[PedalPCB] [Modulation] Low Tide Modulator": {
         "bom_text": """
@@ -466,8 +461,7 @@ BOM_PRESETS = {
             IC6 (Inj) DIP SOCKET (Check Size)
             IC7 (Inj) DIP SOCKET (Check Size)
         """,
-        "source_path": "raw_boms/pedalpcb/modulation/LowTide-PedalPCB.pdf",
-        "is_pdf": True,
+        "source_url": "https://docs.pedalpcb.com/project/LowTide-PedalPCB.pdf",
     },
     "[PedalPCB] [Modulation] The Abyss": {
         "bom_text": """
@@ -533,8 +527,7 @@ BOM_PRESETS = {
             IC1 (Inj) DIP SOCKET (Check Size)
             IC2 (Inj) DIP SOCKET (Check Size)
         """,
-        "source_path": "raw_boms/pedalpcb/modulation/Abyss.pdf",
-        "is_pdf": True,
+        "source_url": "https://docs.pedalpcb.com/project/Abyss.pdf",
     },
     "[PedalPCB] [Overdrive] Kliche Overdrive": {
         "bom_text": """
@@ -607,8 +600,7 @@ BOM_PRESETS = {
             IC2 (Inj) DIP SOCKET (Check Size)
             IC3 (Inj) DIP SOCKET (Check Size)
         """,
-        "source_path": "raw_boms/pedalpcb/overdrive/Kliche-PedalPCB.pdf",
-        "is_pdf": True,
+        "source_url": "https://docs.pedalpcb.com/project/Kliche-PedalPCB.pdf",
     },
     "[PedalPCB] [Time] Arachnid v2": {
         "bom_text": """
@@ -676,8 +668,7 @@ BOM_PRESETS = {
             IC2 (Inj) DIP SOCKET (Check Size)
             IC3 (Inj) DIP SOCKET (Check Size)
         """,
-        "source_path": "raw_boms/pedalpcb/time/Arachnid.pdf",
-        "is_pdf": True,
+        "source_url": "https://docs.pedalpcb.com/project/Arachnid.pdf",
     },
     "[PedalPCB] [Time] Cataclysm Delay": {
         "bom_text": """
@@ -743,8 +734,7 @@ BOM_PRESETS = {
             IC1 (Inj) DIP SOCKET (Check Size)
             IC2 (Inj) DIP SOCKET (Check Size)
         """,
-        "source_path": "raw_boms/pedalpcb/time/Cataclysm-PedalPCB.pdf",
-        "is_pdf": True,
+        "source_url": "https://docs.pedalpcb.com/project/Cataclysm-PedalPCB.pdf",
     },
     "[PedalPCB] [Time] Gravitation Reverb": {
         "bom_text": """
@@ -800,8 +790,7 @@ BOM_PRESETS = {
             IC1 (Inj) DIP SOCKET (Check Size)
             IC2 (Inj) DIP SOCKET (Check Size)
         """,
-        "source_path": "raw_boms/pedalpcb/time/Gravitation-PedalPCB.pdf",
-        "is_pdf": True,
+        "source_url": "https://docs.pedalpcb.com/project/Gravitation-PedalPCB.pdf",
     },
     "[Tayda] [Dynamics] Micro Amp Booster": {
         "bom_text": """
@@ -833,7 +822,6 @@ BOM_PRESETS = {
             GAIN    500k-C    500KC ANTI-LOG TAPER POTENTIOMETER
         """,
         "source_path": "raw_boms/tayda/dynamics/micro_amp_booster.txt",
-        "is_pdf": False,
     },
     "[Tayda] [Dynamics] Orange Squeezer": {
         "bom_text": """
@@ -878,7 +866,6 @@ BOM_PRESETS = {
             BIAS    10k       10K OHM TRIMMER POTENTIOMETER CERMET
         """,
         "source_path": "raw_boms/tayda/dynamics/orange_squeezer.txt",
-        "is_pdf": False,
     },
     "[Tayda] [Fuzz] Bazz Fuzz": {
         "bom_text": """
@@ -904,7 +891,6 @@ BOM_PRESETS = {
             VOL   100k-A    100K OHM LOGARITHMIC POTENTIOMETER
         """,
         "source_path": "raw_boms/tayda/fuzz/bazz_fuzz.txt",
-        "is_pdf": False,
     },
     "[Tayda] [Fuzz] Big Muff": {
         "bom_text": """
@@ -971,7 +957,6 @@ BOM_PRESETS = {
             TONE         100K-B     100K OHM LINEAR POTENTIOMETER
         """,
         "source_path": "raw_boms/tayda/fuzz/big_muff.txt",
-        "is_pdf": False,
     },
     "[Tayda] [Fuzz] Muff Fuzz Overdrive": {
         "bom_text": """
@@ -1003,7 +988,6 @@ BOM_PRESETS = {
             VOL         100K-A     100K OHM LOG POTENTIOMETER
         """,
         "source_path": "raw_boms/tayda/fuzz/muff_fuzz_overdrive.txt",
-        "is_pdf": False,
     },
     "[Tayda] [Fuzz] Satisfaction Fuzz": {
         "bom_text": """
@@ -1038,7 +1022,6 @@ BOM_PRESETS = {
             VOL          100k-A     100K OHM LOG POTENTIOMETER
         """,
         "source_path": "raw_boms/tayda/fuzz/satisfaction_fuzz.txt",
-        "is_pdf": False,
     },
     "[Tayda] [Modulation] Colorsound Tremolo": {
         "bom_text": """
@@ -1083,7 +1066,6 @@ BOM_PRESETS = {
             SPEED   100k-B    100K OHM LINEAR POTENTIOMETER
         """,
         "source_path": "raw_boms/tayda/modulation/colorsound_tremolo.txt",
-        "is_pdf": False,
     },
     "[Tayda] [Modulation] Dr Q": {
         "bom_text": """
@@ -1142,7 +1124,6 @@ BOM_PRESETS = {
             SW    SWITCH    MINI TOGGLE SWITCH DPDT ON-ON
         """,
         "source_path": "raw_boms/tayda/modulation/dr_q.txt",
-        "is_pdf": False,
     },
     "[Tayda] [Overdrive] Bluesbreaker": {
         "bom_text": """
@@ -1192,7 +1173,6 @@ BOM_PRESETS = {
             VOL      100k-A      100K OHM LOG TAPER POTENTIOMETER
         """,
         "source_path": "raw_boms/tayda/overdrive/bluesbreaker.txt",
-        "is_pdf": False,
     },
     "[Tayda] [Overdrive] Centaur Overdrive": {
         "bom_text": """
@@ -1265,7 +1245,6 @@ BOM_PRESETS = {
             VOL      10k-B       10K OHM LIN TAPER POTENTIOMETER
         """,
         "source_path": "raw_boms/tayda/overdrive/centaur_overdrive.txt",
-        "is_pdf": False,
     },
     "[Tayda] [Overdrive] Rat": {
         "bom_text": """
@@ -1319,6 +1298,5 @@ BOM_PRESETS = {
             GAIN    100k-A    100K OHM LOGARITHMIC TAPER POTENTIOMETER
         """,
         "source_path": "raw_boms/tayda/overdrive/rat.txt",
-        "is_pdf": False,
     },
 }

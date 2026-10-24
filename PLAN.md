@@ -167,7 +167,7 @@ Probed on 2026-10-24: board renders in PedalPCB, GuitarPCB and Tonepad documents
 | Step | Status | Pull requests |
 | --- | --- | --- |
 | Plan | Done | This plan's PR |
-| 1. Remove publisher PDFs | Next | |
+| 1. Remove publisher PDFs | In progress: tree independent of the PDFs; history rewrite next | |
 | 2. API service | Not started | |
 | 3. Frontend foundation | Not started | |
 | 4. Walking skeleton | Not started | |

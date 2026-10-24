@@ -577,7 +577,8 @@ def generate_master_zip(
     Contents:
     1. CSVs (Shopping List, Inventory Update)
     2. Generated PDFs (Field Manuals, Sticker Sheets)
-    3. Source Documents (Original PDFs/Txt files)
+    3. Source Documents (uploaded or fetched PDFs, typed lists, and links
+       to publishers' documents)
     4. Info.txt (Metadata)
 
     Args:
@@ -605,7 +606,7 @@ def generate_master_zip(
             "CONTENTS:\n"
             "- Field Manuals/: Printable step-by-step checklists.\n"
             "- Sticker Sheets/: Labels for Avery 5160 (3x10).\n"
-            "- Source Documents/: The original build docs (if available).\n\n"
+            "- Source Documents/: The build docs you gave, or links to them.\n\n"
             "Github Page:\n"
             "https://github.com/JacksonFergusonDev/star-ground\n"
         )
@@ -644,6 +645,15 @@ def generate_master_zip(
                     logger.warning(
                         "Preset source document missing: %s", project.source_path
                     )
+
+            # Strategy C: Link to the publisher's document (Preset). Star
+            # Ground doesn't redistribute publishers' documents.
+            elif project.source_url:
+                file_content = (
+                    "Download the build document from its publisher:\n"
+                    f"{project.source_url}\n"
+                ).encode()
+                dest_name = f"Source Documents/{safe_name} Source Link.txt"
 
             if file_content and dest_name and dest_name not in used_filenames:
                 zf.writestr(dest_name, file_content)

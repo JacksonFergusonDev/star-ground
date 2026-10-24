@@ -177,7 +177,7 @@ See [tests/README.md](tests/README.md) for how to run each layer.
 ├── app.py                 <-- Streamlit web app (a frontend on src/api.py)
 ├── assets/                <-- Images and demo
 ├── examples/              <-- Sample generated build pack
-├── raw_boms/              <-- Source files for the presets library (PedalPCB, Tayda)
+├── raw_boms/              <-- Preset sources: PedalPCB document links, Tayda parts lists
 ├── src/
 │   ├── bom_lib/           <-- Domain logic (see src/README.md)
 │   │   ├── strategies/    <-- Input dispatch: PDF, CSV, pasted text, URL
