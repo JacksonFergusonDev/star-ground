@@ -6,6 +6,7 @@ delegation to the classification engine.
 """
 
 import csv
+import io
 import logging
 import re
 import traceback
@@ -274,6 +275,34 @@ def parse_with_verification(
     return ParseResult(inventory=inventory, stats=stats)
 
 
+def _read_table(filepath: str) -> csv.DictReader[str]:
+    """Reads a spreadsheet export as rows keyed by its header.
+
+    Spreadsheets save CSV as UTF-8, or as Windows-1252 (Excel on Windows), and
+    separate columns with commas, tabs (TSV) or semicolons (Excel in locales
+    that write '4,7' for 4.7). Both are detected.
+
+    Args:
+        filepath: Path to the file.
+
+    Returns:
+        A reader over the file's rows.
+    """
+    with open(filepath, "rb") as f:
+        raw = f.read()
+    try:
+        text = raw.decode("utf-8-sig")
+    except UnicodeDecodeError:
+        text = raw.decode("cp1252", errors="replace")
+    try:
+        dialect: type[csv.Dialect] | csv.Dialect = csv.Sniffer().sniff(
+            text[:4096], delimiters=",\t;"
+        )
+    except csv.Error:
+        dialect = csv.excel
+    return csv.DictReader(io.StringIO(text), dialect=dialect)
+
+
 def parse_csv_bom(filepath: str, source_name: str) -> ParseResult:
     """Parses a CSV BOM file.
 
@@ -290,40 +319,38 @@ def parse_csv_bom(filepath: str, source_name: str) -> ParseResult:
     inventory = create_empty_inventory()
     stats: StatsDict = create_empty_stats()
 
-    with open(filepath, encoding="utf-8-sig") as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            stats["lines_read"] += 1
-            row_clean = {str(k).lower().strip(): v for k, v in row.items() if k}
+    for row in _read_table(filepath):
+        stats["lines_read"] += 1
+        row_clean = {str(k).lower().strip(): v for k, v in row.items() if k}
 
-            # Try explicit columns
-            ref = (
-                row_clean.get("ref")
-                or row_clean.get("designator")
-                or row_clean.get("part")
-                or row_clean.get("location")
-            )
-            val = (
-                row_clean.get("value")
-                or row_clean.get("val")
-                or row_clean.get("description")
-            )
+        # Try explicit columns
+        ref = (
+            row_clean.get("ref")
+            or row_clean.get("designator")
+            or row_clean.get("part")
+            or row_clean.get("location")
+        )
+        val = (
+            row_clean.get("value")
+            or row_clean.get("val")
+            or row_clean.get("description")
+        )
 
-            # Fallback: Assume Col 1 = Ref, Col 2 = Val
-            if not ref and not val and len(row_clean) == 2:
-                vals = list(row_clean.values())
-                ref = vals[0]
-                val = vals[1]
+        # Fallback: Assume Col 1 = Ref, Col 2 = Val
+        if not ref and not val and len(row_clean) == 2:
+            vals = list(row_clean.values())
+            ref = vals[0]
+            val = vals[1]
 
-            success = False
-            if ref and val:
-                count = ingest_bom_line(inventory, source_name, ref, val, stats)
-                if count > 0:
-                    stats["parts_found"] += count
-                    success = True
+        success = False
+        if ref and val:
+            count = ingest_bom_line(inventory, source_name, ref, val, stats)
+            if count > 0:
+                stats["parts_found"] += count
+                success = True
 
-            if not success:
-                stats["residuals"].append(str(row))
+        if not success:
+            stats["residuals"].append(str(row))
 
     return ParseResult(inventory=inventory, stats=stats)
 
@@ -342,34 +369,33 @@ def parse_user_inventory(filepath: str) -> Inventory:
     """
     stock: Inventory = create_empty_inventory()
 
-    with open(filepath, encoding="utf-8-sig") as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            row_clean = {k.lower(): v for k, v in row.items() if k}
+    for row in _read_table(filepath):
+        # A short row has None for its missing cells.
+        row_clean = {k.lower().strip(): v or "" for k, v in row.items() if k}
 
-            cat = row_clean.get("category", "").strip()
-            val = row_clean.get("part", "").strip()
-            # Undo the exporter's formula guard ("'=1+1" was written for "=1+1").
-            if val.startswith("'") and val[1:].startswith(FORMULA_PREFIXES):
-                val = val[1:]
-            qty_str = row_clean.get("qty", "0").strip()
+        cat = row_clean.get("category", "").strip()
+        val = row_clean.get("part", "").strip()
+        # Undo the exporter's formula guard ("'=1+1" was written for "=1+1").
+        if val.startswith("'") and val[1:].startswith(FORMULA_PREFIXES):
+            val = val[1:]
+        qty_str = row_clean.get("qty", "0").strip()
 
-            if cat and val:
-                try:
-                    qty = int(qty_str)
-                except ValueError:
-                    continue
+        if cat and val:
+            try:
+                qty = int(qty_str)
+            except ValueError:
+                continue
 
-                # Critical: Normalize value so it matches BOM keys
+            # Critical: Normalize value so it matches BOM keys
 
-                try:
-                    cat_enum = ComponentCategory(cat)
-                except ValueError:
-                    continue
-                clean_val = normalize_value_by_category(cat_enum, val)
-                key = make_component_key(cat_enum, clean_val)
+            try:
+                cat_enum = ComponentCategory(cat)
+            except ValueError:
+                continue
+            clean_val = normalize_value_by_category(cat_enum, val)
+            key = make_component_key(cat_enum, clean_val)
 
-                stock.add_part("User Stock", key, ref="", qty=qty)
+            stock.add_part("User Stock", key, ref="", qty=qty)
 
     return stock
 

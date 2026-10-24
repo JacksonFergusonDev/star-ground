@@ -32,6 +32,16 @@ class TestManualInputStrategy:
         assert strategy.can_handle(InputMethod.FROM_URL, "R1 10k") is True
         assert strategy.can_handle(InputMethod.PRESET, ["R1 10k"]) is True
         assert strategy.can_handle(InputMethod.UPLOAD_FILE, b"%PDF-1.4") is False
+        txt = FileUpload("bom.txt", b"R1 10k")
+        assert strategy.can_handle(InputMethod.UPLOAD_FILE, txt) is True
+        assert CSVParserStrategy().can_handle(InputMethod.UPLOAD_FILE, txt) is False
+
+    def test_an_uploaded_text_file_is_read_as_lines(self) -> None:
+        upload = FileUpload("bom.txt", b"R1 10k\nR2 22k\nC1 100n\n")
+
+        result = BOMParserContext().process(InputMethod.UPLOAD_FILE, upload, "Txt")
+
+        assert result.stats["parts_found"] == 3
 
     def test_parse_string(self) -> None:
         strategy = ManualInputStrategy()
@@ -110,6 +120,23 @@ class TestCSVParserStrategy:
         assert isinstance(result, ParseResult)
         assert result.stats["parts_found"] == 1
         assert ComponentKey(ComponentCategory.RESISTORS, "10k") in result.inventory
+
+    @pytest.mark.parametrize(
+        ("name", "content"),
+        [
+            ("bom.tsv", b"Ref\tValue\nR1\t10k\nC1\t100n\n"),
+            # Excel where the decimal mark is a comma.
+            ("bom.csv", b"Ref;Value\nR1;4,7k\nC1;100n\n"),
+            # Excel on Windows saves CSV as Windows-1252.
+            ("bom.csv", "Ref,Value\nR1,10k\nC1,100n\n".encode("cp1252")),
+            ("bom.csv", "Ref,Value,Note\nR1,10k,µ\nC1,100n,é\n".encode("cp1252")),
+        ],
+    )
+    def test_spreadsheet_exports_are_read(self, name: str, content: bytes) -> None:
+        result = CSVParserStrategy().parse(FileUpload(name, content), "Sheet")
+
+        assert result.stats["parts_found"] == 2
+        assert result.stats["residuals"] == []
 
     def test_parse_temp_file_cleanup(self) -> None:
         strategy = CSVParserStrategy()
