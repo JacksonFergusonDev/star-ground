@@ -3,7 +3,7 @@
 from decimal import Decimal
 
 from src.bom_lib.constants import AUTO_INJECT_SOURCE
-from src.bom_lib.enums import ComponentCategory, ComponentOrigin
+from src.bom_lib.enums import ComponentCategory, ComponentOrigin, PcbShop
 from src.bom_lib.sourcing import (
     build_shopping_list,
     determine_origin,
@@ -70,20 +70,22 @@ def test_resolve_part_sourcing_circuit_part() -> None:
 
 
 def test_resolve_part_sourcing_pcb_url_routing() -> None:
-    """Routes PCB URLs to PedalPCB when sourced from PedalPCB and not Tayda."""
+    """Routes a board to the shop that sells it, and to Tayda's search otherwise."""
     pedalpcb_resolved = resolve_part_sourcing(
         category=ComponentCategory.PCB,
         val="Triangulum Boost PCB",
         net_qty=1,
-        sources={"PedalPCB Triangulum": ["PCB"]},
+        sources={"Triangulum": ["PCB"]},
+        pcb_shop=PcbShop.PEDALPCB,
     )
     assert "https://www.pedalpcb.com" in pedalpcb_resolved.supplier_url
 
+    # A project's name doesn't choose the shop.
     tayda_resolved = resolve_part_sourcing(
         category=ComponentCategory.PCB,
         val="Distortion PCB",
         net_qty=1,
-        sources={"Tayda Electronics": ["PCB"]},
+        sources={"PedalPCB clone": ["PCB"]},
     )
     assert "https://www.taydaelectronics.com" in tayda_resolved.supplier_url
 

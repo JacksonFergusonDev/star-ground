@@ -27,6 +27,7 @@ from src.bom_lib import (
     Inventory,
     ParseResult,
     ParseWarning,
+    PcbShop,
     ShoppingListRow,
     StatsDict,
     build_shopping_list,
@@ -62,6 +63,7 @@ class Project:
         reading: The document as `read_document` read it, if it was read
             ahead of time; it is read again otherwise.
         source_path: A preset's source document, for the build pack.
+        pcb_shop: The shop that sells a preset's board.
     """
 
     name: str = ""
@@ -72,6 +74,7 @@ class Project:
     use_ocr: bool = False
     reading: ParseResult | None = None
     source_path: str | None = None
+    pcb_shop: PcbShop | None = None
 
     def __post_init__(self) -> None:
         """Refuses a count that would buy no parts, or a negative number."""
@@ -137,7 +140,13 @@ class MasterList:
         Returns:
             One row per part, in display order.
         """
-        return build_shopping_list(self.kit, self.stock, show_hardware, show_extras)
+        return build_shopping_list(
+            self.kit,
+            self.stock,
+            show_hardware,
+            show_extras,
+            {p.label: p.pcb_shop for p in self.projects if p.pcb_shop},
+        )
 
     def pdf_bundle(self) -> bytes:
         """A ZIP of each project's field manual and sticker sheet."""
@@ -287,6 +296,36 @@ def _read(
     return copy.deepcopy(offered(project.reading, project.use_ocr)), PENDING_SOURCE
 
 
+def _identity(project: Project) -> tuple[object, ...]:
+    """What makes two projects the same parts list."""
+    document = document_key(project.method, project.data) or project.data
+    return (project.method, document, project.variant, project.use_ocr)
+
+
+def _unique_label(
+    label: str, identity: tuple[object, ...], labelled: dict[str, tuple[object, ...]]
+) -> str:
+    """The label, numbered if another parts list already has it ('Fuzz (2)').
+
+    Parts are listed under their project's label, so two different circuits
+    named alike would merge into one field manual with two R1s.
+
+    Args:
+        label: The project's label.
+        identity: The project's parts list (`_identity`).
+        labelled: Each label given so far, with its parts list; updated.
+
+    Returns:
+        A label no other parts list has.
+    """
+    candidate, n = label, 1
+    while candidate in labelled and labelled[candidate] != identity:
+        n += 1
+        candidate = f"{label} ({n})"
+    labelled[candidate] = identity
+    return candidate
+
+
 def generate_master_list(
     projects: Sequence[Project], stock: Inventory | None = None
 ) -> MasterList:
@@ -319,6 +358,9 @@ def generate_master_list(
     parts = create_empty_inventory()
     stats = create_empty_stats()
     built: list[BuiltProject] = []
+    # Each label's parts list: the same list entered twice shares its label
+    # (one field manual for both), a different one gets its own.
+    labelled: dict[str, tuple[object, ...]] = {}
     for project, source, (result, listed_as) in zip(
         projects, sources, readings, strict=True
     ):
@@ -333,6 +375,7 @@ def generate_master_list(
             name = str(title)
         # Name the build in every output: 'Muffin Fuzz (Civil War)'.
         label = f"{name} ({project.variant})" if chose_build else name
+        label = _unique_label(label, _identity(project), labelled)
         if label != listed_as:
             rename_source_in_inventory(inventory, listed_as, label)
 
@@ -358,6 +401,7 @@ def generate_master_list(
                 options=tuple(str(o) for o in result.options),
                 document=result.raw_content,
                 source_path=project.source_path,
+                pcb_shop=project.pcb_shop,
             )
         )
 

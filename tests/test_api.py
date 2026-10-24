@@ -18,7 +18,13 @@ from src.api import (
     read_document,
     read_stock,
 )
-from src.bom_lib import ComponentCategory, ComponentKey, FileUpload, InputMethod
+from src.bom_lib import (
+    ComponentCategory,
+    ComponentKey,
+    FileUpload,
+    InputMethod,
+    PcbShop,
+)
 from src.bom_lib.fetch import FetchError
 
 SAMPLES = Path(__file__).parent / "samples"
@@ -187,3 +193,52 @@ def test_a_short_stock_row_is_skipped() -> None:
 def test_a_project_needs_at_least_one_pedal(count: int) -> None:
     with pytest.raises(ValueError, match="at least one pedal"):
         Project(name="Fuzz", count=count, data="R1 10k")
+
+
+def test_different_projects_with_one_name_are_kept_apart() -> None:
+    master = generate_master_list(
+        [
+            Project(name="Fuzz", data="R1 10k\nC1 100n"),
+            Project(name="Fuzz", data="R1 22k\nQ1 2N3904"),
+        ]
+    )
+
+    assert [p.label for p in master.projects] == ["Fuzz", "Fuzz (2)"]
+    assert master.parts[R10K]["sources"] == {"Fuzz": ["R1"]}
+    with zipfile.ZipFile(io.BytesIO(master.pdf_bundle())) as zf:
+        manuals = [n for n in zf.namelist() if n.startswith("Field Manuals/")]
+    assert manuals == [
+        "Field Manuals/Fuzz Field Manual.pdf",
+        "Field Manuals/Fuzz (2) Field Manual.pdf",
+    ]
+
+
+def test_the_same_project_entered_twice_shares_its_label() -> None:
+    master = generate_master_list(
+        [Project(name="Fuzz", data="R1 10k"), Project(name="Fuzz", data="R1 10k")]
+    )
+
+    assert [p.label for p in master.projects] == ["Fuzz", "Fuzz"]
+    assert master.parts[R10K]["qty"] == 2
+
+
+def test_a_board_is_bought_where_the_preset_says_whatever_its_name() -> None:
+    master = generate_master_list(
+        [
+            Project(
+                name="My boost",
+                method=InputMethod.PRESET,
+                data="PCB Triangulum Boost PCB\nR1 10k",
+                pcb_shop=PcbShop.PEDALPCB,
+            ),
+            Project(name="PedalPCB-style clone", data="PCB Clone PCB"),
+        ]
+    )
+
+    links = {
+        r["Part"]: r["Tayda_Link"]
+        for r in master.shopping_list()
+        if r["Category"] == ComponentCategory.PCB.value
+    }
+    assert links["Triangulum Boost PCB"].startswith("https://www.pedalpcb.com")
+    assert links["Clone PCB"].startswith("https://www.taydaelectronics.com")

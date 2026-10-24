@@ -31,6 +31,15 @@ class ComponentOrigin(StrEnum):
     EXTRAS = "Extras"
 
 
+class PcbShop(StrEnum):
+    """Where a project's circuit board is bought.
+
+    The values are the preset sources that sell their own boards.
+    """
+
+    PEDALPCB = "PedalPCB"
+
+
 class HardwareRole(StrEnum):
     """Off-board hardware the app supplies unless a document lists its own."""
 
