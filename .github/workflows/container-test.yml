@@ -1,0 +1,117 @@
+name: Container tests
+
+on:
+  workflow_call:
+
+permissions: {}
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  smoke:
+    name: Smoke (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 25
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-24.04
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+
+      - name: Install browser test dependencies
+        run: |
+          uv sync --locked --only-group ci
+          uv run --no-sync playwright install --with-deps chromium
+
+      - name: Install OCI image tooling
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y skopeo
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
+
+      - name: Build production artifact
+        id: build
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          context: .
+          platforms: linux/${{ matrix.arch }}
+          outputs: type=oci,dest=${{ runner.temp }}/image.tar
+          provenance: mode=max
+          sbom: true
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+          cache-from: type=gha,scope=container-${{ matrix.arch }}
+          cache-to: type=gha,mode=max,scope=container-${{ matrix.arch }}
+
+      - name: Load and test the artifact
+        env:
+          ARCH: ${{ matrix.arch }}
+          EXPECTED_DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          skopeo inspect --raw "oci-archive:${RUNNER_TEMP}/image.tar" > "${RUNNER_TEMP}/index.json"
+          actual="sha256:$(sha256sum "${RUNNER_TEMP}/index.json" | cut -d ' ' -f 1)"
+          test "$actual" = "$EXPECTED_DIGEST"
+          jq -e --arg arch "$ARCH" \
+            '[.manifests[] | select(.platform.os == "linux") | .platform.architecture] == [$arch]' \
+            "${RUNNER_TEMP}/index.json"
+          runtime="$(jq -er '.manifests[] | select(.platform.os == "linux") | .digest' "${RUNNER_TEMP}/index.json")"
+          attestation="$(jq -er '.manifests[] | select(.annotations["vnd.docker.reference.type"] == "attestation-manifest") | .digest' "${RUNNER_TEMP}/index.json")"
+          tar -xOf "${RUNNER_TEMP}/image.tar" "blobs/sha256/${attestation#sha256:}" | \
+            jq -e '[.layers[].annotations["in-toto.io/predicate-type"]] | sort == ["https://slsa.dev/provenance/v1", "https://spdx.dev/Document"]'
+          config="$(tar -xOf "${RUNNER_TEMP}/image.tar" "blobs/sha256/${runtime#sha256:}" | jq -er '.config.digest')"
+          skopeo copy "oci-archive:${RUNNER_TEMP}/image.tar" \
+            "docker-archive:${RUNNER_TEMP}/runtime.tar:star-ground:smoke"
+          docker load --input "${RUNNER_TEMP}/runtime.tar"
+          rm "${RUNNER_TEMP}/runtime.tar"
+          # Docker versions disagree on .Id; hash the exported config bytes instead.
+          # The config includes the runtime settings and every uncompressed layer digest.
+          docker image save --output "${RUNNER_TEMP}/loaded.tar" star-ground:smoke
+          loaded_config="$(tar -xOf "${RUNNER_TEMP}/loaded.tar" manifest.json | jq -er '.[0].Config')"
+          actual_config="sha256:$(tar -xOf "${RUNNER_TEMP}/loaded.tar" "$loaded_config" | sha256sum | cut -d ' ' -f 1)"
+          test "$actual_config" = "$config"
+          rm "${RUNNER_TEMP}/loaded.tar"
+          test "$(docker image inspect --format '{{.Architecture}}' star-ground:smoke)" = "$ARCH"
+          uv run --no-sync python tools/smoke_container.py star-ground:smoke \
+            --artifacts "${RUNNER_TEMP}/browser" 2>&1 | tee "${RUNNER_TEMP}/smoke.log"
+          printf '%s\n' "$EXPECTED_DIGEST" > "${RUNNER_TEMP}/digest.txt"
+
+      - name: Retain test diagnostics
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: container-diagnostics-${{ matrix.arch }}
+          path: |
+            ${{ runner.temp }}/smoke.log
+            ${{ runner.temp }}/index.json
+            ${{ runner.temp }}/browser/
+          retention-days: 7
+          if-no-files-found: warn
+
+      - name: Pass tested artifact to the publisher
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: container-image-${{ matrix.arch }}
+          path: |
+            ${{ runner.temp }}/image.tar
+            ${{ runner.temp }}/digest.txt
+          compression-level: 0
+          retention-days: 1
+          if-no-files-found: error

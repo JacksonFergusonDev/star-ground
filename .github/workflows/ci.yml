@@ -1,6 +1,7 @@
 name: CI
 
 on:
+  workflow_call:
   push:
     branches: [ "main" ]
   pull_request:
@@ -116,11 +117,17 @@ jobs:
       - name: Test with pytest
         run: uv run pytest -n auto
 
+  container:
+    name: Container
+    permissions:
+      contents: read
+    uses: ./.github/workflows/container-test.yml # zizmor: ignore[self-repository] -- actionlint 1.7.12 rejects $/ workflow calls
+
   # The single required status check: add new jobs to `needs`, not to the ruleset.
   ci-ok:
     name: CI OK
     if: always()
-    needs: [lint, house-style, typecheck, test]
+    needs: [lint, house-style, typecheck, test, container]
     runs-on: ubuntu-latest
     timeout-minutes: 2
     steps:
