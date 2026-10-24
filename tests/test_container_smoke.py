@@ -48,9 +48,11 @@ def test_readiness_has_a_deadline(monkeypatch):
         smoke_container.wait_healthy("test")
 
 
-def test_docker_failure_preserves_output(monkeypatch):
-    run = Mock(return_value=subprocess.CompletedProcess([], 1, "stdout", "stderr"))
-    monkeypatch.setattr("tools.smoke_container.subprocess.run", run)
+def test_docker_failure_preserves_output(mocker):
+    run = mocker.patch(
+        "tools.smoke_container.subprocess.run",
+        return_value=subprocess.CompletedProcess([], 1, "stdout", "stderr"),
+    )
     with pytest.raises(RuntimeError, match="stdout\nstderr"):
         smoke_container.docker("inspect", "test")
     assert run.call_args.kwargs["timeout"] == 30

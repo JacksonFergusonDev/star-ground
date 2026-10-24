@@ -68,10 +68,20 @@ jobs:
           skopeo inspect --raw "oci-archive:${RUNNER_TEMP}/image.tar" > "${RUNNER_TEMP}/index.json"
           actual="sha256:$(sha256sum "${RUNNER_TEMP}/index.json" | cut -d ' ' -f 1)"
           test "$actual" = "$EXPECTED_DIGEST"
+          jq -e --arg arch "$ARCH" \
+            '[.manifests[] | select(.platform.os == "linux") | .platform.architecture] == [$arch]' \
+            "${RUNNER_TEMP}/index.json"
+          runtime="$(jq -er '.manifests[] | select(.platform.os == "linux") | .digest' "${RUNNER_TEMP}/index.json")"
+          attestation="$(jq -er '.manifests[] | select(.annotations["vnd.docker.reference.type"] == "attestation-manifest") | .digest' "${RUNNER_TEMP}/index.json")"
+          tar -xOf "${RUNNER_TEMP}/image.tar" "blobs/sha256/${attestation#sha256:}" | \
+            jq -e '[.layers[].annotations["in-toto.io/predicate-type"]] | sort == ["https://slsa.dev/provenance/v1", "https://spdx.dev/Document"]'
+          config="$(tar -xOf "${RUNNER_TEMP}/image.tar" "blobs/sha256/${runtime#sha256:}" | jq -er '.config.digest')"
           skopeo copy "oci-archive:${RUNNER_TEMP}/image.tar" \
             "docker-archive:${RUNNER_TEMP}/runtime.tar:star-ground:smoke"
           docker load --input "${RUNNER_TEMP}/runtime.tar"
           rm "${RUNNER_TEMP}/runtime.tar"
+          # Image IDs hash the config, which includes all uncompressed layer digests.
+          test "$(docker image inspect --format '{{.Id}}' star-ground:smoke)" = "$config"
           test "$(docker image inspect --format '{{.Architecture}}' star-ground:smoke)" = "$ARCH"
           uv run --no-sync python tools/smoke_container.py star-ground:smoke \
             --artifacts "${RUNNER_TEMP}/browser" 2>&1 | tee "${RUNNER_TEMP}/smoke.log"
