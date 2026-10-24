@@ -68,8 +68,8 @@ The public repository holds publisher PDFs in `raw_boms/` (11, the presets' sour
 1. **Force-push** `main` and all tags. The repository has no forks and one open PR (#163, Renovate's lock file maintenance), which is closed and left for Renovate to reopen. Tags keep their names, so releases point at the rewritten commits.
 1. **Clean up what still holds old copies:**
     - Delete GHCR image versions built before the rewrite (they contain `raw_boms/`), and rebuild `latest` from the rewritten `main`.
-    - Ask GitHub Support to purge cached views and the `refs/pull/*` refs of closed pull requests, which a force-push can't touch.
-    - Re-clone every local checkout and delete old worktrees; their objects still contain the PDFs.
+    - Skipped: asking GitHub Support to purge the `refs/pull/*` refs of closed pull requests, which a force-push can't touch. The documents are ones their publishers give away, nothing in them is sensitive, and the old commits are reachable only by SHA through closed pull requests. Revisit only if a publisher asks.
+    - Move local checkouts onto the rewritten history. Local branches and worktrees from before the rewrite must never be pushed.
 1. **Verify** in a fresh clone that `git log --all -- '*.pdf'` lists only generated field manuals and sticker sheets, and that CI passes on the rewritten `main`.
 
 ### 2. API service
@@ -167,7 +167,7 @@ Probed on 2026-10-24: board renders in PedalPCB, GuitarPCB and Tonepad documents
 | Step | Status | Pull requests |
 | --- | --- | --- |
 | Plan | Done | This plan's PR |
-| 1. Remove publisher PDFs | In progress: tree independent of the PDFs; history rewrite next | |
+| 1. Remove publisher PDFs | Done 2026-10-24: history rewritten, `main` and 15 tags force-pushed, old images deleted | #201 |
 | 2. API service | Not started | |
 | 3. Frontend foundation | Not started | |
 | 4. Walking skeleton | Not started | |
