@@ -1,6 +1,5 @@
 """Strategy for parsing PedalPCB PDF build documents."""
 
-import os
 from dataclasses import replace
 
 from src.bom_lib.enums import InputMethod
@@ -27,9 +26,6 @@ class PDFParserStrategy(BOMParserStrategy):
         if isinstance(data, SupportsName) and str(data.name).lower().endswith(".pdf"):
             return True
 
-        if isinstance(data, str) and data.lower().endswith(".pdf"):
-            return True
-
         return bool(
             isinstance(data, (bytes, bytearray)) and bytes(data).startswith(b"%PDF")
         )
@@ -37,19 +33,16 @@ class PDFParserStrategy(BOMParserStrategy):
     def parse(self, data: RawBOMData, source_name: str) -> ParseResult:
         """Parse PDF data into a ParseResult, managing temporary files as needed.
 
+        A string is never read as a file path: it is text the builder typed,
+        so it can't name a file on the server.
+
         Args:
-            data: File-like object (e.g. UploadedFile), file path string, or raw bytes.
+            data: An upload (`FileUpload`), file-like object, or raw bytes.
             source_name: Display label for the source.
 
         Returns:
             ParseResult containing the parsed inventory, statistics, extracted title, and raw PDF bytes.
         """
-        if isinstance(data, str) and os.path.isfile(data):
-            with open(data, "rb") as f:
-                raw_bytes = f.read()
-            res = _parse(data, source_name)
-            return replace(res, raw_content=raw_bytes)
-
         raw_content = self._read_to_bytes(data, "PDFParserStrategy")
         with self._temp_file_from_bytes(raw_content, ".pdf") as tmp_path:
             res = _parse(tmp_path, source_name)

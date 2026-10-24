@@ -1,9 +1,14 @@
 """Tests for CSV exporters using typed ShoppingListRow."""
 
+import csv
+import io
+from pathlib import Path
+
 import pytest
 
 from src.bom_lib.enums import ComponentCategory, ComponentOrigin
-from src.bom_lib.types import ShoppingListRow
+from src.bom_lib.parser import parse_user_inventory
+from src.bom_lib.types import FORMULA_PREFIXES, ShoppingListRow
 from src.exporters import (
     BASE_SHOPPING_LIST_COLS,
     generate_shopping_list_csv,
@@ -208,3 +213,54 @@ def test_the_supplier_cart_lists_what_to_buy() -> None:
         "2,TL072,ICs: TL072",
         "10,,Resistors: 10k ohm 1/4w metal film",
     ]
+
+
+def _shopping_row(part: str, **overrides: object) -> ShoppingListRow:
+    row: ShoppingListRow = {
+        "Origin": ComponentOrigin.CIRCUIT_BOARD,
+        "Category": "ICs",
+        "Part": part,
+        "BOM Qty": 1,
+        "Included": 0,
+        "In Stock": 0,
+        "Net Need": 1,
+        "Buy Qty": 1,
+        "Notes": "",
+        "Search Term": part,
+        "Tayda_Link": "https://www.taydaelectronics.com/catalogsearch/result/?q=x",
+    }
+    row.update(overrides)  # type: ignore[typeddict-item]
+    return row
+
+
+@pytest.mark.parametrize("part", ["=1+1", "+cmd|calc", "-2+3", "@SUM(A1)"])
+def test_document_text_never_becomes_a_spreadsheet_formula(part: str) -> None:
+    rows = [_shopping_row(part)]
+
+    shopping = generate_shopping_list_csv(rows, use_excel_formulas=True)
+    stock = generate_stock_update_csv([_shopping_row(part, **{"Buy Qty": 2})])
+    cart = generate_supplier_cart_csv(rows)
+
+    for csv_bytes in (shopping, stock, cart):
+        cells = [
+            cell
+            for line in csv.reader(io.StringIO(csv_bytes.decode("utf-8-sig")))
+            for cell in line
+        ]
+        formulas = [c for c in cells if c.startswith(FORMULA_PREFIXES)]
+        assert all(c.startswith('=HYPERLINK("https://') for c in formulas)
+        assert any(part in c for c in cells)
+    # The link the app builds is still a formula.
+    assert '"=HYPERLINK(""https://' in shopping.decode("utf-8-sig")
+
+
+def test_the_stock_file_reads_back_a_guarded_part(tmp_path: Path) -> None:
+    stock_csv = generate_stock_update_csv(
+        [_shopping_row("-2+3", Category="Transistors", **{"Buy Qty": 3})]
+    )
+    path = tmp_path / "stock.csv"
+    path.write_bytes(stock_csv)
+
+    stock = parse_user_inventory(str(path))
+
+    assert [k.value for k in stock] == ["-2+3"]

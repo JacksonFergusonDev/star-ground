@@ -21,9 +21,6 @@ class CSVParserStrategy(BOMParserStrategy):
             if method == InputMethod.UPLOAD_FILE and ext != ".pdf":
                 return True
 
-        if isinstance(data, str) and data.lower().endswith((".csv", ".tsv")):
-            return True
-
         return bool(
             method == InputMethod.UPLOAD_FILE
             and isinstance(data, (bytes, bytearray))
@@ -33,17 +30,15 @@ class CSVParserStrategy(BOMParserStrategy):
     def parse(self, data: RawBOMData, source_name: str) -> ParseResult:
         """Parse CSV data into a ParseResult, managing temporary files as needed.
 
+        A string is never read as a file path (see `PDFParserStrategy.parse`).
+
         Args:
-            data: File-like object (e.g. UploadedFile), file path string, or raw bytes.
+            data: An upload (`FileUpload`), file-like object, or raw bytes.
             source_name: Display label for the source.
 
         Returns:
             ParseResult containing the parsed inventory and statistics.
         """
-        # If data is an existing file path, parse directly without temp file creation
-        if isinstance(data, str) and os.path.isfile(data):
-            return parse_csv_bom(data, source_name=source_name)
-
         ext = ".csv"
         if isinstance(data, SupportsName):
             filename = str(data.name)

@@ -301,7 +301,10 @@ def fetch_url(url: str, policy: FetchPolicy | None = None) -> FetchedDocument:
             with _get(url, hostname, address, policy) as response:
                 if response.is_redirect:
                     nxt = urljoin(url, response.headers["location"])
-                    if urlsplit(url).scheme == "https" and nxt.startswith("http:"):
+                    if (
+                        urlsplit(url).scheme == "https"
+                        and urlsplit(nxt).scheme == "http"
+                    ):
                         raise FetchError(
                             "The link redirects from a secure (https) address to "
                             "an insecure one."
