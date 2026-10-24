@@ -3,7 +3,7 @@ import io
 import re
 
 from src.bom_lib.enums import ComponentCategory
-from src.bom_lib.types import ShoppingListRow
+from src.bom_lib.types import FORMULA_PREFIXES, ShoppingListRow
 
 BASE_SHOPPING_LIST_COLS = [
     "Category",
@@ -14,6 +14,29 @@ BASE_SHOPPING_LIST_COLS = [
     "Tayda_Link",
     "Origin",
 ]
+
+
+def _cell[T](value: T) -> T | str:
+    """A value safe to open in a spreadsheet: text never starts a formula.
+
+    Part values come from documents anyone can write; '=HYPERLINK(...)' read
+    as a part must stay text when the CSV opens in Excel.
+
+    Args:
+        value: A cell's value.
+
+    Returns:
+        Text starting with a formula character prefixed with an apostrophe,
+        which spreadsheets read as 'this is text'; anything else unchanged.
+    """
+    if isinstance(value, str) and value.startswith(FORMULA_PREFIXES):
+        return f"'{value}"
+    return value
+
+
+def _safe_row(row: ShoppingListRow) -> dict[str, object]:
+    """A shopping list row with every cell made safe by `_cell`."""
+    return {column: _cell(value) for column, value in row.items()}
 
 
 def get_shopping_list_columns(
@@ -66,13 +89,11 @@ def generate_shopping_list_csv(
 
     rows_to_write = []
     for row in data:
+        safe = _safe_row(row)
         if use_excel_formulas and row.get("Tayda_Link"):
-            # Transform the link into a clickable formula
-            clean_row = row.copy()
-            clean_row["Tayda_Link"] = f'=HYPERLINK("{row["Tayda_Link"]}", "Buy")'
-            rows_to_write.append(clean_row)
-        else:
-            rows_to_write.append(row)
+            # The one formula written on purpose: the app builds the link.
+            safe["Tayda_Link"] = f'=HYPERLINK("{row["Tayda_Link"]}", "Buy")'
+        rows_to_write.append(safe)
 
     writer.writerows(rows_to_write)
 
@@ -114,7 +135,11 @@ def generate_stock_update_csv(data: list[ShoppingListRow]) -> bytes:
         # Only write rows where stock remains; omit zero-qty items to keep the CSV clean
         if new_qty > 0:
             stock_writer.writerow(
-                {"Category": row["Category"], "Part": row["Part"], "Qty": new_qty}
+                {
+                    "Category": row["Category"],
+                    "Part": _cell(row["Part"]),
+                    "Qty": new_qty,
+                }
             )
 
     return stock_update_buf.getvalue().encode("utf-8-sig")
@@ -179,6 +204,10 @@ def generate_supplier_cart_csv(data: list[ShoppingListRow]) -> bytes:
         part_number = manufacturer_part_number(category, row["Part"])
         description = row.get("Search Term") or row["Part"]
         writer.writerow(
-            [row["Buy Qty"], part_number, f"{category.value}: {description}"]
+            [
+                row["Buy Qty"],
+                _cell(part_number),
+                _cell(f"{category.value}: {description}"),
+            ]
         )
     return buf.getvalue().encode("utf-8")

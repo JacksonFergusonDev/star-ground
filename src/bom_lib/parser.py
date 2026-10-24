@@ -50,6 +50,7 @@ from src.bom_lib.layout import (
     valueless_refs,
 )
 from src.bom_lib.types import (
+    FORMULA_PREFIXES,
     BuildVariant,
     Inventory,
     OptionNote,
@@ -102,6 +103,9 @@ from src.bom_lib.verification import (
 # merges words in tightly kerned documents (Muffin Fuzz draws word spaces of
 # 1.3pt between overlapping glyphs: 'TONEBYPASSSWITCH').
 _WORD_GAP_PT = 1.0
+# The most pages a PDF may have. The longest corpus document has 34; a longer
+# one isn't a build document, and every page costs seconds of shared CPU.
+MAX_PDF_PAGES = 60
 
 # Initialize Logger
 logger = logging.getLogger(__name__)
@@ -345,6 +349,9 @@ def parse_user_inventory(filepath: str) -> Inventory:
 
             cat = row_clean.get("category", "").strip()
             val = row_clean.get("part", "").strip()
+            # Undo the exporter's formula guard ("'=1+1" was written for "=1+1").
+            if val.startswith("'") and val[1:].startswith(FORMULA_PREFIXES):
+                val = val[1:]
             qty_str = row_clean.get("qty", "0").strip()
 
             if cat and val:
@@ -2484,6 +2491,12 @@ def parse_pedalpcb_pdf(filepath: str, source_name: str) -> ParseResult:
         except Exception as e:
             logger.error(f"Failed to open PDF {source_name}: {e}")
             stats["errors"].append(f"File Error: {e!s}")
+            return ParseResult(inventory=inventory, stats=stats)
+        if len(pdf.pages) > MAX_PDF_PAGES:
+            stats["errors"].append(
+                f"The PDF has {len(pdf.pages)} pages. Build documents have at "
+                f"most {MAX_PDF_PAGES}, so it wasn't read."
+            )
             return ParseResult(inventory=inventory, stats=stats)
 
         # Phase 2: Extraction

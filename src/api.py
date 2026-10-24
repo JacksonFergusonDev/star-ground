@@ -169,8 +169,6 @@ def document_key(method: InputMethod, data: ProjectData) -> str | None:
     """
     if method == InputMethod.UPLOAD_FILE and isinstance(data, FileUpload):
         return f"file:{data.fingerprint}"
-    if method == InputMethod.UPLOAD_FILE and isinstance(data, str) and data:
-        return f"file:{data}"  # a path (strategies accept paths as uploads)
     if method == InputMethod.FROM_URL and data:
         return f"url:{str(data).strip()}"
     return None
@@ -225,8 +223,8 @@ def file_title(method: InputMethod, data: ProjectData) -> str | None:
     Returns:
         The file name without its extension, or None.
     """
-    if method == InputMethod.UPLOAD_FILE and data is not None:
-        name = data.name if isinstance(data, FileUpload) else data
+    if method == InputMethod.UPLOAD_FILE and isinstance(data, FileUpload):
+        name = data.name
     elif method == InputMethod.FROM_URL and isinstance(data, str) and data:
         name = unquote(urlsplit(data.strip()).path)
     else:

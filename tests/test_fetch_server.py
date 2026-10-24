@@ -107,6 +107,9 @@ def _handler(site: Site) -> type[BaseHTTPRequestHandler]:
                 "/downgrade": lambda: self.redirect(
                     f"http://docs.test:{site.http_port}/bom.pdf"
                 ),
+                "/downgrade-upper": lambda: self.redirect(
+                    f"HTTP://docs.test:{site.http_port}/bom.pdf"
+                ),
                 "/declared-big": lambda: self.big_declared(),
                 "/streamed-big": lambda: self.streamed_big(),
                 "/gzip-bomb": lambda: self.gzip_bomb(),
@@ -277,9 +280,12 @@ class TestTLS:
         with pytest.raises(FetchError, match="certificate"):
             fetch_url(site.url("/bom.pdf", tls=True), site.policy(verify=True))
 
-    def test_a_redirect_from_https_to_http_is_refused(self, site: Site) -> None:
+    @pytest.mark.parametrize("path", ["/downgrade", "/downgrade-upper"])
+    def test_a_redirect_from_https_to_http_is_refused(
+        self, site: Site, path: str
+    ) -> None:
         with pytest.raises(FetchError, match="insecure"):
-            fetch_url(site.url("/downgrade", tls=True), site.policy())
+            fetch_url(site.url(path, tls=True), site.policy())
 
 
 class TestLimits:

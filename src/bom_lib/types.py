@@ -57,6 +57,10 @@ class SupportsName(Protocol):
     name: str
 
 
+# Characters that make a spreadsheet read a cell as a formula (OWASP CSV
+# injection). Exporters prefix such text with an apostrophe.
+FORMULA_PREFIXES = ("=", "+", "-", "@", "\t", "\r")
+
 RawBOMData = (
     str
     | bytes
