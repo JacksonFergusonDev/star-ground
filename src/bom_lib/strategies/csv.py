@@ -16,9 +16,10 @@ class CSVParserStrategy(BOMParserStrategy):
         if isinstance(data, SupportsName):
             filename = str(data.name).lower()
             ext = os.path.splitext(filename)[1]
-            if ext in [".csv", ".tsv", ".txt"]:
+            if ext in (".csv", ".tsv"):
                 return True
-            if method == InputMethod.UPLOAD_FILE and ext != ".pdf":
+            # A .txt is 'R1 10k' lines (`ManualInputStrategy`).
+            if method == InputMethod.UPLOAD_FILE and ext not in (".pdf", ".txt"):
                 return True
 
         return bool(
