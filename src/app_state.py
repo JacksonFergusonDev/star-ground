@@ -9,7 +9,7 @@ import uuid
 from dataclasses import dataclass, field
 
 from src.api import Project, ProjectData, document_key
-from src.bom_lib import InputMethod, ParseResult
+from src.bom_lib import InputMethod, ParseResult, PcbShop, parse_preset_key
 
 
 @dataclass
@@ -50,6 +50,12 @@ class ProjectSlot:
             The project, with its reading if that matches the current input.
         """
         key = document_key(self.method, self.data)
+        preset = parse_preset_key(self.last_loaded_preset or "")
+        shop = (
+            PcbShop(preset[0])
+            if self.method == InputMethod.PRESET and preset and preset[0] in PcbShop
+            else None
+        )
         return Project(
             name=str(self.name or ""),
             count=self.count,
@@ -61,6 +67,7 @@ class ProjectSlot:
             if key is not None and key == self.reading_key
             else None,
             source_path=self.source_path,
+            pcb_shop=shop,
         )
 
 
