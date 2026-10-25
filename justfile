@@ -106,9 +106,14 @@ serve: sync
 serve-api: sync
     uv run uvicorn src.server:app --reload
 
-# Regenerate openapi.json after changing a route or model in src/server/
+# Regenerate openapi.json and the website's API types after changing src/server/
 openapi: sync
     uv run python -m tools.export_openapi
+    npm --prefix web run types
+
+# Start the website's dev server (run `npm ci` in web/ first)
+serve-web:
+    npm --prefix web run dev
 
 # Refresh presets, offer to wait for CI, and verify local state before bumping
 bump part:

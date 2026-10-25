@@ -1,0 +1,85 @@
+---
+// House styles load first, in house-style's order, then Star Ground's accent,
+// then the site's own layout.
+import '@house/css/fonts.css';
+import '@house/css/tokens.css';
+import '@house/css/product.css';
+import '@house/css/components.css';
+import '@branding/theme.css';
+import '../styles/global.css';
+import Icon from '../components/Icon.astro';
+import { links } from '../lib/site';
+
+interface Props {
+  title?: string;
+  description: string;
+  noindex?: boolean;
+}
+const { title, description, noindex = false } = Astro.props;
+const pageTitle = title ? `${title} | Star Ground` : 'Star Ground';
+const canonical = new URL(Astro.url.pathname, Astro.site);
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0f172a" />
+    <meta name="description" content={description} />
+    <title>{pageTitle}</title>
+    {!noindex && <link rel="canonical" href={canonical} />}
+    {noindex && <meta name="robots" content="noindex" />}
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonical} />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">
+      Skip to content
+    </a>
+    <header class="site-header">
+      <div class="nav-wrap">
+        <a href="/" class="wordmark">
+          <img src="/favicon.svg" alt="" width="34" height="34" />
+          <span>Star Ground</span>
+        </a>
+        <nav aria-label="Sections" class="nav-console">
+          <a href="/#how-it-works">How it works</a>
+          <a href="/#documents">Documents</a>
+          <a href="/#accuracy">Accuracy</a>
+        </nav>
+        <nav aria-label="Elsewhere" class="nav-links">
+          <a href={links.github}>
+            <Icon name="brand-github" size={13} /> GitHub
+          </a>
+        </nav>
+      </div>
+    </header>
+    <main id="main">
+      <slot />
+    </main>
+    <footer class="site-footer">
+      <div class="container footer-inner">
+        <p class="publisher-note">
+          Are you a PCB publisher? If you'd rather Star Ground didn't read your documents,{' '}
+          <a href={links.contact}>get in touch</a> and I'll take them out.
+        </p>
+        <div class="footer-bottom">
+          <span>© {new Date().getUTCFullYear()} Jackson Ferguson</span>
+          <a href={links.home}>
+            <Icon name="jacksonferguson" size={14} /> jacksonferguson.me
+          </a>
+          <a href={links.github}>
+            <Icon name="brand-github" size={13} /> GitHub
+          </a>
+          <a href="#main" class="to-top">
+            Back to top <Icon name="arrow-up" size={12} />
+          </a>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

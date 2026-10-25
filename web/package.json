@@ -1,0 +1,51 @@
+{
+  "name": "star-ground-web",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "check": "astro check",
+    "types": "openapi-typescript ../openapi.json -o src/lib/api.d.ts",
+    "lint": "npm run lint:eslint && npm run lint:stylelint",
+    "lint:eslint": "eslint .",
+    "lint:stylelint": "stylelint \"src/**/*.{css,astro,svelte}\"",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test:browser": "playwright test"
+  },
+  "dependencies": {
+    "@astrojs/svelte": "^9.1.1",
+    "astro": "^7.4.2",
+    "svelte": "^5.57.2",
+    "typescript": "^6.0.3"
+  },
+  "overrides": {
+    "openapi-typescript": {
+      "typescript": "$typescript"
+    }
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.12",
+    "@axe-core/playwright": "^4.14.0",
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.64.1",
+    "@types/node": "^26.6.5",
+    "eslint": "^10.13.0",
+    "eslint-plugin-astro": "^3.2.1",
+    "eslint-plugin-svelte": "^3.23.1",
+    "globals": "^17.13.0",
+    "openapi-typescript": "^7.13.0",
+    "prettier": "^3.9.10",
+    "prettier-plugin-astro": "^1.1.2",
+    "prettier-plugin-svelte": "^4.1.1",
+    "stylelint": "^17.16.0",
+    "stylelint-config-html": "^2.0.0",
+    "stylelint-config-standard": "^40.0.0",
+    "typescript-eslint": "^8.72.0"
+  }
+}

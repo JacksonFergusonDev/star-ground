@@ -56,6 +56,30 @@ The web frontend talks to the HTTP API in `src/server/`, a FastAPI app over the 
 
 After changing a route or model, run `just openapi` and commit `openapi.json`.
 
+## Working on the Website
+
+`web/` is the website: an Astro site whose app pages will be Svelte components. It needs Node 22.12 or newer.
+
+```bash
+cd web
+npm ci
+npm run dev
+```
+
+The site is at `http://127.0.0.1:4321/`. Before opening a pull request, run what CI runs:
+
+```bash
+npm run lint
+npm run format:check
+npm run check
+npm run build
+npm run test:browser
+```
+
+`npm run test:browser` serves the build and runs the Playwright tests in Chromium, Firefox and WebKit, at desktop and phone sizes, including an axe accessibility scan. Install the browsers once with `npx playwright install`.
+
+The frontend's API types in `web/src/lib/api.d.ts` are generated from `openapi.json`. After `just openapi`, run `npm run types` in `web/` and commit both files.
+
 ## Shared Design and Writing
 
 The `house/` directory is a committed release of [house-style](https://github.com/JacksonFergusonDev/house-style). Its `GUIDELINES.txt` is the design and writing contract. The `house_style` variable in the `justfile` is the release pin, and `branding/theme.css` supplies Star Ground's green accent.
@@ -71,10 +95,10 @@ Commit the pin and the complete vendored copy together. CI runs the check and fa
 
 The current Streamlit app keeps its native theme in `.streamlit/config.toml`, using the product palette's navy background, panel, and text colors with Star Ground's green accent. The vendored CSS is not loaded into Streamlit. This setup leaves the current app's fonts and layout unchanged.
 
-The JavaScript/React frontend and Zensical documentation have not been created. They will share this same pinned copy:
+The website and future Zensical documentation share this same pinned copy:
 
-- The frontend should import `house/css/fonts.css`, `house/css/tokens.css`, `house/css/product.css`, and the component styles it uses, then `branding/theme.css` and its layout styles. Let the bundler copy and fingerprint referenced fonts and icons.
-- The docs build should copy `house/` unchanged to an ignored `docs/house/` staging directory and copy `branding/theme.css` to its own served assets. Load the house files first, then the brand stylesheet and the documentation theme adapter. Disable the theme's external font loading and use the house fonts. Protostar's `zensical.toml` and `docs/stylesheets/extra.css` show how to map house tokens to Zensical.
+- The website (`web/`) imports `house/css/fonts.css`, `house/css/tokens.css`, `house/css/product.css`, and `house/css/components.css` through its `@house` alias, then `branding/theme.css` (`@branding`) and its own layout styles in `web/src/styles/global.css`. The bundler copies and fingerprints the fonts and icons they reference.
+- The docs build, once added, should copy `house/` unchanged to an ignored `docs/house/` staging directory and copy `branding/theme.css` to its own served assets. Load the house files first, then the brand stylesheet and the documentation theme adapter. Disable the theme's external font loading and use the house fonts. Protostar's `zensical.toml` and `docs/stylesheets/extra.css` show how to map house tokens to Zensical.
 
 Keep the release pin and vendored source shared rather than maintaining separate copies for each build. Site-specific CSS handles layout and the brand accent; shared components and rules change upstream.
 
