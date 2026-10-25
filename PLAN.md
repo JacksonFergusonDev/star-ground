@@ -89,7 +89,7 @@ The public repository holds publisher PDFs in `raw_boms/` (11, the presets' sour
 
 ### 3. Frontend foundation
 
-1. `web/`: an Astro project with the Svelte integration, `house-style` pinned to a tag, and the website's lint, format and test setup.
+1. `web/`: an Astro project with the Svelte integration and the website's lint, format and test setup. It reads the vendored `house/` (pinned in the `justfile`) and `branding/theme.css` through aliases, so the repository keeps one copy of house-style, as `AGENTS.md` requires.
 1. The landing page as a house page: section markers, the grid behind long pages, icons on standalone links, no emoji.
 1. CI job for the frontend: lint, type check (`astro check`), build, Playwright with axe.
 
@@ -170,7 +170,7 @@ Probed on 2026-10-24: board renders in PedalPCB, GuitarPCB and Tonepad documents
 | Plan | Done | This plan's PR |
 | 1. Remove publisher PDFs | Done 2026-10-24: history rewritten, `main` and 15 tags force-pushed, old images deleted | #201 |
 | 2. API service | Done 2026-10-24 | This step's PR |
-| 3. Frontend foundation | Not started | |
+| 3. Frontend foundation | Done 2026-10-24 | This step's PR |
 | 4. Walking skeleton | Not started | |
 | 5. Build workspace | Not started | |
 | 6. Document review | Not started | |

@@ -199,6 +199,7 @@ See [tests/README.md](tests/README.md) for how to run each layer.
 │   ├── feedback.py        <-- In-app feedback form (Google Sheets)
 │   └── pdf_generator.py   <-- Field manuals and sticker sheets
 ├── tests/                 <-- Test suite, golden parts lists and samples
+├── web/                   <-- The website: Astro, with Svelte for the app
 ├── tools/                 <-- Preset generator
 ├── AGENTS.md              <-- Guidelines for AI coding agents
 ├── CONTRIBUTING.md        <-- Development guide

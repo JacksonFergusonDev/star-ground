@@ -1,0 +1,32 @@
+{
+  "extends": [
+    "stylelint-config-standard",
+    "stylelint-config-html/astro",
+    "stylelint-config-html/svelte"
+  ],
+  "ignoreFiles": ["dist/**", ".astro/**", "node_modules/**", "test-results/**"],
+  "rules": {
+    "rule-empty-line-before": null,
+    "at-rule-empty-line-before": null,
+    "comment-empty-line-before": null,
+    "declaration-empty-line-before": null,
+    "no-descending-specificity": null,
+    "media-feature-range-notation": null,
+    "color-function-notation": null,
+    "alpha-value-notation": null,
+    "color-function-alias-notation": null,
+    "color-hex-length": null,
+    "selector-pseudo-class-no-unknown": [
+      true,
+      {
+        "ignorePseudoClasses": ["global"]
+      }
+    ],
+    "selector-class-pattern": [
+      "^(hs-[a-z0-9]+(-[a-z0-9]+)*(--[a-z0-9]+(-[a-z0-9]+)*)?|[a-z][a-z0-9]*(-[a-z0-9]+)*)$",
+      {
+        "message": "Use kebab-case, or house-style's hs-block--modifier names"
+      }
+    ]
+  }
+}
