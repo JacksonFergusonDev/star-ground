@@ -82,25 +82,19 @@ The frontend's API types in `web/src/lib/api/` are generated from `openapi.json`
 
 ## Shared Design and Writing
 
-The `house/` directory is a committed release of [house-style](https://github.com/JacksonFergusonDev/house-style). Its `GUIDELINES.txt` is the design and writing contract. The `house_style` variable in the `justfile` is the release pin, and `branding/theme.css` supplies Star Ground's green accent.
+[house-style](https://github.com/JacksonFergusonDev/house-style) is the shared look and writing rules of Star Ground, Protostar, and jacksonferguson.me. Its `GUIDELINES.md` is the design and writing contract.
 
-To adopt a newer release, change the pin, then run:
+The website installs it with npm, pinned to a tag in `web/package.json` (`"house-style": "github:JacksonFergusonDev/house-style#vX.Y.Z"`). It uses three of house-style's parts:
 
-```sh
-just sync-house-style
-just sync-house-style --check
-```
+- **core:** fonts, tokens, section markers, buttons, and icons;
+- **site:** the project-site shell (header bar, hero field, jump links, section grid, and footer) that Protostar's landing page uses too;
+- **astro:** the Astro components that render that shell.
 
-Commit the pin and the complete vendored copy together. CI runs the check and fails if files were changed, added, or removed. Never edit `house/` directly; make shared design changes in house-style and adopt its release here.
+`web/src/layouts/Base.astro` loads the house stylesheets, then `branding/theme.css` (Star Ground's green accent), then `web/src/styles/global.css`, which holds only Star Ground's own page content. To adopt a newer release, run `npm install --save github:JacksonFergusonDev/house-style#vX.Y.Z` in `web/`, then the browser tests. Change shared styles in house-style and release them; never restyle the shell here.
 
-The current Streamlit app keeps its native theme in `.streamlit/config.toml`, using the product palette's navy background, panel, and text colors with Star Ground's green accent. The vendored CSS is not loaded into Streamlit. This setup leaves the current app's fonts and layout unchanged.
+The current Streamlit app keeps its native navy theme in `.streamlit/config.toml` until the rebuilt site replaces it.
 
-The website and future Zensical documentation share this same pinned copy:
-
-- The website (`web/`) imports `house/css/fonts.css`, `house/css/tokens.css`, `house/css/product.css`, and `house/css/components.css` through its `@house` alias, then `branding/theme.css` (`@branding`) and its own layout styles in `web/src/styles/global.css`. The bundler copies and fingerprints the fonts and icons they reference.
-- The docs build, once added, should copy `house/` unchanged to an ignored `docs/house/` staging directory and copy `branding/theme.css` to its own served assets. Load the house files first, then the brand stylesheet and the documentation theme adapter. Disable the theme's external font loading and use the house fonts. Protostar's `zensical.toml` and `docs/stylesheets/extra.css` show how to map house tokens to Zensical.
-
-Keep the release pin and vendored source shared rather than maintaining separate copies for each build. Site-specific CSS handles layout and the brand accent; shared components and rules change upstream.
+When Zensical documentation is added, vendor the parts it uses with house-style's `scripts/vendor.py` (for example `--parts docs,site`), as Protostar does.
 
 ## Running Tests
 

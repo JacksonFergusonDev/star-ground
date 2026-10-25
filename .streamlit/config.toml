@@ -1,6 +1,6 @@
-# Native mapping of house/css/product.css and branding/theme.css.
-# house/ is vendored; future React and Zensical builds will consume its CSS.
-# Streamlit keeps its existing typography and layout during this adoption.
+# Streamlit's native theme: navy surfaces with Star Ground's green accent.
+# The website (web/) uses house-style's near-black palette instead; this app is
+# replaced at the cutover (PLAN.md, step 11).
 [theme]
 base = "dark"
 primaryColor = "#4ADE80"                # Star Ground Green: Matches logo circuit ground accent

@@ -29,11 +29,11 @@ for (const { path, heading } of pages) {
     });
 
     test('marks every standalone link with a house icon', async ({ page }) => {
-      // House style: a link outside a sentence carries an icon saying where it goes. Header
-      // section links, the wordmark, and the skip link are navigation chrome, not content links.
+      // House style: a link outside a sentence carries an icon saying where it goes. The header
+      // bar's section links and the skip link are navigation chrome, not content links.
       const bare = await page
-        .locator('main a, footer .footer-bottom a')
-        .filter({ hasNot: page.locator('svg.icon') })
+        .locator('main a, .hs-footer-links a')
+        .filter({ hasNot: page.locator('svg') })
         .evaluateAll((links) =>
           links.filter((a) => !a.closest('p')).map((a) => a.textContent?.trim()),
         );
@@ -42,14 +42,22 @@ for (const { path, heading } of pages) {
   });
 }
 
-test('the landing page loads no JavaScript', async ({ page }) => {
+test('the moving field loads only after the page has', async ({ page }) => {
   // House style: the first screen is text, and nothing heavy holds it up.
-  const scripts: string[] = [];
-  page.on('request', (request) => {
-    if (request.resourceType() === 'script') scripts.push(request.url());
-  });
   await page.goto('/');
-  expect(scripts).toEqual([]);
+  await expect(page.locator('.hs-motion')).toBeVisible();
+  const timing = await page.evaluate(() => {
+    const [navigation] = performance.getEntriesByType(
+      'navigation',
+    ) as PerformanceNavigationTiming[];
+    const three = performance
+      .getEntriesByType('resource')
+      .filter((entry) => /three/.test(entry.name))
+      .map((entry) => entry.startTime);
+    return { loaded: navigation.loadEventEnd, three };
+  });
+  expect(timing.three.length).toBeGreaterThan(0);
+  for (const start of timing.three) expect(start).toBeGreaterThanOrEqual(timing.loaded);
 });
 
 test('uses the house fonts', async ({ page }) => {
@@ -64,10 +72,10 @@ test('uses the house fonts', async ({ page }) => {
 });
 
 test('section links reach their sections', async ({ page }, testInfo) => {
-  test.skip(testInfo.project.name.endsWith('-mobile'), 'The section links hide on phones.');
+  test.skip(testInfo.project.name.endsWith('-mobile'), 'Two section links hide on phones.');
   await page.goto('/');
   for (const name of ['How it works', 'Documents', 'Accuracy']) {
-    await page.getByRole('navigation', { name: 'Sections' }).getByRole('link', { name }).click();
+    await page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name }).click();
     await expect(page.locator(`section:target`)).toBeInViewport();
   }
 });

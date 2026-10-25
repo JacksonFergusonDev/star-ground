@@ -12,13 +12,6 @@ nc := '\033[0m'
 default:
     @just --list
 
-# The house-style release committed in house/ for the app and future docs.
-house_style := "v1.6.0"
-
-# Vendor the pinned release (--check compares without changing files).
-sync-house-style *args:
-    uv run https://raw.githubusercontent.com/JacksonFergusonDev/house-style/{{ house_style }}/scripts/vendor.py --tag {{ house_style }} house {{ args }}
-
 # Sync/install dependencies using uv
 sync:
     uv sync --quiet

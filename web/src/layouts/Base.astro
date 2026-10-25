@@ -1,13 +1,14 @@
 ---
 // House styles load first, in house-style's order, then Star Ground's accent,
 // then the site's own layout.
-import '@house/css/fonts.css';
-import '@house/css/tokens.css';
-import '@house/css/product.css';
-import '@house/css/components.css';
+import 'house-style/css/fonts.css';
+import 'house-style/css/tokens.css';
+import 'house-style/css/components.css';
+import 'house-style/css/site.css';
 import '@branding/theme.css';
 import '../styles/global.css';
-import Icon from '../components/Icon.astro';
+import SiteBar from 'house-style/astro/SiteBar.astro';
+import SiteFooter from 'house-style/astro/SiteFooter.astro';
 import { links } from '../lib/site';
 
 interface Props {
@@ -25,7 +26,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#0f172a" />
+    <meta name="theme-color" content="#0a0c0e" />
     <meta name="description" content={description} />
     <title>{pageTitle}</title>
     {!noindex && <link rel="canonical" href={canonical} />}
@@ -40,46 +41,31 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <a class="skip-link" href="#main">
       Skip to content
     </a>
-    <header class="site-header">
-      <div class="nav-wrap">
-        <a href="/" class="wordmark">
-          <img src="/favicon.svg" alt="" width="34" height="34" />
-          <span>Star Ground</span>
-        </a>
-        <nav aria-label="Sections" class="nav-console">
-          <a href="/#how-it-works">How it works</a>
-          <a href="/#documents">Documents</a>
-          <a href="/#accuracy">Accuracy</a>
-        </nav>
-        <nav aria-label="Elsewhere" class="nav-links">
-          <a href={links.github}>
-            <Icon name="brand-github" size={13} /> GitHub
-          </a>
-        </nav>
-      </div>
-    </header>
-    <main id="main">
+    <SiteBar
+      name="Star Ground"
+      logo="/favicon.svg"
+      github={links.github}
+      nav={[
+        { label: 'How it works', href: '/#how-it-works' },
+        { label: 'Documents', href: '/#documents', wide: true },
+        { label: 'Accuracy', href: '/#accuracy', wide: true },
+      ]}
+    />
+    <main id="main" class="page">
       <slot />
     </main>
-    <footer class="site-footer">
-      <div class="container footer-inner">
-        <p class="publisher-note">
-          Are you a PCB publisher? If you'd rather Star Ground didn't read your documents,{' '}
-          <a href={links.contact}>get in touch</a> and I'll take them out.
-        </p>
-        <div class="footer-bottom">
-          <span>© {new Date().getUTCFullYear()} Jackson Ferguson</span>
-          <a href={links.home}>
-            <Icon name="jacksonferguson" size={14} /> jacksonferguson.me
-          </a>
-          <a href={links.github}>
-            <Icon name="brand-github" size={13} /> GitHub
-          </a>
-          <a href="#main" class="to-top">
-            Back to top <Icon name="arrow-up" size={12} />
-          </a>
-        </div>
-      </div>
-    </footer>
+    <SiteFooter
+      license={links.license}
+      links={[
+        { label: 'GitHub', href: links.github, icon: 'brand-github' },
+        { label: 'LinkedIn', href: links.linkedin, icon: 'brand-linkedin' },
+        { label: 'Email', href: links.email, icon: 'brand-email' },
+      ]}
+    >
+      <p>
+        Are you a PCB publisher? If you'd rather Star Ground didn't read your documents,{' '}
+        <a href={links.email}>email me</a> and I'll take them out.
+      </p>
+    </SiteFooter>
   </body>
 </html>

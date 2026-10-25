@@ -19,6 +19,7 @@ Decided 2026-10-22 to 2026-10-24. A decision here changes only by editing this f
   - Astro matches jacksonferguson.me, so house-style, linting (ESLint, Stylelint, Prettier) and browser tests (Playwright with axe) work the same way.
   - Svelte over React: scoped plain CSS reads the house tokens directly, and a stateful workspace takes less code. React's larger ecosystem only matters for live collaboration, a native mobile app, or React-only vendor kits, none of which are planned. If one is ever needed, Astro can host a React island beside the Svelte ones.
   - No Tailwind and no component kit: house-style tokens and components only.
+  - **The site matches Protostar's landing page** (decided 2026-10-25): house-style's near-black palette with Star Ground's green accent, and the shared project-site shell from house-style v2 (header bar, hero field, jump links, section grid, footer, with a publisher note in the footer). house-style v2 split itself into parts so each site takes only what it uses; the website installs it with npm, so the repository no longer vendors a copy in `house/`.
 - **Types:** the API's OpenAPI schema generates the frontend's TypeScript types (`openapi-typescript`), so the two can't drift.
 - **Rejected:** NiceGUI and Reflex (Python UI frameworks that keep Streamlit's server-driven model and fight custom styling), a Vite SPA without a site framework (no static pages for the landing page and catalog), and a downloadable desktop app (Python, onnxruntime and OpenCV per platform, code signing and auto-update, for little gain over hosting at about $0).
 
@@ -89,7 +90,7 @@ The public repository holds publisher PDFs in `raw_boms/` (11, the presets' sour
 
 ### 3. Frontend foundation
 
-1. `web/`: an Astro project with the Svelte integration and the website's lint, format and test setup. It reads the vendored `house/` (pinned in the `justfile`) and `branding/theme.css` through aliases, so the repository keeps one copy of house-style, as `AGENTS.md` requires.
+1. `web/`: an Astro project with the Svelte integration and the website's lint, format and test setup. It installs house-style with npm, pinned to a tag in `web/package.json`, and loads `branding/theme.css` for the accent.
 1. The landing page as a house page: section markers, the grid behind long pages, icons on standalone links, no emoji.
 1. CI job for the frontend: lint, type check (`astro check`), build, Playwright with axe.
 
@@ -169,8 +170,8 @@ Probed on 2026-10-24: board renders in PedalPCB, GuitarPCB and Tonepad documents
 | --- | --- | --- |
 | Plan | Done | This plan's PR |
 | 1. Remove publisher PDFs | Done 2026-10-24: history rewritten, `main` and 15 tags force-pushed, old images deleted | #201 |
-| 2. API service | Done 2026-10-24 | This step's PR |
-| 3. Frontend foundation | Done 2026-10-24 | This step's PR |
+| 2. API service | Done 2026-10-24 | #203 |
+| 3. Frontend foundation | Done 2026-10-25: the site uses house-style v2's shared shell | #204, this PR |
 | 4. Walking skeleton | Not started | |
 | 5. Build workspace | Not started | |
 | 6. Document review | Not started | |
