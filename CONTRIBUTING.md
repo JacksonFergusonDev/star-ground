@@ -87,7 +87,7 @@ The frontend's API types in `web/src/lib/api/` are generated from `openapi.json`
 The website installs it with npm, pinned to a tag in `web/package.json` (`"house-style": "github:JacksonFergusonDev/house-style#vX.Y.Z"`). It uses three of house-style's parts:
 
 - **core:** fonts, tokens, section markers, buttons, and icons;
-- **site:** the project-site shell (header bar, hero field, jump links, section grid, and footer) that Protostar's landing page uses too;
+- **site:** the project-site shell (header bar, hero field canvas and pause button, jump links, section grid, and footer) that Protostar's landing page uses too;
 - **astro:** the Astro components that render that shell.
 
 `web/src/layouts/Base.astro` loads the house stylesheets, then `branding/theme.css` (Star Ground's green accent), then `web/src/styles/global.css`, which holds only Star Ground's own page content. To adopt a newer release, run `npm install --save github:JacksonFergusonDev/house-style#vX.Y.Z` in `web/`, then the browser tests. Change shared styles in house-style and release them; never restyle the shell here.

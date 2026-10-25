@@ -1,0 +1,36 @@
+---
+/**
+ * The hero's moving background: a pedal circuit board whose ground returns
+ * carry current home to one star ground (src/lib/star-field). It uses
+ * house-style's field canvas and pause button (`.hs-field`, `.hs-motion`), and
+ * starts once the page has loaded, so the first screen paints as text. Place
+ * it first inside `.hs-hero`.
+ */
+import Icon from 'house-style/astro/Icon.astro';
+---
+
+<canvas class="hs-field" aria-hidden="true" data-star-field></canvas>
+<button type="button" class="hs-motion" hidden>
+  <span data-hs-motion-label>Pause motion</span>
+  <Icon name="pause" class="hs-motion-pause" />
+  <Icon name="play" class="hs-motion-play" />
+</button>
+
+<script>
+  function start() {
+    const canvas = document.querySelector<HTMLCanvasElement>('[data-star-field]');
+    const button = canvas?.nextElementSibling;
+    if (!canvas || !(button instanceof HTMLButtonElement)) return;
+    const idle = window.requestIdleCallback ?? ((callback) => window.setTimeout(callback, 200));
+    idle(() => {
+      import('../lib/star-field/field')
+        .then(({ startStarField }) => startStarField(canvas, button))
+        .catch(() => {});
+    });
+  }
+  if (document.readyState === 'complete') {
+    start();
+  } else {
+    window.addEventListener('load', start, { once: true });
+  }
+</script>

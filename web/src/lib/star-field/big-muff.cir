@@ -1,0 +1,98 @@
+* Big Muff Pi: the circuit drawn on Star Ground's hero board.
+*
+* Source: J.L., "A Case Study: Re-Engineering the Big Muff Pi" (2014),
+* https://www.guitarscience.net/papers/bigmuff.pdf, Figure 1 (early-version
+* values). Designators are renumbered in signal order, as on the board;
+* README.md maps them to the paper's names and explains every stage.
+*
+* This file and circuit.ts describe the same circuit. Between the "board"
+* markers, every line is one part of circuit.ts with the same designator,
+* nets, and value; tests/browser/circuit.spec.ts fails if they drift apart.
+* Node 0 is the board's GND net (the star ground). Pins are listed in SPICE
+* order: Q collector base emitter, D anode cathode, C positive first.
+*
+* Runs as-is in ngspice (ngspice -b big-muff.cir): it prints the DC bias,
+* each stage's peak-to-peak swing for a 200 mV peak-to-peak note, and the
+* output's harmonics. README.md, "Simulation", lists the expected results.
+
+* --- board ---
+* Input booster (Q1)
+R1 IN Q1IN 39k
+C1 Q1B Q1IN 1u
+R2 Q1B Q1C 470k
+C2 Q1B Q1C 470p
+R3 Q1B 0 100k
+R4 VCC Q1C 47k
+R5 Q1E 0 100
+Q1 Q1C Q1B Q1E BC549C
+C3 Q1C SUS_TOP 1u
+XSUSTAIN 0 SUS_WIPER SUS_TOP POT R=100k
+C4 Q2IN SUS_WIPER 1u
+* First clipping stage (Q2)
+R6 Q2IN Q2B 10k
+R7 Q2B Q2C 470k
+C5 Q2B Q2C 470p
+R8 Q2B 0 100k
+R9 VCC Q2C 47k
+R10 Q2E 0 100
+Q2 Q2C Q2B Q2E BC549C
+C6 CLIP2 Q2B 1u
+D1 Q2C CLIP2 1N914
+D2 CLIP2 Q2C 1N914
+C7 Q2C Q3IN 1u
+* Second clipping stage (Q3)
+R11 Q3IN Q3B 10k
+R12 Q3B Q3C 470k
+C8 Q3B Q3C 470p
+R13 Q3B 0 100k
+R14 VCC Q3C 47k
+R15 Q3E 0 100
+Q3 Q3C Q3B Q3E BC549C
+C9 CLIP3 Q3B 1u
+D3 Q3C CLIP3 1N914
+D4 CLIP3 Q3C 1N914
+* Tone stack
+R16 Q3C TONE_LP 27k
+C10 TONE_LP 0 10n
+C11 Q3C TONE_HP 4n7
+R17 TONE_HP 0 27k
+XTONE TONE_LP TONE_WIPER TONE_HP POT R=100k
+* Output booster (Q4)
+C12 Q4B TONE_WIPER 1u
+R18 VCC Q4B 470k
+R19 Q4B 0 100k
+R20 VCC Q4C 10k
+R21 Q4E 0 2.2k
+Q4 Q4C Q4B Q4E BC549C
+C13 Q4C VOL_TOP 1u
+XVOLUME VOL_TOP OUT 0 POT R=500k
+* --- end board ---
+
+* Off-board wiring: the 9V pad, a guitar on the IN pad, and an amp's input on
+* the OUT pad.
+V9 VCC 0 DC 9
+VGUITAR IN 0 DC 0 AC 1 SIN(0 0.1 196)
+RAMP OUT 0 1Meg
+
+* A pot as two resistors either side of its wiper; POS 0.5 is noon.
+.subckt POT lug1 wiper lug3 R=100k POS=0.5
+RA lug1 wiper {max(R*POS, 1)}
+RB wiper lug3 {max(R*(1-POS), 1)}
+.ends
+
+* Approximate models: close enough to show the circuit's behaviour.
+.model BC549C NPN(IS=7f BF=500 VAF=70 RB=10 CJE=13p CJC=4p TF=0.4n TR=50n)
+.model 1N914 D(IS=2.52n RS=0.568 N=1.752 CJO=4p M=0.4 TT=20n)
+
+.control
+op
+print v(q1b) v(q1c) v(q2c) v(q3c) v(q4b) v(q4c) v(q4e)
+tran 10u 60m 0 10u
+meas tran in_pp PP v(in) from=40m to=60m
+meas tran q1_pp PP v(q1c) from=40m to=60m
+meas tran q2_pp PP v(q2c) from=40m to=60m
+meas tran q3_pp PP v(q3c) from=40m to=60m
+meas tran out_pp PP v(out) from=40m to=60m
+fourier 196 v(out)
+.endc
+.end

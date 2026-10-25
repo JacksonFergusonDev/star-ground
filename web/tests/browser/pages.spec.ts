@@ -44,24 +44,25 @@ for (const { path, heading } of pages) {
 
 test('the moving field loads only after the page has', async ({ page }) => {
   // House style: the first screen is text, and nothing heavy holds it up.
-  // Waits for three itself, not the pause button: a browser without WebGL
-  // (headless Firefox on Linux) loads three but keeps the button hidden.
+  // Waits for the field's script itself, not the pause button: a browser
+  // without WebGL2 (headless Firefox on Linux) loads it but keeps the button
+  // hidden.
   await page.goto('/');
   const timing = () =>
     page.evaluate(() => {
       const [navigation] = performance.getEntriesByType(
         'navigation',
       ) as PerformanceNavigationTiming[];
-      const three = performance
+      const field = performance
         .getEntriesByType('resource')
-        .filter((entry) => /three/.test(entry.name))
+        .filter((entry) => /\/field\.[\w-]+\.js$/.test(entry.name))
         .map((entry) => entry.startTime);
-      return { loaded: navigation.loadEventEnd, three };
+      return { loaded: navigation.loadEventEnd, field };
     });
   // WebKit records the resource entry a moment after the response arrives.
-  await expect.poll(async () => (await timing()).three.length).toBeGreaterThan(0);
-  const { loaded, three } = await timing();
-  for (const start of three) expect(start).toBeGreaterThanOrEqual(loaded);
+  await expect.poll(async () => (await timing()).field.length).toBeGreaterThan(0);
+  const { loaded, field } = await timing();
+  for (const start of field) expect(start).toBeGreaterThanOrEqual(loaded);
 });
 
 test('uses the house fonts', async ({ page }) => {
