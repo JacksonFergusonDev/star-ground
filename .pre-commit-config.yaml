@@ -50,12 +50,14 @@ repos:
         types: [python]
         require_serial: true
 
+      # Checks the files listed in pyproject.toml, as CI does, rather than only
+      # the staged ones; the incremental cache keeps it quick.
       - id: mypy
         name: mypy
         entry: uv run mypy
         language: system
         types: [python]
-        require_serial: true
+        pass_filenames: false
 
       - id: rumdl-check
         name: rumdl check
@@ -82,6 +84,70 @@ repos:
         name: pytest
         entry: uv run just test
         language: system
+        pass_filenames: false
+        stages: [pre-push]
+
+  # Website (web/), mirroring CI's Web job. Hooks run from the repository root,
+  # so each one moves into web/ and drops the web/ prefix from the file names.
+  - repo: local
+    hooks:
+      - id: prettier
+        name: prettier
+        entry: bash -c 'cd web && npx prettier --write --ignore-unknown "${@#web/}"' --
+        language: system
+        files: ^web/
+        require_serial: true
+
+      - id: eslint
+        name: eslint
+        entry: bash -c 'cd web && npx eslint "${@#web/}"' --
+        language: system
+        files: ^web/.*\.(astro|svelte|[cm]?[jt]s)$
+        require_serial: true
+
+      - id: stylelint
+        name: stylelint
+        entry: bash -c 'cd web && npx stylelint "${@#web/}"' --
+        language: system
+        files: ^web/src/.*\.(astro|svelte|css)$
+        require_serial: true
+
+      - id: api-types
+        name: API types match openapi.json
+        entry: bash -c 'cd web && npm run --silent types && git diff --exit-code -- src/lib/api'
+        language: system
+        files: ^(openapi\.json|web/(openapi-ts\.config\.ts|package-lock\.json|src/lib/api/))
+        pass_filenames: false
+
+      - id: astro-check
+        name: astro check
+        entry: bash -c 'cd web && npm run --silent check'
+        language: system
+        files: ^web/(src/|tsconfig\.json|astro\.config\.mjs|svelte\.config\.js|package-lock\.json)
+        pass_filenames: false
+
+      - id: knip
+        name: knip (unused files, exports, and dependencies)
+        entry: bash -c 'cd web && npm run --silent knip'
+        language: system
+        files: ^web/
+        pass_filenames: false
+        stages: [pre-push]
+
+      # The browser tests serve the build, so it runs first.
+      - id: astro-build
+        name: astro build
+        entry: bash -c 'cd web && npm run --silent build'
+        language: system
+        files: ^(web/|openapi\.json)
+        pass_filenames: false
+        stages: [pre-push]
+
+      - id: browser-tests
+        name: browser tests
+        entry: bash -c 'cd web && npm run --silent test:browser'
+        language: system
+        files: ^(web/|openapi\.json)
         pass_filenames: false
         stages: [pre-push]
 

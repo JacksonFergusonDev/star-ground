@@ -36,7 +36,7 @@ This project uses [uv](https://github.com/astral-sh/uv) for dependency managemen
 
 1. **Install Hooks**
 
-   Set up the prek hooks. On commit they run `ruff`, `mypy` and `rumdl` (Markdown); on push, the unit tests.
+   Set up the prek hooks. They mirror CI. On commit they run `ruff`, `mypy` and `rumdl` (Markdown), plus the website's linters and type check when `web/` changes. On push they run the tests, plus knip, the website build and its browser tests when `web/` changes. The `web/` hooks need `npm ci` and `npx playwright install` in `web/` first.
 
    ```bash
    prek install

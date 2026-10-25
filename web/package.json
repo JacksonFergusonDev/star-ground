@@ -16,7 +16,8 @@
     "lint:stylelint": "stylelint \"src/**/*.{css,astro,svelte}\"",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test:browser": "playwright test"
+    "test:browser": "playwright test",
+    "knip": "knip"
   },
   "dependencies": {
     "@astrojs/svelte": "^9.1.1",
@@ -37,6 +38,7 @@
     "eslint-plugin-astro": "^3.2.1",
     "eslint-plugin-svelte": "^3.23.1",
     "globals": "^17.13.0",
+    "knip": "^6.43.0",
     "prettier": "^3.9.10",
     "prettier-plugin-astro": "^1.1.2",
     "prettier-plugin-svelte": "^4.1.1",

@@ -44,20 +44,24 @@ for (const { path, heading } of pages) {
 
 test('the moving field loads only after the page has', async ({ page }) => {
   // House style: the first screen is text, and nothing heavy holds it up.
+  // Waits for three itself, not the pause button: a browser without WebGL
+  // (headless Firefox on Linux) loads three but keeps the button hidden.
   await page.goto('/');
-  await expect(page.locator('.hs-motion')).toBeVisible();
-  const timing = await page.evaluate(() => {
-    const [navigation] = performance.getEntriesByType(
-      'navigation',
-    ) as PerformanceNavigationTiming[];
-    const three = performance
-      .getEntriesByType('resource')
-      .filter((entry) => /three/.test(entry.name))
-      .map((entry) => entry.startTime);
-    return { loaded: navigation.loadEventEnd, three };
-  });
-  expect(timing.three.length).toBeGreaterThan(0);
-  for (const start of timing.three) expect(start).toBeGreaterThanOrEqual(timing.loaded);
+  const timing = () =>
+    page.evaluate(() => {
+      const [navigation] = performance.getEntriesByType(
+        'navigation',
+      ) as PerformanceNavigationTiming[];
+      const three = performance
+        .getEntriesByType('resource')
+        .filter((entry) => /three/.test(entry.name))
+        .map((entry) => entry.startTime);
+      return { loaded: navigation.loadEventEnd, three };
+    });
+  // WebKit records the resource entry a moment after the response arrives.
+  await expect.poll(async () => (await timing()).three.length).toBeGreaterThan(0);
+  const { loaded, three } = await timing();
+  for (const start of three) expect(start).toBeGreaterThanOrEqual(loaded);
 });
 
 test('uses the house fonts', async ({ page }) => {

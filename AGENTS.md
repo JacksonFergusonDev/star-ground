@@ -17,10 +17,12 @@ Guidelines and architectural invariants for AI agents working in the Star Ground
 
 The repository uses **`prek`** hooks (`.pre-commit-config.yaml`) for automated gating:
 
-- **On `git commit` (pre-commit):** Automatically runs `uv lock --check`, `ruff check --fix`, `ruff format`, `mypy`, and `rumdl check/fmt`.
-- **On `git push` (pre-push):** Automatically runs `pytest-unit`.
+- **On `git commit` (pre-commit):** Automatically runs `uv lock --check`, `ruff check --fix`, `ruff format`, `mypy`, `rumdl check/fmt`, and `zizmor`. For changes under `web/`, it also runs Prettier, ESLint, Stylelint, `astro check`, and the check that the API types match `openapi.json`.
+- **On `git push` (pre-push):** Automatically runs the Python tests. For changes under `web/`, it also runs knip, the Astro build, and the browser tests.
 
-> **Agent Rule:** **Do NOT redundantly run `ruff`, `mypy`, `rumdl`, `just lint`, or `just ci` immediately before committing or pushing.** Let the hooks do the work. If a hook fails or formats a file, inspect the failure, adjust the code, and re-stage. Only run manual commands during active development/debugging (e.g. running a specific test file like `uv run pytest tests/test_foo.py`).
+The hooks mirror CI's jobs, so a push that passes them should pass CI. A check added to CI gets a matching hook in the same PR: quick checks on commit, slow ones on push.
+
+> **Agent Rule:** **Do NOT redundantly run `ruff`, `mypy`, `rumdl`, the `web/` linters, `just lint`, or `just ci` immediately before committing or pushing.** Let the hooks do the work. If a hook fails or formats a file, inspect the failure, adjust the code, and re-stage. Only run manual commands during active development/debugging (e.g. running a specific test file like `uv run pytest tests/test_foo.py`).
 
 ## Code & Testing Conventions
 

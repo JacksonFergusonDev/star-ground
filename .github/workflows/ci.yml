@@ -138,6 +138,9 @@ jobs:
       - name: Format
         run: npm run format:check
 
+      - name: Unused files, exports, and dependencies
+        run: npm run knip
+
       # The API's types are generated from openapi.json; they must match it.
       - name: Check API types are current
         run: |
