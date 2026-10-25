@@ -22,6 +22,10 @@
 - **PDF build documents:** parsed with the app's own parser. A document that describes several circuits becomes one preset per build, named "Title: Build".
 - **Text (`.txt`):** a `REF VALUE` list, used as written (the Tayda presets).
 
+## OpenAPI Schema (`tools/export_openapi.py`)
+
+`openapi.json` at the repository root is the HTTP API's schema, which the web frontend generates its TypeScript types from. After changing a route or model in `src/server/`, regenerate it with `just openapi` and commit it with the change. `tests/test_server.py` fails when the committed file no longer matches the API.
+
 ## Release Preflight (`tools/prepare_release.py`)
 
 `just bump <major|minor|patch>` runs `tools/prepare_release.py` before invoking the shared release script:

@@ -42,6 +42,20 @@ This project uses [uv](https://github.com/astral-sh/uv) for dependency managemen
    prek install
    ```
 
+## Running the API
+
+The web frontend talks to the HTTP API in `src/server/`, a FastAPI app over the backend's own API (`src/api.py`). Start it with `just serve-api`, then open `http://127.0.0.1:8000/api/docs` to try each route. These environment variables configure it:
+
+| Variable | What it sets |
+| --- | --- |
+| `STAR_GROUND_CORS_ORIGINS` | Comma-separated browser origins allowed to call the API (the hosted site). Unset when the site and API share an origin. |
+| `STAR_GROUND_REQUESTS_PER_MINUTE` | Each client's request limit on the working routes (default 30). |
+| `STAR_GROUND_READ_SLOTS` | Documents read at once; the rest queue (default 2). OCR needs over 1 GB per read. |
+| `STAR_GROUND_TRUST_PROXY` | `1` to take the client's address from `X-Forwarded-For`, behind the hosting platform's proxy. |
+| `STAR_GROUND_FEEDBACK_CREDENTIALS` | A Google service account's key, as JSON, for the feedback sheet. Without it, feedback answers 503. |
+
+After changing a route or model, run `just openapi` and commit `openapi.json`.
+
 ## Shared Design and Writing
 
 The `house/` directory is a committed release of [house-style](https://github.com/JacksonFergusonDev/house-style). Its `GUIDELINES.txt` is the design and writing contract. The `house_style` variable in the `justfile` is the release pin, and `branding/theme.css` supplies Star Ground's green accent.

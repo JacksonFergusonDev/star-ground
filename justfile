@@ -102,6 +102,14 @@ serve: sync
     @printf "\n{{ blue }}=== Launching Streamlit App ==={{ nc }}\n"
     uv run streamlit run app.py
 
+# Start the HTTP API, reloading on changes (interactive docs at /api/docs)
+serve-api: sync
+    uv run uvicorn src.server:app --reload
+
+# Regenerate openapi.json after changing a route or model in src/server/
+openapi: sync
+    uv run python -m tools.export_openapi
+
 # Refresh presets, offer to wait for CI, and verify local state before bumping
 bump part:
     uv run python -m tools.prepare_release
