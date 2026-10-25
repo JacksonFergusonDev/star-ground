@@ -10,7 +10,7 @@
     "build": "astro build",
     "preview": "astro preview",
     "check": "astro check",
-    "types": "openapi-typescript ../openapi.json -o src/lib/api.d.ts",
+    "types": "openapi-ts",
     "lint": "npm run lint:eslint && npm run lint:stylelint",
     "lint:eslint": "eslint .",
     "lint:stylelint": "stylelint \"src/**/*.{css,astro,svelte}\"",
@@ -24,22 +24,17 @@
     "svelte": "^5.57.2",
     "typescript": "^6.0.3"
   },
-  "overrides": {
-    "openapi-typescript": {
-      "typescript": "$typescript"
-    }
-  },
   "devDependencies": {
     "@astrojs/check": "^0.9.12",
     "@axe-core/playwright": "^4.14.0",
     "@eslint/js": "^10.0.1",
+    "@hey-api/openapi-ts": "0.99.0",
     "@playwright/test": "^1.64.1",
     "@types/node": "^26.6.5",
     "eslint": "^10.13.0",
     "eslint-plugin-astro": "^3.2.1",
     "eslint-plugin-svelte": "^3.23.1",
     "globals": "^17.13.0",
-    "openapi-typescript": "^7.13.0",
     "prettier": "^3.9.10",
     "prettier-plugin-astro": "^1.1.2",
     "prettier-plugin-svelte": "^4.1.1",

@@ -6,7 +6,7 @@ import tseslint from 'typescript-eslint';
 
 export default [
   {
-    ignores: ['dist/**', '.astro/**', 'node_modules/**', 'test-results/**', 'src/lib/api.d.ts'],
+    ignores: ['dist/**', '.astro/**', 'node_modules/**', 'test-results/**', 'src/lib/api/**'],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,

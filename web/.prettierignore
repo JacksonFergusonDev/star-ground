@@ -3,4 +3,4 @@ dist/
 .astro/
 test-results/
 package-lock.json
-src/lib/api.d.ts
+src/lib/api/

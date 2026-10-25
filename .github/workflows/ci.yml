@@ -160,7 +160,7 @@ jobs:
       - name: Check API types are current
         run: |
           npm run types
-          git diff --exit-code -- src/lib/api.d.ts
+          git diff --exit-code -- src/lib/api
 
       - name: Type check
         run: npm run check

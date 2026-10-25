@@ -78,7 +78,7 @@ npm run test:browser
 
 `npm run test:browser` serves the build and runs the Playwright tests in Chromium, Firefox and WebKit, at desktop and phone sizes, including an axe accessibility scan. Install the browsers once with `npx playwright install`.
 
-The frontend's API types in `web/src/lib/api.d.ts` are generated from `openapi.json`. After `just openapi`, run `npm run types` in `web/` and commit both files.
+The frontend's API types in `web/src/lib/api/` are generated from `openapi.json` by `@hey-api/openapi-ts`. After `just openapi`, run `npm run types` in `web/` and commit both files.
 
 ## Shared Design and Writing
 
