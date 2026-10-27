@@ -17,20 +17,15 @@ import Icon from 'house-style/astro/Icon.astro';
 </button>
 
 <script>
-  function start() {
-    const canvas = document.querySelector<HTMLCanvasElement>('[data-star-field]');
-    const button = canvas?.nextElementSibling;
-    if (!canvas || !(button instanceof HTMLButtonElement)) return;
-    const idle = window.requestIdleCallback ?? ((callback) => window.setTimeout(callback, 200));
-    idle(() => {
+  import { afterLoad } from 'house-style/js/field.js';
+
+  const canvas = document.querySelector<HTMLCanvasElement>('[data-star-field]');
+  const button = canvas?.nextElementSibling;
+  if (canvas && button instanceof HTMLButtonElement) {
+    afterLoad(() => {
       import('../lib/star-field/field')
         .then(({ startStarField }) => startStarField(canvas, button))
         .catch(() => {});
     });
-  }
-  if (document.readyState === 'complete') {
-    start();
-  } else {
-    window.addEventListener('load', start, { once: true });
   }
 </script>
