@@ -6,12 +6,13 @@
  * wherever their paths join they meet and travel on as one brighter pulse.
  *
  * It follows house-style's motion rules (GUIDELINES.md): subdued shades of the
- * accent, well below the text in contrast, still for reduced motion, paused off
- * screen or in a hidden tab, and stoppable with its pause button
- * (`.hs-motion`). It draws with raw WebGL2: the still board is one texture, and
+ * accent, well below the text in contrast. house-style's `runField` keeps it
+ * still for reduced motion, paused off screen or in a hidden tab, and
+ * stoppable with its pause button (`.hs-motion`). It draws with raw WebGL2: the still board is one texture, and
  * the current is one instanced draw of round-capped segments.
  */
 
+import { resolveColor, runField, type Field, type FieldStyle } from 'house-style/js/field.js';
 import { drawBoard } from './board';
 import { seeded, vec } from './geometry';
 import { buildBoard, type Board } from './layout';
@@ -23,7 +24,6 @@ const SIGNAL_SPEED = 30;
 const HEAD = 0.6;
 const TAIL = 7;
 const STAR_PAD = { radius: 1.15, drill: 0.6 };
-const LABELS = { pause: 'Pause motion', play: 'Play motion' };
 
 const QUAD_VERTEX = `#version 300 es
 out vec2 vUv;
@@ -129,11 +129,6 @@ void main() {
   outColor = vec4(uColor * alpha, alpha);
 }`;
 
-interface FieldControls {
-  refresh(): void;
-  dispose(): void;
-}
-
 interface PulseEvent {
   source: number;
   arrival: number;
@@ -150,7 +145,7 @@ interface PulseEvent {
 export function startStarField(
   canvas: HTMLCanvasElement,
   button: HTMLButtonElement,
-): FieldControls | undefined {
+): Field | undefined {
   if (!canvas.isConnected) return undefined;
   const context = canvas.getContext('webgl2', {
     alpha: true,
@@ -200,11 +195,7 @@ export function startStarField(
   let font = 'monospace';
   let boardColors = { mask: '', edge: '', copper: '', pad: '', silk: '' };
 
-  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-  let paused = reducedMotion.matches;
-  let visible = true;
-  let frame = 0;
-  let last = 0;
+  let laidOut = false;
   let time = 0;
   let nextWave = 0;
   let nextSignal = 0;
@@ -212,12 +203,12 @@ export function startStarField(
   const eventData = new Float32Array(MAX_EVENTS * 4);
   let random = seeded(11);
 
-  function applyStyle() {
-    const style = getComputedStyle(canvas);
-    const accent = resolveColor(style.getPropertyValue('--hs-field-color').trim() || style.color);
+  // The board's colours are baked into its texture, so a new style lays it out again.
+  function applyStyle(style: FieldStyle) {
+    const accent = style.color;
     const text = resolveColor(getComputedStyle(document.body).color);
     color = [accent[0] / 255, accent[1] / 255, accent[2] / 255];
-    amount = Number.parseFloat(style.getPropertyValue('--hs-field-strength')) || 0.36;
+    amount = style.strength;
     font =
       getComputedStyle(document.documentElement).getPropertyValue('--mono').trim() || 'monospace';
     const rgba = (c: number[], a: number) => `rgba(${c[0]}, ${c[1]}, ${c[2]}, ${a})`;
@@ -228,6 +219,7 @@ export function startStarField(
       pad: rgba(text, 0.5),
       silk: rgba(text, 0.42),
     };
+    if (laidOut) layout();
   }
 
   // Fits the board to the canvas and uploads its still layers. On wide screens
@@ -283,6 +275,7 @@ export function startStarField(
     instanceCount = data.length / 10;
     gl.bindBuffer(gl.ARRAY_BUFFER, instances);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data), gl.STATIC_DRAW);
+    laidOut = true;
   }
 
   // Starts as if the circuit had been running, so the first frame isn't empty.
@@ -368,90 +361,32 @@ export function startStarField(
     gl.bindVertexArray(null);
   }
 
-  function stop() {
-    cancelAnimationFrame(frame);
-    frame = 0;
-  }
-
-  function tick(now: number) {
-    frame = 0;
-    // Client-side navigation removed the page: free the GPU and stop.
-    if (!canvas.isConnected) return dispose();
-    if (paused || !visible || document.hidden) return;
-    const delta = last ? Math.min((now - last) / 1000, 0.08) : 0;
-    last = now;
-    time += delta;
-    schedule();
-    draw();
-    frame = requestAnimationFrame(tick);
-  }
-
-  function sync() {
-    stop();
-    button.hidden = false;
-    button.dataset.hsPaused = String(paused);
-    const text = button.querySelector('[data-hs-motion-label]');
-    if (text) text.textContent = paused ? LABELS.play : LABELS.pause;
-    draw();
-    if (!paused && visible && !document.hidden) {
-      last = 0;
-      frame = requestAnimationFrame(tick);
-    }
-  }
-
-  function toggle() {
-    paused = !paused;
-    sync();
-  }
-
-  function onMotionChange() {
-    paused = reducedMotion.matches;
-    sync();
-  }
-
+  // Laying the board out redraws its texture, so a resize waits until the
+  // window settles; the first layout is immediate.
   let resizing = 0;
-  const sizes = new ResizeObserver(() => {
+  function resize() {
+    if (!laidOut) return layout();
     window.clearTimeout(resizing);
     resizing = window.setTimeout(() => {
       layout();
       draw();
     }, 120);
-  });
-  const observer = new IntersectionObserver(([entry]) => {
-    visible = entry?.isIntersecting ?? true;
-    sync();
-  });
-
-  function dispose() {
-    stop();
-    window.clearTimeout(resizing);
-    observer.disconnect();
-    sizes.disconnect();
-    document.removeEventListener('visibilitychange', sync);
-    reducedMotion.removeEventListener('change', onMotionChange);
-    button.removeEventListener('click', toggle);
-    gl.getExtension('WEBGL_lose_context')?.loseContext();
   }
 
-  applyStyle();
-  layout();
   prime();
-  sizes.observe(canvas);
-  observer.observe(canvas);
-  button.addEventListener('click', toggle);
-  reducedMotion.addEventListener('change', onMotionChange);
-  document.addEventListener('visibilitychange', sync);
-  canvas.classList.add('hs-field--ready');
-  sync();
-
-  return {
-    refresh() {
-      applyStyle();
-      layout();
+  return runField(canvas, button, {
+    style: applyStyle,
+    resize,
+    draw(now, delta) {
+      time = now;
+      if (delta > 0) schedule();
       draw();
     },
-    dispose,
-  };
+    dispose() {
+      window.clearTimeout(resizing);
+      gl.getExtension('WEBGL_lose_context')?.loseContext();
+    },
+  });
 }
 
 function program(gl: WebGL2RenderingContext, vertex: string, fragment: string): WebGLProgram {
@@ -484,20 +419,4 @@ function locations<T extends string>(
   return Object.fromEntries(
     names.map((name) => [name, gl.getUniformLocation(target, name)]),
   ) as Record<T, WebGLUniformLocation | null>;
-}
-
-// CSS colours can be any syntax (relative colours, color-mix); the browser
-// resolves them to rgb() through a probe element's computed colour.
-function resolveColor(value: string): [number, number, number] {
-  const probe = document.createElement('span');
-  probe.style.color = value;
-  probe.style.display = 'none';
-  document.body.append(probe);
-  const resolved = getComputedStyle(probe).color;
-  probe.remove();
-  const channels = resolved
-    .match(/[\d.]+/g)
-    ?.slice(0, 3)
-    .map(Number) ?? [255, 255, 255];
-  return [channels[0] ?? 255, channels[1] ?? 255, channels[2] ?? 255];
 }
