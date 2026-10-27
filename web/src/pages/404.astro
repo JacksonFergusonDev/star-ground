@@ -1,19 +1,16 @@
 ---
-import Icon from '../components/Icon.astro';
+import Icon from 'house-style/astro/Icon.astro';
 import Base from '../layouts/Base.astro';
 ---
 
 <Base title="Page not found" description="This page doesn't exist." noindex>
-  <section class="hero" aria-labelledby="missing-title">
-    <div class="container hero-inner">
-      <p class="eyebrow">404</p>
-      <h1 id="missing-title">This page doesn't exist.</h1>
-      <p class="lead">The link may be old, or the address mistyped.</p>
-      <div class="actions">
-        <a class="hs-button hs-button--primary" href="/">
-          Back to Star Ground <Icon name="arrow-left" size={16} />
-        </a>
-      </div>
+  <section class="hs-hero" aria-labelledby="missing-title">
+    <h1 id="missing-title">This page doesn't exist.</h1>
+    <p class="lede">The link may be old, or the address mistyped.</p>
+    <div class="actions">
+      <a class="hs-button hs-button--primary" href="/">
+        Back to Star Ground <Icon name="arrow-left" size={16} />
+      </a>
     </div>
   </section>
 </Base>

@@ -246,7 +246,7 @@ def test_check_ci_stops_on_failed_run(
     assert "completed / failure" in capsys.readouterr().err
 
 
-def test_check_local_state_runs_uv_lock_and_house_style_checks(
+def test_check_local_state_runs_uv_lock_check(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     commands: list[list[str]] = []
@@ -262,10 +262,7 @@ def test_check_local_state_runs_uv_lock_and_house_style_checks(
 
     prepare_release.check_local_state()
 
-    assert commands == [
-        ["uv", "lock", "--check"],
-        ["just", "sync-house-style", "--check"],
-    ]
+    assert commands == [["uv", "lock", "--check"]]
 
 
 def test_main_rechecks_checkout_when_inputs_are_refreshed(

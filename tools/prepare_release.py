@@ -479,17 +479,14 @@ def check_ci(checkout: CheckoutState) -> None:
 
 
 def check_local_state() -> None:
-    """Verify the lockfile and vendored house-style copy match before bumping."""
-    for command in (
-        ["uv", "lock", "--check"],
-        ["just", "sync-house-style", "--check"],
-    ):
-        try:
-            result = run_repo_cmd(command)
-        except OSError as error:
-            stop(f"could not run {command[0]}: {error}")
-        if result.returncode:
-            stop(f"{' '.join(command)} failed.")
+    """Verify the lockfile matches pyproject.toml before bumping."""
+    command = ["uv", "lock", "--check"]
+    try:
+        result = run_repo_cmd(command)
+    except OSError as error:
+        stop(f"could not run {command[0]}: {error}")
+    if result.returncode:
+        stop(f"{' '.join(command)} failed.")
 
 
 def main() -> None:

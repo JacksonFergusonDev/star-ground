@@ -33,7 +33,7 @@
 1. Verifies the checkout is on a clean `main` branch synced with `origin/main`.
 1. Regenerates `src/bom_lib/_presets_data.py` and offers to commit and push any changes.
 1. Requires a passing `ci.yml` run on `HEAD`, offering to watch an in-progress run to completion.
-1. Checks `uv lock --check` and `just sync-house-style --check` before handing off to the version bump.
+1. Checks `uv lock --check` before handing off to the version bump.
 
 ## Container Release Gate
 

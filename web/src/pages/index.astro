@@ -1,6 +1,8 @@
 ---
-import Icon from '../components/Icon.astro';
-import SectionMarker from '../components/SectionMarker.astro';
+import HeroField from 'house-style/astro/HeroField.astro';
+import Icon from 'house-style/astro/Icon.astro';
+import JumpLinks from 'house-style/astro/JumpLinks.astro';
+import SectionMarker from 'house-style/astro/SectionMarker.astro';
 import Base from '../layouts/Base.astro';
 import { links } from '../lib/site';
 
@@ -8,111 +10,109 @@ const publishers = ['PedalPCB', 'GuitarPCB', 'Aion FX', 'Five Cats', 'Tonepad'];
 ---
 
 <Base description="Star Ground turns guitar pedal build documents into one shopping list: it merges their parts lists, subtracts what you own, and flags anything it may have misread.">
-  <section class="hero" aria-labelledby="hero-title">
-    <div class="container hero-inner">
-      <p class="eyebrow">FOR DIY GUITAR PEDAL BUILDERS</p>
-      <h1 id="hero-title">One shopping list for every pedal you're building.</h1>
-      <p class="lead">
-        Give Star Ground the build documents for your next pedals. It reads each parts list, merges
-        them, subtracts the parts you already own, and tells you exactly what to check wherever it
-        isn't sure it read the document right.
-      </p>
-      <div class="actions">
-        <a class="hs-button hs-button--primary" href={links.app}>
-          Try the current app <Icon name="arrow-up-right" size={16} />
-        </a>
-        <a class="hs-button" href={links.github}>
-          <Icon name="brand-github" size={16} /> View the source
-        </a>
-      </div>
-      <p class="hero-note">
-        The app is being rebuilt here. Until then, the current version does the same work.
-      </p>
+  <section class="hs-hero" aria-labelledby="hero-title">
+    <HeroField />
+    <h1 id="hero-title">One shopping list for every pedal you're building.</h1>
+    <p class="lede">
+      Give Star Ground the build documents for your next pedals. It reads each parts list, merges
+      them, subtracts the parts you already own, and tells you exactly what to check wherever it
+      isn't sure it read the document right.
+    </p>
+    <div class="actions">
+      <a class="hs-button hs-button--primary" href={links.app}>
+        Try the current app <Icon name="arrow-up-right" size={16} />
+      </a>
+      <a class="text-link" href={links.github}>
+        <Icon name="brand-github" size={16} /> View the source
+      </a>
     </div>
+    <p class="hero-note">
+      The app is being rebuilt here. Until then, the current version does the same work.
+    </p>
+    <JumpLinks
+      jumps={[
+        { label: 'How it works', href: '#how-it-works' },
+        { label: 'Documents', href: '#documents' },
+        { label: 'Accuracy', href: '#accuracy' },
+      ]}
+    />
   </section>
 
-  <div class="sections">
-    <section id="how-it-works" class="section" aria-labelledby="how-title">
-      <div class="container">
-        <SectionMarker number={1} label="How it works" />
-        <h2 id="how-title">From a stack of build documents to one parts order.</h2>
-        <p class="section-lead">
-          Each pedal's build document lists its parts. Copying those lists by hand is slow, and one
-          missed resistor stalls a build for weeks. Star Ground does the copying and shows its work.
+  <section id="how-it-works" class="hs-grid section" aria-labelledby="how-title">
+    <SectionMarker number={1} label="How it works" />
+    <h2 id="how-title">From a stack of build documents to one parts order.</h2>
+    <p class="section-lede">
+      Each pedal's build document lists its parts. Copying those lists by hand is slow, and one
+      missed resistor stalls a build for weeks. Star Ground does the copying and shows its work.
+    </p>
+    <ol class="steps">
+      <li>
+        <h3>Add your builds</h3>
+        <p>
+          Upload a build document, paste a link to one, pick a circuit from the preset library, or
+          paste a parts list as lines like <code>R1 10k</code>.
         </p>
-        <ol class="steps">
-          <li>
-            <h3>Add your builds</h3>
-            <p>
-              Upload a build document, paste a link to one, pick a circuit from the preset library,
-              or paste a parts list as lines like <code>R1 10k</code>.
-            </p>
-          </li>
-          <li>
-            <h3>Check what it read</h3>
-            <p>
-              Self-checks read each document again independently. Wherever the parts list could
-              disagree with the document, you get a warning that names the part to check.
-            </p>
-          </li>
-          <li>
-            <h3>Buy and build</h3>
-            <p>
-              Get one shopping list across every project, net of your stock and with spares where
-              running out would stall you, plus supplier cart files, build checklists, and bin
-              labels.
-            </p>
-          </li>
-        </ol>
-      </div>
-    </section>
+      </li>
+      <li>
+        <h3>Check what it read</h3>
+        <p>
+          Self-checks read each document again independently. Wherever the parts list could disagree
+          with the document, you get a warning that names the part to check.
+        </p>
+      </li>
+      <li>
+        <h3>Buy and build</h3>
+        <p>
+          Get one shopping list across every project, net of your stock and with spares where
+          running out would stall you, plus supplier cart files, build checklists, and bin labels.
+        </p>
+      </li>
+    </ol>
+  </section>
 
-    <section id="documents" class="section" aria-labelledby="documents-title">
-      <div class="container">
-        <SectionMarker number={2} label="Documents" />
-        <h2 id="documents-title">Reads the build documents of five PCB publishers.</h2>
-        <ul class="publishers" aria-label="Supported publishers">
-          {publishers.map((name) => (
-            <li>{name}</li>
-          ))}
-        </ul>
-        <p class="section-lead">
-          It handles ruled tables, side-by-side lists, and documents that describe several circuits,
-          where you choose the one you're building. Parts lists printed as images are read by OCR
-          only if you ask, and every part OCR read is listed for you to check. Other publishers'
-          documents aren't tested, so expect more warnings there, or parts it can't read.
-        </p>
-      </div>
-    </section>
+  <section id="documents" class="hs-grid section" aria-labelledby="documents-title">
+    <SectionMarker number={2} label="Documents" />
+    <h2 id="documents-title">Reads the build documents of five PCB publishers.</h2>
+    <ul class="publishers" aria-label="Supported publishers">
+      {publishers.map((name) => (
+        <li>{name}</li>
+      ))}
+    </ul>
+    <p class="section-lede">
+      It handles ruled tables, side-by-side lists, and documents that describe several circuits,
+      where you choose the one you're building. Parts lists printed as images are read by OCR only
+      if you ask, and every part OCR read is listed for you to check. Other publishers' documents
+      aren't tested, so expect more warnings there, or parts it can't read.
+    </p>
+  </section>
 
-    <section id="accuracy" class="section" aria-labelledby="accuracy-title">
-      <div class="container">
-        <SectionMarker number={3} label="Accuracy" />
-        <h2 id="accuracy-title">Graded against parts lists checked by hand.</h2>
-        <dl class="facts">
-          <div>
-            <dt>1,240</dt>
-            <dd>Build documents labeled</dd>
-          </div>
-          <div>
-            <dt>60,000</dt>
-            <dd>Parts checked by hand</dd>
-          </div>
-          <div>
-            <dt>0</dt>
-            <dd>Silent errors on those documents</dd>
-          </div>
-        </dl>
-        <p class="section-lead">
-          The parser reads each page's word positions and table lines, with no language model, so a
-          document always gives the same list. It can still be wrong, but not silently: on every
-          labeled document, each wrong or missing part carries a warning. New documents can differ
-          from the labeled ones, so check the warnings it shows you.
-        </p>
-        <a class="text-link" href={`${links.github}#readme`}>
-          How it's measured <Icon name="arrow-up-right" size={14} />
-        </a>
+  <section id="accuracy" class="hs-grid section" aria-labelledby="accuracy-title">
+    <SectionMarker number={3} label="Accuracy" />
+    <h2 id="accuracy-title">Graded against parts lists checked by hand.</h2>
+    <dl class="facts">
+      <div>
+        <dt>1,240</dt>
+        <dd>Build documents labeled</dd>
       </div>
-    </section>
-  </div>
+      <div>
+        <dt>60,000</dt>
+        <dd>Parts checked by hand</dd>
+      </div>
+      <div>
+        <dt>0</dt>
+        <dd>Silent errors on those documents</dd>
+      </div>
+    </dl>
+    <p class="section-lede">
+      The parser reads each page's word positions and table lines, with no language model, so a
+      document always gives the same list. It can still be wrong, but not silently: on every labeled
+      document, each wrong or missing part carries a warning. New documents can differ from the
+      labeled ones, so check the warnings it shows you.
+    </p>
+    <p class="note">
+      <a class="text-link" href={`${links.github}#readme`}>
+        How it's measured <Icon name="arrow-up-right" size={16} />
+      </a>
+    </p>
+  </section>
 </Base>

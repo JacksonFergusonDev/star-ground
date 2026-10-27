@@ -17,10 +17,12 @@ Guidelines and architectural invariants for AI agents working in the Star Ground
 
 The repository uses **`prek`** hooks (`.pre-commit-config.yaml`) for automated gating:
 
-- **On `git commit` (pre-commit):** Automatically runs `uv lock --check`, `ruff check --fix`, `ruff format`, `mypy`, and `rumdl check/fmt`.
-- **On `git push` (pre-push):** Automatically runs `pytest-unit`.
+- **On `git commit` (pre-commit):** Automatically runs `uv lock --check`, `ruff check --fix`, `ruff format`, `mypy`, `rumdl check/fmt`, and `zizmor`. For changes under `web/`, it also runs Prettier, ESLint, Stylelint, `astro check`, and the check that the API types match `openapi.json`.
+- **On `git push` (pre-push):** Automatically runs the Python tests. For changes under `web/`, it also runs knip, the Astro build, and the browser tests.
 
-> **Agent Rule:** **Do NOT redundantly run `ruff`, `mypy`, `rumdl`, `just lint`, or `just ci` immediately before committing or pushing.** Let the hooks do the work. If a hook fails or formats a file, inspect the failure, adjust the code, and re-stage. Only run manual commands during active development/debugging (e.g. running a specific test file like `uv run pytest tests/test_foo.py`).
+The hooks mirror CI's jobs, so a push that passes them should pass CI. A check added to CI gets a matching hook in the same PR: quick checks on commit, slow ones on push.
+
+> **Agent Rule:** **Do NOT redundantly run `ruff`, `mypy`, `rumdl`, the `web/` linters, `just lint`, or `just ci` immediately before committing or pushing.** Let the hooks do the work. If a hook fails or formats a file, inspect the failure, adjust the code, and re-stage. Only run manual commands during active development/debugging (e.g. running a specific test file like `uv run pytest tests/test_foo.py`).
 
 ## Code & Testing Conventions
 
@@ -41,12 +43,12 @@ The repository uses **`prek`** hooks (`.pre-commit-config.yaml`) for automated g
 
 ## Shared Design and Writing
 
-[house-style](https://github.com/JacksonFergusonDev/house-style) supplies the shared design and writing rules. Read `house/GUIDELINES.txt` before changing prose or UI. The release is pinned by `house_style` in the `justfile`.
+[house-style](https://github.com/JacksonFergusonDev/house-style) supplies the shared design and writing rules. Read its `GUIDELINES.md` (installed at `web/node_modules/house-style/GUIDELINES.md`) before changing prose or UI. The website pins a release in `web/package.json`.
 
-- **`house/` is vendored, never edited.** Run `just sync-house-style` after changing the tag, commit the complete result, and use `just sync-house-style --check` to verify it. CI checks that the copy matches the release. Change shared styles and rules in house-style first, then adopt a tagged release here.
-- **Star Ground's accent is green.** `branding/theme.css` sets `--accent: #4ade80`. The shared navy surfaces come from `house/css/product.css`. Keep the logo assets in this repository.
-- **Streamlit uses its native theme.** `.streamlit/config.toml` maps the shared palette to Streamlit's settings. Vendoring house-style does not load CSS into Streamlit. This adoption preserves the current app's typography and layout; do not inject house CSS or target Streamlit's internal DOM to imitate shared components.
-- **The website (`web/`, Astro and Svelte) reads `house/` through its `@house` alias**, loading fonts, tokens, the product palette, and the components it uses, then `branding/theme.css` (`@branding`) and its own layout styles. It never keeps its own copy of house-style. Zensical docs are planned; do not scaffold them as part of maintaining the vendored release. When docs are introduced, stage an unchanged copy of `house/` under `docs/house/` during the docs build, load that copy through Zensical, and map its tokens to the documentation theme as Protostar does. Stage the brand stylesheet too. Keep the staged copies untracked and keep one pinned source in `house/`.
+- **The website matches Protostar's landing page.** Its header bar, hero field, jump links, section grid, and footer are house-style's site shell (`css/site.css`, rendered by the components in `house-style/astro/`). Fill them with Star Ground's own name, links, and notes; change their look in house-style and adopt the release, never in `web/`. `web/src/styles/global.css` holds only Star Ground's page content.
+- **Star Ground's accent is green.** `branding/theme.css` sets `--accent: #4ade80` on house-style's near-black palette. Keep the logo assets in this repository.
+- **Streamlit uses its native theme.** `.streamlit/config.toml` keeps the app's navy palette until the rebuilt site replaces it. Do not inject house CSS or target Streamlit's internal DOM.
+- **Zensical docs are planned.** When they're added, vendor only the house-style parts they use with its `scripts/vendor.py` (for example `--parts docs,site`), as Protostar does.
 - **Apply the writing rules to new prose and edits.** Use the General audience for the README and future landing pages, Users for instructions, and Technical for contributor and implementation documentation. Existing prose can be brought into the guidelines as it is edited.
 
 ## Pull Request & Architecture Documentation

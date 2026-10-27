@@ -1,4 +1,4 @@
-/* Load after house/css/tokens.css and house/css/product.css in future sites. */
+/* Star Ground's accent. web/src/layouts/Base.astro loads it after house-style's tokens. */
 :root {
   --accent: #4ade80;
 }

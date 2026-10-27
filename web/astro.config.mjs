@@ -2,8 +2,7 @@ import { fileURLToPath } from 'node:url';
 import svelte from '@astrojs/svelte';
 import { defineConfig } from 'astro/config';
 
-// house-style is vendored once at the repository root (`just sync-house-style`);
-// the site reads that copy rather than keeping its own.
+// Star Ground's accent lives at the repository root, beside the logo.
 const repo = fileURLToPath(new URL('..', import.meta.url));
 
 export default defineConfig({
@@ -15,7 +14,6 @@ export default defineConfig({
   vite: {
     resolve: {
       alias: {
-        '@house': `${repo}house`,
         '@branding': `${repo}branding`,
       },
     },
