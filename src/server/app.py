@@ -69,6 +69,7 @@ from src.server.limits import BodySizeLimit, OcrQueue, RateLimiter, ReadingCache
 from src.server.models import (
     BuildNotChosen,
     DocumentReading,
+    DocumentsMissing,
     ExportKind,
     FeedbackIn,
     Health,
@@ -311,6 +312,43 @@ def _read(
     return reading
 
 
+class _MissingDocumentError(Exception):
+    """An upload named by `document` that the reading cache no longer holds."""
+
+    def __init__(self, document: str) -> None:
+        super().__init__(document)
+        self.document = document
+
+
+def _upload_for(
+    services: _Services, project: UploadProject, uploads: Mapping[str, FileUpload]
+) -> FileUpload:
+    """The project's upload: its file part, or rebuilt from a cached reading.
+
+    A cached reading holds the document's bytes (`raw_content`), so a page can
+    name an upload it sent before instead of sending it with every change.
+
+    Raises:
+        RefusedError: The named file part wasn't sent.
+        _MissingDocumentError: The named document isn't cached here.
+    """
+    if project.file is not None and (upload := uploads.get(project.file)):
+        return upload
+    if project.document is None:
+        raise RefusedError(
+            422, Problem(message=f"No file named '{project.file}' was sent.")
+        )
+    document = project.document
+    reading = services.cache.get(document) or services.cache.get(f"{document}|ocr")
+    name = document.removeprefix("file:").rpartition(":")[0]
+    if reading is None or reading.raw_content is None or not name:
+        raise _MissingDocumentError(document)
+    upload = FileUpload(name, reading.raw_content)
+    if document_key(InputMethod.UPLOAD_FILE, upload) != document:
+        raise _MissingDocumentError(document)
+    return upload
+
+
 def _document_reading(
     services: _Services,
     reading: ParseResult,
@@ -320,6 +358,9 @@ def _document_reading(
 ) -> DocumentReading:
     ocr = reading.ocr
     return DocumentReading(
+        document=document_key(method, data)
+        if method == InputMethod.UPLOAD_FILE
+        else None,
         title=reading.title,
         file_title=file_title(method, data),
         parts_found=reading.stats["parts_found"],
@@ -383,12 +424,7 @@ def _project(
                 base, method=InputMethod.FROM_URL, data=project.url, reading=reading
             )
         case UploadProject():
-            upload = uploads.get(project.file)
-            if upload is None:
-                raise RefusedError(
-                    422,
-                    Problem(message=f"No file named '{project.file}' was sent."),
-                )
+            upload = _upload_for(services, project, uploads)
             reading = _read(
                 services, client, InputMethod.UPLOAD_FILE, upload, project.use_ocr
             )
@@ -486,6 +522,7 @@ _EXPORT_RESPONSES: dict[int | str, dict[str, Any]] = {
         "content": {"text/csv": {}, "application/zip": {}},
         "description": "The file, as an attachment.",
     },
+    409: {"model": DocumentsMissing},
     422: {"model": BuildNotChosen | Problem},
 }
 
@@ -550,7 +587,22 @@ def create_app(
         stock: UploadFile | None,
     ) -> MasterList:
         uploads = _uploads(files)
-        projects = [_project(services, client, p, uploads) for p in request.projects]
+        projects: list[Project] = []
+        missing: list[str] = []
+        for p in request.projects:
+            try:
+                projects.append(_project(services, client, p, uploads))
+            except _MissingDocumentError as e:
+                missing.append(e.document)
+        if missing:
+            raise RefusedError(
+                409,
+                DocumentsMissing(
+                    message="This server no longer holds some uploads; send them "
+                    "as files.",
+                    documents=missing,
+                ),
+            )
         try:
             return generate_master_list(
                 projects, read_stock(_upload(stock)) if stock else None
@@ -683,7 +735,10 @@ def create_app(
     @app.post(
         "/api/master-list",
         tags=["master list"],
-        responses={422: {"model": BuildNotChosen | Problem}},
+        responses={
+            409: {"model": DocumentsMissing},
+            422: {"model": BuildNotChosen | Problem},
+        },
     )
     def build_master_list(
         http: Request,

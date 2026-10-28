@@ -37,7 +37,7 @@ def wait_healthy(container: str, timeout: float = 90) -> None:
 
 
 def check_browser(url: str, artifacts: Path) -> None:
-    """Drive Chromium through the served site: paste a parts list, get its shopping list."""
+    """Drive Chromium through the served site: add a pasted list, get its shopping list."""
     from playwright.sync_api import expect, sync_playwright
 
     artifacts.mkdir(parents=True, exist_ok=True)
@@ -53,10 +53,11 @@ def check_browser(url: str, artifacts: Path) -> None:
             page.goto(f"{url}/", wait_until="domcontentloaded")
             expect(page.get_by_role("heading", level=1)).to_be_visible()
             page.goto(f"{url}/app/", wait_until="domcontentloaded")
+            page.get_by_role("button", name="Paste", exact=True).click()
             page.get_by_role("textbox", name="Parts list", exact=True).fill(
                 "R1 10k\nC1 100n\nU1 TL072"
             )
-            page.get_by_role("button", name="Make the shopping list").click()
+            page.get_by_role("button", name="Add", exact=True).click()
             table = page.get_by_role("table")
             for part in ("10k", "100n", "TL072"):
                 expect(table.get_by_role("cell", name=part, exact=True)).to_be_visible()

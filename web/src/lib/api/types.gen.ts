@@ -88,6 +88,24 @@ export type BuildNotChosen = {
 export type ComponentOrigin = 'Circuit Board' | 'Hardware Kit' | 'Extras';
 
 /**
+ * DocumentsMissing
+ *
+ * Uploads named by `document` that this server no longer holds.
+ */
+export type DocumentsMissing = {
+    /**
+     * Message
+     */
+    message: string;
+    /**
+     * Documents
+     *
+     * Send these as files instead.
+     */
+    documents: Array<string>;
+};
+
+/**
  * ExportKind
  *
  * The files a master list exports.
@@ -402,6 +420,12 @@ export type ValidationError = {
  */
 export type DocumentReading = {
     /**
+     * Document
+     *
+     * Names an upload in later master list requests, in place of the file; none for links, whose URL names them.
+     */
+    document: string | null;
+    /**
      * Title
      *
      * The title the document prints.
@@ -637,7 +661,10 @@ export type PresetProject = {
 /**
  * UploadProject
  *
- * An uploaded build document, sent as a file part of the same request.
+ * An uploaded build document.
+ *
+ * It's a file part of the same request, or a reading's `document`, so a page
+ * needn't send the file with every change.
  */
 export type UploadProject = {
     /**
@@ -673,7 +700,13 @@ export type UploadProject = {
      *
      * The file part's filename.
      */
-    file: string;
+    file?: string | null;
+    /**
+     * Document
+     *
+     * A reading's `document`, instead of the file. If this server no longer holds it, the request fails with `DocumentsMissing`; send the file instead.
+     */
+    document?: string | null;
 };
 
 /**
@@ -806,6 +839,10 @@ export type BuildMasterListApiMasterListPostData = {
 
 export type BuildMasterListApiMasterListPostErrors = {
     /**
+     * Conflict
+     */
+    409: DocumentsMissing;
+    /**
      * Response 422 Build Master List Api Master List Post
      *
      * Unprocessable Content
@@ -836,6 +873,10 @@ export type ExportApiExportsKindPostData = {
 };
 
 export type ExportApiExportsKindPostErrors = {
+    /**
+     * Conflict
+     */
+    409: DocumentsMissing;
     /**
      * Response 422 Export Api Exports  Kind  Post
      *

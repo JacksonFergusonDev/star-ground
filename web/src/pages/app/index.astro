@@ -1,22 +1,23 @@
 ---
-import ShoppingList from '../../components/ShoppingList.svelte';
+import Workspace from '../../components/workspace/Workspace.svelte';
 import Base from '../../layouts/Base.astro';
 ---
 
 <Base
-  title="Shopping list"
-  description="Paste a pedal's parts list and get its shopping list."
+  title="Workspace"
+  description="Add the pedals you're building and get one shopping list for all of them."
   noindex
 >
   <section class="section" aria-labelledby="app-title">
     <h1 id="app-title" class="app-title">
-      Paste a parts list.
+      Your builds.
     </h1>
     <p class="section-lede">
-      One line per part, like <code>R1 10k</code>. Star Ground reads the list and returns what to
-      buy, with spares where running out would stall a build.
+      Add each pedal you're building: upload its build document, paste a link to one, pick a preset,
+      or paste a parts list. The master list merges them and updates as you go. Everything stays in
+      this browser.
     </p>
-    <ShoppingList client:load />
+    <Workspace client:only="svelte" />
   </section>
 </Base>
 

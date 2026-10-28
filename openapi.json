@@ -120,6 +120,16 @@
               }
             }
           },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentsMissing"
+                }
+              }
+            }
+          },
           "422": {
             "description": "Unprocessable Content",
             "content": {
@@ -188,6 +198,16 @@
               "text/csv": {},
               "application/zip": {}
             }
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentsMissing"
+                }
+              }
+            },
+            "description": "Conflict"
           },
           "422": {
             "content": {
@@ -408,6 +428,30 @@
         ],
         "title": "ComponentOrigin",
         "description": "Purchasing origins for bill-of-materials components."
+      },
+      "DocumentsMissing": {
+        "properties": {
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "documents": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Documents",
+            "description": "Send these as files instead."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "message",
+          "documents"
+        ],
+        "title": "DocumentsMissing",
+        "description": "Uploads named by `document` that this server no longer holds."
       },
       "ExportKind": {
         "type": "string",
@@ -870,6 +914,18 @@
         "additionalProperties": false,
         "description": "An upload or link, read ahead of building the master list.",
         "properties": {
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Names an upload in later master list requests, in place of the file; none for links, whose URL names them.",
+            "title": "Document"
+          },
           "title": {
             "anyOf": [
               {
@@ -947,6 +1003,7 @@
           }
         },
         "required": [
+          "document",
           "title",
           "file_title",
           "parts_found",
@@ -1226,7 +1283,7 @@
       },
       "UploadProject": {
         "additionalProperties": false,
-        "description": "An uploaded build document, sent as a file part of the same request.",
+        "description": "An uploaded build document.\n\nIt's a file part of the same request, or a reading's `document`, so a page\nneedn't send the file with every change.",
         "properties": {
           "name": {
             "default": "",
@@ -1268,14 +1325,34 @@
             "type": "string"
           },
           "file": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
             "description": "The file part's filename.",
-            "title": "File",
-            "type": "string"
+            "title": "File"
+          },
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "A reading's `document`, instead of the file. If this server no longer holds it, the request fails with `DocumentsMissing`; send the file instead.",
+            "title": "Document"
           }
         },
         "required": [
-          "method",
-          "file"
+          "method"
         ],
         "title": "UploadProject",
         "type": "object"

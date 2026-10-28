@@ -1,8 +1,19 @@
-// The app page against a stand-in API: the browser tests serve the static
+// The workspace against a stand-in API: the browser tests serve the static
 // site alone, so each test answers the API's routes itself.
 
-import { expect, test } from '@playwright/test';
-import type { MasterListRequest, MasterListResult } from '../../src/lib/api';
+import { expect, test, type Page, type Route } from '@playwright/test';
+import type {
+  DocumentReading,
+  MasterListRequest,
+  MasterListResult,
+  PresetCatalog,
+} from '../../src/lib/api';
+
+const catalog: PresetCatalog = {
+  sources: ['PedalPCB'],
+  categories: { PedalPCB: ['Fuzz'] },
+  presets: [{ key: 'fuzz', source: 'PedalPCB', category: 'Fuzz', name: 'Sunflower Fuzz' }],
+};
 
 const result: MasterListResult = {
   projects: [
@@ -39,43 +50,203 @@ const result: MasterListResult = {
   has_stock: false,
 };
 
-test.beforeEach(async ({ page }) => {
-  await page.route('**/api/health', (route) => route.fulfill({ json: { status: 'ok' } }));
+const reading = (over: Partial<DocumentReading> = {}): DocumentReading => ({
+  document: 'file:Ungula.pdf:0123456789abcdef',
+  title: 'Ungula',
+  file_title: 'Ungula',
+  parts_found: 40,
+  builds: [],
+  ocr_builds: [],
+  ocr: null,
+  ocr_offered: false,
+  options: [],
+  errors: [],
+  ...over,
 });
 
-test('pastes a parts list and shows its shopping list', async ({ page }) => {
-  let sent: MasterListRequest | undefined;
+const sse = (...events: object[]): string =>
+  events.map((e) => `data: ${JSON.stringify(e)}\n\n`).join('');
+
+/** The requests the page sent to the master list, parsed. */
+async function stubMasterList(page: Page): Promise<MasterListRequest[]> {
+  const sent: MasterListRequest[] = [];
   await page.route('**/api/master-list', (route) => {
-    sent = JSON.parse(
-      route
-        .request()
-        .postDataBuffer()
-        ?.toString()
-        .match(/\{.*\}/s)?.[0] ?? '{}',
-    );
+    const body = route.request().postDataBuffer()?.toString() ?? '';
+    sent.push(JSON.parse(body.match(/\{"projects".*\}/s)?.[0] ?? '{}') as MasterListRequest);
     return route.fulfill({ json: result });
   });
+  return sent;
+}
+
+async function paste(page: Page, text: string): Promise<void> {
+  await page.getByRole('button', { name: 'Paste' }).click();
+  await page.getByRole('textbox', { name: 'Parts list' }).fill(text);
+  await page.getByRole('button', { name: 'Add', exact: true }).click();
+}
+
+test.beforeEach(async ({ page }) => {
+  await page.route('**/api/health', (route) => route.fulfill({ json: { status: 'ok' } }));
+  await page.route('**/api/presets', (route) => route.fulfill({ json: catalog }));
+});
+
+test('a pasted list appears on the master list without a Generate button', async ({ page }) => {
+  const sent = await stubMasterList(page);
   await page.goto('/app/');
-  await page.getByRole('textbox', { name: 'Parts list' }).fill('R1 10k\nC1 100x');
-  await page.getByRole('button', { name: 'Make the shopping list' }).click();
+  await paste(page, 'R1 10k\nC1 100x');
 
   const row = page.getByRole('row', { name: /10k/ });
   await expect(row).toContainText('Resistors');
-  await expect(row).toContainText('10');
+  await expect(row.getByRole('link', { name: 'Tayda' })).toBeVisible();
   await expect(page.getByText('Check its value.')).toBeVisible();
-  expect(sent?.projects[0]).toMatchObject({ method: 'paste', text: 'R1 10k\nC1 100x' });
+  expect(sent.at(-1)?.projects[0]).toMatchObject({ method: 'paste', text: 'R1 10k\nC1 100x' });
 });
 
-test("shows the API's message when it refuses", async ({ page }) => {
-  await page.route('**/api/master-list', (route) =>
-    route.fulfill({ status: 429, json: { message: 'Too many requests. Try again in a minute.' } }),
+test('changing a count updates the master list', async ({ page }) => {
+  const sent = await stubMasterList(page);
+  await page.goto('/app/');
+  await paste(page, 'R1 10k');
+  await expect(page.getByRole('row', { name: /10k/ })).toBeVisible();
+
+  await page.getByRole('spinbutton', { name: 'Pedals' }).fill('3');
+  await page.getByRole('spinbutton', { name: 'Pedals' }).blur();
+
+  await expect.poll(() => sent.at(-1)?.projects[0]?.count).toBe(3);
+});
+
+test('a preset is added by name', async ({ page }) => {
+  const sent = await stubMasterList(page);
+  await page.goto('/app/');
+  await page.getByRole('button', { name: 'Preset' }).click();
+  await page.getByRole('combobox', { name: 'Preset' }).selectOption('fuzz');
+  await page.getByRole('button', { name: 'Add', exact: true }).click();
+
+  await expect(page.getByRole('textbox', { name: 'Project name' })).toHaveValue('Sunflower Fuzz');
+  await expect
+    .poll(() => sent.at(-1)?.projects[0])
+    .toMatchObject({ method: 'preset', preset: 'fuzz' });
+});
+
+test('the workspace survives a reload', async ({ page }) => {
+  await stubMasterList(page);
+  await page.goto('/app/');
+  await paste(page, 'R1 10k');
+  await page.getByRole('textbox', { name: 'Project name' }).fill('Bench fuzz');
+  await expect(page.getByRole('row', { name: /10k/ })).toBeVisible();
+
+  await page.reload();
+
+  await expect(page.getByRole('textbox', { name: 'Project name' })).toHaveValue('Bench fuzz');
+  await expect(page.getByRole('row', { name: /10k/ })).toBeVisible();
+});
+
+test('a removed project leaves the master list', async ({ page }) => {
+  await stubMasterList(page);
+  await page.goto('/app/');
+  await paste(page, 'R1 10k');
+  await expect(page.getByRole('row', { name: /10k/ })).toBeVisible();
+
+  await page.getByRole('button', { name: /^Remove/ }).click();
+
+  await expect(page.getByRole('table')).toHaveCount(0);
+});
+
+async function upload(page: Page, name: string): Promise<void> {
+  await page.getByRole('button', { name: 'Upload' }).click();
+  await page.getByLabel('Build documents (PDF)').setInputFiles({
+    name,
+    mimeType: 'application/pdf',
+    buffer: Buffer.from('%PDF-1.4 stand-in'),
+  });
+  await page.getByRole('button', { name: 'Add', exact: true }).click();
+}
+
+test('a multi-build document waits for its build, then joins by reference', async ({ page }) => {
+  const sent = await stubMasterList(page);
+  await page.route('**/api/documents/read', (route) =>
+    route.fulfill({
+      contentType: 'text/event-stream',
+      body: sse(
+        { event: 'reading' },
+        { event: 'result', reading: reading({ builds: ['Stock', 'Cleft Mod'] }) },
+      ),
+    }),
   );
   await page.goto('/app/');
-  await page.getByRole('textbox', { name: 'Parts list' }).fill('R1 10k');
-  await page.getByRole('button', { name: 'Make the shopping list' }).click();
+  await upload(page, 'Ungula.pdf');
 
-  await expect(page.getByRole('alert')).toHaveText('Too many requests. Try again in a minute.');
-  await expect(page.getByRole('table')).toHaveCount(0);
+  await expect(page.getByText('Choose a build to add it.')).toBeVisible();
+  expect(sent).toHaveLength(0);
+  await page.getByRole('combobox', { name: 'Build' }).selectOption('Cleft Mod');
+
+  await expect
+    .poll(() => sent.at(-1)?.projects[0])
+    .toMatchObject({
+      method: 'upload',
+      document: 'file:Ungula.pdf:0123456789abcdef',
+      variant: 'Cleft Mod',
+    });
+});
+
+test('an image parts list is read by OCR only when accepted', async ({ page }) => {
+  const sent = await stubMasterList(page);
+  const reads: string[] = [];
+  await page.route('**/api/documents/read', async (route: Route) => {
+    const ocr = /name="ocr"/.test(route.request().postDataBuffer()?.toString() ?? '');
+    reads.push(ocr ? 'ocr' : 'text');
+    const ocrReading = {
+      verdict: 'Complete',
+      message: 'OCR read 25 parts from it.',
+      parts_read: 25,
+      suspect: 0,
+      pages: [1],
+      has_parts: true,
+    };
+    await route.fulfill({
+      contentType: 'text/event-stream',
+      body: sse({
+        event: 'result',
+        reading: ocr
+          ? reading({ ocr: ocrReading as DocumentReading['ocr'] })
+          : reading({ ocr_offered: true }),
+      }),
+    });
+  });
+  await page.goto('/app/');
+  await upload(page, 'Image.pdf');
+
+  await expect(page.getByText('This parts list is an image.')).toBeVisible();
+  expect(reads).toEqual(['text']);
+  await page.getByRole('button', { name: 'Read it by OCR' }).click();
+
+  await expect(page.getByRole('checkbox', { name: 'Add the 25 parts OCR read' })).toBeChecked();
+  expect(reads).toEqual(['text', 'ocr']);
+  await expect.poll(() => sent.at(-1)?.projects[0]?.use_ocr).toBe(true);
+});
+
+test('an upload the server no longer holds is sent again as a file', async ({ page }) => {
+  const bodies: string[] = [];
+  await page.route('**/api/documents/read', (route) =>
+    route.fulfill({
+      contentType: 'text/event-stream',
+      body: sse({ event: 'result', reading: reading() }),
+    }),
+  );
+  await page.route('**/api/master-list', (route) => {
+    const body = route.request().postDataBuffer()?.toString() ?? '';
+    bodies.push(body);
+    return bodies.length === 1
+      ? route.fulfill({
+          status: 409,
+          json: { message: 'Send them as files.', documents: ['file:Ungula.pdf:0123456789abcdef'] },
+        })
+      : route.fulfill({ json: result });
+  });
+  await page.goto('/app/');
+  await upload(page, 'Ungula.pdf');
+
+  await expect(page.getByRole('row', { name: /10k/ })).toBeVisible();
+  expect(bodies[0]).not.toContain('filename=');
+  expect(bodies[1]).toContain('filename="Ungula.pdf"');
 });
 
 test('says the server is busy when a request fails after the API answered', async ({ page }) => {
@@ -83,8 +254,7 @@ test('says the server is busy when a request fails after the API answered', asyn
   const warm = page.waitForResponse('**/api/health');
   await page.goto('/app/');
   await warm;
-  await page.getByRole('textbox', { name: 'Parts list' }).fill('R1 10k');
-  await page.getByRole('button', { name: 'Make the shopping list' }).click();
+  await paste(page, 'R1 10k');
 
   await expect(page.getByRole('alert')).toHaveText(
     'Star Ground is busy right now. Try again in a minute.',
@@ -93,10 +263,10 @@ test('says the server is busy when a request fails after the API answered', asyn
 
 test("says the server can't be reached when it never answered", async ({ page }) => {
   await page.unroute('**/api/health');
-  await page.route('**/api/**', (route) => route.abort('failed'));
+  await page.route('**/api/health', (route) => route.abort('failed'));
+  await page.route('**/api/master-list', (route) => route.abort('failed'));
   await page.goto('/app/');
-  await page.getByRole('textbox', { name: 'Parts list' }).fill('R1 10k');
-  await page.getByRole('button', { name: 'Make the shopping list' }).click();
+  await paste(page, 'R1 10k');
 
   await expect(page.getByRole('alert')).toContainText("Couldn't reach Star Ground's server");
 });
@@ -110,8 +280,7 @@ test('says the server is busy when the platform refuses without a message', asyn
     }),
   );
   await page.goto('/app/');
-  await page.getByRole('textbox', { name: 'Parts list' }).fill('R1 10k');
-  await page.getByRole('button', { name: 'Make the shopping list' }).click();
+  await paste(page, 'R1 10k');
 
   await expect(page.getByRole('alert')).toHaveText(
     'Star Ground is busy right now. Try again in a minute.',
