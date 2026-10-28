@@ -10,8 +10,11 @@ from typing import Any
 import pytest
 from fpdf import FPDF
 
+from src.api import read_document
 from src.bom_lib import (
     ComponentCategory,
+    FileUpload,
+    InputMethod,
     OcrVerdict,
     ParseWarningKind,
     create_empty_inventory,
@@ -22,6 +25,7 @@ from src.bom_lib.ocr import (
     _plausible,
     _reread_labels,
     _several_values,
+    _threads,
     _unlisted,
     _unread,
     _verdict,
@@ -29,6 +33,7 @@ from src.bom_lib.ocr import (
     needs_ocr,
     page_words,
     table_block,
+    without_ocr,
 )
 from src.bom_lib.parser import parse_pedalpcb_pdf
 from src.bom_lib.types import (
@@ -697,3 +702,40 @@ class TestAttemptOcr:
     def test_accept_without_ocr_parts(self) -> None:
         with pytest.raises(ValueError, match="No OCR parts"):
             ParseResult(create_empty_inventory(), _stats()).accept_ocr()
+
+
+class TestOptIn:
+    """OCR runs only for readers that want it, at the thread count set."""
+
+    def test_without_ocr_a_reading_skips_it_but_says_it_could_help(
+        self, tmp_path: Path
+    ) -> None:
+        path = _blank_pdf(tmp_path / "image.pdf")
+        upload = FileUpload("image.pdf", Path(path).read_bytes())
+
+        reading = read_document(InputMethod.UPLOAD_FILE, upload, ocr=False)
+
+        assert reading is not None
+        assert reading.ocr is None
+        assert needs_ocr(reading)
+
+    def test_without_ocr_never_reaches_the_recognizer(self, tmp_path: Path) -> None:
+        path = _blank_pdf(tmp_path / "image.pdf")
+        result = parse_pedalpcb_pdf(path, "Image")
+
+        def recognizer(*_: Any) -> list[OcrBox]:
+            raise AssertionError("OCR ran")
+
+        with without_ocr():
+            assert attempt_ocr(path, result, "Image", recognizer) is None
+
+    @pytest.mark.parametrize(("value", "threads"), [(None, -1), ("", -1), ("2", 2)])
+    def test_the_thread_count_comes_from_the_environment(
+        self, monkeypatch: pytest.MonkeyPatch, value: str | None, threads: int
+    ) -> None:
+        if value is None:
+            monkeypatch.delenv("STAR_GROUND_OCR_THREADS", raising=False)
+        else:
+            monkeypatch.setenv("STAR_GROUND_OCR_THREADS", value)
+
+        assert _threads() == threads

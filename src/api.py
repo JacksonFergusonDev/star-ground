@@ -15,6 +15,7 @@ import copy
 import os
 import tempfile
 from collections.abc import Sequence
+from contextlib import nullcontext
 from dataclasses import dataclass
 from urllib.parse import unquote, urlsplit
 
@@ -39,6 +40,7 @@ from src.bom_lib import (
     rename_source_in_inventory,
     status_leds,
 )
+from src.bom_lib.ocr import without_ocr
 from src.pdf_generator import generate_master_zip, generate_pdf_bundle
 
 # Source label used while a document is read ahead of generating; replaced by
@@ -191,7 +193,9 @@ def document_key(method: InputMethod, data: ProjectData) -> str | None:
     return None
 
 
-def read_document(method: InputMethod, data: ProjectData) -> ParseResult | None:
+def read_document(
+    method: InputMethod, data: ProjectData, ocr: bool = True
+) -> ParseResult | None:
     """Reads an upload or link ahead of generating the master list.
 
     The reading says whether a build must be chosen (`requires_choice`) and
@@ -201,13 +205,16 @@ def read_document(method: InputMethod, data: ProjectData) -> ParseResult | None:
     Args:
         method: How the parts list is given.
         data: The project's parts list.
+        ocr: Whether to read image pages by OCR. Without it, the reading
+            still says whether OCR could add parts (`needs_ocr`).
 
     Returns:
         The reading, or None for inputs read on generating (see `document_key`).
     """
     if document_key(method, data) is None:
         return None
-    return BOMParserContext().process(method, data, source_name=PENDING_SOURCE)
+    with nullcontext() if ocr else without_ocr():
+        return BOMParserContext().process(method, data, source_name=PENDING_SOURCE)
 
 
 def offered(reading: ParseResult, use_ocr: bool) -> ParseResult:

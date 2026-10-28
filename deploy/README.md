@@ -175,4 +175,20 @@ Releases copy only the `linux/amd64` image, so each release is one image in the 
 
 Tag a release as before (`tools/prepare_release.py`, then push the `v*` tag). The run's summary links the deployed API, and the `github-pages` environment links the site.
 
-The image serves the site itself when `STAR_GROUND_SITE_DIR` names it, which the Dockerfile sets for self-hosting. The deploy clears it, so the Cloud Run URL serves only the API, and allows only the Pages origin (`STAR_GROUND_CORS_ORIGINS`). It also sets `STAR_GROUND_TRUST_PROXY=1`, so the rate limiter reads the client's address from `X-Forwarded-For`; PLAN.md step 4 still asks to confirm that Cloud Run appends it as the last entry.
+The image serves the site itself when `STAR_GROUND_SITE_DIR` names it, which the Dockerfile sets for self-hosting. The deploy clears it, so the Cloud Run URL serves only the API, and allows only the Pages origin (`STAR_GROUND_CORS_ORIGINS`). It also sets:
+
+- `STAR_GROUND_TRUST_PROXY=1`, so the rate limiter reads the client's address from `X-Forwarded-For`, where Cloud Run appends it as the last entry.
+- `STAR_GROUND_OCR_THREADS=2`, matching `--cpu 2`. An instance reports 5 CPUs, and OCR sized to 5 threads ran slower than with 2.
+
+The deploy updates these variables and keeps any others, so settings made by hand survive a release.
+
+## Turning OCR off
+
+OCR is the expensive part of the API: one document takes an instance's CPUs for 10 to 50 seconds. If it ever causes trouble, turn it off without a release. Image parts lists are then reported as images and never offered for OCR:
+
+```bash
+gcloud run services update star-ground --project "$PROJECT" --region "$REGION" \
+  --update-env-vars STAR_GROUND_OCR=0
+```
+
+Turn it back on with `STAR_GROUND_OCR=1`. Each client's allowance (`STAR_GROUND_OCR_PER_HOUR`, 10 by default) can be changed the same way.

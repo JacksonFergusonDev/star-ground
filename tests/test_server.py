@@ -11,6 +11,7 @@ from typing import Any
 
 import pytest
 from fastapi.testclient import TestClient
+from fpdf import FPDF
 from pytest_mock import MockerFixture
 
 from src.api import read_document
@@ -121,7 +122,7 @@ def test_a_link_is_read_as_a_link(client: TestClient, mocker: MockerFixture) -> 
 
     response = client.post("/api/documents/read", data={"url": f" {url} "})
 
-    read.assert_called_once_with(InputMethod.FROM_URL, url)
+    read.assert_called_once_with(InputMethod.FROM_URL, url, ocr=False)
     assert _events(response.text)[-1]["reading"]["file_title"] == "Kliche-PedalPCB"
 
 
@@ -542,15 +543,16 @@ def test_the_backend_does_not_depend_on_the_web_layer(path: Path) -> None:
 
 def _ocr_read(
     started: threading.Event | None = None, release: threading.Event | None = None
-):
-    """A stand-in reader that runs 'OCR' through the server's guard."""
+) -> Any:
+    """A stand-in reader that runs 'OCR' through the server's guard when asked."""
 
-    def read(method: InputMethod, data: Any) -> ParseResult | None:
-        with ocr_guard.get()():
-            if started:
-                started.set()
-            if release:
-                release.wait(5)
+    def read(method: InputMethod, data: Any, ocr: bool = True) -> ParseResult | None:
+        if ocr:
+            with ocr_guard.get()():
+                if started:
+                    started.set()
+                if release:
+                    release.wait(5)
         return read_document(
             InputMethod.UPLOAD_FILE, FileUpload(KLICHE.name, KLICHE.read_bytes())
         )
@@ -562,12 +564,94 @@ def _upload(name: str) -> dict[str, tuple[str, bytes, str]]:
     return {"file": (name, KLICHE.read_bytes() + name.encode(), "application/pdf")}
 
 
+def _read_events(
+    client: TestClient, name: str, ocr: bool = False
+) -> list[dict[str, Any]]:
+    response = client.post(
+        "/api/documents/read",
+        files=_upload(name),
+        data={"ocr": "true"} if ocr else {},
+    )
+    return _events(response.text)
+
+
+def _image_reading() -> ParseResult:
+    """A reading whose parts list is an image (blank to the text layer)."""
+    pdf = FPDF()
+    pdf.add_page()
+    upload = FileUpload("image.pdf", bytes(pdf.output()))
+    reading = read_document(InputMethod.UPLOAD_FILE, upload, ocr=False)
+    assert reading is not None
+    return reading
+
+
+def test_a_document_is_read_without_ocr_unless_asked(mocker: MockerFixture) -> None:
+    client = TestClient(create_app(Settings(requests_per_minute=1000)))
+    read = mocker.patch("src.server.app.read_document", return_value=_image_reading())
+
+    reading = _read_events(client, "image.pdf")[-1]["reading"]
+
+    assert read.call_args.kwargs == {"ocr": False}
+    assert reading["ocr"] is None
+    assert reading["ocr_offered"] is True
+
+
+def test_asking_for_ocr_reads_again_with_it(mocker: MockerFixture) -> None:
+    client = TestClient(create_app(Settings(requests_per_minute=1000)))
+    read = mocker.patch("src.server.app.read_document", return_value=_image_reading())
+
+    _read_events(client, "image.pdf")
+    accepted = _read_events(client, "image.pdf", ocr=True)[-1]["reading"]
+
+    assert [c.kwargs for c in read.call_args_list] == [{"ocr": False}, {"ocr": True}]
+    assert accepted["ocr_offered"] is False
+
+
+def test_a_text_document_offers_no_ocr(client: TestClient) -> None:
+    reading = _read_events(client, "text.pdf")[-1]["reading"]
+
+    assert reading["ocr_offered"] is False
+
+
+def test_the_master_list_runs_ocr_only_for_accepted_projects(
+    mocker: MockerFixture,
+) -> None:
+    client = TestClient(create_app(Settings(requests_per_minute=1000)))
+    read = mocker.patch("src.server.app.read_document", side_effect=_ocr_read())
+
+    for name, use_ocr in (("a.pdf", False), ("b.pdf", True)):
+        project = {"method": "upload", "file": name, "use_ocr": use_ocr}
+        _post(
+            client,
+            "/api/master-list",
+            [project],
+            files=[("files", _upload(name)["file"])],
+        )
+
+    assert [c.kwargs for c in read.call_args_list] == [{"ocr": False}, {"ocr": True}]
+
+
+def test_with_ocr_off_nothing_is_offered_or_read(mocker: MockerFixture) -> None:
+    client = TestClient(create_app(Settings(requests_per_minute=1000, ocr=False)))
+    read = mocker.patch("src.server.app.read_document", return_value=_image_reading())
+
+    reading = _read_events(client, "image.pdf", ocr=True)[-1]["reading"]
+
+    assert read.call_args.kwargs == {"ocr": False}
+    assert reading["ocr_offered"] is False
+
+
+def test_ocr_can_be_switched_off_from_the_environment() -> None:
+    assert not Settings.from_env({"STAR_GROUND_OCR": "0"}).ocr
+    assert Settings.from_env({}).ocr
+
+
 def test_each_client_has_an_hourly_ocr_allowance(mocker: MockerFixture) -> None:
     client = TestClient(create_app(Settings(ocr_per_hour=1)))
     mocker.patch("src.server.app.read_document", side_effect=_ocr_read())
 
-    first = _events(client.post("/api/documents/read", files=_upload("a.pdf")).text)
-    second = _events(client.post("/api/documents/read", files=_upload("b.pdf")).text)
+    first = _read_events(client, "a.pdf", ocr=True)
+    second = _read_events(client, "b.pdf", ocr=True)
 
     assert first[-1]["event"] == "result"
     assert second[-1]["event"] == "error"
@@ -578,11 +662,10 @@ def test_the_master_list_refuses_ocr_past_the_allowance(mocker: MockerFixture) -
     client = TestClient(create_app(Settings(ocr_per_hour=0)))
     mocker.patch("src.server.app.read_document", side_effect=_ocr_read())
 
+    project = {"method": "upload", "file": "a.pdf", "use_ocr": True}
     response = client.post(
         "/api/master-list",
-        data={
-            "request": json.dumps({"projects": [{"method": "upload", "file": "a.pdf"}]})
-        },
+        data={"request": json.dumps({"projects": [project]})},
         files=[("files", _upload("a.pdf")["file"])],
     )
 
@@ -593,24 +676,16 @@ def test_the_master_list_refuses_ocr_past_the_allowance(mocker: MockerFixture) -
 def test_a_text_read_never_waits_behind_ocr(mocker: MockerFixture) -> None:
     app = create_app(Settings(requests_per_minute=1000))
     started, release = threading.Event(), threading.Event()
-    ocr = _ocr_read(started, release)
-
-    def read(method: InputMethod, data: Any) -> ParseResult | None:
-        if data.name == "ocr.pdf":
-            return ocr(method, data)
-        return read_document(method, data)
-
-    mocker.patch("src.server.app.read_document", side_effect=read)
+    mocker.patch(
+        "src.server.app.read_document", side_effect=_ocr_read(started, release)
+    )
     waiting = threading.Thread(
-        target=lambda: TestClient(app).post(
-            "/api/documents/read", files=_upload("ocr.pdf")
-        )
+        target=lambda: _read_events(TestClient(app), "ocr.pdf", ocr=True)
     )
     waiting.start()
     try:
         assert started.wait(5)
-        text = TestClient(app).post("/api/documents/read", files=_upload("text.pdf"))
-        assert _events(text.text)[-1]["event"] == "result"
+        assert _read_events(TestClient(app), "text.pdf")[-1]["event"] == "result"
     finally:
         release.set()
         waiting.join(5)
@@ -619,29 +694,23 @@ def test_a_text_read_never_waits_behind_ocr(mocker: MockerFixture) -> None:
 def test_a_document_waiting_for_ocr_streams_its_place(mocker: MockerFixture) -> None:
     app = create_app(Settings(requests_per_minute=1000))
     started, release = threading.Event(), threading.Event()
-    first = _ocr_read(started, release)
-    second = _ocr_read()
+    first, second = _ocr_read(started, release), _ocr_read()
 
-    def read(method: InputMethod, data: Any) -> ParseResult | None:
-        return (first if data.name == "first.pdf" else second)(method, data)
+    def read(method: InputMethod, data: Any, ocr: bool = True) -> ParseResult | None:
+        return (first if data.name == "first.pdf" else second)(method, data, ocr)
 
     mocker.patch("src.server.app.read_document", side_effect=read)
     holder = threading.Thread(
-        target=lambda: TestClient(app).post(
-            "/api/documents/read", files=_upload("first.pdf")
-        )
+        target=lambda: _read_events(TestClient(app), "first.pdf", ocr=True)
     )
     holder.start()
     try:
         assert started.wait(5)
         threading.Timer(0.5, release.set).start()
-        response = TestClient(app).post(
-            "/api/documents/read", files=_upload("second.pdf")
-        )
+        events = _read_events(TestClient(app), "second.pdf", ocr=True)
     finally:
         release.set()
         holder.join(5)
 
-    events = _events(response.text)
     assert [e["event"] for e in events] == ["reading", "queued", "reading", "result"]
     assert events[1]["position"] == 1

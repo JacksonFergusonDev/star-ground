@@ -56,6 +56,12 @@ export type BodyReadApiDocumentsReadPost = {
      * Url
      */
     url?: string | null;
+    /**
+     * Ocr
+     *
+     * Read image pages by OCR; send once the builder accepts.
+     */
+    ocr?: boolean;
 };
 
 /**
@@ -423,7 +429,16 @@ export type DocumentReading = {
      * The builds to choose from if OCR's parts are accepted.
      */
     ocr_builds: Array<string>;
+    /**
+     * What OCR read, when the document was read with `ocr`.
+     */
     ocr: OcrReading | null;
+    /**
+     * Ocr Offered
+     *
+     * OCR could add parts this reading lacks (its parts list is an image, or names parts it doesn't list): read it again with `ocr` once the builder accepts.
+     */
+    ocr_offered: boolean;
     /**
      * Options
      *

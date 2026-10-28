@@ -56,7 +56,7 @@
           "documents"
         ],
         "summary": "Read",
-        "description": "Reads an upload or link ahead of building the master list.\n\nThe reading says which builds a multi-circuit document offers, and\nwhether OCR read parts from image pages. Image-only documents take\nseconds a page, so progress streams as server-sent events.",
+        "description": "Reads an upload or link ahead of building the master list.\n\nThe reading says which builds a multi-circuit document offers, and\nwhether OCR could read parts from image pages (`ocr_offered`). OCR\nruns only when asked (`ocr`) and takes seconds a page, so progress\nstreams as server-sent events.",
         "operationId": "read_api_documents_read_post",
         "requestBody": {
           "content": {
@@ -365,6 +365,12 @@
               }
             ],
             "title": "Url"
+          },
+          "ocr": {
+            "type": "boolean",
+            "title": "Ocr",
+            "description": "Read image pages by OCR; send once the builder accepts.",
+            "default": false
           }
         },
         "type": "object",
@@ -916,7 +922,13 @@
               {
                 "type": "null"
               }
-            ]
+            ],
+            "description": "What OCR read, when the document was read with `ocr`."
+          },
+          "ocr_offered": {
+            "description": "OCR could add parts this reading lacks (its parts list is an image, or names parts it doesn't list): read it again with `ocr` once the builder accepts.",
+            "title": "Ocr Offered",
+            "type": "boolean"
           },
           "options": {
             "description": "Interchangeable parts, resolved.",
@@ -941,6 +953,7 @@
           "builds",
           "ocr_builds",
           "ocr",
+          "ocr_offered",
           "options",
           "errors"
         ],

@@ -13,10 +13,11 @@ of which then carries a warning to check it against the document.
 """
 
 import logging
+import os
 import re
 import threading
-from collections.abc import Callable
-from contextlib import AbstractContextManager
+from collections.abc import Callable, Iterator
+from contextlib import AbstractContextManager, contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass
 from decimal import Decimal
@@ -141,6 +142,22 @@ _ONE_AT_A_TIME = threading.Lock()
 ocr_guard: ContextVar[OcrGuard] = ContextVar(
     "ocr_guard", default=lambda: _ONE_AT_A_TIME
 )
+_RUN_OCR: ContextVar[bool] = ContextVar("run_ocr", default=True)
+
+
+@contextmanager
+def without_ocr() -> Iterator[None]:
+    """Documents read in this block skip OCR.
+
+    The reading still says whether OCR could add parts (`needs_ocr`), so a
+    server can offer it and read again only for builders who accept.
+    """
+    token = _RUN_OCR.set(False)
+    try:
+        yield
+    finally:
+        _RUN_OCR.reset(token)
+
 
 # Standard resistor and capacitor values (the E24 series), per decade.
 _E24 = frozenset(
@@ -224,12 +241,26 @@ class OcrBox:
 Recognizer = Callable[["Image", float], list[OcrBox]]
 
 
+def _threads() -> int:
+    """OCR's thread count: `STAR_GROUND_OCR_THREADS`, or -1 to fit the machine.
+
+    A container can be allowed fewer CPUs than it sees: a Cloud Run instance
+    with 2 vCPUs reports 5, and onnxruntime's threads then compete for the 2.
+    Set to the CPUs allowed, OCR took 8.5 s instead of 10.1 s there.
+    """
+    return int(os.environ.get("STAR_GROUND_OCR_THREADS") or -1)
+
+
 @cache
 def _engine() -> Any:
     from rapidocr import RapidOCR
 
     return RapidOCR(
-        params={"Det.limit_side_len": _DETECT_SIDE, "Det.limit_type": "max"}
+        params={
+            "Det.limit_side_len": _DETECT_SIDE,
+            "Det.limit_type": "max",
+            "EngineConfig.onnxruntime.intra_op_num_threads": _threads(),
+        }
     )
 
 
@@ -1160,13 +1191,14 @@ def attempt_ocr(
         recognizer: The OCR engine (tests substitute a fake).
 
     Returns:
-        The attempt, or None when OCR was not needed, or read too little to
-        add to a document whose text layer did list parts.
+        The attempt, or None when OCR was not needed or is skipped
+        (`without_ocr`), or read too little to add to a document whose text
+        layer did list parts.
 
     Raises:
         OcrRefusedError: The guard (`ocr_guard`) declined to run OCR.
     """
-    if not needs_ocr(result):
+    if not _RUN_OCR.get() or not needs_ocr(result):
         return None
     import pdfplumber
 
