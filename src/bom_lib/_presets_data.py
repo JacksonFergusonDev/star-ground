@@ -56,8 +56,6 @@ BOM_PRESETS = {
             R103 820k
             R5 1M
             R10 1M
-            IC1 (Inj) DIP SOCKET (Check Size)
-            IC100 (Inj) DIP SOCKET (Check Size)
         """,
         "source_url": "https://docs.pedalpcb.com/project/PedalPCB-Triangulum.pdf",
     },
@@ -120,7 +118,6 @@ BOM_PRESETS = {
             R10 430k
             R1 2.2M
             R2 2.2M
-            IC1 (Inj) DIP SOCKET (Check Size)
         """,
         "source_url": "https://docs.pedalpcb.com/project/PaperScratcher-PedalPCB.pdf",
     },
@@ -207,7 +204,6 @@ BOM_PRESETS = {
             R16 1M
             R24 1M
             R26 1M
-            IC1 (Inj) DIP SOCKET (Check Size)
         """,
         "source_url": "https://docs.pedalpcb.com/project/Parentheses.pdf",
     },
@@ -233,7 +229,6 @@ BOM_PRESETS = {
             CLR 4.7k
             R2 33k
             R1 100k
-            IC1 (Inj) DIP SOCKET (Check Size)
         """,
         "source_url": "https://docs.pedalpcb.com/project/Sunflower-PedalPCB.pdf",
     },
@@ -306,11 +301,6 @@ BOM_PRESETS = {
             R34 470k
             R2 1M
             R3 1M
-            IC1 (Inj) DIP SOCKET (Check Size)
-            IC2 (Inj) DIP SOCKET (Check Size)
-            IC3 (Inj) DIP SOCKET (Check Size)
-            IC4 (Inj) DIP SOCKET (Check Size)
-            IC5 (Inj) DIP SOCKET (Check Size)
         """,
         "source_url": "https://docs.pedalpcb.com/project/Circulator.pdf",
     },
@@ -454,12 +444,6 @@ BOM_PRESETS = {
             R49 1M
             R1 2M
             R5 2M
-            IC2 (Inj) DIP SOCKET (Check Size)
-            IC3 (Inj) DIP SOCKET (Check Size)
-            IC4 (Inj) DIP SOCKET (Check Size)
-            IC5 (Inj) DIP SOCKET (Check Size)
-            IC6 (Inj) DIP SOCKET (Check Size)
-            IC7 (Inj) DIP SOCKET (Check Size)
         """,
         "source_url": "https://docs.pedalpcb.com/project/LowTide-PedalPCB.pdf",
     },
@@ -524,8 +508,6 @@ BOM_PRESETS = {
             R1 1M
             R2 1M
             R21 2.2M
-            IC1 (Inj) DIP SOCKET (Check Size)
-            IC2 (Inj) DIP SOCKET (Check Size)
         """,
         "source_url": "https://docs.pedalpcb.com/project/Abyss.pdf",
     },
@@ -596,9 +578,6 @@ BOM_PRESETS = {
             R11 422k
             R2 1M
             R31 1M
-            IC1 (Inj) DIP SOCKET (Check Size)
-            IC2 (Inj) DIP SOCKET (Check Size)
-            IC3 (Inj) DIP SOCKET (Check Size)
         """,
         "source_url": "https://docs.pedalpcb.com/project/Kliche-PedalPCB.pdf",
     },
@@ -664,9 +643,6 @@ BOM_PRESETS = {
             R17 100k
             R1 1M
             R2 1M
-            IC1 (Inj) DIP SOCKET (Check Size)
-            IC2 (Inj) DIP SOCKET (Check Size)
-            IC3 (Inj) DIP SOCKET (Check Size)
         """,
         "source_url": "https://docs.pedalpcb.com/project/Arachnid.pdf",
     },
@@ -731,8 +707,6 @@ BOM_PRESETS = {
             R2 470k
             R3 470k
             R1 1M
-            IC1 (Inj) DIP SOCKET (Check Size)
-            IC2 (Inj) DIP SOCKET (Check Size)
         """,
         "source_url": "https://docs.pedalpcb.com/project/Cataclysm-PedalPCB.pdf",
     },
@@ -787,8 +761,6 @@ BOM_PRESETS = {
             R12 100k
             R1 1M
             R3 1M
-            IC1 (Inj) DIP SOCKET (Check Size)
-            IC2 (Inj) DIP SOCKET (Check Size)
         """,
         "source_url": "https://docs.pedalpcb.com/project/Gravitation-PedalPCB.pdf",
     },

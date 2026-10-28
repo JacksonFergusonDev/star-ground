@@ -19,10 +19,12 @@ from src.api import (
     read_stock,
 )
 from src.bom_lib import (
+    BOM_PRESETS,
     ComponentCategory,
     ComponentKey,
     FileUpload,
     InputMethod,
+    ParseWarningKind,
     PcbShop,
 )
 from src.bom_lib.fetch import FetchError
@@ -55,6 +57,31 @@ def test_pasted_projects_merge_into_one_master_list() -> None:
     assert len(master.kit) > len(master.parts)
     row = next(r for r in master.shopping_list() if r["Part"] == "10k")
     assert row["BOM Qty"] == 3
+
+
+@pytest.mark.parametrize("key", sorted(BOM_PRESETS))
+def test_presets_raise_no_conflicting_duplicates(key: str) -> None:
+    project = Project(method=InputMethod.PRESET, data=BOM_PRESETS[key]["bom_text"])
+
+    master = generate_master_list([project])
+
+    conflicts = [
+        w
+        for w in master.stats["warnings"]
+        if w.kind == ParseWarningKind.CONFLICTING_DUPLICATE
+    ]
+    assert conflicts == []
+
+
+def test_a_preset_s_chips_still_get_sockets() -> None:
+    preset = BOM_PRESETS["[PedalPCB] [Boost] Triangulum Boost"]
+    master = generate_master_list(
+        [Project(method=InputMethod.PRESET, data=preset["bom_text"])]
+    )
+
+    socket = ComponentKey(ComponentCategory.HARDWARE_MISC, "DIP SOCKET (Check Size)")
+    assert master.parts[socket]["qty"] == 2
+    assert any(r["Part"] == "DIP SOCKET (Check Size)" for r in master.shopping_list())
 
 
 def test_a_multi_circuit_document_has_no_default_build() -> None:

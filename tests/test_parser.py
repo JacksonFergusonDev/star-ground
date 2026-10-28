@@ -33,6 +33,7 @@ from src.bom_lib import (
     parse_user_inventory,
     parse_value_to_decimal,
     parse_with_verification,
+    serialize_inventory,
 )
 from src.bom_lib.classifier import normalize_value_to_quantity
 from src.bom_lib.enums import ComponentCategory, ComponentSpec
@@ -741,6 +742,19 @@ def test_preset_integrity():
         # Must find parts
         assert stats["parts_found"] > 0, f"Preset '{name}' yielded 0 parts!"
         assert stats["lines_read"] > 0
+
+
+def test_presets_store_no_injected_parts() -> None:
+    """Presets hold only the document's parts; parsing injects sockets again."""
+    for name, data in BOM_PRESETS.items():
+        assert "(Inj)" not in data["bom_text"], name
+
+
+def test_serialize_inventory_leaves_out_injected_parts() -> None:
+    """A serialized inventory parses back without its injected parts doubled."""
+    inventory = parse_with_verification(["IC1 TL072"]).inventory
+
+    assert serialize_inventory(inventory) == "IC1 TL072"
 
 
 def test_ref_deduplication_and_sorting():
