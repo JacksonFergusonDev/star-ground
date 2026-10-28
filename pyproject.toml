@@ -1,6 +1,6 @@
 [project]
 name = "star-ground"
-version = "2.5.0"
+version = "2.6.0"
 description = "Logistics engine for analog electronics"
 readme = "README.md"
 license = {file = "LICENSE"}
