@@ -84,3 +84,47 @@ test('section links reach their sections', async ({ page }, testInfo) => {
     await expect(page.locator(`section:target`)).toBeInViewport();
   }
 });
+
+test('the moving field survives a lost WebGL context', async ({ page }) => {
+  // A GPU reset or a phone reclaiming memory drops the context. house-style's
+  // runField asks for it back, and the board rebuilds its programs and buffers.
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  page.on('console', (message) => {
+    // Drawing with the old context's programs logs a WebGL warning, not an error.
+    if (message.type() === 'error' || /WebGL.*INVALID/.test(message.text())) {
+      errors.push(message.text());
+    }
+  });
+  await page.goto('/');
+  const motion = page.getByRole('button', { name: 'Play motion', exact: true });
+  const running = await motion
+    .waitFor({ timeout: 10_000 })
+    .then(() => true)
+    .catch(() => false);
+  test.skip(!running, 'This browser has no WebGL2, so the field never starts');
+
+  const restored = await page.evaluate(async () => {
+    const canvas = document.querySelector<HTMLCanvasElement>('.hs-field')!;
+    const lose = canvas.getContext('webgl2')?.getExtension('WEBGL_lose_context');
+    if (!lose) return 'unsupported';
+    const event = (name: string) =>
+      new Promise((resolve) => canvas.addEventListener(name, resolve, { once: true }));
+    // restoreContext() does nothing until the loss has been delivered and its
+    // listeners, runField's among them, have finished.
+    const lost = event('webglcontextlost');
+    lose.loseContext();
+    await lost;
+    await new Promise((resolve) => setTimeout(resolve));
+    const back = event('webglcontextrestored');
+    lose.restoreContext();
+    await back;
+    return canvas.getContext('webgl2')?.isContextLost() ? 'lost' : 'restored';
+  });
+  test.skip(restored === 'unsupported', 'This engine has no WEBGL_lose_context');
+  expect(restored).toBe('restored');
+  // The button still drives the field, and nothing logged an error.
+  await motion.click();
+  await page.getByRole('button', { name: 'Pause motion', exact: true }).waitFor();
+  expect(errors).toEqual([]);
+});
