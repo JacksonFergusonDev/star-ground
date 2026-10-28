@@ -28,8 +28,8 @@ Decided 2026-10-22 to 2026-10-24. A decision here changes only by editing this f
 
 - **Frontend:** GitHub Pages at `star-ground.jacksonferguson.me`. Free, served from a CDN, and never waits on the backend.
 - **API:** Google Cloud Run, scaling to zero, 2 GiB and 2 vCPU per instance, max instances capped (the hard cost ceiling), with a budget alert.
-- **Expected cost:** about $0 a month. Measured on an M3: a text PDF takes about 0.25 s and 160 MB; an OCR document takes 4 to 10 s, about 16 CPU-seconds and a 1.2 to 1.4 GB peak. Cloud Run's free tier (180k vCPU-seconds, 360k GiB-seconds a month) covers about 6,000 OCR documents a month.
-- **Cold starts:** about 2 to 5 s for the first API call after idle (an estimate until measured). The page pings `/api/health` on load, so the backend is warm by the time a user has picked a document.
+- **Expected cost:** about $0 a month. Measured on an M3: a text PDF takes about 0.25 s and 160 MB; an OCR document takes 4 to 10 s, about 16 CPU-seconds and a 1.2 to 1.4 GB peak. Cloud Run's free tier (180k vCPU-seconds, 360k GiB-seconds a month) was expected to cover about 6,000 OCR documents a month. On Cloud Run an OCR document takes 10 to 50 s and about 20 to 100 vCPU-seconds (step 4), so the free tier covers roughly 2,000 to 9,000 a month: still about $0 at expected use.
+- **Cold starts:** 6.5 s for the first API call after idle, measured on Cloud Run (step 4); a deploy's first instance takes about 11 s. The page pings `/api/health` on load, so the backend is warm by the time a user has picked a document.
 - **Concurrency:** one container serves many users; Cloud Run adds instances past a concurrency of about 4. OCR runs at most one or two jobs per container behind a semaphore, with the rest shown as queued.
 - **Docker image:** one multi-stage image (Node builds the site, Python serves it) holds the API and the built site. FastAPI serves the site at `/` and the API at `/api` when the site is present, so `docker run -p 8000:8000 ghcr.io/jacksonfergusondev/star-ground` is a full self-hosted Star Ground. Cloud Run runs the same image, pushed to Artifact Registry. It listens on `${PORT:-8000}`.
 
@@ -105,6 +105,21 @@ The public repository holds publisher PDFs in `raw_boms/` (11, the presets' sour
 1. Confirm Cloud Run appends the client's address as the last `X-Forwarded-For` entry, which the rate limiter trusts with `STAR_GROUND_TRUST_PROXY=1`.
 1. Measure real cold starts and OCR times on Cloud Run, and record them here.
 
+Results, measured 2026-10-28 on v2.5.0 in `us-central1` (2 vCPU, 2 GiB):
+
+- **`X-Forwarded-For`:** Cloud Run appends the client's address as the last entry. Thirty-two requests from one machine, each claiming a different address, were limited as one client after 30.
+- **Cold start:** 6.5 s for `/api/health` after idle, then about 30 ms. Startup CPU boost is on.
+- **Text documents:** pasting a list returns in about 0.1 s from a warm instance.
+- **OCR** (three Five Cats documents with image parts lists, server-side time):
+
+  | Document | M3 (wall, CPU) | Cloud Run, first generation | Cloud Run, second generation |
+  | --- | --- | --- | --- |
+  | Danish Pastry (6.9 MB) | 12.2 s, 28.3 s | 52.9 s | 50.7 s |
+  | Dist Plus (3.9 MB) | 2.4 s, 9.2 s | 17.7 s | 10.4 s |
+  | Echoes (0.3 MB) | 3.8 s, 15.3 s | 23.8 s | 14.9 s |
+
+  The second-generation execution environment is faster for two of the three, so the service uses it. Even so, Cloud Run takes about the M3's CPU time in wall time, where two vCPUs should halve it. A likely cause is the OCR engine sizing its thread pool to the host's cores rather than the container's two; pinning it and timing again is the open follow-up. A repeat of a document returns in under a second from the reading cache.
+
 **Done when** the deployed slice works and costs are confirmed.
 
 ### 5. Build workspace
@@ -175,7 +190,7 @@ Probed on 2026-10-24: board renders in PedalPCB, GuitarPCB and Tonepad documents
 | 1. Remove publisher PDFs | Done 2026-10-24: history rewritten, `main` and 15 tags force-pushed, old images deleted | #201 |
 | 2. API service | Done 2026-10-24 | #203 |
 | 3. Frontend foundation | Done 2026-10-25: the site uses house-style v2's shared shell | #204, #205 |
-| 4. Walking skeleton | In progress: the image, deploy workflows and paste path are built; deploying waits on the Google Cloud setup | This PR |
+| 4. Walking skeleton | Done 2026-10-28: v2.5.0 deployed to Cloud Run and Pages; measurements recorded; OCR thread pinning is a follow-up | #213 |
 | 5. Build workspace | Not started | |
 | 6. Document review | Not started | |
 | 7. PCB highlighting | Not started | |

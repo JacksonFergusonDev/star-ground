@@ -224,6 +224,7 @@ jobs:
 
       # PLAN.md, "Hosting and cost": scale to zero, 2 GiB and 2 vCPU, a new
       # instance past 4 requests, and max instances as the hard cost ceiling.
+      # The second-generation environment runs OCR faster (PLAN.md, step 4).
       # Cloud Run serves only the API; GitHub Pages serves the site.
       - name: Deploy
         id: deploy
@@ -233,7 +234,7 @@ jobs:
           gcloud run deploy star-ground --project "$PROJECT" --region "$REGION" \
             --image "$IMAGE" \
             --service-account "star-ground-run@${PROJECT}.iam.gserviceaccount.com" \
-            --memory 2Gi --cpu 2 --cpu-boost \
+            --memory 2Gi --cpu 2 --cpu-boost --execution-environment gen2 \
             --concurrency 4 --min-instances 0 --max-instances 3 \
             --timeout 300 \
             --set-env-vars "STAR_GROUND_TRUST_PROXY=1,STAR_GROUND_SITE_DIR=,STAR_GROUND_CORS_ORIGINS=${SITE}" \
