@@ -125,7 +125,14 @@ class DocumentReading(_Model):
     ocr_builds: list[str] = Field(
         description="The builds to choose from if OCR's parts are accepted."
     )
-    ocr: OcrReading | None
+    ocr: OcrReading | None = Field(
+        description="What OCR read, when the document was read with `ocr`."
+    )
+    ocr_offered: bool = Field(
+        description="OCR could add parts this reading lacks (its parts list is an "
+        "image, or names parts it doesn't list): read it again with `ocr` once "
+        "the builder accepts."
+    )
     options: list[str] = Field(description="Interchangeable parts, resolved.")
     errors: list[str]
 

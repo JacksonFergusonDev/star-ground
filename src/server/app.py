@@ -59,7 +59,7 @@ from src.bom_lib import (
     get_residual_report,
     parse_preset_key,
 )
-from src.bom_lib.ocr import OcrGuard, OcrRefusedError, ocr_guard
+from src.bom_lib.ocr import OcrGuard, OcrRefusedError, needs_ocr, ocr_guard
 from src.exporters import (
     generate_shopping_list_csv,
     generate_stock_update_csv,
@@ -111,6 +111,8 @@ class Settings:
             Pages site); none when the site is served from the same origin.
         max_body_bytes: The largest request body accepted.
         requests_per_minute: Each client's limit on the API's working routes.
+        ocr: Whether OCR runs at all; off, image parts lists are reported
+            and never offered.
         ocr_per_hour: Each client's limit on documents read by OCR, which
             take an instance's cores for tens of seconds each.
         trust_proxy: Take the client's address from `X-Forwarded-For`, as
@@ -123,6 +125,7 @@ class Settings:
     cors_origins: tuple[str, ...] = ()
     max_body_bytes: int = 50_000_000
     requests_per_minute: int = 30
+    ocr: bool = True
     ocr_per_hour: int = 10
     trust_proxy: bool = False
     cache_bytes: int = 200_000_000
@@ -146,6 +149,7 @@ class Settings:
             requests_per_minute=int(
                 env.get("STAR_GROUND_REQUESTS_PER_MINUTE", defaults.requests_per_minute)
             ),
+            ocr=env.get("STAR_GROUND_OCR", "1") != "0",
             ocr_per_hour=int(
                 env.get("STAR_GROUND_OCR_PER_HOUR", defaults.ocr_per_hour)
             ),
@@ -260,27 +264,43 @@ _OCR_REFUSED = Problem(
 )
 
 
+def _ocr_on(services: _Services, asked: bool) -> bool:
+    """Whether a read asked to run OCR will: the server may have it off."""
+    return asked and services.settings.ocr
+
+
+def _cache_key(
+    services: _Services, method: InputMethod, data: ProjectData, ocr: bool
+) -> str | None:
+    key = document_key(method, data)
+    return f"{key}|ocr" if key and _ocr_on(services, ocr) else key
+
+
 def _read(
     services: _Services,
     client: str,
     method: InputMethod,
     data: ProjectData,
+    ocr: bool,
     report: Callable[[ReadEvent], None] | None = None,
 ) -> ParseResult:
     """An upload or link's reading, from the cache or read now.
+
+    OCR runs only when asked (`ocr`, the builder having accepted it) and the
+    server allows it; the readings with and without it are cached apart.
 
     Raises:
         RefusedError: The document needs OCR and the client has used its
             hourly allowance.
     """
-    key = document_key(method, data)
+    key = _cache_key(services, method, data, ocr)
     if key is None:
         raise ValueError(f"{method} isn't read ahead of time")
     reading = services.cache.get(key)
     if reading is None:
         token = ocr_guard.set(_ocr_guard(services, client, report))
         try:
-            reading = read_document(method, data)
+            reading = read_document(method, data, ocr=_ocr_on(services, ocr))
         except OcrRefusedError as e:
             raise RefusedError(429, _OCR_REFUSED) from e
         finally:
@@ -292,7 +312,11 @@ def _read(
 
 
 def _document_reading(
-    reading: ParseResult, method: InputMethod, data: ProjectData
+    services: _Services,
+    reading: ParseResult,
+    method: InputMethod,
+    data: ProjectData,
+    ocr_run: bool,
 ) -> DocumentReading:
     ocr = reading.ocr
     return DocumentReading(
@@ -311,6 +335,7 @@ def _document_reading(
         )
         if ocr is not None
         else None,
+        ocr_offered=services.settings.ocr and not ocr_run and needs_ocr(reading),
         options=[str(o) for o in reading.options],
         errors=list(reading.stats["errors"]),
     )
@@ -351,7 +376,9 @@ def _project(
                 pcb_shop=shop,
             )
         case UrlProject():
-            reading = _read(services, client, InputMethod.FROM_URL, project.url)
+            reading = _read(
+                services, client, InputMethod.FROM_URL, project.url, project.use_ocr
+            )
             return replace(
                 base, method=InputMethod.FROM_URL, data=project.url, reading=reading
             )
@@ -362,7 +389,9 @@ def _project(
                     422,
                     Problem(message=f"No file named '{project.file}' was sent."),
                 )
-            reading = _read(services, client, InputMethod.UPLOAD_FILE, upload)
+            reading = _read(
+                services, client, InputMethod.UPLOAD_FILE, upload, project.use_ocr
+            )
             return replace(
                 base, method=InputMethod.UPLOAD_FILE, data=upload, reading=reading
             )
@@ -575,12 +604,17 @@ def create_app(
         request: Request,
         file: Annotated[UploadFile | None, File()] = None,
         url: Annotated[str | None, Form(max_length=2048)] = None,
+        ocr: Annotated[
+            bool,
+            Form(description="Read image pages by OCR; send once the builder accepts."),
+        ] = False,
     ) -> StreamingResponse:
         """Reads an upload or link ahead of building the master list.
 
         The reading says which builds a multi-circuit document offers, and
-        whether OCR read parts from image pages. Image-only documents take
-        seconds a page, so progress streams as server-sent events.
+        whether OCR could read parts from image pages (`ocr_offered`). OCR
+        runs only when asked (`ocr`) and takes seconds a page, so progress
+        streams as server-sent events.
         """
         client = limited(request)
         if (file is None) == (url is None):
@@ -592,10 +626,17 @@ def create_app(
         )
 
         def events() -> Iterator[str]:
-            key = document_key(method, data)
+            key = _cache_key(services, method, data, ocr)
+            ocr_run = _ocr_on(services, ocr)
             cached = services.cache.get(key) if key else None
             if cached is not None:
-                yield _sse(ReadDone(reading=_document_reading(cached, method, data)))
+                yield _sse(
+                    ReadDone(
+                        reading=_document_reading(
+                            services, cached, method, data, ocr_run
+                        )
+                    )
+                )
                 return
             # The reading runs on its own thread, so the OCR queue's events
             # stream while it waits for a turn.
@@ -609,6 +650,7 @@ def create_app(
                     client,
                     method,
                     data,
+                    ocr,
                     progress.put,
                 )
                 while not job.done() or not progress.empty():
@@ -630,7 +672,11 @@ def create_app(
                         )
                     )
                     return
-            yield _sse(ReadDone(reading=_document_reading(reading, method, data)))
+            yield _sse(
+                ReadDone(
+                    reading=_document_reading(services, reading, method, data, ocr_run)
+                )
+            )
 
         return StreamingResponse(events(), media_type="text/event-stream")
 
