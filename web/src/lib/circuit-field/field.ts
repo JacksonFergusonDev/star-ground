@@ -142,7 +142,7 @@ interface PulseEvent {
  * @returns Controls, or nothing when the browser has no WebGL2 (the hero keeps
  *   its plain background).
  */
-export function startStarField(
+export function startCircuitField(
   canvas: HTMLCanvasElement,
   button: HTMLButtonElement,
 ): Field | undefined {

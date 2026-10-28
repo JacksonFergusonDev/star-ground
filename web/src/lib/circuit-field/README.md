@@ -1,4 +1,4 @@
-# Star field: the hero's circuit board
+# Circuit field: the hero's circuit board
 
 The landing page's moving background is a real guitar pedal circuit, the Electro-Harmonix Big Muff π fuzz, drawn as a single-sided circuit board with a star ground. Two kinds of current move through it:
 
@@ -24,17 +24,17 @@ Everything here is Star Ground's own code. It uses house-style's field canvas an
 
 ## Files
 
-| File                               | What it holds                                                                                                                                                   |
-| ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `circuit.ts`                       | **The source of truth.** Every part: designator, footprint, value, position, rotation, and the net on each pin. Also `SIGNAL_PATH` and `TONE_BRANCH`.           |
-| `big-muff.cir`                     | The same circuit as a SPICE netlist, runnable in ngspice. `tests/browser/circuit.spec.ts` fails if it and `circuit.ts` disagree.                                |
-| `footprints.ts`                    | Real through-hole footprints at real sizes: pads in pin order, and silkscreen.                                                                                  |
-| `router.ts`                        | A single-layer grid router that lays the copper and records each net as a tree.                                                                                 |
-| `layout.ts`                        | `buildBoard()`: places parts, routes nets, and derives the traces, jumpers, and current-flow data the renderer needs.                                           |
-| `board.ts`                         | Draws the still board once with Canvas 2D (mask, copper, pads, holes, silkscreen).                                                                              |
-| `field.ts`                         | `startStarField()`: fits the board to the hero, uploads it as a texture, and animates current with raw WebGL2, handing the drawing to house-style's `runField`. |
-| `geometry.ts`                      | Points, rectangles, quarter turns, and a seeded random generator.                                                                                               |
-| `../../components/StarField.astro` | The canvas and pause button, and the script that loads `field.ts` once the page has loaded.                                                                     |
+| File                                  | What it holds                                                                                                                                                      |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `circuit.ts`                          | **The source of truth.** Every part: designator, footprint, value, position, rotation, and the net on each pin. Also `SIGNAL_PATH` and `TONE_BRANCH`.              |
+| `big-muff.cir`                        | The same circuit as a SPICE netlist, runnable in ngspice. `tests/browser/circuit.spec.ts` fails if it and `circuit.ts` disagree.                                   |
+| `footprints.ts`                       | Real through-hole footprints at real sizes: pads in pin order, and silkscreen.                                                                                     |
+| `router.ts`                           | A single-layer grid router that lays the copper and records each net as a tree.                                                                                    |
+| `layout.ts`                           | `buildBoard()`: places parts, routes nets, and derives the traces, jumpers, and current-flow data the renderer needs.                                              |
+| `board.ts`                            | Draws the still board once with Canvas 2D (mask, copper, pads, holes, silkscreen).                                                                                 |
+| `field.ts`                            | `startCircuitField()`: fits the board to the hero, uploads it as a texture, and animates current with raw WebGL2, handing the drawing to house-style's `runField`. |
+| `geometry.ts`                         | Points, rectangles, quarter turns, and a seeded random generator.                                                                                                  |
+| `../../components/CircuitField.astro` | The canvas and pause button, and the script that loads `field.ts` once the page has loaded.                                                                        |
 
 The pipeline, from netlist to pixels:
 
@@ -45,7 +45,7 @@ flowchart LR
   build -->|placed parts, pins by net| router["router.ts route()"]
   router -->|net trees| build
   build -->|Board| boardDraw["board.ts drawBoard()<br/>Canvas 2D, once per resize"]
-  build -->|Board| field["field.ts startStarField()"]
+  build -->|Board| field["field.ts startCircuitField()"]
   boardDraw -->|texture| field
   field -->|WebGL2, every frame| canvas["hero canvas"]
 ```
@@ -259,7 +259,7 @@ So the head is sharp (`HEAD` = 0.6 units ahead) and the tail trails behind (`TAI
 
 ### Lifecycle
 
-`StarField.astro` imports `field.ts` through house-style's `afterLoad`, after the page's load event when the browser is idle, so the first screen paints as text. `startStarField()` returns nothing when WebGL2 is unavailable (the hero keeps its plain background, and the pause button stays hidden), and otherwise hands its drawing to house-style's `runField`, which follows the motion rules: still for reduced motion, paused off screen and in hidden tabs, stoppable with the pause button, and freed when client-side navigation removes the canvas. `prime()` back-dates the first events so the first frame already has current in it.
+`CircuitField.astro` imports `field.ts` through house-style's `afterLoad`, after the page's load event once the browser is idle (or a second after load at the latest), so the first screen paints as text. `startCircuitField()` returns nothing when WebGL2 is unavailable (the hero keeps its plain background, and the pause button stays hidden), and otherwise hands its drawing to house-style's `runField`, which follows the motion rules: still for reduced motion, paused off screen and in hidden tabs, stoppable with the pause button, and freed when client-side navigation removes the canvas. `prime()` back-dates the first events so the first frame already has current in it.
 
 ## Rules
 
@@ -284,8 +284,8 @@ So the head is sharp (`HEAD` = 0.6 units ahead) and the tail trails behind (`TAI
 - **Look at the board.** Start the dev server (`npx astro dev` in `web/`), open the page, and run this in the browser console to draw the board alone, large, over the page:
 
 ```js
-const { buildBoard } = await import('/src/lib/star-field/layout.ts');
-const { drawBoard } = await import('/src/lib/star-field/board.ts');
+const { buildBoard } = await import('/src/lib/circuit-field/layout.ts');
+const { drawBoard } = await import('/src/lib/circuit-field/board.ts');
 const b = buildBoard();
 const c = Object.assign(document.createElement('canvas'), {
   width: innerWidth,
