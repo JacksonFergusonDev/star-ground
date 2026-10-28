@@ -1,10 +1,10 @@
-// The hero board's circuit (src/lib/star-field). These checks run in Node, not
+// The hero board's circuit (src/lib/circuit-field). These checks run in Node, not
 // a browser, so they run once, under the chromium project.
 
 import { readFileSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
-import { GROUND, PARTS, SIGNAL_PATH, TONE_BRANCH } from '../../src/lib/star-field/circuit';
-import { buildBoard } from '../../src/lib/star-field/layout';
+import { GROUND, PARTS, SIGNAL_PATH, TONE_BRANCH } from '../../src/lib/circuit-field/circuit';
+import { buildBoard } from '../../src/lib/circuit-field/layout';
 
 test.skip(
   ({ browserName, isMobile }) => browserName !== 'chromium' || isMobile,
@@ -12,7 +12,7 @@ test.skip(
 );
 
 const netlist = readFileSync(
-  new URL('../../src/lib/star-field/big-muff.cir', import.meta.url),
+  new URL('../../src/lib/circuit-field/big-muff.cir', import.meta.url),
   'utf8',
 );
 
