@@ -104,8 +104,9 @@ openapi: sync
     uv run python -m tools.export_openapi
     npm --prefix web run types
 
-# Start the website's dev server (run `npm ci` in web/ first)
+# Install locked dependencies and start the website's dev server
 serve-web:
+    npm --prefix web ci
     npm --prefix web run dev
 
 # Refresh presets, offer to wait for CI, and verify local state before bumping
