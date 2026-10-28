@@ -259,7 +259,7 @@ So the head is sharp (`HEAD` = 0.6 units ahead) and the tail trails behind (`TAI
 
 ### Lifecycle
 
-`CircuitField.astro` imports `field.ts` through house-style's `afterLoad`, after the page's load event once the browser is idle (or a second after load at the latest), so the first screen paints as text. `startCircuitField()` returns nothing when WebGL2 is unavailable (the hero keeps its plain background, and the pause button stays hidden), and otherwise hands its drawing to house-style's `runField`, which follows the motion rules: still for reduced motion, paused off screen and in hidden tabs, stoppable with the pause button, and freed when client-side navigation removes the canvas. `prime()` back-dates the first events so the first frame already has current in it.
+`CircuitField.astro` imports `field.ts` through house-style's `afterLoad`, after the page's load event once the browser is idle (or a second after load at the latest), so the first screen paints as text. `startCircuitField()` returns nothing when WebGL2 is unavailable (the hero keeps its plain background, and the pause button stays hidden), and otherwise hands its drawing to house-style's `runField`, which follows the motion rules: still for reduced motion, paused off screen and in hidden tabs, stoppable with the pause button, and freed when client-side navigation removes the canvas. When the GPU resets or a phone reclaims memory, the WebGL context is lost; `runField` stops drawing until the browser restores it, then calls the scene's `restore()`, which builds the programs, texture, and buffers again and lays the board out on the next resize. `prime()` back-dates the first events so the first frame already has current in it.
 
 ## Rules
 

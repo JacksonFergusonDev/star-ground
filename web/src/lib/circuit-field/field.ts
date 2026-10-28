@@ -155,35 +155,40 @@ export function startCircuitField(
   if (!context) return undefined;
   const gl: WebGL2RenderingContext = context;
 
-  const boardProgram = program(gl, QUAD_VERTEX, BOARD_FRAGMENT);
-  const currentProgram = program(gl, CURRENT_VERTEX, CURRENT_FRAGMENT);
-  const uniforms = {
-    board: locations(gl, boardProgram, ['uBoard', 'uAmount', 'uViewport', 'uWide']),
-    current: locations(gl, currentProgram, [
-      'uViewport',
-      'uWide',
-      'uHalo',
-      'uColor',
-      'uAmount',
-      'uTime',
-      'uStar',
-      'uCount',
-      'uEvents',
-    ]),
-  };
-  const texture = gl.createTexture();
-  const instances = gl.createBuffer();
-  const vao = gl.createVertexArray();
-  gl.bindVertexArray(vao);
-  gl.bindBuffer(gl.ARRAY_BUFFER, instances);
-  const stride = 10 * 4;
-  [4, 4, 2].forEach((size, location, sizes) => {
-    const offset = sizes.slice(0, location).reduce((total, n) => total + n, 0) * 4;
-    gl.enableVertexAttribArray(location);
-    gl.vertexAttribPointer(location, size, gl.FLOAT, false, stride, offset);
-    gl.vertexAttribDivisor(location, 1);
-  });
-  gl.bindVertexArray(null);
+  // Builds every GPU resource: at startup, and again when a lost context comes back.
+  function build() {
+    const boardProgram = program(gl, QUAD_VERTEX, BOARD_FRAGMENT);
+    const currentProgram = program(gl, CURRENT_VERTEX, CURRENT_FRAGMENT);
+    const uniforms = {
+      board: locations(gl, boardProgram, ['uBoard', 'uAmount', 'uViewport', 'uWide']),
+      current: locations(gl, currentProgram, [
+        'uViewport',
+        'uWide',
+        'uHalo',
+        'uColor',
+        'uAmount',
+        'uTime',
+        'uStar',
+        'uCount',
+        'uEvents',
+      ]),
+    };
+    const texture = gl.createTexture();
+    const instances = gl.createBuffer();
+    const vao = gl.createVertexArray();
+    gl.bindVertexArray(vao);
+    gl.bindBuffer(gl.ARRAY_BUFFER, instances);
+    const stride = 10 * 4;
+    [4, 4, 2].forEach((size, location, sizes) => {
+      const offset = sizes.slice(0, location).reduce((total, n) => total + n, 0) * 4;
+      gl.enableVertexAttribArray(location);
+      gl.vertexAttribPointer(location, size, gl.FLOAT, false, stride, offset);
+      gl.vertexAttribDivisor(location, 1);
+    });
+    gl.bindVertexArray(null);
+    return { boardProgram, currentProgram, uniforms, texture, instances, vao };
+  }
+  let { boardProgram, currentProgram, uniforms, texture, instances, vao } = build();
 
   const paper = document.createElement('canvas');
   const board: Board = buildBoard();
@@ -381,6 +386,12 @@ export function startCircuitField(
       time = now;
       if (delta > 0) schedule();
       draw();
+    },
+    // The new context has none of the old resources, and the board's texture
+    // and instances are uploaded again on the resize that follows.
+    restore() {
+      ({ boardProgram, currentProgram, uniforms, texture, instances, vao } = build());
+      laidOut = false;
     },
     dispose() {
       window.clearTimeout(resizing);
