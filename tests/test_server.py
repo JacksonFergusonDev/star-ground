@@ -4,6 +4,7 @@ import ast
 import csv
 import io
 import json
+import threading
 import zipfile
 from pathlib import Path
 from typing import Any
@@ -20,8 +21,9 @@ from src.bom_lib import (
     InputMethod,
     ParseResult,
 )
+from src.bom_lib.ocr import ocr_guard
 from src.server import Settings, create_app
-from src.server.limits import RateLimiter, ReadGate, ReadingCache
+from src.server.limits import OcrQueue, RateLimiter, ReadingCache
 from tools.export_openapi import OPENAPI_FILE, schema_text
 
 ROOT = Path(__file__).parent.parent
@@ -413,8 +415,19 @@ def test_the_rate_limit_window_slides() -> None:
     assert limiter.allow("a")
 
 
-def test_a_full_read_gate_reports_a_queue_position() -> None:
-    gate = ReadGate(1)
+def test_the_rate_limit_window_can_be_longer() -> None:
+    now = [0.0]
+    limiter = RateLimiter(1, window=3600, clock=lambda: now[0])
+
+    assert limiter.allow("a")
+    now[0] = 3599.0
+    assert not limiter.allow("a")
+    now[0] = 3600.0
+    assert limiter.allow("a")
+
+
+def test_a_full_ocr_queue_reports_a_queue_position() -> None:
+    gate = OcrQueue(1)
 
     assert gate.queue_position() == 0
     with gate.slot():
@@ -458,7 +471,7 @@ def test_settings_come_from_the_environment() -> None:
     settings = Settings.from_env(
         {
             "STAR_GROUND_CORS_ORIGINS": "https://a.example, https://b.example",
-            "STAR_GROUND_READ_SLOTS": "1",
+            "STAR_GROUND_OCR_PER_HOUR": "4",
             "STAR_GROUND_REQUESTS_PER_MINUTE": "5",
             "STAR_GROUND_TRUST_PROXY": "1",
             "STAR_GROUND_SITE_DIR": "/app/site",
@@ -466,7 +479,7 @@ def test_settings_come_from_the_environment() -> None:
     )
 
     assert settings.cors_origins == ("https://a.example", "https://b.example")
-    assert (settings.read_slots, settings.requests_per_minute) == (1, 5)
+    assert (settings.ocr_per_hour, settings.requests_per_minute) == (4, 5)
     assert settings.trust_proxy
     assert settings.site_dir == Path("/app/site")
 
@@ -522,3 +535,113 @@ def test_the_backend_does_not_depend_on_the_web_layer(path: Path) -> None:
     imports = _imports(path)
     assert not {m for m in imports if m.split(".")[0] in forbidden}
     assert not {m for m in imports if m == "src.server" or m.startswith("src.server.")}
+
+
+# --- OCR ---
+
+
+def _ocr_read(
+    started: threading.Event | None = None, release: threading.Event | None = None
+):
+    """A stand-in reader that runs 'OCR' through the server's guard."""
+
+    def read(method: InputMethod, data: Any) -> ParseResult | None:
+        with ocr_guard.get()():
+            if started:
+                started.set()
+            if release:
+                release.wait(5)
+        return read_document(
+            InputMethod.UPLOAD_FILE, FileUpload(KLICHE.name, KLICHE.read_bytes())
+        )
+
+    return read
+
+
+def _upload(name: str) -> dict[str, tuple[str, bytes, str]]:
+    return {"file": (name, KLICHE.read_bytes() + name.encode(), "application/pdf")}
+
+
+def test_each_client_has_an_hourly_ocr_allowance(mocker: MockerFixture) -> None:
+    client = TestClient(create_app(Settings(ocr_per_hour=1)))
+    mocker.patch("src.server.app.read_document", side_effect=_ocr_read())
+
+    first = _events(client.post("/api/documents/read", files=_upload("a.pdf")).text)
+    second = _events(client.post("/api/documents/read", files=_upload("b.pdf")).text)
+
+    assert first[-1]["event"] == "result"
+    assert second[-1]["event"] == "error"
+    assert "OCR a limited number of times an hour" in second[-1]["message"]
+
+
+def test_the_master_list_refuses_ocr_past_the_allowance(mocker: MockerFixture) -> None:
+    client = TestClient(create_app(Settings(ocr_per_hour=0)))
+    mocker.patch("src.server.app.read_document", side_effect=_ocr_read())
+
+    response = client.post(
+        "/api/master-list",
+        data={
+            "request": json.dumps({"projects": [{"method": "upload", "file": "a.pdf"}]})
+        },
+        files=[("files", _upload("a.pdf")["file"])],
+    )
+
+    assert response.status_code == 429
+    assert "OCR" in response.json()["message"]
+
+
+def test_a_text_read_never_waits_behind_ocr(mocker: MockerFixture) -> None:
+    app = create_app(Settings(requests_per_minute=1000))
+    started, release = threading.Event(), threading.Event()
+    ocr = _ocr_read(started, release)
+
+    def read(method: InputMethod, data: Any) -> ParseResult | None:
+        if data.name == "ocr.pdf":
+            return ocr(method, data)
+        return read_document(method, data)
+
+    mocker.patch("src.server.app.read_document", side_effect=read)
+    waiting = threading.Thread(
+        target=lambda: TestClient(app).post(
+            "/api/documents/read", files=_upload("ocr.pdf")
+        )
+    )
+    waiting.start()
+    try:
+        assert started.wait(5)
+        text = TestClient(app).post("/api/documents/read", files=_upload("text.pdf"))
+        assert _events(text.text)[-1]["event"] == "result"
+    finally:
+        release.set()
+        waiting.join(5)
+
+
+def test_a_document_waiting_for_ocr_streams_its_place(mocker: MockerFixture) -> None:
+    app = create_app(Settings(requests_per_minute=1000))
+    started, release = threading.Event(), threading.Event()
+    first = _ocr_read(started, release)
+    second = _ocr_read()
+
+    def read(method: InputMethod, data: Any) -> ParseResult | None:
+        return (first if data.name == "first.pdf" else second)(method, data)
+
+    mocker.patch("src.server.app.read_document", side_effect=read)
+    holder = threading.Thread(
+        target=lambda: TestClient(app).post(
+            "/api/documents/read", files=_upload("first.pdf")
+        )
+    )
+    holder.start()
+    try:
+        assert started.wait(5)
+        threading.Timer(0.5, release.set).start()
+        response = TestClient(app).post(
+            "/api/documents/read", files=_upload("second.pdf")
+        )
+    finally:
+        release.set()
+        holder.join(5)
+
+    events = _events(response.text)
+    assert [e["event"] for e in events] == ["reading", "queued", "reading", "result"]
+    assert events[1]["position"] == 1

@@ -10,12 +10,16 @@ website (`Settings.site_dir`), it serves that too, at `/`, so one process is a
 whole Star Ground: the Docker image runs it that way.
 """
 
+import contextvars
 import json
 import logging
 import os
+import queue
 import threading
 import time
 from collections.abc import Callable, Iterator, Mapping, Sequence
+from concurrent.futures import ThreadPoolExecutor
+from contextlib import contextmanager
 from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Annotated, Any, assert_never
@@ -55,12 +59,13 @@ from src.bom_lib import (
     get_residual_report,
     parse_preset_key,
 )
+from src.bom_lib.ocr import OcrGuard, OcrRefusedError, ocr_guard
 from src.exporters import (
     generate_shopping_list_csv,
     generate_stock_update_csv,
     generate_supplier_cart_csv,
 )
-from src.server.limits import BodySizeLimit, RateLimiter, ReadGate, ReadingCache
+from src.server.limits import BodySizeLimit, OcrQueue, RateLimiter, ReadingCache
 from src.server.models import (
     BuildNotChosen,
     DocumentReading,
@@ -105,8 +110,9 @@ class Settings:
         cors_origins: Browser origins allowed to call the API (the GitHub
             Pages site); none when the site is served from the same origin.
         max_body_bytes: The largest request body accepted.
-        read_slots: Documents read at once (see `ReadGate`).
         requests_per_minute: Each client's limit on the API's working routes.
+        ocr_per_hour: Each client's limit on documents read by OCR, which
+            take an instance's cores for tens of seconds each.
         trust_proxy: Take the client's address from `X-Forwarded-For`, as
             set by the platform's proxy (Cloud Run).
         cache_bytes: The reading cache's budget (see `ReadingCache`).
@@ -116,8 +122,8 @@ class Settings:
 
     cors_origins: tuple[str, ...] = ()
     max_body_bytes: int = 50_000_000
-    read_slots: int = 2
     requests_per_minute: int = 30
+    ocr_per_hour: int = 10
     trust_proxy: bool = False
     cache_bytes: int = 200_000_000
     site_dir: Path | None = None
@@ -137,9 +143,11 @@ class Settings:
         site = env.get("STAR_GROUND_SITE_DIR")
         return cls(
             cors_origins=tuple(o.strip() for o in origins.split(",") if o.strip()),
-            read_slots=int(env.get("STAR_GROUND_READ_SLOTS", defaults.read_slots)),
             requests_per_minute=int(
                 env.get("STAR_GROUND_REQUESTS_PER_MINUTE", defaults.requests_per_minute)
+            ),
+            ocr_per_hour=int(
+                env.get("STAR_GROUND_OCR_PER_HOUR", defaults.ocr_per_hour)
             ),
             trust_proxy=env.get("STAR_GROUND_TRUST_PROXY", "") == "1",
             site_dir=Path(site) if site else None,
@@ -208,7 +216,8 @@ class _Exports:
 class _Services:
     settings: Settings
     limiter: RateLimiter
-    gate: ReadGate
+    ocr_limiter: RateLimiter
+    ocr_queue: OcrQueue
     cache: ReadingCache
     feedback: FeedbackSink | None
 
@@ -221,15 +230,61 @@ def _client(request: Request, trust_proxy: bool) -> str:
     return request.client.host if request.client else "unknown"
 
 
-def _read(services: _Services, method: InputMethod, data: ProjectData) -> ParseResult:
-    """An upload or link's reading, from the cache or read now."""
+def _ocr_guard(
+    services: _Services, client: str, report: Callable[[ReadEvent], None] | None
+) -> OcrGuard:
+    """Runs a client's OCR in its turn, within the client's hourly limit.
+
+    Only OCR waits here: a text read never queues behind another document's
+    OCR. A cached reading never reaches OCR, so it costs no allowance.
+    """
+
+    @contextmanager
+    def guard() -> Iterator[None]:
+        if not services.ocr_limiter.allow(client):
+            raise OcrRefusedError
+        position = services.ocr_queue.queue_position()
+        if report and position:
+            report(ReadQueued(position=position))
+        with services.ocr_queue.slot():
+            if report and position:
+                report(ReadStarted())
+            yield
+
+    return guard
+
+
+_OCR_REFUSED = Problem(
+    message="This document's parts list is an image, which Star Ground reads by "
+    "OCR a limited number of times an hour for each person. Try again later."
+)
+
+
+def _read(
+    services: _Services,
+    client: str,
+    method: InputMethod,
+    data: ProjectData,
+    report: Callable[[ReadEvent], None] | None = None,
+) -> ParseResult:
+    """An upload or link's reading, from the cache or read now.
+
+    Raises:
+        RefusedError: The document needs OCR and the client has used its
+            hourly allowance.
+    """
     key = document_key(method, data)
     if key is None:
         raise ValueError(f"{method} isn't read ahead of time")
     reading = services.cache.get(key)
     if reading is None:
-        with services.gate.slot():
+        token = ocr_guard.set(_ocr_guard(services, client, report))
+        try:
             reading = read_document(method, data)
+        except OcrRefusedError as e:
+            raise RefusedError(429, _OCR_REFUSED) from e
+        finally:
+            ocr_guard.reset(token)
         if reading is None:
             raise ValueError(f"{method} isn't read ahead of time")
         services.cache.put(key, reading)
@@ -262,7 +317,10 @@ def _document_reading(
 
 
 def _project(
-    services: _Services, project: ProjectIn, uploads: Mapping[str, FileUpload]
+    services: _Services,
+    client: str,
+    project: ProjectIn,
+    uploads: Mapping[str, FileUpload],
 ) -> Project:
     """The request's project as the backend takes it."""
     base = Project(
@@ -293,7 +351,7 @@ def _project(
                 pcb_shop=shop,
             )
         case UrlProject():
-            reading = _read(services, InputMethod.FROM_URL, project.url)
+            reading = _read(services, client, InputMethod.FROM_URL, project.url)
             return replace(
                 base, method=InputMethod.FROM_URL, data=project.url, reading=reading
             )
@@ -304,7 +362,7 @@ def _project(
                     422,
                     Problem(message=f"No file named '{project.file}' was sent."),
                 )
-            reading = _read(services, InputMethod.UPLOAD_FILE, upload)
+            reading = _read(services, client, InputMethod.UPLOAD_FILE, upload)
             return replace(
                 base, method=InputMethod.UPLOAD_FILE, data=upload, reading=reading
             )
@@ -420,7 +478,8 @@ def create_app(
     services = _Services(
         settings=settings,
         limiter=RateLimiter(settings.requests_per_minute),
-        gate=ReadGate(settings.read_slots),
+        ocr_limiter=RateLimiter(settings.ocr_per_hour, window=3600),
+        ocr_queue=OcrQueue(1),
         cache=ReadingCache(settings.cache_bytes),
         feedback=feedback,
     )
@@ -446,19 +505,23 @@ def create_app(
     async def _problem(request: Request, exc: RefusedError) -> JSONResponse:
         return JSONResponse(exc.body.model_dump(), status_code=exc.status)
 
-    def limited(request: Request) -> None:
-        if not services.limiter.allow(_client(request, settings.trust_proxy)):
+    def limited(request: Request) -> str:
+        """Counts the request against its client's limit; returns the client."""
+        client = _client(request, settings.trust_proxy)
+        if not services.limiter.allow(client):
             raise RefusedError(
                 429, Problem(message="Too many requests. Try again in a minute.")
             )
+        return client
 
     def master_list(
+        client: str,
         request: MasterListRequest,
         files: Sequence[UploadFile],
         stock: UploadFile | None,
     ) -> MasterList:
         uploads = _uploads(files)
-        projects = [_project(services, p, uploads) for p in request.projects]
+        projects = [_project(services, client, p, uploads) for p in request.projects]
         try:
             return generate_master_list(
                 projects, read_stock(_upload(stock)) if stock else None
@@ -502,8 +565,9 @@ def create_app(
                         "schema": {"$ref": "#/components/schemas/ReadEvent"}
                     }
                 },
-                "description": "`queued` and `reading` events, then `result` "
-                "or `error`. Each event's data is one `ReadEvent`.",
+                "description": "A `reading` event; `queued` then `reading` "
+                "again if the document waits for its turn at OCR; then "
+                "`result` or `error`. Each event's data is one `ReadEvent`.",
             }
         },
     )
@@ -518,7 +582,7 @@ def create_app(
         whether OCR read parts from image pages. Image-only documents take
         seconds a page, so progress streams as server-sent events.
         """
-        limited(request)
+        client = limited(request)
         if (file is None) == (url is None):
             raise RefusedError(422, Problem(message="Send either a file or a url."))
         method, data = (
@@ -529,26 +593,43 @@ def create_app(
 
         def events() -> Iterator[str]:
             key = document_key(method, data)
-            reading = services.cache.get(key) if key else None
-            if reading is None:
-                if position := services.gate.queue_position():
-                    yield _sse(ReadQueued(position=position))
-                with services.gate.slot():
-                    yield _sse(ReadStarted())
+            cached = services.cache.get(key) if key else None
+            if cached is not None:
+                yield _sse(ReadDone(reading=_document_reading(cached, method, data)))
+                return
+            # The reading runs on its own thread, so the OCR queue's events
+            # stream while it waits for a turn.
+            yield _sse(ReadStarted())
+            progress: queue.SimpleQueue[ReadEvent] = queue.SimpleQueue()
+            with ThreadPoolExecutor(max_workers=1) as pool:
+                job = pool.submit(
+                    contextvars.copy_context().run,
+                    _read,
+                    services,
+                    client,
+                    method,
+                    data,
+                    progress.put,
+                )
+                while not job.done() or not progress.empty():
                     try:
-                        reading = read_document(method, data)
-                    except Exception:
-                        logger.exception("Reading %s failed", key)
-                        yield _sse(
-                            ReadFailed(
-                                message="The document couldn't be read. "
-                                "It has been logged for a look."
-                            )
-                        )
-                        return
-                if reading is None or key is None:
+                        yield _sse(progress.get(timeout=0.2))
+                    except queue.Empty:
+                        continue
+                try:
+                    reading = job.result()
+                except RefusedError as e:
+                    yield _sse(ReadFailed(message=e.body.message))
                     return
-                services.cache.put(key, reading)
+                except Exception:
+                    logger.exception("Reading %s failed", key)
+                    yield _sse(
+                        ReadFailed(
+                            message="The document couldn't be read. "
+                            "It has been logged for a look."
+                        )
+                    )
+                    return
             yield _sse(ReadDone(reading=_document_reading(reading, method, data)))
 
         return StreamingResponse(events(), media_type="text/event-stream")
@@ -569,9 +650,9 @@ def create_app(
         Uploads are sent as `files`, named as their projects' `file` says;
         `stock` is the builder's stock CSV (columns Category, Part, Qty).
         """
-        limited(http)
+        client = limited(http)
         parsed = _parse_request(request)
-        return _result(master_list(parsed, files or [], stock), parsed)
+        return _result(master_list(client, parsed, files or [], stock), parsed)
 
     @app.post("/api/exports/{kind}", tags=["master list"], responses=_EXPORT_RESPONSES)
     def export(
@@ -587,9 +668,9 @@ def create_app(
         `links` sets how the shopping list (alone or in the build pack)
         writes supplier links: as plain URLs, or as Excel `HYPERLINK`s.
         """
-        limited(http)
+        client = limited(http)
         parsed = _parse_request(request)
-        master = master_list(parsed, files or [], stock)
+        master = master_list(client, parsed, files or [], stock)
         rows = master.shopping_list(parsed.show_hardware, parsed.show_extras)
         excel = links == LinkFormat.EXCEL
         match kind:

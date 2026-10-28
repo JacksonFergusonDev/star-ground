@@ -6,6 +6,7 @@ from urllib.parse import unquote, urlsplit
 
 from src.bom_lib.enums import InputMethod
 from src.bom_lib.fetch import FetchedDocument, FetchError, fetch_url
+from src.bom_lib.ocr import OcrRefusedError
 from src.bom_lib.strategies.base import BOMParserStrategy, ParseResult
 from src.bom_lib.strategies.csv import CSVParserStrategy
 from src.bom_lib.strategies.manual import ManualInputStrategy
@@ -105,6 +106,9 @@ class BOMParserContext:
 
             return _failed("Unknown Method")
 
+        except OcrRefusedError:
+            # The server's limit, not a failure to read: its caller answers.
+            raise
         except FetchError as e:
             # Written for the builder: a link the app won't or can't fetch.
             return _failed(str(e))
