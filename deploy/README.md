@@ -22,7 +22,7 @@ REPO=JacksonFergusonDev/star-ground
 
 ### 1. Project, APIs, and the budget alert
 
-Cloud Run needs a billing account even inside the free tier. The budget alert emails the billing account's admins as spend passes 50% and 100% of $5. It doesn't stop spending; `--max-instances` in the workflow is the hard ceiling.
+Cloud Run needs a billing account even inside the free tier. The budget alert emails the billing account's admins as spend passes 50% and 100% of $5. It doesn't stop spending; `--max-instances` in the workflow is the hard ceiling. The amount must be in the billing account's currency (`gcloud billing accounts describe`); Star Ground's account bills in CAD, so its budget is `7CAD`.
 
 ```bash
 gcloud projects create "$PROJECT"
