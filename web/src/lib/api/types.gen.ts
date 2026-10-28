@@ -539,6 +539,192 @@ export type ReadEvent = ({
     event: 'error';
 } & ReadFailed);
 
+/**
+ * PasteProject
+ *
+ * A parts list typed or pasted as `REF VALUE` lines.
+ */
+export type PasteProject = {
+    /**
+     * Name
+     *
+     * Blank to use the document's title.
+     */
+    name?: string;
+    /**
+     * Count
+     *
+     * Number of pedals.
+     */
+    count?: number;
+    /**
+     * Variant
+     *
+     * The build chosen from a multi-circuit document.
+     */
+    variant?: string | null;
+    /**
+     * Use Ocr
+     *
+     * Add the parts OCR read from images.
+     */
+    use_ocr?: boolean;
+    /**
+     * Method
+     */
+    method: 'paste';
+    /**
+     * Text
+     */
+    text: string;
+};
+
+/**
+ * PresetProject
+ *
+ * A preset from the library, by its key (see `GET /api/presets`).
+ */
+export type PresetProject = {
+    /**
+     * Name
+     *
+     * Blank to use the document's title.
+     */
+    name?: string;
+    /**
+     * Count
+     *
+     * Number of pedals.
+     */
+    count?: number;
+    /**
+     * Variant
+     *
+     * The build chosen from a multi-circuit document.
+     */
+    variant?: string | null;
+    /**
+     * Use Ocr
+     *
+     * Add the parts OCR read from images.
+     */
+    use_ocr?: boolean;
+    /**
+     * Method
+     */
+    method: 'preset';
+    /**
+     * Preset
+     */
+    preset: string;
+};
+
+/**
+ * UploadProject
+ *
+ * An uploaded build document, sent as a file part of the same request.
+ */
+export type UploadProject = {
+    /**
+     * Name
+     *
+     * Blank to use the document's title.
+     */
+    name?: string;
+    /**
+     * Count
+     *
+     * Number of pedals.
+     */
+    count?: number;
+    /**
+     * Variant
+     *
+     * The build chosen from a multi-circuit document.
+     */
+    variant?: string | null;
+    /**
+     * Use Ocr
+     *
+     * Add the parts OCR read from images.
+     */
+    use_ocr?: boolean;
+    /**
+     * Method
+     */
+    method: 'upload';
+    /**
+     * File
+     *
+     * The file part's filename.
+     */
+    file: string;
+};
+
+/**
+ * UrlProject
+ *
+ * A build document at a public link.
+ */
+export type UrlProject = {
+    /**
+     * Name
+     *
+     * Blank to use the document's title.
+     */
+    name?: string;
+    /**
+     * Count
+     *
+     * Number of pedals.
+     */
+    count?: number;
+    /**
+     * Variant
+     *
+     * The build chosen from a multi-circuit document.
+     */
+    variant?: string | null;
+    /**
+     * Use Ocr
+     *
+     * Add the parts OCR read from images.
+     */
+    use_ocr?: boolean;
+    /**
+     * Method
+     */
+    method: 'url';
+    /**
+     * Url
+     */
+    url: string;
+};
+
+/**
+ * MasterListRequest
+ *
+ * The projects to merge, and how to list what to buy.
+ */
+export type MasterListRequest = {
+    /**
+     * Projects
+     */
+    projects: Array<PasteProject | PresetProject | UrlProject | UploadProject>;
+    /**
+     * Show Hardware
+     *
+     * List the hardware kit.
+     */
+    show_hardware?: boolean;
+    /**
+     * Show Extras
+     *
+     * List sockets and adapters.
+     */
+    show_extras?: boolean;
+};
+
 export type HealthApiHealthGetData = {
     body?: never;
     path?: never;

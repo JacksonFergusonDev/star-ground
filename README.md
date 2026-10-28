@@ -220,18 +220,20 @@ See [tests/README.md](tests/README.md) for how to run each layer.
 
 ### Option 2: Run via Docker
 
+The image is the rebuilt Star Ground: the website and its API in one container, at <http://localhost:8000>. While the rebuild is in progress it does less than the hosted app: paste a parts list and get its shopping list.
+
 You can pull the pre-built image directly from the GitHub Container Registry without building it yourself. Images support Linux on x86-64 (`linux/amd64`) and 64-bit ARM (`linux/arm64`). Docker selects the matching architecture on Linux hosts and in the Linux VM used by Docker Desktop on macOS and Windows.
 
 ```bash
 # Run latest stable release
-docker run -p 8501:8501 ghcr.io/jacksonfergusondev/star-ground:latest
+docker run -p 8000:8000 ghcr.io/jacksonfergusondev/star-ground:latest
 ```
 
 Or build from source:
 
 ```bash
 docker build -t star-ground .
-docker run -p 8501:8501 star-ground
+docker run -p 8000:8000 star-ground
 ```
 
 ### Option 3: Local Development

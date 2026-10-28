@@ -94,7 +94,7 @@ def test_offline_failure_cleans_up_and_propagates(monkeypatch, failure, tmp_path
     monkeypatch.setattr(smoke_container, "docker", mocked)
     monkeypatch.setattr(smoke_container, "wait_healthy", Mock())
     response = Mock(status=200)
-    response.read.return_value = b"ok"
+    response.read.return_value = b'{"status": "ok"}'
     context = Mock()
     context.__enter__ = Mock(return_value=response)
     context.__exit__ = Mock(return_value=False)
@@ -126,7 +126,7 @@ def test_late_failure_blocks_success_and_cleans_up(monkeypatch, tmp_path, failur
     monkeypatch.setattr(smoke_container, "check_browser", browser)
     response = Mock(status=200)
     response.read.return_value = (
-        b"wrong health response" if failure == "http" else b"ok"
+        b'{"status": "down"}' if failure == "http" else b'{"status": "ok"}'
     )
     context = Mock()
     context.__enter__ = Mock(return_value=response)

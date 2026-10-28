@@ -1099,6 +1099,283 @@
             "$ref": "#/components/schemas/ReadFailed"
           }
         ]
+      },
+      "PasteProject": {
+        "additionalProperties": false,
+        "description": "A parts list typed or pasted as `REF VALUE` lines.",
+        "properties": {
+          "name": {
+            "default": "",
+            "description": "Blank to use the document's title.",
+            "maxLength": 200,
+            "title": "Name",
+            "type": "string"
+          },
+          "count": {
+            "default": 1,
+            "description": "Number of pedals.",
+            "maximum": 100,
+            "minimum": 1,
+            "title": "Count",
+            "type": "integer"
+          },
+          "variant": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The build chosen from a multi-circuit document.",
+            "title": "Variant"
+          },
+          "use_ocr": {
+            "default": false,
+            "description": "Add the parts OCR read from images.",
+            "title": "Use Ocr",
+            "type": "boolean"
+          },
+          "method": {
+            "const": "paste",
+            "title": "Method",
+            "type": "string"
+          },
+          "text": {
+            "maxLength": 200000,
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "method",
+          "text"
+        ],
+        "title": "PasteProject",
+        "type": "object"
+      },
+      "PresetProject": {
+        "additionalProperties": false,
+        "description": "A preset from the library, by its key (see `GET /api/presets`).",
+        "properties": {
+          "name": {
+            "default": "",
+            "description": "Blank to use the document's title.",
+            "maxLength": 200,
+            "title": "Name",
+            "type": "string"
+          },
+          "count": {
+            "default": 1,
+            "description": "Number of pedals.",
+            "maximum": 100,
+            "minimum": 1,
+            "title": "Count",
+            "type": "integer"
+          },
+          "variant": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The build chosen from a multi-circuit document.",
+            "title": "Variant"
+          },
+          "use_ocr": {
+            "default": false,
+            "description": "Add the parts OCR read from images.",
+            "title": "Use Ocr",
+            "type": "boolean"
+          },
+          "method": {
+            "const": "preset",
+            "title": "Method",
+            "type": "string"
+          },
+          "preset": {
+            "title": "Preset",
+            "type": "string"
+          }
+        },
+        "required": [
+          "method",
+          "preset"
+        ],
+        "title": "PresetProject",
+        "type": "object"
+      },
+      "UploadProject": {
+        "additionalProperties": false,
+        "description": "An uploaded build document, sent as a file part of the same request.",
+        "properties": {
+          "name": {
+            "default": "",
+            "description": "Blank to use the document's title.",
+            "maxLength": 200,
+            "title": "Name",
+            "type": "string"
+          },
+          "count": {
+            "default": 1,
+            "description": "Number of pedals.",
+            "maximum": 100,
+            "minimum": 1,
+            "title": "Count",
+            "type": "integer"
+          },
+          "variant": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The build chosen from a multi-circuit document.",
+            "title": "Variant"
+          },
+          "use_ocr": {
+            "default": false,
+            "description": "Add the parts OCR read from images.",
+            "title": "Use Ocr",
+            "type": "boolean"
+          },
+          "method": {
+            "const": "upload",
+            "title": "Method",
+            "type": "string"
+          },
+          "file": {
+            "description": "The file part's filename.",
+            "title": "File",
+            "type": "string"
+          }
+        },
+        "required": [
+          "method",
+          "file"
+        ],
+        "title": "UploadProject",
+        "type": "object"
+      },
+      "UrlProject": {
+        "additionalProperties": false,
+        "description": "A build document at a public link.",
+        "properties": {
+          "name": {
+            "default": "",
+            "description": "Blank to use the document's title.",
+            "maxLength": 200,
+            "title": "Name",
+            "type": "string"
+          },
+          "count": {
+            "default": 1,
+            "description": "Number of pedals.",
+            "maximum": 100,
+            "minimum": 1,
+            "title": "Count",
+            "type": "integer"
+          },
+          "variant": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The build chosen from a multi-circuit document.",
+            "title": "Variant"
+          },
+          "use_ocr": {
+            "default": false,
+            "description": "Add the parts OCR read from images.",
+            "title": "Use Ocr",
+            "type": "boolean"
+          },
+          "method": {
+            "const": "url",
+            "title": "Method",
+            "type": "string"
+          },
+          "url": {
+            "maxLength": 2048,
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "method",
+          "url"
+        ],
+        "title": "UrlProject",
+        "type": "object"
+      },
+      "MasterListRequest": {
+        "additionalProperties": false,
+        "description": "The projects to merge, and how to list what to buy.",
+        "properties": {
+          "projects": {
+            "items": {
+              "discriminator": {
+                "mapping": {
+                  "paste": "#/components/schemas/PasteProject",
+                  "preset": "#/components/schemas/PresetProject",
+                  "upload": "#/components/schemas/UploadProject",
+                  "url": "#/components/schemas/UrlProject"
+                },
+                "propertyName": "method"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/PasteProject"
+                },
+                {
+                  "$ref": "#/components/schemas/PresetProject"
+                },
+                {
+                  "$ref": "#/components/schemas/UrlProject"
+                },
+                {
+                  "$ref": "#/components/schemas/UploadProject"
+                }
+              ]
+            },
+            "maxItems": 50,
+            "minItems": 1,
+            "title": "Projects",
+            "type": "array"
+          },
+          "show_hardware": {
+            "default": true,
+            "description": "List the hardware kit.",
+            "title": "Show Hardware",
+            "type": "boolean"
+          },
+          "show_extras": {
+            "default": true,
+            "description": "List sockets and adapters.",
+            "title": "Show Extras",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "projects"
+        ],
+        "title": "MasterListRequest",
+        "type": "object"
       }
     }
   }

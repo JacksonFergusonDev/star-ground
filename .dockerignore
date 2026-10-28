@@ -34,3 +34,10 @@ LICENSE
 # Heavy Assets & Tooling
 examples
 tools
+
+# Website: the image builds it from source
+web/node_modules
+web/dist
+web/.astro
+web/test-results
+web/playwright-report

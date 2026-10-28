@@ -461,12 +461,32 @@ def test_settings_come_from_the_environment() -> None:
             "STAR_GROUND_READ_SLOTS": "1",
             "STAR_GROUND_REQUESTS_PER_MINUTE": "5",
             "STAR_GROUND_TRUST_PROXY": "1",
+            "STAR_GROUND_SITE_DIR": "/app/site",
         }
     )
 
     assert settings.cors_origins == ("https://a.example", "https://b.example")
     assert (settings.read_slots, settings.requests_per_minute) == (1, 5)
     assert settings.trust_proxy
+    assert settings.site_dir == Path("/app/site")
+
+
+def test_serves_the_built_site_beside_the_api(tmp_path: Path) -> None:
+    (tmp_path / "index.html").write_text("landing")
+    (tmp_path / "app").mkdir()
+    (tmp_path / "app" / "index.html").write_text("workspace")
+    (tmp_path / "404.html").write_text("missing")
+    client = TestClient(create_app(Settings(site_dir=tmp_path)))
+
+    assert client.get("/").text == "landing"
+    assert client.get("/app/").text == "workspace"
+    assert client.get("/api/health").json() == {"status": "ok"}
+    missing = client.get("/nowhere/")
+    assert (missing.status_code, missing.text) == (404, "missing")
+
+
+def test_serves_only_the_api_without_a_site() -> None:
+    assert TestClient(create_app(Settings())).get("/").status_code == 404
 
 
 def test_default_settings_from_an_empty_environment() -> None:
