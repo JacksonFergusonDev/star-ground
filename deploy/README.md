@@ -26,6 +26,7 @@ Cloud Run needs a billing account even inside the free tier. The budget alert em
 
 ```bash
 gcloud projects create "$PROJECT"
+gcloud config set project "$PROJECT"
 gcloud billing projects link "$PROJECT" --billing-account "$BILLING"
 gcloud services enable --project "$PROJECT" \
   run.googleapis.com artifactregistry.googleapis.com iamcredentials.googleapis.com \
@@ -104,6 +105,7 @@ gcloud run services add-iam-policy-binding star-ground --project "$PROJECT" \
 ### 5. GitHub Pages and DNS
 
 1. Under Settings, Pages, set the source to **GitHub Actions** and the custom domain to `star-ground.jacksonferguson.me`. (`web/public/CNAME` records the domain too.)
+1. Under Settings, Environments, `github-pages`, add a deployment tag rule `v*`. GitHub creates that environment allowing only `main`, and releases deploy from tags.
 1. At the DNS host for `jacksonferguson.me`, add a `CNAME` record from `star-ground` to `jacksonfergusondev.github.io`.
 1. Once GitHub has issued the certificate, turn on **Enforce HTTPS**.
 
