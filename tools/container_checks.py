@@ -9,7 +9,6 @@ from pathlib import Path
 import pdfplumber
 from fpdf import FPDF
 from PIL import Image, ImageDraw, ImageFont
-from streamlit.testing.v1 import AppTest
 
 from src.api import Project, generate_master_list, read_document, read_stock
 from src.bom_lib import BOM_PRESETS, FileUpload, InputMethod
@@ -81,26 +80,10 @@ def check_ocr() -> None:
     assert "10k" in text, text
 
 
-def check_app() -> None:
-    """Execute the actual app and generate a master list through its widgets."""
-    app = AppTest.from_file("/app/app.py", default_timeout=60).run()
-    assert not app.exception, app.exception
-    assert app.title[0].value == "⚡ Star Ground"
-    app.text_area[0].set_value("R1 10k\nC1 100n\nU1 TL072").run()
-    next(
-        button for button in app.button if button.label == "Generate Master List"
-    ).click().run()
-    assert not app.exception, app.exception
-    assert not app.error, app.error
-    assert app.metric[1].value == "3"
-    assert "TL072" in app.dataframe[0].value["Part"].values
-    assert len(app.get("download_button")) == 5
-
-
 def main() -> None:
     """Fail on any missing production capability, without network access."""
     assert os.getuid() != 0, "The production image must run as a non-root user"
-    for check in (check_presets, check_backend, check_ocr, check_app):
+    for check in (check_presets, check_backend, check_ocr):
         print(f"Running {check.__name__}", flush=True)
         check()
     print("All offline container checks passed", flush=True)

@@ -21,7 +21,7 @@ Decided 2026-10-22 to 2026-10-24. A decision here changes only by editing this f
   - No Tailwind and no component kit: house-style tokens and components only.
   - **The site matches Protostar's landing page** (decided 2026-10-25): house-style's near-black palette with Star Ground's green accent, and the shared project-site shell from house-style v2 (header bar, hero field, jump links, section grid, footer, with a publisher note in the footer). house-style v2 split itself into parts so each site takes only what it uses; the website installs it with npm, so the repository no longer vendors a copy in `house/`.
   - **The hero shows a real circuit** (decided 2026-10-25): a Big Muff π laid out as a single-sided board with a star ground, its signal path and ground returns animated in raw WebGL2. It replaces house-style's attractor field and three.js on Star Ground's site; a generated board read as fake because its connections meant nothing.
-- **Types:** the API's OpenAPI schema generates the frontend's TypeScript types (`openapi-typescript`), so the two can't drift.
+- **Types:** the API's OpenAPI schema generates the frontend's TypeScript types (`@hey-api/openapi-ts`), so the two can't drift.
 - **Rejected:** NiceGUI and Reflex (Python UI frameworks that keep Streamlit's server-driven model and fight custom styling), a Vite SPA without a site framework (no static pages for the landing page and catalog), and a downloadable desktop app (Python, onnxruntime and OpenCV per platform, code signing and auto-update, for little gain over hosting at about $0).
 
 ### Hosting and cost
@@ -96,6 +96,8 @@ The public repository holds publisher PDFs in `raw_boms/` (11, the presets' sour
 1. CI job for the frontend: lint, type check (`astro check`), build, Playwright with axe.
 
 ### 4. Walking skeleton, deployed
+
+[`deploy/README.md`](deploy/README.md) explains the deploy and the one-time Google Cloud, Pages and DNS setup.
 
 1. The multi-stage Docker image and the self-host path.
 1. Cloud Run deploy from a tag (Artifact Registry, max instances, budget alert), and GitHub Pages deploy with the `CNAME`.
@@ -172,8 +174,8 @@ Probed on 2026-10-24: board renders in PedalPCB, GuitarPCB and Tonepad documents
 | Plan | Done | This plan's PR |
 | 1. Remove publisher PDFs | Done 2026-10-24: history rewritten, `main` and 15 tags force-pushed, old images deleted | #201 |
 | 2. API service | Done 2026-10-24 | #203 |
-| 3. Frontend foundation | Done 2026-10-25: the site uses house-style v2's shared shell | #204, this PR |
-| 4. Walking skeleton | Not started | |
+| 3. Frontend foundation | Done 2026-10-25: the site uses house-style v2's shared shell | #204, #205 |
+| 4. Walking skeleton | In progress: the image, deploy workflows and paste path are built; deploying waits on the Google Cloud setup | This PR |
 | 5. Build workspace | Not started | |
 | 6. Document review | Not started | |
 | 7. PCB highlighting | Not started | |

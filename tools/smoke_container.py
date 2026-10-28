@@ -1,15 +1,12 @@
 """Exercise a built image's default command, health check and offline capabilities."""
 
 import argparse
-import csv
-import io
 import json
 import subprocess
 import tempfile
 import time
 import urllib.request
 import uuid
-import zipfile
 from pathlib import Path
 
 
@@ -40,44 +37,29 @@ def wait_healthy(container: str, timeout: float = 90) -> None:
 
 
 def check_browser(url: str, artifacts: Path) -> None:
-    """Drive Chromium through the served app and validate its downloaded build pack."""
+    """Drive Chromium through the served site: paste a parts list, get its shopping list."""
     from playwright.sync_api import expect, sync_playwright
 
     artifacts.mkdir(parents=True, exist_ok=True)
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch()
-        context = browser.new_context(accept_downloads=True)
+        context = browser.new_context()
         context.tracing.start(screenshots=True, snapshots=True, sources=True)
         page = context.new_page()
         errors: list[str] = []
         page.on("pageerror", lambda error: errors.append(str(error)))
         page.set_default_timeout(60_000)
         try:
-            page.goto(url, wait_until="domcontentloaded")
-            expect(page.get_by_role("heading", name="Star Ground")).to_be_visible()
-            page.get_by_role("textbox", name="BOM Text", exact=True).fill(
+            page.goto(f"{url}/", wait_until="domcontentloaded")
+            expect(page.get_by_role("heading", level=1)).to_be_visible()
+            page.goto(f"{url}/app/", wait_until="domcontentloaded")
+            page.get_by_role("textbox", name="Parts list", exact=True).fill(
                 "R1 10k\nC1 100n\nU1 TL072"
             )
-            page.get_by_role("button", name="Generate Master List", exact=True).click()
-            with page.expect_download() as download_info:
-                page.get_by_role(
-                    "button", name="Download Complete Build Pack", exact=False
-                ).click()
-            download = download_info.value
-            assert download.failure() is None, download.failure()
-            pack_path = artifacts / "build-pack.zip"
-            download.save_as(pack_path)
-            with zipfile.ZipFile(pack_path) as pack:
-                assert pack.testzip() is None
-                rows = list(
-                    csv.DictReader(
-                        io.StringIO(pack.read("Shopping List.csv").decode("utf-8-sig"))
-                    )
-                )
-                for part in ("10k", "100n", "TL072"):
-                    row = next(row for row in rows if row["Part"] == part)
-                    assert row["BOM Qty"] == "1", row
-                assert any(name.endswith(".pdf") for name in pack.namelist())
+            page.get_by_role("button", name="Make the shopping list").click()
+            table = page.get_by_role("table")
+            for part in ("10k", "100n", "TL072"):
+                expect(table.get_by_role("cell", name=part, exact=True)).to_be_visible()
             assert not errors, errors
         finally:
             try:
@@ -107,18 +89,18 @@ def smoke(image: str, artifacts: Path) -> None:
             name,
             *restrictions,
             "--publish",
-            "127.0.0.1::8501",
+            "127.0.0.1::8000",
             image,
         )
         wait_healthy(name)
-        port = docker("port", name, "8501/tcp")
-        for path in ("/_stcore/health", "/"):
+        port = docker("port", name, "8000/tcp")
+        for path in ("/api/health", "/", "/app/"):
             with urllib.request.urlopen(f"http://{port}{path}", timeout=5) as response:
                 body = response.read()
                 assert response.status == 200, (path, response.status)
                 assert body, path
                 if path.endswith("health"):
-                    assert body == b"ok", body
+                    assert json.loads(body) == {"status": "ok"}, body
         print(
             docker(
                 "run",
@@ -139,7 +121,7 @@ def smoke(image: str, artifacts: Path) -> None:
         )
         check_browser(f"http://{port}", artifacts)
         wait_healthy(name, timeout=10)
-        # SIGTERM must stop Streamlit cleanly; Docker's forced SIGKILL exits 137.
+        # SIGTERM must stop the server cleanly; Docker's forced SIGKILL exits 137.
         docker("stop", "--time=10", name)
         exit_code = docker("inspect", "--format", "{{.State.ExitCode}}", name)
         assert exit_code == "0", f"Unclean shutdown: {exit_code}"

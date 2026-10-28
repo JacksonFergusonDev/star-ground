@@ -1,0 +1,30 @@
+---
+import ShoppingList from '../../components/ShoppingList.svelte';
+import Base from '../../layouts/Base.astro';
+---
+
+<Base
+  title="Shopping list"
+  description="Paste a pedal's parts list and get its shopping list."
+  noindex
+>
+  <section class="section" aria-labelledby="app-title">
+    <h1 id="app-title" class="app-title">
+      Paste a parts list.
+    </h1>
+    <p class="section-lede">
+      One line per part, like <code>R1 10k</code>. Star Ground reads the list and returns what to
+      buy, with spares where running out would stall a build.
+    </p>
+    <ShoppingList client:load />
+  </section>
+</Base>
+
+<style>
+  .app-title {
+    margin: 0 0 24px;
+    font-size: var(--fs-h2);
+    font-weight: 500;
+    letter-spacing: -1.6px;
+  }
+</style>

@@ -5,7 +5,9 @@ each master list or export request, and the browser keeps the user's state.
 Uploads and links are read through a cache (`ReadingCache`), so sending a
 document again costs a lookup, not another reading.
 
-Run it with `just serve-api`, or `uvicorn src.server:app`.
+Run it with `just serve-api`, or `uvicorn src.server:app`. Given the built
+website (`Settings.site_dir`), it serves that too, at `/`, so one process is a
+whole Star Ground: the Docker image runs it that way.
 """
 
 import json
@@ -15,6 +17,7 @@ import threading
 import time
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, replace
+from pathlib import Path
 from typing import Annotated, Any, assert_never
 
 from fastapi import FastAPI, File, Form, Request, UploadFile
@@ -22,6 +25,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
 from fastapi.responses import JSONResponse, Response, StreamingResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, TypeAdapter, ValidationError
 
 from src.api import (
@@ -106,6 +110,8 @@ class Settings:
         trust_proxy: Take the client's address from `X-Forwarded-For`, as
             set by the platform's proxy (Cloud Run).
         cache_bytes: The reading cache's budget (see `ReadingCache`).
+        site_dir: The built website (`web/dist`), served at `/` beside the
+            API; none when the site is hosted elsewhere (GitHub Pages).
     """
 
     cors_origins: tuple[str, ...] = ()
@@ -114,6 +120,7 @@ class Settings:
     requests_per_minute: int = 30
     trust_proxy: bool = False
     cache_bytes: int = 200_000_000
+    site_dir: Path | None = None
 
     @classmethod
     def from_env(cls, env: Mapping[str, str] = os.environ) -> Settings:
@@ -127,6 +134,7 @@ class Settings:
         """
         defaults = cls()
         origins = env.get("STAR_GROUND_CORS_ORIGINS", "")
+        site = env.get("STAR_GROUND_SITE_DIR")
         return cls(
             cors_origins=tuple(o.strip() for o in origins.split(",") if o.strip()),
             read_slots=int(env.get("STAR_GROUND_READ_SLOTS", defaults.read_slots)),
@@ -134,6 +142,7 @@ class Settings:
                 env.get("STAR_GROUND_REQUESTS_PER_MINUTE", defaults.requests_per_minute)
             ),
             trust_proxy=env.get("STAR_GROUND_TRUST_PROXY", "") == "1",
+            site_dir=Path(site) if site else None,
         )
 
 
@@ -640,16 +649,23 @@ def create_app(
                 summary=app.summary,
                 routes=app.routes,
             )
-            # The read stream's events aren't a route's body, so FastAPI
-            # doesn't list them; add them for the frontend's types.
-            events = TypeAdapter(ReadEvent).json_schema(
-                ref_template="#/components/schemas/{model}"
-            )
+            # The read stream's events and the master list's request (sent as
+            # a form field's JSON) aren't a route's body, so FastAPI doesn't
+            # list them; add them for the frontend's types.
             components = schema.setdefault("components", {}).setdefault("schemas", {})
-            components.update(events.pop("$defs", {}))
-            components["ReadEvent"] = events
+            extras: dict[str, TypeAdapter[Any]] = {
+                "ReadEvent": TypeAdapter(ReadEvent),
+                "MasterListRequest": TypeAdapter(MasterListRequest),
+            }
+            for name, adapter in extras.items():
+                extra = adapter.json_schema(ref_template="#/components/schemas/{model}")
+                components.update(extra.pop("$defs", {}))
+                components[name] = extra
             app.openapi_schema = schema
         return app.openapi_schema
 
     app.openapi = openapi  # type: ignore[method-assign]
+    # Mounted last, so the API's routes match first.
+    if settings.site_dir:
+        app.mount("/", StaticFiles(directory=settings.site_dir, html=True), name="site")
     return app

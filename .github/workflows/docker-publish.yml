@@ -1,4 +1,4 @@
-name: Docker
+name: Release
 
 on:
   push:
@@ -53,6 +53,9 @@ jobs:
     needs: test
     runs-on: ubuntu-24.04
     timeout-minutes: 20
+    outputs:
+      image: ${{ steps.image.outputs.name }}
+      digest: ${{ steps.candidate.outputs.digest }}
     permissions:
       contents: read
       packages: write
@@ -171,3 +174,120 @@ jobs:
           # shellcheck disable=SC2016
           printf 'Published `%s@%s`\n\nBoth native architectures passed container smoke tests. SBOM and provenance are attached.\n' \
             "$IMAGE" "$DIGEST" >> "$GITHUB_STEP_SUMMARY"
+
+  # The API runs the exact image just signed, copied into Artifact Registry
+  # because Cloud Run can't pull from GHCR. Skipped until the repository's
+  # GCP_* variables exist (deploy/README.md sets them up).
+  deploy-api:
+    name: Deploy the API to Cloud Run
+    needs: publish
+    if: vars.GCP_PROJECT_ID != ''
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: production
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      url: ${{ steps.deploy.outputs.url }}
+    env:
+      PROJECT: ${{ vars.GCP_PROJECT_ID }}
+      REGION: ${{ vars.GCP_REGION }}
+      SITE: https://star-ground.jacksonferguson.me
+    steps:
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db # v3.0.1
+
+      - name: Install OCI image tooling
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y skopeo
+
+      - name: Copy the signed image to Artifact Registry
+        id: copy
+        env:
+          SOURCE: ${{ needs.publish.outputs.image }}@${{ needs.publish.outputs.digest }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          registry="${REGION}-docker.pkg.dev"
+          target="${registry}/${PROJECT}/star-ground/star-ground"
+          gcloud auth print-access-token | \
+            skopeo login --username oauth2accesstoken --password-stdin "$registry"
+          skopeo copy --all --preserve-digests "docker://${SOURCE}" "docker://${target}:${TAG}"
+          echo "image=${target}@${SOURCE#*@}" >> "$GITHUB_OUTPUT"
+
+      # PLAN.md, "Hosting and cost": scale to zero, 2 GiB and 2 vCPU, a new
+      # instance past 4 requests, and max instances as the hard cost ceiling.
+      # Cloud Run serves only the API; GitHub Pages serves the site.
+      - name: Deploy
+        id: deploy
+        env:
+          IMAGE: ${{ steps.copy.outputs.image }}
+        run: |
+          gcloud run deploy star-ground --project "$PROJECT" --region "$REGION" \
+            --image "$IMAGE" \
+            --service-account "star-ground-run@${PROJECT}.iam.gserviceaccount.com" \
+            --memory 2Gi --cpu 2 --cpu-boost \
+            --concurrency 4 --min-instances 0 --max-instances 3 \
+            --timeout 300 \
+            --set-env-vars "STAR_GROUND_TRUST_PROXY=1,STAR_GROUND_SITE_DIR=,STAR_GROUND_CORS_ORIGINS=${SITE}" \
+            --quiet
+          url="$(gcloud run services describe star-ground --project "$PROJECT" --region "$REGION" \
+            --format 'value(status.url)')"
+          [[ "$url" =~ ^https://[a-z0-9.-]+$ ]]
+          curl --fail --silent --show-error --retry 5 --retry-all-errors --max-time 30 "${url}/api/health"
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          # shellcheck disable=SC2016
+          printf 'Deployed `%s` to %s\n' "$IMAGE" "$url" >> "$GITHUB_STEP_SUMMARY"
+
+  # The site goes live after the API it calls, so it never calls routes the
+  # running API doesn't have yet.
+  deploy-site:
+    name: Deploy the site to GitHub Pages
+    needs: deploy-api
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.pages.outputs.page_url }}
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      # A release builds from a clean install: no cache a PR could have written.
+      - name: Install Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24"
+          package-manager-cache: false
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build against the deployed API
+        env:
+          PUBLIC_API_URL: ${{ needs.deploy-api.outputs.url }}
+        run: npm run build
+
+      - name: Upload the site
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: web/dist
+
+      - name: Deploy
+        id: pages
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
