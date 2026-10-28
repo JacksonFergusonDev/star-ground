@@ -128,6 +128,9 @@ def serialize_inventory(inventory: Inventory) -> str:
 
     e.g. {'Resistors | 10k': refs=['R1', 'R2']} -> "R1 10k\nR2 10k"
 
+    Parts the parser injected (IC sockets, refs like 'IC1 (Inj)') are left
+    out: parsing the text injects them again.
+
     Args:
         inventory: The populated inventory dictionary.
 
@@ -145,8 +148,8 @@ def serialize_inventory(inventory: Inventory) -> str:
         # If we have specific refs (R1, C1), list them individually
         if data["refs"]:
             for ref in data["refs"]:
-                # Ignore generic hardware refs if they slipped in
-                if ref != "HW":
+                # Ignore generic hardware refs and injected parts
+                if ref != "HW" and not ref.endswith("(Inj)"):
                     lines.append(f"{ref} {clean_val}")
         else:
             # Fallback for things without refs (rare in presets)
