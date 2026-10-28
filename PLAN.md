@@ -14,7 +14,7 @@ Decided 2026-10-22 to 2026-10-24. A decision here changes only by editing this f
 
 ### Stack
 
-- **API:** FastAPI over `src/api.py`, with Pydantic models generated from its dataclasses. The API is stateless: every request carries what it needs, and the browser holds the user's state.
+- **API:** FastAPI over `src/api.py`, with Pydantic models generated from its dataclasses. The API is stateless: every request carries what it needs, and the browser holds the user's state. An upload already read can be named by its reading's `document` instead of being sent again; a server that no longer holds it answers 409 and the page sends the file (decided 2026-10-28, so the live master list doesn't re-upload every PDF on each change).
 - **Frontend:** an Astro site (landing page, catalog pages) with the app as a Svelte 5 island, in `web/`.
   - Astro matches jacksonferguson.me, so house-style, linting (ESLint, Stylelint, Prettier) and browser tests (Playwright with axe) work the same way.
   - Svelte over React: scoped plain CSS reads the house tokens directly, and a stateful workspace takes less code. React's larger ecosystem only matters for live collaboration, a native mobile app, or React-only vendor kits, none of which are planned. If one is ever needed, Astro can host a React island beside the Svelte ones.
@@ -192,7 +192,7 @@ Probed on 2026-10-24: board renders in PedalPCB, GuitarPCB and Tonepad documents
 | 2. API service | Done 2026-10-24 | #203 |
 | 3. Frontend foundation | Done 2026-10-25: the site uses house-style v2's shared shell | #204, #205 |
 | 4. Walking skeleton | Done 2026-10-28: v2.5.0 deployed to Cloud Run and Pages; measurements recorded; OCR thread pinning is a follow-up | #213 |
-| 5. Build workspace | Not started | |
+| 5. Build workspace | In progress: project cards, the live master list, build choice, the OCR offer and browser storage are built; stock, exports and supplier carts remain | This PR |
 | 6. Document review | Not started | |
 | 7. PCB highlighting | Not started | |
 | 8. Circuit catalog | Not started | |

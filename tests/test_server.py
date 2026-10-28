@@ -553,9 +553,8 @@ def _ocr_read(
                     started.set()
                 if release:
                     release.wait(5)
-        return read_document(
-            InputMethod.UPLOAD_FILE, FileUpload(KLICHE.name, KLICHE.read_bytes())
-        )
+        # The document as sent (Kliche's bytes, renamed), read without OCR.
+        return read_document(method, data, ocr=False)
 
     return read
 
@@ -714,3 +713,78 @@ def test_a_document_waiting_for_ocr_streams_its_place(mocker: MockerFixture) -> 
 
     assert [e["event"] for e in events] == ["reading", "queued", "reading", "result"]
     assert events[1]["position"] == 1
+
+
+# --- Document references ---
+
+
+def test_a_read_upload_can_be_named_instead_of_sent(client: TestClient) -> None:
+    read = client.post("/api/documents/read", files={"file": _pdf(KLICHE)})
+    document = _events(read.text)[-1]["reading"]["document"]
+
+    sent = _post(
+        client,
+        "/api/master-list",
+        [{"method": "upload", "file": KLICHE.name}],
+        files=[("files", _pdf(KLICHE))],
+    )
+    named = _post(
+        client, "/api/master-list", [{"method": "upload", "document": document}]
+    )
+
+    assert document.startswith(f"file:{KLICHE.name}:")
+    assert named.status_code == 200
+    assert named.json() == sent.json()
+
+
+def test_a_link_reading_has_no_document(
+    client: TestClient, mocker: MockerFixture
+) -> None:
+    upload = FileUpload(KLICHE.name, KLICHE.read_bytes())
+    mocker.patch(
+        "src.server.app.read_document",
+        return_value=read_document(InputMethod.UPLOAD_FILE, upload),
+    )
+
+    response = client.post(
+        "/api/documents/read", data={"url": "https://example.com/a.pdf"}
+    )
+
+    assert _events(response.text)[-1]["reading"]["document"] is None
+
+
+def test_a_document_this_server_lacks_asks_for_the_file(client: TestClient) -> None:
+    gone = f"file:{KLICHE.name}:0123456789abcdef"
+
+    response = client.post(
+        "/api/master-list",
+        data={
+            "request": json.dumps(
+                {"projects": [{"method": "upload", "document": gone}]}
+            )
+        },
+    )
+
+    assert response.status_code == 409
+    assert response.json()["documents"] == [gone]
+
+
+def test_a_named_document_can_still_accept_ocr(mocker: MockerFixture) -> None:
+    client = TestClient(create_app(Settings(requests_per_minute=1000)))
+    read = mocker.patch("src.server.app.read_document", side_effect=_ocr_read())
+    document = _read_events(client, "a.pdf")[-1]["reading"]["document"]
+
+    project = {"method": "upload", "document": document, "use_ocr": True}
+    _post(client, "/api/master-list", [project])
+
+    assert [c.kwargs for c in read.call_args_list] == [{"ocr": False}, {"ocr": True}]
+    assert read.call_args.args[1].name == "a.pdf"
+
+
+def test_an_upload_names_a_file_or_a_document(client: TestClient) -> None:
+    response = client.post(
+        "/api/master-list",
+        data={"request": json.dumps({"projects": [{"method": "upload"}]})},
+    )
+
+    assert response.status_code == 422

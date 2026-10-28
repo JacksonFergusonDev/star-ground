@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test';
 
 const pages = [
   { path: '/', heading: "One shopping list for every pedal you're building." },
-  { path: '/app/', heading: 'Paste a parts list.' },
+  { path: '/app/', heading: 'Your builds.' },
   { path: '/404.html', heading: "This page doesn't exist." },
 ];
 

@@ -10,7 +10,7 @@ bytes.
 from enum import StrEnum
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from src.bom_lib import ComponentOrigin, OcrVerdict, ParseWarningKind
 
@@ -57,10 +57,26 @@ class UrlProject(_ProjectBase):
 
 
 class UploadProject(_ProjectBase):
-    """An uploaded build document, sent as a file part of the same request."""
+    """An uploaded build document.
+
+    It's a file part of the same request, or a reading's `document`, so a page
+    needn't send the file with every change.
+    """
 
     method: Literal["upload"]
-    file: str = Field(description="The file part's filename.")
+    file: str | None = Field(None, description="The file part's filename.")
+    document: str | None = Field(
+        None,
+        description="A reading's `document`, instead of the file. If this server "
+        "no longer holds it, the request fails with `DocumentsMissing`; send the "
+        "file instead.",
+    )
+
+    @model_validator(mode="after")
+    def _names_the_document(self) -> UploadProject:
+        if self.file is None and self.document is None:
+            raise ValueError("Send the upload as a `file` or a `document`.")
+        return self
 
 
 ProjectIn = Annotated[
@@ -116,6 +132,10 @@ class OcrReading(_Model):
 class DocumentReading(_Model):
     """An upload or link, read ahead of building the master list."""
 
+    document: str | None = Field(
+        description="Names an upload in later master list requests, in place of "
+        "the file; none for links, whose URL names them."
+    )
     title: str | None = Field(description="The title the document prints.")
     file_title: str | None = Field(description="The file's name, as a fallback.")
     parts_found: int
@@ -232,6 +252,12 @@ class BuildNotChosen(Problem):
     """A multi-circuit document's build wasn't chosen."""
 
     projects: list[str]
+
+
+class DocumentsMissing(Problem):
+    """Uploads named by `document` that this server no longer holds."""
+
+    documents: list[str] = Field(description="Send these as files instead.")
 
 
 class Preset(_Model):
