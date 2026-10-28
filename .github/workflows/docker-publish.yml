@@ -176,8 +176,10 @@ jobs:
             "$IMAGE" "$DIGEST" >> "$GITHUB_STEP_SUMMARY"
 
   # The API runs the exact image just signed, copied into Artifact Registry
-  # because Cloud Run can't pull from GHCR. Skipped until the repository's
-  # GCP_* variables exist (deploy/README.md sets them up).
+  # because Cloud Run can't pull from GHCR. Only its linux/amd64 image is
+  # copied, the one Cloud Run runs, so each release is one image there and the
+  # registry's cleanup rule can keep the last few without breaking one.
+  # Skipped until the repository's GCP_* variables exist (deploy/README.md).
   deploy-api:
     name: Deploy the API to Cloud Run
     needs: publish
@@ -219,8 +221,12 @@ jobs:
           target="${registry}/${PROJECT}/star-ground/star-ground"
           gcloud auth print-access-token | \
             skopeo login --username oauth2accesstoken --password-stdin "$registry"
-          skopeo copy --all --preserve-digests "docker://${SOURCE}" "docker://${target}:${TAG}"
-          echo "image=${target}@${SOURCE#*@}" >> "$GITHUB_OUTPUT"
+          skopeo copy --override-os linux --override-arch amd64 --preserve-digests \
+            --digestfile "${RUNNER_TEMP}/digest.txt" \
+            "docker://${SOURCE}" "docker://${target}:${TAG}"
+          digest="$(cat "${RUNNER_TEMP}/digest.txt")"
+          [[ "$digest" =~ ^sha256:[a-f0-9]{64}$ ]]
+          echo "image=${target}@${digest}" >> "$GITHUB_OUTPUT"
 
       # PLAN.md, "Hosting and cost": scale to zero, 2 GiB and 2 vCPU, a new
       # instance past 4 requests, and max instances as the hard cost ceiling.

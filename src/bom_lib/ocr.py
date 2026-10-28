@@ -16,6 +16,8 @@ import logging
 import re
 import threading
 from collections.abc import Callable
+from contextlib import AbstractContextManager
+from contextvars import ContextVar
 from dataclasses import dataclass
 from decimal import Decimal
 from functools import cache
@@ -124,8 +126,21 @@ _MAX_UNREAD_SHARE = 0.1
 _REREAD_SCALES = (1.5, 2.5)
 _MAX_REREADS = 24
 
-# One OCR job at a time: each holds a rendered page and the model's buffers.
-_LOCK = threading.Lock()
+
+class OcrRefusedError(Exception):
+    """The OCR guard declined to run OCR now (a server's per-client limit)."""
+
+
+type OcrGuard = Callable[[], AbstractContextManager[object]]
+"""Entered around each document's OCR: it may wait for a turn, or refuse."""
+
+# One OCR job at a time per process: each holds a rendered page and the
+# model's buffers, over 1 GB. A server sets its own guard for each request
+# (`ocr_guard`) to queue OCR, report the queue, and limit each client.
+_ONE_AT_A_TIME = threading.Lock()
+ocr_guard: ContextVar[OcrGuard] = ContextVar(
+    "ocr_guard", default=lambda: _ONE_AT_A_TIME
+)
 
 # Standard resistor and capacitor values (the E24 series), per decade.
 _E24 = frozenset(
@@ -1147,6 +1162,9 @@ def attempt_ocr(
     Returns:
         The attempt, or None when OCR was not needed, or read too little to
         add to a document whose text layer did list parts.
+
+    Raises:
+        OcrRefusedError: The guard (`ocr_guard`) declined to run OCR.
     """
     if not needs_ocr(result):
         return None
@@ -1155,7 +1173,7 @@ def attempt_ocr(
     pages_data: list[PDFPageExtraction] = []
     mentioned: set[str] = set()
     read: list[int] = []
-    with _LOCK, pdfplumber.open(filepath) as pdf:
+    with ocr_guard.get()(), pdfplumber.open(filepath) as pdf:
         for number, page in enumerate(pdf.pages):
             if len(read) == _MAX_PAGES:
                 break

@@ -77,3 +77,43 @@ test("shows the API's message when it refuses", async ({ page }) => {
   await expect(page.getByRole('alert')).toHaveText('Too many requests. Try again in a minute.');
   await expect(page.getByRole('table')).toHaveCount(0);
 });
+
+test('says the server is busy when a request fails after the API answered', async ({ page }) => {
+  await page.route('**/api/master-list', (route) => route.abort('failed'));
+  const warm = page.waitForResponse('**/api/health');
+  await page.goto('/app/');
+  await warm;
+  await page.getByRole('textbox', { name: 'Parts list' }).fill('R1 10k');
+  await page.getByRole('button', { name: 'Make the shopping list' }).click();
+
+  await expect(page.getByRole('alert')).toHaveText(
+    'Star Ground is busy right now. Try again in a minute.',
+  );
+});
+
+test("says the server can't be reached when it never answered", async ({ page }) => {
+  await page.unroute('**/api/health');
+  await page.route('**/api/**', (route) => route.abort('failed'));
+  await page.goto('/app/');
+  await page.getByRole('textbox', { name: 'Parts list' }).fill('R1 10k');
+  await page.getByRole('button', { name: 'Make the shopping list' }).click();
+
+  await expect(page.getByRole('alert')).toContainText("Couldn't reach Star Ground's server");
+});
+
+test('says the server is busy when the platform refuses without a message', async ({ page }) => {
+  await page.route('**/api/master-list', (route) =>
+    route.fulfill({
+      status: 503,
+      contentType: 'text/html',
+      body: '<html>Service Unavailable</html>',
+    }),
+  );
+  await page.goto('/app/');
+  await page.getByRole('textbox', { name: 'Parts list' }).fill('R1 10k');
+  await page.getByRole('button', { name: 'Make the shopping list' }).click();
+
+  await expect(page.getByRole('alert')).toHaveText(
+    'Star Ground is busy right now. Try again in a minute.',
+  );
+});

@@ -69,7 +69,7 @@
         },
         "responses": {
           "200": {
-            "description": "`queued` and `reading` events, then `result` or `error`. Each event's data is one `ReadEvent`.",
+            "description": "A `reading` event; `queued` then `reading` again if the document waits for its turn at OCR; then `result` or `error`. Each event's data is one `ReadEvent`.",
             "content": {
               "text/event-stream": {
                 "schema": {

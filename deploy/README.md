@@ -22,7 +22,7 @@ REPO=JacksonFergusonDev/star-ground
 
 ### 1. Project, APIs, and the budget alert
 
-Cloud Run needs a billing account even inside the free tier. The budget alert emails the billing account's admins as spend passes 50% and 100% of $5. It doesn't stop spending; `--max-instances` in the workflow is the hard ceiling. The amount must be in the billing account's currency (`gcloud billing accounts describe`); Star Ground's account bills in CAD, so its budget is `7CAD`.
+Cloud Run needs a billing account even inside the free tier. The budget alert emails the billing account's admins as spend passes 50% and 100% of $5. It doesn't stop spending: `--max-instances` in the workflow caps the rate, and the spending cutoff (step 6) stops it. The amount must be in the billing account's currency (`gcloud billing accounts describe`); Star Ground's account bills in CAD, so its budget is `7CAD`.
 
 ```bash
 gcloud projects create "$PROJECT"
@@ -108,6 +108,68 @@ gcloud run services add-iam-policy-binding star-ground --project "$PROJECT" \
 1. Under Settings, Environments, `github-pages`, add a deployment tag rule `v*`. GitHub creates that environment allowing only `main`, and releases deploy from tags.
 1. At the DNS host for `jacksonferguson.me`, add a `CNAME` record from `star-ground` to `jacksonfergusondev.github.io`.
 1. Once GitHub has issued the certificate, turn on **Enforce HTTPS**.
+
+### 6. The spending cutoff
+
+Google Cloud has no hard spending limit, and three instances running flat out would cost about US$415 a month. A second budget is the stop. It publishes the month's spend to a Pub/Sub topic every few hours, and the function in [`cutoff/`](cutoff/main.py) closes the API to the internet (ingress `internal`) once the spend reaches it. The site stays up, and the paste page says the server is unreachable. Nothing is deleted. Billing data lags by hours, so spend can pass the budget before the cutoff acts.
+
+The cutoff's account may update only the `star-ground` service, which needs read access to its image and permission to act as its runtime account:
+
+```bash
+NUMBER=$(gcloud projects describe "$PROJECT" --format 'value(projectNumber)')
+CUTOFF="star-ground-cutoff@$PROJECT.iam.gserviceaccount.com"
+gcloud services enable --project "$PROJECT" pubsub.googleapis.com \
+  cloudfunctions.googleapis.com cloudbuild.googleapis.com eventarc.googleapis.com
+gcloud pubsub topics create star-ground-budget --project "$PROJECT"
+gcloud iam service-accounts create star-ground-cutoff --project "$PROJECT" \
+  --display-name "Star Ground spending cutoff"
+gcloud run services add-iam-policy-binding star-ground --project "$PROJECT" \
+  --region "$REGION" --member "serviceAccount:$CUTOFF" --role roles/run.developer
+gcloud iam service-accounts add-iam-policy-binding "star-ground-run@$PROJECT.iam.gserviceaccount.com" \
+  --project "$PROJECT" --member "serviceAccount:$CUTOFF" --role roles/iam.serviceAccountUser
+gcloud artifacts repositories add-iam-policy-binding star-ground --project "$PROJECT" \
+  --location "$REGION" --member "serviceAccount:$CUTOFF" --role roles/artifactregistry.reader
+
+gcloud functions deploy star-ground-cutoff --project "$PROJECT" --gen2 --region "$REGION" \
+  --runtime python313 --source deploy/cutoff --entry-point cut_off \
+  --trigger-topic star-ground-budget --service-account "$CUTOFF" \
+  --set-env-vars "SERVICE=projects/$PROJECT/locations/$REGION/services/star-ground" \
+  --max-instances 1 --memory 256Mi
+# The trigger delivers as the cutoff's account, which must be allowed to call it.
+gcloud run services add-iam-policy-binding star-ground-cutoff --project "$PROJECT" \
+  --region "$REGION" --member "serviceAccount:$CUTOFF" --role roles/run.invoker
+
+gcloud billing budgets create --billing-account "$BILLING" \
+  --display-name "Star Ground cutoff" --budget-amount 20CAD \
+  --filter-projects "projects/$NUMBER" --threshold-rule percent=1.0 \
+  --notifications-rule-pubsub-topic "projects/$PROJECT/topics/star-ground-budget"
+```
+
+To test it, publish a notification over budget, check the API answers 404, then turn it back on:
+
+```bash
+gcloud pubsub topics publish star-ground-budget --project "$PROJECT" \
+  --message '{"costAmount": 21, "budgetAmount": 20}'
+```
+
+**Turning the API back on** after a cutoff, once you've found what spent the money:
+
+```bash
+gcloud run services update star-ground --project "$PROJECT" --region "$REGION" --ingress all
+```
+
+Releases keep the service's ingress, so a release doesn't undo a cutoff. The budget resets each month, but the service stays closed until you run that command.
+
+### 7. Image cleanup
+
+Every release copies an image of about 300 MB into Artifact Registry, which bills storage past 0.5 GB. [`cleanup-policy.json`](cleanup-policy.json) keeps the three newest images, so the last three releases can still be rolled back to:
+
+```bash
+gcloud artifacts repositories set-cleanup-policies star-ground --project "$PROJECT" \
+  --location "$REGION" --policy deploy/cleanup-policy.json --no-dry-run
+```
+
+Releases copy only the `linux/amd64` image, so each release is one image in the registry. Releases before v2.6.0 copied the whole multi-architecture index, whose parts the rule would count separately. So turn the rule on (`--no-dry-run`) only after a release from v2.6.0 on has deployed.
 
 ## Releasing
 

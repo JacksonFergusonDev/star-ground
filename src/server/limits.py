@@ -1,4 +1,4 @@
-"""What keeps one server's work bounded: request size, rate, readers, memory.
+"""What keeps one server's work bounded: request size, rate, OCR, memory.
 
 The API is stateless; nothing here holds state a request depends on. The
 reading cache only saves work: a miss reads the document again.
@@ -84,21 +84,26 @@ async def _send_too_large(send: Send, max_bytes: int) -> None:
 
 
 class RateLimiter:
-    """Allows each client a number of requests per sliding minute.
+    """Allows each client a number of uses per sliding window.
 
     It's in memory, so each server instance counts separately: it stops one
     client from monopolizing an instance, while the deployment's instance cap
     bounds total cost.
 
     Args:
-        per_minute: Requests allowed per client in any 60 seconds.
+        limit: Uses allowed per client in any window.
+        window: The window, in seconds.
         clock: Seconds, monotonic; injectable for tests.
     """
 
     def __init__(
-        self, per_minute: int, clock: Callable[[], float] = time.monotonic
+        self,
+        limit: int,
+        window: float = 60,
+        clock: Callable[[], float] = time.monotonic,
     ) -> None:
-        self.per_minute = per_minute
+        self.limit = limit
+        self.window = window
         self._clock = clock
         self._hits: dict[str, deque[float]] = {}
         self._lock = threading.Lock()
@@ -115,9 +120,9 @@ class RateLimiter:
         now = self._clock()
         with self._lock:
             hits = self._hits.setdefault(client, deque())
-            while hits and now - hits[0] >= 60:
+            while hits and now - hits[0] >= self.window:
                 hits.popleft()
-            if len(hits) >= self.per_minute:
+            if len(hits) >= self.limit:
                 return False
             hits.append(now)
             # Forget idle clients, so the table can't grow without bound.
@@ -126,15 +131,15 @@ class RateLimiter:
             return True
 
 
-class ReadGate:
-    """Limits how many documents are read at once.
+class OcrQueue:
+    """Limits how many documents are read by OCR at once.
 
-    Reading an image-only document runs OCR, which takes several cores and
-    over 1 GB for a few seconds a page, so a server reads only a few at a
-    time and queues the rest.
+    OCR takes both of an instance's cores and over 1 GB for tens of seconds a
+    document, so a server runs one at a time and queues the rest. Text reads
+    take a fraction of a second and never wait here.
 
     Args:
-        slots: Documents read at once.
+        slots: Documents read by OCR at once.
     """
 
     def __init__(self, slots: int) -> None:
@@ -143,7 +148,7 @@ class ReadGate:
         self._waiting = 0
 
     def queue_position(self) -> int:
-        """The position a read would take in the queue, 0 if a slot is free."""
+        """The position a job would take in the queue, 0 if a slot is free."""
         with self._lock:
             return 0 if self._free() else self._waiting + 1
 

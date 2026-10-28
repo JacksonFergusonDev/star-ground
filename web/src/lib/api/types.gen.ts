@@ -775,7 +775,7 @@ export type ReadApiDocumentsReadPostError = ReadApiDocumentsReadPostErrors[keyof
 
 export type ReadApiDocumentsReadPostResponses = {
     /**
-     * `queued` and `reading` events, then `result` or `error`. Each event's data is one `ReadEvent`.
+     * A `reading` event; `queued` then `reading` again if the document waits for its turn at OCR; then `result` or `error`. Each event's data is one `ReadEvent`.
      */
     200: ReadEvent;
 };
