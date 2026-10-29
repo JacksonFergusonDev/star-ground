@@ -25,6 +25,8 @@ import requests
 import urllib3
 from requests.adapters import HTTPAdapter
 
+from src.bom_lib.errors import FetchError
+
 type IPAddress = ipaddress.IPv4Address | ipaddress.IPv6Address
 
 USER_AGENT = "StarGround/1.0 (+https://github.com/JacksonFergusonDev/star-ground)"
@@ -98,13 +100,6 @@ class FetchedDocument:
     content: bytes
     content_type: str
     url: str
-
-
-class FetchError(ValueError):
-    """A URL the app won't fetch, or a response it won't read.
-
-    The message is written for the builder: it is shown as is.
-    """
 
 
 # 'https://github.com/owner/repo/blob/main/bom.csv' -> raw.githubusercontent.com.
@@ -265,8 +260,8 @@ def _status_error(response: requests.Response) -> FetchError:
     """The builder-facing error for a response that isn't the document."""
     if response.status_code in (401, 403):
         return FetchError(
-            f"The site refused the download ({response.status_code}). The link "
-            "may need a sign-in: download the file and upload it instead."
+            f"The site refused the download ({response.status_code}).",
+            "The link may need a sign-in: download the file and upload it instead.",
         )
     if response.status_code == 404:
         return FetchError("Nothing was found at that link (404).")

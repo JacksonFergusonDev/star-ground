@@ -31,6 +31,7 @@ from src.bom_lib.enums import (
     ParseWarningKind,
     PcbShop,
 )
+from src.bom_lib.errors import ReadError
 
 
 @runtime_checkable
@@ -126,6 +127,8 @@ class BuiltProject:
             how the parts' sources and every output name the project.
         hardware: What it needs from the standard hardware kit.
         warnings: Its parser self-check failures, to review.
+        errors: Why its parts list couldn't be read, each with its bug if
+            it was one in Star Ground.
         options: Interchangeable choices resolved to the document's default.
         document: The source PDF's bytes, for the build pack.
         source_path: A preset's typed parts list on disk, for the build pack.
@@ -138,6 +141,7 @@ class BuiltProject:
     label: str
     hardware: BuildHardware
     warnings: tuple[ParseWarning, ...] = ()
+    errors: tuple[ReadError, ...] = ()
     options: tuple[str, ...] = ()
     document: bytes | None = None
     source_path: str | None = None
@@ -180,7 +184,8 @@ class StatsDict(TypedDict):
             prevent duplicate counting and to detect conflicting duplicates.
         unread_counted: Rows counting parts by value ('3 - jumpers') that sat
             in a parts list but could not be classified.
-        errors: Fatal problems that aborted all or part of the parse.
+        errors: Fatal problems that aborted all or part of the parse, for
+            the builder; a bug in Star Ground carries its `Bug`.
         warnings: Self-check failures where the output may be incomplete.
     """
 
@@ -190,7 +195,7 @@ class StatsDict(TypedDict):
     extracted_title: str | None
     seen_refs: dict[str, str]
     unread_counted: list[str]
-    errors: list[str]
+    errors: list[ReadError]
     warnings: list[ParseWarning]
 
 

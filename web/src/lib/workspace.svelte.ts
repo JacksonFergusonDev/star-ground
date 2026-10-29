@@ -25,7 +25,7 @@ export type ReadState =
   | { state: 'reading' }
   | { state: 'queued'; position: number }
   | { state: 'ready' }
-  | { state: 'failed'; message: string };
+  | { state: 'failed'; message: string; bugCode?: string | null };
 
 /** One project card. */
 export interface Card {
@@ -203,3 +203,8 @@ export const files = {
     await transact('readwrite', (s) => s.delete(id));
   },
 };
+
+/** A count with its noun: '1 part', '3 parts'. */
+export function count(n: number, noun: string): string {
+  return `${n} ${noun}${n === 1 ? '' : 's'}`;
+}

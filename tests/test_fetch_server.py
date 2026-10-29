@@ -21,7 +21,8 @@ import pytest
 import trustme
 
 from src.bom_lib import ComponentCategory, ComponentKey, InputMethod, fetch
-from src.bom_lib.fetch import FetchError, FetchPolicy, fetch_url
+from src.bom_lib.errors import ErrorKind, FetchError
+from src.bom_lib.fetch import FetchPolicy, fetch_url
 from src.bom_lib.strategies.context import BOMParserContext
 
 SAMPLE_PDF = Path(__file__).parent / "samples" / "clean" / "Cataclysm-PedalPCB.pdf"
@@ -385,4 +386,6 @@ class TestParsing:
     ) -> None:
         result = self._process(site.url(path))
         assert result.stats["parts_found"] == 0
-        assert message in result.stats["errors"][0]
+        (error,) = result.stats["errors"]
+        assert error.kind == ErrorKind.FETCH
+        assert message in error.message

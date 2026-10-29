@@ -10,7 +10,6 @@ import pytest
 
 from src.api import (
     PENDING_SOURCE,
-    BuildNotChosenError,
     Project,
     document_key,
     file_title,
@@ -27,7 +26,7 @@ from src.bom_lib import (
     ParseWarningKind,
     PcbShop,
 )
-from src.bom_lib.fetch import FetchError
+from src.bom_lib.errors import BuildNotChosenError, FetchError
 
 SAMPLES = Path(__file__).parent / "samples"
 SRC = Path(__file__).parent.parent / "src"
@@ -124,7 +123,10 @@ def test_input_errors_reach_the_master_list(monkeypatch: pytest.MonkeyPatch) -> 
         ]
     )
 
-    assert master.stats["errors"] == ["The link opened a web page, not a parts list."]
+    assert [e.message for e in master.stats["errors"]] == [
+        "The link opened a web page, not a parts list."
+    ]
+    assert master.projects[1].errors == tuple(master.stats["errors"])
     assert master.stats["parts_found"] == 1
 
 

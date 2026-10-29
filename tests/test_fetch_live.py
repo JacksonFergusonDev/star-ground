@@ -8,7 +8,8 @@ site changes: `uv run pytest -m network` (or `just test-network`).
 import pytest
 
 from src.bom_lib import InputMethod
-from src.bom_lib.fetch import FetchError, fetch_url
+from src.bom_lib.errors import FetchError
+from src.bom_lib.fetch import fetch_url
 from src.bom_lib.strategies.context import BOMParserContext
 
 pytestmark = pytest.mark.network
@@ -38,7 +39,7 @@ def test_tonepad_links_are_explained() -> None:
     result = BOMParserContext().process(
         InputMethod.FROM_URL, "https://tonepad.com/getFile.asp?id=102", "Live"
     )
-    assert "Download the PDF" in result.stats["errors"][0]
+    assert "Download the PDF" in result.stats["errors"][0].hint
 
 
 def test_a_github_file_page_fetches_the_file() -> None:

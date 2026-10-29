@@ -13,11 +13,14 @@ from typing import Annotated, Literal
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from src.bom_lib import ComponentOrigin, OcrVerdict, ParseWarningKind
+from src.bom_lib.errors import ErrorKind
 
 # Generous for any real parts list, small enough to bound a request's work.
 MAX_TEXT_CHARS = 200_000
 MAX_PROJECTS = 50
 MAX_COUNT = 100
+# `src.bom_lib.errors.record_bug`'s codes: six hex digits.
+BUG_CODE = r"^[0-9A-F]{6}$"
 
 
 class _Model(BaseModel):
@@ -129,6 +132,22 @@ class OcrReading(_Model):
     has_parts: bool
 
 
+class Problem(_Model):
+    """Why a request or a reading failed, written for the builder."""
+
+    kind: ErrorKind | None = Field(
+        default=None,
+        description="What kind of problem it is; none for a plain refusal.",
+    )
+    message: str = Field(description="What happened.")
+    hint: str = Field(default="", description="What the builder can do about it.")
+    bug_code: str | None = Field(
+        default=None,
+        description="Set when it's a bug in Star Ground: names it in the server's "
+        "log, and a report sends it back.",
+    )
+
+
 class DocumentReading(_Model):
     """An upload or link, read ahead of building the master list."""
 
@@ -154,7 +173,7 @@ class DocumentReading(_Model):
         "the builder accepts."
     )
     options: list[str] = Field(description="Interchangeable parts, resolved.")
-    errors: list[str]
+    errors: list[Problem] = Field(description="Why it couldn't be read.")
 
 
 class ReadQueued(_Model):
@@ -177,11 +196,10 @@ class ReadDone(_Model):
     reading: DocumentReading
 
 
-class ReadFailed(_Model):
+class ReadFailed(Problem):
     """The document couldn't be read."""
 
     event: Literal["error"] = "error"
-    message: str
 
 
 ReadEvent = Annotated[
@@ -204,6 +222,7 @@ class ProjectResult(_Model):
     reviews: list[PartReview]
     ocr_reads: list[PartWarning] = Field(description="Parts read by OCR, to check.")
     options: list[str]
+    errors: list[Problem] = Field(description="Why it couldn't be read.")
 
 
 class ShoppingRow(_Model):
@@ -227,7 +246,6 @@ class Stats(_Model):
 
     lines_read: int
     parts_found: int
-    errors: list[str]
 
 
 class MasterListResult(_Model):
@@ -240,12 +258,6 @@ class MasterListResult(_Model):
         description="Skipped lines that looked like parts."
     )
     has_stock: bool
-
-
-class Problem(_Model):
-    """Why a request couldn't be served."""
-
-    message: str
 
 
 class BuildNotChosen(Problem):
@@ -282,6 +294,18 @@ class FeedbackIn(_Model):
 
     rating: int = Field(ge=1, le=5, description="1 (terrible) to 5 (excellent).")
     comment: str = Field("", max_length=5000)
+
+
+class ReportIn(_Model):
+    """A builder's report of a bug, sent from where it appeared."""
+
+    code: str = Field(pattern=BUG_CODE, description="The bug's `bug_code`.")
+    document: str = Field(
+        max_length=2048,
+        description="What was being read: the upload's name or the link. Never "
+        "the document itself.",
+    )
+    comment: str = Field("", max_length=5000, description="Anything the builder adds.")
 
 
 class Health(_Model):

@@ -128,10 +128,6 @@ _REREAD_SCALES = (1.5, 2.5)
 _MAX_REREADS = 24
 
 
-class OcrRefusedError(Exception):
-    """The OCR guard declined to run OCR now (a server's per-client limit)."""
-
-
 type OcrGuard = Callable[[], AbstractContextManager[object]]
 """Entered around each document's OCR: it may wait for a turn, or refuse."""
 

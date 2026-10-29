@@ -7,7 +7,6 @@ import streamlit as st
 from streamlit.runtime.uploaded_file_manager import UploadedFile
 
 from src.api import (
-    BuildNotChosenError,
     MasterList,
     document_key,
     generate_master_list,
@@ -31,6 +30,7 @@ from src.bom_lib import (
     get_residual_report,
     sort_inventory,
 )
+from src.bom_lib.errors import BuildNotChosenError, ReadError
 from src.exporters import (
     generate_shopping_list_csv,
     generate_stock_update_csv,
@@ -111,6 +111,12 @@ if "results_cleared" not in st.session_state:
 # Initialize session state for pedal slots
 if "pedal_slots" not in st.session_state:
     st.session_state.pedal_slots = [ProjectSlot()]
+
+
+def _explain(error: ReadError) -> str:
+    """An error as the builder reads it, with a bug's code to quote."""
+    text = f"{error.message} {error.hint}".strip()
+    return f"{text} (code {error.bug.code})" if error.bug else text
 
 
 def add_slot() -> None:
@@ -600,7 +606,7 @@ if generate:
             read_stock(stock_file) if stock_file else None,
         )
     except BuildNotChosenError as e:
-        st.error(str(e))
+        st.error(f"{e.message} {e.hint}")
     else:
         # Show each project under the name it was given on the master list.
         for slot, built in zip(
@@ -616,12 +622,12 @@ if generate:
             if stats["errors"]:
                 with st.expander("Show Errors", expanded=True):
                     for err in stats["errors"]:
-                        st.error(f"❌ {err}")
+                        st.error(f"❌ {_explain(err)}")
         elif stats["errors"]:
             # Case: We found parts, but some files/lines failed (Partial Success)
             st.warning("⚠️ Master List generated, but some inputs had errors.")
             for err in stats["errors"]:
-                st.error(f"❌ {err}")
+                st.error(f"❌ {_explain(err)}")
         else:
             st.toast("Master List Generated Successfully", icon="✅")
 

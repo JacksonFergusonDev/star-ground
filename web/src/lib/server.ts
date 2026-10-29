@@ -11,6 +11,7 @@ import type {
   PresetCatalog,
   Problem,
   ReadEvent,
+  ReportIn,
 } from './api';
 
 const api = (path: string): string => `${PUBLIC_API_URL}/api/${path}`;
@@ -53,7 +54,7 @@ async function send(path: string, init?: RequestInit): Promise<Response> {
   }
   if (response.ok) return response;
   const body = (await response.json().catch(() => null)) as ApiError['body'] | null;
-  if (body?.message) throw new ApiError(body.message, response.status, body);
+  if (body?.message) throw new ApiError(explain(body as Problem), response.status, body);
   // Cloud Run's own refusals (no capacity, an overloaded instance) carry no message.
   if (response.status === 429 || response.status >= 500) throw new ApiError(BUSY, response.status);
   throw new ApiError(`The server answered ${response.status}. Try again.`, response.status);
@@ -96,7 +97,7 @@ export async function readDocument(
       if (!line.startsWith('data: ')) continue;
       const event = JSON.parse(line.slice(6)) as ReadEvent;
       if (event.event === 'result') return event.reading;
-      if (event.event === 'error') throw new ApiError(event.message, response.status);
+      if (event.event === 'error') throw new ApiError(explain(event), response.status, event);
       progress(event);
     }
     if (done) throw new ApiError('The reading stopped early. Try again.', response.status);
@@ -194,4 +195,34 @@ function form(request: MasterListRequest, files: File[], stock: Stock | null): F
   }
   if (stock) body.set('stock', new File([stock.text], stock.name, { type: 'text/csv' }));
   return body;
+}
+
+/** A problem as the builder reads it: what happened, then what to do. */
+export function explain(problem: Problem): string {
+  return [problem.message, problem.hint].filter(Boolean).join(' ');
+}
+
+/** Sends a builder's bug report: its code and what was being read, never the document. */
+export async function sendReport(report: ReportIn): Promise<void> {
+  await send('reports', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(report),
+  });
+}
+
+/** Whether a refusal means this server can't take reports at all. */
+export function reportsUnavailable(error: unknown): boolean {
+  return error instanceof ApiError && error.status === 503;
+}
+
+/** A request that failed: what to tell the builder, and the bug's code if it was one. */
+export interface Failure {
+  message: string;
+  bugCode: string | null;
+}
+
+/** The code of the bug a failed request carries, if it was a bug in Star Ground. */
+export function bugOf(error: unknown): string | null {
+  return error instanceof ApiError ? (error.body.bug_code ?? null) : null;
 }

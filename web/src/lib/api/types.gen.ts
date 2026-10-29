@@ -71,9 +71,27 @@ export type BodyReadApiDocumentsReadPost = {
  */
 export type BuildNotChosen = {
     /**
+     * What kind of problem it is; none for a plain refusal.
+     */
+    kind?: ErrorKind | null;
+    /**
      * Message
+     *
+     * What happened.
      */
     message: string;
+    /**
+     * Hint
+     *
+     * What the builder can do about it.
+     */
+    hint?: string;
+    /**
+     * Bug Code
+     *
+     * Set when it's a bug in Star Ground: names it in the server's log, and a report sends it back.
+     */
+    bug_code?: string | null;
     /**
      * Projects
      */
@@ -94,9 +112,27 @@ export type ComponentOrigin = 'Circuit Board' | 'Hardware Kit' | 'Extras';
  */
 export type DocumentsMissing = {
     /**
+     * What kind of problem it is; none for a plain refusal.
+     */
+    kind?: ErrorKind | null;
+    /**
      * Message
+     *
+     * What happened.
      */
     message: string;
+    /**
+     * Hint
+     *
+     * What the builder can do about it.
+     */
+    hint?: string;
+    /**
+     * Bug Code
+     *
+     * Set when it's a bug in Star Ground: names it in the server's log, and a report sends it back.
+     */
+    bug_code?: string | null;
     /**
      * Documents
      *
@@ -104,6 +140,13 @@ export type DocumentsMissing = {
      */
     documents: Array<string>;
 };
+
+/**
+ * ErrorKind
+ *
+ * What kind of problem stopped a reading or a request.
+ */
+export type ErrorKind = 'fetch' | 'unreadable_pdf' | 'too_many_pages' | 'build_not_chosen' | 'ocr_refused' | 'bug';
 
 /**
  * ExportKind
@@ -275,13 +318,31 @@ export type PresetCatalog = {
 /**
  * Problem
  *
- * Why a request couldn't be served.
+ * Why a request or a reading failed, written for the builder.
  */
 export type Problem = {
     /**
+     * What kind of problem it is; none for a plain refusal.
+     */
+    kind?: ErrorKind | null;
+    /**
      * Message
+     *
+     * What happened.
      */
     message: string;
+    /**
+     * Hint
+     *
+     * What the builder can do about it.
+     */
+    hint?: string;
+    /**
+     * Bug Code
+     *
+     * Set when it's a bug in Star Ground: names it in the server's log, and a report sends it back.
+     */
+    bug_code?: string | null;
 };
 
 /**
@@ -314,6 +375,38 @@ export type ProjectResult = {
      * Options
      */
     options: Array<string>;
+    /**
+     * Errors
+     *
+     * Why it couldn't be read.
+     */
+    errors: Array<Problem>;
+};
+
+/**
+ * ReportIn
+ *
+ * A builder's report of a bug, sent from where it appeared.
+ */
+export type ReportIn = {
+    /**
+     * Code
+     *
+     * The bug's `bug_code`.
+     */
+    code: string;
+    /**
+     * Document
+     *
+     * What was being read: the upload's name or the link. Never the document itself.
+     */
+    document: string;
+    /**
+     * Comment
+     *
+     * Anything the builder adds.
+     */
+    comment?: string;
 };
 
 /**
@@ -379,10 +472,6 @@ export type Stats = {
      * Parts Found
      */
     parts_found: number;
-    /**
-     * Errors
-     */
-    errors: Array<string>;
 };
 
 /**
@@ -471,8 +560,10 @@ export type DocumentReading = {
     options: Array<string>;
     /**
      * Errors
+     *
+     * Why it couldn't be read.
      */
-    errors: Array<string>;
+    errors: Array<Problem>;
 };
 
 /**
@@ -531,13 +622,31 @@ export type ReadDone = {
  */
 export type ReadFailed = {
     /**
+     * What kind of problem it is; none for a plain refusal.
+     */
+    kind?: ErrorKind | null;
+    /**
+     * Message
+     *
+     * What happened.
+     */
+    message: string;
+    /**
+     * Hint
+     *
+     * What the builder can do about it.
+     */
+    hint?: string;
+    /**
+     * Bug Code
+     *
+     * Set when it's a bug in Star Ground: names it in the server's log, and a report sends it back.
+     */
+    bug_code?: string | null;
+    /**
      * Event
      */
     event?: 'error';
-    /**
-     * Message
-     */
-    message: string;
 };
 
 /**
@@ -922,3 +1031,32 @@ export type SendFeedbackApiFeedbackPostResponses = {
 };
 
 export type SendFeedbackApiFeedbackPostResponse = SendFeedbackApiFeedbackPostResponses[keyof SendFeedbackApiFeedbackPostResponses];
+
+export type SendReportApiReportsPostData = {
+    body: ReportIn;
+    path?: never;
+    query?: never;
+    url: '/api/reports';
+};
+
+export type SendReportApiReportsPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+    /**
+     * Service Unavailable
+     */
+    503: Problem;
+};
+
+export type SendReportApiReportsPostError = SendReportApiReportsPostErrors[keyof SendReportApiReportsPostErrors];
+
+export type SendReportApiReportsPostResponses = {
+    /**
+     * Successful Response
+     */
+    204: void;
+};
+
+export type SendReportApiReportsPostResponse = SendReportApiReportsPostResponses[keyof SendReportApiReportsPostResponses];

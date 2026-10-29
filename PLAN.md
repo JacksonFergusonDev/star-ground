@@ -39,6 +39,7 @@ Decided 2026-10-22 to 2026-10-24. A decision here changes only by editing this f
 - **Audience: the general DIY pedal builder.** Build nothing deep for one kind of user (for example, people who sell pedals) until forum feedback asks for it.
 - **Local-first, no accounts in v1.** Builds, stock and checklist progress live in the browser, with share links and import and export. Accounts and sync are a README "if users ask" item.
 - **Laptop-first bench mode.** Builds happen with a laptop at the bench, so bench mode is designed for a laptop screen and keyboard, then made to work on phones.
+- **Errors the builder can act on, and reports for the rest** (decided 2026-10-28): a problem with the builder's input is explained in plain words; a bug in Star Ground says so plainly and offers a one-click report to the feedback sheet's Reports tab (no account needed), or a prefilled GitHub issue. A report holds the bug's code and traceback, the document's name or link, and the builder's note, never the document. The traceback stays on the server: the browser and the public GitHub issue get only the code. A help page waits for the documentation site.
 - **Cut from the Streamlit app:** the Debug Console, the "Advanced Options" expander and emoji headings. The feedback expander becomes in-app part reports.
 
 ### Publishers' documents

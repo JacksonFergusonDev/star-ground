@@ -9,7 +9,8 @@ from unittest.mock import patch
 import pytest
 
 from src.bom_lib.enums import ComponentCategory, InputMethod
-from src.bom_lib.fetch import FetchedDocument, FetchError
+from src.bom_lib.errors import BUG_MESSAGE, ErrorKind, FetchError
+from src.bom_lib.fetch import FetchedDocument
 from src.bom_lib.strategies import (
     BOMParserContext,
     CSVParserStrategy,
@@ -342,8 +343,10 @@ class TestBOMParserContext:
 
         assert isinstance(result, ParseResult)
         assert result.stats["parts_found"] == 0
-        assert len(result.stats["errors"]) == 1
-        assert result.stats["errors"] == ["example.com took too long to answer."]
+        (error,) = result.stats["errors"]
+        assert error.kind == ErrorKind.FETCH
+        assert error.message == "example.com took too long to answer."
+        assert error.bug is None
 
     def test_a_bug_is_logged_and_reported_as_one(
         self, caplog: pytest.LogCaptureFixture
@@ -354,18 +357,19 @@ class TestBOMParserContext:
                 InputMethod.PASTE_TEXT, "R1 10k", "Buggy"
             )
 
-        assert result.stats["errors"] == [
-            "Star Ground couldn't read this parts list because of a bug. "
-            "It has been logged; please report it with the document."
-        ]
-        assert "Reading Buggy failed" in caplog.text
-        assert "KeyError" in caplog.text  # with its traceback
+        (error,) = result.stats["errors"]
+        assert error.message == BUG_MESSAGE
+        bug = error.bug
+        assert bug is not None
+        assert "reading Buggy" in bug.detail
+        assert "KeyError" in bug.detail  # with its traceback
+        assert f"Bug {bug.code}" in caplog.text
 
-    def test_process_unknown_method(self) -> None:
+    def test_input_no_strategy_reads_is_a_bug(self) -> None:
+        """Every input the app sends has a strategy, so a miss is Star Ground's."""
         context = BOMParserContext([])
         result = context.process(InputMethod.PASTE_TEXT, "12345", "Unknown")
 
-        assert isinstance(result, ParseResult)
         assert result.stats["parts_found"] == 0
-        assert len(result.stats["errors"]) == 1
-        assert result.stats["errors"][0] == "Unknown Method"
+        (error,) = result.stats["errors"]
+        assert error.kind == ErrorKind.BUG

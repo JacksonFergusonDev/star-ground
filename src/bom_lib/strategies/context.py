@@ -5,8 +5,14 @@ import os
 from urllib.parse import unquote, urlsplit
 
 from src.bom_lib.enums import InputMethod
-from src.bom_lib.fetch import FetchedDocument, FetchError, fetch_url
-from src.bom_lib.ocr import OcrRefusedError
+from src.bom_lib.errors import (
+    FetchError,
+    OcrRefusedError,
+    ReadError,
+    StarGroundError,
+    bug_reading,
+)
+from src.bom_lib.fetch import FetchedDocument, fetch_url
 from src.bom_lib.strategies.base import BOMParserStrategy, ParseResult
 from src.bom_lib.strategies.csv import CSVParserStrategy
 from src.bom_lib.strategies.manual import ManualInputStrategy
@@ -34,8 +40,8 @@ def _from_download(doc: FetchedDocument) -> str | bytes | FileUpload:
         return doc.content
     if doc.content_type == "text/html" or doc.content.lstrip()[:1] == b"<":
         raise FetchError(
-            "The link opened a web page, not a parts list. "
-            "Download the PDF and upload it instead."
+            "The link opened a web page, not a parts list.",
+            "Download the PDF and upload it instead.",
         )
     name = os.path.basename(unquote(urlsplit(doc.url).path))
     if doc.content_type in _CSV_TYPES or name.lower().endswith((".csv", ".tsv")):
@@ -47,11 +53,20 @@ def _from_download(doc: FetchedDocument) -> str | bytes | FileUpload:
     return doc.content.decode("utf-8", errors="replace")
 
 
-def _failed(error: str) -> ParseResult:
+def _failed(error: ReadError) -> ParseResult:
     """An empty reading that reports why it is empty."""
     stats = create_empty_stats()
     stats["errors"].append(error)
     return ParseResult(inventory=create_empty_inventory(), stats=stats)
+
+
+def _describe(method: InputMethod, data: RawBOMData, source_name: str) -> str:
+    """What was being read, for the log: the file's name or the link."""
+    if isinstance(data, FileUpload):
+        return f"reading the upload {data.name}"
+    if method == InputMethod.FROM_URL:
+        return f"reading the link {str(data).strip()}"
+    return f"reading {source_name} ({method.value})"
 
 
 class BOMParserContext:
@@ -104,18 +119,14 @@ class BOMParserContext:
                 if strategy.can_handle(method, data_to_parse):
                     return strategy.parse(data_to_parse, source_name=source_name)
 
-            return _failed("Unknown Method")
+            raise ValueError(f"No strategy reads {method} input")
 
         except OcrRefusedError:
             # The server's limit, not a failure to read: its caller answers.
             raise
-        except FetchError as e:
-            # Written for the builder: a link the app won't or can't fetch.
-            return _failed(str(e))
+        except StarGroundError as e:
+            # Written for the builder: a link that won't load, a damaged PDF.
+            return _failed(e.as_read_error())
         except Exception:
-            # A bug, not the builder's input: log it whole, and say so.
-            logger.exception("Reading %s failed", source_name)
-            return _failed(
-                "Star Ground couldn't read this parts list because of a bug. "
-                "It has been logged; please report it with the document."
-            )
+            # A bug, not the builder's input: record it to report, and say so.
+            return _failed(bug_reading(_describe(method, data, source_name)))

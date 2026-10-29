@@ -2,7 +2,8 @@
   // One project: its name, how many to build, where its parts list comes from,
   // and the choices its document asks for (a build, OCR) on the card itself.
   import type { Card } from '../../lib/workspace.svelte';
-  import { blocker, builds } from '../../lib/workspace.svelte';
+  import { blocker, builds, count } from '../../lib/workspace.svelte';
+  import BugNotice from './BugNotice.svelte';
   import Icon from './Icon.svelte';
 
   let {
@@ -22,11 +23,19 @@
   const choices = $derived(builds(card));
   const waiting = $derived(blocker(card));
   const ocr = $derived(card.reading?.ocr ?? null);
+  // What a bug report names: the upload's file name or the link, never the file.
+  const documentName = $derived(
+    card.source.kind === 'upload'
+      ? card.source.fileName
+      : card.source.kind === 'url'
+        ? card.source.url
+        : card.name,
+  );
 
   const source = $derived.by(() => {
     switch (card.source.kind) {
       case 'paste':
-        return `Pasted list, ${card.source.text.trim().split('\n').length} lines`;
+        return `Pasted list, ${count(card.source.text.trim().split('\n').length, 'line')}`;
       case 'preset':
         return `Preset: ${presetName(card.source.key)}`;
       case 'upload':
@@ -69,6 +78,9 @@
     <p class="status">Waiting for OCR: {card.read.position} ahead.</p>
   {:else if card.read.state === 'failed'}
     <p class="status problem">{card.read.message}</p>
+    {#if card.read.bugCode}
+      <BugNotice code={card.read.bugCode} document={documentName} />
+    {/if}
     <button class="text-button" type="button" onclick={() => onRead(card.useOcr)}>
       Read it again
     </button>

@@ -94,4 +94,5 @@ def test_master_lists_built_at_once_all_succeed(fresh_server: TestClient) -> Non
 
     for key, response in zip(presets, results, strict=True):
         assert response.status_code == 200, (key, response)
-        assert response.json()["stats"]["errors"] == [], (key, response.json())
+        projects = response.json()["projects"]
+        assert all(p["errors"] == [] for p in projects), (key, response.json())

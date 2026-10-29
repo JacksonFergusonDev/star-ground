@@ -182,6 +182,33 @@ The image serves the site itself when `STAR_GROUND_SITE_DIR` names it, which the
 
 The deploy updates these variables and keeps any others, so settings made by hand survive a release.
 
+## Feedback and bug reports
+
+When Star Ground hits a bug reading a document, the workspace offers a **Send report** button. It posts the bug's code, the document's name or link, and the builder's note; the server adds the bug's traceback if it still holds it (the last 256 bugs per instance) and appends the report to the Reports tab of the "Star Ground Feedback" Google Sheet. Feedback ratings go to the same sheet's first tab. Both need the sheet's service-account key, the one the Streamlit app reads from its secrets. Without it, the routes answer 503 and the workspace offers only the GitHub issue link.
+
+Run these yourself, since they handle the key. Save the service account's JSON key as `feedback-key.json`, outside the repository, then:
+
+```bash
+gcloud services enable secretmanager.googleapis.com --project "$PROJECT"
+gcloud secrets create star-ground-feedback --project "$PROJECT" \
+  --replication-policy automatic --data-file feedback-key.json
+gcloud secrets add-iam-policy-binding star-ground-feedback --project "$PROJECT" \
+  --member "serviceAccount:star-ground-run@$PROJECT.iam.gserviceaccount.com" \
+  --role roles/secretmanager.secretAccessor
+gcloud run services update star-ground --project "$PROJECT" --region "$REGION" \
+  --update-secrets STAR_GROUND_FEEDBACK_CREDENTIALS=star-ground-feedback:latest
+rm feedback-key.json
+```
+
+The sheet must be shared with the service account's email as an editor; the Streamlit app's already is. The Reports tab is created on the first report. Releases keep the secret, as they keep other settings made by hand.
+
+Each bug is also written to Cloud Run's log as `Bug <code>: …` with its traceback, so a report can be matched to its log entry:
+
+```bash
+gcloud logging read 'resource.labels.service_name="star-ground" AND textPayload:"Bug A1B2C3"' \
+  --project "$PROJECT" --freshness 30d
+```
+
 ## Turning OCR off
 
 OCR is the expensive part of the API: one document takes an instance's CPUs for 10 to 50 seconds. If it ever causes trouble, turn it off without a release. Image parts lists are then reported as images and never offered for OCR:

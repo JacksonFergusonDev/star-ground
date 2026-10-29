@@ -4,8 +4,8 @@
   // button. Everything is kept in the browser (see lib/workspace.svelte.ts).
   import { onMount } from 'svelte';
   import type { ExportKind, MasterListResult, PresetCatalog } from '../../lib/api';
-  import type { Download } from '../../lib/server';
-  import { exportFile, masterList, presets, readDocument, warmUp } from '../../lib/server';
+  import type { Download, Failure } from '../../lib/server';
+  import { bugOf, exportFile, masterList, presets, readDocument, warmUp } from '../../lib/server';
   import type { Added, Card } from '../../lib/workspace.svelte';
   import { files, request, Workspace } from '../../lib/workspace.svelte';
   import AddProject from './AddProject.svelte';
@@ -17,7 +17,7 @@
   let catalog = $state<PresetCatalog | null>(null);
   let result = $state<MasterListResult | null>(null);
   let updating = $state(false);
-  let error = $state<string | null>(null);
+  let error = $state<Failure | null>(null);
 
   const presetName = (key: string): string =>
     catalog?.presets.find((p) => p.key === key)?.name ?? key;
@@ -62,7 +62,8 @@
       current.read = { state: 'ready' };
     } catch (e) {
       const current = workspace.find(id);
-      if (current) current.read = { state: 'failed', message: (e as Error).message };
+      if (current)
+        current.read = { state: 'failed', message: (e as Error).message, bugCode: bugOf(e) };
     }
   }
 
@@ -140,7 +141,7 @@
           error = null;
         })
         .catch((e: Error) => {
-          if (mine === sequence) error = e.message;
+          if (mine === sequence) error = { message: e.message, bugCode: bugOf(e) };
         })
         .finally(() => {
           if (mine === sequence) updating = false;
