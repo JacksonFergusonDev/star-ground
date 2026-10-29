@@ -260,8 +260,8 @@ def _status_error(response: requests.Response) -> FetchError:
     """The builder-facing error for a response that isn't the document."""
     if response.status_code in (401, 403):
         return FetchError(
-            f"The site refused the download ({response.status_code}). The link "
-            "may need a sign-in: download the file and upload it instead."
+            f"The site refused the download ({response.status_code}).",
+            "The link may need a sign-in: download the file and upload it instead.",
         )
     if response.status_code == 404:
         return FetchError("Nothing was found at that link (404).")

@@ -4,6 +4,7 @@ import ast
 import csv
 import io
 import json
+import re
 import threading
 import zipfile
 from pathlib import Path
@@ -22,10 +23,11 @@ from src.bom_lib import (
     InputMethod,
     ParseResult,
 )
-from src.bom_lib.errors import BUG_MESSAGE
+from src.bom_lib.errors import BUG_MESSAGE, ErrorKind, OcrRefusedError
 from src.bom_lib.ocr import ocr_guard
 from src.server import Settings, create_app
 from src.server.limits import OcrQueue, RateLimiter, ReadingCache
+from src.server.models import BUG_CODE, ReportIn
 from tools.export_openapi import OPENAPI_FILE, schema_text
 
 ROOT = Path(__file__).parent.parent
@@ -144,7 +146,7 @@ def test_a_read_takes_a_file_or_a_link(
     response = client.post("/api/documents/read", **fields)
 
     assert response.status_code == 422
-    assert response.json() == {"message": "Send either a file or a url."}
+    assert response.json()["message"] == "Send either a file or a url."
 
 
 def test_a_failed_read_is_an_error_event(
@@ -794,8 +796,8 @@ def test_an_upload_names_a_file_or_a_document(client: TestClient) -> None:
 # --- Bugs and reports ---
 
 
-def test_a_bug_in_a_reading_comes_with_its_report(
-    client: TestClient, mocker: MockerFixture
+def test_a_bug_in_a_reading_gives_the_builder_only_its_code(
+    client: TestClient, mocker: MockerFixture, caplog: pytest.LogCaptureFixture
 ) -> None:
     mocker.patch(
         "src.bom_lib.strategies.pdf.parse_pedalpcb_pdf", side_effect=KeyError("oops")
@@ -805,15 +807,17 @@ def test_a_bug_in_a_reading_comes_with_its_report(
         client.post("/api/documents/read", files={"file": _pdf(KLICHE)}).text
     )[-1]["reading"]
 
-    assert reading["errors"] == [BUG_MESSAGE]
-    (bug,) = reading["bugs"]
-    assert len(bug["code"]) == 6
-    assert "KeyError" in bug["detail"]
-    assert f"reading the upload {KLICHE.name}" in bug["detail"]
+    (error,) = reading["errors"]
+    assert error["kind"] == ErrorKind.BUG
+    assert error["message"] == BUG_MESSAGE
+    assert re.fullmatch(BUG_CODE, error["bug_code"])
+    # The traceback is in the log, never the response.
+    assert "KeyError" not in json.dumps(reading)
+    assert f"Bug {error['bug_code']}" in caplog.text
 
 
 def test_a_failed_read_is_a_bug_with_a_report(
-    client: TestClient, mocker: MockerFixture
+    client: TestClient, mocker: MockerFixture, caplog: pytest.LogCaptureFixture
 ) -> None:
     mocker.patch("src.server.app.read_document", side_effect=RuntimeError("boom"))
 
@@ -822,8 +826,24 @@ def test_a_failed_read_is_a_bug_with_a_report(
     )[-1]
 
     assert event["event"] == "error"
+    assert event["kind"] == ErrorKind.BUG
     assert event["message"] == BUG_MESSAGE
-    assert "boom" in event["bug"]["detail"]
+    assert "boom" not in json.dumps(event)
+    assert f"Bug {event['bug_code']}" in caplog.text
+
+
+def test_a_refused_ocr_read_is_explained_not_a_bug(
+    client: TestClient, mocker: MockerFixture
+) -> None:
+    mocker.patch("src.server.app.read_document", side_effect=OcrRefusedError)
+
+    event = _events(
+        client.post("/api/documents/read", files={"file": _pdf(KLICHE)}).text
+    )[-1]
+
+    assert event["kind"] == ErrorKind.OCR_REFUSED
+    assert event["hint"] == "Try again later."
+    assert event["bug_code"] is None
 
 
 def test_each_project_says_why_it_couldnt_be_read(
@@ -841,26 +861,76 @@ def test_each_project_says_why_it_couldnt_be_read(
     ).json()
 
     (project,) = result["projects"]
-    assert project["errors"] == [BUG_MESSAGE]
-    assert "broken" in project["bugs"][0]["detail"]
+    (error,) = project["errors"]
+    assert error["kind"] == ErrorKind.BUG
+    assert error["bug_code"]
+
+
+def test_a_bug_outside_a_reading_is_answered_with_a_code_not_a_bare_500(
+    mocker: MockerFixture, caplog: pytest.LogCaptureFixture
+) -> None:
+    mocker.patch("src.server.app.generate_master_list", side_effect=ZeroDivisionError)
+    client = TestClient(create_app(Settings(cors_origins=("https://example.com",))))
+
+    request = json.dumps({"projects": [{"method": "paste", "text": "R1 10k"}]})
+    response = client.post(
+        "/api/master-list",
+        data={"request": request},
+        headers={"origin": "https://example.com"},
+    )
+
+    assert response.status_code == 500
+    body = response.json()
+    assert body["kind"] == ErrorKind.BUG
+    assert f"Bug {body['bug_code']}" in caplog.text
+    # The browser can read it: the answer passed through CORS.
+    assert response.headers["access-control-allow-origin"] == "https://example.com"
 
 
 _REPORT = {
     "code": "A1B2C3",
     "document": "Blender.pdf",
-    "detail": "Traceback ...",
     "comment": "Added three documents at once.",
 }
 
 
-def test_a_report_goes_to_the_reports_sink() -> None:
-    received: list[Any] = []
-    client = TestClient(create_app(Settings(), reports=received.append))
+def test_a_report_gets_the_traceback_this_server_holds(
+    mocker: MockerFixture,
+) -> None:
+    received: list[tuple[Any, str]] = []
+    client = TestClient(
+        create_app(Settings(), reports=lambda r, d: received.append((r, d)))
+    )
+    mocker.patch("src.server.app.generate_master_list", side_effect=ZeroDivisionError)
+    code = _post(
+        client, "/api/master-list", [{"method": "paste", "text": "R1 10k"}]
+    ).json()["bug_code"]
+
+    response = client.post("/api/reports", json={**_REPORT, "code": code})
+
+    assert response.status_code == 204
+    report, detail = received[0]
+    assert report.code == code
+    assert "ZeroDivisionError" in detail
+
+
+def test_a_report_of_a_bug_this_server_doesnt_hold_still_goes_in() -> None:
+    received: list[tuple[Any, str]] = []
+    client = TestClient(
+        create_app(Settings(), reports=lambda r, d: received.append((r, d)))
+    )
 
     response = client.post("/api/reports", json=_REPORT)
 
     assert response.status_code == 204
-    assert received[0].model_dump() == _REPORT
+    assert received == [(ReportIn.model_validate(_REPORT), "")]
+
+
+@pytest.mark.parametrize("code", ["a1b2c3", "A1B2C3D", "<script>"])
+def test_a_report_needs_a_bug_code(client: TestClient, code: str) -> None:
+    response = client.post("/api/reports", json={**_REPORT, "code": code})
+
+    assert response.status_code == 422
 
 
 def test_reports_answer_503_when_not_set_up(client: TestClient) -> None:

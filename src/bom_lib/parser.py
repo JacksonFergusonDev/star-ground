@@ -2478,6 +2478,49 @@ def _is_title(text: str) -> bool:
     return len(text.split()) <= _MAX_TITLE_WORDS and not _URL.search(text)
 
 
+_TITLE_IGNORE = frozenset(
+    {"PEDALPCB", "CONTROLS", "COPYRIGHT", "WWW.PEDALPCB.COM", "LEVEL", "VCC", "GND"}
+)
+
+
+def _title(
+    pdf: Any, pages_data: list[PDFPageExtraction], misread: set[int]
+) -> str | None:
+    """The document's title: the largest words on its title page, if any.
+
+    Args:
+        pdf: The open pdfplumber document.
+        pages_data: Each page's extracted text, in order.
+        misread: Pages whose text layer is misread, so it can't be trusted.
+
+    Returns:
+        The title, or None when the title page has none or can't be read.
+    """
+    # A cover page of warnings comes before the title page (Aion FX
+    # legacy Blueshift: 'WARNING / DISCLAIMER').
+    first = int(
+        len(pdf.pages) > 1 and bool(_DISCLAIMER.match(pages_data[0]["text"] or ""))
+    )
+    if first >= len(pdf.pages) or first in misread:
+        return None
+    words = _without_overprint(pdf.pages[first]).extract_words(extra_attrs=["size"])
+    candidates = [
+        w for w in words if w["text"].upper() not in _TITLE_IGNORE and w["size"] > 10
+    ]
+    while candidates:
+        max_size = max(c["size"] for c in candidates)
+        title_words = [w for w in candidates if w["size"] >= max_size - 1]
+        title_words.sort(key=lambda x: (x["top"], x["x0"]))
+        title = " ".join(w["text"] for w in title_words)
+        if _PRESENTS.fullmatch(title):
+            # 'GuitarPCB Presents' heads the page above the title.
+            candidates = [w for w in candidates if w not in title_words]
+            continue
+        title = _BYLINE.sub("", title)
+        return title if _is_title(title) else None
+    return None
+
+
 def parse_pedalpcb_pdf(filepath: str, source_name: str) -> ParseResult:
     """Parses a PedalPCB Build Document (PDF).
 
@@ -2547,46 +2590,8 @@ def parse_pedalpcb_pdf(filepath: str, source_name: str) -> ParseResult:
             )
 
         # --- PHASE 2: TITLE EXTRACTION ---
-        try:
-            # A cover page of warnings comes before the title page (Aion FX
-            # legacy Blueshift: 'WARNING / DISCLAIMER').
-            first = int(
-                len(pdf.pages) > 1
-                and bool(_DISCLAIMER.match(pages_data[0]["text"] or ""))
-            )
-            if first in misread:
-                raise ValueError("the title page's text is misread OCR")
-            p1 = _without_overprint(pdf.pages[first])
-            words = p1.extract_words(extra_attrs=["size"])
-            ignore = {
-                "PEDALPCB",
-                "CONTROLS",
-                "COPYRIGHT",
-                "WWW.PEDALPCB.COM",
-                "LEVEL",
-                "VCC",
-                "GND",
-            }
-            candidates = [
-                w for w in words if w["text"].upper() not in ignore and w["size"] > 10
-            ]
-
-            while candidates:
-                max_size = max(c["size"] for c in candidates)
-                title_words = [w for w in candidates if w["size"] >= max_size - 1]
-                title_words.sort(key=lambda x: (x["top"], x["x0"]))
-                title = " ".join(w["text"] for w in title_words)
-                if _PRESENTS.fullmatch(title):
-                    # 'GuitarPCB Presents' heads the page above the title.
-                    candidates = [w for w in candidates if w not in title_words]
-                    continue
-                title = _BYLINE.sub("", title)
-                if _is_title(title):
-                    stats["extracted_title"] = title
-                break
-        except Exception:
-            # Title extraction is heuristic/optional; don't fail the build if it misses.
-            pass
+        # A heuristic: a page with no title-like words leaves it unset.
+        stats["extracted_title"] = _title(pdf, pages_data, misread)
 
         inventory, variants, options = read_pages(pages_data, source_name, stats)
 

@@ -6,12 +6,11 @@ from urllib.parse import unquote, urlsplit
 
 from src.bom_lib.enums import InputMethod
 from src.bom_lib.errors import (
-    BUG_MESSAGE,
-    Bug,
     FetchError,
     OcrRefusedError,
+    ReadError,
     StarGroundError,
-    record_bug,
+    bug_reading,
 )
 from src.bom_lib.fetch import FetchedDocument, fetch_url
 from src.bom_lib.strategies.base import BOMParserStrategy, ParseResult
@@ -41,8 +40,8 @@ def _from_download(doc: FetchedDocument) -> str | bytes | FileUpload:
         return doc.content
     if doc.content_type == "text/html" or doc.content.lstrip()[:1] == b"<":
         raise FetchError(
-            "The link opened a web page, not a parts list. "
-            "Download the PDF and upload it instead."
+            "The link opened a web page, not a parts list.",
+            "Download the PDF and upload it instead.",
         )
     name = os.path.basename(unquote(urlsplit(doc.url).path))
     if doc.content_type in _CSV_TYPES or name.lower().endswith((".csv", ".tsv")):
@@ -54,19 +53,15 @@ def _from_download(doc: FetchedDocument) -> str | bytes | FileUpload:
     return doc.content.decode("utf-8", errors="replace")
 
 
-def _failed(error: str, bug: Bug | None = None) -> ParseResult:
-    """An empty reading that reports why it is empty, and the bug if one was."""
+def _failed(error: ReadError) -> ParseResult:
+    """An empty reading that reports why it is empty."""
     stats = create_empty_stats()
     stats["errors"].append(error)
-    return ParseResult(
-        inventory=create_empty_inventory(),
-        stats=stats,
-        bugs=(bug,) if bug else (),
-    )
+    return ParseResult(inventory=create_empty_inventory(), stats=stats)
 
 
 def _describe(method: InputMethod, data: RawBOMData, source_name: str) -> str:
-    """What was being read, for a bug report: the file's name or the link."""
+    """What was being read, for the log: the file's name or the link."""
     if isinstance(data, FileUpload):
         return f"reading the upload {data.name}"
     if method == InputMethod.FROM_URL:
@@ -124,16 +119,14 @@ class BOMParserContext:
                 if strategy.can_handle(method, data_to_parse):
                     return strategy.parse(data_to_parse, source_name=source_name)
 
-            return _failed("Unknown Method")
+            raise ValueError(f"No strategy reads {method} input")
 
         except OcrRefusedError:
             # The server's limit, not a failure to read: its caller answers.
             raise
         except StarGroundError as e:
             # Written for the builder: a link that won't load, a damaged PDF.
-            return _failed(str(e))
+            return _failed(e.as_read_error())
         except Exception:
             # A bug, not the builder's input: record it to report, and say so.
-            return _failed(
-                BUG_MESSAGE, record_bug(_describe(method, data, source_name))
-            )
+            return _failed(bug_reading(_describe(method, data, source_name)))

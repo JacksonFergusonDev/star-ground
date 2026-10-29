@@ -5,7 +5,12 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from src.bom_lib.enums import FeedbackRating
-from src.feedback import FEEDBACK_SHEET, connect_feedback_sheet, save_feedback
+from src.feedback import (
+    FEEDBACK_SHEET,
+    connect_feedback_sheet,
+    save_feedback,
+    save_report,
+)
 
 
 class TestFeedbackSubmission:
@@ -69,3 +74,23 @@ def test_connect_opens_the_feedback_sheet_with_the_given_credentials() -> None:
     assert from_info.call_args[0][0] == credentials
     authorize.return_value.open.assert_called_once_with(FEEDBACK_SHEET)
     assert sheet is authorize.return_value.open.return_value.sheet1
+
+
+def test_a_report_keeps_the_end_of_a_long_traceback() -> None:
+    """A traceback ends with the exception: that's what a trim must keep."""
+    sheet = MagicMock()
+    detail = "frame\n" * 20_000 + "KeyError: 'toks'"
+
+    save_report(sheet, "A1B2C3", "Fuzz.pdf", "", detail)
+
+    kept = sheet.append_row.call_args.args[0][4]
+    assert kept.endswith("KeyError: 'toks'")
+    assert len(kept) < 50_000
+
+
+def test_a_report_without_its_traceback_points_to_the_log() -> None:
+    sheet = MagicMock()
+
+    save_report(sheet, "A1B2C3", "Fuzz.pdf", "", "")
+
+    assert "Bug A1B2C3" in sheet.append_row.call_args.args[0][4]

@@ -184,7 +184,7 @@ The deploy updates these variables and keeps any others, so settings made by han
 
 ## Feedback and bug reports
 
-When Star Ground hits a bug reading a document, the workspace offers a **Send report** button. It posts the bug's code, its traceback, the document's name or link, and the builder's note to the Reports tab of the "Star Ground Feedback" Google Sheet. Feedback ratings go to the same sheet's first tab. Both need the sheet's service-account key, the one the Streamlit app reads from its secrets. Without it, the routes answer 503 and the workspace offers only the GitHub issue link.
+When Star Ground hits a bug reading a document, the workspace offers a **Send report** button. It posts the bug's code, the document's name or link, and the builder's note; the server adds the bug's traceback if it still holds it (the last 256 bugs per instance) and appends the report to the Reports tab of the "Star Ground Feedback" Google Sheet. Feedback ratings go to the same sheet's first tab. Both need the sheet's service-account key, the one the Streamlit app reads from its secrets. Without it, the routes answer 503 and the workspace offers only the GitHub issue link.
 
 Run these yourself, since they handle the key. Save the service account's JSON key as `feedback-key.json`, outside the repository, then:
 

@@ -1,35 +1,35 @@
 <script lang="ts">
   // A bug in Star Ground, shown where it happened: the builder can send a
-  // report in one click (no account needed), or open a GitHub issue. The
-  // technical detail goes in the report, never on screen.
-  import type { BugReport } from '../../lib/api';
+  // report in one click (no account needed), or open a GitHub issue. Both
+  // carry the bug's code, which finds its traceback in the server's log; the
+  // traceback itself never reaches the page.
   import { reportsUnavailable, sendReport } from '../../lib/server';
   import { links } from '../../lib/site';
   import Icon from './Icon.svelte';
 
-  let { bug, document }: { bug: BugReport; document: string } = $props();
+  let { code, document }: { code: string; document: string } = $props();
 
   let comment = $state('');
   let status = $state<'idle' | 'sending' | 'sent' | 'unavailable' | 'failed'>('idle');
   let problem = $state('');
 
-  // GitHub caps a URL's length; the report carries the full detail.
-  const MAX_DETAIL = 5000;
+  // A GitHub issue is public, and a shared link (a Drive file's) opens the
+  // document to anyone who has it: the issue names only the link's site.
+  const publicName = $derived.by(() => {
+    try {
+      return `a link on ${new URL(document).hostname}`;
+    } catch {
+      return document;
+    }
+  });
 
   const issue = $derived.by(() => {
-    const title = `Bug ${bug.code} reading ${document}`;
+    const title = `Bug ${code} reading ${publicName}`;
     const body = [
-      `Star Ground hit a bug while reading **${document}**.`,
+      `Star Ground hit bug **${code}** while reading ${publicName}.`,
       '',
       '**What I was doing**',
       comment.trim() || '_Describe what you did, if you can._',
-      '',
-      '<details><summary>Technical details</summary>',
-      '',
-      '```',
-      bug.detail.slice(0, MAX_DETAIL),
-      '```',
-      '</details>',
     ].join('\n');
     const query = new URLSearchParams({ title, body });
     return `${links.github}/issues/new?${query}`;
@@ -38,7 +38,7 @@
   async function send(): Promise<void> {
     status = 'sending';
     try {
-      await sendReport({ code: bug.code, document, detail: bug.detail, comment: comment.trim() });
+      await sendReport({ code, document, comment: comment.trim() });
       status = 'sent';
     } catch (e) {
       if (reportsUnavailable(e)) {
@@ -55,9 +55,9 @@
   {#if status === 'sent'}
     <p role="status">Report sent. Thank you: it helps get this fixed.</p>
   {:else}
-    <label for={`comment-${bug.code}`}>What were you doing? (optional)</label>
+    <label for={`comment-${code}`}>What were you doing? (optional)</label>
     <textarea
-      id={`comment-${bug.code}`}
+      id={`comment-${code}`}
       bind:value={comment}
       rows="2"
       placeholder="For example: added three documents at once"></textarea>
@@ -78,14 +78,14 @@
     </div>
     {#if status === 'unavailable'}
       <p role="status">
-        This server can't take reports. Opening a GitHub issue sends the same details.
+        This server can't take reports. A GitHub issue with the bug's code works as well.
       </p>
     {:else if status === 'failed'}
       <p role="alert">The report didn't send: {problem}</p>
     {/if}
     <p class="small">
-      The report holds what went wrong, the document's name, and your note, never the document
-      itself. Code {bug.code}.
+      The report holds the bug's code ({code}), the document's name or link, and your note, never
+      the document itself.
     </p>
   {/if}
 </div>

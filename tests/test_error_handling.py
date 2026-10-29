@@ -24,9 +24,8 @@ def test_a_file_that_isnt_a_pdf_is_explained_not_reported_as_a_bug():
         InputMethod.UPLOAD_FILE, FileUpload("damaged.pdf", b"%PDF-1.4 not really"), "X"
     )
 
-    assert result.stats["errors"] == [str(UnreadablePdfError())]
-    assert "Simulated" not in result.stats["errors"][0]
-    assert result.bugs == ()
+    assert result.stats["errors"] == [UnreadablePdfError().as_read_error()]
+    assert result.stats["errors"][0].bug is None
 
 
 def test_a_pdf_longer_than_any_build_document_is_not_read(tmp_path):
@@ -68,8 +67,10 @@ def test_a_bug_while_parsing_a_pdf_is_reported_not_shown(tmp_path, caplog):
     ):
         result = BOMParserContext().process(InputMethod.UPLOAD_FILE, upload, "X")
 
-    assert result.stats["errors"] == [BUG_MESSAGE]
-    (bug,) = result.bugs
+    (error,) = result.stats["errors"]
+    assert error.message == BUG_MESSAGE
+    bug = error.bug
+    assert bug is not None
     assert "reading the upload Fuzz.pdf" in bug.detail
     assert "_eval_standard" in bug.detail
     assert f"Bug {bug.code}" in caplog.text

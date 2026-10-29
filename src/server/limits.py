@@ -1,7 +1,9 @@
 """What keeps one server's work bounded: request size, rate, OCR, memory.
 
 The API is stateless; nothing here holds state a request depends on. The
-reading cache only saves work: a miss reads the document again.
+reading cache only saves work: a miss reads the document again. Recent bugs
+only add their tracebacks to reports: a miss leaves the report's code, which
+names the traceback in the log.
 """
 
 import threading
@@ -13,6 +15,7 @@ from contextlib import contextmanager
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from src.bom_lib import ParseResult
+from src.bom_lib.errors import Bug
 
 
 class BodyTooLargeError(Exception):
@@ -227,3 +230,32 @@ class ReadingCache:
             while self._size > self.max_bytes:
                 _, evicted = self._entries.popitem(last=False)
                 self._size -= self._bytes(evicted)
+
+
+class RecentBugs:
+    """The bugs this server showed builders lately, by code.
+
+    A builder's report sends back only a bug's code; this finds its traceback
+    for the report, so the traceback never travels to the browser.
+
+    Args:
+        max_bugs: How many to keep.
+    """
+
+    def __init__(self, max_bugs: int = 256) -> None:
+        self.max_bugs = max_bugs
+        self._bugs: OrderedDict[str, Bug] = OrderedDict()
+        self._lock = threading.Lock()
+
+    def add(self, bug: Bug) -> None:
+        """Keeps a bug, forgetting the oldest beyond the limit."""
+        with self._lock:
+            self._bugs[bug.code] = bug
+            self._bugs.move_to_end(bug.code)
+            while len(self._bugs) > self.max_bugs:
+                self._bugs.popitem(last=False)
+
+    def get(self, code: str) -> Bug | None:
+        """The bug with this code, if this server still holds it."""
+        with self._lock:
+            return self._bugs.get(code)

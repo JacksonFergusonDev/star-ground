@@ -65,35 +65,33 @@ export type BodyReadApiDocumentsReadPost = {
 };
 
 /**
- * BugReport
- *
- * A failure in Star Ground's own code, for the builder to report.
- */
-export type BugReport = {
-    /**
-     * Code
-     *
-     * Names this occurrence in the server's log.
-     */
-    code: string;
-    /**
-     * Detail
-     *
-     * Star Ground's version, what it was doing, and the traceback: for the report, not to show the builder.
-     */
-    detail: string;
-};
-
-/**
  * BuildNotChosen
  *
  * A multi-circuit document's build wasn't chosen.
  */
 export type BuildNotChosen = {
     /**
+     * What kind of problem it is; none for a plain refusal.
+     */
+    kind?: ErrorKind | null;
+    /**
      * Message
+     *
+     * What happened.
      */
     message: string;
+    /**
+     * Hint
+     *
+     * What the builder can do about it.
+     */
+    hint?: string;
+    /**
+     * Bug Code
+     *
+     * Set when it's a bug in Star Ground: names it in the server's log, and a report sends it back.
+     */
+    bug_code?: string | null;
     /**
      * Projects
      */
@@ -114,9 +112,27 @@ export type ComponentOrigin = 'Circuit Board' | 'Hardware Kit' | 'Extras';
  */
 export type DocumentsMissing = {
     /**
+     * What kind of problem it is; none for a plain refusal.
+     */
+    kind?: ErrorKind | null;
+    /**
      * Message
+     *
+     * What happened.
      */
     message: string;
+    /**
+     * Hint
+     *
+     * What the builder can do about it.
+     */
+    hint?: string;
+    /**
+     * Bug Code
+     *
+     * Set when it's a bug in Star Ground: names it in the server's log, and a report sends it back.
+     */
+    bug_code?: string | null;
     /**
      * Documents
      *
@@ -124,6 +140,13 @@ export type DocumentsMissing = {
      */
     documents: Array<string>;
 };
+
+/**
+ * ErrorKind
+ *
+ * What kind of problem stopped a reading or a request.
+ */
+export type ErrorKind = 'fetch' | 'unreadable_pdf' | 'too_many_pages' | 'build_not_chosen' | 'ocr_refused' | 'bug';
 
 /**
  * ExportKind
@@ -295,13 +318,31 @@ export type PresetCatalog = {
 /**
  * Problem
  *
- * Why a request couldn't be served.
+ * Why a request or a reading failed, written for the builder.
  */
 export type Problem = {
     /**
+     * What kind of problem it is; none for a plain refusal.
+     */
+    kind?: ErrorKind | null;
+    /**
      * Message
+     *
+     * What happened.
      */
     message: string;
+    /**
+     * Hint
+     *
+     * What the builder can do about it.
+     */
+    hint?: string;
+    /**
+     * Bug Code
+     *
+     * Set when it's a bug in Star Ground: names it in the server's log, and a report sends it back.
+     */
+    bug_code?: string | null;
 };
 
 /**
@@ -337,15 +378,9 @@ export type ProjectResult = {
     /**
      * Errors
      *
-     * Why it couldn't be read, in plain words.
+     * Why it couldn't be read.
      */
-    errors: Array<string>;
-    /**
-     * Bugs
-     *
-     * Bugs in Star Ground, to report.
-     */
-    bugs: Array<BugReport>;
+    errors: Array<Problem>;
 };
 
 /**
@@ -357,7 +392,7 @@ export type ReportIn = {
     /**
      * Code
      *
-     * The bug's `code`.
+     * The bug's `bug_code`.
      */
     code: string;
     /**
@@ -366,12 +401,6 @@ export type ReportIn = {
      * What was being read: the upload's name or the link. Never the document itself.
      */
     document: string;
-    /**
-     * Detail
-     *
-     * The bug's `detail`.
-     */
-    detail: string;
     /**
      * Comment
      *
@@ -443,10 +472,6 @@ export type Stats = {
      * Parts Found
      */
     parts_found: number;
-    /**
-     * Errors
-     */
-    errors: Array<string>;
 };
 
 /**
@@ -536,15 +561,9 @@ export type DocumentReading = {
     /**
      * Errors
      *
-     * Why it couldn't be read, in plain words.
+     * Why it couldn't be read.
      */
-    errors: Array<string>;
-    /**
-     * Bugs
-     *
-     * Bugs in Star Ground, to report.
-     */
-    bugs: Array<BugReport>;
+    errors: Array<Problem>;
 };
 
 /**
@@ -603,17 +622,31 @@ export type ReadDone = {
  */
 export type ReadFailed = {
     /**
-     * Event
+     * What kind of problem it is; none for a plain refusal.
      */
-    event?: 'error';
+    kind?: ErrorKind | null;
     /**
      * Message
+     *
+     * What happened.
      */
     message: string;
     /**
-     * Set when the failure is a bug in Star Ground.
+     * Hint
+     *
+     * What the builder can do about it.
      */
-    bug?: BugReport | null;
+    hint?: string;
+    /**
+     * Bug Code
+     *
+     * Set when it's a bug in Star Ground: names it in the server's log, and a report sends it back.
+     */
+    bug_code?: string | null;
+    /**
+     * Event
+     */
+    event?: 'error';
 };
 
 /**

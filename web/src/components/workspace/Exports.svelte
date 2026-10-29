@@ -2,7 +2,9 @@
   // The master list's files: the shopping list, a supplier cart, the stock
   // after this order, field manuals and sticker sheets, and the build pack.
   import type { ExportKind } from '../../lib/api';
-  import type { Download } from '../../lib/server';
+  import type { Download, Failure } from '../../lib/server';
+  import { bugOf } from '../../lib/server';
+  import BugNotice from './BugNotice.svelte';
 
   let { onExport }: { onExport: (kind: ExportKind, excel: boolean) => Promise<Download> } =
     $props();
@@ -28,7 +30,7 @@
 
   let excel = $state(true);
   let busy = $state<ExportKind | null>(null);
-  let problem = $state<string | null>(null);
+  let problem = $state<Failure | null>(null);
 
   async function save(kind: ExportKind): Promise<void> {
     busy = kind;
@@ -42,7 +44,7 @@
       link.click();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
     } catch (e) {
-      problem = (e as Error).message;
+      problem = { message: (e as Error).message, bugCode: bugOf(e) };
     } finally {
       busy = null;
     }
@@ -82,7 +84,10 @@
     Write supplier links as clickable Excel or Google Sheets links
   </label>
   {#if problem}
-    <p class="problem" role="alert">{problem}</p>
+    <p class="problem" role="alert">{problem.message}</p>
+    {#if problem.bugCode}
+      <BugNotice code={problem.bugCode} document="Downloading an export" />
+    {/if}
   {/if}
 </section>
 

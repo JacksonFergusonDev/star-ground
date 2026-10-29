@@ -89,10 +89,13 @@ def save_report(
         code: The bug's code, as in the server's log.
         document: What was being read: an upload's name or a link.
         comment: Anything the builder added.
-        detail: Star Ground's version, what it was doing, and the traceback.
+        detail: Star Ground's version, what it was doing, and the traceback;
+            empty when this server no longer holds the bug.
 
     Raises:
         Exception: If the sheet cannot be written.
     """
-    row = [str(datetime.datetime.now()), code, document, comment, detail[:_MAX_CELL]]
+    # A traceback ends with the exception, so a long one keeps its end.
+    kept = detail[-_MAX_CELL:] if detail else f"Search the log for 'Bug {code}'."
+    row = [str(datetime.datetime.now()), code, document, comment, kept]
     sheet.append_row(row)

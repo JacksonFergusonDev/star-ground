@@ -392,7 +392,6 @@ def generate_master_list(
                 ),
                 warnings=tuple(p_stats["warnings"]),
                 errors=tuple(p_stats["errors"]),
-                bugs=result.bugs,
                 options=tuple(str(o) for o in result.options),
                 document=result.raw_content,
                 source_path=project.source_path,

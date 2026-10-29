@@ -123,7 +123,10 @@ def test_input_errors_reach_the_master_list(monkeypatch: pytest.MonkeyPatch) -> 
         ]
     )
 
-    assert master.stats["errors"] == ["The link opened a web page, not a parts list."]
+    assert [e.message for e in master.stats["errors"]] == [
+        "The link opened a web page, not a parts list."
+    ]
+    assert master.projects[1].errors == tuple(master.stats["errors"])
     assert master.stats["parts_found"] == 1
 
 

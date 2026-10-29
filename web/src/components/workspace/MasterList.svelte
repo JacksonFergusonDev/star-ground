@@ -2,7 +2,8 @@
   // The master list: what to check, then what to buy across every project,
   // and the files to download.
   import type { ExportKind, MasterListResult } from '../../lib/api';
-  import type { Download } from '../../lib/server';
+  import type { Download, Failure } from '../../lib/server';
+  import { explain } from '../../lib/server';
   import type { Options } from '../../lib/workspace.svelte';
   import { count } from '../../lib/workspace.svelte';
   import BugNotice from './BugNotice.svelte';
@@ -18,7 +19,7 @@
   }: {
     result: MasterListResult | null;
     updating: boolean;
-    error: string | null;
+    error: Failure | null;
     options: Options;
     onExport: (kind: ExportKind, excel: boolean) => Promise<Download>;
   } = $props();
@@ -35,7 +36,7 @@
       .filter((p) => p.items.length),
   );
   const choices = $derived((result?.projects ?? []).filter((p) => p.options.length));
-  const unread = $derived((result?.projects ?? []).filter((p) => p.errors.length || p.bugs.length));
+  const unread = $derived((result?.projects ?? []).filter((p) => p.errors.length));
   const rows = $derived(result?.shopping_list ?? []);
   const toBuy = $derived(rows.filter((r) => r.buy_qty > 0).length);
 </script>
@@ -47,7 +48,10 @@
   </div>
 
   {#if error}
-    <p class="problem" role="alert">{error}</p>
+    <p class="problem" role="alert">{error.message}</p>
+    {#if error.bugCode}
+      <BugNotice code={error.bugCode} document="Building the master list" />
+    {/if}
   {/if}
 
   {#if !result}
@@ -61,11 +65,11 @@
 
     {#each unread as project (project.label)}
       <h3>Couldn't read {project.label}</h3>
-      {#each project.errors as message, i (i)}
-        <p class="note">{message}</p>
-      {/each}
-      {#each project.bugs as bug (bug.code)}
-        <BugNotice {bug} document={project.label} />
+      {#each project.errors as problem, i (i)}
+        <p class="note">{explain(problem)}</p>
+        {#if problem.bug_code}
+          <BugNotice code={problem.bug_code} document={project.label} />
+        {/if}
       {/each}
     {/each}
 

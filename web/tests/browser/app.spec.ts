@@ -7,6 +7,7 @@ import type {
   MasterListRequest,
   MasterListResult,
   PresetCatalog,
+  Problem,
 } from '../../src/lib/api';
 
 const catalog: PresetCatalog = {
@@ -29,7 +30,6 @@ const result: MasterListResult = {
       ocr_reads: [],
       options: [],
       errors: [],
-      bugs: [],
     },
   ],
   shopping_list: [
@@ -47,7 +47,7 @@ const result: MasterListResult = {
       supplier_url: 'https://www.taydaelectronics.com/',
     },
   ],
-  stats: { lines_read: 2, parts_found: 2, errors: [] },
+  stats: { lines_read: 2, parts_found: 2 },
   ignored_lines: [],
   has_stock: false,
 };
@@ -63,7 +63,6 @@ const reading = (over: Partial<DocumentReading> = {}): DocumentReading => ({
   ocr_offered: false,
   options: [],
   errors: [],
-  bugs: [],
   ...over,
 });
 
@@ -367,19 +366,20 @@ test('a download saves the file the API exports', async ({ page }) => {
   expect(url).toContain('/api/exports/shopping-list?links=excel');
 });
 
-const BUG = {
-  code: 'A1B2C3',
-  detail:
-    "Star Ground 2.6.0, reading the upload Blender.pdf\n\nTypeError: _eval_standard() missing 1 required positional argument: 'toks'",
-};
 const BUG_MESSAGE = "Star Ground hit a bug while reading this, so its parts aren't on the list.";
+const BUG: Problem = {
+  kind: 'bug',
+  message: BUG_MESSAGE,
+  hint: "It isn't a problem with your document. Sending a report helps get it fixed.",
+  bug_code: 'A1B2C3',
+};
 
 async function stubBuggyList(page: Page): Promise<void> {
   await page.route('**/api/master-list', (route) =>
     route.fulfill({
       json: {
         ...result,
-        projects: [{ ...result.projects[0], label: 'Blender', errors: [BUG_MESSAGE], bugs: [BUG] }],
+        projects: [{ ...result.projects[0], label: 'Blender', errors: [BUG] }],
       },
     }),
   );
@@ -397,7 +397,6 @@ test('a bug says so plainly and sends a report in one click', async ({ page }) =
 
   await expect(page.getByRole('heading', { name: "Couldn't read Blender" })).toBeVisible();
   await expect(page.getByText(BUG_MESSAGE)).toBeVisible();
-  await expect(page.getByText('_eval_standard')).toHaveCount(0);
   await page.getByLabel('What were you doing? (optional)').fill('Added three documents');
   await page.getByRole('button', { name: 'Send report' }).click();
 
@@ -405,12 +404,11 @@ test('a bug says so plainly and sends a report in one click', async ({ page }) =
   expect(report).toEqual({
     code: 'A1B2C3',
     document: 'Blender',
-    detail: BUG.detail,
     comment: 'Added three documents',
   });
 });
 
-test('without reports set up, the GitHub issue link carries the details', async ({ page }) => {
+test('without reports set up, the GitHub issue link carries the code', async ({ page }) => {
   await stubBuggyList(page);
   await page.route('**/api/reports', (route) =>
     route.fulfill({ status: 503, json: { message: "Reports aren't set up on this server." } }),
@@ -424,7 +422,51 @@ test('without reports set up, the GitHub issue link carries the details', async 
   const url = new URL(href ?? '');
   expect(url.pathname).toBe('/JacksonFergusonDev/star-ground/issues/new');
   expect(url.searchParams.get('title')).toBe('Bug A1B2C3 reading Blender');
-  expect(url.searchParams.get('body')).toContain('_eval_standard');
+  expect(url.searchParams.get('body')).toContain('**A1B2C3**');
+});
+
+test("a public GitHub issue names a link's site, not the link", async ({ page }) => {
+  await page.route('**/api/master-list', (route) =>
+    route.fulfill({
+      json: {
+        ...result,
+        projects: [
+          {
+            ...result.projects[0],
+            label: 'https://drive.google.com/file/d/secret/view?usp=sharing',
+            errors: [BUG],
+          },
+        ],
+      },
+    }),
+  );
+  await page.goto('/app/');
+  await paste(page, 'R1 10k');
+
+  const href = await page.getByRole('link', { name: /Open a GitHub issue/ }).getAttribute('href');
+  expect(href).not.toContain('secret');
+  expect(new URL(href ?? '').searchParams.get('title')).toBe(
+    'Bug A1B2C3 reading a link on drive.google.com',
+  );
+});
+
+test('a bug building the master list offers a report', async ({ page }) => {
+  await page.route('**/api/master-list', (route) =>
+    route.fulfill({
+      status: 500,
+      json: {
+        kind: 'bug',
+        message: "Star Ground hit a bug and couldn't finish this.",
+        hint: 'Sending a report helps get it fixed.',
+        bug_code: 'D4E5F6',
+      },
+    }),
+  );
+  await page.goto('/app/');
+  await paste(page, 'R1 10k');
+
+  await expect(page.getByText("Star Ground hit a bug and couldn't finish this.")).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Send report' })).toBeVisible();
 });
 
 test('a read that fails with a bug offers a report on its card', async ({ page }) => {
@@ -432,7 +474,7 @@ test('a read that fails with a bug offers a report on its card', async ({ page }
   await page.route('**/api/documents/read', (route) =>
     route.fulfill({
       contentType: 'text/event-stream',
-      body: sse({ event: 'reading' }, { event: 'error', message: BUG_MESSAGE, bug: BUG }),
+      body: sse({ event: 'reading' }, { event: 'error', ...BUG }),
     }),
   );
   await page.goto('/app/');

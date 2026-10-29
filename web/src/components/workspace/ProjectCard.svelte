@@ -78,8 +78,8 @@
     <p class="status">Waiting for OCR: {card.read.position} ahead.</p>
   {:else if card.read.state === 'failed'}
     <p class="status problem">{card.read.message}</p>
-    {#if card.read.bug}
-      <BugNotice bug={card.read.bug} document={documentName} />
+    {#if card.read.bugCode}
+      <BugNotice code={card.read.bugCode} document={documentName} />
     {/if}
     <button class="text-button" type="button" onclick={() => onRead(card.useOcr)}>
       Read it again

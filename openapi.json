@@ -281,7 +281,7 @@
           "feedback"
         ],
         "summary": "Send Report",
-        "description": "Records a builder's report of a bug, with what was being read.\n\nNever the document itself: an upload's name, or a link.",
+        "description": "Records a builder's report of a bug, with what was being read.\n\nNever the document itself: an upload's name, or a link. The report\ncarries the bug's code; its traceback is added here when this server\nstill holds it, and is in the log under the code either way.",
         "operationId": "send_report_api_reports_post",
         "requestBody": {
           "content": {
@@ -441,33 +441,41 @@
         "type": "object",
         "title": "Body_read_api_documents_read_post"
       },
-      "BugReport": {
-        "additionalProperties": false,
-        "description": "A failure in Star Ground's own code, for the builder to report.",
-        "properties": {
-          "code": {
-            "description": "Names this occurrence in the server's log.",
-            "title": "Code",
-            "type": "string"
-          },
-          "detail": {
-            "description": "Star Ground's version, what it was doing, and the traceback: for the report, not to show the builder.",
-            "title": "Detail",
-            "type": "string"
-          }
-        },
-        "required": [
-          "code",
-          "detail"
-        ],
-        "title": "BugReport",
-        "type": "object"
-      },
       "BuildNotChosen": {
         "properties": {
+          "kind": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ErrorKind"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "What kind of problem it is; none for a plain refusal."
+          },
           "message": {
             "type": "string",
-            "title": "Message"
+            "title": "Message",
+            "description": "What happened."
+          },
+          "hint": {
+            "type": "string",
+            "title": "Hint",
+            "description": "What the builder can do about it.",
+            "default": ""
+          },
+          "bug_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bug Code",
+            "description": "Set when it's a bug in Star Ground: names it in the server's log, and a report sends it back."
           },
           "projects": {
             "items": {
@@ -498,9 +506,39 @@
       },
       "DocumentsMissing": {
         "properties": {
+          "kind": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ErrorKind"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "What kind of problem it is; none for a plain refusal."
+          },
           "message": {
             "type": "string",
-            "title": "Message"
+            "title": "Message",
+            "description": "What happened."
+          },
+          "hint": {
+            "type": "string",
+            "title": "Hint",
+            "description": "What the builder can do about it.",
+            "default": ""
+          },
+          "bug_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bug Code",
+            "description": "Set when it's a bug in Star Ground: names it in the server's log, and a report sends it back."
           },
           "documents": {
             "items": {
@@ -519,6 +557,19 @@
         ],
         "title": "DocumentsMissing",
         "description": "Uploads named by `document` that this server no longer holds."
+      },
+      "ErrorKind": {
+        "description": "What kind of problem stopped a reading or a request.",
+        "enum": [
+          "fetch",
+          "unreadable_pdf",
+          "too_many_pages",
+          "build_not_chosen",
+          "ocr_refused",
+          "bug"
+        ],
+        "title": "ErrorKind",
+        "type": "string"
       },
       "ExportKind": {
         "type": "string",
@@ -771,19 +822,51 @@
         "description": "The preset library."
       },
       "Problem": {
+        "additionalProperties": false,
+        "description": "Why a request or a reading failed, written for the builder.",
         "properties": {
+          "kind": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ErrorKind"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "What kind of problem it is; none for a plain refusal."
+          },
           "message": {
-            "type": "string",
-            "title": "Message"
+            "description": "What happened.",
+            "title": "Message",
+            "type": "string"
+          },
+          "hint": {
+            "default": "",
+            "description": "What the builder can do about it.",
+            "title": "Hint",
+            "type": "string"
+          },
+          "bug_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Set when it's a bug in Star Ground: names it in the server's log, and a report sends it back.",
+            "title": "Bug Code"
           }
         },
-        "additionalProperties": false,
-        "type": "object",
         "required": [
           "message"
         ],
         "title": "Problem",
-        "description": "Why a request couldn't be served."
+        "type": "object"
       },
       "ProjectResult": {
         "properties": {
@@ -820,19 +903,11 @@
           },
           "errors": {
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/Problem"
             },
             "type": "array",
             "title": "Errors",
-            "description": "Why it couldn't be read, in plain words."
-          },
-          "bugs": {
-            "items": {
-              "$ref": "#/components/schemas/BugReport"
-            },
-            "type": "array",
-            "title": "Bugs",
-            "description": "Bugs in Star Ground, to report."
+            "description": "Why it couldn't be read."
           }
         },
         "additionalProperties": false,
@@ -843,8 +918,7 @@
           "reviews",
           "ocr_reads",
           "options",
-          "errors",
-          "bugs"
+          "errors"
         ],
         "title": "ProjectResult",
         "description": "One project as it went onto the master list."
@@ -853,21 +927,15 @@
         "properties": {
           "code": {
             "type": "string",
-            "maxLength": 16,
+            "pattern": "^[0-9A-F]{6}$",
             "title": "Code",
-            "description": "The bug's `code`."
+            "description": "The bug's `bug_code`."
           },
           "document": {
             "type": "string",
             "maxLength": 2048,
             "title": "Document",
             "description": "What was being read: the upload's name or the link. Never the document itself."
-          },
-          "detail": {
-            "type": "string",
-            "maxLength": 20000,
-            "title": "Detail",
-            "description": "The bug's `detail`."
           },
           "comment": {
             "type": "string",
@@ -881,8 +949,7 @@
         "type": "object",
         "required": [
           "code",
-          "document",
-          "detail"
+          "document"
         ],
         "title": "ReportIn",
         "description": "A builder's report of a bug, sent from where it appeared."
@@ -974,21 +1041,13 @@
           "parts_found": {
             "type": "integer",
             "title": "Parts Found"
-          },
-          "errors": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Errors"
           }
         },
         "additionalProperties": false,
         "type": "object",
         "required": [
           "lines_read",
-          "parts_found",
-          "errors"
+          "parts_found"
         ],
         "title": "Stats",
         "description": "Totals across projects."
@@ -1118,19 +1177,11 @@
             "type": "array"
           },
           "errors": {
-            "description": "Why it couldn't be read, in plain words.",
+            "description": "Why it couldn't be read.",
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/Problem"
             },
             "title": "Errors",
-            "type": "array"
-          },
-          "bugs": {
-            "description": "Bugs in Star Ground, to report.",
-            "items": {
-              "$ref": "#/components/schemas/BugReport"
-            },
-            "title": "Bugs",
             "type": "array"
           }
         },
@@ -1144,8 +1195,7 @@
           "ocr",
           "ocr_offered",
           "options",
-          "errors",
-          "bugs"
+          "errors"
         ],
         "title": "DocumentReading",
         "type": "object"
@@ -1226,27 +1276,47 @@
         "additionalProperties": false,
         "description": "The document couldn't be read.",
         "properties": {
-          "event": {
-            "const": "error",
-            "default": "error",
-            "title": "Event",
-            "type": "string"
-          },
-          "message": {
-            "title": "Message",
-            "type": "string"
-          },
-          "bug": {
+          "kind": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/BugReport"
+                "$ref": "#/components/schemas/ErrorKind"
               },
               {
                 "type": "null"
               }
             ],
             "default": null,
-            "description": "Set when the failure is a bug in Star Ground."
+            "description": "What kind of problem it is; none for a plain refusal."
+          },
+          "message": {
+            "description": "What happened.",
+            "title": "Message",
+            "type": "string"
+          },
+          "hint": {
+            "default": "",
+            "description": "What the builder can do about it.",
+            "title": "Hint",
+            "type": "string"
+          },
+          "bug_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Set when it's a bug in Star Ground: names it in the server's log, and a report sends it back.",
+            "title": "Bug Code"
+          },
+          "event": {
+            "const": "error",
+            "default": "error",
+            "title": "Event",
+            "type": "string"
           }
         },
         "required": [
