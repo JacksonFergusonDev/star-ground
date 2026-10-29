@@ -153,9 +153,24 @@ The core of v1, replacing the form.
 
 Probed on 2026-10-24: board renders in PedalPCB, GuitarPCB and Tonepad documents are embedded images with bounding boxes, and Aion's schematics are vector with real text. OCR of cropped board images found 14 designators in 0.5 to 2.2 s; it misses labels rotated 90°.
 
+**Cost, measured 2026-10-29** (`tools/measure_board_ocr.py`, 10 tuning documents per publisher, on the M3). Each distinct embedded image covering at least 8% of its page was read at 200 dpi, upright and then turned 90°:
+
+| Publisher | Images per document | In the text layer | Found by OCR, upright | With the turned pass | CPU-s, upright | CPU-s, both passes |
+| --- | --- | --- | --- | --- | --- | --- |
+| PedalPCB | 6 | 11% | 89% | 98% | 13.2 (17.8 max) | 25.4 (37.1 max) |
+| GuitarPCB | 4 | 15% | 72% | 81% | 8.3 (38.6 max) | 16.1 (76.3 max) |
+| Five Cats | 2 | 0% | 100% | 100% | 14.6 (293 max) | 27.5 (546 max) |
+| Aion FX | 0 | 48% | | | 0 | 0 |
+| Tonepad | 0 | 53% | | | 0 | 0 |
+
+- "In the text layer" counts listed designators printed more than once (an upper bound on what's free). Aion's and Tonepad's boards and schematics are vector drawings, but about half their labels are drawn as shapes, not text.
+- The turned pass is needed: it found 6 to 10 more designators per board image. Re-reading only near-square boxes turned both ways (short sideways labels; RapidOCR already turns taller ones) found fewer and cost about as much, because recognizing hundreds of boxes, not detecting them, is most of the time.
+- A quarter of the images (56 of 206) held no designators: drilling and wiring guides, photos. Five Cats' longest document has 62 images.
+- Parts-list OCR measured 16 CPU-s on the M3 and 20 to 100 vCPU-s on Cloud Run, so a PedalPCB document's 25 CPU-s here is about 30 to 150 vCPU-s there: as much as its parts-list OCR, and over the 10 vCPU-s agreed as the limit for computing it on every upload. Hence the decision above: uploads ask first, and their reads share OCR's queue and hourly allowance. Reading only the largest few images per document would cap the worst case.
+
 1. Backend: find the layout and schematic regions (largest embedded image on a layout page; vector text where present), and each designator's position (text positions, or OCR at 0° and 90°).
 1. Hovering a part lights it up on the board or schematic, and hovering the board highlights the row. Unplaced parts simply don't light up.
-1. Catalog documents get positions precomputed offline; uploads compute them on request.
+1. Catalog documents get positions precomputed offline; uploads compute them only once the builder asks (decided 2026-10-29, see the cost below), like the OCR offer.
 1. Only if heuristics fail for a publisher: a small pre-trained layout model on onnxruntime (for example, RapidLayout). No training.
 
 ### 8. Circuit catalog
