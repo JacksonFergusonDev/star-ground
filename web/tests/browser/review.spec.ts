@@ -260,3 +260,36 @@ test("a value that isn't a part is explained where it was typed", async ({ page 
       'example 10k, 100n or TL072.',
   );
 });
+
+test('parts read down each column, as the document lists them', async ({ page }) => {
+  const at = (x0: number, top: number) => ({ page: 0, x0, top, x1: x0 + 40, bottom: top + 10 });
+  const part = (ref: string, x0: number, top: number) => ({
+    ref,
+    category: 'Resistors' as const,
+    value: '1k',
+    location: at(x0, top),
+  });
+  // Two columns side by side, then a second table below whose columns line up.
+  const parts = [
+    part('R1', 72, 100),
+    part('C1', 300, 100),
+    part('R2', 72, 114),
+    part('C2', 300, 114),
+    part('R3', 72, 128),
+    part('Q1', 72, 400),
+    part('D1', 300, 400),
+    part('Q2', 72, 414),
+    { ref: 'R9', category: 'Resistors' as const, value: '1k', location: null },
+  ];
+  await page.route('**/api/master-list', (route) =>
+    route.fulfill({ json: listOf(project({ reviews: [], parts })) }),
+  );
+  await upload(page);
+  await page.getByRole('button', { name: 'Check the parts against the document' }).click();
+
+  await expect(page.locator('li[data-ref]')).toHaveCount(parts.length);
+  const order = await page
+    .locator('li[data-ref]')
+    .evaluateAll((rows) => rows.map((r) => r.getAttribute('data-ref')));
+  expect(order).toEqual(['R1', 'R2', 'R3', 'C1', 'C2', 'Q1', 'Q2', 'D1', 'R9']);
+});

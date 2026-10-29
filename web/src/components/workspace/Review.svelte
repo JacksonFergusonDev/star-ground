@@ -4,6 +4,7 @@
   // document's order. Choosing a part in either place shows it in the other.
   import { onMount } from 'svelte';
   import type { ProjectResult } from '../../lib/api';
+  import { readingOrder } from '../../lib/reading-order';
   import type { Card, Check } from '../../lib/workspace.svelte';
   import { checksOf, count } from '../../lib/workspace.svelte';
   import type { Box } from './DocumentViewer.svelte';
@@ -55,15 +56,8 @@
     return byRef;
   });
 
-  // In the document's order, so the list reads down the page beside it.
-  const parts = $derived(
-    [...(project?.parts ?? [])].sort((a, b) => {
-      const at = a.location;
-      const bt = b.location;
-      if (!at || !bt) return Number(!at) - Number(!bt);
-      return at.page - bt.page || at.top - bt.top || at.x0 - bt.x0;
-    }),
-  );
+  // In the document's order, down each column, so the list reads beside it.
+  const parts = $derived(readingOrder(project?.parts ?? []));
   const flagged = $derived(parts.filter((p) => warnings.has(p.ref) && !checks[p.ref]));
   const shown = $derived(onlyFlagged ? flagged : parts);
   const checked = $derived(parts.filter((p) => checks[p.ref]).length);
