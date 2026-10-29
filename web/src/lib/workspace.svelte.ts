@@ -3,7 +3,7 @@
 // tens of megabytes, live in IndexedDB. Either can be unavailable (a private
 // window, blocked storage), and the workspace then works for the visit only.
 
-import type { DocumentReading, MasterListRequest } from './api';
+import type { ComponentCategory, DocumentReading, MasterListRequest } from './api';
 import type { Stock } from './server';
 
 /** Where a project's parts list comes from. */
@@ -27,6 +27,11 @@ export type ReadState =
   | { state: 'ready' }
   | { state: 'failed'; message: string; bugCode?: string | null };
 
+/** A part the builder checked against its document. */
+export type Check =
+  | { state: 'confirmed'; value: string }
+  | { state: 'corrected'; read: string; category: ComponentCategory; value: string };
+
 /** One project card. */
 export interface Card {
   id: string;
@@ -40,6 +45,8 @@ export interface Card {
   /** The upload or link as the API read it; none for text and presets. */
   reading: DocumentReading | null;
   read: ReadState;
+  /** The parts checked, by build ('' for a document with one), then designator. */
+  checks: Record<string, Record<string, Check>>;
 }
 
 const STORAGE_KEY = 'star-ground.workspace.v1';
@@ -49,6 +56,20 @@ const MAX_COUNT = 100;
 export function builds(card: Card): string[] {
   if (!card.reading) return [];
   return card.useOcr ? card.reading.ocr_builds : card.reading.builds;
+}
+
+/** Whether a card's parts can be checked against its document: an upload or link, read. */
+export function reviewable(card: Card): boolean {
+  return (
+    (card.source.kind === 'upload' || card.source.kind === 'url') &&
+    card.read.state === 'ready' &&
+    card.reading !== null
+  );
+}
+
+/** The checks for the card's chosen build. */
+export function checksOf(card: Card): Record<string, Check> {
+  return card.checks[card.variant ?? ''] ?? {};
 }
 
 /** Why a card can't go on the master list yet, or null when it can. */
@@ -67,15 +88,29 @@ export interface Options {
   extras: boolean;
 }
 
+/** The cards that can go on the master list, in order: its projects. */
+export function ready(cards: Card[]): Card[] {
+  return cards.filter((c) => blocker(c) === null);
+}
+
 /** The master list request for the cards that are ready. */
 export function request(cards: Card[], options: Options): MasterListRequest | null {
-  const ready = cards.filter((c) => blocker(c) === null);
-  if (!ready.length) return null;
+  const listed = ready(cards);
+  if (!listed.length) return null;
   return {
     show_hardware: options.hardware,
     show_extras: options.extras,
-    projects: ready.map((c) => {
-      const base = { name: c.name, count: c.count, variant: c.variant, use_ocr: c.useOcr };
+    projects: listed.map((c) => {
+      const corrections = Object.entries(checksOf(c)).flatMap(([ref, check]) =>
+        check.state === 'corrected' ? [{ ref, category: check.category, value: check.value }] : [],
+      );
+      const base = {
+        name: c.name,
+        count: c.count,
+        variant: c.variant,
+        use_ocr: c.useOcr,
+        corrections,
+      };
       switch (c.source.kind) {
         case 'paste':
           return { ...base, method: 'paste', text: c.source.text };
@@ -102,12 +137,16 @@ export class Workspace {
     this.options = { ...this.options, ...saved.options };
     // A reading interrupted by a reload can't resume; offer to read again.
     for (const card of this.cards) {
+      card.checks ??= {};
       if (card.read.state === 'reading' || card.read.state === 'queued')
         card.read = { state: 'failed', message: 'Reading was interrupted. Read it again.' };
     }
   }
 
-  add(card: Omit<Card, 'id' | 'variant' | 'useOcr' | 'reading' | 'read'>, read?: ReadState): Card {
+  add(
+    card: Omit<Card, 'id' | 'variant' | 'useOcr' | 'reading' | 'read' | 'checks'>,
+    read?: ReadState,
+  ): Card {
     this.cards.push({
       ...card,
       id: crypto.randomUUID(),
@@ -115,6 +154,7 @@ export class Workspace {
       useOcr: false,
       reading: null,
       read: read ?? { state: 'ready' },
+      checks: {},
     });
     return this.cards[this.cards.length - 1] as Card;
   }
@@ -126,6 +166,15 @@ export class Workspace {
   remove(id: string): void {
     this.cards = this.cards.filter((c) => c.id !== id);
     void files.delete(id);
+  }
+
+  /** Records a part the builder checked, or forgets it (`null`). */
+  check(card: Card, ref: string, check: Check | null): void {
+    const build = card.variant ?? '';
+    const checks = { ...(card.checks[build] ?? {}) };
+    if (check) checks[ref] = check;
+    else delete checks[ref];
+    card.checks[build] = checks;
   }
 
   setCount(card: Card, count: number): void {

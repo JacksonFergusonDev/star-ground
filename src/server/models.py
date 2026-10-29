@@ -19,12 +19,22 @@ from src.bom_lib.errors import ErrorKind
 MAX_TEXT_CHARS = 200_000
 MAX_PROJECTS = 50
 MAX_COUNT = 100
+# More than any parts list has designators.
+MAX_CORRECTIONS = 500
 # `src.bom_lib.errors.record_bug`'s codes: six hex digits.
 BUG_CODE = r"^[0-9A-F]{6}$"
 
 
 class _Model(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
+
+
+class PartCorrection(_Model):
+    """A part the builder corrected against its document."""
+
+    ref: str = Field(max_length=100, description="The designator, as read.")
+    category: ComponentCategory
+    value: str = Field(max_length=200, description="As `POST /api/parts/read` read it.")
 
 
 class _ProjectBase(_Model):
@@ -36,6 +46,11 @@ class _ProjectBase(_Model):
         None, description="The build chosen from a multi-circuit document."
     )
     use_ocr: bool = Field(False, description="Add the parts OCR read from images.")
+    corrections: list[PartCorrection] = Field(
+        default_factory=list,
+        max_length=MAX_CORRECTIONS,
+        description="Parts the builder corrected, applied to the chosen build.",
+    )
 
 
 class PasteProject(_ProjectBase):
@@ -331,6 +346,44 @@ class ReportIn(_Model):
         description="What was being read: the upload's name or the link. Never "
         "the document itself.",
     )
+    comment: str = Field("", max_length=5000, description="Anything the builder adds.")
+
+
+class PartIn(_Model):
+    """A value the builder typed for a part, to read as the parser would."""
+
+    ref: str = Field(max_length=100)
+    value: str = Field(max_length=200)
+    category: ComponentCategory | None = Field(
+        None, description="The part's category as read, for a named part."
+    )
+
+
+class PartOut(_Model):
+    """A part as the master list lists it."""
+
+    category: ComponentCategory
+    value: str
+
+
+class PartReportIn(_Model):
+    """A builder's report that the reading got a part wrong.
+
+    It feeds the parser's regression corpus: the document's link names it,
+    and the location says where to look.
+    """
+
+    document: str = Field(
+        max_length=2048,
+        description="The link, or an upload's name and `document`. Never the "
+        "document itself.",
+    )
+    ref: str = Field(max_length=100)
+    read: str = Field(max_length=200, description="The value as Star Ground read it.")
+    correction: str | None = Field(
+        None, max_length=200, description="The value the document prints."
+    )
+    location: SourceLocation | None = None
     comment: str = Field("", max_length=5000, description="Anything the builder adds.")
 
 

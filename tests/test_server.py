@@ -2,6 +2,7 @@
 
 import ast
 import csv
+import dataclasses
 import io
 import json
 import re
@@ -21,10 +22,12 @@ from src.bom_lib import (
     FeedbackRating,
     FileUpload,
     InputMethod,
+    Location,
     ParseResult,
 )
 from src.bom_lib.errors import BUG_MESSAGE, ErrorKind, OcrRefusedError
 from src.bom_lib.ocr import ocr_guard
+from src.feedback import PartReport
 from src.server import Settings, create_app
 from src.server.limits import OcrQueue, RateLimiter, ReadingCache
 from src.server.models import BUG_CODE, ReportIn
@@ -960,3 +963,120 @@ def test_reports_answer_503_when_not_set_up(client: TestClient) -> None:
 
     assert response.status_code == 503
     assert "aren't set up" in response.json()["message"]
+
+
+# --- Document review ---
+
+
+def _kliche_parts(client: TestClient, **project: Any) -> list[dict[str, Any]]:
+    response = _post(
+        client,
+        "/api/master-list",
+        [{"method": "upload", "file": KLICHE.name, **project}],
+        files=[("files", _pdf(KLICHE))],
+    )
+    assert response.status_code == 200
+    parts: list[dict[str, Any]] = response.json()["projects"][0]["parts"]
+    return parts
+
+
+def test_a_correction_changes_what_the_list_buys(client: TestClient) -> None:
+    read = next(p for p in _kliche_parts(client) if p["ref"] == "R1")
+    correction = {"ref": "R1", "category": "Resistors", "value": "4.7M"}
+
+    parts = _kliche_parts(client, corrections=[correction])
+
+    r1 = next(p for p in parts if p["ref"] == "R1")
+    assert r1["value"] == "4.7M"
+    # Still where the document prints it.
+    assert r1["location"] == read["location"]
+
+
+def test_a_correction_moves_only_its_own_part(client: TestClient) -> None:
+    before = _kliche_parts(client)
+    correction = {"ref": "R1", "category": "Resistors", "value": "4.7M"}
+
+    after = _kliche_parts(client, corrections=[correction])
+
+    assert [p for p in after if p["ref"] != "R1"] == [
+        p for p in before if p["ref"] != "R1"
+    ]
+
+
+def test_a_typed_value_is_read_as_the_parser_reads_it(client: TestClient) -> None:
+    response = client.post("/api/parts/read", json={"ref": "R1", "value": "2K2"})
+
+    assert response.json() == {"category": "Resistors", "value": "2.2k"}
+
+
+def test_a_value_that_isnt_a_part_is_explained(client: TestClient) -> None:
+    response = client.post("/api/parts/read", json={"ref": "R1", "value": " "})
+
+    assert response.status_code == 422
+    assert response.json()["kind"] == ErrorKind.UNREADABLE_PART
+
+
+def test_a_linked_documents_pdf_comes_from_its_reading(
+    client: TestClient, mocker: MockerFixture
+) -> None:
+    upload = FileUpload("Kliche-PedalPCB.pdf", KLICHE.read_bytes())
+    real = read_document(InputMethod.UPLOAD_FILE, upload)
+    read = mocker.patch("src.server.app.read_document", return_value=real)
+    url = "https://docs.pedalpcb.com/project/Kliche-PedalPCB.pdf"
+    client.post("/api/documents/read", data={"url": url})
+
+    response = client.get("/api/documents/pdf", params={"url": url})
+
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "application/pdf"
+    assert response.content == KLICHE.read_bytes()
+    read.assert_called_once()
+
+
+def test_a_link_that_isnt_a_pdf_has_nothing_to_show(
+    client: TestClient, mocker: MockerFixture
+) -> None:
+    real = read_document(
+        InputMethod.UPLOAD_FILE, FileUpload("k.pdf", KLICHE.read_bytes())
+    )
+    assert real is not None
+    mocker.patch(
+        "src.server.app.read_document",
+        return_value=dataclasses.replace(real, raw_content=b"Ref,Value"),
+    )
+
+    response = client.get("/api/documents/pdf", params={"url": "https://x.com/a.csv"})
+
+    assert response.status_code == 404
+
+
+_PART_REPORT = {
+    "document": "https://docs.pedalpcb.com/project/Kliche-PedalPCB.pdf",
+    "ref": "R1",
+    "read": "1k",
+    "correction": "10k",
+    "location": {"page": 1, "x0": 40, "top": 100, "x1": 98, "bottom": 110},
+}
+
+
+def test_a_part_report_reaches_the_sink() -> None:
+    received: list[PartReport] = []
+    client = TestClient(create_app(Settings(), part_reports=received.append))
+
+    response = client.post("/api/part-reports", json=_PART_REPORT)
+
+    assert response.status_code == 204
+    assert received == [
+        PartReport(
+            document=_PART_REPORT["document"],  # type: ignore[arg-type]
+            ref="R1",
+            read="1k",
+            correction="10k",
+            location=Location(page=1, x0=40, top=100, x1=98, bottom=110),
+            comment="",
+        )
+    ]
+
+
+def test_part_reports_answer_503_when_not_set_up(client: TestClient) -> None:
+    assert client.post("/api/part-reports", json=_PART_REPORT).status_code == 503

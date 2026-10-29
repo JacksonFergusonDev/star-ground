@@ -153,7 +153,7 @@ export type DocumentsMissing = {
  *
  * What kind of problem stopped a reading or a request.
  */
-export type ErrorKind = 'fetch' | 'unreadable_pdf' | 'too_many_pages' | 'build_not_chosen' | 'ocr_refused' | 'bug';
+export type ErrorKind = 'fetch' | 'unreadable_pdf' | 'too_many_pages' | 'build_not_chosen' | 'ocr_refused' | 'unreadable_part' | 'bug';
 
 /**
  * ExportKind
@@ -242,6 +242,79 @@ export type MasterListResult = {
  * Categories of parser self-check failures surfaced to the user.
  */
 export type ParseWarningKind = 'Unextracted designator' | 'Conflicting duplicate' | 'Category conflict' | 'Unparsed value' | 'Bill of materials mismatch' | 'Footnote' | 'Builder\'s choice' | 'No parts list' | 'Read by OCR' | 'Misread text layer' | 'Parts list is an image' | 'Parts listed by quantity' | 'Unreadable designator';
+
+/**
+ * PartIn
+ *
+ * A value the builder typed for a part, to read as the parser would.
+ */
+export type PartIn = {
+    /**
+     * Ref
+     */
+    ref: string;
+    /**
+     * Value
+     */
+    value: string;
+    /**
+     * The part's category as read, for a named part.
+     */
+    category?: ComponentCategory | null;
+};
+
+/**
+ * PartOut
+ *
+ * A part as the master list lists it.
+ */
+export type PartOut = {
+    category: ComponentCategory;
+    /**
+     * Value
+     */
+    value: string;
+};
+
+/**
+ * PartReportIn
+ *
+ * A builder's report that the reading got a part wrong.
+ *
+ * It feeds the parser's regression corpus: the document's link names it,
+ * and the location says where to look.
+ */
+export type PartReportIn = {
+    /**
+     * Document
+     *
+     * The link, or an upload's name and `document`. Never the document itself.
+     */
+    document: string;
+    /**
+     * Ref
+     */
+    ref: string;
+    /**
+     * Read
+     *
+     * The value as Star Ground read it.
+     */
+    read: string;
+    /**
+     * Correction
+     *
+     * The value the document prints.
+     */
+    correction?: string | null;
+    location?: SourceLocation | null;
+    /**
+     * Comment
+     *
+     * Anything the builder adds.
+     */
+    comment?: string;
+};
 
 /**
  * PartReview
@@ -752,6 +825,27 @@ export type ReadEvent = ({
 } & ReadFailed);
 
 /**
+ * PartCorrection
+ *
+ * A part the builder corrected against its document.
+ */
+export type PartCorrection = {
+    /**
+     * Ref
+     *
+     * The designator, as read.
+     */
+    ref: string;
+    category: ComponentCategory;
+    /**
+     * Value
+     *
+     * As `POST /api/parts/read` read it.
+     */
+    value: string;
+};
+
+/**
  * PasteProject
  *
  * A parts list typed or pasted as `REF VALUE` lines.
@@ -781,6 +875,12 @@ export type PasteProject = {
      * Add the parts OCR read from images.
      */
     use_ocr?: boolean;
+    /**
+     * Corrections
+     *
+     * Parts the builder corrected, applied to the chosen build.
+     */
+    corrections?: Array<PartCorrection>;
     /**
      * Method
      */
@@ -821,6 +921,12 @@ export type PresetProject = {
      * Add the parts OCR read from images.
      */
     use_ocr?: boolean;
+    /**
+     * Corrections
+     *
+     * Parts the builder corrected, applied to the chosen build.
+     */
+    corrections?: Array<PartCorrection>;
     /**
      * Method
      */
@@ -864,6 +970,12 @@ export type UploadProject = {
      * Add the parts OCR read from images.
      */
     use_ocr?: boolean;
+    /**
+     * Corrections
+     *
+     * Parts the builder corrected, applied to the chosen build.
+     */
+    corrections?: Array<PartCorrection>;
     /**
      * Method
      */
@@ -912,6 +1024,12 @@ export type UrlProject = {
      * Add the parts OCR read from images.
      */
     use_ocr?: boolean;
+    /**
+     * Corrections
+     *
+     * Parts the builder corrected, applied to the chosen build.
+     */
+    corrections?: Array<PartCorrection>;
     /**
      * Method
      */
@@ -1002,6 +1120,40 @@ export type ReadApiDocumentsReadPostResponses = {
 };
 
 export type ReadApiDocumentsReadPostResponse = ReadApiDocumentsReadPostResponses[keyof ReadApiDocumentsReadPostResponses];
+
+export type DocumentPdfApiDocumentsPdfGetData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * Url
+         */
+        url: string;
+    };
+    url: '/api/documents/pdf';
+};
+
+export type DocumentPdfApiDocumentsPdfGetErrors = {
+    /**
+     * Not Found
+     */
+    404: Problem;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DocumentPdfApiDocumentsPdfGetError = DocumentPdfApiDocumentsPdfGetErrors[keyof DocumentPdfApiDocumentsPdfGetErrors];
+
+export type DocumentPdfApiDocumentsPdfGetResponses = {
+    /**
+     * The PDF.
+     */
+    200: Blob | File;
+};
+
+export type DocumentPdfApiDocumentsPdfGetResponse = DocumentPdfApiDocumentsPdfGetResponses[keyof DocumentPdfApiDocumentsPdfGetResponses];
 
 export type BuildMasterListApiMasterListPostData = {
     body: BodyBuildMasterListApiMasterListPost;
@@ -1124,3 +1276,57 @@ export type SendReportApiReportsPostResponses = {
 };
 
 export type SendReportApiReportsPostResponse = SendReportApiReportsPostResponses[keyof SendReportApiReportsPostResponses];
+
+export type ReadPartApiPartsReadPostData = {
+    body: PartIn;
+    path?: never;
+    query?: never;
+    url: '/api/parts/read';
+};
+
+export type ReadPartApiPartsReadPostErrors = {
+    /**
+     * Unprocessable Content
+     */
+    422: Problem;
+};
+
+export type ReadPartApiPartsReadPostError = ReadPartApiPartsReadPostErrors[keyof ReadPartApiPartsReadPostErrors];
+
+export type ReadPartApiPartsReadPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: PartOut;
+};
+
+export type ReadPartApiPartsReadPostResponse = ReadPartApiPartsReadPostResponses[keyof ReadPartApiPartsReadPostResponses];
+
+export type SendPartReportApiPartReportsPostData = {
+    body: PartReportIn;
+    path?: never;
+    query?: never;
+    url: '/api/part-reports';
+};
+
+export type SendPartReportApiPartReportsPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+    /**
+     * Service Unavailable
+     */
+    503: Problem;
+};
+
+export type SendPartReportApiPartReportsPostError = SendPartReportApiPartReportsPostErrors[keyof SendPartReportApiPartReportsPostErrors];
+
+export type SendPartReportApiPartReportsPostResponses = {
+    /**
+     * Successful Response
+     */
+    204: void;
+};
+
+export type SendPartReportApiPartReportsPostResponse = SendPartReportApiPartReportsPostResponses[keyof SendPartReportApiPartReportsPostResponses];

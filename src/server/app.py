@@ -24,7 +24,7 @@ from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Annotated, Any, assert_never
 
-from fastapi import FastAPI, File, Form, Request, UploadFile
+from fastapi import FastAPI, File, Form, Query, Request, UploadFile
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
@@ -34,6 +34,7 @@ from pydantic import BaseModel, TypeAdapter, ValidationError
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from src.api import (
+    Correction,
     MasterList,
     Project,
     ProjectData,
@@ -42,6 +43,7 @@ from src.api import (
     generate_master_list,
     offered,
     parts_to_review,
+    read_correction,
     read_document,
     read_stock,
 )
@@ -50,6 +52,7 @@ from src.bom_lib import (
     FeedbackRating,
     FileUpload,
     InputMethod,
+    Location,
     ParseResult,
     ParseWarning,
     ParseWarningKind,
@@ -58,6 +61,7 @@ from src.bom_lib import (
     ShoppingListRow,
     get_preset_metadata,
     get_residual_report,
+    make_component_key,
     parse_preset_key,
 )
 from src.bom_lib.errors import (
@@ -75,6 +79,7 @@ from src.exporters import (
     generate_stock_update_csv,
     generate_supplier_cart_csv,
 )
+from src.feedback import PartReport
 from src.server.limits import (
     BodySizeLimit,
     OcrQueue,
@@ -93,6 +98,9 @@ from src.server.models import (
     MasterListRequest,
     MasterListResult,
     OcrReading,
+    PartIn,
+    PartOut,
+    PartReportIn,
     PartReview,
     PartWarning,
     PasteProject,
@@ -124,6 +132,10 @@ type FeedbackSink = Callable[[FeedbackRating, str], None]
 type ReportSink = Callable[[ReportIn, str], None]
 """Records a builder's bug report and the bug's traceback, if this server still
 holds it (the sheet's Reports tab, in production)."""
+
+type PartReportSink = Callable[[PartReport], None]
+"""Records a builder's report of a part read wrong (the sheet's Parts tab, in
+production)."""
 
 _STATUS: dict[ErrorKind, int] = {
     ErrorKind.OCR_REFUSED: 429,
@@ -209,6 +221,8 @@ class FeedbackSheet:
         self._connected = 0.0
         self._reports: Any = None
         self._reports_at = 0.0
+        self._parts: Any = None
+        self._parts_at = 0.0
         self._lock = threading.Lock()
 
     def __call__(self, rating: FeedbackRating, comment: str) -> None:
@@ -236,6 +250,16 @@ class FeedbackSheet:
                 report.comment,
                 detail,
             )
+
+    def part_report(self, report: PartReport) -> None:
+        """Appends one part report to the Parts tab."""
+        from src.feedback import connect_part_sheet, save_part_report
+
+        with self._lock:
+            if self._parts is None or time.monotonic() - self._parts_at > 3600:
+                self._parts = connect_part_sheet(self._credentials)
+                self._parts_at = time.monotonic()
+            save_part_report(self._parts, report)
 
 
 def feedback_from_env(env: Mapping[str, str] = os.environ) -> FeedbackSheet | None:
@@ -281,6 +305,7 @@ class _Services:
     cache: ReadingCache
     feedback: FeedbackSink | None
     reports: ReportSink | None
+    part_reports: PartReportSink | None
     bugs: RecentBugs
 
 
@@ -455,6 +480,10 @@ def _project(
         count=project.count,
         variant=project.variant,
         use_ocr=project.use_ocr,
+        corrections=tuple(
+            Correction(c.ref, make_component_key(c.category, c.value))
+            for c in project.corrections
+        ),
     )
     match project:
         case PasteProject():
@@ -496,17 +525,20 @@ def _project(
             assert_never(project)
 
 
+def _location(at: Location | None) -> SourceLocation | None:
+    if at is None:
+        return None
+    return SourceLocation(
+        page=at.page, x0=at.x0, top=at.top, x1=at.x1, bottom=at.bottom
+    )
+
+
 def _part(part: ReadPart) -> ReadPartOut:
-    at = part.location
     return ReadPartOut(
         ref=part.ref,
         category=part.category,
         value=part.value,
-        location=None
-        if at is None
-        else SourceLocation(
-            page=at.page, x0=at.x0, top=at.top, x1=at.x1, bottom=at.bottom
-        ),
+        location=_location(part.location),
     )
 
 
@@ -647,6 +679,7 @@ def create_app(
     settings: Settings | None = None,
     feedback: FeedbackSink | None = None,
     reports: ReportSink | None = None,
+    part_reports: PartReportSink | None = None,
 ) -> FastAPI:
     """Builds the API.
 
@@ -656,6 +689,8 @@ def create_app(
             without one.
         reports: Where bug reports go; the reports route answers 503
             without one.
+        part_reports: Where reports of parts read wrong go; their route
+            answers 503 without one.
 
     Returns:
         The FastAPI application.
@@ -669,6 +704,7 @@ def create_app(
         cache=ReadingCache(settings.cache_bytes),
         feedback=feedback,
         reports=reports,
+        part_reports=part_reports,
         bugs=RecentBugs(),
     )
     app = FastAPI(
@@ -862,6 +898,39 @@ def create_app(
 
         return StreamingResponse(events(), media_type="text/event-stream")
 
+    @app.get(
+        "/api/documents/pdf",
+        tags=["documents"],
+        response_class=Response,
+        responses={
+            200: {"content": {"application/pdf": {}}, "description": "The PDF."},
+            404: {"model": Problem},
+        },
+    )
+    def document_pdf(
+        http: Request, url: Annotated[str, Query(max_length=2048)]
+    ) -> Response:
+        """A linked document's PDF, for the page to draw beside its parts.
+
+        A browser can't fetch a publisher's file itself, so the API passes on
+        the copy it read. Nothing is kept beyond the reading cache.
+        """
+        client = limited(http)
+        url = url.strip()
+        key = document_key(InputMethod.FROM_URL, url)
+        reading = (
+            services.cache.get(f"{key}|ocr")
+            or services.cache.get(str(key))
+            or _read(services, client, InputMethod.FROM_URL, url, ocr=False)
+        )
+        content = reading.raw_content
+        if content is None or not content.startswith(b"%PDF"):
+            raise RefusedError(
+                404,
+                Problem(message="This link isn't a PDF, so there's nothing to show."),
+            )
+        return Response(content, media_type="application/pdf")
+
     @app.post(
         "/api/master-list",
         tags=["master list"],
@@ -975,6 +1044,51 @@ def create_app(
             )
         bug = services.bugs.get(body.code)
         services.reports(body, bug.detail if bug else "")
+
+    @app.post(
+        "/api/parts/read", tags=["master list"], responses={422: {"model": Problem}}
+    )
+    def read_part(http: Request, body: PartIn) -> PartOut:
+        """Reads a value the builder typed for a part, as a parts list's row.
+
+        A correction is read here as it's typed, so the master list request
+        carries it as the list will show it.
+        """
+        limited(http)
+        part = read_correction(body.ref, body.value, body.category)
+        return PartOut(category=part.category, value=part.value)
+
+    @app.post(
+        "/api/part-reports",
+        tags=["feedback"],
+        status_code=204,
+        responses={503: {"model": Problem}},
+    )
+    def send_part_report(http: Request, body: PartReportIn) -> None:
+        """Records a builder's report that a part was read wrong.
+
+        It names the document by its link (or an upload's name and hash) and
+        says where the part was read, so the document can join the parser's
+        regression corpus. Never the document itself.
+        """
+        limited(http)
+        if services.part_reports is None:
+            raise RefusedError(
+                503, Problem(message="Reports aren't set up on this server.")
+            )
+        at = body.location
+        services.part_reports(
+            PartReport(
+                document=body.document,
+                ref=body.ref,
+                read=body.read,
+                correction=body.correction,
+                location=Location(at.page, at.x0, at.top, at.x1, at.bottom)
+                if at
+                else None,
+                comment=body.comment,
+            )
+        )
 
     def openapi() -> dict[str, Any]:
         if app.openapi_schema is None:

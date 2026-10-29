@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "engines": {
-    "node": ">=22.12.0"
+    "node": ">=22.13.0"
   },
   "scripts": {
     "dev": "astro dev",
@@ -23,6 +23,7 @@
     "@astrojs/svelte": "^9.1.1",
     "astro": "^7.4.2",
     "house-style": "github:JacksonFergusonDev/house-style#v3.1.0",
+    "pdfjs-dist": "^6.4.299",
     "svelte": "^5.57.2",
     "typescript": "^6.0.3"
   },

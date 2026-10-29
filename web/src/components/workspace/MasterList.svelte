@@ -16,17 +16,21 @@
     error,
     options,
     onExport,
+    onShow,
   }: {
     result: MasterListResult | null;
     updating: boolean;
     error: Failure | null;
     options: Options;
     onExport: (kind: ExportKind, excel: boolean) => Promise<Download>;
+    /** Shows a project's part (by its place on the list) in its document, if it has one. */
+    onShow: (project: number, ref: string) => (() => void) | null;
   } = $props();
 
   const checks = $derived(
     (result?.projects ?? [])
-      .map((p) => ({
+      .map((p, index) => ({
+        index,
         label: p.label,
         items: [
           ...p.reviews.flatMap((r) => r.warnings.map((w) => ({ ref: r.ref, message: w.message }))),
@@ -83,7 +87,16 @@
         <h4>{project.label}</h4>
         <ul class="notes">
           {#each project.items as item, i (i)}
-            <li><code>{item.ref}</code> {item.message}</li>
+            {@const show = onShow(project.index, item.ref)}
+            <li>
+              <code>{item.ref}</code>
+              {item.message}
+              {#if show}
+                <button class="show" type="button" onclick={show}>
+                  Show in the document <Icon name="arrow-right" size={14} />
+                </button>
+              {/if}
+            </li>
           {/each}
         </ul>
       {/each}
@@ -217,6 +230,25 @@
   }
   summary {
     cursor: pointer;
+  }
+  .show {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+    margin-left: 6px;
+    padding: 0;
+    border: 0;
+    color: var(--text);
+    background: none;
+    font: inherit;
+    cursor: pointer;
+  }
+  .show:hover {
+    color: var(--accent);
+  }
+  .show:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
   }
   .options {
     display: flex;

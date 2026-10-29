@@ -10,10 +10,12 @@ import pytest
 
 from src.api import (
     PENDING_SOURCE,
+    Correction,
     Project,
     document_key,
     file_title,
     generate_master_list,
+    read_correction,
     read_document,
     read_stock,
 )
@@ -26,7 +28,7 @@ from src.bom_lib import (
     ParseWarningKind,
     PcbShop,
 )
-from src.bom_lib.errors import BuildNotChosenError, FetchError
+from src.bom_lib.errors import BuildNotChosenError, FetchError, UnreadablePartError
 
 SAMPLES = Path(__file__).parent / "samples"
 SRC = Path(__file__).parent.parent / "src"
@@ -310,3 +312,67 @@ def test_a_missing_preset_document_is_logged(
     with zipfile.ZipFile(io.BytesIO(master.build_pack(b"", b""))) as zf:
         assert not any(n.startswith("Source Documents/") for n in zf.namelist())
     assert f"Preset source document missing: {gone}" in caplog.text
+
+
+def test_a_correction_buys_the_part_the_document_prints() -> None:
+    project = Project(
+        name="Fuzz",
+        count=2,
+        data="R1 1k\nR2 1k",
+        corrections=(Correction("R1", R10K),),
+    )
+
+    master = generate_master_list([project])
+
+    one_k = ComponentKey(ComponentCategory.RESISTORS, "1k")
+    assert master.parts[R10K]["qty"] == 2
+    assert master.parts[one_k]["qty"] == 2
+    assert {p.ref: p.value for p in master.projects[0].parts} == {
+        "R1": "10k",
+        "R2": "1k",
+    }
+
+
+def test_a_correction_that_leaves_a_part_unused_removes_it() -> None:
+    project = Project(data="R1 1k", corrections=(Correction("R1", R10K),))
+
+    master = generate_master_list([project])
+
+    assert ComponentKey(ComponentCategory.RESISTORS, "1k") not in master.parts
+
+
+def test_a_correction_to_a_part_not_listed_changes_nothing() -> None:
+    project = Project(data="R1 1k", corrections=(Correction("R9", R10K),))
+
+    master = generate_master_list([project])
+
+    assert R10K not in master.parts
+
+
+@pytest.mark.parametrize(
+    ("ref", "value", "category", "part"),
+    [
+        ("R1", "2K2", None, ("Resistors", "2.2k")),
+        ("C1", "100nF", None, ("Capacitors", "100n")),
+        (
+            "DRIVE",
+            "B100k",
+            ComponentCategory.POTENTIOMETERS,
+            ("Potentiometers", "B100k"),
+        ),
+    ],
+)
+def test_a_correction_is_read_as_a_parts_list_row(
+    ref: str,
+    value: str,
+    category: ComponentCategory | None,
+    part: tuple[str, str],
+) -> None:
+    key = read_correction(ref, value, category)
+
+    assert (key.category.value, key.value) == part
+
+
+def test_a_blank_correction_is_explained() -> None:
+    with pytest.raises(UnreadablePartError, match="R1"):
+        read_correction("R1", "  ")
