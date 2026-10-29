@@ -1989,7 +1989,7 @@ wheels = [
 
 [[package]]
 name = "star-ground"
-version = "2.6.0"
+version = "2.6.1"
 source = { editable = "." }
 dependencies = [
     { name = "fastapi" },
