@@ -439,3 +439,6 @@ IGNORE_VALUES = [
 ]
 
 AUTO_INJECT_SOURCE = "Auto-Inject"
+# Marks the designator of a part Star Ground adds for one the document lists
+# (an IC's socket: 'IC1 (Inj)'), so it's never printed in the document.
+INJECTED_SUFFIX = " (Inj)"

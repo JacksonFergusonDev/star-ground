@@ -99,6 +99,13 @@ export type BuildNotChosen = {
 };
 
 /**
+ * ComponentCategory
+ *
+ * Categories of electronic components.
+ */
+export type ComponentCategory = 'Resistors' | 'Capacitors' | 'Potentiometers' | 'Switches' | 'Diodes' | 'Transistors' | 'Crystals/Oscillators' | 'Inductors' | 'Transformers' | 'Relays' | 'Hardware/Misc' | 'ICs' | 'Optoelectronics' | 'Unknown' | 'PCB';
+
+/**
  * ComponentOrigin
  *
  * Purchasing origins for bill-of-materials components.
@@ -381,6 +388,33 @@ export type ProjectResult = {
      * Why it couldn't be read.
      */
     errors: Array<Problem>;
+    /**
+     * Parts
+     *
+     * Each designator read, in the order read, to check against the document.
+     */
+    parts: Array<ReadPartOut>;
+};
+
+/**
+ * ReadPartOut
+ *
+ * One designator a project's parts list read, and where it was printed.
+ */
+export type ReadPartOut = {
+    /**
+     * Ref
+     */
+    ref: string;
+    category: ComponentCategory;
+    /**
+     * Value
+     */
+    value: string;
+    /**
+     * Where in the document it was read; none when it wasn't found printed, or the parts list was pasted.
+     */
+    location: SourceLocation | null;
 };
 
 /**
@@ -456,6 +490,36 @@ export type ShoppingRow = {
      * Supplier Url
      */
     supplier_url: string;
+};
+
+/**
+ * SourceLocation
+ *
+ * A box on one page of a document, in points from the page's top-left.
+ */
+export type SourceLocation = {
+    /**
+     * Page
+     *
+     * The page, counting from 0.
+     */
+    page: number;
+    /**
+     * X0
+     */
+    x0: number;
+    /**
+     * Top
+     */
+    top: number;
+    /**
+     * X1
+     */
+    x1: number;
+    /**
+     * Bottom
+     */
+    bottom: number;
 };
 
 /**

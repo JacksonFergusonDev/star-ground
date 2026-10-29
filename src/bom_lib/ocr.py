@@ -26,6 +26,7 @@ from itertools import pairwise
 from statistics import median
 from typing import TYPE_CHECKING, Any
 
+from src.bom_lib.constants import INJECTED_SUFFIX
 from src.bom_lib.designators import BOARD_REF, is_designator, parse_designator
 from src.bom_lib.enums import ComponentCategory, OcrVerdict, ParseWarningKind
 from src.bom_lib.layout import (
@@ -38,6 +39,7 @@ from src.bom_lib.layout import (
     split_cells,
     starts_description,
 )
+from src.bom_lib.locations import locate
 from src.bom_lib.parser import names_builds, read_pages
 from src.bom_lib.types import (
     BuildVariant,
@@ -163,7 +165,6 @@ _E24 = frozenset(
         *(33, 36, 39, 43, 47, 51, 56, 62, 68, 75, 82, 91),
     )
 )
-_INJECTED = " (Inj)"
 _MAX_VALUE_WORDS = 5
 # Characters printed in parts-list values: Latin letters, digits, punctuation,
 # and the micro and ohm signs.
@@ -916,7 +917,7 @@ def _rows_above(
 
 
 def _base_ref(ref: str) -> str:
-    return ref.removesuffix(_INJECTED)
+    return ref.removesuffix(INJECTED_SUFFIX)
 
 
 def _refs(inventory: Inventory) -> set[str]:
@@ -955,7 +956,7 @@ def _listed(inventory: Inventory) -> dict[str, ComponentKey]:
         ref: key
         for key, data in inventory.items()
         for ref in data["refs"]
-        if not ref.endswith(_INJECTED)
+        if not ref.endswith(INJECTED_SUFFIX)
     }
 
 
@@ -1199,6 +1200,9 @@ def attempt_ocr(
     import pdfplumber
 
     pages_data: list[PDFPageExtraction] = []
+    # Every word OCR read, to find each part in: the rows of a table its
+    # block left out (see `table_block`) can still be read from it.
+    whole: list[PDFPageExtraction] = []
     mentioned: set[str] = set()
     read: list[int] = []
     with ocr_guard.get()(), pdfplumber.open(filepath) as pdf:
@@ -1212,6 +1216,7 @@ def attempt_ocr(
             words = page_words(recognizer(image, 72 / dpi))
             words = _reread_labels(words, image, 72 / dpi, recognizer)
             mentioned |= {w["text"] for w in words["words"]}
+            whole.append(words)
             pages_data.append(table_block(words))
             read.append(number)
             page.close()
@@ -1243,7 +1248,12 @@ def attempt_ocr(
         return None
     parts = _only_refs(inventory, found)
     builds = tuple(
-        BuildVariant(v.name, kept, sum(d["qty"] for d in kept.values()))
+        BuildVariant(
+            v.name,
+            kept,
+            sum(d["qty"] for d in kept.values()),
+            locate(whole, kept, read),
+        )
         for v in variants
         if (kept := _only_refs(v.inventory, found))
     )
@@ -1259,7 +1269,7 @@ def attempt_ocr(
     for key, data in parts.items():
         plausible = _plausible(key)
         for ref in data["refs"]:
-            if ref.endswith(_INJECTED):
+            if ref.endswith(INJECTED_SUFFIX):
                 continue
             suspect += not plausible
             warnings.append(_ocr_warning(ref, key, plausible))
@@ -1333,4 +1343,5 @@ def attempt_ocr(
         parts_read=len(found),
         suspect=suspect,
         supplements=bool(known),
+        locations={} if builds else locate(whole, parts, read),
     )

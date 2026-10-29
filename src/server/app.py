@@ -54,6 +54,7 @@ from src.bom_lib import (
     ParseWarning,
     ParseWarningKind,
     PcbShop,
+    ReadPart,
     ShoppingListRow,
     get_preset_metadata,
     get_residual_report,
@@ -104,10 +105,12 @@ from src.server.models import (
     ReadDone,
     ReadEvent,
     ReadFailed,
+    ReadPartOut,
     ReadQueued,
     ReadStarted,
     ReportIn,
     ShoppingRow,
+    SourceLocation,
     Stats,
     UploadProject,
     UrlProject,
@@ -493,6 +496,20 @@ def _project(
             assert_never(project)
 
 
+def _part(part: ReadPart) -> ReadPartOut:
+    at = part.location
+    return ReadPartOut(
+        ref=part.ref,
+        category=part.category,
+        value=part.value,
+        location=None
+        if at is None
+        else SourceLocation(
+            page=at.page, x0=at.x0, top=at.top, x1=at.x1, bottom=at.bottom
+        ),
+    )
+
+
 def _warning(w: ParseWarning) -> PartWarning:
     return PartWarning(kind=w.kind, ref=w.ref, message=w.message)
 
@@ -531,6 +548,7 @@ def _result(
                 ocr_reads=[_warning(w) for w in ocr],
                 options=list(p.options),
                 errors=[_problem(services, e) for e in p.errors],
+                parts=[_part(part) for part in p.parts],
             )
         )
     stats = master.stats

@@ -29,6 +29,7 @@ from src.bom_lib import (
     ParseResult,
     ParseWarning,
     PcbShop,
+    ReadPart,
     ShoppingListRow,
     StatsDict,
     build_shopping_list,
@@ -40,6 +41,7 @@ from src.bom_lib import (
     rename_source_in_inventory,
     status_leds,
 )
+from src.bom_lib.constants import INJECTED_SUFFIX
 from src.bom_lib.errors import BuildNotChosenError
 from src.bom_lib.ocr import without_ocr
 from src.pdf_generator import generate_master_zip, generate_pdf_bundle
@@ -319,6 +321,20 @@ def _unique_label(
     return candidate
 
 
+def read_parts(result: ParseResult) -> tuple[ReadPart, ...]:
+    """Each designator a single-build result read, with where it was printed.
+
+    Parts Star Ground adds for the document (sockets, ' (Inj)') aren't
+    printed in it, so they're left out.
+    """
+    return tuple(
+        ReadPart(ref, key.category, key.value, result.locations.get(ref))
+        for key, data in result.inventory.items()
+        for ref in data["refs"]
+        if not ref.endswith(INJECTED_SUFFIX)
+    )
+
+
 def generate_master_list(
     projects: Sequence[Project], stock: Inventory | None = None
 ) -> MasterList:
@@ -397,6 +413,7 @@ def generate_master_list(
                 source_path=project.source_path,
                 source_url=project.source_url,
                 pcb_shop=project.pcb_shop,
+                parts=read_parts(result),
             )
         )
 

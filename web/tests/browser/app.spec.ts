@@ -30,6 +30,7 @@ const result: MasterListResult = {
       ocr_reads: [],
       options: [],
       errors: [],
+      parts: [{ ref: 'C1', category: 'Capacitors', value: '100n', location: null }],
     },
   ],
   shopping_list: [

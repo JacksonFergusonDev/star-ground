@@ -8,7 +8,8 @@ import copy
 import hashlib
 import re
 from collections import UserDict, defaultdict
-from dataclasses import dataclass, replace
+from collections.abc import Mapping
+from dataclasses import dataclass, field, replace
 from decimal import Decimal
 from typing import (
     Any,
@@ -117,6 +118,46 @@ class BuildHardware:
 
 
 @dataclass(frozen=True, slots=True)
+class Location:
+    """Where a part was read: a box on one page of its document.
+
+    Coordinates are in points from the page's top-left corner, as pdfplumber
+    and PDF viewers measure them.
+
+    Attributes:
+        page: The page (0-based).
+        x0: Left edge.
+        top: Top edge.
+        x1: Right edge.
+        bottom: Bottom edge.
+    """
+
+    page: int
+    x0: float
+    top: float
+    x1: float
+    bottom: float
+
+
+@dataclass(frozen=True, slots=True)
+class ReadPart:
+    """One designator a project's parts list read, and where it was printed.
+
+    Attributes:
+        ref: The designator ('R1'; 'R1 (2)' for the second board's R1).
+        category: What kind of part it is.
+        value: Its value, as the parts list holds it ('10k').
+        location: Where in the document it was read; None when it wasn't
+            found printed, or the parts list isn't a document.
+    """
+
+    ref: str
+    category: ComponentCategory
+    value: str
+    location: Location | None = None
+
+
+@dataclass(frozen=True, slots=True)
 class BuiltProject:
     """One project as it went onto the master list.
 
@@ -135,6 +176,8 @@ class BuiltProject:
         source_url: A preset's build document at its publisher, linked from
             the build pack.
         pcb_shop: Where its board is bought, when a shop sells it.
+        parts: Each designator its parts list read, in the order read, for
+            checking against the document.
     """
 
     name: str
@@ -147,6 +190,7 @@ class BuiltProject:
     source_path: str | None = None
     source_url: str | None = None
     pcb_shop: PcbShop | None = None
+    parts: tuple[ReadPart, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -628,11 +672,14 @@ class BuildVariant:
         name: The variant name as printed (e.g. 'Civil War', 'Germanium Version').
         inventory: The complete parts list for this build.
         parts_found: Number of parts in the build.
+        locations: Where each of its designators was read: builds can list
+            the same designator in different rows.
     """
 
     name: str
     inventory: Inventory
     parts_found: int
+    locations: Mapping[str, Location] = field(default_factory=dict)
 
 
 @dataclass(frozen=True, slots=True)
@@ -674,6 +721,8 @@ class OcrAttempt:
             only fills in the rest).
         variants: The builds OCR read, when the parts list describes several
             (version columns, a second build's table); empty otherwise.
+        locations: Where each designator in `inventory` was found on its page
+            (each build's are its own).
     """
 
     verdict: OcrVerdict
@@ -684,6 +733,7 @@ class OcrAttempt:
     suspect: int
     supplements: bool
     variants: tuple[BuildVariant, ...] = ()
+    locations: Mapping[str, Location] = field(default_factory=dict)
 
     @property
     def has_parts(self) -> bool:
@@ -741,6 +791,9 @@ class ParseResult:
         options: Interchangeable choices resolved to the document's default.
         ocr: Parts OCR read from image pages, offered to the builder; they are
             not in ``inventory`` until `accept_ocr`.
+        locations: Where in the document each designator in `inventory` was
+            read (see `locations.locate`; each build's are its own). A part
+            read without a designator, or one not found printed, has none.
     """
 
     inventory: Inventory
@@ -750,6 +803,7 @@ class ParseResult:
     variants: tuple[BuildVariant, ...] = ()
     options: tuple[OptionNote, ...] = ()
     ocr: OcrAttempt | None = None
+    locations: Mapping[str, Location] = field(default_factory=dict)
 
     @property
     def requires_choice(self) -> bool:
@@ -779,7 +833,13 @@ class ParseResult:
                 f"No build named {name!r}; choose one of {self.variant_names}"
             )
         stats = cast(StatsDict, {**self.stats, "parts_found": variant.parts_found})
-        return replace(self, inventory=variant.inventory, stats=stats, variants=())
+        return replace(
+            self,
+            inventory=variant.inventory,
+            stats=stats,
+            variants=(),
+            locations=variant.locations,
+        )
 
     def accept_ocr(self) -> ParseResult:
         """Returns the result with the parts OCR read added to the parts list.
@@ -803,6 +863,7 @@ class ParseResult:
                     v,
                     inventory=self._with(v.inventory),
                     parts_found=v.parts_found + self.stats["parts_found"],
+                    locations={**self.locations, **v.locations},
                 )
                 for v in self.ocr.variants
             )
@@ -812,11 +873,18 @@ class ParseResult:
                 stats=self._ocr_stats(self.ocr),
                 variants=variants,
                 ocr=None,
+                locations={},
             )
         inventory = self._with(self.ocr.inventory)
         stats = self._ocr_stats(self.ocr)
         stats["parts_found"] += sum(d["qty"] for d in self.ocr.inventory.values())
-        return replace(self, inventory=inventory, stats=stats, ocr=None)
+        return replace(
+            self,
+            inventory=inventory,
+            stats=stats,
+            ocr=None,
+            locations={**self.locations, **self.ocr.locations},
+        )
 
     def _with(self, parts: Inventory) -> Inventory:
         """This result's parts list with other parts added."""
