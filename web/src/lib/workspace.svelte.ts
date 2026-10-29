@@ -4,6 +4,7 @@
 // window, blocked storage), and the workspace then works for the visit only.
 
 import type { DocumentReading, MasterListRequest } from './api';
+import type { Stock } from './server';
 
 /** Where a project's parts list comes from. */
 type Source =
@@ -58,11 +59,21 @@ export function blocker(card: Card): string | null {
   return null;
 }
 
+/** What the master list lists besides the projects' own parts. */
+export interface Options {
+  /** The hardware kit: enclosure, jacks, footswitch, and so on. */
+  hardware: boolean;
+  /** Sockets and adapters. */
+  extras: boolean;
+}
+
 /** The master list request for the cards that are ready. */
-export function request(cards: Card[]): MasterListRequest | null {
+export function request(cards: Card[], options: Options): MasterListRequest | null {
   const ready = cards.filter((c) => blocker(c) === null);
   if (!ready.length) return null;
   return {
+    show_hardware: options.hardware,
+    show_extras: options.extras,
     projects: ready.map((c) => {
       const base = { name: c.name, count: c.count, variant: c.variant, use_ocr: c.useOcr };
       switch (c.source.kind) {
@@ -81,9 +92,14 @@ export function request(cards: Card[]): MasterListRequest | null {
 
 export class Workspace {
   cards = $state<Card[]>([]);
+  stock = $state<Stock | null>(null);
+  options = $state<Options>({ hardware: true, extras: true });
 
   constructor() {
-    this.cards = load();
+    const saved = load();
+    this.cards = saved.cards ?? [];
+    this.stock = saved.stock ?? null;
+    this.options = { ...this.options, ...saved.options };
     // A reading interrupted by a reload can't resume; offer to read again.
     for (const card of this.cards) {
       if (card.read.state === 'reading' || card.read.state === 'queued')
@@ -118,19 +134,26 @@ export class Workspace {
 
   save(): void {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(this.cards));
+      const saved: Saved = { cards: this.cards, stock: this.stock, options: this.options };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
     } catch {
       // Storage is full or blocked: the workspace lasts for this visit.
     }
   }
 }
 
-function load(): Card[] {
+interface Saved {
+  cards: Card[];
+  stock: Stock | null;
+  options: Options;
+}
+
+function load(): Partial<Saved> {
   try {
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '[]') as unknown;
-    return Array.isArray(saved) ? (saved as Card[]) : [];
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}') as unknown;
+    return saved && typeof saved === 'object' && !Array.isArray(saved) ? (saved as Saved) : {};
   } catch {
-    return [];
+    return {};
   }
 }
 

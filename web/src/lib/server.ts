@@ -5,6 +5,7 @@ import { PUBLIC_API_URL } from 'astro:env/client';
 import type {
   DocumentReading,
   DocumentsMissing,
+  ExportKind,
   MasterListRequest,
   MasterListResult,
   PresetCatalog,
@@ -102,23 +103,29 @@ export async function readDocument(
   }
 }
 
+/** The builder's stock CSV (columns Category, Part, Qty), sent with each request. */
+export interface Stock {
+  name: string;
+  text: string;
+}
+
+/** The file a reading's `document` names, for a server that no longer holds it. */
+type FileFor = (document: string) => Promise<File | undefined>;
+
 /**
- * Merges the projects into one master list.
+ * Posts a master list request, to build the list or export it.
  *
  * Uploads are named by their reading's `document`, so files aren't sent with
  * every change. If the server no longer holds one, it's sent once as a file.
- *
- * @param request The projects, with uploads named by `document`.
- * @param file The file a `document` names, to send when the server lacks it.
  */
-export async function masterList(
+async function submit(
+  path: string,
   request: MasterListRequest,
-  file: (document: string) => Promise<File | undefined>,
-): Promise<MasterListResult> {
-  const post = async (body: FormData) =>
-    (await (await send('master-list', { method: 'POST', body })).json()) as MasterListResult;
+  file: FileFor,
+  stock: Stock | null,
+): Promise<Response> {
   try {
-    return await post(form(request, []));
+    return await send(path, { method: 'POST', body: form(request, [], stock) });
   } catch (error) {
     if (!(error instanceof ApiError) || error.status !== 409) throw error;
     const missing = new Set((error.body as Partial<DocumentsMissing>).documents ?? []);
@@ -133,11 +140,50 @@ export async function masterList(
         return { ...project, file: found.name, document: null };
       }),
     );
-    return post(form({ ...request, projects }, files));
+    return send(path, { method: 'POST', body: form({ ...request, projects }, files, stock) });
   }
 }
 
-function form(request: MasterListRequest, files: File[]): FormData {
+/** Merges the projects into one master list. */
+export async function masterList(
+  request: MasterListRequest,
+  file: FileFor,
+  stock: Stock | null,
+): Promise<MasterListResult> {
+  return (await (await submit('master-list', request, file, stock)).json()) as MasterListResult;
+}
+
+/** A file to save: an export of the master list. */
+export interface Download {
+  blob: Blob;
+  filename: string;
+}
+
+/**
+ * Exports the master list as a CSV or ZIP.
+ *
+ * @param kind Which file.
+ * @param excel Write supplier links as Excel `HYPERLINK`s rather than URLs.
+ */
+export async function exportFile(
+  kind: ExportKind,
+  excel: boolean,
+  request: MasterListRequest,
+  file: FileFor,
+  stock: Stock | null,
+): Promise<Download> {
+  const response = await submit(
+    `exports/${kind}?links=${excel ? 'excel' : 'plain'}`,
+    request,
+    file,
+    stock,
+  );
+  const disposition = response.headers.get('content-disposition') ?? '';
+  const filename = /filename="([^"]+)"/.exec(disposition)?.[1] ?? `${kind}`;
+  return { blob: await response.blob(), filename };
+}
+
+function form(request: MasterListRequest, files: File[], stock: Stock | null): FormData {
   const body = new FormData();
   body.set('request', JSON.stringify(request));
   const sent = new Set<string>();
@@ -146,5 +192,6 @@ function form(request: MasterListRequest, files: File[]): FormData {
     sent.add(file.name);
     body.append('files', file);
   }
+  if (stock) body.set('stock', new File([stock.text], stock.name, { type: 'text/csv' }));
   return body;
 }

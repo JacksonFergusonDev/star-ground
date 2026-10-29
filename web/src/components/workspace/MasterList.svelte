@@ -1,13 +1,25 @@
 <script lang="ts">
-  // The master list: what to check, then what to buy across every project.
-  import type { MasterListResult } from '../../lib/api';
+  // The master list: what to check, then what to buy across every project,
+  // and the files to download.
+  import type { ExportKind, MasterListResult } from '../../lib/api';
+  import type { Download } from '../../lib/server';
+  import type { Options } from '../../lib/workspace.svelte';
+  import Exports from './Exports.svelte';
   import Icon from './Icon.svelte';
 
   let {
     result,
     updating,
     error,
-  }: { result: MasterListResult | null; updating: boolean; error: string | null } = $props();
+    options,
+    onExport,
+  }: {
+    result: MasterListResult | null;
+    updating: boolean;
+    error: string | null;
+    options: Options;
+    onExport: (kind: ExportKind, excel: boolean) => Promise<Download>;
+  } = $props();
 
   const checks = $derived(
     (result?.projects ?? [])
@@ -20,7 +32,9 @@
       }))
       .filter((p) => p.items.length),
   );
-  const toBuy = $derived(result?.shopping_list.filter((r) => r.buy_qty > 0) ?? []);
+  const choices = $derived((result?.projects ?? []).filter((p) => p.options.length));
+  const rows = $derived(result?.shopping_list ?? []);
+  const toBuy = $derived(rows.filter((r) => r.buy_qty > 0).length);
 </script>
 
 <section class="master" aria-labelledby="master-title" aria-busy={updating}>
@@ -37,15 +51,30 @@
     <p class="empty">Add a project and its parts appear here, merged with every other project's.</p>
   {:else}
     <p class="summary">
-      {result.stats.parts_found} parts read from {result.projects.length}
-      {result.projects.length === 1 ? 'project' : 'projects'}; {toBuy.length} to buy.
+      {result.stats.parts_found} parts read from {result.stats.lines_read} lines across
+      {result.projects.length}
+      {result.projects.length === 1 ? 'project' : 'projects'}; {rows.length} different parts,
+      {toBuy} to buy{result.has_stock ? ' after your stock' : ''}.
     </p>
+
+    {#if result.stats.errors.length}
+      <h3>Couldn't read</h3>
+      <ul class="notes">
+        {#each result.stats.errors as message, i (i)}
+          <li>{message}</li>
+        {/each}
+      </ul>
+    {/if}
 
     {#if checks.length}
       <h3>Check these parts</h3>
+      <p class="note">
+        Star Ground's self-checks found places where the list may not match the document. Compare
+        these against it before ordering.
+      </p>
       {#each checks as project (project.label)}
         <h4>{project.label}</h4>
-        <ul class="checks">
+        <ul class="notes">
           {#each project.items as item, i (i)}
             <li><code>{item.ref}</code> {item.message}</li>
           {/each}
@@ -53,27 +82,66 @@
       {/each}
     {/if}
 
+    {#if choices.length}
+      <h3>Interchangeable parts</h3>
+      <p class="note">These documents offer alternatives. The first option listed was used.</p>
+      {#each choices as project (project.label)}
+        <h4>{project.label}</h4>
+        <ul class="notes">
+          {#each project.options as text, i (i)}
+            <li>{text}</li>
+          {/each}
+        </ul>
+      {/each}
+    {/if}
+
+    {#if result.ignored_lines.length}
+      <details>
+        <summary>
+          {result.ignored_lines.length} skipped
+          {result.ignored_lines.length === 1 ? 'line' : 'lines'} that looked like parts
+        </summary>
+        <ul class="notes">
+          {#each result.ignored_lines as line, i (i)}
+            <li><code>{line}</code></li>
+          {/each}
+        </ul>
+      </details>
+    {/if}
+
     <h3>Shopping list</h3>
+    <div class="options">
+      <label><input type="checkbox" bind:checked={options.hardware} /> Hardware kit</label>
+      <label><input type="checkbox" bind:checked={options.extras} /> Sockets and adapters</label>
+    </div>
     <div class="table">
       <table>
         <thead>
           <tr>
             <th scope="col">Part</th>
             <th scope="col">Category</th>
+            {#if result.has_stock}
+              <th scope="col" class="qty">Needed</th>
+              <th scope="col" class="qty">In stock</th>
+            {/if}
             <th scope="col" class="qty">Buy</th>
             <th scope="col">Notes</th>
             <th scope="col"><span class="visually-hidden">Supplier</span></th>
           </tr>
         </thead>
         <tbody>
-          {#each toBuy as row (row.origin + row.category + row.part)}
-            <tr>
+          {#each rows as row (row.origin + row.category + row.part)}
+            <tr class:covered={row.buy_qty === 0}>
               <td class="part">{row.part}</td>
               <td>{row.category}</td>
+              {#if result.has_stock}
+                <td class="qty">{row.bom_qty}</td>
+                <td class="qty">{row.in_stock ?? 0}</td>
+              {/if}
               <td class="qty">{row.buy_qty}</td>
-              <td class="notes">{row.notes}</td>
+              <td class="notes-cell">{row.notes}</td>
               <td class="link">
-                {#if row.supplier_url}
+                {#if row.supplier_url && row.buy_qty > 0}
                   <a href={row.supplier_url} target="_blank" rel="noopener noreferrer">
                     Tayda <Icon name="arrow-up-right" size={14} />
                   </a>
@@ -84,6 +152,8 @@
         </tbody>
       </table>
     </div>
+
+    <Exports {onExport} />
   {/if}
 </section>
 
@@ -123,7 +193,9 @@
   .state,
   .summary,
   .empty,
-  .checks {
+  .note,
+  .notes,
+  details {
     margin: 0;
     color: var(--muted);
     font-size: var(--fs-ui);
@@ -133,8 +205,26 @@
     margin: 0;
     color: var(--text);
   }
-  .checks {
+  .notes {
     padding-left: 20px;
+  }
+  summary {
+    cursor: pointer;
+  }
+  .options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 20px;
+    color: var(--muted);
+    font-size: var(--fs-ui);
+  }
+  .options label {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .covered td {
+    color: var(--muted);
   }
   .table {
     /* Holds the hidden column heading, so it scrolls with the table. */
@@ -176,7 +266,7 @@
     text-align: right;
     font-variant-numeric: tabular-nums;
   }
-  .notes {
+  .notes-cell {
     color: var(--muted);
   }
   .link a {
