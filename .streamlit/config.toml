@@ -14,6 +14,7 @@ toolbarMode = "minimal"         # UX: Reduces clutter; the menu only appears on 
 showErrorDetails = false        # Prod: Suppresses raw stack traces in the UI to prevent info leakage.
 
 [server]
+port = 4504
 maxUploadSize = 50              # Resource: Hard cap (50MB) to prevent OOM (Out of Memory) crashes.
 enableXsrfProtection = true     # Security: Enforces token validation to prevent CSRF attacks.
 enableCORS = true               # Security: Restricts Cross-Origin Resource Sharing.

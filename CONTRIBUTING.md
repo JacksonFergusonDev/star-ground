@@ -44,7 +44,7 @@ This project uses [uv](https://github.com/astral-sh/uv) for dependency managemen
 
 ## Running the API
 
-The web frontend talks to the HTTP API in `src/server/`, a FastAPI app over the backend's own API (`src/api.py`). Start it with `just serve-api`, then open `http://127.0.0.1:8000/api/docs` to try each route. These environment variables configure it:
+The web frontend talks to the HTTP API in `src/server/`, a FastAPI app over the backend's own API (`src/api.py`). Start it with `just serve-api`, then open `http://127.0.0.1:4501/api/docs` to try each route. These environment variables configure it:
 
 | Variable | What it sets |
 | --- | --- |
@@ -66,7 +66,11 @@ npm ci
 npm run dev
 ```
 
-The site is at `http://127.0.0.1:4321/`. Before opening a pull request, run what CI runs:
+The site is at <http://127.0.0.1:4500/>. From the repository root, `just serve-web` installs the dependencies and starts it. Run `just serve-api` in a separate terminal tab; the site proxies `/api` to port 4501, so local development needs no `PUBLIC_API_URL` or CORS settings. After building, `npm run preview` in `web/` serves the build on port 4502 and uses the same API proxy.
+
+Star Ground reserves ports 4500–4504: website development, API, build preview, browser tests, and the Streamlit app (`just serve`), respectively. The personal site uses 4300–4302 and Protostar uses 4400–4401. Astro exits when its port is occupied instead of silently moving. Stop the existing server with `Ctrl+C` before starting another. For a second worktree, choose unused ports explicitly and update its proxy target if the API port changes.
+
+Before opening a pull request, run what CI runs:
 
 ```bash
 npm run lint
@@ -76,7 +80,7 @@ npm run build
 npm run test:browser
 ```
 
-`npm run test:browser` serves the build and runs the Playwright tests in Chromium, Firefox and WebKit, at desktop and phone sizes, including an axe accessibility scan. Install the browsers once with `npx playwright install`.
+`npm run test:browser` serves the build on port 4503 (failing if occupied) and runs the Playwright tests in Chromium, Firefox and WebKit, at desktop and phone sizes, including an axe accessibility scan. Install the browsers once with `npx playwright install`.
 
 The frontend's API types in `web/src/lib/api/` are generated from `openapi.json` by `@hey-api/openapi-ts`. After `just openapi`, run `npm run types` in `web/` and commit both files.
 

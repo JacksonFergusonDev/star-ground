@@ -13,7 +13,7 @@ const firefoxLaunch = firefoxHome
 
 // SITE_URL points the browser tests at an already-running site; otherwise they serve the build.
 const siteUrl = process.env.SITE_URL;
-const baseURL = siteUrl ?? 'http://127.0.0.1:4323';
+const baseURL = siteUrl ?? 'http://127.0.0.1:4503';
 const desktop = { viewport: { width: 1440, height: 1000 } };
 
 export default defineConfig({
@@ -52,9 +52,9 @@ export default defineConfig({
   webServer: siteUrl
     ? undefined
     : {
-        command: 'npx astro preview --ignore-lock --host 127.0.0.1 --port 4323',
+        command: 'npx astro preview --ignore-lock --host 127.0.0.1 --port 4503',
         url: baseURL,
-        reuseExistingServer: !process.env.CI,
+        reuseExistingServer: false,
         timeout: 30_000,
       },
 });
