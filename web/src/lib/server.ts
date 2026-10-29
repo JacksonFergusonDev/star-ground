@@ -8,6 +8,9 @@ import type {
   ExportKind,
   MasterListRequest,
   MasterListResult,
+  PartIn,
+  PartOut,
+  PartReportIn,
   PresetCatalog,
   Problem,
   ReadEvent,
@@ -205,6 +208,30 @@ export function explain(problem: Problem): string {
 /** Sends a builder's bug report: its code and what was being read, never the document. */
 export async function sendReport(report: ReportIn): Promise<void> {
   await send('reports', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(report),
+  });
+}
+
+/** Reads a value the builder typed for a part, as the parser reads a parts list. */
+export async function readPart(part: PartIn): Promise<PartOut> {
+  const response = await send('parts/read', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(part),
+  });
+  return (await response.json()) as PartOut;
+}
+
+/** A linked document's PDF, passed on by the API, which read it. */
+export async function linkedPdf(url: string): Promise<ArrayBuffer> {
+  return (await send(`documents/pdf?url=${encodeURIComponent(url)}`)).arrayBuffer();
+}
+
+/** Sends a builder's report that a part was read wrong: never the document. */
+export async function sendPartReport(report: PartReportIn): Promise<void> {
+  await send('part-reports', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify(report),

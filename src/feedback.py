@@ -1,8 +1,10 @@
 import datetime
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 from src.bom_lib.enums import FeedbackRating
+from src.bom_lib.types import Location
 
 if TYPE_CHECKING:
     import gspread
@@ -10,6 +12,17 @@ if TYPE_CHECKING:
 FEEDBACK_SHEET = "Star Ground Feedback"
 REPORTS_TAB = "Reports"
 _REPORT_HEADERS = ["Time", "Code", "Document", "Comment", "Detail"]
+PARTS_TAB = "Parts"
+_PART_HEADERS = [
+    "Time",
+    "Document",
+    "Ref",
+    "Read",
+    "Correction",
+    "Page",
+    "Box",
+    "Comment",
+]
 # A Google Sheets cell holds at most 50,000 characters.
 _MAX_CELL = 45_000
 
@@ -43,6 +56,20 @@ def connect_feedback_sheet(credentials: Mapping[str, Any]) -> gspread.Worksheet:
     return _spreadsheet(credentials).sheet1
 
 
+def _tab(
+    credentials: Mapping[str, Any], name: str, headers: Sequence[str]
+) -> gspread.Worksheet:
+    import gspread
+
+    spreadsheet = _spreadsheet(credentials)
+    try:
+        return spreadsheet.worksheet(name)
+    except gspread.WorksheetNotFound:
+        tab = spreadsheet.add_worksheet(name, rows=1, cols=len(headers))
+        tab.append_row(list(headers))
+        return tab
+
+
 def connect_report_sheet(credentials: Mapping[str, Any]) -> gspread.Worksheet:
     """Opens the feedback sheet's Reports tab, adding it the first time.
 
@@ -52,15 +79,41 @@ def connect_report_sheet(credentials: Mapping[str, Any]) -> gspread.Worksheet:
     Returns:
         gspread.Worksheet: The tab bug reports are appended to.
     """
-    import gspread
+    return _tab(credentials, REPORTS_TAB, _REPORT_HEADERS)
 
-    spreadsheet = _spreadsheet(credentials)
-    try:
-        return spreadsheet.worksheet(REPORTS_TAB)
-    except gspread.WorksheetNotFound:
-        tab = spreadsheet.add_worksheet(REPORTS_TAB, rows=1, cols=len(_REPORT_HEADERS))
-        tab.append_row(_REPORT_HEADERS)
-        return tab
+
+def connect_part_sheet(credentials: Mapping[str, Any]) -> gspread.Worksheet:
+    """Opens the feedback sheet's Parts tab, adding it the first time.
+
+    Args:
+        credentials: A Google service account's key, as its JSON fields.
+
+    Returns:
+        gspread.Worksheet: The tab part reports are appended to.
+    """
+    return _tab(credentials, PARTS_TAB, _PART_HEADERS)
+
+
+@dataclass(frozen=True, slots=True)
+class PartReport:
+    """A builder's report that a part was read wrong.
+
+    Attributes:
+        document: The link, or an upload's name and content hash; never the
+            document itself.
+        ref: The designator.
+        read: The value as Star Ground read it.
+        correction: The value the document prints, if the builder gave one.
+        location: Where the part was read.
+        comment: Anything the builder added.
+    """
+
+    document: str
+    ref: str
+    read: str
+    correction: str | None
+    location: Location | None
+    comment: str
 
 
 def save_feedback(sheet: gspread.Worksheet, rating: FeedbackRating, text: str) -> None:
@@ -98,4 +151,31 @@ def save_report(
     # A traceback ends with the exception, so a long one keeps its end.
     kept = detail[-_MAX_CELL:] if detail else f"Search the log for 'Bug {code}'."
     row = [str(datetime.datetime.now()), code, document, comment, kept]
+    sheet.append_row(row)
+
+
+def save_part_report(sheet: gspread.Worksheet, report: PartReport) -> None:
+    """Appends a part report to the Parts tab.
+
+    Pages are numbered from 1, as a PDF viewer numbers them; the box is in
+    points from the page's top-left.
+
+    Args:
+        sheet: The tab from `connect_part_sheet`.
+        report: The report.
+
+    Raises:
+        Exception: If the sheet cannot be written.
+    """
+    at = report.location
+    row = [
+        str(datetime.datetime.now()),
+        report.document,
+        report.ref,
+        report.read,
+        report.correction or "",
+        at.page + 1 if at else "",
+        f"{at.x0:.0f}, {at.top:.0f}, {at.x1:.0f}, {at.bottom:.0f}" if at else "",
+        report.comment,
+    ]
     sheet.append_row(row)

@@ -5,10 +5,13 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from src.bom_lib.enums import FeedbackRating
+from src.bom_lib.types import Location
 from src.feedback import (
     FEEDBACK_SHEET,
+    PartReport,
     connect_feedback_sheet,
     save_feedback,
+    save_part_report,
     save_report,
 )
 
@@ -94,3 +97,29 @@ def test_a_report_without_its_traceback_points_to_the_log() -> None:
     save_report(sheet, "A1B2C3", "Fuzz.pdf", "", "")
 
     assert "Bug A1B2C3" in sheet.append_row.call_args.args[0][4]
+
+
+def test_a_part_report_numbers_pages_as_a_viewer_does() -> None:
+    sheet = MagicMock()
+    report = PartReport(
+        document="https://docs.pedalpcb.com/project/Kliche-PedalPCB.pdf",
+        ref="R1",
+        read="1k",
+        correction="10k",
+        location=Location(page=1, x0=40.2, top=100, x1=98, bottom=110.6),
+        comment="",
+    )
+
+    save_part_report(sheet, report)
+
+    row = sheet.append_row.call_args.args[0]
+    assert row[1:] == [report.document, "R1", "1k", "10k", 2, "40, 100, 98, 111", ""]
+
+
+def test_a_part_report_without_a_correction_or_place() -> None:
+    sheet = MagicMock()
+    report = PartReport("Fuzz.pdf", "R9", "", None, None, "R9 is missing")
+
+    save_part_report(sheet, report)
+
+    assert sheet.append_row.call_args.args[0][4:] == ["", "", "", "R9 is missing"]

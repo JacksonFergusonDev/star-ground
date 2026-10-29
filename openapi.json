@@ -91,6 +91,56 @@
         }
       }
     },
+    "/api/documents/pdf": {
+      "get": {
+        "tags": [
+          "documents"
+        ],
+        "summary": "Document Pdf",
+        "description": "A linked document's PDF, for the page to draw beside its parts.\n\nA browser can't fetch a publisher's file itself, so the API passes on\nthe copy it read. Nothing is kept beyond the reading cache.",
+        "operationId": "document_pdf_api_documents_pdf_get",
+        "parameters": [
+          {
+            "name": "url",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "maxLength": 2048,
+              "title": "Url"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The PDF.",
+            "content": {
+              "application/pdf": {}
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/master-list": {
       "post": {
         "tags": [
@@ -319,6 +369,93 @@
           }
         }
       }
+    },
+    "/api/parts/read": {
+      "post": {
+        "tags": [
+          "master list"
+        ],
+        "summary": "Read Part",
+        "description": "Reads a value the builder typed for a part, as a parts list's row.\n\nA correction is read here as it's typed, so the master list request\ncarries it as the list will show it.",
+        "operationId": "read_part_api_parts_read_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PartIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/part-reports": {
+      "post": {
+        "tags": [
+          "feedback"
+        ],
+        "summary": "Send Part Report",
+        "description": "Records a builder's report that a part was read wrong.\n\nIt names the document by its link (or an upload's name and hash) and\nsays where the part was read, so the document can join the parser's\nregression corpus. Never the document itself.",
+        "operationId": "send_part_report_api_part_reports_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PartReportIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -495,7 +632,7 @@
         "description": "A multi-circuit document's build wasn't chosen."
       },
       "ComponentCategory": {
-        "type": "string",
+        "description": "Categories of electronic components.",
         "enum": [
           "Resistors",
           "Capacitors",
@@ -514,7 +651,7 @@
           "PCB"
         ],
         "title": "ComponentCategory",
-        "description": "Categories of electronic components."
+        "type": "string"
       },
       "ComponentOrigin": {
         "type": "string",
@@ -588,6 +725,7 @@
           "too_many_pages",
           "build_not_chosen",
           "ocr_refused",
+          "unreadable_part",
           "bug"
         ],
         "title": "ErrorKind",
@@ -728,6 +866,118 @@
         ],
         "title": "ParseWarningKind",
         "description": "Categories of parser self-check failures surfaced to the user."
+      },
+      "PartIn": {
+        "properties": {
+          "ref": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "Ref"
+          },
+          "value": {
+            "type": "string",
+            "maxLength": 200,
+            "title": "Value"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ComponentCategory"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The part's category as read, for a named part."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "ref",
+          "value"
+        ],
+        "title": "PartIn",
+        "description": "A value the builder typed for a part, to read as the parser would."
+      },
+      "PartOut": {
+        "properties": {
+          "category": {
+            "$ref": "#/components/schemas/ComponentCategory"
+          },
+          "value": {
+            "type": "string",
+            "title": "Value"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "category",
+          "value"
+        ],
+        "title": "PartOut",
+        "description": "A part as the master list lists it."
+      },
+      "PartReportIn": {
+        "properties": {
+          "document": {
+            "type": "string",
+            "maxLength": 2048,
+            "title": "Document",
+            "description": "The link, or an upload's name and `document`. Never the document itself."
+          },
+          "ref": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "Ref"
+          },
+          "read": {
+            "type": "string",
+            "maxLength": 200,
+            "title": "Read",
+            "description": "The value as Star Ground read it."
+          },
+          "correction": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Correction",
+            "description": "The value the document prints."
+          },
+          "location": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourceLocation"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "comment": {
+            "type": "string",
+            "maxLength": 5000,
+            "title": "Comment",
+            "description": "Anything the builder adds.",
+            "default": ""
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "document",
+          "ref",
+          "read"
+        ],
+        "title": "PartReportIn",
+        "description": "A builder's report that the reading got a part wrong.\n\nIt feeds the parser's regression corpus: the document's link names it,\nand the location says where to look."
       },
       "PartReview": {
         "properties": {
@@ -1488,6 +1738,34 @@
           }
         ]
       },
+      "PartCorrection": {
+        "additionalProperties": false,
+        "description": "A part the builder corrected against its document.",
+        "properties": {
+          "ref": {
+            "description": "The designator, as read.",
+            "maxLength": 100,
+            "title": "Ref",
+            "type": "string"
+          },
+          "category": {
+            "$ref": "#/components/schemas/ComponentCategory"
+          },
+          "value": {
+            "description": "As `POST /api/parts/read` read it.",
+            "maxLength": 200,
+            "title": "Value",
+            "type": "string"
+          }
+        },
+        "required": [
+          "ref",
+          "category",
+          "value"
+        ],
+        "title": "PartCorrection",
+        "type": "object"
+      },
       "PasteProject": {
         "additionalProperties": false,
         "description": "A parts list typed or pasted as `REF VALUE` lines.",
@@ -1525,6 +1803,15 @@
             "description": "Add the parts OCR read from images.",
             "title": "Use Ocr",
             "type": "boolean"
+          },
+          "corrections": {
+            "description": "Parts the builder corrected, applied to the chosen build.",
+            "items": {
+              "$ref": "#/components/schemas/PartCorrection"
+            },
+            "maxItems": 500,
+            "title": "Corrections",
+            "type": "array"
           },
           "method": {
             "const": "paste",
@@ -1582,6 +1869,15 @@
             "title": "Use Ocr",
             "type": "boolean"
           },
+          "corrections": {
+            "description": "Parts the builder corrected, applied to the chosen build.",
+            "items": {
+              "$ref": "#/components/schemas/PartCorrection"
+            },
+            "maxItems": 500,
+            "title": "Corrections",
+            "type": "array"
+          },
           "method": {
             "const": "preset",
             "title": "Method",
@@ -1636,6 +1932,15 @@
             "description": "Add the parts OCR read from images.",
             "title": "Use Ocr",
             "type": "boolean"
+          },
+          "corrections": {
+            "description": "Parts the builder corrected, applied to the chosen build.",
+            "items": {
+              "$ref": "#/components/schemas/PartCorrection"
+            },
+            "maxItems": 500,
+            "title": "Corrections",
+            "type": "array"
           },
           "method": {
             "const": "upload",
@@ -1712,6 +2017,15 @@
             "description": "Add the parts OCR read from images.",
             "title": "Use Ocr",
             "type": "boolean"
+          },
+          "corrections": {
+            "description": "Parts the builder corrected, applied to the chosen build.",
+            "items": {
+              "$ref": "#/components/schemas/PartCorrection"
+            },
+            "maxItems": 500,
+            "title": "Corrections",
+            "type": "array"
           },
           "method": {
             "const": "url",

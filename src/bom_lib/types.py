@@ -627,6 +627,38 @@ class Inventory(UserDict[ComponentKey, PartData]):
         part["counted"][source] = part["counted"].get(source, 0) + qty
         part["sources"].setdefault(source, [])
 
+    def move(self, source: str, ref: str, key: ComponentKey) -> bool:
+        """Lists one of a source's designators as another part.
+
+        A builder's correction: the document prints R1 as 10k, but the
+        reading took 1k. A part left with no designators or count is removed.
+
+        Args:
+            source: The source the designator was read from.
+            ref: The designator.
+            key: The part it is.
+
+        Returns:
+            Whether the source lists the designator.
+        """
+        found = next(
+            (k for k, data in self.items() if ref in data["sources"].get(source, [])),
+            None,
+        )
+        if found is None:
+            return False
+        if found == key:
+            return True
+        old = self[found]
+        old["refs"].remove(ref)
+        old["sources"][source].remove(ref)
+        old["qty"] -= 1
+        old["included"] = min(old["included"], old["qty"])
+        if old["qty"] <= 0:
+            del self[found]
+        self.add_part(source, key, ref)
+        return True
+
     def merge(self, other: Inventory, multiplier: int = 1) -> None:
         """Merges another inventory into this one.
 

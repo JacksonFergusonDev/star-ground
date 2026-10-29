@@ -142,8 +142,12 @@ The core of v1, replacing the form.
     - Measured 2026-10-29 on the local corpus (1,154 text documents): 99.3% to 100% of designators located per publisher, and 95.5% to 99.4% of boxes hold their value; the rest are mostly the right row with the value printed differently or on another line. OCR located every part on Five Cats Echoes and Dist Plus.
     - Parts read from a counted list ('4 - 10k', no designator) have no location yet, and a warning is placed by its designator's part, so one about a part the parse missed has none.
 1. A pdf.js viewer beside the parts list: each part outlined where it was read; a warning jumps to its spot.
+    - A card's "Check the parts against the document" and a warning's "Show in the document" open a review in place of the workspace: the pages on one side (pdf.js, loaded only then), the project's parts on the other in the document's order: page by page, down each column (Celestial Drive prints four side by side). Choosing a part in either place shows it in the other. On phones the document stays pinned above the list.
+    - An upload is drawn from the browser's own copy; a link's PDF comes through `GET /api/documents/pdf` from the reading cache, since a browser can't fetch a publisher's file itself.
 1. Confirm or correct a part in place.
+    - Checks live on the card, per build. A correction is read by `POST /api/parts/read` as it's typed, so a value that isn't a part is explained at the field, and the master list request carries it already normalized (`corrections`). The API moves the designator to its corrected part before merging, so the shopping list, exports and field manuals all follow it.
 1. "This part looks wrong": one click sends the document link, location and correction to the feedback sheet, feeding the parser's regression corpus.
+    - Saving a correction sends it by default (`POST /api/part-reports`, the sheet's Parts tab, added on first use); the builder can untick it. An upload is named by its file name and content hash, never sent.
 
 ### 7. PCB and schematic highlighting
 
@@ -197,7 +201,7 @@ Probed on 2026-10-24: board renders in PedalPCB, GuitarPCB and Tonepad documents
 | 3. Frontend foundation | Done 2026-10-25: the site uses house-style v2's shared shell | #204, #205 |
 | 4. Walking skeleton | Done 2026-10-28: v2.5.0 deployed to Cloud Run and Pages; measurements recorded; OCR thread pinning is a follow-up | #213 |
 | 5. Build workspace | Done 2026-10-28: project cards, the live master list, build choice, the OCR offer, stock, every export and browser storage. Feedback moves to step 6's part reports, and the catalog as a source to step 8 | #216, #218 |
-| 6. Document review | In progress: every part read from a document says where (page and box) | this PR |
+| 6. Document review | Done 2026-10-29: part locations, the document viewer, confirm or correct in place, and part reports | #222, this PR |
 | 7. PCB highlighting | Not started | |
 | 8. Circuit catalog | Not started | |
 | 9. Bench mode | Not started | |

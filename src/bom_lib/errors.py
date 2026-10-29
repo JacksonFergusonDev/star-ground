@@ -27,6 +27,7 @@ class ErrorKind(StrEnum):
     TOO_MANY_PAGES = "too_many_pages"
     BUILD_NOT_CHOSEN = "build_not_chosen"
     OCR_REFUSED = "ocr_refused"
+    UNREADABLE_PART = "unreadable_part"
     BUG = "bug"
 
 
@@ -159,6 +160,23 @@ class OcrRefusedError(StarGroundError):
             "This document's parts list is an image, which Star Ground reads by "
             "OCR a limited number of times an hour for each person.",
             "Try again later.",
+        )
+
+
+class UnreadablePartError(StarGroundError):
+    """A builder's correction that doesn't read as a part.
+
+    Args:
+        ref: The designator corrected.
+        value: The value typed.
+    """
+
+    kind = ErrorKind.UNREADABLE_PART
+
+    def __init__(self, ref: str, value: str) -> None:
+        super().__init__(
+            f"Star Ground couldn't read '{value}' as {ref}'s value.",
+            "Type it as the document prints it, for example 10k, 100n or TL072.",
         )
 
 

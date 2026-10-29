@@ -12,12 +12,15 @@
     onCount,
     onRemove,
     onRead,
+    onReview,
   }: {
     card: Card;
     presetName: (key: string) => string;
     onCount: (count: number) => void;
     onRemove: () => void;
     onRead: (ocr: boolean) => void;
+    /** Opens the document beside its parts; null until the parts are listed. */
+    onReview: (() => void) | null;
   } = $props();
 
   const choices = $derived(builds(card));
@@ -123,6 +126,12 @@
   {#if waiting && card.read.state === 'ready'}
     <p class="status">{waiting}</p>
   {/if}
+
+  {#if onReview}
+    <button class="text-button review" type="button" onclick={onReview}>
+      Check the parts against the document <Icon name="arrow-right" size={14} />
+    </button>
+  {/if}
 </li>
 
 <style>
@@ -200,6 +209,12 @@
   .remove:hover,
   .text-button:hover {
     color: var(--accent);
+  }
+  .review {
+    display: inline-flex;
+    gap: 8px;
+    align-items: center;
+    text-decoration: none;
   }
   .text-button {
     justify-self: start;

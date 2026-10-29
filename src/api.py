@@ -23,6 +23,8 @@ from src.bom_lib import (
     BOMParserContext,
     BuildHardware,
     BuiltProject,
+    ComponentCategory,
+    ComponentKey,
     FileUpload,
     InputMethod,
     Inventory,
@@ -33,16 +35,18 @@ from src.bom_lib import (
     ShoppingListRow,
     StatsDict,
     build_shopping_list,
+    categorize_part,
     create_empty_inventory,
     create_empty_stats,
     get_standard_hardware,
+    make_component_key,
     parse_user_inventory,
     provided_hardware,
     rename_source_in_inventory,
     status_leds,
 )
 from src.bom_lib.constants import INJECTED_SUFFIX
-from src.bom_lib.errors import BuildNotChosenError
+from src.bom_lib.errors import BuildNotChosenError, UnreadablePartError
 from src.bom_lib.ocr import without_ocr
 from src.pdf_generator import generate_master_zip, generate_pdf_bundle
 
@@ -52,6 +56,19 @@ PENDING_SOURCE = "__pending__"
 
 type ProjectData = str | FileUpload | None
 """A project's parts list: pasted or preset text, a URL, or a file."""
+
+
+@dataclass(frozen=True, slots=True)
+class Correction:
+    """A part the builder corrected against its document.
+
+    Attributes:
+        ref: The designator, as the reading listed it ('R1', 'R1 (2)').
+        part: The part the document prints (see `read_correction`).
+    """
+
+    ref: str
+    part: ComponentKey
 
 
 @dataclass(frozen=True, slots=True)
@@ -71,6 +88,8 @@ class Project:
         source_url: A preset's build document at its publisher, for the
             build pack's link.
         pcb_shop: The shop that sells a preset's board.
+        corrections: Parts the builder corrected, applied to the chosen
+            build's reading.
     """
 
     name: str = ""
@@ -83,6 +102,7 @@ class Project:
     source_path: str | None = None
     source_url: str | None = None
     pcb_shop: PcbShop | None = None
+    corrections: tuple[Correction, ...] = ()
 
     def __post_init__(self) -> None:
         """Refuses a count that would buy no parts, or a negative number."""
@@ -241,6 +261,29 @@ def file_title(method: InputMethod, data: ProjectData) -> str | None:
     return os.path.splitext(os.path.basename(name))[0] or None
 
 
+def read_correction(
+    ref: str, value: str, category: ComponentCategory | None = None
+) -> ComponentKey:
+    """Reads a builder's correction as the parser reads a parts list's row.
+
+    Args:
+        ref: The designator corrected.
+        value: The value the document prints, as typed ('2K2', '100n').
+        category: The part's category as read, for a named part the
+            designator doesn't classify ('DRIVE', a pot).
+
+    Returns:
+        The part, with its value normalized ('2.2k').
+
+    Raises:
+        UnreadablePartError: The value doesn't read as a part.
+    """
+    result = categorize_part(ref, value, category) if value.strip() else None
+    if result is None:
+        raise UnreadablePartError(ref, value.strip())
+    return make_component_key(result.category, result.clean_value)
+
+
 def parts_to_review(warnings: Sequence[ParseWarning]) -> dict[str, list[ParseWarning]]:
     """Groups a project's warnings by designator, in the order first warned.
 
@@ -377,6 +420,8 @@ def generate_master_list(
         if chose_build:
             result = result.select(str(project.variant))
         inventory, p_stats = result.inventory, result.stats
+        for correction in project.corrections:
+            inventory.move(listed_as, correction.ref, correction.part)
 
         name = source
         title = result.title or file_title(project.method, project.data)
