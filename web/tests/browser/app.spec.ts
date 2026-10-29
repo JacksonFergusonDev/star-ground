@@ -28,6 +28,8 @@ const result: MasterListResult = {
       ],
       ocr_reads: [],
       options: [],
+      errors: [],
+      bugs: [],
     },
   ],
   shopping_list: [
@@ -61,6 +63,7 @@ const reading = (over: Partial<DocumentReading> = {}): DocumentReading => ({
   ocr_offered: false,
   options: [],
   errors: [],
+  bugs: [],
   ...over,
 });
 
@@ -362,4 +365,81 @@ test('a download saves the file the API exports', async ({ page }) => {
 
   expect((await download).suggestedFilename()).toBe('shopping-list.csv');
   expect(url).toContain('/api/exports/shopping-list?links=excel');
+});
+
+const BUG = {
+  code: 'A1B2C3',
+  detail:
+    "Star Ground 2.6.0, reading the upload Blender.pdf\n\nTypeError: _eval_standard() missing 1 required positional argument: 'toks'",
+};
+const BUG_MESSAGE = "Star Ground hit a bug while reading this, so its parts aren't on the list.";
+
+async function stubBuggyList(page: Page): Promise<void> {
+  await page.route('**/api/master-list', (route) =>
+    route.fulfill({
+      json: {
+        ...result,
+        projects: [{ ...result.projects[0], label: 'Blender', errors: [BUG_MESSAGE], bugs: [BUG] }],
+      },
+    }),
+  );
+}
+
+test('a bug says so plainly and sends a report in one click', async ({ page }) => {
+  await stubBuggyList(page);
+  let report: Record<string, string> = {};
+  await page.route('**/api/reports', (route) => {
+    report = route.request().postDataJSON() as Record<string, string>;
+    return route.fulfill({ status: 204 });
+  });
+  await page.goto('/app/');
+  await paste(page, 'R1 10k');
+
+  await expect(page.getByRole('heading', { name: "Couldn't read Blender" })).toBeVisible();
+  await expect(page.getByText(BUG_MESSAGE)).toBeVisible();
+  await expect(page.getByText('_eval_standard')).toHaveCount(0);
+  await page.getByLabel('What were you doing? (optional)').fill('Added three documents');
+  await page.getByRole('button', { name: 'Send report' }).click();
+
+  await expect(page.getByText('Report sent.')).toBeVisible();
+  expect(report).toEqual({
+    code: 'A1B2C3',
+    document: 'Blender',
+    detail: BUG.detail,
+    comment: 'Added three documents',
+  });
+});
+
+test('without reports set up, the GitHub issue link carries the details', async ({ page }) => {
+  await stubBuggyList(page);
+  await page.route('**/api/reports', (route) =>
+    route.fulfill({ status: 503, json: { message: "Reports aren't set up on this server." } }),
+  );
+  await page.goto('/app/');
+  await paste(page, 'R1 10k');
+  await page.getByRole('button', { name: 'Send report' }).click();
+
+  await expect(page.getByText("This server can't take reports.")).toBeVisible();
+  const href = await page.getByRole('link', { name: /Open a GitHub issue/ }).getAttribute('href');
+  const url = new URL(href ?? '');
+  expect(url.pathname).toBe('/JacksonFergusonDev/star-ground/issues/new');
+  expect(url.searchParams.get('title')).toBe('Bug A1B2C3 reading Blender');
+  expect(url.searchParams.get('body')).toContain('_eval_standard');
+});
+
+test('a read that fails with a bug offers a report on its card', async ({ page }) => {
+  await stubMasterList(page);
+  await page.route('**/api/documents/read', (route) =>
+    route.fulfill({
+      contentType: 'text/event-stream',
+      body: sse({ event: 'reading' }, { event: 'error', message: BUG_MESSAGE, bug: BUG }),
+    }),
+  );
+  await page.goto('/app/');
+  await upload(page, 'Blender.pdf');
+
+  const card = page.getByRole('listitem').filter({ hasText: 'Upload: Blender.pdf' });
+  await expect(card.getByText(BUG_MESSAGE)).toBeVisible();
+  await expect(card.getByRole('button', { name: 'Send report' })).toBeVisible();
+  await expect(card.getByRole('button', { name: 'Read it again' })).toBeVisible();
 });

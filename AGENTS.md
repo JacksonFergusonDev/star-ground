@@ -39,6 +39,7 @@ The hooks mirror CI's jobs, so a push that passes them should pass CI. A check a
    - ATX headings only (`# Heading`, never underlined).
    - Dash markers (`-`) for unordered lists.
    - `1.` numbering for all ordered list items.
+1. **Errors the builder sees (`src/bom_lib/errors.py`):** A problem the builder can act on (a damaged PDF, a link that won't load, an unchosen build) is a `StarGroundError` subclass whose message is plain words written for them, shown as is. Any other exception is a bug: where documents are read it's caught once (`BOMParserContext.process`, the API's read route), recorded with `record_bug`, and shown as `BUG_MESSAGE` with a report the builder can send. Never put exception text in front of the builder, and don't catch exceptions deeper in the parser to turn them into strings.
 1. **Dead Code (On Request):** When asked to look for dead code, run `just deadcode` (vulture, configured in `[tool.vulture]`). It is not a gate: it exits non-zero whenever it reports anything, and findings are leads to review, not errors to clear. It scans `app.py`, `src/`, and `tools/` but not `tests/`, so code only tests reach shows up. Confirm each finding before acting (grep for string keys, `getattr`, and hooks a library calls). Delete real dead code along with the tests that only exercise it. Add a confirmed false positive to `ignore_names` under a comment giving the reason, never a lower `min_confidence`.
 
 ## Shared Design and Writing

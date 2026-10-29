@@ -21,7 +21,8 @@ import pytest
 import trustme
 
 from src.bom_lib import ComponentCategory, ComponentKey, InputMethod, fetch
-from src.bom_lib.fetch import FetchError, FetchPolicy, fetch_url
+from src.bom_lib.errors import FetchError
+from src.bom_lib.fetch import FetchPolicy, fetch_url
 from src.bom_lib.strategies.context import BOMParserContext
 
 SAMPLE_PDF = Path(__file__).parent / "samples" / "clean" / "Cataclysm-PedalPCB.pdf"

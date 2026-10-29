@@ -9,7 +9,8 @@ from unittest.mock import patch
 import pytest
 
 from src.bom_lib.enums import ComponentCategory, InputMethod
-from src.bom_lib.fetch import FetchedDocument, FetchError
+from src.bom_lib.errors import BUG_MESSAGE, FetchError
+from src.bom_lib.fetch import FetchedDocument
 from src.bom_lib.strategies import (
     BOMParserContext,
     CSVParserStrategy,
@@ -354,12 +355,11 @@ class TestBOMParserContext:
                 InputMethod.PASTE_TEXT, "R1 10k", "Buggy"
             )
 
-        assert result.stats["errors"] == [
-            "Star Ground couldn't read this parts list because of a bug. "
-            "It has been logged; please report it with the document."
-        ]
-        assert "Reading Buggy failed" in caplog.text
-        assert "KeyError" in caplog.text  # with its traceback
+        assert result.stats["errors"] == [BUG_MESSAGE]
+        (bug,) = result.bugs
+        assert "reading Buggy" in bug.detail
+        assert "KeyError" in bug.detail  # with its traceback
+        assert f"Bug {bug.code}" in caplog.text
 
     def test_process_unknown_method(self) -> None:
         context = BOMParserContext([])

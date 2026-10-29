@@ -25,6 +25,8 @@ import requests
 import urllib3
 from requests.adapters import HTTPAdapter
 
+from src.bom_lib.errors import FetchError
+
 type IPAddress = ipaddress.IPv4Address | ipaddress.IPv6Address
 
 USER_AGENT = "StarGround/1.0 (+https://github.com/JacksonFergusonDev/star-ground)"
@@ -98,13 +100,6 @@ class FetchedDocument:
     content: bytes
     content_type: str
     url: str
-
-
-class FetchError(ValueError):
-    """A URL the app won't fetch, or a response it won't read.
-
-    The message is written for the builder: it is shown as is.
-    """
 
 
 # 'https://github.com/owner/repo/blob/main/bom.csv' -> raw.githubusercontent.com.

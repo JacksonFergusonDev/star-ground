@@ -129,6 +129,16 @@ class OcrReading(_Model):
     has_parts: bool
 
 
+class BugReport(_Model):
+    """A failure in Star Ground's own code, for the builder to report."""
+
+    code: str = Field(description="Names this occurrence in the server's log.")
+    detail: str = Field(
+        description="Star Ground's version, what it was doing, and the traceback: "
+        "for the report, not to show the builder."
+    )
+
+
 class DocumentReading(_Model):
     """An upload or link, read ahead of building the master list."""
 
@@ -154,7 +164,8 @@ class DocumentReading(_Model):
         "the builder accepts."
     )
     options: list[str] = Field(description="Interchangeable parts, resolved.")
-    errors: list[str]
+    errors: list[str] = Field(description="Why it couldn't be read, in plain words.")
+    bugs: list[BugReport] = Field(description="Bugs in Star Ground, to report.")
 
 
 class ReadQueued(_Model):
@@ -182,6 +193,9 @@ class ReadFailed(_Model):
 
     event: Literal["error"] = "error"
     message: str
+    bug: BugReport | None = Field(
+        None, description="Set when the failure is a bug in Star Ground."
+    )
 
 
 ReadEvent = Annotated[
@@ -204,6 +218,8 @@ class ProjectResult(_Model):
     reviews: list[PartReview]
     ocr_reads: list[PartWarning] = Field(description="Parts read by OCR, to check.")
     options: list[str]
+    errors: list[str] = Field(description="Why it couldn't be read, in plain words.")
+    bugs: list[BugReport] = Field(description="Bugs in Star Ground, to report.")
 
 
 class ShoppingRow(_Model):
@@ -282,6 +298,19 @@ class FeedbackIn(_Model):
 
     rating: int = Field(ge=1, le=5, description="1 (terrible) to 5 (excellent).")
     comment: str = Field("", max_length=5000)
+
+
+class ReportIn(_Model):
+    """A builder's report of a bug, sent from where it appeared."""
+
+    code: str = Field(max_length=16, description="The bug's `code`.")
+    document: str = Field(
+        max_length=2048,
+        description="What was being read: the upload's name or the link. Never "
+        "the document itself.",
+    )
+    detail: str = Field(max_length=20_000, description="The bug's `detail`.")
+    comment: str = Field("", max_length=5000, description="Anything the builder adds.")
 
 
 class Health(_Model):

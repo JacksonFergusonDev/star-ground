@@ -40,6 +40,7 @@ from src.bom_lib import (
     rename_source_in_inventory,
     status_leds,
 )
+from src.bom_lib.errors import BuildNotChosenError
 from src.bom_lib.ocr import without_ocr
 from src.pdf_generator import generate_master_zip, generate_pdf_bundle
 
@@ -85,24 +86,6 @@ class Project:
         """Refuses a count that would buy no parts, or a negative number."""
         if self.count < 1:
             raise ValueError(f"A project needs at least one pedal, not {self.count}")
-
-
-class BuildNotChosenError(ValueError):
-    """A multi-circuit document's build was not chosen.
-
-    Building the wrong variant buys the wrong parts, so there is no default.
-
-    Attributes:
-        projects: The names of the projects whose build must be chosen.
-    """
-
-    def __init__(self, projects: list[str]) -> None:
-        super().__init__(
-            "Choose which build before generating: "
-            + ", ".join(projects)
-            + ". Each build of these documents needs different parts."
-        )
-        self.projects = projects
 
 
 @dataclass(frozen=True, slots=True)
@@ -408,6 +391,8 @@ def generate_master_list(
                     status_leds(inventory),
                 ),
                 warnings=tuple(p_stats["warnings"]),
+                errors=tuple(p_stats["errors"]),
+                bugs=result.bugs,
                 options=tuple(str(o) for o in result.options),
                 document=result.raw_content,
                 source_path=project.source_path,

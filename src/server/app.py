@@ -33,7 +33,6 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, TypeAdapter, ValidationError
 
 from src.api import (
-    BuildNotChosenError,
     MasterList,
     Project,
     ProjectData,
@@ -59,7 +58,14 @@ from src.bom_lib import (
     get_residual_report,
     parse_preset_key,
 )
-from src.bom_lib.ocr import OcrGuard, OcrRefusedError, needs_ocr, ocr_guard
+from src.bom_lib.errors import (
+    BUG_MESSAGE,
+    Bug,
+    BuildNotChosenError,
+    OcrRefusedError,
+    record_bug,
+)
+from src.bom_lib.ocr import OcrGuard, needs_ocr, ocr_guard
 from src.exporters import (
     generate_shopping_list_csv,
     generate_stock_update_csv,
@@ -67,6 +73,7 @@ from src.exporters import (
 )
 from src.server.limits import BodySizeLimit, OcrQueue, RateLimiter, ReadingCache
 from src.server.models import (
+    BugReport,
     BuildNotChosen,
     DocumentReading,
     DocumentsMissing,
@@ -91,6 +98,7 @@ from src.server.models import (
     ReadFailed,
     ReadQueued,
     ReadStarted,
+    ReportIn,
     ShoppingRow,
     Stats,
     UploadProject,
@@ -101,6 +109,9 @@ logger = logging.getLogger(__name__)
 
 type FeedbackSink = Callable[[FeedbackRating, str], None]
 """Records a rating and comment (the Google Sheet, in production)."""
+
+type ReportSink = Callable[[ReportIn], None]
+"""Records a builder's bug report (the sheet's Reports tab, in production)."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -170,6 +181,8 @@ class FeedbackSheet:
         self._credentials = credentials
         self._sheet: Any = None
         self._connected = 0.0
+        self._reports: Any = None
+        self._reports_at = 0.0
         self._lock = threading.Lock()
 
     def __call__(self, rating: FeedbackRating, comment: str) -> None:
@@ -182,8 +195,24 @@ class FeedbackSheet:
                 self._connected = time.monotonic()
             save_feedback(self._sheet, rating, comment)
 
+    def report(self, report: ReportIn) -> None:
+        """Appends one bug report to the Reports tab."""
+        from src.feedback import connect_report_sheet, save_report
 
-def feedback_from_env(env: Mapping[str, str] = os.environ) -> FeedbackSink | None:
+        with self._lock:
+            if self._reports is None or time.monotonic() - self._reports_at > 3600:
+                self._reports = connect_report_sheet(self._credentials)
+                self._reports_at = time.monotonic()
+            save_report(
+                self._reports,
+                report.code,
+                report.document,
+                report.comment,
+                report.detail,
+            )
+
+
+def feedback_from_env(env: Mapping[str, str] = os.environ) -> FeedbackSheet | None:
     """The feedback sheet, if `STAR_GROUND_FEEDBACK_CREDENTIALS` holds a key.
 
     Args:
@@ -225,6 +254,7 @@ class _Services:
     ocr_queue: OcrQueue
     cache: ReadingCache
     feedback: FeedbackSink | None
+    reports: ReportSink | None
 
 
 def _client(request: Request, trust_proxy: bool) -> str:
@@ -257,12 +287,6 @@ def _ocr_guard(
             yield
 
     return guard
-
-
-_OCR_REFUSED = Problem(
-    message="This document's parts list is an image, which Star Ground reads by "
-    "OCR a limited number of times an hour for each person. Try again later."
-)
 
 
 def _ocr_on(services: _Services, asked: bool) -> bool:
@@ -303,7 +327,7 @@ def _read(
         try:
             reading = read_document(method, data, ocr=_ocr_on(services, ocr))
         except OcrRefusedError as e:
-            raise RefusedError(429, _OCR_REFUSED) from e
+            raise RefusedError(429, Problem(message=str(e))) from e
         finally:
             ocr_guard.reset(token)
         if reading is None:
@@ -349,6 +373,10 @@ def _upload_for(
     return upload
 
 
+def _bug(bug: Bug) -> BugReport:
+    return BugReport(code=bug.code, detail=bug.detail)
+
+
 def _document_reading(
     services: _Services,
     reading: ParseResult,
@@ -379,6 +407,7 @@ def _document_reading(
         ocr_offered=services.settings.ocr and not ocr_run and needs_ocr(reading),
         options=[str(o) for o in reading.options],
         errors=list(reading.stats["errors"]),
+        bugs=[_bug(b) for b in reading.bugs],
     )
 
 
@@ -470,6 +499,8 @@ def _result(master: MasterList, request: MasterListRequest) -> MasterListResult:
                 ],
                 ocr_reads=[_warning(w) for w in ocr],
                 options=list(p.options),
+                errors=list(p.errors),
+                bugs=[_bug(b) for b in p.bugs],
             )
         )
     stats = master.stats
@@ -528,13 +559,17 @@ _EXPORT_RESPONSES: dict[int | str, dict[str, Any]] = {
 
 
 def create_app(
-    settings: Settings | None = None, feedback: FeedbackSink | None = None
+    settings: Settings | None = None,
+    feedback: FeedbackSink | None = None,
+    reports: ReportSink | None = None,
 ) -> FastAPI:
     """Builds the API.
 
     Args:
         settings: The instance's configuration; defaults if omitted.
         feedback: Where feedback goes; the feedback route answers 503
+            without one.
+        reports: Where bug reports go; the reports route answers 503
             without one.
 
     Returns:
@@ -548,6 +583,7 @@ def create_app(
         ocr_queue=OcrQueue(1),
         cache=ReadingCache(settings.cache_bytes),
         feedback=feedback,
+        reports=reports,
     )
     app = FastAPI(
         title="Star Ground API",
@@ -713,16 +749,11 @@ def create_app(
                 try:
                     reading = job.result()
                 except RefusedError as e:
-                    yield _sse(ReadFailed(message=e.body.message))
+                    yield _sse(ReadFailed(message=e.body.message, bug=None))
                     return
                 except Exception:
-                    logger.exception("Reading %s failed", key)
-                    yield _sse(
-                        ReadFailed(
-                            message="The document couldn't be read. "
-                            "It has been logged for a look."
-                        )
-                    )
+                    bug = record_bug(f"reading {file_title(method, data) or key}")
+                    yield _sse(ReadFailed(message=BUG_MESSAGE, bug=_bug(bug)))
                     return
             yield _sse(
                 ReadDone(
@@ -822,6 +853,24 @@ def create_app(
                 503, Problem(message="Feedback isn't set up on this server.")
             )
         services.feedback(list(FeedbackRating)[body.rating - 1], body.comment)
+
+    @app.post(
+        "/api/reports",
+        tags=["feedback"],
+        status_code=204,
+        responses={503: {"model": Problem}},
+    )
+    def send_report(http: Request, body: ReportIn) -> None:
+        """Records a builder's report of a bug, with what was being read.
+
+        Never the document itself: an upload's name, or a link.
+        """
+        limited(http)
+        if services.reports is None:
+            raise RefusedError(
+                503, Problem(message="Reports aren't set up on this server.")
+            )
+        services.reports(body)
 
     def openapi() -> dict[str, Any]:
         if app.openapi_schema is None:

@@ -5,8 +5,15 @@ import os
 from urllib.parse import unquote, urlsplit
 
 from src.bom_lib.enums import InputMethod
-from src.bom_lib.fetch import FetchedDocument, FetchError, fetch_url
-from src.bom_lib.ocr import OcrRefusedError
+from src.bom_lib.errors import (
+    BUG_MESSAGE,
+    Bug,
+    FetchError,
+    OcrRefusedError,
+    StarGroundError,
+    record_bug,
+)
+from src.bom_lib.fetch import FetchedDocument, fetch_url
 from src.bom_lib.strategies.base import BOMParserStrategy, ParseResult
 from src.bom_lib.strategies.csv import CSVParserStrategy
 from src.bom_lib.strategies.manual import ManualInputStrategy
@@ -47,11 +54,24 @@ def _from_download(doc: FetchedDocument) -> str | bytes | FileUpload:
     return doc.content.decode("utf-8", errors="replace")
 
 
-def _failed(error: str) -> ParseResult:
-    """An empty reading that reports why it is empty."""
+def _failed(error: str, bug: Bug | None = None) -> ParseResult:
+    """An empty reading that reports why it is empty, and the bug if one was."""
     stats = create_empty_stats()
     stats["errors"].append(error)
-    return ParseResult(inventory=create_empty_inventory(), stats=stats)
+    return ParseResult(
+        inventory=create_empty_inventory(),
+        stats=stats,
+        bugs=(bug,) if bug else (),
+    )
+
+
+def _describe(method: InputMethod, data: RawBOMData, source_name: str) -> str:
+    """What was being read, for a bug report: the file's name or the link."""
+    if isinstance(data, FileUpload):
+        return f"reading the upload {data.name}"
+    if method == InputMethod.FROM_URL:
+        return f"reading the link {str(data).strip()}"
+    return f"reading {source_name} ({method.value})"
 
 
 class BOMParserContext:
@@ -109,13 +129,11 @@ class BOMParserContext:
         except OcrRefusedError:
             # The server's limit, not a failure to read: its caller answers.
             raise
-        except FetchError as e:
-            # Written for the builder: a link the app won't or can't fetch.
+        except StarGroundError as e:
+            # Written for the builder: a link that won't load, a damaged PDF.
             return _failed(str(e))
         except Exception:
-            # A bug, not the builder's input: log it whole, and say so.
-            logger.exception("Reading %s failed", source_name)
+            # A bug, not the builder's input: record it to report, and say so.
             return _failed(
-                "Star Ground couldn't read this parts list because of a bug. "
-                "It has been logged; please report it with the document."
+                BUG_MESSAGE, record_bug(_describe(method, data, source_name))
             )

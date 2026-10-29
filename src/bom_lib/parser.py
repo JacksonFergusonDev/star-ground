@@ -9,7 +9,6 @@ import csv
 import io
 import logging
 import re
-import traceback
 from collections import Counter
 from dataclasses import replace
 from typing import TYPE_CHECKING, Any
@@ -27,6 +26,7 @@ from src.bom_lib.classifier import (
 )
 from src.bom_lib.designators import is_designator, parse_designator
 from src.bom_lib.enums import ComponentCategory, ParseWarningKind
+from src.bom_lib.errors import TooManyPagesError, UnreadablePdfError
 from src.bom_lib.layout import (
     REF_RANGE,
     Cell,
@@ -2493,6 +2493,10 @@ def parse_pedalpcb_pdf(filepath: str, source_name: str) -> ParseResult:
 
     Returns:
         A ParseResult containing updated inventory, parsing statistics, and extracted title.
+
+    Raises:
+        UnreadablePdfError: The file can't be opened as a PDF.
+        TooManyPagesError: The PDF is far longer than a build document.
     """
     # Lazy import to avoid loading heavy PDF libraries unless needed
     import pdfplumber
@@ -2509,97 +2513,82 @@ def parse_pedalpcb_pdf(filepath: str, source_name: str) -> ParseResult:
         try:
             pdf = pdfplumber.open(filepath)
         except Exception as e:
-            logger.error(f"Failed to open PDF {source_name}: {e}")
-            stats["errors"].append(f"File Error: {e!s}")
-            return ParseResult(inventory=inventory, stats=stats)
+            logger.info("Couldn't open %s as a PDF: %s", source_name, e)
+            raise UnreadablePdfError from e
         if len(pdf.pages) > MAX_PDF_PAGES:
-            stats["errors"].append(
-                f"The PDF has {len(pdf.pages)} pages. Build documents have at "
-                f"most {MAX_PDF_PAGES}, so it wasn't read."
-            )
-            return ParseResult(inventory=inventory, stats=stats)
+            raise TooManyPagesError(len(pdf.pages), MAX_PDF_PAGES)
 
-        # Phase 2: Extraction
-        try:
-            # Iterate pages once to grab expensive text/table data
-            pages_data: list[PDFPageExtraction] = []
-            misread: set[int] = set()
-            for number, raw_page in enumerate(pdf.pages):
-                straight = _straighten(_without_overprint(raw_page.filter(_readable)))
-                marked = marked_labels(_page_words(straight))
-                page = _without_marks(straight)
-                page_words = _page_words(page)
-                if _misread(page_words):
-                    # Read as an image page instead (see `ocr.py`).
-                    check_misread_text(stats, number)
-                    misread.add(number)
-                    pages_data.append({"tables": [], "text": "", "words": []})
-                    continue
-                pages_data.append(
-                    {
-                        # Same word gap as the layout reader: kerned cells
-                        # otherwise run together ('3mmRedLED,Diffused').
-                        "tables": page.extract_tables(
-                            {"text_x_tolerance": _WORD_GAP_PT}
-                        ),
-                        "text": page.extract_text(),
-                        "words": page_words,
-                        "pictures": _pictures(raw_page),
-                        "marked": marked,
-                    }
-                )
-
-            # --- PHASE 2: TITLE EXTRACTION ---
-            try:
-                # A cover page of warnings comes before the title page (Aion FX
-                # legacy Blueshift: 'WARNING / DISCLAIMER').
-                first = int(
-                    len(pdf.pages) > 1
-                    and bool(_DISCLAIMER.match(pages_data[0]["text"] or ""))
-                )
-                if first in misread:
-                    raise ValueError("the title page's text is misread OCR")
-                p1 = _without_overprint(pdf.pages[first])
-                words = p1.extract_words(extra_attrs=["size"])
-                ignore = {
-                    "PEDALPCB",
-                    "CONTROLS",
-                    "COPYRIGHT",
-                    "WWW.PEDALPCB.COM",
-                    "LEVEL",
-                    "VCC",
-                    "GND",
+        # Phase 2: Extraction. A failure here is a bug in Star Ground: the
+        # reading's caller records it (`src.bom_lib.errors.record_bug`).
+        # Iterate pages once to grab expensive text/table data
+        pages_data: list[PDFPageExtraction] = []
+        misread: set[int] = set()
+        for number, raw_page in enumerate(pdf.pages):
+            straight = _straighten(_without_overprint(raw_page.filter(_readable)))
+            marked = marked_labels(_page_words(straight))
+            page = _without_marks(straight)
+            page_words = _page_words(page)
+            if _misread(page_words):
+                # Read as an image page instead (see `ocr.py`).
+                check_misread_text(stats, number)
+                misread.add(number)
+                pages_data.append({"tables": [], "text": "", "words": []})
+                continue
+            pages_data.append(
+                {
+                    # Same word gap as the layout reader: kerned cells
+                    # otherwise run together ('3mmRedLED,Diffused').
+                    "tables": page.extract_tables({"text_x_tolerance": _WORD_GAP_PT}),
+                    "text": page.extract_text(),
+                    "words": page_words,
+                    "pictures": _pictures(raw_page),
+                    "marked": marked,
                 }
-                candidates = [
-                    w
-                    for w in words
-                    if w["text"].upper() not in ignore and w["size"] > 10
-                ]
+            )
 
-                while candidates:
-                    max_size = max(c["size"] for c in candidates)
-                    title_words = [w for w in candidates if w["size"] >= max_size - 1]
-                    title_words.sort(key=lambda x: (x["top"], x["x0"]))
-                    title = " ".join(w["text"] for w in title_words)
-                    if _PRESENTS.fullmatch(title):
-                        # 'GuitarPCB Presents' heads the page above the title.
-                        candidates = [w for w in candidates if w not in title_words]
-                        continue
-                    title = _BYLINE.sub("", title)
-                    if _is_title(title):
-                        stats["extracted_title"] = title
-                    break
-            except Exception:
-                # Title extraction is heuristic/optional; don't fail the build if it misses.
-                pass
+        # --- PHASE 2: TITLE EXTRACTION ---
+        try:
+            # A cover page of warnings comes before the title page (Aion FX
+            # legacy Blueshift: 'WARNING / DISCLAIMER').
+            first = int(
+                len(pdf.pages) > 1
+                and bool(_DISCLAIMER.match(pages_data[0]["text"] or ""))
+            )
+            if first in misread:
+                raise ValueError("the title page's text is misread OCR")
+            p1 = _without_overprint(pdf.pages[first])
+            words = p1.extract_words(extra_attrs=["size"])
+            ignore = {
+                "PEDALPCB",
+                "CONTROLS",
+                "COPYRIGHT",
+                "WWW.PEDALPCB.COM",
+                "LEVEL",
+                "VCC",
+                "GND",
+            }
+            candidates = [
+                w for w in words if w["text"].upper() not in ignore and w["size"] > 10
+            ]
 
-            inventory, variants, options = read_pages(pages_data, source_name, stats)
+            while candidates:
+                max_size = max(c["size"] for c in candidates)
+                title_words = [w for w in candidates if w["size"] >= max_size - 1]
+                title_words.sort(key=lambda x: (x["top"], x["x0"]))
+                title = " ".join(w["text"] for w in title_words)
+                if _PRESENTS.fullmatch(title):
+                    # 'GuitarPCB Presents' heads the page above the title.
+                    candidates = [w for w in candidates if w not in title_words]
+                    continue
+                title = _BYLINE.sub("", title)
+                if _is_title(title):
+                    stats["extracted_title"] = title
+                break
+        except Exception:
+            # Title extraction is heuristic/optional; don't fail the build if it misses.
+            pass
 
-        except Exception as e:
-            # Capture internal parsing errors (logic bugs, layout changes)
-            logger.error(f"Parsing logic failed for {source_name}")
-            logger.error(traceback.format_exc())
-            stats["errors"].append(f"Parse Error: {e!s}")
+        inventory, variants, options = read_pages(pages_data, source_name, stats)
 
     finally:
         # Always close the file handle

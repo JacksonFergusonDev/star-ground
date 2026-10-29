@@ -7,7 +7,6 @@ import streamlit as st
 from streamlit.runtime.uploaded_file_manager import UploadedFile
 
 from src.api import (
-    BuildNotChosenError,
     MasterList,
     document_key,
     generate_master_list,
@@ -31,6 +30,7 @@ from src.bom_lib import (
     get_residual_report,
     sort_inventory,
 )
+from src.bom_lib.errors import BuildNotChosenError
 from src.exporters import (
     generate_shopping_list_csv,
     generate_stock_update_csv,

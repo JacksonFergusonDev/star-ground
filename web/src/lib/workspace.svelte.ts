@@ -3,7 +3,7 @@
 // tens of megabytes, live in IndexedDB. Either can be unavailable (a private
 // window, blocked storage), and the workspace then works for the visit only.
 
-import type { DocumentReading, MasterListRequest } from './api';
+import type { BugReport, DocumentReading, MasterListRequest } from './api';
 import type { Stock } from './server';
 
 /** Where a project's parts list comes from. */
@@ -25,7 +25,7 @@ export type ReadState =
   | { state: 'reading' }
   | { state: 'queued'; position: number }
   | { state: 'ready' }
-  | { state: 'failed'; message: string };
+  | { state: 'failed'; message: string; bug?: BugReport | null };
 
 /** One project card. */
 export interface Card {
@@ -203,3 +203,8 @@ export const files = {
     await transact('readwrite', (s) => s.delete(id));
   },
 };
+
+/** A count with its noun: '1 part', '3 parts'. */
+export function count(n: number, noun: string): string {
+  return `${n} ${noun}${n === 1 ? '' : 's'}`;
+}

@@ -5,7 +5,7 @@
   import { onMount } from 'svelte';
   import type { ExportKind, MasterListResult, PresetCatalog } from '../../lib/api';
   import type { Download } from '../../lib/server';
-  import { exportFile, masterList, presets, readDocument, warmUp } from '../../lib/server';
+  import { bugOf, exportFile, masterList, presets, readDocument, warmUp } from '../../lib/server';
   import type { Added, Card } from '../../lib/workspace.svelte';
   import { files, request, Workspace } from '../../lib/workspace.svelte';
   import AddProject from './AddProject.svelte';
@@ -62,7 +62,7 @@
       current.read = { state: 'ready' };
     } catch (e) {
       const current = workspace.find(id);
-      if (current) current.read = { state: 'failed', message: (e as Error).message };
+      if (current) current.read = { state: 'failed', message: (e as Error).message, bug: bugOf(e) };
     }
   }
 

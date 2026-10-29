@@ -4,6 +4,8 @@
   import type { ExportKind, MasterListResult } from '../../lib/api';
   import type { Download } from '../../lib/server';
   import type { Options } from '../../lib/workspace.svelte';
+  import { count } from '../../lib/workspace.svelte';
+  import BugNotice from './BugNotice.svelte';
   import Exports from './Exports.svelte';
   import Icon from './Icon.svelte';
 
@@ -33,6 +35,7 @@
       .filter((p) => p.items.length),
   );
   const choices = $derived((result?.projects ?? []).filter((p) => p.options.length));
+  const unread = $derived((result?.projects ?? []).filter((p) => p.errors.length || p.bugs.length));
   const rows = $derived(result?.shopping_list ?? []);
   const toBuy = $derived(rows.filter((r) => r.buy_qty > 0).length);
 </script>
@@ -51,20 +54,20 @@
     <p class="empty">Add a project and its parts appear here, merged with every other project's.</p>
   {:else}
     <p class="summary">
-      {result.stats.parts_found} parts read from {result.stats.lines_read} lines across
-      {result.projects.length}
-      {result.projects.length === 1 ? 'project' : 'projects'}; {rows.length} different parts,
+      {count(result.stats.parts_found, 'part')} read from {count(result.stats.lines_read, 'line')}
+      across {count(result.projects.length, 'project')}; {count(rows.length, 'different part')},
       {toBuy} to buy{result.has_stock ? ' after your stock' : ''}.
     </p>
 
-    {#if result.stats.errors.length}
-      <h3>Couldn't read</h3>
-      <ul class="notes">
-        {#each result.stats.errors as message, i (i)}
-          <li>{message}</li>
-        {/each}
-      </ul>
-    {/if}
+    {#each unread as project (project.label)}
+      <h3>Couldn't read {project.label}</h3>
+      {#each project.errors as message, i (i)}
+        <p class="note">{message}</p>
+      {/each}
+      {#each project.bugs as bug (bug.code)}
+        <BugNotice {bug} document={project.label} />
+      {/each}
+    {/each}
 
     {#if checks.length}
       <h3>Check these parts</h3>

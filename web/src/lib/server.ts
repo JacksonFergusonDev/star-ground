@@ -3,6 +3,7 @@
 
 import { PUBLIC_API_URL } from 'astro:env/client';
 import type {
+  BugReport,
   DocumentReading,
   DocumentsMissing,
   ExportKind,
@@ -11,6 +12,7 @@ import type {
   PresetCatalog,
   Problem,
   ReadEvent,
+  ReportIn,
 } from './api';
 
 const api = (path: string): string => `${PUBLIC_API_URL}/api/${path}`;
@@ -96,7 +98,11 @@ export async function readDocument(
       if (!line.startsWith('data: ')) continue;
       const event = JSON.parse(line.slice(6)) as ReadEvent;
       if (event.event === 'result') return event.reading;
-      if (event.event === 'error') throw new ApiError(event.message, response.status);
+      if (event.event === 'error')
+        throw new ApiError(event.message, response.status, {
+          message: event.message,
+          bug: event.bug,
+        });
       progress(event);
     }
     if (done) throw new ApiError('The reading stopped early. Try again.', response.status);
@@ -194,4 +200,25 @@ function form(request: MasterListRequest, files: File[], stock: Stock | null): F
   }
   if (stock) body.set('stock', new File([stock.text], stock.name, { type: 'text/csv' }));
   return body;
+}
+
+/** Sends a builder's bug report: what went wrong and what was being read, never the document. */
+export async function sendReport(report: ReportIn): Promise<void> {
+  await send('reports', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(report),
+  });
+}
+
+/** Whether a refusal means this server can't take reports at all. */
+export function reportsUnavailable(error: unknown): boolean {
+  return error instanceof ApiError && error.status === 503;
+}
+
+/** The bug a failed request carries, if the failure was a bug in Star Ground. */
+export function bugOf(error: unknown): BugReport | null {
+  return error instanceof ApiError
+    ? ((error.body.bug as BugReport | null | undefined) ?? null)
+    : null;
 }

@@ -22,6 +22,7 @@ from src.bom_lib import (
     InputMethod,
     ParseResult,
 )
+from src.bom_lib.errors import BUG_MESSAGE
 from src.bom_lib.ocr import ocr_guard
 from src.server import Settings, create_app
 from src.server.limits import OcrQueue, RateLimiter, ReadingCache
@@ -788,3 +789,82 @@ def test_an_upload_names_a_file_or_a_document(client: TestClient) -> None:
     )
 
     assert response.status_code == 422
+
+
+# --- Bugs and reports ---
+
+
+def test_a_bug_in_a_reading_comes_with_its_report(
+    client: TestClient, mocker: MockerFixture
+) -> None:
+    mocker.patch(
+        "src.bom_lib.strategies.pdf.parse_pedalpcb_pdf", side_effect=KeyError("oops")
+    )
+
+    reading = _events(
+        client.post("/api/documents/read", files={"file": _pdf(KLICHE)}).text
+    )[-1]["reading"]
+
+    assert reading["errors"] == [BUG_MESSAGE]
+    (bug,) = reading["bugs"]
+    assert len(bug["code"]) == 6
+    assert "KeyError" in bug["detail"]
+    assert f"reading the upload {KLICHE.name}" in bug["detail"]
+
+
+def test_a_failed_read_is_a_bug_with_a_report(
+    client: TestClient, mocker: MockerFixture
+) -> None:
+    mocker.patch("src.server.app.read_document", side_effect=RuntimeError("boom"))
+
+    event = _events(
+        client.post("/api/documents/read", files={"file": _pdf(KLICHE)}).text
+    )[-1]
+
+    assert event["event"] == "error"
+    assert event["message"] == BUG_MESSAGE
+    assert "boom" in event["bug"]["detail"]
+
+
+def test_each_project_says_why_it_couldnt_be_read(
+    client: TestClient, mocker: MockerFixture
+) -> None:
+    mocker.patch(
+        "src.bom_lib.strategies.manual.parse_with_verification",
+        side_effect=TypeError("broken"),
+    )
+
+    result = _post(
+        client,
+        "/api/master-list",
+        [{"method": "paste", "name": "Fuzz", "text": "R1 10k"}],
+    ).json()
+
+    (project,) = result["projects"]
+    assert project["errors"] == [BUG_MESSAGE]
+    assert "broken" in project["bugs"][0]["detail"]
+
+
+_REPORT = {
+    "code": "A1B2C3",
+    "document": "Blender.pdf",
+    "detail": "Traceback ...",
+    "comment": "Added three documents at once.",
+}
+
+
+def test_a_report_goes_to_the_reports_sink() -> None:
+    received: list[Any] = []
+    client = TestClient(create_app(Settings(), reports=received.append))
+
+    response = client.post("/api/reports", json=_REPORT)
+
+    assert response.status_code == 204
+    assert received[0].model_dump() == _REPORT
+
+
+def test_reports_answer_503_when_not_set_up(client: TestClient) -> None:
+    response = client.post("/api/reports", json=_REPORT)
+
+    assert response.status_code == 503
+    assert "aren't set up" in response.json()["message"]

@@ -274,6 +274,51 @@
           }
         }
       }
+    },
+    "/api/reports": {
+      "post": {
+        "tags": [
+          "feedback"
+        ],
+        "summary": "Send Report",
+        "description": "Records a builder's report of a bug, with what was being read.\n\nNever the document itself: an upload's name, or a link.",
+        "operationId": "send_report_api_reports_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReportIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -395,6 +440,28 @@
         },
         "type": "object",
         "title": "Body_read_api_documents_read_post"
+      },
+      "BugReport": {
+        "additionalProperties": false,
+        "description": "A failure in Star Ground's own code, for the builder to report.",
+        "properties": {
+          "code": {
+            "description": "Names this occurrence in the server's log.",
+            "title": "Code",
+            "type": "string"
+          },
+          "detail": {
+            "description": "Star Ground's version, what it was doing, and the traceback: for the report, not to show the builder.",
+            "title": "Detail",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "detail"
+        ],
+        "title": "BugReport",
+        "type": "object"
       },
       "BuildNotChosen": {
         "properties": {
@@ -750,6 +817,22 @@
             },
             "type": "array",
             "title": "Options"
+          },
+          "errors": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Errors",
+            "description": "Why it couldn't be read, in plain words."
+          },
+          "bugs": {
+            "items": {
+              "$ref": "#/components/schemas/BugReport"
+            },
+            "type": "array",
+            "title": "Bugs",
+            "description": "Bugs in Star Ground, to report."
           }
         },
         "additionalProperties": false,
@@ -759,10 +842,50 @@
           "name",
           "reviews",
           "ocr_reads",
-          "options"
+          "options",
+          "errors",
+          "bugs"
         ],
         "title": "ProjectResult",
         "description": "One project as it went onto the master list."
+      },
+      "ReportIn": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "maxLength": 16,
+            "title": "Code",
+            "description": "The bug's `code`."
+          },
+          "document": {
+            "type": "string",
+            "maxLength": 2048,
+            "title": "Document",
+            "description": "What was being read: the upload's name or the link. Never the document itself."
+          },
+          "detail": {
+            "type": "string",
+            "maxLength": 20000,
+            "title": "Detail",
+            "description": "The bug's `detail`."
+          },
+          "comment": {
+            "type": "string",
+            "maxLength": 5000,
+            "title": "Comment",
+            "description": "Anything the builder adds.",
+            "default": ""
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "document",
+          "detail"
+        ],
+        "title": "ReportIn",
+        "description": "A builder's report of a bug, sent from where it appeared."
       },
       "ShoppingRow": {
         "properties": {
@@ -995,10 +1118,19 @@
             "type": "array"
           },
           "errors": {
+            "description": "Why it couldn't be read, in plain words.",
             "items": {
               "type": "string"
             },
             "title": "Errors",
+            "type": "array"
+          },
+          "bugs": {
+            "description": "Bugs in Star Ground, to report.",
+            "items": {
+              "$ref": "#/components/schemas/BugReport"
+            },
+            "title": "Bugs",
             "type": "array"
           }
         },
@@ -1012,7 +1144,8 @@
           "ocr",
           "ocr_offered",
           "options",
-          "errors"
+          "errors",
+          "bugs"
         ],
         "title": "DocumentReading",
         "type": "object"
@@ -1102,6 +1235,18 @@
           "message": {
             "title": "Message",
             "type": "string"
+          },
+          "bug": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BugReport"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Set when the failure is a bug in Star Ground."
           }
         },
         "required": [

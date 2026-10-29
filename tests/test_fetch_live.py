@@ -8,7 +8,8 @@ site changes: `uv run pytest -m network` (or `just test-network`).
 import pytest
 
 from src.bom_lib import InputMethod
-from src.bom_lib.fetch import FetchError, fetch_url
+from src.bom_lib.errors import FetchError
+from src.bom_lib.fetch import fetch_url
 from src.bom_lib.strategies.context import BOMParserContext
 
 pytestmark = pytest.mark.network
