@@ -1,8 +1,10 @@
 """Unit tests for the isolated Context-Free Grammar (CFG) SI-value parser."""
 
+import threading
 from decimal import Decimal
 from typing import cast
 
+import pyparsing as pp
 import pytest
 
 from src.bom_lib.grammar import (
@@ -131,3 +133,37 @@ def test_a_numbered_t_with_a_resistance_is_a_trimmer() -> None:
     assert trimmer.category == ComponentCategory.POTENTIOMETERS
     assert transformer is not None
     assert transformer.category == ComponentCategory.TRANSFORMERS
+
+
+def _parse_together(
+    parser: pp.ParserElement, barrier: threading.Barrier, results: list[object]
+) -> None:
+    barrier.wait()
+    try:
+        results.append(parser.parse_string("4k7", parse_all=True)[0])
+        results.append(parser.parse_string("10k", parse_all=True)[0])
+    except TypeError as e:
+        results.append(e)
+
+
+def test_a_fresh_parser_is_safe_to_share_between_threads() -> None:
+    """Documents are read on several threads at once (the web API).
+
+    pyparsing found a parse action's arity by retrying it on TypeError, which
+    raced: concurrent first calls left it calling the action with no
+    arguments, and every value after that failed to parse.
+    """
+    for _ in range(50):
+        parser = build_value_parser()
+        barrier = threading.Barrier(8)
+        results: list[object] = []
+        threads = [
+            threading.Thread(target=_parse_together, args=(parser, barrier, results))
+            for _ in range(8)
+        ]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+
+        assert set(results) == {Decimal(4700), Decimal(10000)}

@@ -4,6 +4,7 @@ import csv
 import io
 import os
 import zipfile
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import pdfplumber
@@ -57,6 +58,37 @@ def check_backend() -> None:
                 assert document.pages[0].extract_text(), name
 
 
+def check_concurrent_reads() -> None:
+    """Read several documents at once in this fresh process, as the API does.
+
+    Shared parser state can break only under concurrency, and only before the
+    process has parsed anything: pyparsing's parse-action probing once raced
+    there and then failed every later parse.
+    """
+    uploads = []
+    for i in range(8):
+        pdf = FPDF()
+        pdf.add_page()
+        pdf.set_font("Helvetica", size=16)
+        for line in (
+            f"Concurrent {i}",
+            "Resistors",
+            f"R1 {i + 1}k",
+            "Capacitors",
+            "C1 4n7",
+        ):
+            pdf.cell(0, 10, line, new_x="LMARGIN", new_y="NEXT")
+        uploads.append(FileUpload(f"concurrent-{i}.pdf", bytes(pdf.output())))
+    with ThreadPoolExecutor(max_workers=len(uploads)) as pool:
+        readings = list(
+            pool.map(lambda u: read_document(InputMethod.UPLOAD_FILE, u), uploads)
+        )
+    for reading in readings:
+        assert reading is not None
+        assert not reading.stats["errors"], reading.stats["errors"]
+        assert reading.stats["parts_found"] == 2, reading.stats
+
+
 def check_presets() -> None:
     """Require the catalog, and every typed parts list it names, to be packaged."""
     assert BOM_PRESETS, "Preset catalog is empty"
@@ -83,7 +115,7 @@ def check_ocr() -> None:
 def main() -> None:
     """Fail on any missing production capability, without network access."""
     assert os.getuid() != 0, "The production image must run as a non-root user"
-    for check in (check_presets, check_backend, check_ocr):
+    for check in (check_concurrent_reads, check_presets, check_backend, check_ocr):
         print(f"Running {check.__name__}", flush=True)
         check()
     print("All offline container checks passed", flush=True)

@@ -97,7 +97,7 @@ serve: sync
 
 # Start the HTTP API, reloading on changes (interactive docs at /api/docs)
 serve-api: sync
-    uv run uvicorn src.server:app --reload --host 127.0.0.1 --port 4501
+    uv run uvicorn src.server:app --reload --reload-dir src --host 127.0.0.1 --port 4501
 
 # Regenerate openapi.json and the website's API types after changing src/server/
 openapi: sync
