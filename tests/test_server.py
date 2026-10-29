@@ -191,6 +191,28 @@ def test_a_master_list_merges_every_kind_of_project(client: TestClient) -> None:
     assert tens["supplier_url"].startswith("https://")
 
 
+def test_each_part_says_where_it_was_read(client: TestClient) -> None:
+    response = _post(
+        client,
+        "/api/master-list",
+        [
+            {"method": "upload", "file": KLICHE.name},
+            {"method": "paste", "text": "R1 10k", "name": "Mine"},
+        ],
+        files=[("files", _pdf(KLICHE))],
+    )
+
+    kliche, pasted = response.json()["projects"]
+    r1 = next(p for p in kliche["parts"] if p["ref"] == "R1")
+    assert r1["category"] == "Resistors"
+    assert r1["location"]["page"] == 1
+    assert r1["location"]["x0"] < r1["location"]["x1"]
+    assert all(p["location"] for p in kliche["parts"])
+    assert pasted["parts"] == [
+        {"ref": "R1", "category": "Resistors", "value": "10k", "location": None}
+    ]
+
+
 def test_stock_is_subtracted(client: TestClient) -> None:
     request = json.dumps({"projects": [{"method": "paste", "text": "R1 10k"}]})
     stock = b"Category,Part,Qty\nResistors,10k,1\n"

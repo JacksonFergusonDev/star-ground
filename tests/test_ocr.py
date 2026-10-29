@@ -588,6 +588,10 @@ class TestAttemptOcr:
         cap = make_component_key(ComponentCategory.CAPACITORS, "1u")
         assert accepted.inventory[cap]["refs"] == ["C3"]
         assert accepted.stats["parts_found"] >= 11
+        # Each part points to its row in the image: C3 and its value, '1μ'.
+        c3 = accepted.locations["C3"]
+        assert (c3.page, c3.x0, c3.top, c3.x1) == (0, 180, 440, 266)
+        assert accepted.locations["D2"] == accepted.locations["D1"]
 
     def test_a_switch_symbol_is_read(self, tmp_path: Path) -> None:
         # Five Cats Jive-By Shooter: 'CLIP1 | SW_SPDT | SPDT Toggle'.

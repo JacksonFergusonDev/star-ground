@@ -50,6 +50,7 @@ from src.bom_lib.layout import (
     unreadable_rows,
     valueless_refs,
 )
+from src.bom_lib.locations import locate
 from src.bom_lib.types import (
     FORMULA_PREFIXES,
     BuildVariant,
@@ -199,7 +200,9 @@ def ingest_bom_line(
         # 2. Handle Auto-Injection (e.g., Sockets)
         if result.injected_key and inject:
             # Record auto-injected component key (e.g. IC socket)
-            inventory.add_part(source, result.injected_key, f"{r} (Inj)")
+            inventory.add_part(
+                source, result.injected_key, f"{r}{constants.INJECTED_SUFFIX}"
+            )
 
     return parts_found
 
@@ -2594,6 +2597,10 @@ def parse_pedalpcb_pdf(filepath: str, source_name: str) -> ParseResult:
         stats["extracted_title"] = _title(pdf, pages_data, misread)
 
         inventory, variants, options = read_pages(pages_data, source_name, stats)
+        locations = locate(pages_data, inventory)
+        variants = tuple(
+            replace(v, locations=locate(pages_data, v.inventory)) for v in variants
+        )
 
     finally:
         # Always close the file handle
@@ -2606,4 +2613,5 @@ def parse_pedalpcb_pdf(filepath: str, source_name: str) -> ParseResult:
         title=stats.get("extracted_title"),
         variants=variants,
         options=options,
+        locations=locations,
     )

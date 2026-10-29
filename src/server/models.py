@@ -12,7 +12,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from src.bom_lib import ComponentOrigin, OcrVerdict, ParseWarningKind
+from src.bom_lib import ComponentCategory, ComponentOrigin, OcrVerdict, ParseWarningKind
 from src.bom_lib.errors import ErrorKind
 
 # Generous for any real parts list, small enough to bound a request's work.
@@ -214,6 +214,28 @@ class PartReview(_Model):
     warnings: list[PartWarning]
 
 
+class SourceLocation(_Model):
+    """A box on one page of a document, in points from the page's top-left."""
+
+    page: int = Field(description="The page, counting from 0.")
+    x0: float
+    top: float
+    x1: float
+    bottom: float
+
+
+class ReadPartOut(_Model):
+    """One designator a project's parts list read, and where it was printed."""
+
+    ref: str
+    category: ComponentCategory
+    value: str
+    location: SourceLocation | None = Field(
+        description="Where in the document it was read; none when it wasn't "
+        "found printed, or the parts list was pasted."
+    )
+
+
 class ProjectResult(_Model):
     """One project as it went onto the master list."""
 
@@ -223,6 +245,10 @@ class ProjectResult(_Model):
     ocr_reads: list[PartWarning] = Field(description="Parts read by OCR, to check.")
     options: list[str]
     errors: list[Problem] = Field(description="Why it couldn't be read.")
+    parts: list[ReadPartOut] = Field(
+        description="Each designator read, in the order read, to check against "
+        "the document."
+    )
 
 
 class ShoppingRow(_Model):

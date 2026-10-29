@@ -494,6 +494,28 @@
         "title": "BuildNotChosen",
         "description": "A multi-circuit document's build wasn't chosen."
       },
+      "ComponentCategory": {
+        "type": "string",
+        "enum": [
+          "Resistors",
+          "Capacitors",
+          "Potentiometers",
+          "Switches",
+          "Diodes",
+          "Transistors",
+          "Crystals/Oscillators",
+          "Inductors",
+          "Transformers",
+          "Relays",
+          "Hardware/Misc",
+          "ICs",
+          "Optoelectronics",
+          "Unknown",
+          "PCB"
+        ],
+        "title": "ComponentCategory",
+        "description": "Categories of electronic components."
+      },
       "ComponentOrigin": {
         "type": "string",
         "enum": [
@@ -908,6 +930,14 @@
             "type": "array",
             "title": "Errors",
             "description": "Why it couldn't be read."
+          },
+          "parts": {
+            "items": {
+              "$ref": "#/components/schemas/ReadPartOut"
+            },
+            "type": "array",
+            "title": "Parts",
+            "description": "Each designator read, in the order read, to check against the document."
           }
         },
         "additionalProperties": false,
@@ -918,10 +948,47 @@
           "reviews",
           "ocr_reads",
           "options",
-          "errors"
+          "errors",
+          "parts"
         ],
         "title": "ProjectResult",
         "description": "One project as it went onto the master list."
+      },
+      "ReadPartOut": {
+        "properties": {
+          "ref": {
+            "type": "string",
+            "title": "Ref"
+          },
+          "category": {
+            "$ref": "#/components/schemas/ComponentCategory"
+          },
+          "value": {
+            "type": "string",
+            "title": "Value"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourceLocation"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Where in the document it was read; none when it wasn't found printed, or the parts list was pasted."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "ref",
+          "category",
+          "value",
+          "location"
+        ],
+        "title": "ReadPartOut",
+        "description": "One designator a project's parts list read, and where it was printed."
       },
       "ReportIn": {
         "properties": {
@@ -1031,6 +1098,42 @@
         ],
         "title": "ShoppingRow",
         "description": "One part to buy."
+      },
+      "SourceLocation": {
+        "properties": {
+          "page": {
+            "type": "integer",
+            "title": "Page",
+            "description": "The page, counting from 0."
+          },
+          "x0": {
+            "type": "number",
+            "title": "X0"
+          },
+          "top": {
+            "type": "number",
+            "title": "Top"
+          },
+          "x1": {
+            "type": "number",
+            "title": "X1"
+          },
+          "bottom": {
+            "type": "number",
+            "title": "Bottom"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "page",
+          "x0",
+          "top",
+          "x1",
+          "bottom"
+        ],
+        "title": "SourceLocation",
+        "description": "A box on one page of a document, in points from the page's top-left."
       },
       "Stats": {
         "properties": {
