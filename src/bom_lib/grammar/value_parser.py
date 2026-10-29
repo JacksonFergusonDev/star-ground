@@ -38,7 +38,14 @@ _UNITS = ["ohm", "ohms", "Ω", "F", "Hz", "H", "V", "W"]
 UNIT: Final[pp.ParserElement] = pp.one_of(_UNITS, caseless=True) | pp.Literal("Ω")
 
 
-def _eval_sandwich(toks: pp.ParseResults) -> Decimal:
+# Parse actions take pyparsing's full (string, location, tokens) signature.
+# Given fewer, pyparsing finds the arity by calling with all three and
+# retrying on TypeError, and that probing isn't thread-safe: two documents
+# read at once could leave it calling the action with no arguments, after
+# which every value in the process failed to parse.
+
+
+def _eval_sandwich(_s: str, _loc: int, toks: pp.ParseResults) -> Decimal:
     """Transforms parsed BS 1852 sandwich tokens into a Decimal base value."""
     whole = toks["whole"]
     mult_char = toks["mult"]
@@ -47,7 +54,7 @@ def _eval_sandwich(toks: pp.ParseResults) -> Decimal:
     return val * SI_MULTIPLIERS[mult_char]
 
 
-def _eval_standard(toks: pp.ParseResults) -> Decimal:
+def _eval_standard(_s: str, _loc: int, toks: pp.ParseResults) -> Decimal:
     """Transforms parsed standard notation tokens into a Decimal base value."""
     num_str = toks["number"]
     val = Decimal(num_str)
