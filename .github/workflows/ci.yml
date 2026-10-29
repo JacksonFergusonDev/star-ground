@@ -182,10 +182,14 @@ jobs:
           retention-days: 1
 
   web-browsers:
-    name: Web browsers
+    name: Web browsers (${{ matrix.shard }}/3)
     needs: web
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
     container:
       image: ${{ needs.web.outputs.playwright-image }} # zizmor: ignore[unpinned-images] -- the Web job pins it to a validated sha256 digest
       options: --init --ipc=host
@@ -220,13 +224,15 @@ jobs:
       # Firefox on Linux creates a WebGL context only with an X display, so a
       # virtual one lets the hero board render in every engine (in software).
       - name: Browser tests
-        run: xvfb-run --auto-servernum npm run test:browser
+        env:
+          SHARD: ${{ matrix.shard }}
+        run: xvfb-run --auto-servernum npm run test:browser -- --shard="$SHARD/3"
 
       - name: Upload browser test results
         if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
-          name: browser-test-results
+          name: browser-test-results-${{ matrix.shard }}
           path: web/test-results/
           retention-days: 7
 
