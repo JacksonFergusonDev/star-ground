@@ -192,7 +192,7 @@ Probed on 2026-10-24: board renders in PedalPCB, GuitarPCB and Tonepad documents
 | 2. API service | Done 2026-10-24 | #203 |
 | 3. Frontend foundation | Done 2026-10-25: the site uses house-style v2's shared shell | #204, #205 |
 | 4. Walking skeleton | Done 2026-10-28: v2.5.0 deployed to Cloud Run and Pages; measurements recorded; OCR thread pinning is a follow-up | #213 |
-| 5. Build workspace | In progress: project cards, the live master list, build choice, the OCR offer and browser storage are built; stock, exports and supplier carts remain | This PR |
+| 5. Build workspace | Done 2026-10-28: project cards, the live master list, build choice, the OCR offer, stock, every export and browser storage. Feedback moves to step 6's part reports, and the catalog as a source to step 8 | #216, this PR |
 | 6. Document review | Not started | |
 | 7. PCB highlighting | Not started | |
 | 8. Circuit catalog | Not started | |

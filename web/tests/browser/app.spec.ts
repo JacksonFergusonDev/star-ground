@@ -67,12 +67,18 @@ const reading = (over: Partial<DocumentReading> = {}): DocumentReading => ({
 const sse = (...events: object[]): string =>
   events.map((e) => `data: ${JSON.stringify(e)}\n\n`).join('');
 
+/** The `request` field of a multipart master list body. */
+function requestOf(body: string): MasterListRequest {
+  const json = /name="request"\r\n\r\n(.*?)\r\n--/s.exec(body)?.[1] ?? '{}';
+  return JSON.parse(json) as MasterListRequest;
+}
+
 /** The requests the page sent to the master list, parsed. */
 async function stubMasterList(page: Page): Promise<MasterListRequest[]> {
   const sent: MasterListRequest[] = [];
   await page.route('**/api/master-list', (route) => {
     const body = route.request().postDataBuffer()?.toString() ?? '';
-    sent.push(JSON.parse(body.match(/\{"projects".*\}/s)?.[0] ?? '{}') as MasterListRequest);
+    sent.push(requestOf(body));
     return route.fulfill({ json: result });
   });
   return sent;
@@ -285,4 +291,75 @@ test('says the server is busy when the platform refuses without a message', asyn
   await expect(page.getByRole('alert')).toHaveText(
     'Star Ground is busy right now. Try again in a minute.',
   );
+});
+
+test('a stock CSV goes with each request and adds stock columns', async ({ page }) => {
+  const bodies: string[] = [];
+  await page.route('**/api/master-list', (route) => {
+    const body = route.request().postDataBuffer()?.toString() ?? '';
+    bodies.push(body);
+    const stocked = body.includes('name="stock"');
+    return route.fulfill({
+      json: stocked
+        ? {
+            ...result,
+            has_stock: true,
+            shopping_list: result.shopping_list.map((r) => ({
+              ...r,
+              in_stock: 40,
+              net_need: 0,
+              buy_qty: 0,
+            })),
+          }
+        : result,
+    });
+  });
+  await page.goto('/app/');
+  await paste(page, 'R1 10k');
+  await page.getByLabel('Stock CSV').setInputFiles({
+    name: 'stock.csv',
+    mimeType: 'text/csv',
+    buffer: Buffer.from('Category,Part,Qty\nResistors,10k,40\n'),
+  });
+
+  await expect(page.getByRole('columnheader', { name: 'In stock' })).toBeVisible();
+  await expect(page.getByText('0 to buy after your stock')).toBeVisible();
+  expect(bodies.at(-1)).toContain('filename="stock.csv"');
+
+  await page.reload();
+  await expect(page.getByText('Subtracting stock.csv from what to buy.')).toBeVisible();
+});
+
+test('the list options go with the request', async ({ page }) => {
+  const sent = await stubMasterList(page);
+  await page.goto('/app/');
+  await paste(page, 'R1 10k');
+  await expect(page.getByRole('row', { name: /10k/ })).toBeVisible();
+
+  await page.getByRole('checkbox', { name: 'Hardware kit' }).uncheck();
+
+  await expect.poll(() => sent.at(-1)?.show_hardware).toBe(false);
+  expect(sent.at(-1)?.show_extras).toBe(true);
+});
+
+test('a download saves the file the API exports', async ({ page }) => {
+  await stubMasterList(page);
+  let url = '';
+  await page.route('**/api/exports/**', (route) => {
+    url = route.request().url();
+    return route.fulfill({
+      body: 'Part,Qty\n10k,10\n',
+      contentType: 'text/csv',
+      headers: { 'content-disposition': 'attachment; filename="shopping-list.csv"' },
+    });
+  });
+  await page.goto('/app/');
+  await paste(page, 'R1 10k');
+  await expect(page.getByRole('row', { name: /10k/ })).toBeVisible();
+
+  const download = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Shopping list', exact: true }).click();
+
+  expect((await download).suggestedFilename()).toBe('shopping-list.csv');
+  expect(url).toContain('/api/exports/shopping-list?links=excel');
 });

@@ -3,13 +3,15 @@
   // on the other. The list updates as the cards change; there's no Generate
   // button. Everything is kept in the browser (see lib/workspace.svelte.ts).
   import { onMount } from 'svelte';
-  import type { MasterListResult, PresetCatalog } from '../../lib/api';
-  import { masterList, presets, readDocument, warmUp } from '../../lib/server';
+  import type { ExportKind, MasterListResult, PresetCatalog } from '../../lib/api';
+  import type { Download } from '../../lib/server';
+  import { exportFile, masterList, presets, readDocument, warmUp } from '../../lib/server';
   import type { Added, Card } from '../../lib/workspace.svelte';
   import { files, request, Workspace } from '../../lib/workspace.svelte';
   import AddProject from './AddProject.svelte';
   import MasterList from './MasterList.svelte';
   import ProjectCard from './ProjectCard.svelte';
+  import StockPanel from './StockPanel.svelte';
 
   const workspace = new Workspace();
   let catalog = $state<PresetCatalog | null>(null);
@@ -106,6 +108,13 @@
     return card ? files.get(card.id) : undefined;
   }
 
+  // Exports the list as the cards stand now, with the same requests the list makes.
+  function exportList(kind: ExportKind, excel: boolean): Promise<Download> {
+    const next = request(workspace.cards, workspace.options);
+    if (!next) return Promise.reject(new Error('Add a project first.'));
+    return exportFile(kind, excel, next, fileFor, workspace.stock);
+  }
+
   // Rebuild the master list whenever the cards change, after a short pause so
   // typing a name or a count sends one request, not one per keystroke. A
   // newer request supersedes an older one still in flight.
@@ -113,7 +122,8 @@
   $effect(() => {
     // Saving reads every card deeply, so any change re-runs this.
     workspace.save();
-    const next = request(workspace.cards);
+    const next = request(workspace.cards, workspace.options);
+    const stock = workspace.stock;
     const mine = ++sequence;
     if (!next) {
       result = null;
@@ -123,7 +133,7 @@
     }
     updating = true;
     const timer = setTimeout(() => {
-      masterList(next, fileFor)
+      masterList(next, fileFor, stock)
         .then((r) => {
           if (mine !== sequence) return;
           result = r;
@@ -157,9 +167,10 @@
       </ul>
     {/if}
     <AddProject {catalog} onAdd={add} />
+    <StockPanel stock={workspace.stock} onChange={(stock) => (workspace.stock = stock)} />
   </section>
 
-  <MasterList {result} {updating} {error} />
+  <MasterList {result} {updating} {error} options={workspace.options} onExport={exportList} />
 </div>
 
 <style>
