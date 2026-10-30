@@ -6,8 +6,9 @@ describes it). This reads each labelled document exactly as the catalog job
 does (`src.catalog.build.catalog_reading`), grades that reading against the
 labels with the accuracy suite's scorer, and adds the file to
 `catalog/verified.json` only when every part of every build is right. The
-entry holds the file's SHA-256 and the reading's fingerprint, so the mark
-lasts only while both stay the same (`src.catalog.verified`).
+entry holds the document's hash (up to its final `%%EOF`) and the reading's
+fingerprint, so the mark lasts only while both stay the same
+(`src.catalog.verified`).
 
 A document that doesn't match is reported with its first wrong part and
 left off. Entries for documents not in this run are kept.
@@ -18,7 +19,6 @@ Usage:
 """
 
 import argparse
-import hashlib
 import sys
 from datetime import date
 from multiprocessing import Pool
@@ -27,14 +27,14 @@ from pathlib import Path
 from src.api import read_document
 from src.bom_lib import FileUpload, InputMethod, OcrVerdict
 from src.catalog.build import catalog_reading
-from src.catalog.verified import Checked, VerifiedList, fingerprint
+from src.catalog.verified import Checked, VerifiedList, document_hash, fingerprint
 from tests.accuracy import GoldenDoc, load_golden, score_result
 
 
 def _verify(doc: GoldenDoc) -> tuple[str, str, str | None, str]:
     """One labelled document: its name, hash, fingerprint if right, and why not."""
     content = doc.pdf.read_bytes()
-    digest = hashlib.sha256(content).hexdigest()
+    digest = document_hash(content)
     reading = read_document(InputMethod.UPLOAD_FILE, FileUpload(doc.pdf.name, content))
     if reading is None:
         return doc.name, digest, None, "not a document Star Ground reads"

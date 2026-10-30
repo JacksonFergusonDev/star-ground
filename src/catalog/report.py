@@ -18,6 +18,7 @@ from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from enum import StrEnum
+from pathlib import Path
 from typing import TextIO
 
 from rich.console import Console
@@ -119,19 +120,32 @@ class Reporter:
         stream: TextIO | None = None,
         console: Console | None = None,
         summary_path: str | None = None,
+        summary_file: Path | None = None,
     ) -> None:
         self.github = github
+        self._summary_file = summary_file
         self._stream = stream
         self._console = console or Console(stderr=True, highlight=False)
         self._summary_path = summary_path
         self.tally = Tally()
 
     @classmethod
-    def for_environment(cls, env: Mapping[str, str] = os.environ) -> Reporter:
-        """The reporter for where the job runs."""
+    def for_environment(
+        cls, env: Mapping[str, str] = os.environ, summary_file: Path | None = None
+    ) -> Reporter:
+        """The reporter for where the job runs.
+
+        Args:
+            env: The environment.
+            summary_file: Also write the summary here, as Markdown. GitHub
+                gives each step its own `GITHUB_STEP_SUMMARY`, so a later step
+                (the update's pull request) reads it from this file.
+        """
         github = in_github_actions(env)
         return cls(
-            github, summary_path=env.get("GITHUB_STEP_SUMMARY") if github else None
+            github,
+            summary_path=env.get("GITHUB_STEP_SUMMARY") if github else None,
+            summary_file=summary_file,
         )
 
     def _print(self, line: str) -> None:
@@ -221,61 +235,10 @@ class Reporter:
         unchecked = [
             e for e in self.tally.events if e.outcome in _FINE and not e.verified
         ]
+        text = self._markdown(outcomes, publishers, problems, unchecked)
+        if self._summary_file is not None:
+            self._summary_file.write_text(text, encoding="utf-8")
         if self.github:
-            lines = [
-                "## Circuit catalog",
-                "",
-                "| Publisher | "
-                + " | ".join(o.value.capitalize() for o in outcomes)
-                + " | Verified | Pages not read |",
-                "| --- " * (len(outcomes) + 3) + "|",
-            ]
-            for publisher in publishers:
-                counts = self.tally.counts(publisher)
-                failed_pages = len(self.tally.page_failures.get(publisher, {}))
-                lines.append(
-                    f"| {publisher} | "
-                    + " | ".join(str(counts[o]) for o in outcomes)
-                    + f" | {self._verified(publisher)} | {failed_pages} |"
-                )
-            if problems:
-                lines += [
-                    "",
-                    "### Not added",
-                    "",
-                    "| Publisher | Document | Outcome | Reason |",
-                ]
-                lines.append("| --- | --- | --- | --- |")
-                lines += [
-                    f"| {e.publisher} | {e.document} | {e.outcome} | {e.reason.replace('|', '/')} |"
-                    for e in problems
-                ]
-            pages = [
-                (p, page, why)
-                for p, failures in self.tally.page_failures.items()
-                for page, why in failures.items()
-            ]
-            if pages:
-                lines += ["", "### Pages not read", "", "| Publisher | Page | Reason |"]
-                lines.append("| --- | --- | --- |")
-                lines += [
-                    f"| {p} | {page} | {why.replace('|', '/')} |"
-                    for p, page, why in pages
-                ]
-            if unchecked:
-                lines += [
-                    "",
-                    "<details><summary>Listed but not checked by hand "
-                    f"({len(unchecked)})</summary>",
-                    "",
-                    "| Publisher | Document | Outcome |",
-                    "| --- | --- | --- |",
-                ]
-                lines += [
-                    f"| {e.publisher} | {e.document} | {e.outcome} |" for e in unchecked
-                ]
-                lines += ["", "</details>"]
-            text = "\n".join(lines) + "\n"
             if self._summary_path:
                 with open(self._summary_path, "a", encoding="utf-8") as summary:
                     summary.write(text)
@@ -318,6 +281,68 @@ class Reporter:
             for e in unchecked:
                 listed.add_row(e.publisher, e.document, e.outcome)
             self._console.print(listed)
+
+    def _markdown(
+        self,
+        outcomes: list[Outcome],
+        publishers: list[str],
+        problems: list[Event],
+        unchecked: list[Event],
+    ) -> str:
+        """The summary as Markdown: for GitHub's run page and the update's PR."""
+        lines = [
+            "## Circuit catalog",
+            "",
+            "| Publisher | "
+            + " | ".join(o.value.capitalize() for o in outcomes)
+            + " | Verified | Pages not read |",
+            "| --- " * (len(outcomes) + 3) + "|",
+        ]
+        for publisher in publishers:
+            counts = self.tally.counts(publisher)
+            failed_pages = len(self.tally.page_failures.get(publisher, {}))
+            lines.append(
+                f"| {publisher} | "
+                + " | ".join(str(counts[o]) for o in outcomes)
+                + f" | {self._verified(publisher)} | {failed_pages} |"
+            )
+        if problems:
+            lines += [
+                "",
+                "### Not added",
+                "",
+                "| Publisher | Document | Outcome | Reason |",
+            ]
+            lines.append("| --- | --- | --- | --- |")
+            lines += [
+                f"| {e.publisher} | {e.document} | {e.outcome} | {e.reason.replace('|', '/')} |"
+                for e in problems
+            ]
+        pages = [
+            (p, page, why)
+            for p, failures in self.tally.page_failures.items()
+            for page, why in failures.items()
+        ]
+        if pages:
+            lines += ["", "### Pages not read", "", "| Publisher | Page | Reason |"]
+            lines.append("| --- | --- | --- |")
+            lines += [
+                f"| {p} | {page} | {why.replace('|', '/')} |" for p, page, why in pages
+            ]
+        if unchecked:
+            lines += [
+                "",
+                "<details><summary>Listed but not checked by hand "
+                f"({len(unchecked)})</summary>",
+                "",
+                "| Publisher | Document | Outcome |",
+                "| --- | --- | --- |",
+            ]
+            lines += [
+                f"| {e.publisher} | {e.document} | {e.outcome} |" for e in unchecked
+            ]
+            lines += ["", "</details>"]
+        return "\n".join(lines) + "\n"
 
     def _verified(self, publisher: str) -> int:
         return sum(

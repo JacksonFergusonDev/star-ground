@@ -33,7 +33,13 @@ from src.catalog.client import (
 from src.catalog.discover import Listing, PageState, discover, pdf_links
 from src.catalog.report import Event, Outcome, Reporter
 from src.catalog.sources import SOURCES, Publisher
-from src.catalog.verified import Checked, Verification, VerifiedList, fingerprint
+from src.catalog.verified import (
+    Checked,
+    Verification,
+    VerifiedList,
+    document_hash,
+    fingerprint,
+)
 
 
 @dataclass
@@ -525,10 +531,62 @@ def test_a_reading_that_fails_is_reported_and_the_rest_go_on(
     )
 
 
-def test_documents_past_the_time_budget_are_postponed(run: Any) -> None:
-    reporter = run(_docs(_pedalpcb_web()), lambda upload: _reading(), minutes=0)
+def test_a_run_out_of_time_reads_no_more_and_removes_nothing(
+    tmp_path: Path, run: Any
+) -> None:
+    run(_docs(_pedalpcb_web()), lambda upload: _reading())
+    web = _docs(_pedalpcb_web())
 
+    reporter = run(web, lambda upload: _reading(), minutes=0)
+
+    assert [u for u in web.urls() if "/product/" in u or u.endswith(".pdf")] == []
+    assert (tmp_path / "builds" / "pedalpcb" / "fuzz.json").exists()
     assert {e.outcome for e in reporter.tally.events} == {Outcome.POSTPONED}
+    state = State.load(tmp_path / "state" / "pedalpcb.json")
+    assert len(state.pages) == 2
+
+
+def test_pages_read_longest_ago_go_first() -> None:
+    web = _pedalpcb_web()
+    drive = "https://www.pedalpcb.com/product/drive/"
+    fuzz = "https://www.pedalpcb.com/product/fuzz/"
+    known = {
+        drive: PageState("old", (), "2026-10-01T00:00:00+00:00"),
+        fuzz: PageState("old", (), "2026-10-29T00:00:00+00:00"),
+    }
+    calls = iter([False, True])
+
+    found = discover(
+        _client(web), SOURCES[Publisher.PEDALPCB], known, spent=lambda: next(calls)
+    )
+
+    pages = [u for u in web.urls() if "/product/" in u]
+    assert pages == [drive]
+    assert not found.complete
+    # The page left over keeps what it held last time.
+    assert found.pages[fuzz] == known[fuzz]
+
+
+def test_a_document_hash_ignores_what_follows_the_end_marker() -> None:
+    body = b"%PDF-1.5 ... %%EOF\r\n"
+    stamped = body + b"%tonepad.com 192.0.2.1 10/30/2026 9:21:00 PM"
+
+    assert document_hash(stamped) == document_hash(body + b"%other stamp")
+    assert document_hash(stamped) != document_hash(b"%PDF-1.5 changed %%EOF")
+
+
+def test_the_summary_is_also_written_to_a_file(tmp_path: Path) -> None:
+    summary = tmp_path / "summary.md"
+    reporter = Reporter(
+        github=False, console=Console(record=True), summary_file=summary
+    )
+
+    reporter.outcome(Event("tonepad", "https://x.test/a.pdf", Outcome.LISTED))
+    reporter.summary()
+
+    text = summary.read_text()
+    assert text.startswith("## Circuit catalog")
+    assert "| tonepad | 1 |" in text
 
 
 # --- Reporting ---

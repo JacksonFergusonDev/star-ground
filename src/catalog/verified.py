@@ -1,7 +1,8 @@
 """Which catalog documents have been checked by hand, and what was checked.
 
 A build is **verified** only when someone has checked that exact file's parts
-against the document: its hash is on the list (`catalog/verified.json`), and
+against the document: its hash (`document_hash`) is on the list
+(`catalog/verified.json`), and
 today's reading of it matches the reading that was checked (`fingerprint`).
 Everything else is **unverified**: read automatically, not yet checked.
 
@@ -21,6 +22,24 @@ from pathlib import Path
 
 from src.api import read_parts
 from src.bom_lib import ParseResult
+
+
+def document_hash(content: bytes) -> str:
+    """A PDF's SHA-256, up to and including its final `%%EOF` marker.
+
+    A PDF ends at `%%EOF`, and readers ignore what follows. Tonepad stamps
+    each download there with the downloader's address and the time, so the
+    whole file's hash differs on every download; this one doesn't. A file
+    with no marker is hashed whole.
+
+    Args:
+        content: The file's bytes.
+
+    Returns:
+        The hash, in hex.
+    """
+    end = content.rfind(b"%%EOF")
+    return hashlib.sha256(content[: end + 5] if end != -1 else content).hexdigest()
 
 
 class Verification(StrEnum):

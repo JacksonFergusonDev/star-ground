@@ -36,7 +36,14 @@ def main(argv: list[str] | None = None) -> int:
         "--minutes",
         type=float,
         default=300,
-        help="Stop starting new documents after this long (default 300, under GitHub's 6-hour job limit).",
+        help="Stop starting new pages or documents after this long, shared across "
+        "publishers (default 300, under GitHub's 6-hour job limit); the rest wait "
+        "for the next run.",
+    )
+    parser.add_argument(
+        "--summary",
+        type=Path,
+        help="Also write the summary, as Markdown, to this file.",
     )
     parser.add_argument(
         "--delay",
@@ -57,24 +64,30 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--verbose", action="store_true", help="Log every request.")
     args = parser.parse_args(argv)
 
-    reporter = Reporter.for_environment()
+    reporter = Reporter.for_environment(summary_file=args.summary)
     reporter.install_logging(args.verbose)
     if args.delay < MIN_DELAY_S:
         reporter.warning(
             f"--delay {args.delay} is below the minimum; using {MIN_DELAY_S:.0f} s"
         )
     client = PoliteClient(delay=max(args.delay, MIN_DELAY_S))
-    budget = Budget(time.monotonic() + args.minutes * 60)
+    deadline = time.monotonic() + args.minutes * 60
     publishers = (
         [Publisher(p) for p in args.publisher] if args.publisher else list(Publisher)
     )
     reporter.info(
         f"Catalog job as '{user_agent()}': {', '.join(publishers)}; at least "
         f"{max(args.delay, MIN_DELAY_S):.0f} s between requests to a site; "
-        f"{args.minutes:.0f} minutes for documents."
+        f"{args.minutes:.0f} minutes, shared across publishers."
     )
     started = time.monotonic()
-    for publisher in publishers:
+    for number, publisher in enumerate(publishers):
+        # Each publisher gets an equal share of the time left, so a large one
+        # (PedalPCB) can't starve the rest; time one doesn't use passes on.
+        now = time.monotonic()
+        share = max(0.0, deadline - now) / (len(publishers) - number)
+        budget = Budget(now + share)
+        reporter.info(f"{publisher}: {share / 60:.0f} minutes")
         try:
             build(
                 client,
