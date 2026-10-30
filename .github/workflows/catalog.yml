@@ -1,0 +1,148 @@
+# The circuit catalog's nightly run (step 8 of PLAN.md): finds publishers'
+# build documents, reads the new and changed ones, and proposes the catalog's
+# changes as one rolling pull request for review. Never pushes to main.
+#
+# Run it by hand (Actions > Catalog > Run workflow) for the first full run, or
+# for a sample of one publisher. See src/catalog/ for how the job behaves
+# towards the publishers' sites.
+
+name: Catalog
+
+on:
+  schedule:
+    # 07:17 UTC: night in the publishers' time zones, off the hour.
+    - cron: "17 7 * * *"
+  workflow_dispatch:
+    inputs:
+      publisher:
+        description: Only this publisher
+        type: choice
+        default: all
+        options: [all, pedalpcb, guitarpcb, tonepad, fivecats]
+      minutes:
+        description: Minutes for reading documents (the job stops at 6 hours)
+        type: number
+        default: 300
+      pages:
+        description: "Sample: listing pages per publisher (blank for all)"
+        type: string
+        default: ""
+      documents:
+        description: "Sample: documents per publisher (blank for all)"
+        type: string
+        default: ""
+
+permissions:
+  contents: read
+
+# One run at a time: two would ask the sites twice and race on the branch.
+concurrency:
+  group: catalog
+  cancel-in-progress: false
+
+env:
+  UV_LOCKED: "1"
+  BRANCH: catalog/nightly
+
+jobs:
+  update:
+    name: Update the catalog
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+
+      - name: Install dependencies
+        run: uv sync --no-dev --group catalog
+
+      # The open update's data is the last run's: carry it over, so an
+      # unreviewed night's state isn't lost and nothing is asked twice. The
+      # verified list always comes from main, where it's maintained.
+      - name: Start from the open update, if any
+        run: |
+          if git ls-remote --exit-code --heads origin "$BRANCH" >/dev/null; then
+            git fetch --no-tags origin "$BRANCH"
+            for kept in catalog/builds catalog/state; do
+              git rm -r -q --ignore-unmatch "$kept"
+              if git cat-file -e "FETCH_HEAD:$kept" 2>/dev/null; then
+                git checkout FETCH_HEAD -- "$kept"
+              fi
+            done
+            echo "Carried over the catalog data from $BRANCH."
+          else
+            echo "No open update; starting from main's catalog data."
+          fi
+
+      - name: Run the catalog job
+        id: job
+        env:
+          PUBLISHER: ${{ inputs.publisher || 'all' }}
+          MINUTES: ${{ inputs.minutes || 300 }}
+          PAGES: ${{ inputs.pages }}
+          DOCUMENTS: ${{ inputs.documents }}
+        run: |
+          args=(--out catalog --minutes "$MINUTES")
+          [ "$PUBLISHER" != all ] && args+=(--publisher "$PUBLISHER")
+          [ -n "$PAGES" ] && args+=(--pages "$PAGES")
+          [ -n "$DOCUMENTS" ] && args+=(--documents "$DOCUMENTS")
+          set +e
+          uv run python -m src.catalog "${args[@]}"
+          echo "status=$?" >> "$GITHUB_OUTPUT"
+
+      # The job exits non-zero when something needs a look (a failure, a bot
+      # check), but what it did read is still proposed.
+      - name: Propose the changes
+        if: ${{ !cancelled() }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          git add catalog/
+          if git diff --cached --quiet; then
+            echo "The catalog didn't change."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit --quiet -m "chore(catalog): nightly update" -m "From $RUN_URL"
+          gh auth setup-git
+          git push --force origin "HEAD:refs/heads/$BRANCH"
+
+          # The run's summary is the review: what was listed, what changed
+          # and what was left out. A pull request body holds 65,536 characters.
+          {
+            echo "The catalog job's proposed changes. Review the documents marked"
+            echo "updated before merging. Run: $RUN_URL"
+            echo
+            head -c 60000 "$GITHUB_STEP_SUMMARY"
+            echo
+            echo
+            echo "_The full summary, if cut short here, is on the run's page._"
+          } > "$RUNNER_TEMP/body.md"
+          if gh pr view "$BRANCH" --json state --jq .state 2>/dev/null | grep -q OPEN; then
+            gh pr edit "$BRANCH" --body-file "$RUNNER_TEMP/body.md"
+          elif ! gh pr create --base main --head "$BRANCH" \
+              --title "chore(catalog): catalog update" \
+              --body-file "$RUNNER_TEMP/body.md"; then
+            # Opening a pull request needs the repository setting "Allow
+            # GitHub Actions to create and approve pull requests".
+            compare="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/compare/main...${BRANCH}?expand=1"
+            echo "::warning title=Catalog::Pushed $BRANCH but couldn't open its pull request (Actions may not create pull requests in this repository). Open it: $compare"
+          fi
+
+      - name: Fail if the job needs a look
+        if: ${{ steps.job.outputs.status != '0' }}
+        env:
+          STATUS: ${{ steps.job.outputs.status }}
+        run: |
+          echo "::error title=Catalog::The job exited $STATUS: see the summary for what failed or was blocked."
+          exit 1

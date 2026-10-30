@@ -190,6 +190,9 @@ Probed on 2026-10-24: board renders in PedalPCB, GuitarPCB and Tonepad documents
     - Nothing it decides is silent: every document ends listed, updated, unchanged, not clean, failed, blocked, disallowed, postponed or removed, with the reason. In GitHub Actions each publisher is a collapsible group, failures annotate the run, and a summary table lists every document not added; elsewhere the output is Rich. A failure or block exits non-zero.
 1. A static Astro page per build, with search and filters, "Add to build", the publisher's buy link and the publisher contact note.
 1. The nightly check workflow (see [Publishers' documents](#publishers-documents)).
+    - `.github/workflows/catalog.yml` runs the job at 07:17 UTC, or by hand with a publisher and a sample size (which is how the first full run happens). It never pushes to `main`: it commits the catalog's changes to one rolling branch, `catalog/nightly`, and opens or updates a single "Catalog update" pull request whose description is the run's summary, so updated documents are reviewed before they're merged.
+    - An unreviewed night isn't lost: the next run starts from the open update's builds and state, with `main`'s verified list. A run that met a failure or a bot check still proposes what it read, then shows as failed.
+    - Opening the pull request needs the repository setting "Allow GitHub Actions to create and approve pull requests". Without it the run pushes the branch and its warning links to open the pull request by hand. Pull requests opened by the workflow's token don't start CI; they change only `catalog/`.
 
 ### 9. Bench mode
 
@@ -229,8 +232,8 @@ Probed on 2026-10-24: board renders in PedalPCB, GuitarPCB and Tonepad documents
 | 4. Walking skeleton | Done 2026-10-28: v2.5.0 deployed to Cloud Run and Pages; measurements recorded; OCR thread pinning is a follow-up | #213 |
 | 5. Build workspace | Done 2026-10-28: project cards, the live master list, build choice, the OCR offer, stock, every export and browser storage. Feedback moves to step 6's part reports, and the catalog as a source to step 8 | #216, #218 |
 | 6. Document review | Done 2026-10-29: part locations, the document viewer, confirm or correct in place, and part reports | #222, this PR |
-| 7. PCB highlighting | Not started: cost measured 2026-10-29; catalog documents only, so it lands with step 8 | this PR |
-| 8. Circuit catalog | Not started | |
+| 7. PCB highlighting | Not started: cost measured 2026-10-29; catalog documents only, so it lands with step 8 | #224 |
+| 8. Circuit catalog | In progress: the catalog job and verified list, and the nightly workflow; the catalog pages are next | #225, this PR |
 | 9. Bench mode | Not started | |
 | 10. Share links | Not started | |
 | 11. Cutover and launch | Not started | |
