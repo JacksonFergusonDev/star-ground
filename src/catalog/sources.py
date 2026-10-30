@@ -82,6 +82,9 @@ class Source:
             build document, as an alternative to `product_label`.
         visit_page_first: Fetch the listing page before its document, as the
             site asks (Tonepad answers a download warning otherwise).
+        documents_apart: The documents are on another host than the pages
+            (PedalPCB's docs.pedalpcb.com), so they're read while discovery
+            goes on, each host at full spacing.
     """
 
     publisher: Publisher
@@ -96,6 +99,7 @@ class Source:
     product_label: re.Pattern[str] | None = None
     product_row_label: re.Pattern[str] | None = None
     visit_page_first: bool = False
+    documents_apart: bool = False
 
     def allows(self, url: str) -> bool:
         """Whether a URL is on this publisher's site."""
@@ -113,6 +117,7 @@ SOURCES: dict[Publisher, Source] = {
         site="https://www.pedalpcb.com/",
         sitemap="https://www.pedalpcb.com/sitemap_index.xml",
         product_sitemap="product-sitemap",
+        documents_apart=True,
     ),
     Publisher.GUITARPCB: Source(
         Publisher.GUITARPCB,

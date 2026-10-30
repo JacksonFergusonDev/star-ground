@@ -757,3 +757,21 @@ def test_a_rejected_document_checked_since_is_fetched_and_listed(
     assert json.loads((tmp_path / "builds/pedalpcb/fuzz.json").read_text())["verified"]
     fuzz_asks = [h for u, h in web.asked if u.endswith("Fuzz.pdf")]
     assert fuzz_asks == [{}]
+
+
+def test_a_failure_while_discovering_alongside_reading_is_raised(
+    run: Any, mocker: Any
+) -> None:
+    mocker.patch(
+        "src.catalog.build.discover", side_effect=RuntimeError("sitemap broke")
+    )
+
+    with pytest.raises(RuntimeError, match="sitemap broke"):
+        run(_docs(_pedalpcb_web()), lambda upload: _reading())
+
+
+def test_pedalpcb_documents_are_read_while_discovery_goes_on() -> None:
+    assert SOURCES[Publisher.PEDALPCB].documents_apart
+    assert not any(
+        s.documents_apart for p, s in SOURCES.items() if p != Publisher.PEDALPCB
+    )

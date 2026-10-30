@@ -262,6 +262,7 @@ def discover(
     known: Mapping[str, PageState] | None = None,
     limit: int | None = None,
     spent: Callable[[], bool] = lambda: False,
+    on_listing: Callable[[Listing], None] = lambda listing: None,
 ) -> Discovery:
     """Finds a publisher's build documents.
 
@@ -273,12 +274,20 @@ def discover(
         limit: Read at most this many listing pages (a sample).
         spent: Whether the run's time is spent; the pages left keep what
             the last run found on them, and wait for the next run.
+        on_listing: Called with each document as it's first found, so it
+            can be read while discovery goes on.
 
     Returns:
         The documents found, each page's state, and pages that failed.
     """
     known = known or {}
     result = Discovery()
+
+    def add(listing: Listing) -> None:
+        if listing.document not in result.listings:
+            result.listings[listing.document] = listing
+            on_listing(listing)
+
     pages: dict[str, str | None]
     if source.file_index:
         pages = dict.fromkeys(_file_index_pages(client, source.file_index, source))
@@ -322,7 +331,7 @@ def discover(
                 if later in known:
                     result.pages[later] = known[later]
                     for listing in known[later].listings:
-                        result.listings.setdefault(listing.document, listing)
+                        add(listing)
             break
         if before and lastmod and before.lastmod == lastmod:
             logger.info(
@@ -365,5 +374,5 @@ def discover(
             )
         result.pages[page] = state
         for listing in state.listings:
-            result.listings.setdefault(listing.document, listing)
+            add(listing)
     return result
