@@ -610,6 +610,22 @@ def score_doc(doc: GoldenDoc, ocr: bool = False) -> DocScore:
     attempt = None
     if ocr:
         res, attempt = _with_ocr(doc.pdf, res)
+    return score_result(doc, res, attempt)
+
+
+def score_result(
+    doc: GoldenDoc, res: ParseResult, attempt: OcrAttempt | None = None
+) -> DocScore:
+    """Grades a reading already made of a document, as `score_doc` grades its own.
+
+    Args:
+        doc: The ground truth to grade against.
+        res: The reading, with OCR's parts accepted if they were.
+        attempt: OCR's attempt, when it read part of the document.
+
+    Returns:
+        A DocScore covering every expected and every emitted designator.
+    """
     flagged = {w.ref.upper() for w in res.stats["warnings"] if w.ref}
     if res.stats["errors"] or any(
         w.kind == ParseWarningKind.NO_PARTS_LIST for w in res.stats["warnings"]

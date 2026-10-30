@@ -1,5 +1,6 @@
 """Tests for the catalog job (`src.catalog`), with a fake web and fake readers."""
 
+import hashlib
 import io
 import json
 from collections.abc import Iterator, Mapping
@@ -32,6 +33,7 @@ from src.catalog.client import (
 from src.catalog.discover import Listing, PageState, discover, pdf_links
 from src.catalog.report import Event, Outcome, Reporter
 from src.catalog.sources import SOURCES, Publisher
+from src.catalog.verified import Checked, Verification, VerifiedList, fingerprint
 
 
 @dataclass
@@ -598,3 +600,102 @@ def test_a_dead_link_hides_its_build(tmp_path: Path, run: Any) -> None:
     assert not (tmp_path / "builds" / "pedalpcb" / "fuzz.json").exists()
     fuzz = next(e for e in reporter.tally.events if e.document.endswith("Fuzz.pdf"))
     assert fuzz.outcome == Outcome.GONE
+
+
+# --- Verified by hand ---
+
+
+def test_a_fingerprint_is_what_is_bought_not_where_or_in_what_order() -> None:
+    a = _reading(parts=2)
+    b = create_empty_inventory()
+    for n in (2, 1):
+        b.add_part(
+            "other", make_component_key(ComponentCategory.RESISTORS, "10k"), f"R{n}"
+        )
+    c = _reading(parts=2)
+    c.inventory.add_part(
+        "doc", make_component_key(ComponentCategory.RESISTORS, "1k"), "R3"
+    )
+
+    assert fingerprint(a) == fingerprint(
+        ParseResult(b, create_empty_stats(), title="Other")
+    )
+    assert fingerprint(a) != fingerprint(c)
+
+
+def test_a_document_is_verified_only_with_its_checked_reading(tmp_path: Path) -> None:
+    listed = VerifiedList({"abc": Checked(fingerprint(_reading()), "2026-10-30")})
+    listed.save(tmp_path / "verified.json")
+    loaded = VerifiedList.load(tmp_path / "verified.json")
+
+    assert loaded.check("abc", fingerprint(_reading())) == Verification.VERIFIED
+    assert loaded.check("abc", fingerprint(_reading(parts=3))) == Verification.CHANGED
+    assert loaded.check("def", fingerprint(_reading())) == Verification.UNVERIFIED
+
+
+def _verify(tmp_path: Path, body: bytes, reading: ParseResult) -> None:
+    digest = hashlib.sha256(body).hexdigest()
+    VerifiedList({digest: Checked(fingerprint(reading), "2026-10-30")}).save(
+        tmp_path / "verified.json"
+    )
+
+
+def test_a_verified_document_is_listed_and_marked(tmp_path: Path, run: Any) -> None:
+    doubt = ParseWarning(ParseWarningKind.UNEXTRACTED_REF, "C4", "C4 may be missing.")
+    checked = _reading(warnings=[doubt])
+    _verify(tmp_path, b"%PDF fuzz", checked)
+
+    def read(upload: FileUpload) -> ParseResult:
+        return checked if upload.name == "Fuzz.pdf" else _reading()
+
+    reporter = run(_docs(_pedalpcb_web()), read)
+
+    fuzz = json.loads((tmp_path / "builds" / "pedalpcb" / "fuzz.json").read_text())
+    drive = json.loads((tmp_path / "builds" / "pedalpcb" / "drive.json").read_text())
+    # Listed despite its warning, because it was checked by hand.
+    assert fuzz["verified"] is True
+    # An unchecked document with no doubts is listed, unmarked.
+    assert drive["verified"] is False
+    assert reporter._verified("pedalpcb") == 1
+
+
+def test_a_checked_file_that_now_reads_differently_loses_its_mark(
+    tmp_path: Path, run: Any
+) -> None:
+    _verify(tmp_path, b"%PDF fuzz", _reading(parts=3))
+
+    reporter = run(_docs(_pedalpcb_web()), lambda upload: _reading())
+
+    fuzz = json.loads((tmp_path / "builds" / "pedalpcb" / "fuzz.json").read_text())
+    assert fuzz["verified"] is False
+    assert "likely a parser regression" in reporter._stream.getvalue()
+
+
+def test_a_newly_verified_unchanged_document_gains_its_mark(
+    tmp_path: Path, run: Any
+) -> None:
+    run(_docs(_pedalpcb_web()), lambda upload: _reading())
+    _verify(tmp_path, b"%PDF fuzz", _reading())
+
+    reporter = run(_docs(_pedalpcb_web()), lambda upload: _reading())
+
+    fuzz = json.loads((tmp_path / "builds" / "pedalpcb" / "fuzz.json").read_text())
+    assert fuzz["verified"] is True
+    assert {e.outcome for e in reporter.tally.events} == {Outcome.UNCHANGED}
+
+
+def test_a_rejected_document_checked_since_is_fetched_and_listed(
+    tmp_path: Path, run: Any
+) -> None:
+    doubt = ParseWarning(ParseWarningKind.UNPARSED_VALUE, "R1", "Check its value.")
+    doubtful = _reading(warnings=[doubt])
+    run(_docs(_pedalpcb_web()), lambda upload: doubtful)
+    assert not (tmp_path / "builds" / "pedalpcb" / "fuzz.json").exists()
+    _verify(tmp_path, b"%PDF fuzz", doubtful)
+    web = _docs(_pedalpcb_web())
+
+    run(web, lambda upload: doubtful)
+
+    assert json.loads((tmp_path / "builds/pedalpcb/fuzz.json").read_text())["verified"]
+    fuzz_asks = [h for u, h in web.asked if u.endswith("Fuzz.pdf")]
+    assert fuzz_asks == [{}]

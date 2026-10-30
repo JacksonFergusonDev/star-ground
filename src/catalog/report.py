@@ -65,12 +65,14 @@ class Event:
         document: Its URL.
         outcome: What became of it.
         reason: Why, for anything but a plain success.
+        verified: Whether its listed build has been checked by hand.
     """
 
     publisher: str
     document: str
     outcome: Outcome
     reason: str = ""
+    verified: bool = False
 
 
 @dataclass(slots=True)
@@ -216,14 +218,17 @@ class Reporter:
         outcomes = list(Outcome)
         publishers = self.tally.publishers()
         problems = [e for e in self.tally.events if e.outcome not in _FINE]
+        unchecked = [
+            e for e in self.tally.events if e.outcome in _FINE and not e.verified
+        ]
         if self.github:
             lines = [
                 "## Circuit catalog",
                 "",
                 "| Publisher | "
                 + " | ".join(o.value.capitalize() for o in outcomes)
-                + " | Pages not read |",
-                "| --- " * (len(outcomes) + 2) + "|",
+                + " | Verified | Pages not read |",
+                "| --- " * (len(outcomes) + 3) + "|",
             ]
             for publisher in publishers:
                 counts = self.tally.counts(publisher)
@@ -231,7 +236,7 @@ class Reporter:
                 lines.append(
                     f"| {publisher} | "
                     + " | ".join(str(counts[o]) for o in outcomes)
-                    + f" | {failed_pages} |"
+                    + f" | {self._verified(publisher)} | {failed_pages} |"
                 )
             if problems:
                 lines += [
@@ -257,6 +262,19 @@ class Reporter:
                     f"| {p} | {page} | {why.replace('|', '/')} |"
                     for p, page, why in pages
                 ]
+            if unchecked:
+                lines += [
+                    "",
+                    "<details><summary>Listed but not checked by hand "
+                    f"({len(unchecked)})</summary>",
+                    "",
+                    "| Publisher | Document | Outcome |",
+                    "| --- | --- | --- |",
+                ]
+                lines += [
+                    f"| {e.publisher} | {e.document} | {e.outcome} |" for e in unchecked
+                ]
+                lines += ["", "</details>"]
             text = "\n".join(lines) + "\n"
             if self._summary_path:
                 with open(self._summary_path, "a", encoding="utf-8") as summary:
@@ -267,12 +285,14 @@ class Reporter:
         table.add_column("Publisher")
         for o in outcomes:
             table.add_column(o.value.capitalize(), justify="right", style=_STYLE[o])
+        table.add_column("Verified", justify="right", style="bold green")
         table.add_column("Pages not read", justify="right")
         for publisher in publishers:
             counts = self.tally.counts(publisher)
             table.add_row(
                 publisher,
                 *(str(counts[o]) for o in outcomes),
+                str(self._verified(publisher)),
                 str(len(self.tally.page_failures.get(publisher, {}))),
             )
         self._console.print(table)
@@ -288,6 +308,23 @@ class Reporter:
                     e.reason,
                 )
             self._console.print(detail)
+        if unchecked:
+            listed = Table(
+                title=f"Listed but not checked by hand ({len(unchecked)})",
+                title_justify="left",
+            )
+            for column in ("Publisher", "Document", "Outcome"):
+                listed.add_column(column, overflow="fold")
+            for e in unchecked:
+                listed.add_row(e.publisher, e.document, e.outcome)
+            self._console.print(listed)
+
+    def _verified(self, publisher: str) -> int:
+        return sum(
+            1
+            for e in self.tally.events
+            if e.publisher == publisher and e.outcome in _FINE and e.verified
+        )
 
 
 class _GitHubHandler(logging.Handler):

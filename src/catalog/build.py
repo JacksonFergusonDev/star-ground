@@ -40,6 +40,7 @@ from src.catalog.client import (
 from src.catalog.discover import Listing, PageState, discover
 from src.catalog.report import Event, Outcome, Reporter
 from src.catalog.sources import Source
+from src.catalog.verified import Verification, VerifiedList, builds, fingerprint
 
 # Self-check warnings that describe the document rather than a doubtful
 # reading: the builder's choice of a value, a footnote to read.
@@ -62,6 +63,8 @@ class DocumentState:
         outcome: What became of it then.
         reason: Why, for anything but success.
         entry: Its entry's id, when it's listed.
+        parts: The `verified.fingerprint` of its reading, when it was read.
+        verification: Whether that reading was checked by hand, then.
     """
 
     sha256: str | None = None
@@ -71,6 +74,8 @@ class DocumentState:
     outcome: str = ""
     reason: str = ""
     entry: str | None = None
+    parts: str | None = None
+    verification: str = ""
 
 
 @dataclass(slots=True)
@@ -125,14 +130,23 @@ def clean(result: ParseResult) -> str | None:
         and result.ocr.verdict != OcrVerdict.COMPLETE
     ):
         return f"OCR's reading of the parts list: {result.ocr.verdict}"
-    builds = [result.select(v.name) for v in result.variants] or [result]
-    for build in builds:
+    for _, build in builds(result):
         if not build.inventory:
             return "no parts were read"
         doubts = [w for w in build.stats["warnings"] if w.kind not in _INFORMATIONAL]
         if doubts:
             return f"{len(doubts)} self-check warning(s), first: {doubts[0].kind}: {doubts[0].message}"
     return None
+
+
+def catalog_reading(reading: ParseResult) -> ParseResult:
+    """A reading as the catalog lists it: OCR's parts accepted when complete.
+
+    OCR's attempt stays on the result, so `clean` can judge it.
+    """
+    ocr = reading.ocr
+    complete = ocr is not None and ocr.verdict == OcrVerdict.COMPLETE
+    return replace(offered(reading, use_ocr=complete), ocr=ocr)
 
 
 def entry_id(listing: Listing) -> str:
@@ -142,12 +156,14 @@ def entry_id(listing: Listing) -> str:
 
 
 def entry(
-    source: Source, listing: Listing, digest: str, result: ParseResult, checked: str
+    source: Source,
+    listing: Listing,
+    digest: str,
+    result: ParseResult,
+    checked: str,
+    verified: bool,
 ) -> dict[str, Any]:
     """A listed document's catalog entry: only what was derived from it."""
-    builds: list[tuple[str | None, ParseResult]] = [
-        (v.name, result.select(v.name)) for v in result.variants
-    ] or [(None, result)]
     return {
         "id": entry_id(listing),
         "publisher": source.publisher.value,
@@ -158,6 +174,7 @@ def entry(
         "sha256": digest,
         "checked": checked,
         "read_by_ocr": result.ocr is not None and result.ocr.has_parts,
+        "verified": verified,
         "builds": [
             {
                 "name": name,
@@ -171,7 +188,7 @@ def entry(
                     for part in read_parts(build)
                 ],
             }
-            for name, build in builds
+            for name, build in builds(result)
         ],
     }
 
@@ -191,6 +208,19 @@ class Budget:
     def spent(self) -> bool:
         """Whether the run is out of time."""
         return self.clock() >= self.deadline
+
+
+def _unchanged(
+    publisher: str, url: str, previous: DocumentState, how: str, kept: Verification
+) -> Event:
+    """A document unchanged since the last run, reported as it stands."""
+    if previous.outcome == Outcome.NOT_CLEAN:
+        return Event(
+            publisher, url, Outcome.NOT_CLEAN, f"unchanged ({how}): {previous.reason}"
+        )
+    return Event(
+        publisher, url, Outcome.UNCHANGED, how, verified=kept == Verification.VERIFIED
+    )
 
 
 def _now() -> str:
@@ -227,6 +257,22 @@ def build(
     state_path = out / "state" / f"{publisher}.json"
     builds_dir = out / "builds" / publisher
     state = State.load(state_path)
+    verified = VerifiedList.load(out / "verified.json")
+
+    def still(previous: DocumentState) -> Verification:
+        """A reading kept from an earlier run, checked against today's list."""
+        if previous.sha256 is None or previous.parts is None:
+            return Verification.UNVERIFIED
+        return verified.check(previous.sha256, previous.parts)
+
+    def mark(previous: DocumentState, verification: Verification) -> None:
+        """Updates a listed build's mark when the list changed under it."""
+        if previous.entry and previous.verification != verification:
+            path = builds_dir / f"{previous.entry}.json"
+            if path.exists():
+                data = json.loads(path.read_text())
+                data["verified"] = verification == Verification.VERIFIED
+                path.write_text(json.dumps(data, indent=1) + "\n")
 
     with reporter.section(f"{publisher}: finding build documents"):
         found = discover(client, source, state.pages, page_limit)
@@ -293,7 +339,17 @@ def build(
             try:
                 if source.visit_page_first:
                     client.get(listing.page)
-                fetched = client.get(url, previous.etag, previous.last_modified)
+                # A document left out but since checked by hand is fetched in
+                # full, so it can be read and listed.
+                newly_checked = (
+                    previous.outcome == Outcome.NOT_CLEAN
+                    and previous.sha256 in verified.checked
+                )
+                fetched = (
+                    client.get(url)
+                    if newly_checked
+                    else client.get(url, previous.etag, previous.last_modified)
+                )
             except BlockedError as error:
                 record(
                     url,
@@ -345,10 +401,12 @@ def build(
                 )
                 continue
             if fetched.status == 304:
+                kept = still(previous)
+                mark(previous, kept)
                 record(
                     url,
-                    replace(previous, checked=checked),
-                    Event(publisher, url, Outcome.UNCHANGED, "304 Not Modified"),
+                    replace(previous, checked=checked, verification=kept),
+                    _unchanged(publisher, url, previous, "304 Not Modified", kept),
                 )
                 continue
             digest = sha256(fetched.content).hexdigest()
@@ -359,28 +417,34 @@ def build(
                 last_modified=fetched.last_modified,
                 checked=checked,
             )
-            if digest == previous.sha256 and previous.outcome in (
-                Outcome.LISTED,
-                Outcome.UPDATED,
-                Outcome.UNCHANGED,
-                Outcome.NOT_CLEAN,
+            if (
+                digest == previous.sha256
+                and not newly_checked
+                and previous.outcome
+                in (
+                    Outcome.LISTED,
+                    Outcome.UPDATED,
+                    Outcome.UNCHANGED,
+                    Outcome.NOT_CLEAN,
+                )
             ):
+                kept = still(previous)
+                mark(previous, kept)
                 record(
                     url,
-                    replace(fetched_state, outcome=previous.outcome),
-                    Event(publisher, url, Outcome.UNCHANGED, "same hash as last time"),
+                    replace(fetched_state, outcome=previous.outcome, verification=kept),
+                    _unchanged(
+                        publisher, url, previous, "same hash as last time", kept
+                    ),
                 )
                 continue
             try:
                 reading = read(FileUpload(listing.name, fetched.content))
                 if reading is None:
                     raise ValueError("not a document Star Ground reads")
-                ocr = reading.ocr
-                accepted = offered(
-                    reading,
-                    use_ocr=ocr is not None and ocr.verdict == OcrVerdict.COMPLETE,
-                )
-                why = clean(replace(accepted, ocr=ocr))
+                accepted = catalog_reading(reading)
+                why = clean(accepted)
+                parts = fingerprint(accepted)
             except Exception as error:  # A reading bug is reported; the rest go on.
                 reason = f"couldn't read it: {type(error).__name__}: {error}"
                 record(
@@ -391,7 +455,23 @@ def build(
                     Event(publisher, url, Outcome.FAILED, reason),
                 )
                 continue
-            if why is not None:
+            verification = verified.check(digest, parts)
+            fetched_state = replace(
+                fetched_state, parts=parts, verification=verification
+            )
+            if verification == Verification.CHANGED:
+                reporter.warning(
+                    f"{url} was checked by hand, but today's reading of the same file "
+                    "differs from the one checked: likely a parser regression",
+                    title=f"{publisher}: verified reading changed",
+                )
+            is_verified = verification == Verification.VERIFIED
+            if why is not None and is_verified:
+                # Checked by hand, so its warnings were looked into.
+                reporter.info(
+                    f"listed though not clean, as it was checked by hand ({why})"
+                )
+            elif why is not None:
                 if previous.entry:
                     (builds_dir / f"{previous.entry}.json").unlink(missing_ok=True)
                 record(
@@ -402,7 +482,7 @@ def build(
                     Event(publisher, url, Outcome.NOT_CLEAN, why),
                 )
                 continue
-            listed = entry(source, listing, digest, accepted, checked)
+            listed = entry(source, listing, digest, accepted, checked, is_verified)
             taken = builds_dir / f"{listed['id']}.json"
             if taken.exists() and json.loads(taken.read_text())["document"] != url:
                 # Two documents published under one file name.
@@ -422,5 +502,5 @@ def build(
                 replace(
                     fetched_state, outcome=outcome, reason=reason, entry=listed["id"]
                 ),
-                Event(publisher, url, outcome, reason),
+                Event(publisher, url, outcome, reason, verified=is_verified),
             )
