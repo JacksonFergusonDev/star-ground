@@ -14,7 +14,9 @@ The document's bytes are read in memory and dropped.
 """
 
 import json
+import queue
 import re
+import threading
 import time
 from collections.abc import Callable
 from dataclasses import asdict, dataclass, field, replace
@@ -37,7 +39,7 @@ from src.catalog.client import (
     GoneError,
     PoliteClient,
 )
-from src.catalog.discover import Listing, PageState, discover
+from src.catalog.discover import Discovery, Listing, PageState, discover
 from src.catalog.report import Event, Outcome, Reporter
 from src.catalog.sources import Source
 from src.catalog.verified import (
@@ -230,6 +232,59 @@ def _unchanged(
     )
 
 
+def _found_while_reading(
+    source: Source,
+    client: PoliteClient,
+    known: dict[str, PageState],
+    page_limit: int | None,
+    document_limit: int | None,
+    budget: Budget,
+    read_one: Callable[[Listing, str], None],
+) -> Discovery:
+    """Discovers on one thread and reads each document as it's found.
+
+    For a publisher whose documents are on another host than its pages
+    (PedalPCB's docs.pedalpcb.com): discovery gets its own client, so each
+    host keeps its own spacing and neither waits for the other.
+
+    Returns:
+        What discovery found.
+    """
+    found: queue.SimpleQueue[Listing | None] = queue.SimpleQueue()
+    result: list[Discovery] = []
+    failure: list[BaseException] = []
+
+    def find() -> None:
+        try:
+            result.append(
+                discover(
+                    client.alongside(),
+                    source,
+                    known,
+                    page_limit,
+                    budget.spent,
+                    on_listing=found.put,
+                )
+            )
+        except BaseException as error:  # Raised again on the reading thread.
+            failure.append(error)
+        finally:
+            found.put(None)
+
+    finder = threading.Thread(target=find, name=f"{source.publisher}-discovery")
+    finder.start()
+    count = 0
+    while (listing := found.get()) is not None:
+        if document_limit is not None and count >= document_limit:
+            continue
+        count += 1
+        read_one(listing, f"[{count}]")
+    finder.join()
+    if failure:
+        raise failure[0]
+    return result[0]
+
+
 def _now() -> str:
     return datetime.now(UTC).isoformat(timespec="seconds")
 
@@ -281,21 +336,226 @@ def build(
                 data["verified"] = verification == Verification.VERIFIED
                 path.write_text(json.dumps(data, indent=1) + "\n")
 
-    with reporter.section(f"{publisher}: finding build documents"):
-        found = discover(client, source, state.pages, page_limit, budget.spent)
-        for page, reason in sorted(found.failures.items()):
-            reporter.page_failed(publisher, page, reason)
-        reporter.info(
-            f"{len(found.listings)} build documents linked from {len(found.pages)} pages "
-            f"({len(found.failures)} pages not read)"
-        )
-        whole = page_limit is None and found.complete
-        state.pages = found.pages if whole else {**state.pages, **found.pages}
-
     def record(listing_url: str, document: DocumentState, event: Event) -> None:
         state.documents[listing_url] = document
         state.save(state_path)
         reporter.outcome(event)
+
+    def read_one(listing: Listing, label: str) -> None:
+        """Fetches one document, reads it if it changed, and records the outcome."""
+        url = listing.document
+        previous = state.documents.get(url, DocumentState())
+        if budget.spent():
+            reporter.outcome(
+                Event(
+                    publisher,
+                    url,
+                    Outcome.POSTPONED,
+                    "the run's time budget is spent",
+                )
+            )
+            return
+        reporter.info(f"{label} {listing.name}")
+        checked = _now()
+        try:
+            if source.visit_page_first:
+                client.get(listing.page)
+            # A document left out but since checked by hand is fetched in
+            # full, so it can be read and listed.
+            newly_checked = (
+                previous.outcome == Outcome.NOT_CLEAN
+                and previous.sha256 in verified.checked
+            )
+            fetched = (
+                client.get(url)
+                if newly_checked
+                else client.get(url, previous.etag, previous.last_modified)
+            )
+        except BlockedError as error:
+            record(
+                url,
+                replace(
+                    previous,
+                    checked=checked,
+                    outcome=Outcome.BLOCKED,
+                    reason=str(error),
+                ),
+                Event(publisher, url, Outcome.BLOCKED, str(error)),
+            )
+            return
+        except GoneError as error:
+            # A dead link hides the build.
+            if previous.entry:
+                (builds_dir / f"{previous.entry}.json").unlink(missing_ok=True)
+            record(
+                url,
+                replace(
+                    previous,
+                    checked=checked,
+                    outcome=Outcome.GONE,
+                    reason=str(error),
+                    entry=None,
+                ),
+                Event(publisher, url, Outcome.GONE, str(error)),
+            )
+            return
+        except DisallowedError as error:
+            record(
+                url,
+                replace(
+                    previous,
+                    checked=checked,
+                    outcome=Outcome.DISALLOWED,
+                    reason=str(error),
+                ),
+                Event(publisher, url, Outcome.DISALLOWED, str(error)),
+            )
+            return
+        except Exception as error:  # A failed fetch is reported; the rest go on.
+            reason = f"couldn't fetch it: {error}"
+            record(
+                url,
+                replace(
+                    previous, checked=checked, outcome=Outcome.FAILED, reason=reason
+                ),
+                Event(publisher, url, Outcome.FAILED, reason),
+            )
+            return
+        if fetched.status == 304:
+            kept = still(previous)
+            mark(previous, kept)
+            record(
+                url,
+                replace(previous, checked=checked, verification=kept),
+                _unchanged(publisher, url, previous, "304 Not Modified", kept),
+            )
+            return
+        digest = document_hash(fetched.content)
+        fetched_state = replace(
+            previous,
+            sha256=digest,
+            etag=fetched.etag,
+            last_modified=fetched.last_modified,
+            checked=checked,
+        )
+        if (
+            digest == previous.sha256
+            and not newly_checked
+            and previous.outcome
+            in (
+                Outcome.LISTED,
+                Outcome.UPDATED,
+                Outcome.UNCHANGED,
+                Outcome.NOT_CLEAN,
+            )
+        ):
+            kept = still(previous)
+            mark(previous, kept)
+            record(
+                url,
+                replace(fetched_state, outcome=previous.outcome, verification=kept),
+                _unchanged(publisher, url, previous, "same hash as last time", kept),
+            )
+            return
+        try:
+            reading = read(FileUpload(listing.name, fetched.content))
+            if reading is None:
+                raise ValueError("not a document Star Ground reads")
+            accepted = catalog_reading(reading)
+            why = clean(accepted)
+            parts = fingerprint(accepted)
+        except Exception as error:  # A reading bug is reported; the rest go on.
+            reason = f"couldn't read it: {type(error).__name__}: {error}"
+            record(
+                url,
+                replace(
+                    fetched_state, outcome=Outcome.FAILED, reason=reason, entry=None
+                ),
+                Event(publisher, url, Outcome.FAILED, reason),
+            )
+            return
+        verification = verified.check(digest, parts)
+        fetched_state = replace(fetched_state, parts=parts, verification=verification)
+        if verification == Verification.CHANGED:
+            reporter.warning(
+                f"{url} was checked by hand, but today's reading of the same file "
+                "differs from the one checked: likely a parser regression",
+                title=f"{publisher}: verified reading changed",
+            )
+        is_verified = verification == Verification.VERIFIED
+        if why is not None and is_verified:
+            # Checked by hand, so its warnings were looked into.
+            reporter.info(f"listed though not clean, as it was checked by hand ({why})")
+        elif why is not None:
+            if previous.entry:
+                (builds_dir / f"{previous.entry}.json").unlink(missing_ok=True)
+            record(
+                url,
+                replace(
+                    fetched_state, outcome=Outcome.NOT_CLEAN, reason=why, entry=None
+                ),
+                Event(publisher, url, Outcome.NOT_CLEAN, why),
+            )
+            return
+        listed = entry(source, listing, digest, accepted, checked, is_verified)
+        taken = builds_dir / f"{listed['id']}.json"
+        if taken.exists() and json.loads(taken.read_text())["document"] != url:
+            # Two documents published under one file name.
+            listed["id"] += "-" + sha256(url.encode()).hexdigest()[:6]
+        builds_dir.mkdir(parents=True, exist_ok=True)
+        (builds_dir / f"{listed['id']}.json").write_text(
+            json.dumps(listed, indent=1) + "\n"
+        )
+        outcome = Outcome.UPDATED if previous.entry else Outcome.LISTED
+        reason = (
+            "the document changed since it was listed; check it"
+            if previous.entry
+            else ""
+        )
+        record(
+            url,
+            replace(fetched_state, outcome=outcome, reason=reason, entry=listed["id"]),
+            Event(publisher, url, outcome, reason, verified=is_verified),
+        )
+
+    def report_discovery(found: Discovery) -> None:
+        for page, reason in sorted(found.failures.items()):
+            reporter.page_failed(publisher, page, reason)
+        reporter.info(
+            f"{len(found.listings)} build documents linked from {len(found.pages)} "
+            f"pages ({len(found.failures)} pages not read)"
+        )
+        whole = page_limit is None and found.complete
+        state.pages = found.pages if whole else {**state.pages, **found.pages}
+
+    if source.documents_apart:
+        # The documents are on another host than the pages, so each is read
+        # as soon as discovery finds it, both hosts at full spacing.
+        with reporter.section(f"{publisher}: finding and reading build documents"):
+            found = _found_while_reading(
+                source,
+                client,
+                state.pages,
+                page_limit,
+                document_limit,
+                budget,
+                read_one,
+            )
+            report_discovery(found)
+    else:
+        with reporter.section(f"{publisher}: finding build documents"):
+            found = discover(client, source, state.pages, page_limit, budget.spent)
+            report_discovery(found)
+        listings = sorted(
+            found.listings.values(),
+            key=lambda li: (
+                state.documents.get(li.document, DocumentState()).checked,
+                li.document,
+            ),
+        )[:document_limit]
+        with reporter.section(f"{publisher}: reading {len(listings)} documents"):
+            for number, listing in enumerate(listings, 1):
+                read_one(listing, f"[{number}/{len(listings)}]")
 
     # A sample, or a run out of time, doesn't see every page, so it can't
     # tell what's gone: it removes nothing.
@@ -317,197 +577,4 @@ def build(
             if not gone:
                 reporter.info("none")
             state.save(state_path)
-
-    listings = sorted(
-        found.listings.values(),
-        key=lambda li: (
-            state.documents.get(li.document, DocumentState()).checked,
-            li.document,
-        ),
-    )
-    if document_limit is not None:
-        listings = listings[:document_limit]
-    with reporter.section(f"{publisher}: reading {len(listings)} documents"):
-        for number, listing in enumerate(listings, 1):
-            url = listing.document
-            previous = state.documents.get(url, DocumentState())
-            if budget.spent():
-                reporter.outcome(
-                    Event(
-                        publisher,
-                        url,
-                        Outcome.POSTPONED,
-                        "the run's time budget is spent",
-                    )
-                )
-                continue
-            reporter.info(f"[{number}/{len(listings)}] {listing.name}")
-            checked = _now()
-            try:
-                if source.visit_page_first:
-                    client.get(listing.page)
-                # A document left out but since checked by hand is fetched in
-                # full, so it can be read and listed.
-                newly_checked = (
-                    previous.outcome == Outcome.NOT_CLEAN
-                    and previous.sha256 in verified.checked
-                )
-                fetched = (
-                    client.get(url)
-                    if newly_checked
-                    else client.get(url, previous.etag, previous.last_modified)
-                )
-            except BlockedError as error:
-                record(
-                    url,
-                    replace(
-                        previous,
-                        checked=checked,
-                        outcome=Outcome.BLOCKED,
-                        reason=str(error),
-                    ),
-                    Event(publisher, url, Outcome.BLOCKED, str(error)),
-                )
-                continue
-            except GoneError as error:
-                # A dead link hides the build.
-                if previous.entry:
-                    (builds_dir / f"{previous.entry}.json").unlink(missing_ok=True)
-                record(
-                    url,
-                    replace(
-                        previous,
-                        checked=checked,
-                        outcome=Outcome.GONE,
-                        reason=str(error),
-                        entry=None,
-                    ),
-                    Event(publisher, url, Outcome.GONE, str(error)),
-                )
-                continue
-            except DisallowedError as error:
-                record(
-                    url,
-                    replace(
-                        previous,
-                        checked=checked,
-                        outcome=Outcome.DISALLOWED,
-                        reason=str(error),
-                    ),
-                    Event(publisher, url, Outcome.DISALLOWED, str(error)),
-                )
-                continue
-            except Exception as error:  # A failed fetch is reported; the rest go on.
-                reason = f"couldn't fetch it: {error}"
-                record(
-                    url,
-                    replace(
-                        previous, checked=checked, outcome=Outcome.FAILED, reason=reason
-                    ),
-                    Event(publisher, url, Outcome.FAILED, reason),
-                )
-                continue
-            if fetched.status == 304:
-                kept = still(previous)
-                mark(previous, kept)
-                record(
-                    url,
-                    replace(previous, checked=checked, verification=kept),
-                    _unchanged(publisher, url, previous, "304 Not Modified", kept),
-                )
-                continue
-            digest = document_hash(fetched.content)
-            fetched_state = replace(
-                previous,
-                sha256=digest,
-                etag=fetched.etag,
-                last_modified=fetched.last_modified,
-                checked=checked,
-            )
-            if (
-                digest == previous.sha256
-                and not newly_checked
-                and previous.outcome
-                in (
-                    Outcome.LISTED,
-                    Outcome.UPDATED,
-                    Outcome.UNCHANGED,
-                    Outcome.NOT_CLEAN,
-                )
-            ):
-                kept = still(previous)
-                mark(previous, kept)
-                record(
-                    url,
-                    replace(fetched_state, outcome=previous.outcome, verification=kept),
-                    _unchanged(
-                        publisher, url, previous, "same hash as last time", kept
-                    ),
-                )
-                continue
-            try:
-                reading = read(FileUpload(listing.name, fetched.content))
-                if reading is None:
-                    raise ValueError("not a document Star Ground reads")
-                accepted = catalog_reading(reading)
-                why = clean(accepted)
-                parts = fingerprint(accepted)
-            except Exception as error:  # A reading bug is reported; the rest go on.
-                reason = f"couldn't read it: {type(error).__name__}: {error}"
-                record(
-                    url,
-                    replace(
-                        fetched_state, outcome=Outcome.FAILED, reason=reason, entry=None
-                    ),
-                    Event(publisher, url, Outcome.FAILED, reason),
-                )
-                continue
-            verification = verified.check(digest, parts)
-            fetched_state = replace(
-                fetched_state, parts=parts, verification=verification
-            )
-            if verification == Verification.CHANGED:
-                reporter.warning(
-                    f"{url} was checked by hand, but today's reading of the same file "
-                    "differs from the one checked: likely a parser regression",
-                    title=f"{publisher}: verified reading changed",
-                )
-            is_verified = verification == Verification.VERIFIED
-            if why is not None and is_verified:
-                # Checked by hand, so its warnings were looked into.
-                reporter.info(
-                    f"listed though not clean, as it was checked by hand ({why})"
-                )
-            elif why is not None:
-                if previous.entry:
-                    (builds_dir / f"{previous.entry}.json").unlink(missing_ok=True)
-                record(
-                    url,
-                    replace(
-                        fetched_state, outcome=Outcome.NOT_CLEAN, reason=why, entry=None
-                    ),
-                    Event(publisher, url, Outcome.NOT_CLEAN, why),
-                )
-                continue
-            listed = entry(source, listing, digest, accepted, checked, is_verified)
-            taken = builds_dir / f"{listed['id']}.json"
-            if taken.exists() and json.loads(taken.read_text())["document"] != url:
-                # Two documents published under one file name.
-                listed["id"] += "-" + sha256(url.encode()).hexdigest()[:6]
-            builds_dir.mkdir(parents=True, exist_ok=True)
-            (builds_dir / f"{listed['id']}.json").write_text(
-                json.dumps(listed, indent=1) + "\n"
-            )
-            outcome = Outcome.UPDATED if previous.entry else Outcome.LISTED
-            reason = (
-                "the document changed since it was listed; check it"
-                if previous.entry
-                else ""
-            )
-            record(
-                url,
-                replace(
-                    fetched_state, outcome=outcome, reason=reason, entry=listed["id"]
-                ),
-                Event(publisher, url, outcome, reason, verified=is_verified),
-            )
+    state.save(state_path)

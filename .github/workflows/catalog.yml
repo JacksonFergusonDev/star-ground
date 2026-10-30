@@ -2,6 +2,10 @@
 # build documents, reads the new and changed ones, and proposes the catalog's
 # changes as one rolling pull request for review. Never pushes to main.
 #
+# One job per publisher, in parallel: each is a different site, so running
+# them side by side asks no site any faster. A publisher's own requests are
+# never split across jobs, which would. A last job gathers their results.
+#
 # Run it by hand (Actions > Catalog > Run workflow) for the first full run, or
 # for a sample of one publisher. See src/catalog/ for how the job behaves
 # towards the publishers' sites.
@@ -20,7 +24,7 @@ on:
         default: all
         options: [all, pedalpcb, guitarpcb, tonepad, fivecats]
       minutes:
-        description: Minutes for finding and reading, shared across publishers (the job stops at 6 hours)
+        description: Minutes each publisher's job may spend finding and reading (jobs stop at 6 hours)
         type: number
         default: 300
       pages:
@@ -47,18 +51,21 @@ env:
   BRANCH: catalog/nightly
 
 jobs:
-  update:
-    name: Update the catalog
+  publisher:
+    name: ${{ matrix.publisher }}
     runs-on: ubuntu-latest
     timeout-minutes: 350
-    permissions:
-      contents: write
-      pull-requests: write
+    strategy:
+      # A blocked or failing site doesn't stop the others.
+      fail-fast: false
+      matrix:
+        publisher: ${{ fromJSON((!inputs.publisher || inputs.publisher == 'all') && '["pedalpcb", "guitarpcb", "tonepad", "fivecats"]' || format('["{0}"]', inputs.publisher)) }}
+    env:
+      PUBLISHER: ${{ matrix.publisher }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
-          fetch-depth: 0
 
       - name: Install uv
         uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
@@ -66,20 +73,21 @@ jobs:
       - name: Install dependencies
         run: uv sync --no-dev --group catalog
 
-      # The open update's data is the last run's: carry it over, so an
-      # unreviewed night's state isn't lost and nothing is asked twice. The
-      # verified list always comes from main, where it's maintained.
+      # The open update's data is the last run's: carry this publisher's over,
+      # so an unreviewed night's state isn't lost and nothing is asked twice.
+      # The verified list always comes from main, where it's maintained.
       - name: Start from the open update, if any
         run: |
+          kept=("catalog/builds/$PUBLISHER" "catalog/state/$PUBLISHER.json")
           if git ls-remote --exit-code --heads origin "$BRANCH" >/dev/null; then
-            git fetch --no-tags origin "$BRANCH"
-            for kept in catalog/builds catalog/state; do
-              git rm -r -q --ignore-unmatch "$kept"
-              if git cat-file -e "FETCH_HEAD:$kept" 2>/dev/null; then
-                git checkout FETCH_HEAD -- "$kept"
+            git fetch --no-tags --depth 1 origin "$BRANCH"
+            for path in "${kept[@]}"; do
+              git rm -r -q --ignore-unmatch "$path"
+              if git cat-file -e "FETCH_HEAD:$path" 2>/dev/null; then
+                git checkout FETCH_HEAD -- "$path"
               fi
             done
-            echo "Carried over the catalog data from $BRANCH."
+            echo "Carried over $PUBLISHER's catalog data from $BRANCH."
           else
             echo "No open update; starting from main's catalog data."
           fi
@@ -87,23 +95,107 @@ jobs:
       - name: Run the catalog job
         id: job
         env:
-          PUBLISHER: ${{ inputs.publisher || 'all' }}
           MINUTES: ${{ inputs.minutes || 300 }}
           PAGES: ${{ inputs.pages }}
           DOCUMENTS: ${{ inputs.documents }}
         run: |
-          args=(--out catalog --minutes "$MINUTES" --summary "$RUNNER_TEMP/summary.md")
-          [ "$PUBLISHER" != all ] && args+=(--publisher "$PUBLISHER")
+          mkdir -p "$RUNNER_TEMP/out"
+          args=(--publisher "$PUBLISHER" --out catalog --minutes "$MINUTES"
+            --summary "$RUNNER_TEMP/out/summary.md")
           [ -n "$PAGES" ] && args+=(--pages "$PAGES")
           [ -n "$DOCUMENTS" ] && args+=(--documents "$DOCUMENTS")
           set +e
           uv run python -m src.catalog "${args[@]}"
           echo "status=$?" >> "$GITHUB_OUTPUT"
 
-      # The job exits non-zero when something needs a look (a failure, a bot
-      # check), but what it did read is still proposed.
-      - name: Propose the changes
+      # Only this publisher's files: the jobs write apart, so gathering them
+      # can't clash.
+      - name: Keep this publisher's results
         if: ${{ !cancelled() }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/out/builds" "$RUNNER_TEMP/out/state"
+          if [ -d "catalog/builds/$PUBLISHER" ]; then
+            cp -R "catalog/builds/$PUBLISHER" "$RUNNER_TEMP/out/builds/"
+          fi
+          if [ -f "catalog/state/$PUBLISHER.json" ]; then
+            cp "catalog/state/$PUBLISHER.json" "$RUNNER_TEMP/out/state/"
+          fi
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        if: ${{ !cancelled() }}
+        with:
+          name: catalog-${{ matrix.publisher }}
+          path: ${{ runner.temp }}/out/
+          retention-days: 7
+          if-no-files-found: error
+
+      # The job exits non-zero when something needs a look (a failure, a bot
+      # check); its results are kept above, and proposed by the next job.
+      - name: Fail if the job needs a look
+        if: ${{ steps.job.outputs.status != '0' }}
+        env:
+          STATUS: ${{ steps.job.outputs.status }}
+        run: |
+          echo "::error title=$PUBLISHER::The job exited $STATUS: see the summary for what failed or was blocked."
+          exit 1
+
+  propose:
+    name: Propose the changes
+    needs: publisher
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      # Every publisher's data from the open update, then each job's results
+      # over it. A publisher whose job failed outright keeps last night's.
+      - name: Start from the open update, if any
+        run: |
+          if git ls-remote --exit-code --heads origin "$BRANCH" >/dev/null; then
+            git fetch --no-tags --depth 1 origin "$BRANCH"
+            for path in catalog/builds catalog/state; do
+              git rm -r -q --ignore-unmatch "$path"
+              if git cat-file -e "FETCH_HEAD:$path" 2>/dev/null; then
+                git checkout FETCH_HEAD -- "$path"
+              fi
+            done
+          fi
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          pattern: catalog-*
+          path: ${{ runner.temp }}/results
+
+      - name: Gather the publishers' results
+        run: |
+          : > "$RUNNER_TEMP/summary.md"
+          for result in "$RUNNER_TEMP"/results/catalog-*/; do
+            publisher=$(basename "$result")
+            publisher=${publisher#catalog-}
+            if [ -f "$result/state/$publisher.json" ]; then
+              rm -rf "catalog/builds/$publisher"
+              mkdir -p catalog/builds catalog/state
+              if [ -d "$result/builds/$publisher" ]; then
+                cp -R "$result/builds/$publisher" catalog/builds/
+              fi
+              cp "$result/state/$publisher.json" catalog/state/
+            fi
+            if [ -f "$result/summary.md" ]; then
+              { echo "## $publisher"; tail -n +2 "$result/summary.md"; echo; } >> "$RUNNER_TEMP/summary.md"
+            else
+              echo "## $publisher" >> "$RUNNER_TEMP/summary.md"
+              echo "_Its job wrote no summary: see its log._" >> "$RUNNER_TEMP/summary.md"
+            fi
+          done
+          cat "$RUNNER_TEMP/summary.md" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Open or update the pull request
         env:
           GH_TOKEN: ${{ github.token }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
@@ -119,18 +211,16 @@ jobs:
           gh auth setup-git
           git push --force origin "HEAD:refs/heads/$BRANCH"
 
-          # The run's summary is the review: what was listed, what changed
-          # and what was left out. Each step has its own GITHUB_STEP_SUMMARY,
-          # so the job also wrote it to a file. A pull request body holds
-          # 65,536 characters.
+          # The summaries are the review: what was listed, what changed and
+          # what was left out. A pull request body holds 65,536 characters.
           {
             echo "The catalog job's proposed changes. Review the documents marked"
             echo "updated before merging. Run: $RUN_URL"
             echo
-            head -c 60000 "$RUNNER_TEMP/summary.md" 2>/dev/null || echo "_The job wrote no summary._"
+            head -c 60000 "$RUNNER_TEMP/summary.md"
             echo
             echo
-            echo "_The full summary, if cut short here, is on the run's page._"
+            echo "_The full summaries, if cut short here, are on the run's page._"
           } > "$RUNNER_TEMP/body.md"
           if gh pr view "$BRANCH" --json state --jq .state 2>/dev/null | grep -q OPEN; then
             gh pr edit "$BRANCH" --body-file "$RUNNER_TEMP/body.md"
@@ -142,11 +232,3 @@ jobs:
             compare="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/compare/main...${BRANCH}?expand=1"
             echo "::warning title=Catalog::Pushed $BRANCH but couldn't open its pull request (Actions may not create pull requests in this repository). Open it: $compare"
           fi
-
-      - name: Fail if the job needs a look
-        if: ${{ steps.job.outputs.status != '0' }}
-        env:
-          STATUS: ${{ steps.job.outputs.status }}
-        run: |
-          echo "::error title=Catalog::The job exited $STATUS: see the summary for what failed or was blocked."
-          exit 1

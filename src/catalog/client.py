@@ -140,6 +140,15 @@ class PoliteClient:
         self._delay = delay
         self.requests = 0
 
+    def alongside(self) -> PoliteClient:
+        """A client for another thread: the same session, waits and spacing.
+
+        It keeps its own per-host timing, so it suits a thread that asks
+        other hosts than this client's (PedalPCB's pages beside its
+        documents). Sharing the session keeps a test's fake web in use.
+        """
+        return PoliteClient(self._session, self._sleep, self._clock, self._delay)
+
     def _wait(self, host: str, delay: float) -> None:
         last = self._last.get(host)
         if last is not None:
