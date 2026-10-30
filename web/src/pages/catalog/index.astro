@@ -1,0 +1,243 @@
+---
+// The circuit catalog: every build document the catalog job read cleanly,
+// searchable by name and filtered by publisher and by whether it was checked
+// by hand. The list is plain HTML; the filters hide rows, so without
+// JavaScript the whole list still shows.
+import { getCollection } from 'astro:content';
+import Icon from 'house-style/astro/Icon.astro';
+import Base from '../../layouts/Base.astro';
+import type { Publisher } from '../../lib/catalog';
+import { buildPath, byTitle, partCount, publishers } from '../../lib/catalog';
+
+const entries = (await getCollection('catalog')).sort(byTitle);
+const present = (Object.keys(publishers) as Publisher[]).filter((p) =>
+  entries.some((e) => e.data.publisher === p),
+);
+const verified = entries.filter((e) => e.data.verified).length;
+---
+
+<Base
+  title="Circuit catalog"
+  description="Guitar pedal build documents whose parts lists Star Ground has already read, ready to add to a shopping list."
+  noindex
+>
+  <section class="section" aria-labelledby="catalog-title">
+    <h1 id="catalog-title" class="catalog-title">
+      Circuit catalog.
+    </h1>
+    <p class="section-lede">
+      Build documents from PCB publishers whose parts lists Star Ground has already read. Find your
+      pedal and add it to your build. <strong>Verified</strong> builds were checked by hand against
+      the document; the rest were read automatically, so check their warnings once they're added.
+    </p>
+
+    {entries.length ? (
+      <>
+        <form class="filters" role="search" aria-label="Filter the catalog">
+          <label class="search">
+            <span>Search</span>
+            <input type="search" name="q" placeholder="Big Muff, Klon, fuzz…" autocomplete="off" />
+          </label>
+          <label>
+            <span>Publisher</span>
+            <select name="publisher">
+              <option value="">All publishers</option>
+              {present.map((p) => (
+                <option value={p}>{publishers[p]}</option>
+              ))}
+            </select>
+          </label>
+          <label class="check">
+            <input type="checkbox" name="verified" />
+            <span>Verified only</span>
+          </label>
+        </form>
+
+        <p class="count" aria-live="polite" data-count>
+          {entries.length} builds, {verified} verified
+        </p>
+
+        <ul class="entries" data-entries>
+          {entries.map((entry) => (
+            <li
+              data-publisher={entry.data.publisher}
+              data-verified={entry.data.verified ? 'yes' : 'no'}
+              data-search={[
+                entry.data.title,
+                entry.data.file_name,
+                ...entry.data.builds.map((b) => b.name ?? ''),
+              ]
+                .join(' ')
+                .toLowerCase()}
+            >
+              <a href={buildPath(entry)}>
+                <span class="title">{entry.data.title}</span>
+                <span class="meta">
+                  {publishers[entry.data.publisher]} · {partCount(entry)} parts
+                  {entry.data.builds.length > 1 && ` · ${entry.data.builds.length} builds`}
+                </span>
+                <span class:list={['mark', { verified: entry.data.verified }]}>
+                  {entry.data.verified ? 'Verified' : 'Unverified'}
+                </span>
+                <Icon name="arrow-right" size={16} />
+              </a>
+            </li>
+          ))}
+        </ul>
+        <p class="empty" data-empty hidden>
+          No builds match. Try fewer words, or add the document yourself in the workspace.
+        </p>
+      </>
+    ) : (
+      <p class="note">The catalog is empty for now: its first documents are still being read.</p>
+    )}
+
+    <p class="note">
+      Not listed? Upload the build document or paste a link to it in the{' '}
+      <a href="/app/">workspace</a>.
+    </p>
+  </section>
+</Base>
+
+<script>
+  const form = document.querySelector<HTMLFormElement>('.filters');
+  const rows = [...document.querySelectorAll<HTMLLIElement>('[data-entries] li')];
+  const count = document.querySelector<HTMLElement>('[data-count]');
+  const empty = document.querySelector<HTMLElement>('[data-empty]');
+
+  function filter(): void {
+    if (!form) return;
+    const fields = new FormData(form);
+    const words = String(fields.get('q') ?? '')
+      .toLowerCase()
+      .split(/\s+/)
+      .filter(Boolean);
+    const publisher = String(fields.get('publisher') ?? '');
+    const verifiedOnly = fields.has('verified');
+    let shown = 0;
+    for (const row of rows) {
+      const match =
+        words.every((w) => row.dataset.search?.includes(w)) &&
+        (!publisher || row.dataset.publisher === publisher) &&
+        (!verifiedOnly || row.dataset.verified === 'yes');
+      row.hidden = !match;
+      if (match) shown += 1;
+    }
+    if (count) count.textContent = `${shown} of ${rows.length} builds`;
+    if (empty) empty.hidden = shown > 0;
+  }
+
+  form?.addEventListener('input', filter);
+  form?.addEventListener('submit', (event) => event.preventDefault());
+</script>
+
+<style>
+  .catalog-title {
+    margin: 0 0 24px;
+    font-size: var(--fs-h2);
+    font-weight: 500;
+    letter-spacing: -1.6px;
+  }
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    gap: 16px;
+    margin: 40px 0 16px;
+  }
+  .filters label {
+    display: grid;
+    gap: 6px;
+  }
+  .filters label > span {
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: var(--fs-label);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .search {
+    flex: 1 1 260px;
+  }
+  .filters input[type='search'],
+  .filters select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    color: var(--text);
+    background: var(--panel);
+    font-family: var(--mono);
+    font-size: var(--fs-ui);
+  }
+  .filters .check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-bottom: 10px;
+  }
+  .filters .check input {
+    accent-color: var(--accent);
+  }
+  .filters input:focus-visible,
+  .filters select:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  .count {
+    margin: 0 0 12px;
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: var(--fs-label);
+  }
+  .entries {
+    display: grid;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--line);
+    list-style: none;
+  }
+  .entries li[hidden] {
+    display: none;
+  }
+  .entries a {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto auto;
+    align-items: baseline;
+    gap: 6px 20px;
+    padding: 14px 4px;
+    border-bottom: 1px solid var(--line);
+  }
+  .title {
+    font-size: var(--fs-body);
+  }
+  .meta,
+  .mark {
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: var(--fs-label);
+  }
+  .mark.verified {
+    color: var(--accent);
+  }
+  .entries a :global(svg) {
+    align-self: center;
+  }
+  .empty {
+    color: var(--muted);
+  }
+  .note a,
+  .section-lede a {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  @media (max-width: 640px) {
+    .entries a {
+      grid-template-columns: minmax(0, 1fr) auto auto;
+    }
+    .meta {
+      grid-row: 2;
+      grid-column: 1 / -1;
+    }
+  }
+</style>

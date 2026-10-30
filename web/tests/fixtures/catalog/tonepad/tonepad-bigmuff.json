@@ -1,0 +1,647 @@
+{
+  "id": "tonepad-bigmuff",
+  "publisher": "tonepad",
+  "title": "Gran Mango 3.1416",
+  "document": "https://tonepad.com/getFile.asp?id=94",
+  "page": "https://tonepad.com/project.asp?id=3",
+  "file_name": "tonepad_bigmuff.pdf",
+  "sha256": "7f117935d37e1b85c2904710987d50f36db616f62294619e0087605a913b890a",
+  "checked": "2026-10-30T21:24:34+00:00",
+  "read_by_ocr": false,
+  "verified": false,
+  "builds": [
+    {
+      "name": "Stock Big Muff",
+      "parts": [
+        {
+          "ref": "C1",
+          "category": "Capacitors",
+          "value": "1u",
+          "location": null
+        },
+        {
+          "ref": "C3",
+          "category": "Capacitors",
+          "value": "1u",
+          "location": null
+        },
+        {
+          "ref": "C4",
+          "category": "Capacitors",
+          "value": "1u",
+          "location": null
+        },
+        {
+          "ref": "C7",
+          "category": "Capacitors",
+          "value": "1u",
+          "location": null
+        },
+        {
+          "ref": "C13",
+          "category": "Capacitors",
+          "value": "1u",
+          "location": null
+        },
+        {
+          "ref": "R1",
+          "category": "Resistors",
+          "value": "39k",
+          "location": null
+        },
+        {
+          "ref": "R17",
+          "category": "Resistors",
+          "value": "39k",
+          "location": null
+        },
+        {
+          "ref": "R12",
+          "category": "Resistors",
+          "value": "8.2k",
+          "location": null
+        },
+        {
+          "ref": "R7",
+          "category": "Resistors",
+          "value": "8.2k",
+          "location": null
+        },
+        {
+          "ref": "C2",
+          "category": "Capacitors",
+          "value": "500p",
+          "location": null
+        },
+        {
+          "ref": "C6",
+          "category": "Capacitors",
+          "value": "500p",
+          "location": null
+        },
+        {
+          "ref": "C9",
+          "category": "Capacitors",
+          "value": "500p",
+          "location": null
+        },
+        {
+          "ref": "R2",
+          "category": "Resistors",
+          "value": "100k",
+          "location": null
+        },
+        {
+          "ref": "R13",
+          "category": "Resistors",
+          "value": "100k",
+          "location": null
+        },
+        {
+          "ref": "R18",
+          "category": "Resistors",
+          "value": "100k",
+          "location": null
+        },
+        {
+          "ref": "R8",
+          "category": "Resistors",
+          "value": "100k",
+          "location": null
+        },
+        {
+          "ref": "R19",
+          "category": "Resistors",
+          "value": "100k",
+          "location": null
+        },
+        {
+          "ref": "R3",
+          "category": "Resistors",
+          "value": "470k",
+          "location": null
+        },
+        {
+          "ref": "R14",
+          "category": "Resistors",
+          "value": "470k",
+          "location": null
+        },
+        {
+          "ref": "R9",
+          "category": "Resistors",
+          "value": "470k",
+          "location": null
+        },
+        {
+          "ref": "R4",
+          "category": "Resistors",
+          "value": "15k",
+          "location": null
+        },
+        {
+          "ref": "R15",
+          "category": "Resistors",
+          "value": "15k",
+          "location": null
+        },
+        {
+          "ref": "R10",
+          "category": "Resistors",
+          "value": "15k",
+          "location": null
+        },
+        {
+          "ref": "C5",
+          "category": "Capacitors",
+          "value": "100n",
+          "location": null
+        },
+        {
+          "ref": "C8",
+          "category": "Capacitors",
+          "value": "100n",
+          "location": null
+        },
+        {
+          "ref": "C12",
+          "category": "Capacitors",
+          "value": "100n",
+          "location": null
+        },
+        {
+          "ref": "R5",
+          "category": "Resistors",
+          "value": "100",
+          "location": null
+        },
+        {
+          "ref": "R16",
+          "category": "Resistors",
+          "value": "100",
+          "location": null
+        },
+        {
+          "ref": "R11",
+          "category": "Resistors",
+          "value": "100",
+          "location": null
+        },
+        {
+          "ref": "R6",
+          "category": "Resistors",
+          "value": "1k",
+          "location": null
+        },
+        {
+          "ref": "R20",
+          "category": "Resistors",
+          "value": "390k",
+          "location": null
+        },
+        {
+          "ref": "C10",
+          "category": "Capacitors",
+          "value": "4n",
+          "location": null
+        },
+        {
+          "ref": "R21",
+          "category": "Resistors",
+          "value": "10k",
+          "location": null
+        },
+        {
+          "ref": "C11",
+          "category": "Capacitors",
+          "value": "10n",
+          "location": null
+        },
+        {
+          "ref": "R22",
+          "category": "Resistors",
+          "value": "2.2k",
+          "location": null
+        }
+      ]
+    },
+    {
+      "name": "“Triangle” Big Muff",
+      "parts": [
+        {
+          "ref": "C1",
+          "category": "Capacitors",
+          "value": "100n",
+          "location": null
+        },
+        {
+          "ref": "C3",
+          "category": "Capacitors",
+          "value": "100n",
+          "location": null
+        },
+        {
+          "ref": "C4",
+          "category": "Capacitors",
+          "value": "100n",
+          "location": null
+        },
+        {
+          "ref": "C7",
+          "category": "Capacitors",
+          "value": "100n",
+          "location": null
+        },
+        {
+          "ref": "C12",
+          "category": "Capacitors",
+          "value": "100n",
+          "location": null
+        },
+        {
+          "ref": "C13",
+          "category": "Capacitors",
+          "value": "100n",
+          "location": null
+        },
+        {
+          "ref": "R1",
+          "category": "Resistors",
+          "value": "3.3k",
+          "location": null
+        },
+        {
+          "ref": "R12",
+          "category": "Resistors",
+          "value": "8.2k",
+          "location": null
+        },
+        {
+          "ref": "R7",
+          "category": "Resistors",
+          "value": "8.2k",
+          "location": null
+        },
+        {
+          "ref": "R2",
+          "category": "Resistors",
+          "value": "82k",
+          "location": null
+        },
+        {
+          "ref": "R13",
+          "category": "Resistors",
+          "value": "82k",
+          "location": null
+        },
+        {
+          "ref": "R3",
+          "category": "Resistors",
+          "value": "390k",
+          "location": null
+        },
+        {
+          "ref": "R14",
+          "category": "Resistors",
+          "value": "390k",
+          "location": null
+        },
+        {
+          "ref": "R9",
+          "category": "Resistors",
+          "value": "390k",
+          "location": null
+        },
+        {
+          "ref": "R20",
+          "category": "Resistors",
+          "value": "390k",
+          "location": null
+        },
+        {
+          "ref": "R4",
+          "category": "Resistors",
+          "value": "22k",
+          "location": null
+        },
+        {
+          "ref": "R15",
+          "category": "Resistors",
+          "value": "22k",
+          "location": null
+        },
+        {
+          "ref": "C5",
+          "category": "Capacitors",
+          "value": "50n",
+          "location": null
+        },
+        {
+          "ref": "C8",
+          "category": "Capacitors",
+          "value": "50n",
+          "location": null
+        },
+        {
+          "ref": "R5",
+          "category": "Resistors",
+          "value": "820",
+          "location": null
+        },
+        {
+          "ref": "R16",
+          "category": "Resistors",
+          "value": "820",
+          "location": null
+        },
+        {
+          "ref": "C6",
+          "category": "Capacitors",
+          "value": "560p",
+          "location": null
+        },
+        {
+          "ref": "C9",
+          "category": "Capacitors",
+          "value": "560p",
+          "location": null
+        },
+        {
+          "ref": "R6",
+          "category": "Resistors",
+          "value": "1k",
+          "location": null
+        },
+        {
+          "ref": "R17",
+          "category": "Resistors",
+          "value": "39k",
+          "location": null
+        },
+        {
+          "ref": "R18",
+          "category": "Resistors",
+          "value": "39k",
+          "location": null
+        },
+        {
+          "ref": "R19",
+          "category": "Resistors",
+          "value": "100k",
+          "location": null
+        },
+        {
+          "ref": "C10",
+          "category": "Capacitors",
+          "value": "4n",
+          "location": null
+        },
+        {
+          "ref": "R10",
+          "category": "Resistors",
+          "value": "12k",
+          "location": null
+        },
+        {
+          "ref": "R21",
+          "category": "Resistors",
+          "value": "12k",
+          "location": null
+        },
+        {
+          "ref": "C11",
+          "category": "Capacitors",
+          "value": "10n",
+          "location": null
+        },
+        {
+          "ref": "R11",
+          "category": "Resistors",
+          "value": "150",
+          "location": null
+        },
+        {
+          "ref": "R22",
+          "category": "Resistors",
+          "value": "2.7k",
+          "location": null
+        }
+      ]
+    },
+    {
+      "name": "“Russian Green” Big Muff",
+      "parts": [
+        {
+          "ref": "C1",
+          "category": "Capacitors",
+          "value": "100n",
+          "location": null
+        },
+        {
+          "ref": "C3",
+          "category": "Capacitors",
+          "value": "100n",
+          "location": null
+        },
+        {
+          "ref": "C4",
+          "category": "Capacitors",
+          "value": "100n",
+          "location": null
+        },
+        {
+          "ref": "C7",
+          "category": "Capacitors",
+          "value": "100n",
+          "location": null
+        },
+        {
+          "ref": "C12",
+          "category": "Capacitors",
+          "value": "100n",
+          "location": null
+        },
+        {
+          "ref": "C13",
+          "category": "Capacitors",
+          "value": "100n",
+          "location": null
+        },
+        {
+          "ref": "R1",
+          "category": "Resistors",
+          "value": "39k",
+          "location": null
+        },
+        {
+          "ref": "R12",
+          "category": "Resistors",
+          "value": "10k",
+          "location": null
+        },
+        {
+          "ref": "R7",
+          "category": "Resistors",
+          "value": "10k",
+          "location": null
+        },
+        {
+          "ref": "R21",
+          "category": "Resistors",
+          "value": "10k",
+          "location": null
+        },
+        {
+          "ref": "C2",
+          "category": "Capacitors",
+          "value": "470p",
+          "location": null
+        },
+        {
+          "ref": "C6",
+          "category": "Capacitors",
+          "value": "470p",
+          "location": null
+        },
+        {
+          "ref": "C9",
+          "category": "Capacitors",
+          "value": "470p",
+          "location": null
+        },
+        {
+          "ref": "R2",
+          "category": "Resistors",
+          "value": "100k",
+          "location": null
+        },
+        {
+          "ref": "R13",
+          "category": "Resistors",
+          "value": "100k",
+          "location": null
+        },
+        {
+          "ref": "R8",
+          "category": "Resistors",
+          "value": "100k",
+          "location": null
+        },
+        {
+          "ref": "R19",
+          "category": "Resistors",
+          "value": "100k",
+          "location": null
+        },
+        {
+          "ref": "R3",
+          "category": "Resistors",
+          "value": "470k",
+          "location": null
+        },
+        {
+          "ref": "R14",
+          "category": "Resistors",
+          "value": "470k",
+          "location": null
+        },
+        {
+          "ref": "R9",
+          "category": "Resistors",
+          "value": "470k",
+          "location": null
+        },
+        {
+          "ref": "R20",
+          "category": "Resistors",
+          "value": "470k",
+          "location": null
+        },
+        {
+          "ref": "R4",
+          "category": "Resistors",
+          "value": "12k",
+          "location": null
+        },
+        {
+          "ref": "R15",
+          "category": "Resistors",
+          "value": "12k",
+          "location": null
+        },
+        {
+          "ref": "R10",
+          "category": "Resistors",
+          "value": "12k",
+          "location": null
+        },
+        {
+          "ref": "C5",
+          "category": "Capacitors",
+          "value": "47n",
+          "location": null
+        },
+        {
+          "ref": "C8",
+          "category": "Capacitors",
+          "value": "47n",
+          "location": null
+        },
+        {
+          "ref": "R5",
+          "category": "Resistors",
+          "value": "390",
+          "location": null
+        },
+        {
+          "ref": "R16",
+          "category": "Resistors",
+          "value": "390",
+          "location": null
+        },
+        {
+          "ref": "R11",
+          "category": "Resistors",
+          "value": "390",
+          "location": null
+        },
+        {
+          "ref": "R6",
+          "category": "Resistors",
+          "value": "1k",
+          "location": null
+        },
+        {
+          "ref": "R17",
+          "category": "Resistors",
+          "value": "20k",
+          "location": null
+        },
+        {
+          "ref": "R18",
+          "category": "Resistors",
+          "value": "22k",
+          "location": null
+        },
+        {
+          "ref": "C10",
+          "category": "Capacitors",
+          "value": "3.9n",
+          "location": null
+        },
+        {
+          "ref": "C11",
+          "category": "Capacitors",
+          "value": "10n",
+          "location": null
+        },
+        {
+          "ref": "R22",
+          "category": "Resistors",
+          "value": "2k",
+          "location": null
+        }
+      ]
+    }
+  ]
+}

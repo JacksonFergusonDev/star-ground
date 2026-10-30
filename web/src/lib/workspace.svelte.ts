@@ -11,14 +11,15 @@ type Source =
   | { kind: 'paste'; text: string }
   | { kind: 'preset'; key: string }
   | { kind: 'upload'; fileName: string }
-  | { kind: 'url'; url: string };
+  /** A link; `catalog` names the catalog build it was added from ('<publisher>/<name>'). */
+  | { kind: 'url'; url: string; catalog?: string };
 
 /** A project as the builder adds it, before it becomes a card. */
 export type Added =
   | { kind: 'paste'; name: string; text: string }
   | { kind: 'preset'; key: string }
   | { kind: 'upload'; file: File }
-  | { kind: 'url'; url: string };
+  | { kind: 'url'; url: string; name?: string; catalog?: string };
 
 /** Reading an upload or link: under way, waiting for OCR, done, or failed. */
 export type ReadState =

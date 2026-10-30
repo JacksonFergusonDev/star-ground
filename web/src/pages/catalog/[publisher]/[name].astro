@@ -1,0 +1,180 @@
+---
+// One build document in the catalog: its parts as Star Ground read them,
+// whether someone checked that reading by hand, and the way to the
+// publisher's own page and document.
+import type { GetStaticPaths } from 'astro';
+import { getCollection } from 'astro:content';
+import Icon from 'house-style/astro/Icon.astro';
+import Base from '../../../layouts/Base.astro';
+import type { CatalogEntry } from '../../../lib/catalog';
+import { partCount, publisherLink, publishers } from '../../../lib/catalog';
+
+export const getStaticPaths = (async () => {
+  const entries = await getCollection('catalog');
+  return entries.map((entry) => {
+    const [publisher, name] = entry.id.split('/');
+    return { params: { publisher, name }, props: { entry } };
+  });
+}) satisfies GetStaticPaths;
+
+const { entry } = Astro.props as { entry: CatalogEntry };
+const { data } = entry;
+const publisher = publishers[data.publisher];
+const checked = new Date(data.checked).toLocaleDateString('en', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+  timeZone: 'UTC',
+});
+const several = data.builds.length > 1;
+---
+
+<Base
+  title={`${data.title} (${publisher})`}
+  description={`The parts list of ${publisher}'s ${data.title} build document, ${partCount(entry)} parts, ready to add to a Star Ground shopping list.`}
+  noindex
+>
+  <article class="section build" aria-labelledby="build-title">
+    <p class="crumb">
+      <a class="text-link" href="/catalog/">
+        <Icon name="arrow-left" size={16} /> Circuit catalog
+      </a>
+    </p>
+    <p class="eyebrow">{publisher}</p>
+    <h1 id="build-title">{data.title}</h1>
+
+    <p class:list={['mark', { verified: data.verified }]}>
+      {data.verified
+        ? 'Verified: checked by hand against this document.'
+        : 'Unverified: read automatically, and not yet checked by hand.'}
+    </p>
+
+    <div class="actions">
+      <a
+        class="hs-button hs-button--primary"
+        href={`/app/?catalog=${encodeURIComponent(entry.id)}`}
+      >
+        Add to build <Icon name="arrow-right" size={16} />
+      </a>
+      <a class="text-link" href={data.page}>
+        {publisherLink(entry)} <Icon name="arrow-up-right" size={16} />
+      </a>
+      <a class="text-link" href={data.document}>
+        The build document <Icon name="arrow-up-right" size={16} />
+      </a>
+    </div>
+
+    <p class="note">
+      Read from {publisher}'s <code>{data.file_name}</code>, last checked on {checked}.{' '}
+      {data.read_by_ocr ? 'Its parts list is an image, so it was read by OCR. ' : ''}Adding it reads
+      the document again, so you can check each part against it.
+    </p>
+
+    {several && (
+      <p class="note">
+        This document describes {data.builds.length} builds. You choose the one you're building once
+        it's added.
+      </p>
+    )}
+
+    {data.builds.map((build, index) => (
+      <section class="parts" aria-labelledby={`build-${index}`}>
+        <h2 id={`build-${index}`}>{build.name ?? 'Parts'}</h2>
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Part</th>
+              <th scope="col">Value</th>
+              <th scope="col">Kind</th>
+            </tr>
+          </thead>
+          <tbody>
+            {build.parts.map((part) => (
+              <tr>
+                <th scope="row">{part.ref}</th>
+                <td>{part.value}</td>
+                <td>{part.category}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
+    ))}
+  </article>
+</Base>
+
+<style>
+  .build {
+    max-width: 760px;
+  }
+  .crumb {
+    margin: 0 0 40px;
+  }
+  .eyebrow {
+    margin: 0 0 12px;
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: var(--fs-label);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  h1 {
+    margin: 0 0 20px;
+    font-size: var(--fs-h2);
+    font-weight: 500;
+    letter-spacing: -1.6px;
+    line-height: 1.2;
+    text-wrap: balance;
+  }
+  .mark {
+    margin: 0;
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: var(--fs-label);
+    letter-spacing: 0.04em;
+  }
+  .mark.verified {
+    color: var(--accent);
+  }
+  .note code {
+    overflow-wrap: anywhere;
+  }
+  .parts {
+    margin-top: 56px;
+  }
+  .parts h2 {
+    font-size: var(--fs-h4);
+    letter-spacing: 0;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--fs-ui);
+  }
+  th,
+  td {
+    padding: 8px 12px 8px 0;
+    border-bottom: 1px solid var(--line);
+    text-align: left;
+    vertical-align: top;
+  }
+  thead th {
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: var(--fs-label);
+    font-weight: 400;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  tbody th {
+    font-family: var(--mono);
+    font-weight: 400;
+  }
+  td:nth-child(2) {
+    font-family: var(--mono);
+    overflow-wrap: anywhere;
+  }
+  td:last-child {
+    color: var(--muted);
+  }
+</style>
