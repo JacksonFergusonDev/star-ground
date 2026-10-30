@@ -20,7 +20,7 @@ on:
         default: all
         options: [all, pedalpcb, guitarpcb, tonepad, fivecats]
       minutes:
-        description: Minutes for reading documents (the job stops at 6 hours)
+        description: Minutes for finding and reading, shared across publishers (the job stops at 6 hours)
         type: number
         default: 300
       pages:
@@ -42,6 +42,8 @@ concurrency:
 
 env:
   UV_LOCKED: "1"
+  # `uv run` would otherwise sync the default groups again (the dev tools).
+  UV_NO_SYNC: "1"
   BRANCH: catalog/nightly
 
 jobs:
@@ -90,7 +92,7 @@ jobs:
           PAGES: ${{ inputs.pages }}
           DOCUMENTS: ${{ inputs.documents }}
         run: |
-          args=(--out catalog --minutes "$MINUTES")
+          args=(--out catalog --minutes "$MINUTES" --summary "$RUNNER_TEMP/summary.md")
           [ "$PUBLISHER" != all ] && args+=(--publisher "$PUBLISHER")
           [ -n "$PAGES" ] && args+=(--pages "$PAGES")
           [ -n "$DOCUMENTS" ] && args+=(--documents "$DOCUMENTS")
@@ -118,12 +120,14 @@ jobs:
           git push --force origin "HEAD:refs/heads/$BRANCH"
 
           # The run's summary is the review: what was listed, what changed
-          # and what was left out. A pull request body holds 65,536 characters.
+          # and what was left out. Each step has its own GITHUB_STEP_SUMMARY,
+          # so the job also wrote it to a file. A pull request body holds
+          # 65,536 characters.
           {
             echo "The catalog job's proposed changes. Review the documents marked"
             echo "updated before merging. Run: $RUN_URL"
             echo
-            head -c 60000 "$GITHUB_STEP_SUMMARY"
+            head -c 60000 "$RUNNER_TEMP/summary.md" 2>/dev/null || echo "_The job wrote no summary._"
             echo
             echo
             echo "_The full summary, if cut short here, is on the run's page._"

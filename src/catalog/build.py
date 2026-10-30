@@ -40,7 +40,13 @@ from src.catalog.client import (
 from src.catalog.discover import Listing, PageState, discover
 from src.catalog.report import Event, Outcome, Reporter
 from src.catalog.sources import Source
-from src.catalog.verified import Verification, VerifiedList, builds, fingerprint
+from src.catalog.verified import (
+    Verification,
+    VerifiedList,
+    builds,
+    document_hash,
+    fingerprint,
+)
 
 # Self-check warnings that describe the document rather than a doubtful
 # reading: the builder's choice of a value, a footnote to read.
@@ -56,7 +62,7 @@ class DocumentState:
     """A document as the last run that fetched it left it.
 
     Attributes:
-        sha256: Its hash, if it was read.
+        sha256: Its `verified.document_hash`, if it was read.
         etag: Its `ETag`, to ask whether it changed.
         last_modified: Its `Last-Modified`, likewise.
         checked: When it was last asked about (ISO 8601).
@@ -96,6 +102,7 @@ class State:
                 url: PageState(
                     page["lastmod"],
                     tuple(Listing(**listing) for listing in page["listings"]),
+                    page.get("read", ""),
                 )
                 for url, page in raw["pages"].items()
             },
@@ -275,24 +282,24 @@ def build(
                 path.write_text(json.dumps(data, indent=1) + "\n")
 
     with reporter.section(f"{publisher}: finding build documents"):
-        found = discover(client, source, state.pages, page_limit)
+        found = discover(client, source, state.pages, page_limit, budget.spent)
         for page, reason in sorted(found.failures.items()):
             reporter.page_failed(publisher, page, reason)
         reporter.info(
             f"{len(found.listings)} build documents linked from {len(found.pages)} pages "
             f"({len(found.failures)} pages not read)"
         )
-        state.pages = (
-            found.pages if page_limit is None else {**state.pages, **found.pages}
-        )
+        whole = page_limit is None and found.complete
+        state.pages = found.pages if whole else {**state.pages, **found.pages}
 
     def record(listing_url: str, document: DocumentState, event: Event) -> None:
         state.documents[listing_url] = document
         state.save(state_path)
         reporter.outcome(event)
 
-    # A sample run doesn't see every page, so it removes nothing.
-    if page_limit is None:
+    # A sample, or a run out of time, doesn't see every page, so it can't
+    # tell what's gone: it removes nothing.
+    if page_limit is None and found.complete:
         with reporter.section(f"{publisher}: documents no longer linked"):
             gone = [url for url in state.documents if url not in found.listings]
             for url in gone:
@@ -409,7 +416,7 @@ def build(
                     _unchanged(publisher, url, previous, "304 Not Modified", kept),
                 )
                 continue
-            digest = sha256(fetched.content).hexdigest()
+            digest = document_hash(fetched.content)
             fetched_state = replace(
                 previous,
                 sha256=digest,

@@ -7,8 +7,9 @@ taken from the last run (`PageState`).
 """
 
 import logging
-from collections.abc import Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass, field
+from datetime import UTC, datetime
 from html.parser import HTMLParser
 from pathlib import PurePosixPath
 from urllib.parse import parse_qs, unquote, urljoin, urlsplit, urlunsplit
@@ -43,10 +44,13 @@ class PageState:
     Attributes:
         lastmod: The sitemap's `<lastmod>` for it then, if it gave one.
         listings: The documents it linked.
+        read: When it was last fetched (ISO 8601), so the pages read longest
+            ago go first when a run's time is short.
     """
 
     lastmod: str | None
     listings: tuple[Listing, ...]
+    read: str = ""
 
 
 @dataclass(slots=True)
@@ -57,11 +61,14 @@ class Discovery:
         listings: Every document found, each once, by URL.
         pages: Each listing page's state, for the next run.
         failures: Pages that couldn't be read, and why.
+        complete: Whether every listing page was considered; a run out of
+            time leaves the rest for the next, so it can't tell what's gone.
     """
 
     listings: dict[str, Listing] = field(default_factory=dict)
     pages: dict[str, PageState] = field(default_factory=dict)
     failures: dict[str, str] = field(default_factory=dict)
+    complete: bool = True
 
 
 @dataclass(frozen=True, slots=True)
@@ -254,6 +261,7 @@ def discover(
     source: Source,
     known: Mapping[str, PageState] | None = None,
     limit: int | None = None,
+    spent: Callable[[], bool] = lambda: False,
 ) -> Discovery:
     """Finds a publisher's build documents.
 
@@ -263,6 +271,8 @@ def discover(
         known: Each page as the last run read it; a product page whose
             `<lastmod>` hasn't changed isn't fetched again.
         limit: Read at most this many listing pages (a sample).
+        spent: Whether the run's time is spent; the pages left keep what
+            the last run found on them, and wait for the next run.
 
     Returns:
         The documents found, each page's state, and pages that failed.
@@ -277,7 +287,12 @@ def discover(
     else:
         pages = {}
     pages.update({p.url: None for p in source.document_pages})
-    ordered = sorted(pages.items())
+    # Pages never read, then those read longest ago, so a run out of time
+    # carries on where the last one stopped.
+    ordered = sorted(
+        pages.items(),
+        key=lambda item: (known[item[0]].read if item[0] in known else "", item[0]),
+    )
     # A sample takes pages spread across the list: the first few alone can be
     # parts and kits with no documents (PedalPCB's are capacitors).
     chosen = (
@@ -296,6 +311,19 @@ def discover(
     )
     for number, (page, lastmod) in enumerate(chosen, 1):
         before = known.get(page)
+        if spent():
+            result.complete = False
+            left = chosen[number - 1 :]
+            logger.warning(
+                "Time budget spent: %d listing pages left for the next run",
+                len(left),
+            )
+            for later, _ in left:
+                if later in known:
+                    result.pages[later] = known[later]
+                    for listing in known[later].listings:
+                        result.listings.setdefault(listing.document, listing)
+            break
         if before and lastmod and before.lastmod == lastmod:
             logger.info(
                 "[%d/%d] %s unchanged since %s; %d documents as before",
@@ -323,7 +351,11 @@ def discover(
                 if source.file_index
                 else pdf_links(page, html, source)
             )
-            state = PageState(lastmod, tuple(links))
+            state = PageState(
+                lastmod,
+                tuple(links),
+                datetime.now(UTC).isoformat(timespec="seconds"),
+            )
             logger.info(
                 "[%d/%d] %s: %d build documents",
                 number,
