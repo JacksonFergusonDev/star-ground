@@ -104,7 +104,7 @@ def main(argv: list[str] | None = None) -> int:
             )
             reporter.tally.page_failures.setdefault(publisher, {})["(run)"] = str(error)
     reporter.info(
-        f"{client.requests} requests in {(time.monotonic() - started) / 60:.1f} minutes"
+        f"{client.request_count} requests in {(time.monotonic() - started) / 60:.1f} minutes"
     )
     reporter.summary()
     events = reporter.tally.events

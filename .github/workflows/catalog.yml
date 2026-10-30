@@ -99,17 +99,17 @@ jobs:
           PAGES: ${{ inputs.pages }}
           DOCUMENTS: ${{ inputs.documents }}
         run: |
-          mkdir -p "$RUNNER_TEMP/out"
+          mkdir -p "$RUNNER_TEMP/out/summaries"
           args=(--publisher "$PUBLISHER" --out catalog --minutes "$MINUTES"
-            --summary "$RUNNER_TEMP/out/summary.md")
+            --summary "$RUNNER_TEMP/out/summaries/$PUBLISHER.md")
           [ -n "$PAGES" ] && args+=(--pages "$PAGES")
           [ -n "$DOCUMENTS" ] && args+=(--documents "$DOCUMENTS")
           set +e
           uv run python -m src.catalog "${args[@]}"
           echo "status=$?" >> "$GITHUB_OUTPUT"
 
-      # Only this publisher's files: the jobs write apart, so gathering them
-      # can't clash.
+      # Only this publisher's files, each named by the publisher: the jobs'
+      # artifacts merge into one folder without clashing.
       - name: Keep this publisher's results
         if: ${{ !cancelled() }}
         run: |
@@ -167,32 +167,41 @@ jobs:
             done
           fi
 
+      # Merged into one folder: a single artifact would otherwise be unpacked
+      # without the folder that several get, and each file names its publisher.
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           pattern: catalog-*
           path: ${{ runner.temp }}/results
+          merge-multiple: true
 
       - name: Gather the publishers' results
         run: |
+          results="$RUNNER_TEMP/results"
           : > "$RUNNER_TEMP/summary.md"
-          for result in "$RUNNER_TEMP"/results/catalog-*/; do
-            publisher=$(basename "$result")
-            publisher=${publisher#catalog-}
-            if [ -f "$result/state/$publisher.json" ]; then
-              rm -rf "catalog/builds/$publisher"
-              mkdir -p catalog/builds catalog/state
-              if [ -d "$result/builds/$publisher" ]; then
-                cp -R "$result/builds/$publisher" catalog/builds/
-              fi
-              cp "$result/state/$publisher.json" catalog/state/
+          shopt -s nullglob
+          for state in "$results"/state/*.json; do
+            publisher=$(basename "$state" .json)
+            rm -rf "catalog/builds/$publisher"
+            mkdir -p catalog/builds catalog/state
+            if [ -d "$results/builds/$publisher" ]; then
+              cp -R "$results/builds/$publisher" catalog/builds/
             fi
-            if [ -f "$result/summary.md" ]; then
-              { echo "## $publisher"; tail -n +2 "$result/summary.md"; echo; } >> "$RUNNER_TEMP/summary.md"
-            else
-              echo "## $publisher" >> "$RUNNER_TEMP/summary.md"
-              echo "_Its job wrote no summary: see its log._" >> "$RUNNER_TEMP/summary.md"
+            cp "$state" catalog/state/
+            echo "Gathered $publisher's results."
+          done
+          for publisher in pedalpcb guitarpcb tonepad fivecats; do
+            summary="$results/summaries/$publisher.md"
+            if [ -f "$summary" ]; then
+              { echo "## $publisher"; tail -n +2 "$summary"; echo; } >> "$RUNNER_TEMP/summary.md"
+            elif [ -f "$results/state/$publisher.json" ]; then
+              { echo "## $publisher"; echo "_Its job wrote no summary: see its log._"; echo; } >> "$RUNNER_TEMP/summary.md"
             fi
           done
+          if [ ! -s "$RUNNER_TEMP/summary.md" ]; then
+            echo "::error title=Catalog::No publisher's job left results to gather."
+            exit 1
+          fi
           cat "$RUNNER_TEMP/summary.md" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Open or update the pull request

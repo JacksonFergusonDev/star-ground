@@ -157,6 +157,17 @@ def test_requests_to_a_site_are_spaced_by_its_crawl_delay() -> None:
     assert all(s >= 30 for s in clock.slept)
 
 
+def test_a_companion_client_s_requests_are_counted() -> None:
+    web = _Web({"https://a.test/1": _Response(), "https://b.test/1": _Response()})
+    client = _client(web)
+
+    client.get("https://a.test/1")
+    client.alongside().get("https://b.test/1")
+
+    # Each host's robots.txt, then its page.
+    assert client.request_count == 4
+
+
 def test_requests_wait_at_least_the_minimum() -> None:
     web = _Web({"https://a.test/1": _Response()})
     clock = _Clock()

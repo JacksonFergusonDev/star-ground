@@ -138,7 +138,13 @@ class PoliteClient:
         self._last: dict[str, float] = {}
         self._blocked: set[str] = set()
         self._delay = delay
-        self.requests = 0
+        self._requests = 0
+        self._companions: list[PoliteClient] = []
+
+    @property
+    def request_count(self) -> int:
+        """How many requests this client and its companions have made."""
+        return self._requests + sum(c.request_count for c in self._companions)
 
     def alongside(self) -> PoliteClient:
         """A client for another thread: the same session, waits and spacing.
@@ -147,7 +153,9 @@ class PoliteClient:
         other hosts than this client's (PedalPCB's pages beside its
         documents). Sharing the session keeps a test's fake web in use.
         """
-        return PoliteClient(self._session, self._sleep, self._clock, self._delay)
+        companion = PoliteClient(self._session, self._sleep, self._clock, self._delay)
+        self._companions.append(companion)
+        return companion
 
     def _wait(self, host: str, delay: float) -> None:
         last = self._last.get(host)
@@ -180,7 +188,7 @@ class PoliteClient:
             )
         for attempt in range(RETRIES + 1):
             self._wait(host, delay)
-            self.requests += 1
+            self._requests += 1
             logger.debug("GET %s", url)
             try:
                 response = self._session.get(
