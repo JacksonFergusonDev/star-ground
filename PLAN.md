@@ -47,9 +47,9 @@ Decided 2026-10-22 to 2026-10-24. A decision here changes only by editing this f
 Star Ground stores only what it derives from a document, never the document itself:
 
 - **Stored:** the publisher's URL, title, publisher, content hash, parsed parts list, and part positions.
-- **Fetched on demand:** when a user opens a catalog build, the API fetches the PDF from the publisher (as "From URL" does today) and the browser draws it. Nothing is kept.
+- **Fetched on demand:** when a user opens a catalog build, the API fetches the PDF from the publisher (as "From URL" does today) and the browser draws it. Nothing is kept. The browser hashes the PDF it draws: if the publisher has changed it since the catalog was built, the build's stored part positions aren't drawn over it (see step 7).
 - **Build pack:** includes the source PDF only when the user uploaded it or it was fetched for them in that session; otherwise a link to the publisher's page.
-- **Nightly check:** a workflow re-checks every catalog URL. A dead link hides the build; a changed hash triggers a re-parse and flags the build for review. Requests are conditional and spread out.
+- **Nightly check:** a workflow re-checks every catalog URL. A dead link hides the build; a changed hash triggers a re-parse, recomputes its part positions, and flags the build for review. Requests are conditional (`ETag`, `Last-Modified`) and spread out.
 - **Good for publishers:** each catalog page links prominently to buy the PCB from its publisher, and the catalog and footer carry a contact note: "Are you a publisher? Let me know if you'd rather your documents weren't listed."
 - **No copies in git.** The repository and its history hold no publisher PDFs (step 1).
 
@@ -153,14 +153,32 @@ The core of v1, replacing the form.
 
 Probed on 2026-10-24: board renders in PedalPCB, GuitarPCB and Tonepad documents are embedded images with bounding boxes, and Aion's schematics are vector with real text. OCR of cropped board images found 14 designators in 0.5 to 2.2 s; it misses labels rotated 90°.
 
-1. Backend: find the layout and schematic regions (largest embedded image on a layout page; vector text where present), and each designator's position (text positions, or OCR at 0° and 90°).
+**Cost, measured 2026-10-29** (`tools/measure_board_ocr.py`, 10 tuning documents per publisher, on the M3). Each distinct embedded image covering at least 8% of its page was read at 200 dpi, upright and then turned 90°:
+
+| Publisher | Images per document | In the text layer | Found by OCR, upright | With the turned pass | CPU-s, upright | CPU-s, both passes |
+| --- | --- | --- | --- | --- | --- | --- |
+| PedalPCB | 6 | 11% | 89% | 98% | 13.2 (17.8 max) | 25.4 (37.1 max) |
+| GuitarPCB | 4 | 15% | 72% | 81% | 8.3 (38.6 max) | 16.1 (76.3 max) |
+| Five Cats | 2 | 0% | 100% | 100% | 14.6 (293 max) | 27.5 (546 max) |
+| Aion FX | 0 | 48% | | | 0 | 0 |
+| Tonepad | 0 | 53% | | | 0 | 0 |
+
+- "In the text layer" counts listed designators printed more than once (an upper bound on what's free). Aion's and Tonepad's boards and schematics are vector drawings, but about half their labels are drawn as shapes, not text.
+- The turned pass is needed: it found 6 to 10 more designators per board image. Re-reading only near-square boxes turned both ways (short sideways labels; RapidOCR already turns taller ones) found fewer and cost about as much, because recognizing hundreds of boxes, not detecting them, is most of the time.
+- A quarter of the images (56 of 206) held no designators: drilling and wiring guides, photos. Five Cats' longest document has 62 images.
+- Parts-list OCR measured 16 CPU-s on the M3 and 20 to 100 vCPU-s on Cloud Run, so a PedalPCB document's 25 CPU-s here is about 30 to 150 vCPU-s there: as much as its parts-list OCR. Offered on request, it would share OCR's hourly allowance with the parts lists that need it; hence catalog only. In GitHub Actions the cost is free minutes, and reading only the largest few images per document would still shorten the job.
+
+**Only catalog documents are highlighted** (decided 2026-10-29). Highlighting is a nice-to-have, and the cost below makes OCR for it a poor use of the API's compute, so the API never computes board positions. Step 8's offline catalog job computes them, and this step lands with it.
+
+1. The catalog job finds each document's layout and schematic regions (embedded images; vector text where present) and each designator's position (text positions, or OCR at 0° and 90°). It runs in GitHub Actions, never on Cloud Run.
 1. Hovering a part lights it up on the board or schematic, and hovering the board highlights the row. Unplaced parts simply don't light up.
-1. Catalog documents get positions precomputed offline; uploads compute them on request.
+1. An upload or link whose content hash matches a catalog build uses that build's positions. Any other document has no board view: no OCR, and no partial highlighting from a text layer that holds only half the labels (Aion FX, Tonepad).
+1. Positions belong to a content hash. The browser hashes the PDF it draws and compares it with the catalog's; on a mismatch it shows the document without highlighting and says the publisher has updated it since. Stale boxes on a changed layout would point at the wrong parts. The nightly check (step 8) recomputes them within a day.
 1. Only if heuristics fail for a publisher: a small pre-trained layout model on onnxruntime (for example, RapidLayout). No training.
 
 ### 8. Circuit catalog
 
-1. An offline job builds catalog data from publisher URLs: title, publisher, buy link, hash, parsed parts, positions. Only documents the parser reads cleanly are listed.
+1. An offline job, in GitHub Actions, builds catalog data from publisher URLs: title, publisher, buy link, hash, parsed parts, part positions in the parts list, and board and schematic positions (step 7). Only documents the parser reads cleanly are listed.
 1. A static Astro page per build, with search and filters, "Add to build", the publisher's buy link and the publisher contact note.
 1. The nightly check workflow (see [Publishers' documents](#publishers-documents)).
 
@@ -202,7 +220,7 @@ Probed on 2026-10-24: board renders in PedalPCB, GuitarPCB and Tonepad documents
 | 4. Walking skeleton | Done 2026-10-28: v2.5.0 deployed to Cloud Run and Pages; measurements recorded; OCR thread pinning is a follow-up | #213 |
 | 5. Build workspace | Done 2026-10-28: project cards, the live master list, build choice, the OCR offer, stock, every export and browser storage. Feedback moves to step 6's part reports, and the catalog as a source to step 8 | #216, #218 |
 | 6. Document review | Done 2026-10-29: part locations, the document viewer, confirm or correct in place, and part reports | #222, this PR |
-| 7. PCB highlighting | Not started | |
+| 7. PCB highlighting | Not started: cost measured 2026-10-29; catalog documents only, so it lands with step 8 | this PR |
 | 8. Circuit catalog | Not started | |
 | 9. Bench mode | Not started | |
 | 10. Share links | Not started | |
