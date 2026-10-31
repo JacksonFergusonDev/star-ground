@@ -309,7 +309,8 @@
               onCount={(count) => workspace.setCount(card, count)}
               onRemove={() => workspace.remove(card.id)}
               onRead={(ocr) => read(card.id, ocr)}
-              onReview={reviewable(card) && projectOf(card.id)?.parts.length
+              onReview={reviewable(card) &&
+              (projectOf(card.id)?.parts.length || projectOf(card.id)?.counted.length)
                 ? () => review(card.id)
                 : null}
               onBench={projectOf(card.id)?.build_order.length ? () => (benching = card.id) : null}

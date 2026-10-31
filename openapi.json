@@ -666,13 +666,22 @@
             "type": "array",
             "title": "Refs",
             "description": "Its designators, in the order read."
+          },
+          "counted": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Counted",
+            "description": "The keys of its parts counted by value, in the order read."
           }
         },
         "additionalProperties": false,
         "type": "object",
         "required": [
           "stage",
-          "refs"
+          "refs",
+          "counted"
         ],
         "title": "BuildStep",
         "description": "One stage of soldering a project, lowest parts first."
@@ -708,6 +717,37 @@
         ],
         "title": "ComponentOrigin",
         "description": "Purchasing origins for bill-of-materials components."
+      },
+      "CountedPartOut": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key",
+            "description": "What names it where a designator would: '#Resistors 47'."
+          },
+          "category": {
+            "$ref": "#/components/schemas/ComponentCategory"
+          },
+          "value": {
+            "type": "string",
+            "title": "Value"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count",
+            "description": "How many the parts list counts."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "key",
+          "category",
+          "value",
+          "count"
+        ],
+        "title": "CountedPartOut",
+        "description": "A part a project's parts list counts by value, with no designator.\n\nTonepad lists most of a build this way ('2 - 47'). It has no place on the\npage, since the document prints no designator for it."
       },
       "DocumentsMissing": {
         "properties": {
@@ -1235,13 +1275,21 @@
             "title": "Parts",
             "description": "Each designator read, in the order read, to check against the document."
           },
+          "counted": {
+            "items": {
+              "$ref": "#/components/schemas/CountedPartOut"
+            },
+            "type": "array",
+            "title": "Counted",
+            "description": "Each part counted by value instead, in the order read."
+          },
           "build_order": {
             "items": {
               "$ref": "#/components/schemas/BuildStep"
             },
             "type": "array",
             "title": "Build Order",
-            "description": "Its designators by the stage they're soldered in, lowest parts first, as the field manual orders them."
+            "description": "Its parts by the stage they're soldered in, lowest parts first, as the field manual orders them."
           }
         },
         "additionalProperties": false,
@@ -1254,6 +1302,7 @@
           "options",
           "errors",
           "parts",
+          "counted",
           "build_order"
         ],
         "title": "ProjectResult",

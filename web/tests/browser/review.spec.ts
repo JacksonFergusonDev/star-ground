@@ -72,7 +72,8 @@ const project = (over: Partial<ProjectResult> = {}): ProjectResult => ({
       location: { page: 0, x0: 72, top: 400, x1: 120, bottom: 410 },
     },
   ],
-  build_order: [{ stage: 'Resistors', refs: ['R1', 'R2'] }],
+  counted: [],
+  build_order: [{ stage: 'Resistors', refs: ['R1', 'R2'], counted: [] }],
   ...over,
 });
 
@@ -328,6 +329,50 @@ test('bench mode places parts in build order from the keyboard, and keeps them',
   await expect(page.getByText('All 2 parts placed.')).toBeVisible();
   await page.getByRole('button', { name: 'Start over' }).click();
   await expect(page.getByText('0 of 2 parts placed.')).toBeVisible();
+});
+
+test('parts counted by value are checked and placed with the rest', async ({ page }) => {
+  // Tonepad's Rat: 'IC1 LM308', then rows such as '2 - 47' with no designator.
+  const tonepad = project({
+    reviews: [],
+    parts: [{ ref: 'IC1', category: 'ICs', value: 'LM308', location: null }],
+    counted: [
+      { key: '#Resistors 47', category: 'Resistors', value: '47', count: 2 },
+      { key: '#Capacitors 100n', category: 'Capacitors', value: '100n', count: 3 },
+    ],
+    build_order: [
+      { stage: 'Resistors', refs: [], counted: ['#Resistors 47'] },
+      { stage: 'Small capacitors', refs: [], counted: ['#Capacitors 100n'] },
+      { stage: 'Chips', refs: ['IC1'], counted: [] },
+    ],
+  });
+  await page.route('**/api/master-list', (route) => route.fulfill({ json: listOf(tonepad) }));
+  await upload(page);
+
+  await page.getByRole('button', { name: 'Check the parts against the document' }).click();
+  const counted = page.getByRole('list', { name: 'Counted by value' });
+  await expect(counted.locator('li')).toHaveText([/2 ×\s*47/, /3 ×\s*100n/]);
+  await expect(page.getByText('0 of 6 parts checked.')).toBeVisible();
+  await expect(row(page, '#Resistors 47').getByRole('button', { name: 'Wrong?' })).toHaveCount(0);
+  await row(page, '#Resistors 47').getByRole('button', { name: 'Looks right' }).click();
+  await expect(page.getByText('2 of 6 parts checked.')).toBeVisible();
+
+  await page.getByRole('button', { name: 'Back to the workspace' }).click();
+  await page.getByRole('button', { name: 'Build it, part by part' }).click();
+  await expect(page.getByText('0 of 6 parts placed.')).toBeVisible();
+  const order = await page
+    .locator('li[data-ref]')
+    .evaluateAll((rows) => rows.map((r) => r.getAttribute('data-ref')));
+  expect(order).toEqual(['#Resistors 47', '#Capacitors 100n', 'IC1']);
+  await expect(row(page, '#Resistors 47')).toHaveAttribute('aria-current', 'step');
+
+  // A counted row is placed all at once.
+  await page.locator('body').press('Space');
+  await expect(page.getByText('2 of 6 parts placed.')).toBeVisible();
+  await expect(row(page, '#Capacitors 100n')).toHaveAttribute('aria-current', 'step');
+  await page.reload();
+  await page.getByRole('button', { name: 'Build it, part by part' }).click();
+  await expect(row(page, '#Resistors 47').getByRole('checkbox')).toBeChecked();
 });
 
 test("a catalog document's board lights up the part at hand, and the other way round", async ({

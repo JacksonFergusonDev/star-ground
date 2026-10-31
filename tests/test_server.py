@@ -19,11 +19,16 @@ from pytest_mock import MockerFixture
 from src.api import read_document
 from src.bom_lib import (
     BOM_PRESETS,
+    BOMParserContext,
+    ComponentCategory,
     FeedbackRating,
     FileUpload,
     InputMethod,
     Location,
     ParseResult,
+    create_empty_inventory,
+    create_empty_stats,
+    make_component_key,
 )
 from src.bom_lib.errors import BUG_MESSAGE, ErrorKind, OcrRefusedError
 from src.bom_lib.ocr import ocr_guard
@@ -222,10 +227,50 @@ def test_each_project_gives_its_build_order(client: TestClient) -> None:
 
     (project,) = response.json()["projects"]
     assert project["build_order"] == [
-        {"stage": "Resistors", "refs": ["R1", "R2"]},
-        {"stage": "Small capacitors", "refs": ["C1"]},
-        {"stage": "Electrolytic capacitors", "refs": ["C2"]},
-        {"stage": "Chips", "refs": ["IC1"]},
+        {"stage": "Resistors", "refs": ["R1", "R2"], "counted": []},
+        {"stage": "Small capacitors", "refs": ["C1"], "counted": []},
+        {"stage": "Electrolytic capacitors", "refs": ["C2"], "counted": []},
+        {"stage": "Chips", "refs": ["IC1"], "counted": []},
+    ]
+
+
+def test_parts_counted_by_value_are_listed_and_ordered(
+    client: TestClient, mocker: MockerFixture
+) -> None:
+    # Tonepad's Rat: 'IC1 LM308', then counted rows such as '2 - 47'.
+    inventory = create_empty_inventory()
+    inventory.add_part("doc", make_component_key(ComponentCategory.ICS, "LM308"), "IC1")
+    inventory.add_counted(
+        "doc", make_component_key(ComponentCategory.RESISTORS, "47"), 2
+    )
+    inventory.add_counted(
+        "doc", make_component_key(ComponentCategory.CAPACITORS, "100n"), 3
+    )
+    reading = ParseResult(inventory=inventory, stats=create_empty_stats())
+    mocker.patch.object(BOMParserContext, "process", return_value=reading)
+
+    response = _post(
+        client,
+        "/api/master-list",
+        [{"method": "upload", "file": KLICHE.name}],
+        files=[("files", _pdf(KLICHE))],
+    )
+
+    (project,) = response.json()["projects"]
+    assert [p["ref"] for p in project["parts"]] == ["IC1"]
+    assert project["counted"] == [
+        {"key": "#Resistors 47", "category": "Resistors", "value": "47", "count": 2},
+        {
+            "key": "#Capacitors 100n",
+            "category": "Capacitors",
+            "value": "100n",
+            "count": 3,
+        },
+    ]
+    assert project["build_order"] == [
+        {"stage": "Resistors", "refs": [], "counted": ["#Resistors 47"]},
+        {"stage": "Small capacitors", "refs": [], "counted": ["#Capacitors 100n"]},
+        {"stage": "Chips", "refs": ["IC1"], "counted": []},
     ]
 
 

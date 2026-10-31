@@ -31,7 +31,8 @@ const result: MasterListResult = {
       options: [],
       errors: [],
       parts: [{ ref: 'C1', category: 'Capacitors', value: '100n', location: null }],
-      build_order: [{ stage: 'Small capacitors', refs: ['C1'] }],
+      counted: [],
+      build_order: [{ stage: 'Small capacitors', refs: ['C1'], counted: [] }],
     },
   ],
   shopping_list: [
