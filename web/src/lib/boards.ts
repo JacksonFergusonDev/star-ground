@@ -13,7 +13,7 @@ const END = new TextEncoder().encode('%%EOF');
  * A PDF's SHA-256 up to and including its final `%%EOF`, as the catalog job's
  * `document_hash` computes it: Tonepad stamps each download after the marker.
  */
-export async function documentHash(bytes: ArrayBuffer): Promise<string> {
+async function documentHash(bytes: ArrayBuffer): Promise<string> {
   const data = new Uint8Array(bytes);
   let end = data.length;
   search: for (let at = data.length - END.length; at >= 0; at--) {
