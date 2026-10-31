@@ -113,6 +113,10 @@
     {/if}
     <button class="hs-button hs-button--primary" type="submit">Add</button>
   </form>
+  <p class="catalog">
+    Or find your pedal in the <a href="/catalog/">circuit catalog</a>, whose parts lists are already
+    read.
+  </p>
 </section>
 
 <style>
@@ -176,6 +180,15 @@
   textarea {
     line-height: 1.6;
     resize: vertical;
+  }
+  .catalog {
+    margin: 0;
+    color: var(--muted);
+    font-size: var(--fs-ui);
+  }
+  .catalog a {
+    text-decoration: underline;
+    text-underline-offset: 3px;
   }
   .hs-button {
     justify-self: start;

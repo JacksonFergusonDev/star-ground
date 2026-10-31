@@ -3,11 +3,13 @@
 
 FROM node:24-bookworm@sha256:6449e19d8184d84062525b6a7524def03146c2cb04a7f08b076680d0e8e4240a AS site
 
-# The site reads Star Ground's accent from branding/, beside web/.
+# The site reads Star Ground's accent from branding/, and the circuit
+# catalog's pages from catalog/, beside web/.
 WORKDIR /src/web
 COPY web/package.json web/package-lock.json ./
 RUN npm ci --no-audit --no-fund
 COPY branding/ /src/branding/
+COPY catalog/ /src/catalog/
 COPY web/ ./
 # Same origin as the API, so the site calls /api directly.
 ENV PUBLIC_API_URL=""

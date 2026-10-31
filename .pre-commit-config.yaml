@@ -134,10 +134,11 @@ repos:
         pass_filenames: false
         stages: [pre-push]
 
-      # The browser tests serve the build, so it runs first.
+      # The browser tests serve the build, so it runs first, with the fixed
+      # catalog entries they test against rather than the nightly catalog.
       - id: astro-build
         name: astro build
-        entry: bash -c 'cd web && npm run --silent build'
+        entry: bash -c 'cd web && CATALOG_DIR=tests/fixtures/catalog npm run --silent build'
         language: system
         files: ^(web/|openapi\.json)
         pass_filenames: false

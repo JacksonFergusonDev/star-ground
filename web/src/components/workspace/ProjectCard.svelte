@@ -44,7 +44,7 @@
       case 'upload':
         return `Upload: ${card.source.fileName}`;
       case 'url':
-        return `Link: ${card.source.url}`;
+        return card.source.catalog ? card.source.url : `Link: ${card.source.url}`;
     }
   });
 
@@ -73,7 +73,13 @@
       <Icon name="close" />
     </button>
   </div>
-  <p class="source">{source}</p>
+  <p class="source">
+    {#if card.source.kind === 'url' && card.source.catalog}
+      From the <a href={`/catalog/${card.source.catalog}/`}>catalog</a>: {source}
+    {:else}
+      {source}
+    {/if}
+  </p>
 
   {#if card.read.state === 'reading'}
     <p class="status">Reading the document…</p>
@@ -231,6 +237,10 @@
     font-size: var(--fs-ui);
     line-height: 1.6;
     overflow-wrap: anywhere;
+  }
+  .source a {
+    text-decoration: underline;
+    text-underline-offset: 3px;
   }
   .problem {
     color: var(--text);

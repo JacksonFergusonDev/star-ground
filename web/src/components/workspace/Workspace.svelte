@@ -53,8 +53,30 @@
   const presetName = (key: string): string =>
     catalog?.presets.find((p) => p.key === key)?.name ?? key;
 
+  // A catalog build's "Add to build" opens `/app/?catalog=<publisher>/<name>`.
+  // It's added once: the address loses the parameter, so a reload doesn't add it again.
+  let catalogProblem = $state<string | null>(null);
+  async function addFromCatalog(): Promise<void> {
+    const address = new URL(window.location.href);
+    const id = address.searchParams.get('catalog');
+    if (id === null) return;
+    address.searchParams.delete('catalog');
+    history.replaceState(history.state, '', address);
+    try {
+      if (!/^[a-z]+\/[a-z0-9-]+$/.test(id)) throw new Error(id);
+      const response = await fetch(`/catalog/${id}.json`);
+      if (!response.ok) throw new Error(id);
+      const build = (await response.json()) as { title: string; document: string };
+      await add({ kind: 'url', url: build.document, name: build.title, catalog: id });
+    } catch {
+      catalogProblem =
+        "That catalog build couldn't be found. It may have been taken out of the catalog.";
+    }
+  }
+
   onMount(() => {
     warmUp();
+    void addFromCatalog();
     presets()
       .then((c) => (catalog = c))
       .catch(() => (catalog = { sources: [], categories: {}, presets: [] }));
@@ -112,7 +134,11 @@
         break;
       case 'url': {
         const card = workspace.add(
-          { name: 'Link', count: 1, source: { kind: 'url', url: added.url } },
+          {
+            name: added.name ?? 'Link',
+            count: 1,
+            source: { kind: 'url', url: added.url, catalog: added.catalog },
+          },
           { state: 'reading' },
         );
         void read(card.id, false);
@@ -199,6 +225,9 @@
   <div class="workspace">
     <section class="projects" aria-labelledby="projects-title">
       <h2 id="projects-title">Projects</h2>
+      {#if catalogProblem}
+        <p class="problem" role="alert">{catalogProblem}</p>
+      {/if}
       {#if workspace.cards.length}
         <ul class="cards">
           {#each workspace.cards as card (card.id)}
@@ -252,6 +281,10 @@
     font-size: var(--fs-h3);
     font-weight: 500;
     letter-spacing: -0.8px;
+  }
+  .problem {
+    margin: 0;
+    color: var(--muted);
   }
   .cards {
     display: grid;
