@@ -11,9 +11,10 @@ scrape" (checked 2026-10-29). Builders can still add its documents by link.
 """
 
 import re
-from dataclasses import dataclass
+from collections.abc import Mapping
+from dataclasses import dataclass, field
 from enum import StrEnum
-from urllib.parse import urlsplit
+from urllib.parse import unquote, urlsplit
 
 
 class Publisher(StrEnum):
@@ -76,6 +77,10 @@ class Source:
         legacy_hosts: Other hosts the publisher's older documents are on.
         excluded: Link text or file names that mark something other than a
             build document.
+        document_path: A pattern every build document's URL path matches,
+            for a site that links other PDFs too.
+        not_builds: Documents that read as builds but aren't circuits to
+            build (test jigs), by URL, with the reason they're left out.
         product_label: Link text a document link on a product page must
             match, if any.
         product_row_label: A table row heading that marks the row's link as a
@@ -96,10 +101,19 @@ class Source:
     file_index: FileIndex | None = None
     legacy_hosts: tuple[str, ...] = ()
     excluded: re.Pattern[str] | None = None
+    document_path: re.Pattern[str] | None = None
+    not_builds: Mapping[str, str] = field(default_factory=dict)
     product_label: re.Pattern[str] | None = None
     product_row_label: re.Pattern[str] | None = None
     visit_page_first: bool = False
     documents_apart: bool = False
+
+    def is_build(self, url: str) -> bool:
+        """Whether a document found on the site may be a build document."""
+        if url in self.not_builds:
+            return False
+        path = unquote(urlsplit(url).path)
+        return self.document_path is None or bool(self.document_path.match(path))
 
     def allows(self, url: str) -> bool:
         """Whether a URL is on this publisher's site."""
@@ -118,8 +132,16 @@ SOURCES: dict[Publisher, Source] = {
         sitemap="https://www.pedalpcb.com/sitemap_index.xml",
         product_sitemap="product-sitemap",
         documents_apart=True,
-        # Product pages also link the datasheets of their chips and transistors.
+        # Product pages also link the datasheets of their chips and
+        # transistors. Build documents are under /project/ on
+        # docs.pedalpcb.com, and a few under /docs/ on the shop's own host.
         excluded=re.compile(r"datasheet", re.IGNORECASE),
+        document_path=re.compile(r"/(?:project|docs)/", re.IGNORECASE),
+        not_builds={
+            "https://docs.pedalpcb.com/project/PedalPCB-Auditorium.pdf": (
+                "a test enclosure for trying other boards, with no circuit"
+            ),
+        },
     ),
     Publisher.GUITARPCB: Source(
         Publisher.GUITARPCB,
@@ -141,6 +163,11 @@ SOURCES: dict[Publisher, Source] = {
             DocumentPage("https://guitarpcb.com/bonus-build-documents/"),
         ),
         legacy_hosts=("guitarpcb.webs.com", "www.guitarpcb.webs.com"),
+        not_builds={
+            "https://guitarpcb.com/wp-content/uploads/2023/12/The-Test-Rig.pdf": (
+                "a test jig for checking finished boards, not an effect"
+            ),
+        },
         excluded=re.compile(
             r"artwork|final[\s_-]*art|drill[\s_-]*template|datasheet", re.IGNORECASE
         ),

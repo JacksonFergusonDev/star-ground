@@ -4,7 +4,7 @@ import hashlib
 import io
 import json
 from collections.abc import Iterator, Mapping
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any
 
@@ -312,6 +312,17 @@ def test_pedalpcb_datasheets_are_not_build_documents() -> None:
     links = pdf_links("https://www.pedalpcb.com/product/fuzz/", html, source)
 
     assert [li.name for li in links] == ["Fuzz.pdf"]
+
+
+def test_pedalpcb_build_documents_are_under_its_project_paths() -> None:
+    source = SOURCES[Publisher.PEDALPCB]
+
+    assert source.is_build("https://docs.pedalpcb.com/project/Fuzz.pdf")
+    assert source.is_build("https://www.pedalpcb.com/docs/Byzantium-PartsList.pdf")
+    assert not source.is_build("https://docs.pedalpcb.com/Wiring.pdf")
+    assert not source.is_build(
+        "https://docs.pedalpcb.com/project/PedalPCB-Auditorium.pdf"
+    )
 
 
 _SITEMAP_INDEX = b"""<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
@@ -627,6 +638,21 @@ def test_a_document_that_no_longer_reads_cleanly_is_taken_out(
     assert not (tmp_path / "builds" / "pedalpcb" / "fuzz.json").exists()
     fuzz = next(e for e in reporter.tally.events if e.document.endswith("Fuzz.pdf"))
     assert (fuzz.outcome, fuzz.reason) == (Outcome.NOT_CLEAN, "no parts were read")
+
+
+def test_a_listed_document_found_not_to_be_a_build_is_removed(
+    tmp_path: Path, run: Any, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    run(_docs(_pedalpcb_web()), lambda upload: _reading())
+    fuzz = "https://docs.pedalpcb.com/project/Fuzz.pdf"
+    source = replace(SOURCES[Publisher.PEDALPCB], not_builds={fuzz: "a test jig"})
+    monkeypatch.setitem(SOURCES, Publisher.PEDALPCB, source)
+
+    # The product page is unchanged, so its link comes from the last run.
+    run(_docs(_pedalpcb_web()), lambda upload: _reading())
+
+    entries = sorted((tmp_path / "builds" / "pedalpcb").glob("*.json"))
+    assert [e.name for e in entries] == ["drive.json"]
 
 
 def test_a_document_no_longer_linked_is_removed(tmp_path: Path, run: Any) -> None:
