@@ -1,0 +1,188 @@
+{
+ "id": "fcp-m-drive-v1-0-insert",
+ "publisher": "fivecats",
+ "title": "fcp-m-drive-v1-0-insert",
+ "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/02/FCP-M-Drive-V1-0-insert.pdf",
+ "page": "https://www.five-cats-pedals.co.uk/product/the-m-drive-emerson-custom-em-drive-transparent-overdrive-clone/",
+ "file_name": "FCP-M-Drive-V1-0-insert.pdf",
+ "sha256": "0692bf088621b3b0935189039dbdbbdc8b9ec147e3c6b89dd578a3f4b385291a",
+ "checked": "2026-10-31T06:09:05+00:00",
+ "read_by_ocr": true,
+ "verified": false,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "R1",
+     "count": 1,
+     "category": "Resistors",
+     "value": "2M",
+     "location": {
+      "page": 0,
+      "x0": 103.81280838317872,
+      "top": 357.3526665161133,
+      "x1": 156.87913725585938,
+      "bottom": 363.25266651611327
+     }
+    },
+    {
+     "ref": "R2",
+     "count": 1,
+     "category": "Resistors",
+     "value": "4.7k",
+     "location": {
+      "page": 0,
+      "x0": 103.81280838317872,
+      "top": 365.16524150390626,
+      "x1": 156.87913725585938,
+      "bottom": 370.7652415039063
+     }
+    },
+    {
+     "ref": "C1",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "100n",
+     "location": {
+      "page": 0,
+      "x0": 103.81280838317872,
+      "top": 379.92231137695313,
+      "x1": 163.25868834228515,
+      "bottom": 386.02231137695316
+     }
+    },
+    {
+     "ref": "C2",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "100n",
+     "location": {
+      "page": 0,
+      "x0": 103.23284786682129,
+      "top": 386.5774754150391,
+      "x1": 163.25868834228515,
+      "bottom": 393.2774754150391
+     }
+    },
+    {
+     "ref": "D1",
+     "count": 1,
+     "category": "Diodes",
+     "value": "1N5817",
+     "location": {
+      "page": 0,
+      "x0": 103.23284786682129,
+      "top": 401.9132361694336,
+      "x1": 166.4484784790039,
+      "bottom": 408.01323616943364
+     }
+    },
+    {
+     "ref": "Q1",
+     "count": 1,
+     "category": "Transistors",
+     "value": "2N2222A/2N5088/2N3904NPN - E-B-C",
+     "location": {
+      "page": 0,
+      "x0": 103.81280838317872,
+      "top": 417.24902611083985,
+      "x1": 246.19294002685547,
+      "bottom": 422.6490261108398
+     }
+    },
+    {
+     "ref": "VOLUME",
+     "count": 1,
+     "category": "Potentiometers",
+     "value": "A250K",
+     "location": {
+      "page": 0,
+      "x0": 103.23284786682129,
+      "top": 432.0060959838867,
+      "x1": 163.83864885864259,
+      "bottom": 438.10609598388675
+     }
+    },
+    {
+     "ref": "GAIN",
+     "count": 1,
+     "category": "Potentiometers",
+     "value": "B250K",
+     "location": {
+      "page": 0,
+      "x0": 103.81280838317872,
+      "top": 438.95062005615233,
+      "x1": 163.83864885864259,
+      "bottom": 445.05062005615235
+     }
+    }
+   ]
+  }
+ ],
+ "boards": {
+  "Q1": [
+   {
+    "page": 0,
+    "x0": 204.12,
+    "top": 127.08,
+    "x1": 216.72,
+    "bottom": 136.07999999999998
+   }
+  ],
+  "D1": [
+   {
+    "page": 0,
+    "x0": 169.56,
+    "top": 136.44,
+    "x1": 182.51999999999998,
+    "bottom": 147.23999999999998
+   }
+  ],
+  "GAIN": [
+   {
+    "page": 0,
+    "x0": 66.24000000000001,
+    "top": 144.72,
+    "x1": 76.32,
+    "bottom": 164.16
+   }
+  ],
+  "C2": [
+   {
+    "page": 0,
+    "x0": 284.03999999999996,
+    "top": 148.32,
+    "x1": 298.08,
+    "bottom": 159.12
+   }
+  ],
+  "C1": [
+   {
+    "page": 0,
+    "x0": 91.8,
+    "top": 149.4,
+    "x1": 105.47999999999999,
+    "bottom": 160.2
+   }
+  ],
+  "R2": [
+   {
+    "page": 0,
+    "x0": 284.4,
+    "top": 163.79999999999998,
+    "x1": 298.44,
+    "bottom": 174.95999999999998
+   }
+  ],
+  "R1": [
+   {
+    "page": 0,
+    "x0": 93.24,
+    "top": 165.23999999999998,
+    "x1": 106.92,
+    "bottom": 175.68
+   }
+  ]
+ }
+}

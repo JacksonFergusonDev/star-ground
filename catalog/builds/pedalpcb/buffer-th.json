@@ -1,0 +1,98 @@
+{
+ "id": "buffer-th",
+ "publisher": "pedalpcb",
+ "title": "Simple JFET Buffer",
+ "document": "https://docs.pedalpcb.com/project/Buffer-TH.pdf",
+ "page": "https://www.pedalpcb.com/product/jfetbuffer/",
+ "file_name": "Buffer-TH.pdf",
+ "sha256": "3c98a25097a66c5ddcfe1c1bb03dea6234b2ca45e75ef243e74e740fbd32a9e8",
+ "checked": "2026-10-31T08:54:08+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "R1",
+     "count": 1,
+     "category": "Resistors",
+     "value": "3.3k",
+     "location": {
+      "page": 0,
+      "x0": 50.2715,
+      "top": 381.16,
+      "x1": 105.8745,
+      "bottom": 391.16
+     }
+    },
+    {
+     "ref": "R2",
+     "count": 1,
+     "category": "Resistors",
+     "value": "2.2M",
+     "location": {
+      "page": 0,
+      "x0": 50.2715,
+      "top": 393.16,
+      "x1": 107.87150000000001,
+      "bottom": 403.16
+     }
+    },
+    {
+     "ref": "R3",
+     "count": 1,
+     "category": "Resistors",
+     "value": "2.2M",
+     "location": {
+      "page": 0,
+      "x0": 50.2715,
+      "top": 405.16,
+      "x1": 107.87150000000001,
+      "bottom": 415.16
+     }
+    },
+    {
+     "ref": "C1",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "100n",
+     "location": {
+      "page": 0,
+      "x0": 50.2715,
+      "top": 441.16,
+      "x1": 111.4745,
+      "bottom": 451.16
+     }
+    },
+    {
+     "ref": "C2",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "10u MLCC",
+     "location": {
+      "page": 0,
+      "x0": 50.2715,
+      "top": 453.16,
+      "x1": 138.67050000000003,
+      "bottom": 463.16
+     }
+    },
+    {
+     "ref": "Q1",
+     "count": 1,
+     "category": "Transistors",
+     "value": "J201",
+     "location": {
+      "page": 0,
+      "x0": 50.2715,
+      "top": 489.16,
+      "x1": 110.8745,
+      "bottom": 499.16
+     }
+    }
+   ]
+  }
+ ],
+ "boards": {}
+}

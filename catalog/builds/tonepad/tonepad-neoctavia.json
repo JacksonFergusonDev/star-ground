@@ -1,0 +1,148 @@
+{
+ "id": "tonepad-neoctavia",
+ "publisher": "tonepad",
+ "title": "NeoCtaVia",
+ "document": "https://tonepad.com/getFile.asp?id=85",
+ "page": "https://tonepad.com/project.asp?id=43",
+ "file_name": "tonepad_neoctavia.pdf",
+ "sha256": "f807117f9ba2fbdbea044c11f28c53d8c9b92cd4ecc89d2864089c8a06acf61c",
+ "checked": "2026-10-31T06:40:22+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "IC1",
+     "count": 1,
+     "category": "ICs",
+     "value": "4558",
+     "location": {
+      "page": 0,
+      "x0": 161.4254,
+      "top": 455.1612999999998,
+      "x1": 217.446,
+      "bottom": 467.1612999999998
+     }
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Resistors",
+     "value": "100",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Capacitors",
+     "value": "220p",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Potentiometers",
+     "value": "250k Lin",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Transformers",
+     "value": "42TM022",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 3,
+     "category": "Resistors",
+     "value": "10k",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Capacitors",
+     "value": "100n",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Potentiometers",
+     "value": "100k Log",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 2,
+     "category": "Diodes",
+     "value": "Ge Diodes",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Resistors",
+     "value": "100k",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 2,
+     "category": "Capacitors",
+     "value": "1u",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Resistors",
+     "value": "820k",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Capacitors",
+     "value": "47u",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Resistors",
+     "value": "1M",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 2,
+     "category": "Capacitors",
+     "value": "22u",
+     "location": null
+    }
+   ]
+  }
+ ],
+ "boards": {
+  "IC1": [
+   {
+    "page": 0,
+    "x0": 197.6006,
+    "top": 652.1857,
+    "x1": 207.33059999999998,
+    "bottom": 659.1857
+   },
+   {
+    "page": 0,
+    "x0": 298.4006,
+    "top": 652.1857,
+    "x1": 308.1306,
+    "bottom": 659.1857
+   }
+  ]
+ }
+}

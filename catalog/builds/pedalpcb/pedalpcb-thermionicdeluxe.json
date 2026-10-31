@@ -1,0 +1,2723 @@
+{
+ "id": "pedalpcb-thermionicdeluxe",
+ "publisher": "pedalpcb",
+ "title": "Thermionic Deluxe",
+ "document": "https://docs.pedalpcb.com/project/PedalPCB-ThermionicDeluxe.pdf",
+ "page": "https://www.pedalpcb.com/product/thermionic-deluxe/",
+ "file_name": "PedalPCB-ThermionicDeluxe.pdf",
+ "sha256": "3e99ac1533beeaa09d5947d723f8ad01b16e005b240d89ccecda399741c6d67d",
+ "checked": "2026-10-31T11:00:57+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "R1A",
+     "count": 1,
+     "category": "Resistors",
+     "value": "1M",
+     "location": {
+      "page": 1,
+      "x0": 36.0,
+      "top": 98.15999999999997,
+      "x1": 85.86,
+      "bottom": 107.15999999999997
+     }
+    },
+    {
+     "ref": "R1B",
+     "count": 1,
+     "category": "Resistors",
+     "value": "1M",
+     "location": {
+      "page": 1,
+      "x0": 114.6,
+      "top": 98.15999999999997,
+      "x1": 164.46,
+      "bottom": 107.15999999999997
+     }
+    },
+    {
+     "ref": "C1A",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "22n",
+     "location": {
+      "page": 1,
+      "x0": 222.612,
+      "top": 98.15999999999997,
+      "x1": 275.712,
+      "bottom": 107.15999999999997
+     }
+    },
+    {
+     "ref": "C1B",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "22n",
+     "location": {
+      "page": 1,
+      "x0": 306.0,
+      "top": 98.15999999999997,
+      "x1": 359.1,
+      "bottom": 107.15999999999997
+     }
+    },
+    {
+     "ref": "C12A",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "22n",
+     "location": {
+      "page": 1,
+      "x0": 222.612,
+      "top": 216.95999999999992,
+      "x1": 275.712,
+      "bottom": 225.95999999999992
+     }
+    },
+    {
+     "ref": "C12B",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "22n",
+     "location": {
+      "page": 1,
+      "x0": 306.0,
+      "top": 216.95999999999992,
+      "x1": 359.09999999999997,
+      "bottom": 225.95999999999992
+     }
+    },
+    {
+     "ref": "IC1",
+     "count": 1,
+     "category": "ICs",
+     "value": "TL072",
+     "location": {
+      "page": 1,
+      "x0": 409.224,
+      "top": 101.51319999999998,
+      "x1": 472.94399999999996,
+      "bottom": 110.51319999999998
+     }
+    },
+    {
+     "ref": "IC2A",
+     "count": 1,
+     "category": "ICs",
+     "value": "TL072",
+     "location": {
+      "page": 1,
+      "x0": 409.224,
+      "top": 112.31319999999994,
+      "x1": 472.94399999999996,
+      "bottom": 121.31319999999994
+     }
+    },
+    {
+     "ref": "IC2B",
+     "count": 1,
+     "category": "ICs",
+     "value": "TL072",
+     "location": {
+      "page": 1,
+      "x0": 409.224,
+      "top": 123.1132,
+      "x1": 472.94399999999996,
+      "bottom": 132.1132
+     }
+    },
+    {
+     "ref": "IC3A",
+     "count": 1,
+     "category": "ICs",
+     "value": "TL072",
+     "location": {
+      "page": 1,
+      "x0": 409.224,
+      "top": 133.91319999999996,
+      "x1": 472.94399999999996,
+      "bottom": 142.91319999999996
+     }
+    },
+    {
+     "ref": "IC3B",
+     "count": 1,
+     "category": "ICs",
+     "value": "TL072",
+     "location": {
+      "page": 1,
+      "x0": 409.224,
+      "top": 144.71319999999992,
+      "x1": 472.94399999999996,
+      "bottom": 153.71319999999992
+     }
+    },
+    {
+     "ref": "IC4A",
+     "count": 1,
+     "category": "ICs",
+     "value": "TL072",
+     "location": {
+      "page": 1,
+      "x0": 409.224,
+      "top": 155.51319999999998,
+      "x1": 472.94399999999996,
+      "bottom": 164.51319999999998
+     }
+    },
+    {
+     "ref": "IC4B",
+     "count": 1,
+     "category": "ICs",
+     "value": "TL072",
+     "location": {
+      "page": 1,
+      "x0": 409.224,
+      "top": 166.31319999999994,
+      "x1": 472.94399999999996,
+      "bottom": 175.31319999999994
+     }
+    },
+    {
+     "ref": "R2A",
+     "count": 1,
+     "category": "Resistors",
+     "value": "330k",
+     "location": {
+      "page": 1,
+      "x0": 36.0,
+      "top": 108.95999999999992,
+      "x1": 95.22,
+      "bottom": 117.95999999999992
+     }
+    },
+    {
+     "ref": "R2B",
+     "count": 1,
+     "category": "Resistors",
+     "value": "330k",
+     "location": {
+      "page": 1,
+      "x0": 114.6,
+      "top": 108.95999999999992,
+      "x1": 173.82,
+      "bottom": 117.95999999999992
+     }
+    },
+    {
+     "ref": "C2A",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "47p",
+     "location": {
+      "page": 1,
+      "x0": 222.612,
+      "top": 108.95999999999992,
+      "x1": 275.352,
+      "bottom": 117.95999999999992
+     }
+    },
+    {
+     "ref": "C2B",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "47p",
+     "location": {
+      "page": 1,
+      "x0": 306.0,
+      "top": 108.95999999999992,
+      "x1": 358.74,
+      "bottom": 117.95999999999992
+     }
+    },
+    {
+     "ref": "C6A",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "47p",
+     "location": {
+      "page": 1,
+      "x0": 222.612,
+      "top": 152.15999999999997,
+      "x1": 275.352,
+      "bottom": 161.15999999999997
+     }
+    },
+    {
+     "ref": "C6B",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "47p",
+     "location": {
+      "page": 1,
+      "x0": 306.0,
+      "top": 152.15999999999997,
+      "x1": 358.74,
+      "bottom": 161.15999999999997
+     }
+    },
+    {
+     "ref": "R3A",
+     "count": 1,
+     "category": "Resistors",
+     "value": "10k",
+     "location": {
+      "page": 1,
+      "x0": 36.0,
+      "top": 119.75990000000002,
+      "x1": 89.64,
+      "bottom": 128.75990000000002
+     }
+    },
+    {
+     "ref": "R3B",
+     "count": 1,
+     "category": "Resistors",
+     "value": "10k",
+     "location": {
+      "page": 1,
+      "x0": 114.6,
+      "top": 119.75990000000002,
+      "x1": 168.23999999999998,
+      "bottom": 128.75990000000002
+     }
+    },
+    {
+     "ref": "R7A",
+     "count": 1,
+     "category": "Resistors",
+     "value": "10k",
+     "location": {
+      "page": 1,
+      "x0": 36.0,
+      "top": 152.15999999999997,
+      "x1": 89.64,
+      "bottom": 161.15999999999997
+     }
+    },
+    {
+     "ref": "R7B",
+     "count": 1,
+     "category": "Resistors",
+     "value": "10k",
+     "location": {
+      "page": 1,
+      "x0": 114.6,
+      "top": 152.15999999999997,
+      "x1": 168.23999999999998,
+      "bottom": 161.15999999999997
+     }
+    },
+    {
+     "ref": "R13A",
+     "count": 1,
+     "category": "Resistors",
+     "value": "10k",
+     "location": {
+      "page": 1,
+      "x0": 36.0,
+      "top": 216.95999999999992,
+      "x1": 89.64,
+      "bottom": 225.95999999999992
+     }
+    },
+    {
+     "ref": "R14A",
+     "count": 1,
+     "category": "Resistors",
+     "value": "10k",
+     "location": {
+      "page": 1,
+      "x0": 36.0,
+      "top": 227.75990000000002,
+      "x1": 89.64,
+      "bottom": 236.75990000000002
+     }
+    },
+    {
+     "ref": "R14B",
+     "count": 1,
+     "category": "Resistors",
+     "value": "10k",
+     "location": {
+      "page": 1,
+      "x0": 114.6,
+      "top": 227.75990000000002,
+      "x1": 168.23999999999998,
+      "bottom": 236.75990000000002
+     }
+    },
+    {
+     "ref": "R31A",
+     "count": 1,
+     "category": "Resistors",
+     "value": "10k",
+     "location": {
+      "page": 1,
+      "x0": 36.0,
+      "top": 357.36,
+      "x1": 89.64,
+      "bottom": 366.36
+     }
+    },
+    {
+     "ref": "R31B",
+     "count": 1,
+     "category": "Resistors",
+     "value": "10k",
+     "location": {
+      "page": 1,
+      "x0": 114.6,
+      "top": 357.36,
+      "x1": 168.23999999999998,
+      "bottom": 366.36
+     }
+    },
+    {
+     "ref": "C3A",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "10n",
+     "location": {
+      "page": 1,
+      "x0": 222.612,
+      "top": 119.75990000000002,
+      "x1": 275.712,
+      "bottom": 128.75990000000002
+     }
+    },
+    {
+     "ref": "C3B",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "10n",
+     "location": {
+      "page": 1,
+      "x0": 306.0,
+      "top": 119.75990000000002,
+      "x1": 359.1,
+      "bottom": 128.75990000000002
+     }
+    },
+    {
+     "ref": "C10A",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "10n",
+     "location": {
+      "page": 1,
+      "x0": 222.612,
+      "top": 195.36,
+      "x1": 275.712,
+      "bottom": 204.36
+     }
+    },
+    {
+     "ref": "C10B",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "10n",
+     "location": {
+      "page": 1,
+      "x0": 306.0,
+      "top": 195.36,
+      "x1": 359.09999999999997,
+      "bottom": 204.36
+     }
+    },
+    {
+     "ref": "C14A",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "10n",
+     "location": {
+      "page": 1,
+      "x0": 222.612,
+      "top": 238.55999999999995,
+      "x1": 275.712,
+      "bottom": 247.55999999999995
+     }
+    },
+    {
+     "ref": "C14B",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "10n",
+     "location": {
+      "page": 1,
+      "x0": 306.0,
+      "top": 238.55999999999995,
+      "x1": 359.09999999999997,
+      "bottom": 247.55999999999995
+     }
+    },
+    {
+     "ref": "R4A",
+     "count": 1,
+     "category": "Resistors",
+     "value": "22k",
+     "location": {
+      "page": 1,
+      "x0": 36.0,
+      "top": 130.55999999999995,
+      "x1": 89.64,
+      "bottom": 139.55999999999995
+     }
+    },
+    {
+     "ref": "R4B",
+     "count": 1,
+     "category": "Resistors",
+     "value": "22k",
+     "location": {
+      "page": 1,
+      "x0": 114.6,
+      "top": 130.55999999999995,
+      "x1": 168.23999999999998,
+      "bottom": 139.55999999999995
+     }
+    },
+    {
+     "ref": "R8A",
+     "count": 1,
+     "category": "Resistors",
+     "value": "22k",
+     "location": {
+      "page": 1,
+      "x0": 36.0,
+      "top": 162.95999999999992,
+      "x1": 89.64,
+      "bottom": 171.95999999999992
+     }
+    },
+    {
+     "ref": "R8B",
+     "count": 1,
+     "category": "Resistors",
+     "value": "22k",
+     "location": {
+      "page": 1,
+      "x0": 114.6,
+      "top": 162.95999999999992,
+      "x1": 168.23999999999998,
+      "bottom": 171.95999999999992
+     }
+    },
+    {
+     "ref": "R9A",
+     "count": 1,
+     "category": "Resistors",
+     "value": "22k",
+     "location": {
+      "page": 1,
+      "x0": 36.0,
+      "top": 173.75990000000002,
+      "x1": 89.64,
+      "bottom": 182.75990000000002
+     }
+    },
+    {
+     "ref": "R9B",
+     "count": 1,
+     "category": "Resistors",
+     "value": "22k",
+     "location": {
+      "page": 1,
+      "x0": 114.6,
+      "top": 173.75990000000002,
+      "x1": 168.23999999999998,
+      "bottom": 182.75990000000002
+     }
+    },
+    {
+     "ref": "R10A",
+     "count": 1,
+     "category": "Resistors",
+     "value": "22k",
+     "location": {
+      "page": 1,
+      "x0": 36.0,
+      "top": 184.55999999999995,
+      "x1": 89.64,
+      "bottom": 193.55999999999995
+     }
+    },
+    {
+     "ref": "R10B",
+     "count": 1,
+     "category": "Resistors",
+     "value": "22k",
+     "location": {
+      "page": 1,
+      "x0": 114.6,
+      "top": 184.55999999999995,
+      "x1": 168.23999999999998,
+      "bottom": 193.55999999999995
+     }
+    },
+    {
+     "ref": "R11A",
+     "count": 1,
+     "category": "Resistors",
+     "value": "22k",
+     "location": {
+      "page": 1,
+      "x0": 36.0,
+      "top": 195.36,
+      "x1": 89.64,
+      "bottom": 204.36
+     }
+    },
+    {
+     "ref": "R11B",
+     "count": 1,
+     "category": "Resistors",
+     "value": "22k",
+     "location": {
+      "page": 1,
+      "x0": 114.6,
+      "top": 195.36,
+      "x1": 168.23999999999998,
+      "bottom": 204.36
+     }
+    },
+    {
+     "ref": "R21A",
+     "count": 1,
+     "category": "Resistors",
+     "value": "22k",
+     "location": {
+      "page": 1,
+      "x0": 36.0,
+      "top": 303.36,
+      "x1": 89.64,
+      "bottom": 312.36
+     }
+    },
+    {
+     "ref": "R21B",
+     "count": 1,
+     "category": "Resistors",
+     "value": "22k",
+     "location": {
+      "page": 1,
+      "x0": 114.6,
+      "top": 303.36,
+      "x1": 168.23999999999998,
+      "bottom": 312.36
+     }
+    },
+    {
+     "ref": "R33",
+     "count": 1,
+     "category": "Resistors",
+     "value": "22k",
+     "location": {
+      "page": 1,
+      "x0": 36.0,
+      "top": 378.96000000000004,
+      "x1": 89.64,
+      "bottom": 387.96000000000004
+     }
+    },
+    {
+     "ref": "R36",
+     "count": 1,
+     "category": "Resistors",
+     "value": "22k",
+     "location": {
+      "page": 1,
+      "x0": 36.0,
+      "top": 411.36,
+      "x1": 89.64,
+      "bottom": 420.36
+     }
+    },
+    {
+     "ref": "C4A",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "1n",
+     "location": {
+      "page": 1,
+      "x0": 222.612,
+      "top": 130.55999999999995,
+      "x1": 270.13199999999995,
+      "bottom": 139.55999999999995
+     }
+    },
+    {
+     "ref": "C4B",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "1n",
+     "location": {
+      "page": 1,
+      "x0": 306.0,
+      "top": 130.55999999999995,
+      "x1": 353.52,
+      "bottom": 139.55999999999995
+     }
+    },
+    {
+     "ref": "R5A",
+     "count": 1,
+     "category": "Resistors",
+     "value": "39k",
+     "location": {
+      "page": 1,
+      "x0": 36.0,
+      "top": 141.36,
+      "x1": 89.64,
+      "bottom": 150.36
+     }
+    },
+    {
+     "ref": "R5B",
+     "count": 1,
+     "category": "Resistors",
+     "value": "39k",
+     "location": {
+      "page": 1,
+      "x0": 114.6,
+      "top": 141.36,
+      "x1": 168.23999999999998,
+      "bottom": 150.36
+     }
+    },
+    {
+     "ref": "C5A",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "100n",
+     "location": {
+      "page": 1,
+      "x0": 222.612,
+      "top": 141.36,
+      "x1": 281.292,
+      "bottom": 150.36
+     }
+    },
+    {
+     "ref": "C5B",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "100n",
+     "location": {
+      "page": 1,
+      "x0": 306.0,
+      "top": 141.36,
+      "x1": 364.68,
+      "bottom": 150.36
+     }
+    },
+    {
+     "ref": "C23A",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "100n",
+     "location": {
+      "page": 1,
+      "x0": 222.612,
+      "top": 270.9599999999999,
+      "x1": 281.292,
+      "bottom": 279.9599999999999
+     }
+    },
+    {
+     "ref": "C23B",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "100n",
+     "location": {
+      "page": 1,
+      "x0": 306.0,
+      "top": 270.9599999999999,
+      "x1": 364.68,
+      "bottom": 279.9599999999999
+     }
+    },
+    {
+     "ref": "C25",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "100n",
+     "location": {
+      "page": 1,
+      "x0": 222.612,
+      "top": 292.56,
+      "x1": 281.292,
+      "bottom": 301.56
+     }
+    },
+    {
+     "ref": "C27",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "100n",
+     "location": {
+      "page": 1,
+      "x0": 222.612,
+      "top": 314.16,
+      "x1": 281.292,
+      "bottom": 323.16
+     }
+    },
+    {
+     "ref": "C7A",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "47n",
+     "location": {
+      "page": 1,
+      "x0": 222.612,
+      "top": 162.95999999999992,
+      "x1": 275.712,
+      "bottom": 171.95999999999992
+     }
+    },
+    {
+     "ref": "C7B",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "47n",
+     "location": {
+      "page": 1,
+      "x0": 306.0,
+      "top": 162.95999999999992,
+      "x1": 359.1,
+      "bottom": 171.95999999999992
+     }
+    },
+    {
+     "ref": "C8A",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "120p",
+     "location": {
+      "page": 1,
+      "x0": 222.612,
+      "top": 173.75990000000002,
+      "x1": 280.93199999999996,
+      "bottom": 182.75990000000002
+     }
+    },
+    {
+     "ref": "C8B",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "120p",
+     "location": {
+      "page": 1,
+      "x0": 306.0,
+      "top": 173.75990000000002,
+      "x1": 364.32,
+      "bottom": 182.75990000000002
+     }
+    },
+    {
+     "ref": "C9A",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "100p",
+     "location": {
+      "page": 1,
+      "x0": 222.612,
+      "top": 184.55999999999995,
+      "x1": 280.93199999999996,
+      "bottom": 193.55999999999995
+     }
+    },
+    {
+     "ref": "C9B",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "220p",
+     "location": {
+      "page": 1,
+      "x0": 306.0,
+      "top": 184.55999999999995,
+      "x1": 364.32,
+      "bottom": 193.55999999999995
+     }
+    },
+    {
+     "ref": "D1A",
+     "count": 1,
+     "category": "Diodes",
+     "value": "1N4148",
+     "location": {
+      "page": 1,
+      "x0": 409.224,
+      "top": 198.71319999999992,
+      "x1": 479.784,
+      "bottom": 207.71319999999992
+     }
+    },
+    {
+     "ref": "D1B",
+     "count": 1,
+     "category": "Diodes",
+     "value": "1N4148",
+     "location": {
+      "page": 1,
+      "x0": 409.224,
+      "top": 209.51319999999998,
+      "x1": 479.784,
+      "bottom": 218.51319999999998
+     }
+    },
+    {
+     "ref": "D2A",
+     "count": 1,
+     "category": "Diodes",
+     "value": "1N4148",
+     "location": {
+      "page": 1,
+      "x0": 409.224,
+      "top": 220.31319999999994,
+      "x1": 479.784,
+      "bottom": 229.31319999999994
+     }
+    },
+    {
+     "ref": "D2B",
+     "count": 1,
+     "category": "Diodes",
+     "value": "1N4148",
+     "location": {
+      "page": 1,
+      "x0": 409.224,
+      "top": 231.1132,
+      "x1": 479.784,
+      "bottom": 240.1132
+     }
+    },
+    {
+     "ref": "D3A",
+     "count": 1,
+     "category": "Diodes",
+     "value": "1N4148",
+     "location": {
+      "page": 1,
+      "x0": 409.224,
+      "top": 241.91319999999996,
+      "x1": 479.784,
+      "bottom": 250.91319999999996
+     }
+    },
+    {
+     "ref": "D3B",
+     "count": 1,
+     "category": "Diodes",
+     "value": "1N4148",
+     "location": {
+      "page": 1,
+      "x0": 409.224,
+      "top": 252.71319999999992,
+      "x1": 479.784,
+      "bottom": 261.7131999999999
+     }
+    },
+    {
+     "ref": "D4A",
+     "count": 1,
+     "category": "Diodes",
+     "value": "1N4148",
+     "location": {
+      "page": 1,
+      "x0": 409.224,
+      "top": 263.5132,
+      "x1": 479.784,
+      "bottom": 272.5132
+     }
+    },
+    {
+     "ref": "D4B",
+     "count": 1,
+     "category": "Diodes",
+     "value": "1N4148",
+     "location": {
+      "page": 1,
+      "x0": 409.224,
+      "top": 274.31319999999994,
+      "x1": 479.784,
+      "bottom": 283.31319999999994
+     }
+    },
+    {
+     "ref": "R12A",
+     "count": 1,
+     "category": "Resistors",
+     "value": "220k",
+     "location": {
+      "page": 1,
+      "x0": 36.0,
+      "top": 206.15999999999997,
+      "x1": 95.22,
+      "bottom": 215.15999999999997
+     }
+    },
+    {
+     "ref": "R12B",
+     "count": 1,
+     "category": "Resistors",
+     "value": "220k",
+     "location": {
+      "page": 1,
+      "x0": 114.6,
+      "top": 206.15999999999997,
+      "x1": 173.82,
+      "bottom": 215.15999999999997
+     }
+    },
+    {
+     "ref": "C11A",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "4.7n",
+     "location": {
+      "page": 1,
+      "x0": 222.612,
+      "top": 206.15999999999997,
+      "x1": 275.71199999999993,
+      "bottom": 215.15999999999997
+     }
+    },
+    {
+     "ref": "C11B",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "4.7n",
+     "location": {
+      "page": 1,
+      "x0": 306.0,
+      "top": 206.15999999999997,
+      "x1": 359.09999999999997,
+      "bottom": 215.15999999999997
+     }
+    },
+    {
+     "ref": "R13B",
+     "count": 1,
+     "category": "Resistors",
+     "value": "27k",
+     "location": {
+      "page": 1,
+      "x0": 114.6,
+      "top": 216.95999999999992,
+      "x1": 168.23999999999998,
+      "bottom": 225.95999999999992
+     }
+    },
+    {
+     "ref": "C13A",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "220n",
+     "location": {
+      "page": 1,
+      "x0": 222.612,
+      "top": 227.75990000000002,
+      "x1": 281.292,
+      "bottom": 236.75990000000002
+     }
+    },
+    {
+     "ref": "C13B",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "220n",
+     "location": {
+      "page": 1,
+      "x0": 306.0,
+      "top": 227.75990000000002,
+      "x1": 364.68,
+      "bottom": 236.75990000000002
+     }
+    },
+    {
+     "ref": "C16A",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "220n",
+     "location": {
+      "page": 1,
+      "x0": 222.612,
+      "top": 260.15999999999997,
+      "x1": 281.292,
+      "bottom": 269.15999999999997
+     }
+    },
+    {
+     "ref": "C16B",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "220n",
+     "location": {
+      "page": 1,
+      "x0": 306.0,
+      "top": 260.15999999999997,
+      "x1": 364.68,
+      "bottom": 269.15999999999997
+     }
+    },
+    {
+     "ref": "R15A",
+     "count": 1,
+     "category": "Resistors",
+     "value": "2.2k",
+     "location": {
+      "page": 1,
+      "x0": 36.0,
+      "top": 238.55999999999995,
+      "x1": 89.64,
+      "bottom": 247.55999999999995
+     }
+    },
+    {
+     "ref": "R15B",
+     "count": 1,
+     "category": "Resistors",
+     "value": "2.2k",
+     "location": {
+      "page": 1,
+      "x0": 114.6,
+      "top": 238.55999999999995,
+      "x1": 168.24,
+      "bottom": 247.55999999999995
+     }
+    },
+    {
+     "ref": "R18A",
+     "count": 1,
+     "category": "Resistors",
+     "value": "2.2k",
+     "location": {
+      "page": 1,
+      "x0": 36.0,
+      "top": 270.9599999999999,
+      "x1": 89.64,
+      "bottom": 279.9599999999999
+     }
+    },
+    {
+     "ref": "R18B",
+     "count": 1,
+     "category": "Resistors",
+     "value": "2.2k",
+     "location": {
+      "page": 1,
+      "x0": 114.6,
+      "top": 270.9599999999999,
+      "x1": 168.24,
+      "bottom": 279.9599999999999
+     }
+    },
+    {
+     "ref": "R20A",
+     "count": 1,
+     "category": "Resistors",
+     "value": "2.2k",
+     "location": {
+      "page": 1,
+      "x0": 36.0,
+      "top": 292.56,
+      "x1": 89.64,
+      "bottom": 301.56
+     }
+    },
+    {
+     "ref": "R20B",
+     "count": 1,
+     "category": "Resistors",
+     "value": "2.2k",
+     "location": {
+      "page": 1,
+      "x0": 114.6,
+      "top": 292.56,
+      "x1": 168.24,
+      "bottom": 301.56
+     }
+    },
+    {
+     "ref": "R22A",
+     "count": 1,
+     "category": "Resistors",
+     "value": "2.2k",
+     "location": {
+      "page": 1,
+      "x0": 36.0,
+      "top": 314.16,
+      "x1": 89.64,
+      "bottom": 323.16
+     }
+    },
+    {
+     "ref": "R22B",
+     "count": 1,
+     "category": "Resistors",
+     "value": "2.2k",
+     "location": {
+      "page": 1,
+      "x0": 114.6,
+      "top": 314.16,
+      "x1": 168.24,
+      "bottom": 323.16
+     }
+    },
+    {
+     "ref": "R34",
+     "count": 1,
+     "category": "Resistors",
+     "value": "2.2k",
+     "location": {
+      "page": 1,
+      "x0": 36.0,
+      "top": 389.76000000000005,
+      "x1": 89.64,
+      "bottom": 398.76000000000005
+     }
+    },
+    {
+     "ref": "R37",
+     "count": 1,
+     "category": "Resistors",
+     "value": "2.2k",
+     "location": {
+      "page": 1,
+      "x0": 36.0,
+      "top": 422.16,
+      "x1": 89.64,
+      "bottom": 431.16
+     }
+    },
+    {
+     "ref": "R16A",
+     "count": 1,
+     "category": "Resistors",
+     "value": "33k",
+     "location": {
+      "page": 1,
+      "x0": 36.0,
+      "top": 249.36,
+      "x1": 89.64,
+      "bottom": 258.36
+     }
+    },
+    {
+     "ref": "R16B",
+     "count": 1,
+     "category": "Resistors",
+     "value": "33k",
+     "location": {
+      "page": 1,
+      "x0": 114.6,
+      "top": 249.36,
+      "x1": 168.23999999999998,
+      "bottom": 258.36
+     }
+    },
+    {
+     "ref": "R17A",
+     "count": 1,
+     "category": "Resistors",
+     "value": "33k",
+     "location": {
+      "page": 1,
+      "x0": 36.0,
+      "top": 260.15999999999997,
+      "x1": 89.64,
+      "bottom": 269.15999999999997
+     }
+    },
+    {
+     "ref": "R17B",
+     "count": 1,
+     "category": "Resistors",
+     "value": "33k",
+     "location": {
+      "page": 1,
+      "x0": 114.6,
+      "top": 260.15999999999997,
+      "x1": 168.23999999999998,
+      "bottom": 269.15999999999997
+     }
+    },
+    {
+     "ref": "C15A",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "2.2n",
+     "location": {
+      "page": 1,
+      "x0": 222.612,
+      "top": 249.36,
+      "x1": 275.71199999999993,
+      "bottom": 258.36
+     }
+    },
+    {
+     "ref": "C15B",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "2.2n",
+     "location": {
+      "page": 1,
+      "x0": 306.0,
+      "top": 249.36,
+      "x1": 359.09999999999997,
+      "bottom": 258.36
+     }
+    },
+    {
+     "ref": "R19A",
+     "count": 1,
+     "category": "Resistors",
+     "value": "470k",
+     "location": {
+      "page": 1,
+      "x0": 36.0,
+      "top": 281.76000000000005,
+      "x1": 95.22,
+      "bottom": 290.76000000000005
+     }
+    },
+    {
+     "ref": "R19B",
+     "count": 1,
+     "category": "Resistors",
+     "value": "470k",
+     "location": {
+      "page": 1,
+      "x0": 114.6,
+      "top": 281.76000000000005,
+      "x1": 173.82,
+      "bottom": 290.76000000000005
+     }
+    },
+    {
+     "ref": "C20",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "100u",
+     "location": {
+      "page": 1,
+      "x0": 222.612,
+      "top": 281.76000000000005,
+      "x1": 281.472,
+      "bottom": 290.76000000000005
+     }
+    },
+    {
+     "ref": "D5",
+     "count": 1,
+     "category": "Diodes",
+     "value": "1N5817",
+     "location": {
+      "page": 1,
+      "x0": 409.224,
+      "top": 285.1132,
+      "x1": 479.784,
+      "bottom": 294.1132
+     }
+    },
+    {
+     "ref": "C26",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "22u",
+     "location": {
+      "page": 1,
+      "x0": 222.612,
+      "top": 303.36,
+      "x1": 275.892,
+      "bottom": 312.36
+     }
+    },
+    {
+     "ref": "C28",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "22u",
+     "location": {
+      "page": 1,
+      "x0": 222.612,
+      "top": 324.96000000000004,
+      "x1": 275.892,
+      "bottom": 333.96000000000004
+     }
+    },
+    {
+     "ref": "L1A",
+     "count": 1,
+     "category": "Diodes",
+     "value": "3mm Red LED",
+     "location": {
+      "page": 1,
+      "x0": 409.224,
+      "top": 317.51320000000004,
+      "x1": 509.304,
+      "bottom": 326.51320000000004
+     }
+    },
+    {
+     "ref": "L1B",
+     "count": 1,
+     "category": "Diodes",
+     "value": "3mm Red LED",
+     "location": {
+      "page": 1,
+      "x0": 409.224,
+      "top": 328.3132,
+      "x1": 509.304,
+      "bottom": 337.3132
+     }
+    },
+    {
+     "ref": "L2A",
+     "count": 1,
+     "category": "Diodes",
+     "value": "3mm Red LED",
+     "location": {
+      "page": 1,
+      "x0": 409.224,
+      "top": 339.1132,
+      "x1": 509.304,
+      "bottom": 348.1132
+     }
+    },
+    {
+     "ref": "L2B",
+     "count": 1,
+     "category": "Diodes",
+     "value": "3mm Red LED",
+     "location": {
+      "page": 1,
+      "x0": 409.224,
+      "top": 349.9132,
+      "x1": 509.304,
+      "bottom": 358.9132
+     }
+    },
+    {
+     "ref": "L3A",
+     "count": 1,
+     "category": "Diodes",
+     "value": "3mm Red LED",
+     "location": {
+      "page": 1,
+      "x0": 409.224,
+      "top": 360.71320000000003,
+      "x1": 509.304,
+      "bottom": 369.71320000000003
+     }
+    },
+    {
+     "ref": "L3B",
+     "count": 1,
+     "category": "Diodes",
+     "value": "3mm Red LED",
+     "location": {
+      "page": 1,
+      "x0": 409.224,
+      "top": 371.51320000000004,
+      "x1": 509.304,
+      "bottom": 380.51320000000004
+     }
+    },
+    {
+     "ref": "L4A",
+     "count": 1,
+     "category": "Diodes",
+     "value": "3mm Red LED",
+     "location": {
+      "page": 1,
+      "x0": 409.224,
+      "top": 382.3132,
+      "x1": 509.304,
+      "bottom": 391.3132
+     }
+    },
+    {
+     "ref": "L4B",
+     "count": 1,
+     "category": "Diodes",
+     "value": "3mm Red LED",
+     "location": {
+      "page": 1,
+      "x0": 409.224,
+      "top": 393.1132,
+      "x1": 509.304,
+      "bottom": 402.1132
+     }
+    },
+    {
+     "ref": "LEDA",
+     "count": 1,
+     "category": "Diodes",
+     "value": "3mm Red LED",
+     "location": {
+      "page": 1,
+      "x0": 409.224,
+      "top": 403.9132,
+      "x1": 509.304,
+      "bottom": 412.9132
+     }
+    },
+    {
+     "ref": "LEDB",
+     "count": 1,
+     "category": "Diodes",
+     "value": "3mm Red LED",
+     "location": {
+      "page": 1,
+      "x0": 409.224,
+      "top": 414.71320000000003,
+      "x1": 509.304,
+      "bottom": 423.71320000000003
+     }
+    },
+    {
+     "ref": "R23A",
+     "count": 1,
+     "category": "Resistors",
+     "value": "100k",
+     "location": {
+      "page": 1,
+      "x0": 36.0,
+      "top": 324.96000000000004,
+      "x1": 95.22,
+      "bottom": 333.96000000000004
+     }
+    },
+    {
+     "ref": "R23B",
+     "count": 1,
+     "category": "Resistors",
+     "value": "100k",
+     "location": {
+      "page": 1,
+      "x0": 114.6,
+      "top": 324.96000000000004,
+      "x1": 173.82,
+      "bottom": 333.96000000000004
+     }
+    },
+    {
+     "ref": "R24A",
+     "count": 1,
+     "category": "Resistors",
+     "value": "3.3k",
+     "location": {
+      "page": 1,
+      "x0": 36.0,
+      "top": 335.76000000000005,
+      "x1": 89.64,
+      "bottom": 344.76000000000005
+     }
+    },
+    {
+     "ref": "R24B",
+     "count": 1,
+     "category": "Resistors",
+     "value": "3.3k",
+     "location": {
+      "page": 1,
+      "x0": 114.6,
+      "top": 335.76000000000005,
+      "x1": 168.24,
+      "bottom": 344.76000000000005
+     }
+    },
+    {
+     "ref": "R25A",
+     "count": 1,
+     "category": "Resistors",
+     "value": "4.7k",
+     "location": {
+      "page": 1,
+      "x0": 36.0,
+      "top": 346.56,
+      "x1": 89.64,
+      "bottom": 355.56
+     }
+    },
+    {
+     "ref": "R25B",
+     "count": 1,
+     "category": "Resistors",
+     "value": "4.7k",
+     "location": {
+      "page": 1,
+      "x0": 114.6,
+      "top": 346.56,
+      "x1": 168.24,
+      "bottom": 355.56
+     }
+    },
+    {
+     "ref": "R32",
+     "count": 1,
+     "category": "Resistors",
+     "value": "20k",
+     "location": {
+      "page": 1,
+      "x0": 36.0,
+      "top": 368.16,
+      "x1": 89.64,
+      "bottom": 377.16
+     }
+    },
+    {
+     "ref": "R35",
+     "count": 1,
+     "category": "Resistors",
+     "value": "20k",
+     "location": {
+      "page": 1,
+      "x0": 36.0,
+      "top": 400.56,
+      "x1": 89.64,
+      "bottom": 409.56
+     }
+    },
+    {
+     "ref": "VOLA",
+     "count": 1,
+     "category": "Potentiometers",
+     "value": "A50K",
+     "location": {
+      "page": 1,
+      "x0": 409.224,
+      "top": 447.1132,
+      "x1": 504.98400000000004,
+      "bottom": 456.1132
+     }
+    },
+    {
+     "ref": "VOLB",
+     "count": 1,
+     "category": "Potentiometers",
+     "value": "A50K",
+     "location": {
+      "page": 1,
+      "x0": 409.224,
+      "top": 533.5132,
+      "x1": 504.98400000000004,
+      "bottom": 542.5132
+     }
+    },
+    {
+     "ref": "TREBLEA",
+     "count": 1,
+     "category": "Potentiometers",
+     "value": "B100K",
+     "location": {
+      "page": 1,
+      "x0": 409.224,
+      "top": 457.9132,
+      "x1": 511.104,
+      "bottom": 466.9132
+     }
+    },
+    {
+     "ref": "TREBLEB",
+     "count": 1,
+     "category": "Potentiometers",
+     "value": "B100K",
+     "location": {
+      "page": 1,
+      "x0": 409.224,
+      "top": 544.3132,
+      "x1": 511.104,
+      "bottom": 553.3132
+     }
+    },
+    {
+     "ref": "BASSA",
+     "count": 1,
+     "category": "Potentiometers",
+     "value": "C100K",
+     "location": {
+      "page": 1,
+      "x0": 409.224,
+      "top": 468.71320000000003,
+      "x1": 511.104,
+      "bottom": 477.71320000000003
+     }
+    },
+    {
+     "ref": "MIDA",
+     "count": 1,
+     "category": "Potentiometers",
+     "value": "C100K",
+     "location": {
+      "page": 1,
+      "x0": 409.224,
+      "top": 479.51320000000004,
+      "x1": 511.104,
+      "bottom": 488.51320000000004
+     }
+    },
+    {
+     "ref": "TIGHTA",
+     "count": 1,
+     "category": "Potentiometers",
+     "value": "C100K",
+     "location": {
+      "page": 1,
+      "x0": 409.224,
+      "top": 501.1132,
+      "x1": 511.104,
+      "bottom": 510.1132
+     }
+    },
+    {
+     "ref": "BASSB",
+     "count": 1,
+     "category": "Potentiometers",
+     "value": "C100K",
+     "location": {
+      "page": 1,
+      "x0": 409.224,
+      "top": 555.1132,
+      "x1": 511.104,
+      "bottom": 564.1132
+     }
+    },
+    {
+     "ref": "MIDB",
+     "count": 1,
+     "category": "Potentiometers",
+     "value": "C100K",
+     "location": {
+      "page": 1,
+      "x0": 409.224,
+      "top": 565.9132,
+      "x1": 511.104,
+      "bottom": 574.9132
+     }
+    },
+    {
+     "ref": "TIGHTB",
+     "count": 1,
+     "category": "Potentiometers",
+     "value": "C100K",
+     "location": {
+      "page": 1,
+      "x0": 409.224,
+      "top": 587.5132,
+      "x1": 511.104,
+      "bottom": 596.5132
+     }
+    },
+    {
+     "ref": "PRESA",
+     "count": 1,
+     "category": "Potentiometers",
+     "value": "C10K",
+     "location": {
+      "page": 1,
+      "x0": 409.224,
+      "top": 490.3132,
+      "x1": 505.524,
+      "bottom": 499.3132
+     }
+    },
+    {
+     "ref": "PRESB",
+     "count": 1,
+     "category": "Potentiometers",
+     "value": "C10K",
+     "location": {
+      "page": 1,
+      "x0": 409.224,
+      "top": 576.7132,
+      "x1": 505.524,
+      "bottom": 585.7132
+     }
+    },
+    {
+     "ref": "GAINA",
+     "count": 1,
+     "category": "Potentiometers",
+     "value": "B1M",
+     "location": {
+      "page": 1,
+      "x0": 409.224,
+      "top": 511.9132,
+      "x1": 501.744,
+      "bottom": 520.9132
+     }
+    },
+    {
+     "ref": "GAINB",
+     "count": 1,
+     "category": "Potentiometers",
+     "value": "A1M",
+     "location": {
+      "page": 1,
+      "x0": 409.224,
+      "top": 598.3132,
+      "x1": 501.20399999999995,
+      "bottom": 607.3132
+     }
+    },
+    {
+     "ref": "TRIMA",
+     "count": 1,
+     "category": "Potentiometers",
+     "value": "100K",
+     "location": {
+      "page": 1,
+      "x0": 409.224,
+      "top": 630.7132,
+      "x1": 468.444,
+      "bottom": 639.7132
+     }
+    },
+    {
+     "ref": "TRIMB",
+     "count": 1,
+     "category": "Potentiometers",
+     "value": "100K",
+     "location": {
+      "page": 1,
+      "x0": 409.224,
+      "top": 641.5132,
+      "x1": 468.444,
+      "bottom": 650.5132
+     }
+    }
+   ]
+  }
+ ],
+ "boards": {
+  "TREBLEA": [
+   {
+    "page": 0,
+    "x0": 317.3199133,
+    "top": 222.83053959999992,
+    "x1": 326.3199133,
+    "bottom": 244.43053959999992
+   },
+   {
+    "page": 2,
+    "x0": 229.80537080000005,
+    "top": 248.67004270000007,
+    "x1": 246.00537080000004,
+    "bottom": 254.79004270000007
+   }
+  ],
+  "PRESA": [
+   {
+    "page": 0,
+    "x0": 242.12008379999997,
+    "top": 225.35053959999993,
+    "x1": 250.76008379999996,
+    "bottom": 244.0705395999999
+   }
+  ],
+  "BASSA": [
+   {
+    "page": 0,
+    "x0": 470.00008379999997,
+    "top": 225.71053959999992,
+    "x1": 477.20008379999996,
+    "bottom": 244.43053959999992
+   }
+  ],
+  "GAINA": [
+   {
+    "page": 0,
+    "x0": 166.8399133,
+    "top": 227.51053959999993,
+    "x1": 174.39991329999998,
+    "bottom": 242.99053959999992
+   }
+  ],
+  "MIDA": [
+   {
+    "page": 0,
+    "x0": 394.7199133,
+    "top": 228.95053959999993,
+    "x1": 400.8399133,
+    "bottom": 241.1905395999999
+   }
+  ],
+  "C7A": [
+   {
+    "page": 0,
+    "x0": 351.2000838,
+    "top": 244.43053959999992,
+    "x1": 364.52008379999995,
+    "bottom": 253.79053959999993
+   }
+  ],
+  "C10A": [
+   {
+    "page": 0,
+    "x0": 213.7299133,
+    "top": 245.15053959999992,
+    "x1": 226.14991329999998,
+    "bottom": 254.15053959999992
+   }
+  ],
+  "D5": [
+   {
+    "page": 0,
+    "x0": 533.3199133,
+    "top": 245.5105395999999,
+    "x1": 544.4799132999999,
+    "bottom": 254.15053959999992
+   }
+  ],
+  "C14A": [
+   {
+    "page": 0,
+    "x0": 304.76008379999996,
+    "top": 245.87053959999992,
+    "x1": 319.52008379999995,
+    "bottom": 253.79053959999993
+   }
+  ],
+  "C16A": [
+   {
+    "page": 0,
+    "x0": 440.4800838,
+    "top": 249.11053959999992,
+    "x1": 457.0400838,
+    "bottom": 259.91053959999994
+   }
+  ],
+  "C13A": [
+   {
+    "page": 0,
+    "x0": 485.79991329999996,
+    "top": 250.1905395999999,
+    "x1": 503.4399133,
+    "bottom": 259.1905395999999
+   }
+  ],
+  "C6A": [
+   {
+    "page": 0,
+    "x0": 124.04008379999999,
+    "top": 254.87053959999992,
+    "x1": 137.36008379999998,
+    "bottom": 263.8705395999999
+   },
+   {
+    "page": 0,
+    "x0": 123.99991329999999,
+    "top": 356.7505395999999,
+    "x1": 136.95991329999998,
+    "bottom": 365.0305395999999
+   }
+  ],
+  "C3A": [
+   {
+    "page": 0,
+    "x0": 167.9199133,
+    "top": 254.87053959999992,
+    "x1": 182.67991329999998,
+    "bottom": 264.23053959999993
+   },
+   {
+    "page": 0,
+    "x0": 350.7999133,
+    "top": 266.03053959999994,
+    "x1": 363.7599133,
+    "bottom": 273.9505395999999
+   },
+   {
+    "page": 0,
+    "x0": 168.9999133,
+    "top": 356.7505395999999,
+    "x1": 182.3199133,
+    "bottom": 364.6705395999999
+   }
+  ],
+  "R25A": [
+   {
+    "page": 0,
+    "x0": 212.9199133,
+    "top": 255.59053959999991,
+    "x1": 228.7599133,
+    "bottom": 263.8705395999999
+   }
+  ],
+  "R13A": [
+   {
+    "page": 0,
+    "x0": 350.4399133,
+    "top": 255.59053959999991,
+    "x1": 364.8399133,
+    "bottom": 263.8705395999999
+   }
+  ],
+  "R22A": [
+   {
+    "page": 0,
+    "x0": 395.0799133,
+    "top": 255.59053959999991,
+    "x1": 410.5599133,
+    "bottom": 263.8705395999999
+   }
+  ],
+  "R35": [
+   {
+    "page": 0,
+    "x0": 532.9599132999999,
+    "top": 255.59053959999991,
+    "x1": 545.1999132999999,
+    "bottom": 263.8705395999999
+   }
+  ],
+  "R15A": [
+   {
+    "page": 0,
+    "x0": 213.9999133,
+    "top": 266.03053959999994,
+    "x1": 228.0399133,
+    "bottom": 273.9505395999999
+   }
+  ],
+  "D4A": [
+   {
+    "page": 0,
+    "x0": 396.5199133,
+    "top": 266.03053959999994,
+    "x1": 409.8399133,
+    "bottom": 273.9505395999999
+   }
+  ],
+  "R18A": [
+   {
+    "page": 0,
+    "x0": 486.8799133,
+    "top": 266.03053959999994,
+    "x1": 500.91991329999996,
+    "bottom": 273.9505395999999
+   },
+   {
+    "page": 2,
+    "x0": 242.39461030000007,
+    "top": 169.83004270000006,
+    "x1": 248.51461030000007,
+    "bottom": 179.91004270000008
+   }
+  ],
+  "R36": [
+   {
+    "page": 0,
+    "x0": 532.9599132999999,
+    "top": 266.03053959999994,
+    "x1": 545.1999132999999,
+    "bottom": 273.9505395999999
+   }
+  ],
+  "L2A": [
+   {
+    "page": 0,
+    "x0": 78.63991329999999,
+    "top": 271.4305395999999,
+    "x1": 91.2399133,
+    "bottom": 278.9905395999999
+   }
+  ],
+  "D1A": [
+   {
+    "page": 0,
+    "x0": 351.5199133,
+    "top": 275.7505395999999,
+    "x1": 363.03991329999997,
+    "bottom": 284.0305395999999
+   },
+   {
+    "page": 2,
+    "x0": 155.63461030000008,
+    "top": 430.83004270000004,
+    "x1": 162.83461030000007,
+    "bottom": 439.11004270000006
+   }
+  ],
+  "D2A": [
+   {
+    "page": 0,
+    "x0": 396.5199133,
+    "top": 275.7505395999999,
+    "x1": 409.1199133,
+    "bottom": 284.0305395999999
+   }
+  ],
+  "R9A": [
+   {
+    "page": 0,
+    "x0": 214.7199133,
+    "top": 276.1105395999999,
+    "x1": 227.3199133,
+    "bottom": 284.0305395999999
+   }
+  ],
+  "R17A": [
+   {
+    "page": 0,
+    "x0": 486.8799133,
+    "top": 276.1105395999999,
+    "x1": 500.91991329999996,
+    "bottom": 284.0305395999999
+   }
+  ],
+  "R32": [
+   {
+    "page": 0,
+    "x0": 532.9599132999999,
+    "top": 276.1105395999999,
+    "x1": 545.1999132999999,
+    "bottom": 284.0305395999999
+   }
+  ],
+  "IC2A": [
+   {
+    "page": 0,
+    "x0": 171.20008380000002,
+    "top": 277.5505395999999,
+    "x1": 180.20008380000002,
+    "bottom": 292.3105395999999
+   },
+   {
+    "page": 2,
+    "x0": 484.68537080000004,
+    "top": 645.7500427000001,
+    "x1": 494.7653708,
+    "bottom": 652.2300427
+   }
+  ],
+  "IC3A": [
+   {
+    "page": 0,
+    "x0": 307.9599133,
+    "top": 278.2705395999999,
+    "x1": 315.5199133,
+    "bottom": 291.9505395999999
+   }
+  ],
+  "R20A": [
+   {
+    "page": 0,
+    "x0": 393.9999133,
+    "top": 285.1105395999999,
+    "x1": 410.91991329999996,
+    "bottom": 294.47053959999994
+   }
+  ],
+  "R8A": [
+   {
+    "page": 0,
+    "x0": 213.6399133,
+    "top": 285.83053959999995,
+    "x1": 228.0399133,
+    "bottom": 294.83053959999995
+   }
+  ],
+  "C5A": [
+   {
+    "page": 0,
+    "x0": 260.0799133,
+    "top": 286.1905395999999,
+    "x1": 273.7599133,
+    "bottom": 294.47053959999994
+   }
+  ],
+  "R16A": [
+   {
+    "page": 0,
+    "x0": 487.28008379999994,
+    "top": 286.1905395999999,
+    "x1": 500.6000838,
+    "bottom": 293.7505395999999
+   }
+  ],
+  "R12A": [
+   {
+    "page": 0,
+    "x0": 350.0799133,
+    "top": 295.5505395999999,
+    "x1": 364.47991329999996,
+    "bottom": 304.5505395999999
+   }
+  ],
+  "R7A": [
+   {
+    "page": 0,
+    "x0": 214.3599133,
+    "top": 296.2705395999999,
+    "x1": 227.67991329999998,
+    "bottom": 304.1905395999999
+   }
+  ],
+  "C9A": [
+   {
+    "page": 0,
+    "x0": 260.0799133,
+    "top": 296.2705395999999,
+    "x1": 273.7599133,
+    "bottom": 304.1905395999999
+   }
+  ],
+  "R23A": [
+   {
+    "page": 0,
+    "x0": 394.7199133,
+    "top": 296.2705395999999,
+    "x1": 410.5599133,
+    "bottom": 304.1905395999999
+   }
+  ],
+  "R2A": [
+   {
+    "page": 0,
+    "x0": 395.1200838,
+    "top": 296.2705395999999,
+    "x1": 410.2400838,
+    "bottom": 304.1905395999999
+   },
+   {
+    "page": 0,
+    "x0": 214.3599133,
+    "top": 306.71053959999995,
+    "x1": 227.67991329999998,
+    "bottom": 314.6305395999999
+   }
+  ],
+  "R19A": [
+   {
+    "page": 0,
+    "x0": 486.8799133,
+    "top": 296.2705395999999,
+    "x1": 500.91991329999996,
+    "bottom": 304.1905395999999
+   }
+  ],
+  "R1A": [
+   {
+    "page": 0,
+    "x0": 125.0799133,
+    "top": 296.9905395999999,
+    "x1": 135.51991329999998,
+    "bottom": 303.47053959999994
+   }
+  ],
+  "R14A": [
+   {
+    "page": 0,
+    "x0": 258.6399133,
+    "top": 305.6305395999999,
+    "x1": 273.7599133,
+    "bottom": 314.9905395999999
+   }
+  ],
+  "R10A": [
+   {
+    "page": 0,
+    "x0": 350.0799133,
+    "top": 305.6305395999999,
+    "x1": 364.47991329999996,
+    "bottom": 314.9905395999999
+   }
+  ],
+  "C4A": [
+   {
+    "page": 0,
+    "x0": 169.3599133,
+    "top": 306.35053959999993,
+    "x1": 182.67991329999998,
+    "bottom": 314.2705395999999
+   },
+   {
+    "page": 2,
+    "x0": 248.15461030000006,
+    "top": 205.11004270000006,
+    "x1": 252.47461030000005,
+    "bottom": 215.19004270000008
+   }
+  ],
+  "C2A": [
+   {
+    "page": 0,
+    "x0": 123.99991329999999,
+    "top": 306.71053959999995,
+    "x1": 137.3199133,
+    "bottom": 314.2705395999999
+   },
+   {
+    "page": 2,
+    "x0": 218.99461030000003,
+    "top": 631.7100427,
+    "x1": 223.67461030000004,
+    "bottom": 640.7100427
+   }
+  ],
+  "R24A": [
+   {
+    "page": 0,
+    "x0": 395.0799133,
+    "top": 306.71053959999995,
+    "x1": 410.5599133,
+    "bottom": 314.2705395999999
+   },
+   {
+    "page": 2,
+    "x0": 265.43461030000003,
+    "top": 50.670042700000074,
+    "x1": 269.7546103000001,
+    "bottom": 60.030042700000074
+   }
+  ],
+  "C15A": [
+   {
+    "page": 0,
+    "x0": 440.79991329999996,
+    "top": 306.71053959999995,
+    "x1": 455.91991329999996,
+    "bottom": 314.2705395999999
+   }
+  ],
+  "C12A": [
+   {
+    "page": 0,
+    "x0": 486.8799133,
+    "top": 306.71053959999995,
+    "x1": 501.6399133,
+    "bottom": 314.2705395999999
+   }
+  ],
+  "L3A": [
+   {
+    "page": 0,
+    "x0": 285.2799133,
+    "top": 312.1105395999999,
+    "x1": 293.1999133,
+    "bottom": 324.35053959999993
+   }
+  ],
+  "C1A": [
+   {
+    "page": 0,
+    "x0": 124.7199133,
+    "top": 316.4305395999999,
+    "x1": 136.5999133,
+    "bottom": 324.35053959999993
+   }
+  ],
+  "C23A": [
+   {
+    "page": 0,
+    "x0": 439.35991329999996,
+    "top": 316.79053959999993,
+    "x1": 456.6399133,
+    "bottom": 324.35053959999993
+   }
+  ],
+  "C25": [
+   {
+    "page": 0,
+    "x0": 487.64008379999996,
+    "top": 316.79053959999993,
+    "x1": 500.2400838,
+    "bottom": 324.35053959999993
+   }
+  ],
+  "TIGHTB": [
+   {
+    "page": 0,
+    "x0": 91.2399133,
+    "top": 326.1505395999999,
+    "x1": 98.79991329999999,
+    "bottom": 344.8705395999999
+   }
+  ],
+  "PRESB": [
+   {
+    "page": 0,
+    "x0": 242.4800838,
+    "top": 327.23053959999993,
+    "x1": 250.0400838,
+    "bottom": 345.59053959999994
+   }
+  ],
+  "MIDB": [
+   {
+    "page": 0,
+    "x0": 393.9999133,
+    "top": 329.3905395999999,
+    "x1": 401.5599133,
+    "bottom": 342.71053959999995
+   }
+  ],
+  "C10B": [
+   {
+    "page": 0,
+    "x0": 212.1999133,
+    "top": 346.3105395999999,
+    "x1": 228.7599133,
+    "bottom": 354.59053959999994
+   }
+  ],
+  "C7B": [
+   {
+    "page": 0,
+    "x0": 350.7999133,
+    "top": 346.3105395999999,
+    "x1": 364.1199133,
+    "bottom": 354.95053959999996
+   }
+  ],
+  "C11B": [
+   {
+    "page": 0,
+    "x0": 260.0799133,
+    "top": 347.0305395999999,
+    "x1": 273.7599133,
+    "bottom": 354.59053959999994
+   }
+  ],
+  "C14B": [
+   {
+    "page": 0,
+    "x0": 304.7199133,
+    "top": 347.0305395999999,
+    "x1": 319.8399133,
+    "bottom": 354.59053959999994
+   }
+  ],
+  "C16B": [
+   {
+    "page": 0,
+    "x0": 440.8400838,
+    "top": 351.71053959999995,
+    "x1": 455.9600838,
+    "bottom": 359.6305395999999
+   }
+  ],
+  "C13B": [
+   {
+    "page": 0,
+    "x0": 485.79991329999996,
+    "top": 351.71053959999995,
+    "x1": 502.35991329999996,
+    "bottom": 359.6305395999999
+   }
+  ],
+  "R25B": [
+   {
+    "page": 0,
+    "x0": 213.6399133,
+    "top": 357.1105395999999,
+    "x1": 228.7599133,
+    "bottom": 364.6705395999999
+   }
+  ],
+  "R22B": [
+   {
+    "page": 0,
+    "x0": 395.0799133,
+    "top": 357.1105395999999,
+    "x1": 410.5599133,
+    "bottom": 365.0305395999999
+   }
+  ],
+  "R15B": [
+   {
+    "page": 0,
+    "x0": 214.4000838,
+    "top": 366.83053959999995,
+    "x1": 228.0800838,
+    "bottom": 374.7505395999999
+   }
+  ],
+  "R18B": [
+   {
+    "page": 0,
+    "x0": 486.9200838,
+    "top": 366.83053959999995,
+    "x1": 500.9600838,
+    "bottom": 374.7505395999999
+   }
+  ],
+  "R5B": [
+   {
+    "page": 0,
+    "x0": 124.35991329999999,
+    "top": 367.1905395999999,
+    "x1": 136.5999133,
+    "bottom": 375.47053959999994
+   }
+  ],
+  "L2B": [
+   {
+    "page": 0,
+    "x0": 78.63991329999999,
+    "top": 372.59053959999994,
+    "x1": 90.8799133,
+    "bottom": 380.5105395999999
+   }
+  ],
+  "R17B": [
+   {
+    "page": 0,
+    "x0": 487.28008379999994,
+    "top": 376.9105395999999,
+    "x1": 500.9600838,
+    "bottom": 384.47053959999994
+   }
+  ],
+  "R9B": [
+   {
+    "page": 0,
+    "x0": 215.0799133,
+    "top": 377.2705395999999,
+    "x1": 227.3199133,
+    "bottom": 385.5505395999999
+   }
+  ],
+  "TRIMB": [
+   {
+    "page": 0,
+    "x0": 258.6399133,
+    "top": 377.9905395999999,
+    "x1": 274.4799133,
+    "bottom": 385.5505395999999
+   }
+  ],
+  "IC3B": [
+   {
+    "page": 0,
+    "x0": 307.9599133,
+    "top": 379.4305395999999,
+    "x1": 315.5199133,
+    "bottom": 393.1105395999999
+   }
+  ],
+  "IC1": [
+   {
+    "page": 0,
+    "x0": 444.3999133,
+    "top": 379.4305395999999,
+    "x1": 450.0699133,
+    "bottom": 393.1105395999999
+   }
+  ],
+  "R3B": [
+   {
+    "page": 0,
+    "x0": 123.99991329999999,
+    "top": 386.9905395999999,
+    "x1": 136.5999133,
+    "bottom": 395.2705395999999
+   }
+  ],
+  "R8B": [
+   {
+    "page": 0,
+    "x0": 215.0799133,
+    "top": 386.9905395999999,
+    "x1": 227.3199133,
+    "bottom": 395.2705395999999
+   }
+  ],
+  "R11B": [
+   {
+    "page": 0,
+    "x0": 350.7999133,
+    "top": 386.9905395999999,
+    "x1": 363.7599133,
+    "bottom": 395.2705395999999
+   }
+  ],
+  "R20B": [
+   {
+    "page": 0,
+    "x0": 395.0799133,
+    "top": 386.9905395999999,
+    "x1": 410.5599133,
+    "bottom": 395.2705395999999
+   }
+  ],
+  "R16B": [
+   {
+    "page": 0,
+    "x0": 487.28008379999994,
+    "top": 386.9905395999999,
+    "x1": 500.6000838,
+    "bottom": 394.9105395999999
+   }
+  ],
+  "R1B": [
+   {
+    "page": 0,
+    "x0": 124.7199133,
+    "top": 397.4305395999999,
+    "x1": 135.51991329999998,
+    "bottom": 405.35053959999993
+   }
+  ],
+  "R7B": [
+   {
+    "page": 0,
+    "x0": 214.7199133,
+    "top": 397.4305395999999,
+    "x1": 227.3199133,
+    "bottom": 405.35053959999993
+   }
+  ],
+  "C9B": [
+   {
+    "page": 0,
+    "x0": 260.0799133,
+    "top": 397.4305395999999,
+    "x1": 273.03991329999997,
+    "bottom": 405.71053959999995
+   }
+  ],
+  "R23B": [
+   {
+    "page": 0,
+    "x0": 395.0799133,
+    "top": 397.4305395999999,
+    "x1": 410.5599133,
+    "bottom": 405.35053959999993
+   }
+  ],
+  "C4B": [
+   {
+    "page": 0,
+    "x0": 168.6399133,
+    "top": 406.4305395999999,
+    "x1": 182.67991329999998,
+    "bottom": 416.1505395999999
+   }
+  ],
+  "C28": [
+   {
+    "page": 0,
+    "x0": 123.99991329999999,
+    "top": 407.5105395999999,
+    "x1": 136.95991329999998,
+    "bottom": 415.4305395999999
+   }
+  ],
+  "C12B": [
+   {
+    "page": 0,
+    "x0": 486.8799133,
+    "top": 407.5105395999999,
+    "x1": 501.6399133,
+    "bottom": 415.4305395999999
+   }
+  ],
+  "R2B": [
+   {
+    "page": 0,
+    "x0": 214.7199133,
+    "top": 407.8705395999999,
+    "x1": 227.67991329999998,
+    "bottom": 416.1505395999999
+   }
+  ],
+  "R14B": [
+   {
+    "page": 0,
+    "x0": 259.71991330000003,
+    "top": 407.8705395999999,
+    "x1": 273.7599133,
+    "bottom": 415.4305395999999
+   }
+  ],
+  "C1B": [
+   {
+    "page": 0,
+    "x0": 440.79991329999996,
+    "top": 407.8705395999999,
+    "x1": 455.91991329999996,
+    "bottom": 415.4305395999999
+   }
+  ],
+  "R31A": [
+   {
+    "page": 0,
+    "x0": 168.68008379999998,
+    "top": 417.23053959999993,
+    "x1": 183.44008379999997,
+    "bottom": 426.23053959999993
+   },
+   {
+    "page": 2,
+    "x0": 418.0746103000001,
+    "top": 705.8700427,
+    "x1": 424.1946103,
+    "bottom": 715.9500427
+   }
+  ],
+  "R31B": [
+   {
+    "page": 0,
+    "x0": 395.4399133,
+    "top": 417.59053959999994,
+    "x1": 409.8399133,
+    "bottom": 425.8705395999999
+   }
+  ],
+  "C23B": [
+   {
+    "page": 0,
+    "x0": 440.4399133,
+    "top": 417.59053959999994,
+    "x1": 455.91991329999996,
+    "bottom": 425.8705395999999
+   }
+  ],
+  "R37": [
+   {
+    "page": 0,
+    "x0": 533.3199133,
+    "top": 417.59053959999994,
+    "x1": 545.1999132999999,
+    "bottom": 425.8705395999999
+   }
+  ],
+  "C20": [
+   {
+    "page": 2,
+    "x0": 359.7546103000001,
+    "top": 505.71004270000003,
+    "x1": 366.23461030000004,
+    "bottom": 515.7900427000001
+   }
+  ],
+  "IC2B": [
+   {
+    "page": 2,
+    "x0": 484.68537080000004,
+    "top": 594.6300427000001,
+    "x1": 495.4853708,
+    "bottom": 601.1100427
+   }
+  ],
+  "IC4A": [
+   {
+    "page": 2,
+    "x0": 484.68537080000004,
+    "top": 611.1900427,
+    "x1": 495.4853708,
+    "bottom": 618.0300427000001
+   }
+  ]
+ }
+}

@@ -1,0 +1,372 @@
+{
+ "id": "tonepad-blueclipper",
+ "publisher": "tonepad",
+ "title": "Clip Azul",
+ "document": "https://tonepad.com/getFile.asp?id=93",
+ "page": "https://tonepad.com/project.asp?id=49",
+ "file_name": "tonepad_blueclipper.pdf",
+ "sha256": "5dc1f24740d0e54b80a765e1972b2ec477206f21db165cdaf4d282680532b26c",
+ "checked": "2026-10-31T06:45:25+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "R1",
+     "count": 1,
+     "category": "Resistors",
+     "value": "200k",
+     "location": {
+      "page": 0,
+      "x0": 72.0,
+      "top": 371.12559999999996,
+      "x1": 124.0194,
+      "bottom": 383.12559999999996
+     }
+    },
+    {
+     "ref": "C1",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "47n",
+     "location": {
+      "page": 0,
+      "x0": 183.0254,
+      "top": 371.12559999999996,
+      "x1": 253.2968,
+      "bottom": 383.12559999999996
+     }
+    },
+    {
+     "ref": "D1",
+     "count": 1,
+     "category": "Diodes",
+     "value": "1N914",
+     "location": {
+      "page": 0,
+      "x0": 291.0254,
+      "top": 371.12559999999996,
+      "x1": 352.3808,
+      "bottom": 383.12559999999996
+     }
+    },
+    {
+     "ref": "D2",
+     "count": 1,
+     "category": "Diodes",
+     "value": "1N914",
+     "location": {
+      "page": 0,
+      "x0": 291.0254,
+      "top": 384.53119999999996,
+      "x1": 352.3808,
+      "bottom": 396.53119999999996
+     }
+    },
+    {
+     "ref": "R2",
+     "count": 1,
+     "category": "Resistors",
+     "value": "240k",
+     "location": {
+      "page": 0,
+      "x0": 72.0,
+      "top": 384.53119999999996,
+      "x1": 124.0194,
+      "bottom": 396.53119999999996
+     }
+    },
+    {
+     "ref": "C2",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "4.7u",
+     "location": {
+      "page": 0,
+      "x0": 183.0254,
+      "top": 384.53119999999996,
+      "x1": 239.9528,
+      "bottom": 396.53119999999996
+     }
+    },
+    {
+     "ref": "C3",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "4.7u",
+     "location": {
+      "page": 0,
+      "x0": 183.0254,
+      "top": 397.93679999999995,
+      "x1": 239.9528,
+      "bottom": 409.93679999999995
+     }
+    },
+    {
+     "ref": "R3",
+     "count": 1,
+     "category": "Resistors",
+     "value": "150",
+     "location": {
+      "page": 0,
+      "x0": 72.0,
+      "top": 397.93679999999995,
+      "x1": 118.0194,
+      "bottom": 409.93679999999995
+     }
+    },
+    {
+     "ref": "R4",
+     "count": 1,
+     "category": "Resistors",
+     "value": "150k",
+     "location": {
+      "page": 0,
+      "x0": 72.0,
+      "top": 411.34239999999994,
+      "x1": 124.0194,
+      "bottom": 423.34239999999994
+     }
+    },
+    {
+     "ref": "C4",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "33n",
+     "location": {
+      "page": 0,
+      "x0": 183.0254,
+      "top": 411.34239999999994,
+      "x1": 253.2968,
+      "bottom": 423.34239999999994
+     }
+    },
+    {
+     "ref": "R5",
+     "count": 1,
+     "category": "Resistors",
+     "value": "8.2k",
+     "location": {
+      "page": 0,
+      "x0": 72.0,
+      "top": 424.74799999999993,
+      "x1": 151.35510000000002,
+      "bottom": 436.74799999999993
+     }
+    },
+    {
+     "ref": "C5",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "100u",
+     "location": {
+      "page": 0,
+      "x0": 183.0254,
+      "top": 424.74799999999993,
+      "x1": 243.28879999999998,
+      "bottom": 436.74799999999993
+     }
+    },
+    {
+     "ref": "R6",
+     "count": 1,
+     "category": "Resistors",
+     "value": "10k",
+     "location": {
+      "page": 0,
+      "x0": 72.0,
+      "top": 438.1535999999999,
+      "x1": 117.34740000000001,
+      "bottom": 450.1535999999999
+     }
+    },
+    {
+     "ref": "R7",
+     "count": 1,
+     "category": "Potentiometers",
+     "value": "50k .",
+     "location": {
+      "page": 0,
+      "x0": 72.0,
+      "top": 451.5591999999999,
+      "x1": 117.34740000000001,
+      "bottom": 463.5591999999999
+     }
+    },
+    {
+     "ref": "R8",
+     "count": 1,
+     "category": "Resistors",
+     "value": "2.2M",
+     "location": {
+      "page": 0,
+      "x0": 72.0,
+      "top": 464.9647999999999,
+      "x1": 164.0151,
+      "bottom": 476.9647999999999
+     }
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "ICs",
+     "value": "TL071",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Hardware/Misc",
+     "value": "DIP SOCKET (Check Size)",
+     "location": null
+    }
+   ]
+  }
+ ],
+ "boards": {
+  "R7": [
+   {
+    "page": 0,
+    "x0": 170.6927,
+    "top": 207.1775,
+    "x1": 175.8053,
+    "bottom": 211.1775
+   },
+   {
+    "page": 0,
+    "x0": 505.7379,
+    "top": 666.5262,
+    "x1": 514.6850000000001,
+    "bottom": 673.5262
+   }
+  ],
+  "C5": [
+   {
+    "page": 0,
+    "x0": 124.3854,
+    "top": 580.1086,
+    "x1": 133.3325,
+    "bottom": 587.1086
+   }
+  ],
+  "R1": [
+   {
+    "page": 0,
+    "x0": 183.486,
+    "top": 608.9262,
+    "x1": 192.4331,
+    "bottom": 615.9262
+   }
+  ],
+  "C1": [
+   {
+    "page": 0,
+    "x0": 147.4294,
+    "top": 630.5585,
+    "x1": 156.3765,
+    "bottom": 637.5585
+   }
+  ],
+  "R5": [
+   {
+    "page": 0,
+    "x0": 377.0442,
+    "top": 637.7585,
+    "x1": 385.99129999999997,
+    "bottom": 644.7585
+   }
+  ],
+  "R6": [
+   {
+    "page": 0,
+    "x0": 441.8442,
+    "top": 637.7585,
+    "x1": 450.7913,
+    "bottom": 644.7585
+   }
+  ],
+  "R3": [
+   {
+    "page": 0,
+    "x0": 247.4442,
+    "top": 644.9585,
+    "x1": 256.3913,
+    "bottom": 651.9585
+   }
+  ],
+  "C3": [
+   {
+    "page": 0,
+    "x0": 341.259,
+    "top": 652.1089,
+    "x1": 350.2061,
+    "bottom": 659.1089
+   }
+  ],
+  "R8": [
+   {
+    "page": 0,
+    "x0": 111.486,
+    "top": 666.5262,
+    "x1": 120.4331,
+    "bottom": 673.5262
+   }
+  ],
+  "R2": [
+   {
+    "page": 0,
+    "x0": 183.486,
+    "top": 666.5262,
+    "x1": 192.4331,
+    "bottom": 673.5262
+   }
+  ],
+  "D1": [
+   {
+    "page": 0,
+    "x0": 383.3379,
+    "top": 666.5262,
+    "x1": 392.28499999999997,
+    "bottom": 673.5262
+   }
+  ],
+  "D2": [
+   {
+    "page": 0,
+    "x0": 404.9379,
+    "top": 666.5262,
+    "x1": 413.885,
+    "bottom": 673.5262
+   }
+  ],
+  "C4": [
+   {
+    "page": 0,
+    "x0": 470.5546,
+    "top": 666.5588,
+    "x1": 479.50169999999997,
+    "bottom": 673.5588
+   }
+  ],
+  "C2": [
+   {
+    "page": 0,
+    "x0": 225.1854,
+    "top": 680.9086,
+    "x1": 234.1325,
+    "bottom": 687.9086
+   }
+  ],
+  "R4": [
+   {
+    "page": 0,
+    "x0": 283.4442,
+    "top": 680.9585,
+    "x1": 292.3913,
+    "bottom": 687.9585
+   }
+  ]
+ }
+}
