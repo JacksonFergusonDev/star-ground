@@ -673,6 +673,22 @@ def test_a_document_no_longer_linked_is_removed(tmp_path: Path, run: Any) -> Non
     assert Outcome.REMOVED in {e.outcome for e in reporter.tally.events}
 
 
+def test_a_page_that_fails_keeps_the_builds_it_linked(tmp_path: Path, run: Any) -> None:
+    run(_docs(_pedalpcb_web()), lambda upload: _reading())
+    web = _docs(_pedalpcb_web())
+    # Fuzz's page has changed since, so it's fetched again, and it fails.
+    web._pages["https://www.pedalpcb.com/product-sitemap.xml"] = [
+        _Response(body=_PRODUCTS.replace(b"2026-01-01", b"2026-03-03"))
+    ]
+    web._pages["https://www.pedalpcb.com/product/fuzz/"] = [_Response(500)]
+
+    reporter = run(web, lambda upload: _reading())
+
+    entries = sorted((tmp_path / "builds" / "pedalpcb").glob("*.json"))
+    assert [e.name for e in entries] == ["drive.json", "fuzz.json"]
+    assert Outcome.REMOVED not in {e.outcome for e in reporter.tally.events}
+
+
 def test_a_reading_that_fails_is_reported_and_the_rest_go_on(
     tmp_path: Path, run: Any
 ) -> None:
