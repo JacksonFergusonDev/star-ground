@@ -1,0 +1,174 @@
+{
+ "id": "tonepad-rossphaser",
+ "publisher": "tonepad",
+ "title": "Ropez",
+ "document": "https://tonepad.com/getFile.asp?id=99",
+ "page": "https://tonepad.com/project.asp?id=25",
+ "file_name": "tonepad_rossphaser.pdf",
+ "sha256": "ef4a93004e796e4c26db1a8e91ec122c0837a341474d648628ddb089809700f6",
+ "checked": "2026-10-31T06:48:29+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Resistors",
+     "value": "1k",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Capacitors",
+     "value": "100p",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 8,
+     "category": "Resistors",
+     "value": "10k",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 2,
+     "category": "Capacitors",
+     "value": "10n",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Resistors",
+     "value": "470k",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Capacitors",
+     "value": "50n",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 12,
+     "category": "Resistors",
+     "value": "27k",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 4,
+     "category": "Capacitors",
+     "value": "3.3n",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Resistors",
+     "value": "15k",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 3,
+     "category": "Capacitors",
+     "value": "1u",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 2,
+     "category": "Resistors",
+     "value": "270k",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Capacitors",
+     "value": "3.3u",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Resistors",
+     "value": "100k",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Capacitors",
+     "value": "10u",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 4,
+     "category": "Resistors",
+     "value": "1.8k",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Resistors",
+     "value": "4.7k",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Resistors",
+     "value": "150k",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 3,
+     "category": "Diodes",
+     "value": "1N914",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 2,
+     "category": "Potentiometers",
+     "value": "500kC",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 3,
+     "category": "ICs",
+     "value": "LM13600",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 4,
+     "category": "Hardware/Misc",
+     "value": "DIP SOCKET (Check Size)",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "ICs",
+     "value": "RC4558, (other dual opamps will work)",
+     "location": null
+    }
+   ]
+  }
+ ],
+ "boards": {}
+}

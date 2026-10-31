@@ -1,0 +1,307 @@
+{
+ "id": "basicrelaybypass-pedalpcb",
+ "publisher": "pedalpcb",
+ "title": "Basic Relay Bypass",
+ "document": "https://docs.pedalpcb.com/project/BasicRelayBypass-PedalPCB.pdf",
+ "page": "https://www.pedalpcb.com/product/pcb393/",
+ "file_name": "BasicRelayBypass-PedalPCB.pdf",
+ "sha256": "0b5e9f13ac11ed6c16e9dcba5a0c1c572c611836c5e7ebf505ce052b678c8fc3",
+ "checked": "2026-10-31T09:44:49+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "R1",
+     "count": 1,
+     "category": "Resistors",
+     "value": "10k",
+     "location": {
+      "page": 0,
+      "x0": 37.0,
+      "top": 237.77800000000002,
+      "x1": 139.8748,
+      "bottom": 249.77800000000002
+     }
+    },
+    {
+     "ref": "R2",
+     "count": 1,
+     "category": "Resistors",
+     "value": "10k",
+     "location": {
+      "page": 0,
+      "x0": 37.0,
+      "top": 251.30599999999993,
+      "x1": 139.8748,
+      "bottom": 263.3059999999999
+     }
+    },
+    {
+     "ref": "R4",
+     "count": 1,
+     "category": "Resistors",
+     "value": "10k",
+     "location": {
+      "page": 0,
+      "x0": 37.0,
+      "top": 278.36199999999997,
+      "x1": 139.8748,
+      "bottom": 290.36199999999997
+     }
+    },
+    {
+     "ref": "R3",
+     "count": 1,
+     "category": "Resistors",
+     "value": "100k",
+     "location": {
+      "page": 0,
+      "x0": 37.0,
+      "top": 264.83399999999995,
+      "x1": 146.5492,
+      "bottom": 276.83399999999995
+     }
+    },
+    {
+     "ref": "C1",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "1u MLCC",
+     "location": {
+      "page": 0,
+      "x0": 37.0,
+      "top": 305.418,
+      "x1": 131.8684,
+      "bottom": 317.418
+     }
+    },
+    {
+     "ref": "C2",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "100n",
+     "location": {
+      "page": 0,
+      "x0": 37.0,
+      "top": 318.94599999999997,
+      "x1": 145.21720000000002,
+      "bottom": 330.94599999999997
+     }
+    },
+    {
+     "ref": "C3",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "100n",
+     "location": {
+      "page": 0,
+      "x0": 37.0,
+      "top": 332.474,
+      "x1": 145.21720000000002,
+      "bottom": 344.474
+     }
+    },
+    {
+     "ref": "D1",
+     "count": 1,
+     "category": "Diodes",
+     "value": "1N5817",
+     "location": {
+      "page": 0,
+      "x0": 37.0,
+      "top": 359.53,
+      "x1": 160.55800000000002,
+      "bottom": 371.53
+     }
+    },
+    {
+     "ref": "D2",
+     "count": 1,
+     "category": "Diodes",
+     "value": "1N5817",
+     "location": {
+      "page": 0,
+      "x0": 37.0,
+      "top": 373.058,
+      "x1": 160.55800000000002,
+      "bottom": 385.058
+     }
+    },
+    {
+     "ref": "IC1",
+     "count": 1,
+     "category": "ICs",
+     "value": "NE555",
+     "location": {
+      "page": 0,
+      "x0": 37.0,
+      "top": 400.114,
+      "x1": 226.38580000000002,
+      "bottom": 412.114
+     }
+    },
+    {
+     "ref": "IC2",
+     "count": 1,
+     "category": "ICs",
+     "value": "78L09",
+     "location": {
+      "page": 0,
+      "x0": 37.0,
+      "top": 413.642,
+      "x1": 151.8916,
+      "bottom": 425.642
+     }
+    },
+    {
+     "ref": "Q1",
+     "count": 1,
+     "category": "Transistors",
+     "value": "2N3904",
+     "location": {
+      "page": 0,
+      "x0": 37.0,
+      "top": 440.698,
+      "x1": 160.55800000000002,
+      "bottom": 452.698
+     }
+    },
+    {
+     "ref": "K1",
+     "count": 1,
+     "category": "Relays",
+     "value": "A-4.5W-K",
+     "location": {
+      "page": 0,
+      "x0": 37.0,
+      "top": 467.75399999999996,
+      "x1": 170.3152,
+      "bottom": 479.75399999999996
+     }
+    },
+    {
+     "ref": "FS",
+     "count": 1,
+     "category": "Switches",
+     "value": "SPST Momentary",
+     "location": {
+      "page": 0,
+      "x0": 37.0,
+      "top": 494.81,
+      "x1": 301.0618,
+      "bottom": 506.81
+     }
+    }
+   ]
+  }
+ ],
+ "boards": {
+  "R3": [
+   {
+    "page": 0,
+    "x0": 444.725,
+    "top": 562.984,
+    "x1": 451.925,
+    "bottom": 568.744
+   }
+  ],
+  "D2": [
+   {
+    "page": 0,
+    "x0": 412.325,
+    "top": 563.3439999999999,
+    "x1": 420.245,
+    "bottom": 568.744
+   }
+  ],
+  "K1": [
+   {
+    "page": 0,
+    "x0": 318.005,
+    "top": 580.9839999999999,
+    "x1": 323.945,
+    "bottom": 587.824
+   },
+   {
+    "page": 0,
+    "x0": 388.06918399999995,
+    "top": 584.2239999999999,
+    "x1": 393.829184,
+    "bottom": 593.584
+   },
+   {
+    "page": 0,
+    "x0": 318.949184,
+    "top": 620.584,
+    "x1": 330.469184,
+    "bottom": 627.784
+   }
+  ],
+  "D1": [
+   {
+    "page": 0,
+    "x0": 369.349184,
+    "top": 583.864,
+    "x1": 375.469184,
+    "bottom": 591.784
+   }
+  ],
+  "IC1": [
+   {
+    "page": 0,
+    "x0": 525.365,
+    "top": 629.584,
+    "x1": 533.645,
+    "bottom": 635.704
+   }
+  ],
+  "R4": [
+   {
+    "page": 0,
+    "x0": 403.325,
+    "top": 638.944,
+    "x1": 410.525,
+    "bottom": 645.064
+   }
+  ],
+  "Q1": [
+   {
+    "page": 0,
+    "x0": 367.325,
+    "top": 640.744,
+    "x1": 374.885,
+    "bottom": 646.864
+   }
+  ],
+  "IC2": [
+   {
+    "page": 0,
+    "x0": 327.005,
+    "top": 688.9839999999999,
+    "x1": 335.285,
+    "bottom": 695.104
+   }
+  ],
+  "R1": [
+   {
+    "page": 0,
+    "x0": 363.94918399999995,
+    "top": 708.784,
+    "x1": 369.709184,
+    "bottom": 715.624
+   }
+  ],
+  "R2": [
+   {
+    "page": 0,
+    "x0": 363.94918399999995,
+    "top": 731.104,
+    "x1": 369.709184,
+    "bottom": 738.304
+   }
+  ]
+ }
+}

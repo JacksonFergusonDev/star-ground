@@ -1,0 +1,182 @@
+{
+ "id": "tonepad-phase90",
+ "publisher": "tonepad",
+ "title": "Pez 90",
+ "document": "https://tonepad.com/getFile.asp?id=42",
+ "page": "https://tonepad.com/project.asp?id=7",
+ "file_name": "tonepad_phase90.pdf",
+ "sha256": "5b42601b939608f050026c20c4531d6f2c55449dc3ab13c91195da13ef45cc12",
+ "checked": "2026-10-31T06:20:43+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "D1",
+     "count": 1,
+     "category": "Diodes",
+     "value": "1N914",
+     "location": {
+      "page": 0,
+      "x0": 276.6254,
+      "top": 381.92589999999996,
+      "x1": 337.99070000000006,
+      "bottom": 393.92589999999996
+     }
+    },
+    {
+     "ref": "D2",
+     "count": 1,
+     "category": "Diodes",
+     "value": "5.1V zener",
+     "location": {
+      "page": 0,
+      "x0": 276.6254,
+      "top": 395.33179999999993,
+      "x1": 360.67589999999996,
+      "bottom": 407.33179999999993
+     }
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Resistors",
+     "value": "4.7k",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Potentiometers",
+     "value": "500k rev. Log.",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 10,
+     "category": "Resistors",
+     "value": "10k",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Potentiometers",
+     "value": "250k .",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 5,
+     "category": "Resistors",
+     "value": "22k",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Resistors",
+     "value": "56k",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 6,
+     "category": "Capacitors",
+     "value": "50n",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Transistors",
+     "value": "2N4125",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 6,
+     "category": "Resistors",
+     "value": "150k",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 2,
+     "category": "Capacitors",
+     "value": "10n",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 4,
+     "category": "Transistors",
+     "value": "2N5952 (Matched)",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 2,
+     "category": "Resistors",
+     "value": "470k",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Capacitors",
+     "value": "10u",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 3,
+     "category": "ICs",
+     "value": "TL072",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 3,
+     "category": "Hardware/Misc",
+     "value": "DIP SOCKET (Check Size)",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Resistors",
+     "value": "1M",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Capacitors",
+     "value": "15u",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Resistors",
+     "value": "3.9M",
+     "location": null
+    }
+   ]
+  }
+ ],
+ "boards": {
+  "D2": [
+   {
+    "page": 0,
+    "x0": 232.1379,
+    "top": 688.1262,
+    "x1": 241.085,
+    "bottom": 695.1262
+   }
+  ]
+ }
+}

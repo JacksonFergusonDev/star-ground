@@ -1,0 +1,62 @@
+{
+ "id": "tonepad-bipolar",
+ "publisher": "tonepad",
+ "title": "Bipolar Power",
+ "document": "https://tonepad.com/getFile.asp?id=118",
+ "page": "https://tonepad.com/project.asp?id=64",
+ "file_name": "tonepad_bipolar.pdf",
+ "sha256": "b4fdb6e3735915e44cfa645615d1b06dd6fbd2cc70a5a5ac68b3cc7065b72b71",
+ "checked": "2026-10-31T05:54:46+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Resistors",
+     "value": "1k",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "ICs",
+     "value": "MAX1044",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Hardware/Misc",
+     "value": "DIP SOCKET (Check Size)",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Resistors",
+     "value": "6.8k",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 2,
+     "category": "Capacitors",
+     "value": "10u",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Transistors",
+     "value": "2n5087",
+     "location": null
+    }
+   ]
+  }
+ ],
+ "boards": {}
+}

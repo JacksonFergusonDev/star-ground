@@ -1,0 +1,291 @@
+{
+ "id": "tonepad-wahwah",
+ "publisher": "tonepad",
+ "title": "Wah Wah",
+ "document": "https://tonepad.com/getFile.asp?id=59",
+ "page": "https://tonepad.com/project.asp?id=29",
+ "file_name": "tonepad_wahwah.pdf",
+ "sha256": "7a7df09d32a5a83f110f0f3a14d0d81b9bceb92d996726e9a084dff201f19fac",
+ "checked": "2026-10-31T06:32:15+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "Q1",
+     "count": 1,
+     "category": "Transistors",
+     "value": "MPSA18",
+     "location": {
+      "page": 1,
+      "x0": 220.0961,
+      "top": 194.7258999999999,
+      "x1": 294.12410000000006,
+      "bottom": 206.7258999999999
+     }
+    },
+    {
+     "ref": "Q2",
+     "count": 1,
+     "category": "Transistors",
+     "value": "MPSA18",
+     "location": {
+      "page": 1,
+      "x0": 220.0961,
+      "top": 208.13179999999988,
+      "x1": 294.12410000000006,
+      "bottom": 220.13179999999988
+     }
+    },
+    {
+     "ref": "Q3",
+     "count": 1,
+     "category": "Transistors",
+     "value": "2N5457",
+     "location": {
+      "page": 1,
+      "x0": 168.6254,
+      "top": 374.72589999999997,
+      "x1": 237.3254,
+      "bottom": 386.72589999999997
+     }
+    },
+    {
+     "ref": "Q4",
+     "count": 1,
+     "category": "Transistors",
+     "value": "2N5457",
+     "location": {
+      "page": 1,
+      "x0": 435.0254,
+      "top": 374.72589999999997,
+      "x1": 503.7214,
+      "bottom": 386.72589999999997
+     }
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Resistors",
+     "value": "470",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 2,
+     "category": "Capacitors",
+     "value": "10n",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 2,
+     "category": "Resistors",
+     "value": "220k",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 2,
+     "category": "Resistors",
+     "value": "1k",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 3,
+     "category": "Capacitors",
+     "value": "220n",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 2,
+     "category": "Resistors",
+     "value": "4.7k",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 2,
+     "category": "Resistors",
+     "value": "1.5k",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Capacitors",
+     "value": "4.7u",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 2,
+     "category": "Potentiometers",
+     "value": "100k",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Resistors",
+     "value": "10k",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Capacitors",
+     "value": "47u",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Resistors",
+     "value": "22k",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Resistors",
+     "value": "33k",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Potentiometers",
+     "value": "Wah pot",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Resistors",
+     "value": "68k",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Resistors",
+     "value": "82k",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 2,
+     "category": "Resistors",
+     "value": "470k",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Diodes",
+     "value": "1N914",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Resistors",
+     "value": "6.8k",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 3,
+     "category": "Resistors",
+     "value": "1M",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Potentiometers",
+     "value": "5k",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Capacitors",
+     "value": "1u",
+     "location": null
+    }
+   ]
+  }
+ ],
+ "boards": {
+  "Q4": [
+   {
+    "page": 0,
+    "x0": 464.3184,
+    "top": 504.55850000000004,
+    "x1": 473.6564,
+    "bottom": 511.55850000000004
+   },
+   {
+    "page": 1,
+    "x0": 464.3184,
+    "top": 504.55850000000004,
+    "x1": 473.6564,
+    "bottom": 511.55850000000004
+   }
+  ],
+  "Q1": [
+   {
+    "page": 0,
+    "x0": 236.6646,
+    "top": 601.7085999999999,
+    "x1": 246.0026,
+    "bottom": 608.7085999999999
+   },
+   {
+    "page": 1,
+    "x0": 236.6646,
+    "top": 601.7085999999999,
+    "x1": 246.0026,
+    "bottom": 608.7085999999999
+   }
+  ],
+  "Q2": [
+   {
+    "page": 0,
+    "x0": 438.2646,
+    "top": 601.7085999999999,
+    "x1": 447.6026,
+    "bottom": 608.7085999999999
+   },
+   {
+    "page": 1,
+    "x0": 438.2646,
+    "top": 601.7085999999999,
+    "x1": 447.6026,
+    "bottom": 608.7085999999999
+   }
+  ],
+  "Q3": [
+   {
+    "page": 0,
+    "x0": 125.9184,
+    "top": 626.9585,
+    "x1": 135.2564,
+    "bottom": 633.9585
+   },
+   {
+    "page": 1,
+    "x0": 125.9184,
+    "top": 626.9585,
+    "x1": 135.2564,
+    "bottom": 633.9585
+   }
+  ]
+ }
+}

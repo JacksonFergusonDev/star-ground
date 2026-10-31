@@ -1,0 +1,132 @@
+{
+ "id": "tonepad-phase45",
+ "publisher": "tonepad",
+ "title": "Pez 45",
+ "document": "https://tonepad.com/getFile.asp?id=70",
+ "page": "https://tonepad.com/project.asp?id=13",
+ "file_name": "tonepad_phase45.pdf",
+ "sha256": "9db97b1088e38bb067454645090cd3b11a3742dcb7e8b87ff5cd7994626fef40",
+ "checked": "2026-10-31T06:35:10+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Resistors",
+     "value": "7.5k",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 4,
+     "category": "Capacitors",
+     "value": "10n",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Diodes",
+     "value": "1N5230 (4.7v zener)",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 12,
+     "category": "Resistors",
+     "value": "10k",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 4,
+     "category": "Capacitors",
+     "value": "50n",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Resistors",
+     "value": "20k",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 3,
+     "category": "Capacitors",
+     "value": "10u",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Potentiometers",
+     "value": "250k .",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 5,
+     "category": "Resistors",
+     "value": "150k",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Potentiometers",
+     "value": "500k Rev. Log",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 3,
+     "category": "Resistors",
+     "value": "470k",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 2,
+     "category": "ICs",
+     "value": "TL072",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 2,
+     "category": "Hardware/Misc",
+     "value": "DIP SOCKET (Check Size)",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Resistors",
+     "value": "1M",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 2,
+     "category": "Transistors",
+     "value": "2N5952",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Resistors",
+     "value": "3.9M",
+     "location": null
+    }
+   ]
+  }
+ ],
+ "boards": {}
+}
