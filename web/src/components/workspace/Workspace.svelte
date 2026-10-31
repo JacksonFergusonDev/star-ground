@@ -44,16 +44,16 @@
   // The card being checked against its document, and the part to show first.
   let reviewing = $state<{ id: string; ref: string | null } | null>(null);
 
-  // The card being built in bench mode.
-  let benching = $state<string | null>(null);
-  const benched = $derived(benching ? (workspace.find(benching) ?? null) : null);
-  const benchProject = $derived(benched ? projectOf(benched.id) : null);
-
   const reviewed = $derived(reviewing ? (workspace.find(reviewing.id) ?? null) : null);
   // A card's project on the master list, as last built: a correction shows on
   // the card's checks at once, and in the project once the list catches up.
   const projectOf = (id: string): ProjectResult | null =>
     result?.projects[listed.indexOf(id)] ?? null;
+
+  // The card being built in bench mode.
+  let benching = $state<string | null>(null);
+  const benched = $derived(benching ? (workspace.find(benching) ?? null) : null);
+  const benchProject = $derived(benched ? projectOf(benched.id) : null);
 
   function review(id: string, ref: string | null = null): void {
     reviewing = { id, ref };
