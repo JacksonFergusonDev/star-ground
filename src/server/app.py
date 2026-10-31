@@ -49,6 +49,7 @@ from src.api import (
 )
 from src.bom_lib import (
     BOM_PRESETS,
+    CountedPart,
     FeedbackRating,
     FileUpload,
     InputMethod,
@@ -91,6 +92,7 @@ from src.server.limits import (
 from src.server.models import (
     BuildNotChosen,
     BuildStep,
+    CountedPartOut,
     DocumentReading,
     DocumentsMissing,
     ExportKind,
@@ -544,15 +546,26 @@ def _part(part: ReadPart) -> ReadPartOut:
     )
 
 
-def _build_order(parts: Sequence[ReadPart]) -> list[BuildStep]:
-    """A project's designators by soldering stage, lowest parts first."""
-    stages: dict[BuildStage, list[str]] = {}
+def _counted(part: CountedPart) -> CountedPartOut:
+    return CountedPartOut(
+        key=part.key, category=part.category, value=part.value, count=part.count
+    )
+
+
+def _build_order(
+    parts: Sequence[ReadPart], counted: Sequence[CountedPart]
+) -> list[BuildStep]:
+    """A project's parts by soldering stage, lowest parts first."""
+    stages: dict[BuildStage, BuildStep] = {}
+
+    def step(stage: BuildStage) -> BuildStep:
+        return stages.setdefault(stage, BuildStep(stage=stage, refs=[], counted=[]))
+
     for part in parts:
-        stages.setdefault(build_stage(part.category, part.value), []).append(part.ref)
-    return [
-        BuildStep(stage=stage, refs=refs)
-        for stage, refs in sorted(stages.items(), key=lambda s: stage_order(s[0]))
-    ]
+        step(build_stage(part.category, part.value)).refs.append(part.ref)
+    for c in counted:
+        step(build_stage(c.category, c.value)).counted.append(c.key)
+    return sorted(stages.values(), key=lambda s: stage_order(s.stage))
 
 
 def _warning(w: ParseWarning) -> PartWarning:
@@ -594,7 +607,8 @@ def _result(
                 options=list(p.options),
                 errors=[_problem(services, e) for e in p.errors],
                 parts=[_part(part) for part in p.parts],
-                build_order=_build_order(p.parts),
+                counted=[_counted(c) for c in p.counted],
+                build_order=_build_order(p.parts, p.counted),
             )
         )
     stats = master.stats

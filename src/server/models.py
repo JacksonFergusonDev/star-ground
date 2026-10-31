@@ -252,11 +252,29 @@ class ReadPartOut(_Model):
     )
 
 
+class CountedPartOut(_Model):
+    """A part a project's parts list counts by value, with no designator.
+
+    Tonepad lists most of a build this way ('2 - 47'). It has no place on the
+    page, since the document prints no designator for it.
+    """
+
+    key: str = Field(
+        description="What names it where a designator would: '#Resistors 47'."
+    )
+    category: ComponentCategory
+    value: str
+    count: int = Field(description="How many the parts list counts.")
+
+
 class BuildStep(_Model):
     """One stage of soldering a project, lowest parts first."""
 
     stage: BuildStage
     refs: list[str] = Field(description="Its designators, in the order read.")
+    counted: list[str] = Field(
+        description="The keys of its parts counted by value, in the order read."
+    )
 
 
 class ProjectResult(_Model):
@@ -272,8 +290,11 @@ class ProjectResult(_Model):
         description="Each designator read, in the order read, to check against "
         "the document."
     )
+    counted: list[CountedPartOut] = Field(
+        description="Each part counted by value instead, in the order read."
+    )
     build_order: list[BuildStep] = Field(
-        description="Its designators by the stage they're soldered in, lowest "
+        description="Its parts by the stage they're soldered in, lowest "
         "parts first, as the field manual orders them."
     )
 

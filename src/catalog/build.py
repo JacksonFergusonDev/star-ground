@@ -26,7 +26,7 @@ from hashlib import sha256
 from pathlib import Path
 from typing import Any
 
-from src.api import offered, read_document, read_parts
+from src.api import counted_parts, offered, read_document, read_parts
 from src.bom_lib import (
     FileUpload,
     InputMethod,
@@ -231,13 +231,12 @@ def _entry_parts(build: ParseResult) -> list[dict[str, Any]]:
     counted = [
         {
             "ref": None,
-            "count": count,
-            "category": key.category.value,
-            "value": key.value,
+            "count": part.count,
+            "category": part.category.value,
+            "value": part.value,
             "location": None,
         }
-        for key, data in build.inventory.items()
-        if (count := sum(data["counted"].values()))
+        for part in counted_parts(build)
     ]
     return designated + counted
 

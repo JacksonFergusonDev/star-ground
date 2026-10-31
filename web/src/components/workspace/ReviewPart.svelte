@@ -2,8 +2,9 @@
   // One part to check against the document: confirm it, or correct it and
   // tell Star Ground, which adds the document to the parser's regression
   // corpus. The report names the document by its link or file name; the
-  // document itself is never sent.
-  import type { ReadPartOut } from '../../lib/api';
+  // document itself is never sent. A part counted by value has no designator
+  // to correct, so it can only be confirmed.
+  import type { CountedPartOut, ReadPartOut } from '../../lib/api';
   import { readPart, reportsUnavailable, sendPartReport } from '../../lib/server';
   import type { Check } from '../../lib/workspace.svelte';
 
@@ -17,7 +18,7 @@
     onSelect,
     onCheck,
   }: {
-    part: ReadPartOut;
+    part: ReadPartOut | CountedPartOut;
     check: Check | null;
     warnings: string[];
     selected: boolean;
@@ -29,6 +30,8 @@
     onCheck: (check: Check | null) => void;
   } = $props();
 
+  const designated = $derived('ref' in part ? part : null);
+  const counted = $derived('key' in part ? part : null);
   // The value as read, and as the list now has it.
   const read = $derived(check?.state === 'corrected' ? check.read : part.value);
   const value = $derived(check?.state === 'corrected' ? check.value : part.value);
@@ -52,12 +55,14 @@
 
   async function save(event: SubmitEvent): Promise<void> {
     event.preventDefault();
+    const at = designated;
+    if (!at) return;
     saving = true;
     problem = '';
     try {
       const changed = typed.trim() !== value;
       if (changed) {
-        const corrected = await readPart({ ref: part.ref, value: typed, category: part.category });
+        const corrected = await readPart({ ref: at.ref, value: typed, category: at.category });
         onCheck(
           corrected.value === read
             ? null
@@ -68,10 +73,10 @@
         try {
           await sendPartReport({
             document,
-            ref: part.ref,
+            ref: at.ref,
             read,
             correction: changed ? typed.trim() : null,
-            location: part.location,
+            location: at.location,
             comment: note.trim(),
           });
           sent = 'sent';
@@ -91,17 +96,22 @@
 
 <li
   class="part"
-  data-ref={part.ref}
+  data-ref={designated?.ref ?? counted?.key}
   class:selected
   class:hovered
   class:flagged={warnings.length && !check}
 >
   <div class="row">
     <button class="show" type="button" onclick={onSelect} aria-pressed={selected}>
-      <span class="ref">{part.ref}</span>
-      <span class="value">{value}</span>
-      {#if !part.location}
-        <span class="where">Not found on the page</span>
+      {#if counted}
+        <span class="ref">{counted.count} ×</span>
+        <span class="value">{value}</span>
+      {:else if designated}
+        <span class="ref">{designated.ref}</span>
+        <span class="value">{value}</span>
+        {#if !designated.location}
+          <span class="where">Not found on the page</span>
+        {/if}
       {/if}
     </button>
     <div class="marks">
@@ -113,7 +123,9 @@
       >
         {confirmed ? 'Checked' : 'Looks right'}
       </button>
-      <button type="button" class="action" aria-expanded={editing} onclick={edit}>Wrong?</button>
+      {#if !counted}
+        <button type="button" class="action" aria-expanded={editing} onclick={edit}>Wrong?</button>
+      {/if}
     </div>
   </div>
 
@@ -132,10 +144,10 @@
     <p class="note" role="status">This server can't take reports, so only your copy changed.</p>
   {/if}
 
-  {#if editing}
+  {#if editing && designated}
     <form class="edit" onsubmit={save}>
       <label>
-        <span>What the document prints for {part.ref}</span>
+        <span>What the document prints for {designated.ref}</span>
         <input bind:value={typed} required autocomplete="off" />
       </label>
       <label>

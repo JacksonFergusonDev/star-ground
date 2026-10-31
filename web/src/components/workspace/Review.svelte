@@ -2,6 +2,8 @@
   // Checking a project against its document: the pages on one side, each part
   // outlined where it was read, and the parts on the other, in the
   // document's order. Choosing a part in either place shows it in the other.
+  // Parts the document counts by value ('2 - 47') follow, with no place on
+  // the page, since it prints no designator for them.
   import { onMount } from 'svelte';
   import type { ProjectResult } from '../../lib/api';
   import type { BoardMarks } from '../../lib/boards';
@@ -71,9 +73,15 @@
 
   // In the document's order, down each column, so the list reads beside it.
   const parts = $derived(readingOrder(project?.parts ?? []));
+  const counted = $derived(project?.counted ?? []);
   const flagged = $derived(parts.filter((p) => warnings.has(p.ref) && !checks[p.ref]));
   const shown = $derived(onlyFlagged ? flagged : parts);
-  const checked = $derived(parts.filter((p) => checks[p.ref]).length);
+  // Every part, a counted row counting as many as it lists.
+  const total = $derived(parts.length + counted.reduce((sum, c) => sum + c.count, 0));
+  const checked = $derived(
+    parts.filter((p) => checks[p.ref]).length +
+      counted.filter((c) => checks[c.key]).reduce((sum, c) => sum + c.count, 0),
+  );
   // Warnings about parts the list doesn't have ('R9 may be missing').
   const missing = $derived([...warnings].filter(([ref]) => !parts.some((p) => p.ref === ref)));
 
@@ -142,7 +150,7 @@
       {:else}
         <div class="summary">
           <p class="note">
-            {checked} of {count(parts.length, 'part')} checked{flagged.length
+            {checked} of {count(total, 'part')} checked{flagged.length
               ? `; ${flagged.length} flagged by Star Ground's self-checks`
               : ''}.
           </p>
@@ -179,6 +187,25 @@
             />
           {/each}
         </ul>
+        {#if counted.length && !onlyFlagged}
+          <h3>Counted by value</h3>
+          <p class="note">
+            The document lists these by value, with no designator to find on the page.
+          </p>
+          <ul class="list" aria-label="Counted by value">
+            {#each counted as part (part.key)}
+              <ReviewPart
+                {part}
+                check={checks[part.key] ?? null}
+                warnings={[]}
+                selected={selected === part.key}
+                {document}
+                onSelect={() => (selected = part.key)}
+                onCheck={(check) => onCheck(part.key, check)}
+              />
+            {/each}
+          </ul>
+        {/if}
       {/if}
     </div>
   </div>
@@ -252,6 +279,15 @@
     align-items: center;
     color: var(--muted);
     font-size: var(--fs-ui);
+  }
+  h3 {
+    margin: 12px 0 0;
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: var(--fs-label);
+    font-weight: 400;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
   }
   .missing {
     margin: 0;

@@ -158,6 +158,26 @@ class ReadPart:
 
 
 @dataclass(frozen=True, slots=True)
+class CountedPart:
+    """A part a parts list counts by value, with no designator ('2 - 47').
+
+    Attributes:
+        category: What kind of part it is.
+        value: Its value, as the parts list holds it ('47').
+        count: How many the list counts.
+    """
+
+    category: ComponentCategory
+    value: str
+    count: int
+
+    @property
+    def key(self) -> str:
+        """What names it where a designator would ('#Resistors 47')."""
+        return f"#{self.category.value} {self.value}"
+
+
+@dataclass(frozen=True, slots=True)
 class BuiltProject:
     """One project as it went onto the master list.
 
@@ -178,6 +198,7 @@ class BuiltProject:
         pcb_shop: Where its board is bought, when a shop sells it.
         parts: Each designator its parts list read, in the order read, for
             checking against the document.
+        counted: Each part its parts list counts by value instead.
     """
 
     name: str
@@ -191,6 +212,7 @@ class BuiltProject:
     source_url: str | None = None
     pcb_shop: PcbShop | None = None
     parts: tuple[ReadPart, ...] = ()
+    counted: tuple[CountedPart, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)

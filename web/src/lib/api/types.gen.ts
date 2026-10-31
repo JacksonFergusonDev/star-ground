@@ -118,6 +118,12 @@ export type BuildStep = {
      * Its designators, in the order read.
      */
     refs: Array<string>;
+    /**
+     * Counted
+     *
+     * The keys of its parts counted by value, in the order read.
+     */
+    counted: Array<string>;
 };
 
 /**
@@ -133,6 +139,34 @@ export type ComponentCategory = 'Resistors' | 'Capacitors' | 'Potentiometers' | 
  * Purchasing origins for bill-of-materials components.
  */
 export type ComponentOrigin = 'Circuit Board' | 'Hardware Kit' | 'Extras';
+
+/**
+ * CountedPartOut
+ *
+ * A part a project's parts list counts by value, with no designator.
+ *
+ * Tonepad lists most of a build this way ('2 - 47'). It has no place on the
+ * page, since the document prints no designator for it.
+ */
+export type CountedPartOut = {
+    /**
+     * Key
+     *
+     * What names it where a designator would: '#Resistors 47'.
+     */
+    key: string;
+    category: ComponentCategory;
+    /**
+     * Value
+     */
+    value: string;
+    /**
+     * Count
+     *
+     * How many the parts list counts.
+     */
+    count: number;
+};
 
 /**
  * DocumentsMissing
@@ -490,9 +524,15 @@ export type ProjectResult = {
      */
     parts: Array<ReadPartOut>;
     /**
+     * Counted
+     *
+     * Each part counted by value instead, in the order read.
+     */
+    counted: Array<CountedPartOut>;
+    /**
      * Build Order
      *
-     * Its designators by the stage they're soldered in, lowest parts first, as the field manual orders them.
+     * Its parts by the stage they're soldered in, lowest parts first, as the field manual orders them.
      */
     build_order: Array<BuildStep>;
 };

@@ -25,6 +25,7 @@ from src.bom_lib import (
     BuiltProject,
     ComponentCategory,
     ComponentKey,
+    CountedPart,
     FileUpload,
     InputMethod,
     Inventory,
@@ -378,6 +379,18 @@ def read_parts(result: ParseResult) -> tuple[ReadPart, ...]:
     )
 
 
+def counted_parts(result: ParseResult) -> tuple[CountedPart, ...]:
+    """Each part a single-build result counts by value, with no designator.
+
+    Tonepad lists most of a build this way ('2 - 47').
+    """
+    return tuple(
+        CountedPart(key.category, key.value, count)
+        for key, data in result.inventory.items()
+        if (count := sum(data["counted"].values()))
+    )
+
+
 def generate_master_list(
     projects: Sequence[Project], stock: Inventory | None = None
 ) -> MasterList:
@@ -459,6 +472,7 @@ def generate_master_list(
                 source_url=project.source_url,
                 pcb_shop=project.pcb_shop,
                 parts=read_parts(result),
+                counted=counted_parts(result),
             )
         )
 

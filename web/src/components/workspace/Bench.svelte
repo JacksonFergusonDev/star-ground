@@ -3,9 +3,10 @@
   // field manual's order), with the document beside the checklist when there
   // is one, lit up where a catalog document's board draws the part at hand. Made for a laptop at the bench: Space places the current part and
   // moves to the next, the arrow keys move between parts. Progress is kept
-  // on the card.
+  // on the card. A part the document counts by value ('2 - 47') is one row,
+  // placed all at once and keyed '#<category> <value>' (its `key`).
   import { onMount } from 'svelte';
-  import type { ProjectResult } from '../../lib/api';
+  import type { BuildStep, ProjectResult } from '../../lib/api';
   import type { BoardMarks } from '../../lib/boards';
   import { boardBoxes, boardMarks, rowRef } from '../../lib/boards';
   import type { Card } from '../../lib/workspace.svelte';
@@ -31,11 +32,25 @@
     onBack: () => void;
   } = $props();
 
+  type Row = { label: string; value: string; count: number };
+
   const placed = $derived(new Set(placedOf(card)));
-  const parts = $derived(new Map(project.parts.map((p) => [p.ref, p])));
-  // Every designator in build order, one after another.
-  const order = $derived(project.build_order.flatMap((step) => step.refs));
-  const done = $derived(order.filter((ref) => placed.has(ref)).length);
+  // Each row by its designator, or a counted part's key.
+  const rows = $derived(
+    new Map<string, Row>([
+      ...project.parts.map((p) => [p.ref, { label: p.ref, value: p.value, count: 1 }] as const),
+      ...project.counted.map(
+        (c) => [c.key, { label: `${c.count} ×`, value: c.value, count: c.count }] as const,
+      ),
+    ]),
+  );
+  const stepRows = (step: BuildStep): string[] => [...step.refs, ...step.counted];
+  // Every row in build order, one after another.
+  const order = $derived(project.build_order.flatMap(stepRows));
+  const sum = (keys: string[]): number =>
+    keys.reduce((n, key) => n + (rows.get(key)?.count ?? 1), 0);
+  const total = $derived(sum(order));
+  const done = $derived(sum(order.filter((ref) => placed.has(ref))));
 
   // The part at hand: the first not yet placed, until the builder moves.
   // svelte-ignore state_referenced_locally
@@ -121,11 +136,11 @@
     </p>
     <div class="progress">
       <p class="note" role="status">
-        {done === order.length && order.length
-          ? `All ${count(order.length, 'part')} placed.`
-          : `${done} of ${count(order.length, 'part')} placed.`}
+        {done === total && total
+          ? `All ${count(total, 'part')} placed.`
+          : `${done} of ${count(total, 'part')} placed.`}
       </p>
-      <meter min="0" max={order.length || 1} value={done} aria-label="Parts placed"></meter>
+      <meter min="0" max={total || 1} value={done} aria-label="Parts placed"></meter>
       {#if done}
         <button class="text-button" type="button" onclick={onStartOver}>Start over</button>
       {/if}
@@ -158,8 +173,8 @@
         <li class="stage">
           <h3>{step.stage}</h3>
           <ul>
-            {#each step.refs as ref (ref)}
-              {@const part = parts.get(ref)}
+            {#each stepRows(step) as ref (ref)}
+              {@const row = rows.get(ref)}
               <li
                 data-ref={ref}
                 class:current={current === ref}
@@ -176,8 +191,8 @@
                       onPlace(ref, e.currentTarget.checked);
                     }}
                   />
-                  <span class="ref">{ref}</span>
-                  <span class="value">{part?.value ?? ''}</span>
+                  <span class="ref">{row?.label ?? ref}</span>
+                  <span class="value">{row?.value ?? ''}</span>
                 </label>
               </li>
             {/each}
