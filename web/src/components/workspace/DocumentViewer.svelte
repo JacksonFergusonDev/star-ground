@@ -1,17 +1,20 @@
 <script lang="ts" module>
   import type { SourceLocation } from '../../lib/api';
 
-  /** A part outlined where it was read. */
+  /** A part outlined where it was read, or where the board draws it. */
   export interface Box {
     ref: string;
     location: SourceLocation;
     /** Flagged by a self-check, checked by the builder, or neither. */
     tone: 'flagged' | 'checked' | 'plain';
+    /** A place on the board or schematic: shown for the part at hand. */
+    board?: boolean;
   }
 </script>
 
 <script lang="ts">
-  // A build document's pages, with each part outlined where it was read.
+  // A build document's pages, with each part outlined where it was read, and
+  // for a catalog document, lit up where its board and schematic draw it.
   // Pages draw as they scroll near, at the panel's width times the zoom; the
   // boxes are placed in points, so they scale with the page.
   import type { PDFDocumentProxy } from 'pdfjs-dist';
@@ -24,11 +27,20 @@
     boxes,
     selected,
     onSelect,
+    hovered = null,
+    onHover = () => {},
+    prefer = 'list',
   }: {
     load: () => Promise<ArrayBuffer>;
     boxes: Box[];
     selected: string | null;
     onSelect: (ref: string) => void;
+    /** A part pointed at in the list, lit up here too. */
+    hovered?: string | null;
+    /** Pointing at a part here, or away (null). */
+    onHover?: (ref: string | null) => void;
+    /** Where to bring the chosen part into view: its row, or its board. */
+    prefer?: 'list' | 'board';
   } = $props();
 
   const ZOOMS = [1, 1.5, 2, 3];
@@ -120,7 +132,8 @@
 
   // Bring the chosen part into the middle of the view.
   $effect(() => {
-    const box = boxes.find((b) => b.ref === selected);
+    const mine = boxes.filter((b) => b.ref === selected);
+    const box = mine.find((b) => !!b.board === (prefer === 'board')) ?? mine[0];
     const page = box && pageElements[box.location.page];
     const size = box && pages[box.location.page];
     if (!box || !page || !size || !scroller || !pageWidth) return;
@@ -172,18 +185,24 @@
         style:aspect-ratio={`${size.width} / ${size.height}`}
       >
         <canvas bind:this={canvases[index]} aria-label={`Page ${index + 1}`}></canvas>
-        {#each byPage[index] ?? [] as box (box.ref)}
+        {#each byPage[index] ?? [] as box, i (`${box.ref}:${i}`)}
           <button
             type="button"
             tabindex="-1"
             class={`box ${box.tone}`}
+            class:board={box.board}
             class:selected={box.ref === selected}
+            class:hovered={box.ref === hovered}
             style:left={percent(box.location.x0 - 2, size.width)}
             style:top={percent(box.location.top - 2, size.height)}
             style:width={percent(box.location.x1 - box.location.x0 + 4, size.width)}
             style:height={percent(box.location.bottom - box.location.top + 4, size.height)}
-            aria-label={`Show ${box.ref} in the parts list`}
+            aria-label={box.board
+              ? `${box.ref} on the board: show it in the parts list`
+              : `Show ${box.ref} in the parts list`}
             onclick={() => onSelect(box.ref)}
+            onmouseenter={() => onHover(box.ref)}
+            onmouseleave={() => onHover(null)}
           ></button>
         {/each}
       </div>
@@ -282,8 +301,19 @@
   .box.checked {
     border-color: transparent;
   }
-  .box:hover {
+  .box:hover,
+  .box.hovered {
     border-color: var(--accent);
+  }
+  /* A board's labels are many and small: each shows only when pointed at,
+     or as the part at hand. */
+  .box.board {
+    border-color: transparent;
+  }
+  .box.board:hover,
+  .box.board.hovered {
+    border-color: var(--accent);
+    background: var(--accent-soft);
   }
   .box.selected {
     border: 2px solid var(--accent);

@@ -4,7 +4,8 @@ For each document the job fetches it (conditionally, after the first time),
 reads it as an upload would be read, with OCR for image parts lists, and
 keeps the result only when it reads cleanly (`clean`). The catalog holds:
 
-- `builds/<publisher>/<id>.json`: an `Entry` per listed document.
+- `builds/<publisher>/<id>.json`: an `Entry` per listed document, with
+  where its board and schematic draw each part (`boards`, step 7).
 - `state/<publisher>.json`: what the last runs saw (each page's
   `<lastmod>`, each document's hash, `ETag` and outcome), so the next run asks
   only about what may have changed, and documents checked longest ago go
@@ -33,6 +34,8 @@ from src.bom_lib import (
     ParseResult,
     ParseWarningKind,
 )
+from src.bom_lib.boards import board_marks, marks_by_ref
+from src.bom_lib.types import Location
 from src.catalog.client import (
     BlockedError,
     DisallowedError,
@@ -49,6 +52,21 @@ from src.catalog.verified import (
     document_hash,
     fingerprint,
 )
+
+# The board finder's version. An entry whose positions came from an older
+# one (or none: listed before step 7) is fetched in full once more and given
+# new positions, without being read or listed again.
+BOARDS_VERSION = 1
+
+FindBoards = Callable[[bytes, list[str], list[Location]], dict[str, list[Location]]]
+
+
+def find_boards(
+    content: bytes, refs: list[str], listing: list[Location]
+) -> dict[str, list[Location]]:
+    """Where a document draws each designator outside its parts list."""
+    return marks_by_ref(board_marks(content, refs, listing))
+
 
 # Self-check warnings that describe the document rather than a doubtful
 # reading: the builder's choice of a value, a footnote to read.
@@ -73,6 +91,8 @@ class DocumentState:
         entry: Its entry's id, when it's listed.
         parts: The `verified.fingerprint` of its reading, when it was read.
         verification: Whether that reading was checked by hand, then.
+        boards: The `BOARDS_VERSION` its entry's board positions came from;
+            0 for none.
     """
 
     sha256: str | None = None
@@ -84,6 +104,7 @@ class DocumentState:
     entry: str | None = None
     parts: str | None = None
     verification: str = ""
+    boards: int = 0
 
 
 @dataclass(slots=True)
@@ -298,6 +319,7 @@ def build(
     page_limit: int | None = None,
     document_limit: int | None = None,
     read: Callable[[FileUpload], ParseResult | None] | None = None,
+    boards: FindBoards = find_boards,
 ) -> None:
     """Brings a publisher's part of the catalog up to date.
 
@@ -311,6 +333,7 @@ def build(
         document_limit: Read at most this many documents (a sample run).
         read: Reads a document (tests pass a fake); by default, as an upload
             with OCR.
+        boards: Finds where a document draws each part (tests pass a fake).
     """
     read = read or (
         lambda upload: read_document(InputMethod.UPLOAD_FILE, upload, ocr=True)
@@ -335,6 +358,26 @@ def build(
                 data = json.loads(path.read_text())
                 data["verified"] = verification == Verification.VERIFIED
                 path.write_text(json.dumps(data, indent=1) + "\n")
+
+    def add_boards(entry_id: str, content: bytes) -> None:
+        """Adds where the document draws each of its entry's parts."""
+        path = builds_dir / f"{entry_id}.json"
+        data = json.loads(path.read_text())
+        parts = [p for build in data["builds"] for p in build["parts"]]
+        listing = [Location(**p["location"]) for p in parts if p["location"]]
+        try:
+            found = boards(content, [p["ref"] for p in parts], listing)
+        except Exception as error:  # The build is still listed, without them.
+            reporter.warning(
+                f"couldn't find where {entry_id} draws its parts: "
+                f"{type(error).__name__}: {error}",
+                title=f"{publisher}: board positions",
+            )
+            found = {}
+        data["boards"] = {
+            ref: [asdict(loc) for loc in places] for ref, places in found.items()
+        }
+        path.write_text(json.dumps(data, indent=1) + "\n")
 
     def record(listing_url: str, document: DocumentState, event: Event) -> None:
         state.documents[listing_url] = document
@@ -366,9 +409,14 @@ def build(
                 previous.outcome == Outcome.NOT_CLEAN
                 and previous.sha256 in verified.checked
             )
+            # A listed build without current board positions is fetched in
+            # full too, so they can be found.
+            needs_boards = (
+                previous.entry is not None and previous.boards < BOARDS_VERSION
+            )
             fetched = (
                 client.get(url)
-                if newly_checked
+                if newly_checked or needs_boards
                 else client.get(url, previous.etag, previous.last_modified)
             )
         except BlockedError as error:
@@ -451,10 +499,21 @@ def build(
         ):
             kept = still(previous)
             mark(previous, kept)
+            how = "same hash as last time"
+            added = previous.boards
+            if needs_boards and previous.entry:
+                add_boards(previous.entry, fetched.content)
+                how += "; board positions added"
+                added = BOARDS_VERSION
             record(
                 url,
-                replace(fetched_state, outcome=previous.outcome, verification=kept),
-                _unchanged(publisher, url, previous, "same hash as last time", kept),
+                replace(
+                    fetched_state,
+                    outcome=previous.outcome,
+                    verification=kept,
+                    boards=added,
+                ),
+                _unchanged(publisher, url, previous, how, kept),
             )
             return
         try:
@@ -506,6 +565,7 @@ def build(
         (builds_dir / f"{listed['id']}.json").write_text(
             json.dumps(listed, indent=1) + "\n"
         )
+        add_boards(listed["id"], fetched.content)
         outcome = Outcome.UPDATED if previous.entry else Outcome.LISTED
         reason = (
             "the document changed since it was listed; check it"
@@ -514,7 +574,13 @@ def build(
         )
         record(
             url,
-            replace(fetched_state, outcome=outcome, reason=reason, entry=listed["id"]),
+            replace(
+                fetched_state,
+                outcome=outcome,
+                reason=reason,
+                entry=listed["id"],
+                boards=BOARDS_VERSION,
+            ),
             Event(publisher, url, outcome, reason, verified=is_verified),
         )
 
