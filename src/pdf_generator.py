@@ -35,6 +35,7 @@ from src.bom_lib import (
     deduplicate_refs,
     get_spec_type,
 )
+from src.bom_lib.stages import build_stage, stage_order
 
 logger = logging.getLogger(__name__)
 
@@ -348,14 +349,8 @@ class FieldManual(FPDF):
 def sort_by_z_height(part_list: list[ChecklistPart]) -> list[ChecklistPart]:
     """Sorts components by their physical Z-Height (Low to High).
 
-    This ordering dictates the most efficient soldering sequence:
-    1. PCB (Base)
-    2. Resistors / Diodes (Flush to board)
-    3. Sockets / ICs
-    4. Small Capacitors
-    5. Transistors
-    6. Electrolytics (Tall)
-    7. Potentiometers / Mechanicals (Tallest/Rigid)
+    The order is `build_stage`'s: the board, flush parts, sockets, small
+    capacitors, transistors, electrolytics, mechanical parts, then chips.
 
     Args:
         part_list (list[ChecklistPart]): List of component parts.
@@ -363,45 +358,12 @@ def sort_by_z_height(part_list: list[ChecklistPart]) -> list[ChecklistPart]:
     Returns:
         list[ChecklistPart]: The sorted list.
     """
-    # Mapping Categories to Rank (Lower number = Earlier in build)
-    z_map: dict[ComponentCategory, int] = {
-        ComponentCategory.PCB: 0,  # First
-        ComponentCategory.RESISTORS: 10,
-        ComponentCategory.DIODES: 15,
-        # Sockets will be injected at 18
-        ComponentCategory.CRYSTALS_OSCILLATORS: 30,
-        ComponentCategory.CAPACITORS: 40,  # Default (Small)
-        ComponentCategory.INDUCTORS: 45,
-        ComponentCategory.TRANSISTORS: 50,
-        # Electros will be injected at 60
-        ComponentCategory.RELAYS: 65,
-        ComponentCategory.SWITCHES: 70,
-        ComponentCategory.TRANSFORMERS: 75,
-        ComponentCategory.POTENTIOMETERS: 80,  # "Second Last" (Mechanicals)
-        ComponentCategory.HARDWARE_MISC: 85,  # Jacks, etc.
-        ComponentCategory.ICS: 90,  # "Last" (Chip Insertion)
-    }
-
-    def get_rank(item: ChecklistPart) -> int:
-        cat = item["category"]
-        val = str(item["value"])
-
-        # 1. Socket Check (Priority Override)
-        # Sockets are usually in "Hardware/Misc" or "ICs" but need to be soldered early
-        if "SOCKET" in val.upper():
-            return 18
-
-        # 2. Capacitor Check (Electro vs Ceramic)
-        if cat == ComponentCategory.CAPACITORS:
-            # Electros are tall -> Late build
-            spec = item.get("spec_type") or get_spec_type(cat, val)
-            if spec == ComponentSpec.ELECTROLYTIC:
-                return 60  # Electrolytics rank
-            return 40  # Small caps
-
-        return z_map.get(cat, 99)
-
-    return sorted(part_list, key=get_rank)
+    return sorted(
+        part_list,
+        key=lambda item: stage_order(
+            build_stage(item["category"], str(item["value"]), item.get("spec_type"))
+        ),
+    )
 
 
 def _sanitize_filename(name: str) -> str:

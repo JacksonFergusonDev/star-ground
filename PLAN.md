@@ -203,6 +203,9 @@ Probed on 2026-10-24: board renders in PedalPCB, GuitarPCB and Tonepad documents
 1. A laptop-first checklist per project, ordered by component height, with the board view and highlighting beside it.
 1. Keyboard-driven: Space checks off the next part, arrows move. Progress is saved.
 1. Field manual and sticker sheet PDFs stay as exports.
+    - A card's **Build it, part by part** opens bench mode (`Bench.svelte`) in place of the workspace, like the review. Its order comes from the API: each project in the master list carries `build_order`, its designators grouped by `BuildStage` (`src/bom_lib/stages.py`), the order `sort_by_z_height` gave the field manuals and now shares with them, so paper and screen agree. Only the API knows an electrolytic from a film capacitor, so the order isn't repeated in TypeScript.
+    - Space places the part at hand and moves to the next one still to place; the arrow keys move; a click or its checkbox works too. Keys typed in a field or on a button keep their own meaning. Progress lives on the card per build (`placed`), so it survives a reload, and **Start over** clears it.
+    - Beside the list, an upload's or link's document shows the part at hand outlined where its parts list prints it. Its place on the board waits for step 7's positions.
 
 ### 10. Share links
 
@@ -241,6 +244,6 @@ Probed on 2026-10-24: board renders in PedalPCB, GuitarPCB and Tonepad documents
 | 6. Document review | Done 2026-10-29: part locations, the document viewer, confirm or correct in place, and part reports | #222, #223 |
 | 7. PCB highlighting | Not started: cost measured 2026-10-29; catalog documents only, so it lands with step 8 | #224 |
 | 8. Circuit catalog | In progress: the catalog job and verified list, the nightly workflow, and the catalog pages; the first full run is under way | #225, #227, #229, #230, this PR |
-| 9. Bench mode | Not started | |
+| 9. Bench mode | Done 2026-10-31: the checklist in build order, keyboard-driven, saved, with the document beside it; the board view comes with step 7 | this PR |
 | 10. Share links | Done 2026-10-31: every project but uploads, in the link's fragment | this PR |
 | 11. Cutover and launch | Not started | |

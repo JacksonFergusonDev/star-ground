@@ -71,6 +71,7 @@ const project = (over: Partial<ProjectResult> = {}): ProjectResult => ({
       location: { page: 0, x0: 72, top: 400, x1: 120, bottom: 410 },
     },
   ],
+  build_order: [{ stage: 'Resistors', refs: ['R1', 'R2'] }],
   ...over,
 });
 
@@ -292,4 +293,38 @@ test('parts read down each column, as the document lists them', async ({ page })
     .locator('li[data-ref]')
     .evaluateAll((rows) => rows.map((r) => r.getAttribute('data-ref')));
   expect(order).toEqual(['R1', 'R2', 'R3', 'C1', 'C2', 'Q1', 'Q2', 'D1', 'R9']);
+});
+
+test('bench mode places parts in build order from the keyboard, and keeps them', async ({
+  page,
+}) => {
+  await stubMasterList(page);
+  await upload(page);
+
+  await page.getByRole('button', { name: 'Build it, part by part' }).click();
+  await expect(page.getByRole('heading', { name: 'Build Fuzz' })).toBeVisible();
+  await expect(page.getByText('0 of 2 parts placed.')).toBeVisible();
+  await expect(row(page, 'R1')).toHaveAttribute('aria-current', 'step');
+  // The document shows the part at hand.
+  await expect(page.getByRole('button', { name: 'Show R1 in the parts list' })).toHaveClass(
+    /selected/,
+  );
+
+  // Space places R1 and moves on to R2; the arrows move back.
+  await page.locator('body').press('Space');
+  await expect(row(page, 'R1').getByRole('checkbox')).toBeChecked();
+  await expect(row(page, 'R2')).toHaveAttribute('aria-current', 'step');
+  await page.locator('body').press('ArrowUp');
+  await expect(row(page, 'R1')).toHaveAttribute('aria-current', 'step');
+  await expect(page.getByText('1 of 2 parts placed.')).toBeVisible();
+
+  await page.reload();
+  await page.getByRole('button', { name: 'Build it, part by part' }).click();
+  await expect(page.getByText('1 of 2 parts placed.')).toBeVisible();
+  await expect(row(page, 'R2')).toHaveAttribute('aria-current', 'step');
+
+  await row(page, 'R2').getByRole('checkbox').check();
+  await expect(page.getByText('All 2 parts placed.')).toBeVisible();
+  await page.getByRole('button', { name: 'Start over' }).click();
+  await expect(page.getByText('0 of 2 parts placed.')).toBeVisible();
 });

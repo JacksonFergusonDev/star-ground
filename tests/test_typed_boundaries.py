@@ -9,6 +9,7 @@ from src.bom_lib.enums import ComponentCategory, ComponentOrigin, ComponentSpec
 from src.bom_lib.parser import parse_csv_bom, parse_with_verification
 from src.bom_lib.presets import PresetCatalog, PresetLookupEntry, get_preset_metadata
 from src.bom_lib.sourcing import _format_alts, get_spec_type
+from src.bom_lib.stages import BuildStage, build_stage, stage_order
 from src.bom_lib.types import (
     AlternativeSpec,
     CategorizationResult,
@@ -409,3 +410,19 @@ def test_counted_parts_reach_each_projects_field_manual() -> None:
     assert rata["10k"].qty == 5  # one pedal's checklist: 4 counted + R9
     assert rata["10k"].unique_refs == ["R9"]
     assert totals[key]["qty"] == 14
+
+
+def test_a_socket_goes_in_before_small_capacitors_and_its_chip_last() -> None:
+    stages = [
+        build_stage(ComponentCategory.ICS, "TL072"),
+        build_stage(ComponentCategory.HARDWARE_MISC, "8 pin DIP Socket"),
+        build_stage(ComponentCategory.CAPACITORS, "100n"),
+        build_stage(ComponentCategory.CAPACITORS, "100u"),
+    ]
+
+    assert sorted(stages, key=stage_order) == [
+        BuildStage.SOCKETS,
+        BuildStage.CAPACITORS,
+        BuildStage.ELECTROLYTICS,
+        BuildStage.ICS,
+    ]

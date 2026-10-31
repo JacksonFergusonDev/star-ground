@@ -99,6 +99,28 @@ export type BuildNotChosen = {
 };
 
 /**
+ * BuildStage
+ *
+ * A step of a build, declared in the order it's soldered.
+ */
+export type BuildStage = 'PCB' | 'Resistors' | 'Diodes' | 'Sockets' | 'Crystals and oscillators' | 'Small capacitors' | 'Inductors' | 'Transistors' | 'Electrolytic capacitors' | 'Relays' | 'Switches' | 'Transformers' | 'Potentiometers' | 'Hardware' | 'Chips' | 'Other parts';
+
+/**
+ * BuildStep
+ *
+ * One stage of soldering a project, lowest parts first.
+ */
+export type BuildStep = {
+    stage: BuildStage;
+    /**
+     * Refs
+     *
+     * Its designators, in the order read.
+     */
+    refs: Array<string>;
+};
+
+/**
  * ComponentCategory
  *
  * Categories of electronic components.
@@ -467,6 +489,12 @@ export type ProjectResult = {
      * Each designator read, in the order read, to check against the document.
      */
     parts: Array<ReadPartOut>;
+    /**
+     * Build Order
+     *
+     * Its designators by the stage they're soldered in, lowest parts first, as the field manual orders them.
+     */
+    build_order: Array<BuildStep>;
 };
 
 /**
