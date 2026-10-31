@@ -31,7 +31,7 @@ export function publisherLink(entry: CatalogEntry): string {
 
 /** The number of parts in a build document, counting its largest build. */
 export const partCount = (entry: CatalogEntry): number =>
-  Math.max(0, ...entry.data.builds.map((b) => b.parts.length));
+  Math.max(0, ...entry.data.builds.map((b) => b.parts.reduce((sum, p) => sum + p.count, 0)));
 
 /** Entries by title, then publisher. */
 export const byTitle = (a: CatalogEntry, b: CatalogEntry): number =>

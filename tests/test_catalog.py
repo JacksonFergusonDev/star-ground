@@ -277,6 +277,18 @@ def test_a_table_row_heading_can_mark_a_build_document() -> None:
     assert [li.name for li in links] == ["FCP-Fuzz-Insert.pdf"]
 
 
+def test_pedalpcb_datasheets_are_not_build_documents() -> None:
+    source = SOURCES[Publisher.PEDALPCB]
+    html = """
+      <a href="https://docs.pedalpcb.com/project/Fuzz.pdf">Build Docs</a>
+      <a href="https://docs.pedalpcb.com/datasheet/bat42.pdf">BAT42</a>
+    """
+
+    links = pdf_links("https://www.pedalpcb.com/product/fuzz/", html, source)
+
+    assert [li.name for li in links] == ["Fuzz.pdf"]
+
+
 _SITEMAP_INDEX = b"""<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <sitemap><loc>https://www.pedalpcb.com/product-sitemap.xml</loc></sitemap>
   <sitemap><loc>https://www.pedalpcb.com/post-sitemap.xml</loc></sitemap>
@@ -485,6 +497,23 @@ def test_a_clean_document_is_listed_and_the_document_is_not_kept(
     assert [p["ref"] for p in fuzz["builds"][0]["parts"]] == ["R1", "R2"]
     assert not list(tmp_path.rglob("*.pdf"))
     assert {e.outcome for e in reporter.tally.events} == {Outcome.LISTED}
+
+
+def test_parts_counted_by_value_are_listed_with_their_count(
+    tmp_path: Path, run: Any
+) -> None:
+    reading = _reading(parts=1)
+    reading.inventory.add_counted(
+        "doc", make_component_key(ComponentCategory.RESISTORS, "47"), 2
+    )
+
+    run(_docs(_pedalpcb_web()), lambda upload: reading)
+
+    fuzz = json.loads((tmp_path / "builds" / "pedalpcb" / "fuzz.json").read_text())
+    assert [(p["ref"], p["count"], p["value"]) for p in fuzz["builds"][0]["parts"]] == [
+        ("R1", 1, "10k"),
+        (None, 2, "47"),
+    ]
 
 
 def test_an_unchanged_document_is_not_read_again(tmp_path: Path, run: Any) -> None:
@@ -798,6 +827,20 @@ def test_a_verified_document_is_listed_and_marked(tmp_path: Path, run: Any) -> N
     # An unchecked document with no doubts is listed, unmarked.
     assert drive["verified"] is False
     assert reporter._verified("pedalpcb") == 1
+
+
+def test_a_verified_document_with_no_parts_is_not_listed(
+    tmp_path: Path, run: Any
+) -> None:
+    empty = _reading(parts=0)
+    _verify(tmp_path, b"%PDF fuzz", empty)
+
+    def read(upload: FileUpload) -> ParseResult:
+        return empty if upload.name == "Fuzz.pdf" else _reading()
+
+    run(_docs(_pedalpcb_web()), read)
+
+    assert not (tmp_path / "builds" / "pedalpcb" / "fuzz.json").exists()
 
 
 def test_a_checked_file_that_now_reads_differently_loses_its_mark(

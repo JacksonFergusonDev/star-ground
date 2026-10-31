@@ -40,7 +40,9 @@ const catalog = defineCollection({
         name: z.string().nullable(),
         parts: z.array(
           z.object({
-            ref: z.string(),
+            // None for a part counted by value ('2 - 47'), as Tonepad lists them.
+            ref: z.string().nullable(),
+            count: z.number().int().positive(),
             category: z.string(),
             value: z.string(),
             location: location.nullable(),

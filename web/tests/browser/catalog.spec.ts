@@ -64,6 +64,8 @@ test("a build's page shows its parts, its mark and the publisher's links", async
   await expect(page.getByRole('link', { name: "Tonepad's project page" })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Stock Big Muff' })).toBeVisible();
   await expect(page.getByText('This document describes 3 builds.')).toBeVisible();
+  // A part counted by value has no designator, so its count stands in.
+  await expect(page.getByRole('rowheader', { name: '2 ×', exact: true })).toBeVisible();
 });
 
 test('Add to build adds the document to the workspace once', async ({ page }) => {
