@@ -284,6 +284,10 @@ def discover(
     result = Discovery()
 
     def add(listing: Listing) -> None:
+        # Checked here, not as a page is read, so the rules also apply to
+        # the documents an unchanged page linked last time.
+        if not source.is_build(listing.document):
+            return
         if listing.document not in result.listings:
             result.listings[listing.document] = listing
             on_listing(listing)
