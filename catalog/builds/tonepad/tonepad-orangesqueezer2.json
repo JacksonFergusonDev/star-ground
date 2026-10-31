@@ -1,0 +1,31 @@
+{
+ "id": "tonepad-orangesqueezer2",
+ "publisher": "tonepad",
+ "title": "Naranjito 2",
+ "document": "https://tonepad.com/getFile.asp?id=88",
+ "page": "https://tonepad.com/project.asp?id=5",
+ "file_name": "tonepad_orangesqueezer2.pdf",
+ "sha256": "ffdee505f8d12ff6dd57bfaeb94605736024f0163085d02dddc50dde42b33e62",
+ "checked": "2026-10-31T01:28:31+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "IC1",
+     "category": "ICs",
+     "value": "4558",
+     "location": {
+      "page": 0,
+      "x0": 161.4254,
+      "top": 441.75539999999984,
+      "x1": 217.4586,
+      "bottom": 453.75539999999984
+     }
+    }
+   ]
+  }
+ ]
+}

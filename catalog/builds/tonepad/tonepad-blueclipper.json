@@ -1,0 +1,199 @@
+{
+ "id": "tonepad-blueclipper",
+ "publisher": "tonepad",
+ "title": "Clip Azul",
+ "document": "https://tonepad.com/getFile.asp?id=93",
+ "page": "https://tonepad.com/project.asp?id=49",
+ "file_name": "tonepad_blueclipper.pdf",
+ "sha256": "5dc1f24740d0e54b80a765e1972b2ec477206f21db165cdaf4d282680532b26c",
+ "checked": "2026-10-31T01:32:07+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "R1",
+     "category": "Resistors",
+     "value": "200k",
+     "location": {
+      "page": 0,
+      "x0": 72.0,
+      "top": 371.12559999999996,
+      "x1": 124.0194,
+      "bottom": 383.12559999999996
+     }
+    },
+    {
+     "ref": "C1",
+     "category": "Capacitors",
+     "value": "47n",
+     "location": {
+      "page": 0,
+      "x0": 183.0254,
+      "top": 371.12559999999996,
+      "x1": 253.2968,
+      "bottom": 383.12559999999996
+     }
+    },
+    {
+     "ref": "D1",
+     "category": "Diodes",
+     "value": "1N914",
+     "location": {
+      "page": 0,
+      "x0": 291.0254,
+      "top": 371.12559999999996,
+      "x1": 352.3808,
+      "bottom": 383.12559999999996
+     }
+    },
+    {
+     "ref": "D2",
+     "category": "Diodes",
+     "value": "1N914",
+     "location": {
+      "page": 0,
+      "x0": 291.0254,
+      "top": 384.53119999999996,
+      "x1": 352.3808,
+      "bottom": 396.53119999999996
+     }
+    },
+    {
+     "ref": "R2",
+     "category": "Resistors",
+     "value": "240k",
+     "location": {
+      "page": 0,
+      "x0": 72.0,
+      "top": 384.53119999999996,
+      "x1": 124.0194,
+      "bottom": 396.53119999999996
+     }
+    },
+    {
+     "ref": "C2",
+     "category": "Capacitors",
+     "value": "4.7u",
+     "location": {
+      "page": 0,
+      "x0": 183.0254,
+      "top": 384.53119999999996,
+      "x1": 239.9528,
+      "bottom": 396.53119999999996
+     }
+    },
+    {
+     "ref": "C3",
+     "category": "Capacitors",
+     "value": "4.7u",
+     "location": {
+      "page": 0,
+      "x0": 183.0254,
+      "top": 397.93679999999995,
+      "x1": 239.9528,
+      "bottom": 409.93679999999995
+     }
+    },
+    {
+     "ref": "R3",
+     "category": "Resistors",
+     "value": "150",
+     "location": {
+      "page": 0,
+      "x0": 72.0,
+      "top": 397.93679999999995,
+      "x1": 118.0194,
+      "bottom": 409.93679999999995
+     }
+    },
+    {
+     "ref": "R4",
+     "category": "Resistors",
+     "value": "150k",
+     "location": {
+      "page": 0,
+      "x0": 72.0,
+      "top": 411.34239999999994,
+      "x1": 124.0194,
+      "bottom": 423.34239999999994
+     }
+    },
+    {
+     "ref": "C4",
+     "category": "Capacitors",
+     "value": "33n",
+     "location": {
+      "page": 0,
+      "x0": 183.0254,
+      "top": 411.34239999999994,
+      "x1": 253.2968,
+      "bottom": 423.34239999999994
+     }
+    },
+    {
+     "ref": "R5",
+     "category": "Resistors",
+     "value": "8.2k",
+     "location": {
+      "page": 0,
+      "x0": 72.0,
+      "top": 424.74799999999993,
+      "x1": 151.35510000000002,
+      "bottom": 436.74799999999993
+     }
+    },
+    {
+     "ref": "C5",
+     "category": "Capacitors",
+     "value": "100u",
+     "location": {
+      "page": 0,
+      "x0": 183.0254,
+      "top": 424.74799999999993,
+      "x1": 243.28879999999998,
+      "bottom": 436.74799999999993
+     }
+    },
+    {
+     "ref": "R6",
+     "category": "Resistors",
+     "value": "10k",
+     "location": {
+      "page": 0,
+      "x0": 72.0,
+      "top": 438.1535999999999,
+      "x1": 117.34740000000001,
+      "bottom": 450.1535999999999
+     }
+    },
+    {
+     "ref": "R7",
+     "category": "Potentiometers",
+     "value": "50k .",
+     "location": {
+      "page": 0,
+      "x0": 72.0,
+      "top": 451.5591999999999,
+      "x1": 117.34740000000001,
+      "bottom": 463.5591999999999
+     }
+    },
+    {
+     "ref": "R8",
+     "category": "Resistors",
+     "value": "2.2M",
+     "location": {
+      "page": 0,
+      "x0": 72.0,
+      "top": 464.9647999999999,
+      "x1": 164.0151,
+      "bottom": 476.9647999999999
+     }
+    }
+   ]
+  }
+ ]
+}

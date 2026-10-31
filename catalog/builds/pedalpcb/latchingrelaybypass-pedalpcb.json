@@ -1,0 +1,235 @@
+{
+ "id": "latchingrelaybypass-pedalpcb",
+ "publisher": "pedalpcb",
+ "title": "Basic Relay Bypass",
+ "document": "https://docs.pedalpcb.com/project/LatchingRelayBypass-PedalPCB.pdf",
+ "page": "https://www.pedalpcb.com/product/pcb394/",
+ "file_name": "LatchingRelayBypass-PedalPCB.pdf",
+ "sha256": "0879f4cfc479a992f5b406d537e14102c37d7b62bc281951e3e7b72aa5a25087",
+ "checked": "2026-10-31T02:00:36+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "R1",
+     "category": "Resistors",
+     "value": "10k",
+     "location": {
+      "page": 0,
+      "x0": 37.0,
+      "top": 230.57799999999997,
+      "x1": 139.8748,
+      "bottom": 242.57799999999997
+     }
+    },
+    {
+     "ref": "R2",
+     "category": "Resistors",
+     "value": "10k",
+     "location": {
+      "page": 0,
+      "x0": 37.0,
+      "top": 244.106,
+      "x1": 139.8748,
+      "bottom": 256.106
+     }
+    },
+    {
+     "ref": "R4",
+     "category": "Resistors",
+     "value": "10k",
+     "location": {
+      "page": 0,
+      "x0": 37.0,
+      "top": 271.16200000000003,
+      "x1": 139.8748,
+      "bottom": 283.16200000000003
+     }
+    },
+    {
+     "ref": "R5",
+     "category": "Resistors",
+     "value": "10k",
+     "location": {
+      "page": 0,
+      "x0": 37.0,
+      "top": 284.69,
+      "x1": 139.8748,
+      "bottom": 296.69
+     }
+    },
+    {
+     "ref": "R6",
+     "category": "Resistors",
+     "value": "10k",
+     "location": {
+      "page": 0,
+      "x0": 37.0,
+      "top": 298.21799999999996,
+      "x1": 139.8748,
+      "bottom": 310.21799999999996
+     }
+    },
+    {
+     "ref": "R3",
+     "category": "Resistors",
+     "value": "100k",
+     "location": {
+      "page": 0,
+      "x0": 37.0,
+      "top": 257.634,
+      "x1": 146.5492,
+      "bottom": 269.634
+     }
+    },
+    {
+     "ref": "C1",
+     "category": "Capacitors",
+     "value": "1u MLCC",
+     "location": {
+      "page": 0,
+      "x0": 37.0,
+      "top": 325.274,
+      "x1": 131.8684,
+      "bottom": 337.274
+     }
+    },
+    {
+     "ref": "C2",
+     "category": "Capacitors",
+     "value": "100n",
+     "location": {
+      "page": 0,
+      "x0": 37.0,
+      "top": 338.80199999999996,
+      "x1": 145.21720000000002,
+      "bottom": 350.80199999999996
+     }
+    },
+    {
+     "ref": "C4",
+     "category": "Capacitors",
+     "value": "100n",
+     "location": {
+      "page": 0,
+      "x0": 37.0,
+      "top": 365.858,
+      "x1": 145.21720000000002,
+      "bottom": 377.858
+     }
+    },
+    {
+     "ref": "C3",
+     "category": "Capacitors",
+     "value": "100u",
+     "location": {
+      "page": 0,
+      "x0": 37.0,
+      "top": 352.33,
+      "x1": 145.21720000000002,
+      "bottom": 364.33
+     }
+    },
+    {
+     "ref": "IC1",
+     "category": "ICs",
+     "value": "NE555",
+     "location": {
+      "page": 0,
+      "x0": 37.0,
+      "top": 392.914,
+      "x1": 226.38580000000002,
+      "bottom": 404.914
+     }
+    },
+    {
+     "ref": "IC2",
+     "category": "ICs",
+     "value": "78L09",
+     "location": {
+      "page": 0,
+      "x0": 37.0,
+      "top": 406.442,
+      "x1": 151.8916,
+      "bottom": 418.442
+     }
+    },
+    {
+     "ref": "Q1",
+     "category": "Transistors",
+     "value": "2N3904",
+     "location": {
+      "page": 0,
+      "x0": 37.0,
+      "top": 433.498,
+      "x1": 160.55800000000002,
+      "bottom": 445.498
+     }
+    },
+    {
+     "ref": "Q2",
+     "category": "Transistors",
+     "value": "2N3904",
+     "location": {
+      "page": 0,
+      "x0": 37.0,
+      "top": 447.02599999999995,
+      "x1": 160.55800000000002,
+      "bottom": 459.02599999999995
+     }
+    },
+    {
+     "ref": "Q4",
+     "category": "Transistors",
+     "value": "2N3904",
+     "location": {
+      "page": 0,
+      "x0": 37.0,
+      "top": 474.082,
+      "x1": 160.55800000000002,
+      "bottom": 486.082
+     }
+    },
+    {
+     "ref": "Q3",
+     "category": "Transistors",
+     "value": "2N3906",
+     "location": {
+      "page": 0,
+      "x0": 37.0,
+      "top": 460.554,
+      "x1": 160.55800000000002,
+      "bottom": 472.554
+     }
+    },
+    {
+     "ref": "K1",
+     "category": "Relays",
+     "value": "TQ2-L-5V",
+     "location": {
+      "page": 0,
+      "x0": 37.0,
+      "top": 501.138,
+      "x1": 171.20680000000002,
+      "bottom": 513.1379999999999
+     }
+    },
+    {
+     "ref": "FS",
+     "category": "Switches",
+     "value": "SPST Momentary",
+     "location": {
+      "page": 0,
+      "x0": 37.0,
+      "top": 514.6659999999999,
+      "x1": 301.0618,
+      "bottom": 526.6659999999999
+     }
+    }
+   ]
+  }
+ ]
+}

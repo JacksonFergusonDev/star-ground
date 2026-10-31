@@ -1,0 +1,379 @@
+{
+ "id": "fcp-violetear-v1-0-iinsert-pdf",
+ "publisher": "fivecats",
+ "title": "fcp-violetear-v1-0-iinsert-pdf",
+ "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/06/FCP-Violetear-V1-0-Iinsert.pdf.pdf",
+ "page": "https://www.five-cats-pedals.co.uk/product/eqd-mega-pack/",
+ "file_name": "FCP-Violetear-V1-0-Iinsert.pdf.pdf",
+ "sha256": "9db4dee9f64cba0a0d883473b9ba2f2dd93c2237120f31480df39c915f41f76f",
+ "checked": "2026-10-31T01:04:00+00:00",
+ "read_by_ocr": true,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "R1",
+     "category": "Resistors",
+     "value": "1M",
+     "location": {
+      "page": 0,
+      "x0": 20.71737999267578,
+      "top": 385.3141894042969,
+      "x1": 82.4467143310547,
+      "bottom": 395.8141894042969
+     }
+    },
+    {
+     "ref": "R2",
+     "category": "Resistors",
+     "value": "470",
+     "location": {
+      "page": 0,
+      "x0": 21.140184294128417,
+      "top": 399.7422525390625,
+      "x1": 89.63437808837891,
+      "bottom": 410.2422525390625
+     }
+    },
+    {
+     "ref": "R9",
+     "category": "Resistors",
+     "value": "470",
+     "location": {
+      "page": 0,
+      "x0": 20.71737999267578,
+      "top": 502.43612626953126,
+      "x1": 89.63437808837891,
+      "bottom": 512.9361262695313
+     }
+    },
+    {
+     "ref": "R3",
+     "category": "Resistors",
+     "value": "47k",
+     "location": {
+      "page": 0,
+      "x0": 21.140184294128417,
+      "top": 414.1703156738281,
+      "x1": 84.56073717651367,
+      "bottom": 424.6703156738281
+     }
+    },
+    {
+     "ref": "R6",
+     "category": "Resistors",
+     "value": "47k",
+     "location": {
+      "page": 0,
+      "x0": 21.140184294128417,
+      "top": 458.3032423828125,
+      "x1": 84.98353746337891,
+      "bottom": 468.8032423828125
+     }
+    },
+    {
+     "ref": "R4",
+     "category": "Resistors",
+     "value": "22k",
+     "location": {
+      "page": 0,
+      "x0": 21.140184294128417,
+      "top": 429.44711611328125,
+      "x1": 84.56073717651367,
+      "bottom": 439.94711611328125
+     }
+    },
+    {
+     "ref": "R5",
+     "category": "Resistors",
+     "value": "12k",
+     "location": {
+      "page": 0,
+      "x0": 21.140184294128417,
+      "top": 443.8751792480469,
+      "x1": 84.56073717651367,
+      "bottom": 454.3751792480469
+     }
+    },
+    {
+     "ref": "R7",
+     "category": "Resistors",
+     "value": "220k",
+     "location": {
+      "page": 0,
+      "x0": 21.140184294128417,
+      "top": 472.7313055175781,
+      "x1": 89.63437808837891,
+      "bottom": 483.2313055175781
+     }
+    },
+    {
+     "ref": "R8",
+     "category": "Resistors",
+     "value": "27k",
+     "location": {
+      "page": 0,
+      "x0": 21.140184294128417,
+      "top": 487.5837373046875,
+      "x1": 84.98353746337891,
+      "bottom": 497.8837373046875
+     }
+    },
+    {
+     "ref": "R10",
+     "category": "Resistors",
+     "value": "2.2k",
+     "location": {
+      "page": 0,
+      "x0": 20.71737999267578,
+      "top": 516.8641894042969,
+      "x1": 87.0975549560547,
+      "bottom": 527.3641894042969
+     }
+    },
+    {
+     "ref": "R11",
+     "category": "Resistors",
+     "value": "2.2k",
+     "location": {
+      "page": 0,
+      "x0": 20.71737999267578,
+      "top": 531.2922953613281,
+      "x1": 87.0975549560547,
+      "bottom": 542.0922953613281
+     }
+    },
+    {
+     "ref": "R12",
+     "category": "Resistors",
+     "value": "100",
+     "location": {
+      "page": 0,
+      "x0": 20.71737999267578,
+      "top": 545.7203584960937,
+      "x1": 89.63437808837891,
+      "bottom": 556.8203584960937
+     }
+    },
+    {
+     "ref": "C1",
+     "category": "Capacitors",
+     "value": "1u",
+     "location": {
+      "page": 0,
+      "x0": 21.140184294128417,
+      "top": 576.2738737304687,
+      "x1": 84.56073717651367,
+      "bottom": 586.5738737304687
+     }
+    },
+    {
+     "ref": "C3",
+     "category": "Capacitors",
+     "value": "1u",
+     "location": {
+      "page": 0,
+      "x0": 21.985791558837892,
+      "top": 604.705652758789,
+      "x1": 84.56073717651367,
+      "bottom": 615.805652758789
+     }
+    },
+    {
+     "ref": "C7",
+     "category": "Capacitors",
+     "value": "1u",
+     "location": {
+      "page": 0,
+      "x0": 21.985791558837892,
+      "top": 664.5396843261718,
+      "x1": 84.56073717651367,
+      "bottom": 674.0396843261718
+     }
+    },
+    {
+     "ref": "C2",
+     "category": "Capacitors",
+     "value": "100u",
+     "location": {
+      "page": 0,
+      "x0": 21.985791558837892,
+      "top": 590.7019368652344,
+      "x1": 95.13082999267579,
+      "bottom": 601.5019368652344
+     }
+    },
+    {
+     "ref": "C10",
+     "category": "Capacitors",
+     "value": "100u",
+     "location": {
+      "page": 0,
+      "x0": 21.985791558837892,
+      "top": 707.8238737304688,
+      "x1": 95.13082999267579,
+      "bottom": 717.7238737304688
+     }
+    },
+    {
+     "ref": "C4",
+     "category": "Capacitors",
+     "value": "4.7u",
+     "location": {
+      "page": 0,
+      "x0": 21.140184294128417,
+      "top": 619.5580631347656,
+      "x1": 92.17120122070313,
+      "bottom": 630.0580631347656
+     }
+    },
+    {
+     "ref": "C5",
+     "category": "Capacitors",
+     "value": "2.2u",
+     "location": {
+      "page": 0,
+      "x0": 21.140184294128417,
+      "top": 633.9861690917969,
+      "x1": 92.17120122070313,
+      "bottom": 644.4861690917969
+     }
+    },
+    {
+     "ref": "C9",
+     "category": "Capacitors",
+     "value": "2.2u",
+     "location": {
+      "page": 0,
+      "x0": 21.140184294128417,
+      "top": 692.9714633544922,
+      "x1": 92.17120122070313,
+      "bottom": 703.1714633544923
+     }
+    },
+    {
+     "ref": "C6",
+     "category": "Capacitors",
+     "value": "220n",
+     "location": {
+      "page": 0,
+      "x0": 21.140184294128417,
+      "top": 649.2629267089844,
+      "x1": 95.13082999267579,
+      "bottom": 659.4629267089845
+     }
+    },
+    {
+     "ref": "C8",
+     "category": "Capacitors",
+     "value": "10u",
+     "location": {
+      "page": 0,
+      "x0": 21.985791558837892,
+      "top": 678.1190529785156,
+      "x1": 89.63437808837891,
+      "bottom": 688.0190529785156
+     }
+    },
+    {
+     "ref": "Q1",
+     "category": "Transistors",
+     "value": "PF5102",
+     "location": {
+      "page": 0,
+      "x0": 243.95771928710937,
+      "top": 385.3141894042969,
+      "x1": 321.7535929931641,
+      "bottom": 395.8141894042969
+     }
+    },
+    {
+     "ref": "Q2",
+     "category": "Transistors",
+     "value": "2N5089",
+     "location": {
+      "page": 0,
+      "x0": 243.1121080078125,
+      "top": 399.7422525390625,
+      "x1": 324.2904268310547,
+      "bottom": 410.2422525390625
+     }
+    },
+    {
+     "ref": "Q3",
+     "category": "Transistors",
+     "value": "2N6027",
+     "location": {
+      "page": 0,
+      "x0": 243.95771928710937,
+      "top": 414.1703156738281,
+      "x1": 323.4448155517578,
+      "bottom": 424.6703156738281
+     }
+    },
+    {
+     "ref": "D1",
+     "category": "Diodes",
+     "value": "1N5817",
+     "location": {
+      "page": 0,
+      "x0": 243.1121080078125,
+      "top": 443.8751792480469,
+      "x1": 323.4448155517578,
+      "bottom": 454.3751792480469
+     }
+    },
+    {
+     "ref": "RATE",
+     "category": "Potentiometers",
+     "value": "B100K",
+     "location": {
+      "page": 0,
+      "x0": 242.68930236816405,
+      "top": 472.7313055175781,
+      "x1": 318.37116928710935,
+      "bottom": 483.2313055175781
+     }
+    },
+    {
+     "ref": "LEVEL",
+     "category": "Potentiometers",
+     "value": "B100K",
+     "location": {
+      "page": 0,
+      "x0": 242.68930236816405,
+      "top": 502.43612626953126,
+      "x1": 318.37116928710935,
+      "bottom": 512.9361262695313
+     }
+    },
+    {
+     "ref": "DEPTH",
+     "category": "Potentiometers",
+     "value": "B10K",
+     "location": {
+      "page": 0,
+      "x0": 242.68930236816405,
+      "top": 487.5837373046875,
+      "x1": 312.8747173828125,
+      "bottom": 497.8837373046875
+     }
+    },
+    {
+     "ref": "MODE",
+     "category": "Switches",
+     "value": "ON/OFF/ON",
+     "location": {
+      "page": 0,
+      "x0": 241.8436910888672,
+      "top": 516.8641894042969,
+      "x1": 334.2070844770951,
+      "bottom": 527.3641894042969
+     }
+    }
+   ]
+  }
+ ]
+}

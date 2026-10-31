@@ -1,0 +1,211 @@
+{
+ "id": "bd-photon-phuzz",
+ "publisher": "guitarpcb",
+ "title": "PHOTON PHUZZ",
+ "document": "https://guitarpcb.com/wp-content/uploads/2025/07/BD_Photon-Phuzz.pdf",
+ "page": "https://guitarpcb.com/community/topic/direct-build-document-link-list/",
+ "file_name": "BD_Photon-Phuzz.pdf",
+ "sha256": "06ad8bcb7150a7a1e8daf885c6c3a22c76178ee6418f06cd0d0ba592fc432074",
+ "checked": "2026-10-31T01:55:31+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "R1",
+     "category": "Resistors",
+     "value": "1M",
+     "location": {
+      "page": 0,
+      "x0": 202.51755649127358,
+      "top": 540.4571516611943,
+      "x1": 261.0383967176878,
+      "bottom": 551.4571516611943
+     }
+    },
+    {
+     "ref": "R2",
+     "category": "Resistors",
+     "value": "3.9M",
+     "location": {
+      "page": 0,
+      "x0": 93.69383659750235,
+      "top": 730.028452777825,
+      "x1": 245.6201191416278,
+      "bottom": 742.038452777825
+     }
+    },
+    {
+     "ref": "R3",
+     "category": "Resistors",
+     "value": "3.3k",
+     "location": {
+      "page": 0,
+      "x0": 202.51755649127358,
+      "top": 570.4823404611943,
+      "x1": 262.1722838307275,
+      "bottom": 581.4823404611943
+     }
+    },
+    {
+     "ref": "R5",
+     "category": "Resistors",
+     "value": "3.3k",
+     "location": {
+      "page": 0,
+      "x0": 202.51755649127358,
+      "top": 600.5075292611945,
+      "x1": 262.1722838307275,
+      "bottom": 611.5075292611945
+     }
+    },
+    {
+     "ref": "R4",
+     "category": "Resistors",
+     "value": "16",
+     "location": {
+      "page": 0,
+      "x0": 289.54955207188675,
+      "top": 730.028452777825,
+      "x1": 486.18521719341146,
+      "bottom": 742.038452777825
+     }
+    },
+    {
+     "ref": "VOL",
+     "category": "Potentiometers",
+     "value": "B10K",
+     "location": {
+      "page": 0,
+      "x0": 198.76440789127358,
+      "top": 630.5327180611945,
+      "x1": 265.15396976505076,
+      "bottom": 641.5327180611945
+     }
+    },
+    {
+     "ref": "BIAS",
+     "category": "Potentiometers",
+     "value": "B10K",
+     "location": {
+      "page": 0,
+      "x0": 198.01377817127357,
+      "top": 645.5453124611945,
+      "x1": 265.15396976505076,
+      "bottom": 656.5453124611945
+     }
+    },
+    {
+     "ref": "Q1",
+     "category": "Transistors",
+     "value": "BC109",
+     "location": {
+      "page": 0,
+      "x0": 201.76692677127357,
+      "top": 688.3312065011944,
+      "x1": 270.3544409746961,
+      "bottom": 699.3312065011944
+     }
+    },
+    {
+     "ref": "C1",
+     "category": "Capacitors",
+     "value": "470n",
+     "location": {
+      "page": 0,
+      "x0": 307.60571729127355,
+      "top": 540.4571516611943,
+      "x1": 385.46183352499594,
+      "bottom": 551.4571516611943
+     }
+    },
+    {
+     "ref": "C2",
+     "category": "Capacitors",
+     "value": "680n",
+     "location": {
+      "page": 0,
+      "x0": 307.60571729127355,
+      "top": 555.4697460611944,
+      "x1": 385.46183352499594,
+      "bottom": 566.4697460611944
+     }
+    },
+    {
+     "ref": "C3",
+     "category": "Capacitors",
+     "value": "5p",
+     "location": {
+      "page": 0,
+      "x0": 307.60571729127355,
+      "top": 570.4823404611943,
+      "x1": 377.41555204207805,
+      "bottom": 581.4823404611943
+     }
+    },
+    {
+     "ref": "C4",
+     "category": "Capacitors",
+     "value": "2.2n",
+     "location": {
+      "page": 0,
+      "x0": 307.60571729127355,
+      "top": 585.4949348611945,
+      "x1": 384.16438123835877,
+      "bottom": 596.4949348611945
+     }
+    },
+    {
+     "ref": "C5",
+     "category": "Capacitors",
+     "value": "47u",
+     "location": {
+      "page": 0,
+      "x0": 307.60571729127355,
+      "top": 600.5075292611945,
+      "x1": 382.1378092769779,
+      "bottom": 611.5075292611945
+     }
+    },
+    {
+     "ref": "D1",
+     "category": "Diodes",
+     "value": "1N4739",
+     "location": {
+      "page": 0,
+      "x0": 307.60571729127355,
+      "top": 630.5327180611945,
+      "x1": 389.1272541345252,
+      "bottom": 641.5327180611945
+     }
+    },
+    {
+     "ref": "D2",
+     "category": "Diodes",
+     "value": "1N4001",
+     "location": {
+      "page": 0,
+      "x0": 307.60571729127355,
+      "top": 645.5453124611945,
+      "x1": 389.1272541345252,
+      "bottom": 656.5453124611945
+     }
+    },
+    {
+     "ref": "D3",
+     "category": "Diodes",
+     "value": "CA BiColor LED",
+     "location": {
+      "page": 0,
+      "x0": 307.60571729127355,
+      "top": 673.3186121011944,
+      "x1": 379.9193796499615,
+      "bottom": 684.3186121011944
+     }
+    }
+   ]
+  }
+ ]
+}

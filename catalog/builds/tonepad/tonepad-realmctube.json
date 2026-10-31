@@ -1,0 +1,391 @@
+{
+ "id": "tonepad-realmctube",
+ "publisher": "tonepad",
+ "title": "Real McTube",
+ "document": "https://tonepad.com/getFile.asp?id=43",
+ "page": "https://tonepad.com/project.asp?id=23",
+ "file_name": "tonepad_realmctube.pdf",
+ "sha256": "40ee04f48064281d22b2025be23b7185d5feaaf7b8b17a742884bc1f66dbe527",
+ "checked": "2026-10-31T01:08:06+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "R1",
+     "category": "Resistors",
+     "value": "2.2k",
+     "location": {
+      "page": 0,
+      "x0": 50.4,
+      "top": 180.32589999999993,
+      "x1": 95.75379999999998,
+      "bottom": 192.32589999999993
+     }
+    },
+    {
+     "ref": "R2",
+     "category": "Resistors",
+     "value": "12 2W",
+     "location": {
+      "page": 0,
+      "x0": 50.40029999999999,
+      "top": 193.72920000000022,
+      "x1": 89.75269999999998,
+      "bottom": 205.72920000000022
+     }
+    },
+    {
+     "ref": "R3",
+     "category": "Resistors",
+     "value": "1M",
+     "location": {
+      "page": 0,
+      "x0": 50.40029999999999,
+      "top": 207.13710000000003,
+      "x1": 93.07669999999997,
+      "bottom": 219.13710000000003
+     }
+    },
+    {
+     "ref": "R8",
+     "category": "Resistors",
+     "value": "1M",
+     "location": {
+      "page": 0,
+      "x0": 50.40029999999999,
+      "top": 274.1651000000003,
+      "x1": 93.07669999999997,
+      "bottom": 286.1651000000003
+     }
+    },
+    {
+     "ref": "R4",
+     "category": "Resistors",
+     "value": "330k \u00bdW",
+     "location": {
+      "page": 0,
+      "x0": 50.40029999999999,
+      "top": 220.54270000000008,
+      "x1": 127.10169999999998,
+      "bottom": 232.54270000000008
+     }
+    },
+    {
+     "ref": "R5",
+     "category": "Resistors",
+     "value": "15k",
+     "location": {
+      "page": 0,
+      "x0": 50.40029999999999,
+      "top": 233.94830000000013,
+      "x1": 95.7541,
+      "bottom": 245.94830000000013
+     }
+    },
+    {
+     "ref": "R6",
+     "category": "Resistors",
+     "value": "680k \u00bdW",
+     "location": {
+      "page": 0,
+      "x0": 50.40029999999999,
+      "top": 247.35390000000018,
+      "x1": 127.10169999999998,
+      "bottom": 259.3539000000002
+     }
+    },
+    {
+     "ref": "R7",
+     "category": "Resistors",
+     "value": "4.7k",
+     "location": {
+      "page": 0,
+      "x0": 50.40029999999999,
+      "top": 260.75950000000023,
+      "x1": 95.75409999999998,
+      "bottom": 272.75950000000023
+     }
+    },
+    {
+     "ref": "R9",
+     "category": "Resistors",
+     "value": "100k",
+     "location": {
+      "page": 0,
+      "x0": 50.40029999999999,
+      "top": 287.5707000000002,
+      "x1": 102.42749999999998,
+      "bottom": 299.5707000000002
+     }
+    },
+    {
+     "ref": "R10",
+     "category": "Resistors",
+     "value": "470 \u00bdW",
+     "location": {
+      "page": 0,
+      "x0": 50.40029999999999,
+      "top": 300.9763000000002,
+      "x1": 103.09949999999998,
+      "bottom": 312.9763000000002
+     }
+    },
+    {
+     "ref": "RV1",
+     "category": "Potentiometers",
+     "value": "500k Log",
+     "location": {
+      "page": 0,
+      "x0": 50.8961,
+      "top": 331.5256,
+      "x1": 134.2753,
+      "bottom": 343.5256
+     }
+    },
+    {
+     "ref": "RV2",
+     "category": "Potentiometers",
+     "value": "500k Log",
+     "location": {
+      "page": 0,
+      "x0": 50.8961,
+      "top": 344.9312,
+      "x1": 134.2753,
+      "bottom": 356.9312
+     }
+    },
+    {
+     "ref": "D1",
+     "category": "Diodes",
+     "value": "1N4004",
+     "location": {
+      "page": 0,
+      "x0": 50.8961,
+      "top": 374.72589999999997,
+      "x1": 138.26299999999998,
+      "bottom": 386.72589999999997
+     }
+    },
+    {
+     "ref": "D2",
+     "category": "Diodes",
+     "value": "1N4004",
+     "location": {
+      "page": 0,
+      "x0": 50.8961,
+      "top": 374.72589999999997,
+      "x1": 138.26299999999998,
+      "bottom": 386.72589999999997
+     }
+    },
+    {
+     "ref": "D3",
+     "category": "Diodes",
+     "value": "1N4004",
+     "location": {
+      "page": 0,
+      "x0": 50.8961,
+      "top": 374.72589999999997,
+      "x1": 138.26299999999998,
+      "bottom": 386.72589999999997
+     }
+    },
+    {
+     "ref": "D4",
+     "category": "Diodes",
+     "value": "1N4004",
+     "location": {
+      "page": 0,
+      "x0": 50.8961,
+      "top": 374.72589999999997,
+      "x1": 138.26299999999998,
+      "bottom": 386.72589999999997
+     }
+    },
+    {
+     "ref": "D5",
+     "category": "Diodes",
+     "value": "1N4001",
+     "location": {
+      "page": 0,
+      "x0": 50.8961,
+      "top": 388.13179999999994,
+      "x1": 138.26299999999998,
+      "bottom": 400.13179999999994
+     }
+    },
+    {
+     "ref": "D6",
+     "category": "Diodes",
+     "value": "1N4001",
+     "location": {
+      "page": 0,
+      "x0": 50.8961,
+      "top": 388.13179999999994,
+      "x1": 138.26299999999998,
+      "bottom": 400.13179999999994
+     }
+    },
+    {
+     "ref": "D7",
+     "category": "Diodes",
+     "value": "1N4001",
+     "location": {
+      "page": 0,
+      "x0": 50.8961,
+      "top": 388.13179999999994,
+      "x1": 138.26299999999998,
+      "bottom": 400.13179999999994
+     }
+    },
+    {
+     "ref": "D8",
+     "category": "Diodes",
+     "value": "1N4001",
+     "location": {
+      "page": 0,
+      "x0": 50.8961,
+      "top": 388.13179999999994,
+      "x1": 138.26299999999998,
+      "bottom": 400.13179999999994
+     }
+    },
+    {
+     "ref": "C1",
+     "category": "Capacitors",
+     "value": "33u 160V",
+     "location": {
+      "page": 0,
+      "x0": 49.8254,
+      "top": 421.5256,
+      "x1": 103.4188,
+      "bottom": 433.5256
+     }
+    },
+    {
+     "ref": "C2",
+     "category": "Capacitors",
+     "value": "33u 160V",
+     "location": {
+      "page": 0,
+      "x0": 49.8254,
+      "top": 434.9312,
+      "x1": 103.4188,
+      "bottom": 446.9312
+     }
+    },
+    {
+     "ref": "C3",
+     "category": "Capacitors",
+     "value": "2200u 16V",
+     "location": {
+      "page": 0,
+      "x0": 49.8254,
+      "top": 448.3368,
+      "x1": 116.76500000000001,
+      "bottom": 460.3368
+     }
+    },
+    {
+     "ref": "C4",
+     "category": "Capacitors",
+     "value": "2200u 16V",
+     "location": {
+      "page": 0,
+      "x0": 49.8254,
+      "top": 461.7424,
+      "x1": 116.76500000000001,
+      "bottom": 473.7424
+     }
+    },
+    {
+     "ref": "C5",
+     "category": "Capacitors",
+     "value": "10n 50V",
+     "location": {
+      "page": 0,
+      "x0": 49.8254,
+      "top": 475.14799999999997,
+      "x1": 113.429,
+      "bottom": 487.14799999999997
+     }
+    },
+    {
+     "ref": "C6",
+     "category": "Capacitors",
+     "value": "20n 200V",
+     "location": {
+      "page": 0,
+      "x0": 49.8254,
+      "top": 488.55359999999996,
+      "x1": 113.429,
+      "bottom": 500.55359999999996
+     }
+    },
+    {
+     "ref": "C8",
+     "category": "Capacitors",
+     "value": "20n 200V",
+     "location": {
+      "page": 0,
+      "x0": 49.8254,
+      "top": 515.3648,
+      "x1": 113.429,
+      "bottom": 527.3648
+     }
+    },
+    {
+     "ref": "C7",
+     "category": "Capacitors",
+     "value": "100u 16V",
+     "location": {
+      "page": 0,
+      "x0": 49.8254,
+      "top": 501.95919999999995,
+      "x1": 110.09190000000001,
+      "bottom": 513.9592
+     }
+    },
+    {
+     "ref": "C9",
+     "category": "Capacitors",
+     "value": "100u 16V",
+     "location": {
+      "page": 0,
+      "x0": 49.8254,
+      "top": 528.7703999999999,
+      "x1": 110.09190000000001,
+      "bottom": 540.7703999999999
+     }
+    },
+    {
+     "ref": "T1",
+     "category": "Transformers",
+     "value": "120v/12v 0.5A",
+     "location": {
+      "page": 0,
+      "x0": 50.8961,
+      "top": 561.9259,
+      "x1": 152.29169999999996,
+      "bottom": 573.9259
+     }
+    },
+    {
+     "ref": "T2",
+     "category": "Transformers",
+     "value": "120v/12v 0.5A",
+     "location": {
+      "page": 0,
+      "x0": 50.8961,
+      "top": 575.3318,
+      "x1": 152.29169999999996,
+      "bottom": 587.3318
+     }
+    }
+   ]
+  }
+ ]
+}

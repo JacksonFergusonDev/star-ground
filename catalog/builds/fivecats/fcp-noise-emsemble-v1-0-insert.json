@@ -1,0 +1,271 @@
+{
+ "id": "fcp-noise-emsemble-v1-0-insert",
+ "publisher": "fivecats",
+ "title": "fcp-noise-emsemble-v1-0-insert",
+ "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/08/FCP-Noise-Emsemble-V1-0-Insert.pdf",
+ "page": "https://www.five-cats-pedals.co.uk/product/noise-ensemble-fuzz/",
+ "file_name": "FCP-Noise-Emsemble-V1-0-Insert.pdf",
+ "sha256": "188643dc0b378a9fa829feccfecc2c53dfa127770092accad1881c6063a67a4c",
+ "checked": "2026-10-31T01:06:54+00:00",
+ "read_by_ocr": true,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "R1",
+     "category": "Resistors",
+     "value": "2.2M",
+     "location": {
+      "page": 0,
+      "x0": 21.985791558837892,
+      "top": 383.61680043945313,
+      "x1": 118.38503311767577,
+      "bottom": 393.8168004394531
+     }
+    },
+    {
+     "ref": "R2",
+     "category": "Resistors",
+     "value": "1k",
+     "location": {
+      "page": 0,
+      "x0": 21.985791558837892,
+      "top": 398.04486357421877,
+      "x1": 106.969334375,
+      "bottom": 407.94486357421874
+     }
+    },
+    {
+     "ref": "R3",
+     "category": "Resistors",
+     "value": "100k",
+     "location": {
+      "page": 0,
+      "x0": 21.985791558837892,
+      "top": 411.19986357421874,
+      "x1": 117.11661619873047,
+      "bottom": 421.0998635742187
+     }
+    },
+    {
+     "ref": "R4",
+     "category": "Resistors",
+     "value": "47k",
+     "location": {
+      "page": 0,
+      "x0": 21.985791558837892,
+      "top": 424.35486357421877,
+      "x1": 112.88858121337891,
+      "bottom": 434.25486357421875
+     }
+    },
+    {
+     "ref": "R5",
+     "category": "Resistors",
+     "value": "10k",
+     "location": {
+      "page": 0,
+      "x0": 21.985791558837892,
+      "top": 437.50986357421874,
+      "x1": 112.88858121337891,
+      "bottom": 448.30986357421875
+     }
+    },
+    {
+     "ref": "R6",
+     "category": "Resistors",
+     "value": "10k",
+     "location": {
+      "page": 0,
+      "x0": 21.985791558837892,
+      "top": 451.08918940429686,
+      "x1": 111.620175,
+      "bottom": 460.98918940429684
+     }
+    },
+    {
+     "ref": "R7",
+     "category": "Resistors",
+     "value": "10k",
+     "location": {
+      "page": 0,
+      "x0": 21.985791558837892,
+      "top": 465.09292670898435,
+      "x1": 111.620175,
+      "bottom": 474.9929267089843
+     }
+    },
+    {
+     "ref": "R8",
+     "category": "Resistors",
+     "value": "3.3M",
+     "location": {
+      "page": 0,
+      "x0": 21.985791558837892,
+      "top": 478.2479267089844,
+      "x1": 117.11661619873047,
+      "bottom": 488.14792670898436
+     }
+    },
+    {
+     "ref": "C1",
+     "category": "Capacitors",
+     "value": "100u",
+     "location": {
+      "page": 0,
+      "x0": 22.408594522094727,
+      "top": 505.83098984375,
+      "x1": 121.76745682373047,
+      "bottom": 514.73098984375
+     }
+    },
+    {
+     "ref": "C2",
+     "category": "Capacitors",
+     "value": "100u",
+     "location": {
+      "page": 0,
+      "x0": 22.408594522094727,
+      "top": 518.1372953613281,
+      "x1": 121.76745682373047,
+      "bottom": 528.0372953613281
+     }
+    },
+    {
+     "ref": "C3",
+     "category": "Capacitors",
+     "value": "47n",
+     "location": {
+      "page": 0,
+      "x0": 22.408594522094727,
+      "top": 534.4749317871094,
+      "x1": 116.271015625,
+      "bottom": 543.2749317871094
+     }
+    },
+    {
+     "ref": "C5",
+     "category": "Capacitors",
+     "value": "47n",
+     "location": {
+      "page": 0,
+      "x0": 22.408594522094727,
+      "top": 559.2996843261719,
+      "x1": 116.271015625,
+      "bottom": 568.499684326172
+     }
+    },
+    {
+     "ref": "C4",
+     "category": "Capacitors",
+     "value": "10u",
+     "location": {
+      "page": 0,
+      "x0": 22.408594522094727,
+      "top": 545.29598984375,
+      "x1": 116.271015625,
+      "bottom": 555.19598984375
+     }
+    },
+    {
+     "ref": "C6",
+     "category": "Capacitors",
+     "value": "10n",
+     "location": {
+      "page": 0,
+      "x0": 22.408594522094727,
+      "top": 572.0303584960938,
+      "x1": 116.271015625,
+      "bottom": 582.2303584960938
+     }
+    },
+    {
+     "ref": "C7",
+     "category": "Capacitors",
+     "value": "2.2u",
+     "location": {
+      "page": 0,
+      "x0": 22.408594522094727,
+      "top": 585.6096843261719,
+      "x1": 119.65343933105468,
+      "bottom": 595.1096843261719
+     }
+    },
+    {
+     "ref": "U1",
+     "category": "ICs",
+     "value": "PT2399",
+     "location": {
+      "page": 0,
+      "x0": 21.985791558837892,
+      "top": 613.1927474609375,
+      "x1": 125.5726861694336,
+      "bottom": 621.7927474609376
+     }
+    },
+    {
+     "ref": "U2",
+     "category": "ICs",
+     "value": "78L05Z",
+     "location": {
+      "page": 0,
+      "x0": 21.985791558837892,
+      "top": 626.3477474609375,
+      "x1": 125.5726861694336,
+      "bottom": 636.2477474609375
+     }
+    },
+    {
+     "ref": "D1",
+     "category": "Diodes",
+     "value": "1N4001",
+     "location": {
+      "page": 0,
+      "x0": 21.985791558837892,
+      "top": 653.0821161132812,
+      "x1": 128.1095093017578,
+      "bottom": 662.9821161132812
+     }
+    },
+    {
+     "ref": "ATTACK1",
+     "category": "Potentiometers",
+     "value": "B22K",
+     "location": {
+      "page": 0,
+      "x0": 23.254203125,
+      "top": 680.6651792480469,
+      "x1": 117.11661619873047,
+      "bottom": 689.2651792480469
+     }
+    },
+    {
+     "ref": "SIZE1",
+     "category": "Potentiometers",
+     "value": "B22K",
+     "location": {
+      "page": 0,
+      "x0": 21.985791558837892,
+      "top": 693.3958105957031,
+      "x1": 118.38503311767577,
+      "bottom": 703.8958105957031
+     }
+    },
+    {
+     "ref": "VOL1",
+     "category": "Potentiometers",
+     "value": "A100K",
+     "location": {
+      "page": 0,
+      "x0": 21.985791558837892,
+      "top": 706.5508105957032,
+      "x1": 123.45866867675781,
+      "bottom": 716.7508105957032
+     }
+    }
+   ]
+  }
+ ]
+}

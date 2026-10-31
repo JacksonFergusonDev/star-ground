@@ -1,0 +1,180 @@
+{
+ "id": "tonepad-rossdynacomp",
+ "publisher": "tonepad",
+ "title": "CompaRous",
+ "document": "https://tonepad.com/getFile.asp?id=9",
+ "page": "https://tonepad.com/project.asp?id=10",
+ "file_name": "tonepad_rossdynacomp.pdf",
+ "sha256": "371ad440a6477f6fbef9c69d07f5db51b76ca8b78e91e71aa12d206042b2e965",
+ "checked": "2026-10-31T01:29:46+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": "Dyna",
+   "parts": [
+    {
+     "ref": "IC1",
+     "category": "ICs",
+     "value": "CA3080",
+     "location": {
+      "page": 0,
+      "x0": 57.6,
+      "top": 531.3789999999998,
+      "x1": 130.3007,
+      "bottom": 543.3789999999998
+     }
+    },
+    {
+     "ref": "Ra",
+     "category": "Resistors",
+     "value": "1M",
+     "location": {
+      "page": 0,
+      "x0": 270.4961,
+      "top": 410.72589999999997,
+      "x1": 313.1673,
+      "bottom": 422.72589999999997
+     }
+    },
+    {
+     "ref": "Re",
+     "category": "Resistors",
+     "value": "470k",
+     "location": {
+      "page": 0,
+      "x0": 270.4961,
+      "top": 464.34949999999986,
+      "x1": 322.51750000000004,
+      "bottom": 476.34949999999986
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ross",
+   "parts": [
+    {
+     "ref": "IC1",
+     "category": "ICs",
+     "value": "CA3080",
+     "location": {
+      "page": 0,
+      "x0": 57.6,
+      "top": 531.3789999999998,
+      "x1": 130.3007,
+      "bottom": 543.3789999999998
+     }
+    },
+    {
+     "ref": "Rc",
+     "category": "Resistors",
+     "value": "10k",
+     "location": {
+      "page": 0,
+      "x0": 381.6,
+      "top": 437.5376999999999,
+      "x1": 426.27630000000005,
+      "bottom": 449.5376999999999
+     }
+    },
+    {
+     "ref": "Ca",
+     "category": "Capacitors",
+     "value": "1u",
+     "location": {
+      "page": 0,
+      "x0": 381.6,
+      "top": 477.75539999999984,
+      "x1": 396.93710000000004,
+      "bottom": 489.75539999999984
+     }
+    },
+    {
+     "ref": "Cb",
+     "category": "Capacitors",
+     "value": "1u",
+     "location": {
+      "page": 0,
+      "x0": 381.6,
+      "top": 491.1612999999998,
+      "x1": 396.93710000000004,
+      "bottom": 503.1612999999998
+     }
+    },
+    {
+     "ref": "Cc",
+     "category": "Capacitors",
+     "value": "1u",
+     "location": {
+      "page": 0,
+      "x0": 381.6,
+      "top": 504.5671999999998,
+      "x1": 396.2651,
+      "bottom": 516.5671999999997
+     }
+    },
+    {
+     "ref": "Ra",
+     "category": "Resistors",
+     "value": "470k",
+     "location": {
+      "page": 0,
+      "x0": 381.6,
+      "top": 410.72589999999997,
+      "x1": 433.62140000000005,
+      "bottom": 422.72589999999997
+     }
+    },
+    {
+     "ref": "Rb",
+     "category": "Resistors",
+     "value": "470k",
+     "location": {
+      "page": 0,
+      "x0": 381.6,
+      "top": 424.13179999999994,
+      "x1": 433.62140000000005,
+      "bottom": 436.13179999999994
+     }
+    },
+    {
+     "ref": "Rd",
+     "category": "Resistors",
+     "value": "220k",
+     "location": {
+      "page": 0,
+      "x0": 381.6,
+      "top": 450.9435999999999,
+      "x1": 433.62140000000005,
+      "bottom": 462.9435999999999
+     }
+    },
+    {
+     "ref": "Re",
+     "category": "Resistors",
+     "value": "220k",
+     "location": {
+      "page": 0,
+      "x0": 381.6,
+      "top": 464.34949999999986,
+      "x1": 433.62140000000005,
+      "bottom": 476.34949999999986
+     }
+    },
+    {
+     "ref": "Cd",
+     "category": "Capacitors",
+     "value": "220p",
+     "location": {
+      "page": 0,
+      "x0": 381.6,
+      "top": 517.9730999999997,
+      "x1": 441.6265,
+      "bottom": 529.9730999999997
+     }
+    }
+   ]
+  }
+ ]
+}

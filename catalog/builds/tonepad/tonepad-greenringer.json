@@ -1,0 +1,55 @@
+{
+ "id": "tonepad-greenringer",
+ "publisher": "tonepad",
+ "title": "Cosa Verde",
+ "document": "https://tonepad.com/getFile.asp?id=90",
+ "page": "https://tonepad.com/project.asp?id=46",
+ "file_name": "tonepad_greenringer.pdf",
+ "sha256": "def0d39fd0ae713e75efbfa83243be831e9039a44781dbf63857123a2d72e033",
+ "checked": "2026-10-31T01:30:20+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "Q1",
+     "category": "Transistors",
+     "value": "2N5088",
+     "location": {
+      "page": 0,
+      "x0": 211.8254,
+      "top": 448.9550999999999,
+      "x1": 280.5248,
+      "bottom": 460.9550999999999
+     }
+    },
+    {
+     "ref": "Q3",
+     "category": "Transistors",
+     "value": "2N5088",
+     "location": {
+      "page": 0,
+      "x0": 211.8254,
+      "top": 475.76689999999985,
+      "x1": 280.5248,
+      "bottom": 487.76689999999985
+     }
+    },
+    {
+     "ref": "Q2",
+     "category": "Transistors",
+     "value": "2N3906",
+     "location": {
+      "page": 0,
+      "x0": 211.8254,
+      "top": 462.3609999999999,
+      "x1": 280.5248,
+      "bottom": 474.3609999999999
+     }
+    }
+   ]
+  }
+ ]
+}

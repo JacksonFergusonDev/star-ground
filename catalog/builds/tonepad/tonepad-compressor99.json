@@ -1,0 +1,31 @@
+{
+ "id": "tonepad-compressor99",
+ "publisher": "tonepad",
+ "title": "Comp 99",
+ "document": "https://tonepad.com/getFile.asp?id=121",
+ "page": "https://tonepad.com/project.asp?id=67",
+ "file_name": "tonepad_compressor99.pdf",
+ "sha256": "5bb197b64cda2e4aa5a55e9589e824a1dea4c8dac55ead785d2ea469d17dd67f",
+ "checked": "2026-10-31T00:42:51+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "IC1",
+     "category": "ICs",
+     "value": "LM13600",
+     "location": {
+      "page": 0,
+      "x0": 247.8254,
+      "top": 405.82980000000003,
+      "x1": 320.572,
+      "bottom": 416.82980000000003
+     }
+    }
+   ]
+  }
+ ]
+}

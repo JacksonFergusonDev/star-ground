@@ -1,0 +1,240 @@
+{
+ "id": "tonepad-distortion1",
+ "publisher": "tonepad",
+ "title": "Disto-Uno",
+ "document": "https://tonepad.com/getFile.asp?id=78",
+ "page": "https://tonepad.com/project.asp?id=37",
+ "file_name": "tonepad_distortion1.pdf",
+ "sha256": "e2218785e30d4d6ce32d3ba7a48706f5f95d1e34a45eccb0c7b98e76d83dee3e",
+ "checked": "2026-10-31T01:24:33+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": "TA7136P",
+   "parts": [
+    {
+     "ref": "C5",
+     "category": "Capacitors",
+     "value": "1u",
+     "location": {
+      "page": 0,
+      "x0": 266.4,
+      "top": 452.17599999999993,
+      "x1": 281.738,
+      "bottom": 464.17599999999993
+     }
+    },
+    {
+     "ref": "R4",
+     "category": "Resistors",
+     "value": "100k",
+     "location": {
+      "page": 0,
+      "x0": 266.4,
+      "top": 371.7424,
+      "x1": 318.4326,
+      "bottom": 383.7424
+     }
+    },
+    {
+     "ref": "C2",
+     "category": "Capacitors",
+     "value": "470n",
+     "location": {
+      "page": 0,
+      "x0": 266.4,
+      "top": 411.95919999999995,
+      "x1": 281.738,
+      "bottom": 423.95919999999995
+     }
+    },
+    {
+     "ref": "R3",
+     "category": "Resistors",
+     "value": "470k",
+     "location": {
+      "page": 0,
+      "x0": 266.4,
+      "top": 358.3368,
+      "x1": 318.4326,
+      "bottom": 370.3368
+     }
+    },
+    {
+     "ref": "R1",
+     "category": "Resistors",
+     "value": "27k",
+     "location": {
+      "page": 0,
+      "x0": 266.4,
+      "top": 331.5256,
+      "x1": 311.7586,
+      "bottom": 343.5256
+     }
+    },
+    {
+     "ref": "C1",
+     "category": "Capacitors",
+     "value": "250p",
+     "location": {
+      "page": 0,
+      "x0": 266.4,
+      "top": 398.55359999999996,
+      "x1": 312.4306,
+      "bottom": 410.55359999999996
+     }
+    },
+    {
+     "ref": "C4",
+     "category": "Capacitors",
+     "value": "250p",
+     "location": {
+      "page": 0,
+      "x0": 266.4,
+      "top": 438.77039999999994,
+      "x1": 326.4386,
+      "bottom": 450.77039999999994
+     }
+    },
+    {
+     "ref": "C3",
+     "category": "Capacitors",
+     "value": "150p",
+     "location": {
+      "page": 0,
+      "x0": 266.4,
+      "top": 425.36479999999995,
+      "x1": 312.4306,
+      "bottom": 437.36479999999995
+     }
+    },
+    {
+     "ref": "IC2",
+     "category": "ICs",
+     "value": "TA7136P",
+     "location": {
+      "page": 0,
+      "x0": 266.4,
+      "top": 492.3927999999999,
+      "x1": 345.79200000000003,
+      "bottom": 504.3927999999999
+     }
+    }
+   ]
+  },
+  {
+   "name": "TL072",
+   "parts": [
+    {
+     "ref": "R3",
+     "category": "Resistors",
+     "value": "100k",
+     "location": {
+      "page": 0,
+      "x0": 367.2,
+      "top": 408.7376999999999,
+      "x1": 419.236,
+      "bottom": 420.7376999999999
+     }
+    },
+    {
+     "ref": "C5",
+     "category": "Capacitors",
+     "value": "470n",
+     "location": {
+      "page": 0,
+      "x0": 460.8,
+      "top": 435.54949999999985,
+      "x1": 476.13800000000003,
+      "bottom": 447.54949999999985
+     }
+    },
+    {
+     "ref": "R4",
+     "category": "Resistors",
+     "value": "1M",
+     "location": {
+      "page": 0,
+      "x0": 367.2,
+      "top": 422.1435999999999,
+      "x1": 409.88399999999996,
+      "bottom": 434.1435999999999
+     }
+    },
+    {
+     "ref": "D3",
+     "category": "Diodes",
+     "value": "1N914",
+     "location": {
+      "page": 0,
+      "x0": 367.2,
+      "top": 475.7671999999998,
+      "x1": 428.574,
+      "bottom": 487.7671999999998
+     }
+    },
+    {
+     "ref": "C1",
+     "category": "Capacitors",
+     "value": "470p",
+     "location": {
+      "page": 0,
+      "x0": 460.8,
+      "top": 381.92589999999996,
+      "x1": 506.83400000000006,
+      "bottom": 393.92589999999996
+     }
+    },
+    {
+     "ref": "R2",
+     "category": "Resistors",
+     "value": "47k",
+     "location": {
+      "page": 0,
+      "x0": 367.2,
+      "top": 395.33179999999993,
+      "x1": 412.562,
+      "bottom": 407.33179999999993
+     }
+    },
+    {
+     "ref": "C2",
+     "category": "Capacitors",
+     "value": "68n",
+     "location": {
+      "page": 0,
+      "x0": 460.8,
+      "top": 395.33179999999993,
+      "x1": 476.13800000000003,
+      "bottom": 407.33179999999993
+     }
+    },
+    {
+     "ref": "C4",
+     "category": "Capacitors",
+     "value": "100p",
+     "location": {
+      "page": 0,
+      "x0": 460.8,
+      "top": 422.1435999999999,
+      "x1": 520.842,
+      "bottom": 434.1435999999999
+     }
+    },
+    {
+     "ref": "IC1",
+     "category": "ICs",
+     "value": "TL072",
+     "location": {
+      "page": 0,
+      "x0": 367.2,
+      "top": 448.9553999999998,
+      "x1": 430.58000000000004,
+      "bottom": 460.9553999999998
+     }
+    }
+   ]
+  }
+ ]
+}

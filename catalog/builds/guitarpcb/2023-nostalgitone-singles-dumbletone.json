@@ -1,0 +1,367 @@
+{
+ "id": "2023-nostalgitone-singles-dumbletone",
+ "publisher": "guitarpcb",
+ "title": "NostalgiTone Dumbletone Single",
+ "document": "https://guitarpcb.com/wp-content/uploads/2024/10/2023-NostalgiTone-Singles-Dumbletone.pdf",
+ "page": "https://guitarpcb.com/community/topic/pedal-building-guides-mandatory-reading/",
+ "file_name": "2023-NostalgiTone-Singles-Dumbletone.pdf",
+ "sha256": "a6878c592eb361715fc3c1344de877f8b8d72ec00389faf265db9fc2ed97333f",
+ "checked": "2026-10-31T01:51:14+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "R2",
+     "category": "Resistors",
+     "value": "470k",
+     "location": {
+      "page": 1,
+      "x0": 86.759965296,
+      "top": 431.49501572205145,
+      "x1": 128.79781005542685,
+      "bottom": 438.82501572205143
+     }
+    },
+    {
+     "ref": "R4",
+     "category": "Resistors",
+     "value": "1k",
+     "location": {
+      "page": 1,
+      "x0": 86.759965296,
+      "top": 451.05500789805143,
+      "x1": 125.43780730736113,
+      "bottom": 458.3850078980514
+     }
+    },
+    {
+     "ref": "R6",
+     "category": "Resistors",
+     "value": "1k",
+     "location": {
+      "page": 1,
+      "x0": 86.759965296,
+      "top": 470.6150000740514,
+      "x1": 125.43780730736113,
+      "bottom": 477.9450000740514
+     }
+    },
+    {
+     "ref": "R3",
+     "category": "Resistors",
+     "value": "1k",
+     "location": {
+      "page": 1,
+      "x0": 86.759965296,
+      "top": 441.3350117860514,
+      "x1": 125.43780730736113,
+      "bottom": 448.66501178605137
+     }
+    },
+    {
+     "ref": "R8",
+     "category": "Resistors",
+     "value": "10k",
+     "location": {
+      "page": 1,
+      "x0": 86.759965296,
+      "top": 490.17499225005145,
+      "x1": 126.87779162868681,
+      "bottom": 497.50499225005143
+     }
+    },
+    {
+     "ref": "R5",
+     "category": "Resistors",
+     "value": "10k",
+     "location": {
+      "page": 1,
+      "x0": 86.759965296,
+      "top": 460.7750040100515,
+      "x1": 126.87779162868681,
+      "bottom": 468.10500401005146
+     }
+    },
+    {
+     "ref": "R7",
+     "category": "Resistors",
+     "value": "10k",
+     "location": {
+      "page": 1,
+      "x0": 86.759965296,
+      "top": 480.33499618605146,
+      "x1": 126.87779162868681,
+      "bottom": 487.66499618605144
+     }
+    },
+    {
+     "ref": "R1",
+     "category": "Resistors",
+     "value": "2.2M",
+     "location": {
+      "page": 1,
+      "x0": 86.759965296,
+      "top": 421.7750196100514,
+      "x1": 128.5156889716062,
+      "bottom": 429.1050196100514
+     }
+    },
+    {
+     "ref": "C1",
+     "category": "Capacitors",
+     "value": "470n",
+     "location": {
+      "page": 1,
+      "x0": 159.59994755048808,
+      "top": 421.7750196100514,
+      "x1": 201.57558780797177,
+      "bottom": 429.1050196100514
+     }
+    },
+    {
+     "ref": "C5",
+     "category": "Capacitors",
+     "value": "470n",
+     "location": {
+      "page": 1,
+      "x0": 159.59990760810922,
+      "top": 460.7750040100515,
+      "x1": 201.5755478655929,
+      "bottom": 468.10500401005146
+     }
+    },
+    {
+     "ref": "Q1",
+     "category": "Transistors",
+     "value": "2N7000",
+     "location": {
+      "page": 1,
+      "x0": 231.83996493259167,
+      "top": 421.7750196100514,
+      "x1": 282.9556292043004,
+      "bottom": 429.1050196100514
+     }
+    },
+    {
+     "ref": "Q2",
+     "category": "Transistors",
+     "value": "2N7000",
+     "location": {
+      "page": 1,
+      "x0": 231.83990886668374,
+      "top": 431.49501572205145,
+      "x1": 282.9555731383925,
+      "bottom": 438.82501572205143
+     }
+    },
+    {
+     "ref": "D1",
+     "category": "Diodes",
+     "value": "1N4148",
+     "location": {
+      "page": 1,
+      "x0": 314.8798503600391,
+      "top": 421.7750196100514,
+      "x1": 362.6355623063551,
+      "bottom": 429.1050196100514
+     }
+    },
+    {
+     "ref": "D2",
+     "category": "Diodes",
+     "value": "1N4148",
+     "location": {
+      "page": 1,
+      "x0": 314.8797942941311,
+      "top": 431.49501572205145,
+      "x1": 362.63550624044717,
+      "bottom": 438.82501572205143
+     }
+    },
+    {
+     "ref": "C2",
+     "category": "Capacitors",
+     "value": "100p",
+     "location": {
+      "page": 1,
+      "x0": 159.5999068752215,
+      "top": 431.49501572205145,
+      "x1": 203.40386665218037,
+      "bottom": 438.82501572205143
+     }
+    },
+    {
+     "ref": "C3",
+     "category": "Capacitors",
+     "value": "100n",
+     "location": {
+      "page": 1,
+      "x0": 159.59990101212003,
+      "top": 441.3350117860514,
+      "x1": 201.57554126960372,
+      "bottom": 448.66501178605137
+     }
+    },
+    {
+     "ref": "C7",
+     "category": "Capacitors",
+     "value": "100n",
+     "location": {
+      "page": 1,
+      "x0": 159.59990760810922,
+      "top": 480.33499618605146,
+      "x1": 201.5755478655929,
+      "bottom": 487.66499618605144
+     }
+    },
+    {
+     "ref": "D3",
+     "category": "Diodes",
+     "value": "Red LED",
+     "location": {
+      "page": 1,
+      "x0": 314.8799775160527,
+      "top": 441.3350117860514,
+      "x1": 363.5371728302463,
+      "bottom": 448.66501178605137
+     }
+    },
+    {
+     "ref": "C4",
+     "category": "Capacitors",
+     "value": "3.3n",
+     "location": {
+      "page": 1,
+      "x0": 159.59990101212003,
+      "top": 451.05500789805143,
+      "x1": 200.3956102708536,
+      "bottom": 458.3850078980514
+     }
+    },
+    {
+     "ref": "VOL",
+     "category": "Potentiometers",
+     "value": "A100K",
+     "location": {
+      "page": 1,
+      "x0": 229.91984412144188,
+      "top": 451.05500789805143,
+      "x1": 280.8487251505332,
+      "bottom": 458.3850078980514
+     }
+    },
+    {
+     "ref": "D4",
+     "category": "Diodes",
+     "value": "1N5817",
+     "location": {
+      "page": 1,
+      "x0": 314.8797785370459,
+      "top": 451.05500789805143,
+      "x1": 362.63549048336193,
+      "bottom": 458.3850078980514
+     }
+    },
+    {
+     "ref": "GAIN",
+     "category": "Potentiometers",
+     "value": "B500K",
+     "location": {
+      "page": 1,
+      "x0": 227.99995995972597,
+      "top": 460.7750040100515,
+      "x1": 280.84879450369493,
+      "bottom": 468.10500401005146
+     }
+    },
+    {
+     "ref": "C6",
+     "category": "Capacitors",
+     "value": "100u",
+     "location": {
+      "page": 1,
+      "x0": 159.59990101212003,
+      "top": 470.6150000740514,
+      "x1": 203.40386078907886,
+      "bottom": 477.9450000740514
+     }
+    },
+    {
+     "ref": "VOICE",
+     "category": "Potentiometers",
+     "value": "B10K",
+     "location": {
+      "page": 1,
+      "x0": 226.9198813903244,
+      "top": 470.6150000740514,
+      "x1": 278.8087881960475,
+      "bottom": 477.9450000740514
+     }
+    },
+    {
+     "ref": "IC1",
+     "category": "ICs",
+     "value": "TL072",
+     "location": {
+      "page": 1,
+      "x0": 313.9198981653312,
+      "top": 470.6150000740514,
+      "x1": 360.11563609918136,
+      "bottom": 477.9450000740514
+     }
+    },
+    {
+     "ref": "TONE",
+     "category": "Potentiometers",
+     "value": "B50K",
+     "location": {
+      "page": 1,
+      "x0": 227.99995995972597,
+      "top": 480.33499618605146,
+      "x1": 278.8088342213941,
+      "bottom": 487.66499618605144
+     }
+    },
+    {
+     "ref": "LED",
+     "category": "Diodes",
+     "value": "Status",
+     "location": {
+      "page": 1,
+      "x0": 313.4399027563866,
+      "top": 480.33499618605146,
+      "x1": 360.88412886139173,
+      "bottom": 487.66499618605144
+     }
+    },
+    {
+     "ref": "C8",
+     "category": "Capacitors",
+     "value": "47u",
+     "location": {
+      "page": 1,
+      "x0": 159.59990760810922,
+      "top": 490.17499225005145,
+      "x1": 201.48388853426303,
+      "bottom": 497.50499225005143
+     }
+    },
+    {
+     "ref": "CLR",
+     "category": "Resistors",
+     "value": "1.8k",
+     "location": {
+      "page": 1,
+      "x0": 233.03760664485264,
+      "top": 636.951182019552,
+      "x1": 473.98833574992403,
+      "bottom": 644.991182019552
+     }
+    }
+   ]
+  }
+ ]
+}

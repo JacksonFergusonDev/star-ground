@@ -1,0 +1,199 @@
+{
+ "id": "bd-one-knob-fuzz-1",
+ "publisher": "guitarpcb",
+ "title": "One-Knob Fuzz",
+ "document": "https://guitarpcb.com/wp-content/uploads/2018/06/BD_One-Knob-Fuzz-1.pdf",
+ "page": "https://guitarpcb.com/community/topic/direct-build-document-link-list/",
+ "file_name": "BD_One-Knob-Fuzz-1.pdf",
+ "sha256": "b7135322b92cfe9a211efd7eab4e9a824a42e585bfa0013b9b1c0a146a4a4bfe",
+ "checked": "2026-10-31T01:08:31+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "R1",
+     "category": "Resistors",
+     "value": "10k",
+     "location": {
+      "page": 0,
+      "x0": 236.039905584,
+      "top": 456.045254381952,
+      "x1": 338.40894706017144,
+      "bottom": 467.08525438195204
+     }
+    },
+    {
+     "ref": "R2",
+     "category": "Resistors",
+     "value": "820",
+     "location": {
+      "page": 0,
+      "x0": 236.039905584,
+      "top": 471.52524818995204,
+      "x1": 341.60352274290346,
+      "bottom": 482.56524818995206
+     }
+    },
+    {
+     "ref": "R3",
+     "category": "Resistors",
+     "value": "2.2k",
+     "location": {
+      "page": 0,
+      "x0": 236.039905584,
+      "top": 487.125241949952,
+      "x1": 338.3464568542649,
+      "bottom": 498.165241949952
+     }
+    },
+    {
+     "ref": "R4",
+     "category": "Resistors",
+     "value": "150k",
+     "location": {
+      "page": 0,
+      "x0": 236.039905584,
+      "top": 502.605235757952,
+      "x1": 341.16895583689035,
+      "bottom": 513.645235757952
+     }
+    },
+    {
+     "ref": "R5",
+     "category": "Resistors",
+     "value": "1k",
+     "location": {
+      "page": 0,
+      "x0": 236.039905584,
+      "top": 518.085229565952,
+      "x1": 335.5289383154733,
+      "bottom": 529.1252295659519
+     }
+    },
+    {
+     "ref": "R6",
+     "category": "Resistors",
+     "value": "1.8k",
+     "location": {
+      "page": 0,
+      "x0": 236.039905584,
+      "top": 533.565223373952,
+      "x1": 338.3464568542649,
+      "bottom": 544.605223373952
+     }
+    },
+    {
+     "ref": "Q1",
+     "category": "Transistors",
+     "value": "BC109",
+     "location": {
+      "page": 0,
+      "x0": 235.319905872,
+      "top": 549.045217181952,
+      "x1": 344.46645797548445,
+      "bottom": 560.085217181952
+     }
+    },
+    {
+     "ref": "Q2",
+     "category": "Transistors",
+     "value": "BC108",
+     "location": {
+      "page": 0,
+      "x0": 235.319905872,
+      "top": 564.525210989952,
+      "x1": 344.46645797548445,
+      "bottom": 575.565210989952
+     }
+    },
+    {
+     "ref": "C1",
+     "category": "Capacitors",
+     "value": "100n",
+     "location": {
+      "page": 0,
+      "x0": 236.159905536,
+      "top": 580.125204749952,
+      "x1": 341.4370319170199,
+      "bottom": 591.165204749952
+     }
+    },
+    {
+     "ref": "C2",
+     "category": "Capacitors",
+     "value": "220p",
+     "location": {
+      "page": 0,
+      "x0": 236.159905536,
+      "top": 595.605198557952,
+      "x1": 341.4370319170199,
+      "bottom": 606.645198557952
+     }
+    },
+    {
+     "ref": "C3",
+     "category": "Capacitors",
+     "value": "220n",
+     "location": {
+      "page": 0,
+      "x0": 236.159905536,
+      "top": 611.085192365952,
+      "x1": 341.4370319170199,
+      "bottom": 622.125192365952
+     }
+    },
+    {
+     "ref": "C4",
+     "category": "Capacitors",
+     "value": "10u",
+     "location": {
+      "page": 0,
+      "x0": 236.159905536,
+      "top": 626.565186173952,
+      "x1": 338.677023140301,
+      "bottom": 637.605186173952
+     }
+    },
+    {
+     "ref": "C5",
+     "category": "Capacitors",
+     "value": "22u",
+     "location": {
+      "page": 0,
+      "x0": 236.159905536,
+      "top": 642.0451799819521,
+      "x1": 338.6770138844451,
+      "bottom": 653.085179981952
+     }
+    },
+    {
+     "ref": "D1",
+     "category": "Diodes",
+     "value": "LED-DUAL-APADS",
+     "location": {
+      "page": 0,
+      "x0": 235.679905728,
+      "top": 657.525173789952,
+      "x1": 370.248471593604,
+      "bottom": 668.5651737899519
+     }
+    },
+    {
+     "ref": "VOL",
+     "category": "Potentiometers",
+     "value": "A500k",
+     "location": {
+      "page": 0,
+      "x0": 232.559906976,
+      "top": 673.125167549952,
+      "x1": 344.5289644232144,
+      "bottom": 684.165167549952
+     }
+    }
+   ]
+  }
+ ]
+}

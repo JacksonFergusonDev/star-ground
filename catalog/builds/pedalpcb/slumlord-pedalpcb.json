@@ -1,0 +1,199 @@
+{
+ "id": "slumlord-pedalpcb",
+ "publisher": "pedalpcb",
+ "title": "Slumlord Overdrive",
+ "document": "https://docs.pedalpcb.com/project/Slumlord-PedalPCB.pdf",
+ "page": "https://www.pedalpcb.com/product/pcb621/",
+ "file_name": "Slumlord-PedalPCB.pdf",
+ "sha256": "3428b2fdf65761d0a4b671a5b6ecdb917c43ded197bbb3fe1a1411f31471b90d",
+ "checked": "2026-10-31T02:46:01+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "R1",
+     "category": "Resistors",
+     "value": "2.2M",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 109.55999999999995,
+      "x1": 141.8656,
+      "bottom": 121.55999999999995
+     }
+    },
+    {
+     "ref": "R2",
+     "category": "Resistors",
+     "value": "47k",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 123.97000000000003,
+      "x1": 139.8748,
+      "bottom": 135.97000000000003
+     }
+    },
+    {
+     "ref": "R3",
+     "category": "Resistors",
+     "value": "680",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 138.38,
+      "x1": 147.2092,
+      "bottom": 150.38
+     }
+    },
+    {
+     "ref": "CLR",
+     "category": "Resistors",
+     "value": "4.7k",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 152.79099999999994,
+      "x1": 139.87120000000002,
+      "bottom": 164.79099999999994
+     }
+    },
+    {
+     "ref": "C1",
+     "category": "Capacitors",
+     "value": "100n",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 181.611,
+      "x1": 145.21720000000002,
+      "bottom": 193.611
+     }
+    },
+    {
+     "ref": "C2",
+     "category": "Capacitors",
+     "value": "47n",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 196.02199999999993,
+      "x1": 138.5428,
+      "bottom": 208.02199999999993
+     }
+    },
+    {
+     "ref": "C3",
+     "category": "Capacitors",
+     "value": "10n",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 210.43200000000002,
+      "x1": 138.5428,
+      "bottom": 222.43200000000002
+     }
+    },
+    {
+     "ref": "C100",
+     "category": "Capacitors",
+     "value": "100u",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 224.84199999999998,
+      "x1": 145.21720000000002,
+      "bottom": 236.84199999999998
+     }
+    },
+    {
+     "ref": "D1",
+     "category": "Diodes",
+     "value": "1N914",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 253.663,
+      "x1": 153.8836,
+      "bottom": 265.663
+     }
+    },
+    {
+     "ref": "D2",
+     "category": "Diodes",
+     "value": "1N914",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 268.073,
+      "x1": 153.8836,
+      "bottom": 280.073
+     }
+    },
+    {
+     "ref": "D100",
+     "category": "Diodes",
+     "value": "1N5817",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 282.483,
+      "x1": 160.55800000000002,
+      "bottom": 294.483
+     }
+    },
+    {
+     "ref": "Q1",
+     "category": "Transistors",
+     "value": "2N3904",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 311.304,
+      "x1": 160.55800000000002,
+      "bottom": 323.304
+     }
+    },
+    {
+     "ref": "VOLUME",
+     "category": "Potentiometers",
+     "value": "A100K",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 340.12399999999997,
+      "x1": 154.552,
+      "bottom": 352.12399999999997
+     }
+    },
+    {
+     "ref": "TONE",
+     "category": "Potentiometers",
+     "value": "B100K",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 354.53499999999997,
+      "x1": 154.552,
+      "bottom": 366.53499999999997
+     }
+    },
+    {
+     "ref": "GAIN",
+     "category": "Potentiometers",
+     "value": "B100K",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 368.945,
+      "x1": 154.552,
+      "bottom": 380.945
+     }
+    }
+   ]
+  }
+ ]
+}

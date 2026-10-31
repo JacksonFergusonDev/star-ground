@@ -1,0 +1,103 @@
+{
+ "id": "tonepad-pedalpower",
+ "publisher": "tonepad",
+ "title": "Adjustable Pedalboard Power",
+ "document": "https://tonepad.com/getFile.asp?id=111",
+ "page": "https://tonepad.com/project.asp?id=59",
+ "file_name": "tonepad_pedalpower.pdf",
+ "sha256": "ad39bca156921e55d70a8c2deff18af926a2226b973f30d69605a0bfe1193dae",
+ "checked": "2026-10-31T00:36:56+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "D1",
+     "category": "Diodes",
+     "value": "1N4002",
+     "location": {
+      "page": 0,
+      "x0": 270.4961,
+      "top": 482.72589999999997,
+      "x1": 349.1847,
+      "bottom": 494.72589999999997
+     }
+    },
+    {
+     "ref": "D2",
+     "category": "Diodes",
+     "value": "1N4002",
+     "location": {
+      "page": 0,
+      "x0": 270.4961,
+      "top": 482.72589999999997,
+      "x1": 349.1847,
+      "bottom": 494.72589999999997
+     }
+    },
+    {
+     "ref": "D3",
+     "category": "Diodes",
+     "value": "1N4002",
+     "location": {
+      "page": 0,
+      "x0": 270.4961,
+      "top": 482.72589999999997,
+      "x1": 349.1847,
+      "bottom": 494.72589999999997
+     }
+    },
+    {
+     "ref": "D4",
+     "category": "Diodes",
+     "value": "1N4002",
+     "location": {
+      "page": 0,
+      "x0": 270.4961,
+      "top": 482.72589999999997,
+      "x1": 349.1847,
+      "bottom": 494.72589999999997
+     }
+    },
+    {
+     "ref": "D5",
+     "category": "Diodes",
+     "value": "1N4002",
+     "location": {
+      "page": 0,
+      "x0": 270.4961,
+      "top": 482.72589999999997,
+      "x1": 349.1847,
+      "bottom": 494.72589999999997
+     }
+    },
+    {
+     "ref": "D6",
+     "category": "Diodes",
+     "value": "1N4002",
+     "location": {
+      "page": 0,
+      "x0": 270.4961,
+      "top": 482.72589999999997,
+      "x1": 349.1847,
+      "bottom": 494.72589999999997
+     }
+    },
+    {
+     "ref": "IC1",
+     "category": "ICs",
+     "value": "LM317 w/heatsink",
+     "location": {
+      "page": 0,
+      "x0": 270.4961,
+      "top": 496.13179999999994,
+      "x1": 396.533,
+      "bottom": 508.13179999999994
+     }
+    }
+   ]
+  }
+ ]
+}

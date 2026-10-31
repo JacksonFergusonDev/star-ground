@@ -1,0 +1,55 @@
+{
+ "id": "tonepad-rebotedelay25",
+ "publisher": "tonepad",
+ "title": "Rebote Delay 2.5",
+ "document": "https://tonepad.com/getFile.asp?id=98",
+ "page": "https://tonepad.com/project.asp?id=51",
+ "file_name": "tonepad_rebotedelay25.pdf",
+ "sha256": "747e3ceaec68cd47d0a05d8063d87651a2a0fec576232984fe901069ef8fa824",
+ "checked": "2026-10-31T01:33:52+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "IC1",
+     "category": "ICs",
+     "value": "PT2399",
+     "location": {
+      "page": 0,
+      "x0": 227.2961,
+      "top": 367.5256,
+      "x1": 298.66810000000004,
+      "bottom": 379.5256
+     }
+    },
+    {
+     "ref": "IC2",
+     "category": "ICs",
+     "value": "TL072",
+     "location": {
+      "page": 0,
+      "x0": 227.2961,
+      "top": 380.9312,
+      "x1": 290.66270000000003,
+      "bottom": 392.9312
+     }
+    },
+    {
+     "ref": "IC3",
+     "category": "ICs",
+     "value": "5v positive Regulator (78L05)",
+     "location": {
+      "page": 0,
+      "x0": 227.2961,
+      "top": 407.7427,
+      "x1": 368.70169999999996,
+      "bottom": 419.7427
+     }
+    }
+   ]
+  }
+ ]
+}

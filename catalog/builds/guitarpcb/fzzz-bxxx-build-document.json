@@ -1,0 +1,271 @@
+{
+ "id": "fzzz-bxxx-build-document",
+ "publisher": "guitarpcb",
+ "title": "Fzzz Bxxx",
+ "document": "https://guitarpcb.com/wp-content/uploads/2020/01/Fzzz-Bxxx-Build-Document.pdf",
+ "page": "https://guitarpcb.com/community/topic/direct-build-document-link-list/",
+ "file_name": "Fzzz-Bxxx-Build-Document.pdf",
+ "sha256": "b0ff2bc712bb22d25fe97290d4862ee71bec86c7b50baa534b92735443cf07f5",
+ "checked": "2026-10-31T01:21:48+00:00",
+ "read_by_ocr": true,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "R1",
+     "category": "Resistors",
+     "value": "1M",
+     "location": {
+      "page": 0,
+      "x0": 209.23095703125,
+      "top": 411.96773803710937,
+      "x1": 276.58338500976566,
+      "bottom": 421.0677380371094
+     }
+    },
+    {
+     "ref": "R3",
+     "category": "Resistors",
+     "value": "1M",
+     "location": {
+      "page": 0,
+      "x0": 209.23095703125,
+      "top": 434.32257934570316,
+      "x1": 276.98192687988285,
+      "bottom": 443.6225793457032
+     }
+    },
+    {
+     "ref": "C1",
+     "category": "Capacitors",
+     "value": "470n",
+     "location": {
+      "page": 0,
+      "x0": 322.01639282226563,
+      "top": 411.96773803710937,
+      "x1": 391.36151000976565,
+      "bottom": 421.0677380371094
+     }
+    },
+    {
+     "ref": "C2",
+     "category": "Capacitors",
+     "value": "470n",
+     "location": {
+      "page": 0,
+      "x0": 321.61785095214844,
+      "top": 423.14515869140627,
+      "x1": 391.36151000976565,
+      "bottom": 432.4451586914063
+     }
+    },
+    {
+     "ref": "C3",
+     "category": "Capacitors",
+     "value": "470n",
+     "location": {
+      "page": 0,
+      "x0": 321.61785095214844,
+      "top": 434.32257934570316,
+      "x1": 390.5644262695313,
+      "bottom": 443.6225793457032
+     }
+    },
+    {
+     "ref": "C4",
+     "category": "Capacitors",
+     "value": "470n",
+     "location": {
+      "page": 0,
+      "x0": 322.01639282226563,
+      "top": 446.4979962158203,
+      "x1": 391.36151000976565,
+      "bottom": 454.6979962158203
+     }
+    },
+    {
+     "ref": "R2",
+     "category": "Resistors",
+     "value": "22k",
+     "location": {
+      "page": 0,
+      "x0": 209.23095703125,
+      "top": 423.14515869140627,
+      "x1": 276.58338500976566,
+      "bottom": 432.4451586914063
+     }
+    },
+    {
+     "ref": "R4",
+     "category": "Resistors",
+     "value": "470k",
+     "location": {
+      "page": 0,
+      "x0": 209.62947875976565,
+      "top": 446.4979962158203,
+      "x1": 278.17753234863284,
+      "bottom": 454.6979962158203
+     }
+    },
+    {
+     "ref": "R5",
+     "category": "Resistors",
+     "value": "1.8k",
+     "location": {
+      "page": 0,
+      "x0": 209.23095703125,
+      "top": 456.87702392578126,
+      "x1": 277.77899047851565,
+      "bottom": 466.27702392578124
+     }
+    },
+    {
+     "ref": "R7",
+     "category": "Resistors",
+     "value": "1.8k",
+     "location": {
+      "page": 0,
+      "x0": 209.23095703125,
+      "top": 479.83065490722663,
+      "x1": 276.98192687988285,
+      "bottom": 488.63065490722664
+     }
+    },
+    {
+     "ref": "C5",
+     "category": "Capacitors",
+     "value": "100u",
+     "location": {
+      "page": 0,
+      "x0": 321.61785095214844,
+      "top": 456.87702392578126,
+      "x1": 391.36151000976565,
+      "bottom": 466.27702392578124
+     }
+    },
+    {
+     "ref": "R6",
+     "category": "Resistors",
+     "value": "470",
+     "location": {
+      "page": 0,
+      "x0": 209.23095703125,
+      "top": 468.2540478515625,
+      "x1": 278.97459594726564,
+      "bottom": 477.35404785156254
+     }
+    },
+    {
+     "ref": "Q1",
+     "category": "Transistors",
+     "value": "2N3053",
+     "location": {
+      "page": 0,
+      "x0": 321.61785095214844,
+      "top": 479.83065490722663,
+      "x1": 396.94101562500003,
+      "bottom": 488.63065490722664
+     }
+    },
+    {
+     "ref": "Q2",
+     "category": "Transistors",
+     "value": "2N3053",
+     "location": {
+      "page": 0,
+      "x0": 320.82078735351564,
+      "top": 491.40726196289063,
+      "x1": 396.94101562500003,
+      "bottom": 500.20726196289064
+     }
+    },
+    {
+     "ref": "D1",
+     "category": "Diodes",
+     "value": "1n914",
+     "location": {
+      "page": 0,
+      "x0": 209.62947875976565,
+      "top": 502.38509948730473,
+      "x1": 281.3658068847656,
+      "bottom": 511.18509948730474
+     }
+    },
+    {
+     "ref": "D2",
+     "category": "Diodes",
+     "value": "1n914",
+     "location": {
+      "page": 0,
+      "x0": 209.23095703125,
+      "top": 512.96373046875,
+      "x1": 280.96728515625,
+      "bottom": 522.56373046875
+     }
+    },
+    {
+     "ref": "LEVEL",
+     "category": "Potentiometers",
+     "value": "A10k",
+     "location": {
+      "page": 0,
+      "x0": 315.2413018798828,
+      "top": 512.96373046875,
+      "x1": 391.36151000976565,
+      "bottom": 522.56373046875
+     }
+    },
+    {
+     "ref": "D3",
+     "category": "Diodes",
+     "value": "1n4001",
+     "location": {
+      "page": 0,
+      "x0": 209.23095703125,
+      "top": 524.9395440673828,
+      "x1": 282.162890625,
+      "bottom": 533.7395440673828
+     }
+    },
+    {
+     "ref": "ATTACK",
+     "category": "Potentiometers",
+     "value": "B100k",
+     "location": {
+      "page": 0,
+      "x0": 312.85009094238285,
+      "top": 524.9395440673828,
+      "x1": 392.95563720703126,
+      "bottom": 533.7395440673828
+     }
+    },
+    {
+     "ref": "D4",
+     "category": "Diodes",
+     "value": "Status LED",
+     "location": {
+      "page": 0,
+      "x0": 209.62947875976565,
+      "top": 536.1169647216798,
+      "x1": 288.14091796875,
+      "bottom": 544.9169647216797
+     }
+    },
+    {
+     "ref": "TONE",
+     "category": "Potentiometers",
+     "value": "B10k",
+     "location": {
+      "page": 0,
+      "x0": 316.4369073486328,
+      "top": 536.1169647216798,
+      "x1": 391.76003173828127,
+      "bottom": 544.9169647216797
+     }
+    }
+   ]
+  }
+ ]
+}

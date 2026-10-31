@@ -1,0 +1,331 @@
+{
+ "id": "fcp-buddha-drive-insert-v1-0",
+ "publisher": "fivecats",
+ "title": "fcp-buddha-drive-insert-v1-0",
+ "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/03/FCP-Buddha-Drive-Insert-V1-0.pdf",
+ "page": "https://www.five-cats-pedals.co.uk/product/buddha-drive-lovepedal-hermida-audio-zendrive-clone/",
+ "file_name": "FCP-Buddha-Drive-Insert-V1-0.pdf",
+ "sha256": "6a5b6e559aea60d5c6f31035bf0ab77d12831e443ee045752e048588abea4c03",
+ "checked": "2026-10-31T00:56:00+00:00",
+ "read_by_ocr": true,
+ "verified": false,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "R1",
+     "category": "Resistors",
+     "value": "10k",
+     "location": {
+      "page": 0,
+      "x0": 24.3583125,
+      "top": 378.1861803588867,
+      "x1": 78.58455510864258,
+      "bottom": 383.7861803588867
+     }
+    },
+    {
+     "ref": "R2",
+     "category": "Resistors",
+     "value": "10k",
+     "location": {
+      "page": 0,
+      "x0": 24.3583125,
+      "top": 384.26263892211915,
+      "x1": 78.58455510864258,
+      "bottom": 390.16263892211913
+     }
+    },
+    {
+     "ref": "R7",
+     "category": "Resistors",
+     "value": "10k",
+     "location": {
+      "page": 0,
+      "x0": 24.3583125,
+      "top": 421.58935365600587,
+      "x1": 78.00459459228516,
+      "bottom": 427.1893536560059
+     }
+    },
+    {
+     "ref": "D1",
+     "category": "Diodes",
+     "value": "1N5817",
+     "location": {
+      "page": 0,
+      "x0": 207.62561676635744,
+      "top": 384.26263892211915,
+      "x1": 270.2612795654297,
+      "bottom": 390.16263892211913
+     }
+    },
+    {
+     "ref": "R3",
+     "category": "Resistors",
+     "value": "2.2M",
+     "location": {
+      "page": 0,
+      "x0": 23.77835380783081,
+      "top": 391.7858538757324,
+      "x1": 80.32443665771484,
+      "bottom": 397.7858538757324
+     }
+    },
+    {
+     "ref": "D2",
+     "category": "Diodes",
+     "value": "BAT41",
+     "location": {
+      "page": 0,
+      "x0": 207.62561676635744,
+      "top": 391.7858538757324,
+      "x1": 267.36149157714846,
+      "bottom": 397.7858538757324
+     }
+    },
+    {
+     "ref": "D3",
+     "category": "Diodes",
+     "value": "BAT41",
+     "location": {
+      "page": 0,
+      "x0": 207.62561676635744,
+      "top": 399.1643888122559,
+      "x1": 267.36149157714846,
+      "bottom": 405.06438881225586
+     }
+    },
+    {
+     "ref": "R4",
+     "category": "Resistors",
+     "value": "1k",
+     "location": {
+      "page": 0,
+      "x0": 24.3583125,
+      "top": 399.1643888122559,
+      "x1": 75.6847598236084,
+      "bottom": 405.06438881225586
+     }
+    },
+    {
+     "ref": "R6",
+     "category": "Resistors",
+     "value": "1k",
+     "location": {
+      "page": 0,
+      "x0": 24.3583125,
+      "top": 415.2235642456055,
+      "x1": 75.6847598236084,
+      "bottom": 421.12356424560545
+     }
+    },
+    {
+     "ref": "R8",
+     "category": "Resistors",
+     "value": "1k",
+     "location": {
+      "page": 0,
+      "x0": 24.3583125,
+      "top": 428.96788859252933,
+      "x1": 75.6847598236084,
+      "bottom": 434.96788859252933
+     }
+    },
+    {
+     "ref": "R5",
+     "category": "Resistors",
+     "value": "470k",
+     "location": {
+      "page": 0,
+      "x0": 24.3583125,
+      "top": 406.832283782959,
+      "x1": 81.19437743225097,
+      "bottom": 412.632283782959
+     }
+    },
+    {
+     "ref": "D4",
+     "category": "Diodes",
+     "value": "1N34A",
+     "location": {
+      "page": 0,
+      "x0": 207.62561676635744,
+      "top": 406.832283782959,
+      "x1": 268.52141260986326,
+      "bottom": 412.632283782959
+     }
+    },
+    {
+     "ref": "Q1",
+     "category": "Transistors",
+     "value": "2N7000",
+     "location": {
+      "page": 0,
+      "x0": 207.62561676635744,
+      "top": 421.58935365600587,
+      "x1": 270.5512525268555,
+      "bottom": 427.1893536560059
+     }
+    },
+    {
+     "ref": "Q2",
+     "category": "Transistors",
+     "value": "2N7000",
+     "location": {
+      "page": 0,
+      "x0": 207.62561676635744,
+      "top": 428.96788859252933,
+      "x1": 270.5512525268555,
+      "bottom": 434.96788859252933
+     }
+    },
+    {
+     "ref": "C1",
+     "category": "Capacitors",
+     "value": "100u",
+     "location": {
+      "page": 0,
+      "x0": 24.93827301635742,
+      "top": 445.02706402587893,
+      "x1": 83.80419245910645,
+      "bottom": 450.9270640258789
+     }
+    },
+    {
+     "ref": "U1",
+     "category": "ICs",
+     "value": "AD712/ OPA2604/ OPAMP",
+     "location": {
+      "page": 0,
+      "x0": 207.62561676635744,
+      "top": 445.02706402587893,
+      "x1": 318.39795864257815,
+      "bottom": 450.9270640258789
+     }
+    },
+    {
+     "ref": "C2",
+     "category": "Capacitors",
+     "value": "47u",
+     "location": {
+      "page": 0,
+      "x0": 24.93827301635742,
+      "top": 451.826878894043,
+      "x1": 81.7743379486084,
+      "bottom": 457.926878894043
+     }
+    },
+    {
+     "ref": "C3",
+     "category": "Capacitors",
+     "value": "100n",
+     "location": {
+      "page": 0,
+      "x0": 24.93827301635742,
+      "top": 460.0734939331055,
+      "x1": 83.80419245910645,
+      "bottom": 466.17349393310553
+     }
+    },
+    {
+     "ref": "C4",
+     "category": "Capacitors",
+     "value": "470n",
+     "location": {
+      "page": 0,
+      "x0": 24.93827301635742,
+      "top": 465.42653781738284,
+      "x1": 83.80419245910645,
+      "bottom": 471.52653781738286
+     }
+    },
+    {
+     "ref": "C7",
+     "category": "Capacitors",
+     "value": "470n",
+     "location": {
+      "page": 0,
+      "x0": 24.93827301635742,
+      "top": 488.5748881530762,
+      "x1": 83.80419245910645,
+      "bottom": 494.3748881530762
+     }
+    },
+    {
+     "ref": "DRIVE",
+     "category": "Potentiometers",
+     "value": "B500K",
+     "location": {
+      "page": 0,
+      "x0": 207.62561676635744,
+      "top": 465.42653781738284,
+      "x1": 267.07148942871095,
+      "bottom": 471.52653781738286
+     }
+    },
+    {
+     "ref": "C5",
+     "category": "Capacitors",
+     "value": "100p",
+     "location": {
+      "page": 0,
+      "x0": 24.93827301635742,
+      "top": 473.67313826293946,
+      "x1": 83.80419245910645,
+      "bottom": 479.67313826293946
+     }
+    },
+    {
+     "ref": "VOICE",
+     "category": "Potentiometers",
+     "value": "B10K",
+     "location": {
+      "page": 0,
+      "x0": 207.62561676635744,
+      "top": 473.67313826293946,
+      "x1": 264.751676550293,
+      "bottom": 479.67313826293946
+     }
+    },
+    {
+     "ref": "C6",
+     "category": "Capacitors",
+     "value": "3.3n",
+     "location": {
+      "page": 0,
+      "x0": 24.93827301635742,
+      "top": 481.48571325073243,
+      "x1": 82.64427872314454,
+      "bottom": 487.58571325073245
+     }
+    },
+    {
+     "ref": "TONE",
+     "category": "Potentiometers",
+     "value": "B50K",
+     "location": {
+      "page": 0,
+      "x0": 207.62561676635744,
+      "top": 481.48571325073243,
+      "x1": 264.751676550293,
+      "bottom": 487.58571325073245
+     }
+    },
+    {
+     "ref": "VOLUME",
+     "category": "Potentiometers",
+     "value": "B100K",
+     "location": {
+      "page": 0,
+      "x0": 207.62561676635744,
+      "top": 488.5748881530762,
+      "x1": 267.07148942871095,
+      "bottom": 494.3748881530762
+     }
+    }
+   ]
+  }
+ ]
+}

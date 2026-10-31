@@ -1,0 +1,271 @@
+{
+ "id": "dirtdauber-pedalpcb",
+ "publisher": "pedalpcb",
+ "title": "Dirt Dauber Sub-Octave Fuzz",
+ "document": "https://docs.pedalpcb.com/project/DirtDauber-PedalPCB.pdf",
+ "page": "https://www.pedalpcb.com/product/pcb491/",
+ "file_name": "DirtDauber-PedalPCB.pdf",
+ "sha256": "fe92207e9570b911c60d7b23fe2b3fe905adacf59b457d1240ff131e4e199498",
+ "checked": "2026-10-31T02:20:30+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "R1",
+     "category": "Resistors",
+     "value": "2.2k",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 108.23599999999999,
+      "x1": 139.87120000000002,
+      "bottom": 120.23599999999999
+     }
+    },
+    {
+     "ref": "R2",
+     "category": "Resistors",
+     "value": "3.3M",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 121.76400000000001,
+      "x1": 141.8656,
+      "bottom": 133.764
+     }
+    },
+    {
+     "ref": "R3",
+     "category": "Resistors",
+     "value": "3.3M",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 135.29200000000003,
+      "x1": 141.8656,
+      "bottom": 147.29200000000003
+     }
+    },
+    {
+     "ref": "R4",
+     "category": "Resistors",
+     "value": "100k",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 148.81999999999994,
+      "x1": 146.5492,
+      "bottom": 160.81999999999994
+     }
+    },
+    {
+     "ref": "R5",
+     "category": "Resistors",
+     "value": "100k",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 162.34799999999996,
+      "x1": 146.5492,
+      "bottom": 174.34799999999996
+     }
+    },
+    {
+     "ref": "R100",
+     "category": "Resistors",
+     "value": "4.7k",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 175.87699999999995,
+      "x1": 139.87120000000002,
+      "bottom": 187.87699999999995
+     }
+    },
+    {
+     "ref": "R101",
+     "category": "Resistors",
+     "value": "4.7k",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 189.40499999999997,
+      "x1": 139.87120000000002,
+      "bottom": 201.40499999999997
+     }
+    },
+    {
+     "ref": "C1",
+     "category": "Capacitors",
+     "value": "100n",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 216.461,
+      "x1": 145.21720000000002,
+      "bottom": 228.461
+     }
+    },
+    {
+     "ref": "C3",
+     "category": "Capacitors",
+     "value": "100n",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 243.51699999999994,
+      "x1": 145.21720000000002,
+      "bottom": 255.51699999999994
+     }
+    },
+    {
+     "ref": "C101",
+     "category": "Capacitors",
+     "value": "100n",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 284.101,
+      "x1": 145.21720000000002,
+      "bottom": 296.101
+     }
+    },
+    {
+     "ref": "C102",
+     "category": "Capacitors",
+     "value": "100n",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 297.62899999999996,
+      "x1": 145.21720000000002,
+      "bottom": 309.62899999999996
+     }
+    },
+    {
+     "ref": "C2",
+     "category": "Capacitors",
+     "value": "1u",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 229.98900000000003,
+      "x1": 131.8684,
+      "bottom": 241.98900000000003
+     }
+    },
+    {
+     "ref": "C4",
+     "category": "Capacitors",
+     "value": "1u",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 257.04499999999996,
+      "x1": 131.8684,
+      "bottom": 269.04499999999996
+     }
+    },
+    {
+     "ref": "C100",
+     "category": "Capacitors",
+     "value": "100u",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 270.573,
+      "x1": 145.21720000000002,
+      "bottom": 282.573
+     }
+    },
+    {
+     "ref": "D100",
+     "category": "Diodes",
+     "value": "1N5817",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 324.685,
+      "x1": 160.55800000000002,
+      "bottom": 336.685
+     }
+    },
+    {
+     "ref": "IC1",
+     "category": "ICs",
+     "value": "CD4049UBE",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 351.741,
+      "x1": 187.22560000000001,
+      "bottom": 363.741
+     }
+    },
+    {
+     "ref": "IC2",
+     "category": "ICs",
+     "value": "CD4040BE",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 365.269,
+      "x1": 178.5592,
+      "bottom": 377.269
+     }
+    },
+    {
+     "ref": "SW1",
+     "category": "Switches",
+     "value": "SPDT ON/ON",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 392.325,
+      "x1": 157.8532,
+      "bottom": 404.325
+     }
+    },
+    {
+     "ref": "OCTAVE",
+     "category": "Potentiometers",
+     "value": "B100K",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 419.381,
+      "x1": 154.552,
+      "bottom": 431.381
+     }
+    },
+    {
+     "ref": "FUZZ",
+     "category": "Potentiometers",
+     "value": "B100K",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 432.909,
+      "x1": 154.552,
+      "bottom": 444.909
+     }
+    },
+    {
+     "ref": "LEVEL",
+     "category": "Potentiometers",
+     "value": "A100K",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 446.43699999999995,
+      "x1": 154.552,
+      "bottom": 458.43699999999995
+     }
+    }
+   ]
+  }
+ ]
+}

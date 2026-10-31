@@ -1,0 +1,1561 @@
+{
+ "documents": {
+  "https://tonepad.com/getFile.asp?id=100": {
+   "checked": "2026-10-31T00:32:46+00:00",
+   "entry": "tonepad-rossphaser-extra-phase-stages",
+   "etag": null,
+   "last_modified": null,
+   "outcome": "listed",
+   "parts": "2ea46889297d25bf3210185056d14f3ebe427cf49476597dc2f29000eb340e52",
+   "reason": "",
+   "sha256": "5fa44f2fd25cda2077df6613ad6bae6a331e302d1de21a63dfb006810972c9f6",
+   "verification": "verified"
+  },
+  "https://tonepad.com/getFile.asp?id=101": {
+   "checked": "2026-10-31T00:33:19+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": null,
+   "outcome": "not clean",
+   "parts": "ee7fdb0871caefafac5830fdd4cd35a48d8252fe012501ea562fa9168586e84f",
+   "reason": "2 self-check warning(s), first: Unparsed value: R32 value '1Meg' is not a recognizable resistor value.",
+   "sha256": "ec1c98c746422aa792e42869327f88e7bd0fcde5f12a5684421d2146a542eecb",
+   "verification": "unverified"
+  },
+  "https://tonepad.com/getFile.asp?id=102": {
+   "checked": "2026-10-31T00:33:56+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": null,
+   "outcome": "not clean",
+   "parts": "2ea46889297d25bf3210185056d14f3ebe427cf49476597dc2f29000eb340e52",
+   "reason": "no parts were read",
+   "sha256": "7e31cf476ca3a6c6bc492f36714bb450c3871051fdca7dcfe065397472200d30",
+   "verification": "unverified"
+  },
+  "https://tonepad.com/getFile.asp?id=107": {
+   "checked": "2026-10-31T00:34:30+00:00",
+   "entry": "tonepad-abselector",
+   "etag": null,
+   "last_modified": null,
+   "outcome": "listed",
+   "parts": "2ea46889297d25bf3210185056d14f3ebe427cf49476597dc2f29000eb340e52",
+   "reason": "",
+   "sha256": "f964ea8612f6d462c99b7367e7aedc2ec84ef041c587a63b23e6903ad44284bf",
+   "verification": "verified"
+  },
+  "https://tonepad.com/getFile.asp?id=108": {
+   "checked": "2026-10-31T00:35:07+00:00",
+   "entry": "tonepad-guvnor",
+   "etag": null,
+   "last_modified": null,
+   "outcome": "listed",
+   "parts": "3143c3698088e7b0501aa871f401d8b3c37541b6bc9417460024b13ed04160b6",
+   "reason": "",
+   "sha256": "9fe8badbacd827d6711a2dd945f451a5c66f4acdd09e7dd1a926f58b6d4b6878",
+   "verification": "verified"
+  },
+  "https://tonepad.com/getFile.asp?id=109": {
+   "checked": "2026-10-31T00:35:44+00:00",
+   "entry": "tonepad-folkurbanoctup",
+   "etag": null,
+   "last_modified": null,
+   "outcome": "listed",
+   "parts": "1cfa4d1ddbdb29c10198483b39dc051ef024f08049aa893163a3805b52012ba8",
+   "reason": "",
+   "sha256": "c814597c1ee42c4e499324d94bb2404cc5fd9528138fdbe48458bbc703eef337",
+   "verification": "verified"
+  },
+  "https://tonepad.com/getFile.asp?id=11": {
+   "checked": "2026-10-31T00:36:18+00:00",
+   "entry": "tonepad-orangesqueezer",
+   "etag": null,
+   "last_modified": null,
+   "outcome": "listed",
+   "parts": "0865a8497eaa0ca19bee1c3851a46f40b646ea5cc1dcfe4516c92d20ffcdba8d",
+   "reason": "",
+   "sha256": "5844b78754b60d21d85c36e0ebbd3f4c1e8e273803881ff719f961bb9a0bdd23",
+   "verification": "verified"
+  },
+  "https://tonepad.com/getFile.asp?id=111": {
+   "checked": "2026-10-31T00:36:56+00:00",
+   "entry": "tonepad-pedalpower",
+   "etag": null,
+   "last_modified": null,
+   "outcome": "listed",
+   "parts": "ab51ba2499b02ed73b749250e35c2ef17588b8dca110688c7256af61c85f19bb",
+   "reason": "",
+   "sha256": "ad39bca156921e55d70a8c2deff18af926a2226b973f30d69605a0bfe1193dae",
+   "verification": "verified"
+  },
+  "https://tonepad.com/getFile.asp?id=112": {
+   "checked": "2026-10-31T00:37:31+00:00",
+   "entry": "tonepad-sansampgt2-2007",
+   "etag": null,
+   "last_modified": null,
+   "outcome": "listed",
+   "parts": "2ea46889297d25bf3210185056d14f3ebe427cf49476597dc2f29000eb340e52",
+   "reason": "",
+   "sha256": "8c3f0dbec95fa9bb83c3ac718f1311fb8f5aef341f82afdc105c0ec412696080",
+   "verification": "verified"
+  },
+  "https://tonepad.com/getFile.asp?id=113": {
+   "checked": "2026-10-31T00:38:04+00:00",
+   "entry": "tonepad-envelopefilter",
+   "etag": null,
+   "last_modified": null,
+   "outcome": "listed",
+   "parts": "0b79641227df7d1dbe943adb5ab9a83731e3e8e2a0f4ed08f6e606b8705a7d83",
+   "reason": "",
+   "sha256": "49cd84fa45dc5f40e52fa6fe8dc8bb1203d095ba88a68656ee14020c724ea4f3",
+   "verification": "verified"
+  },
+  "https://tonepad.com/getFile.asp?id=114": {
+   "checked": "2026-10-31T00:38:40+00:00",
+   "entry": "tonepad-wahwahbasic",
+   "etag": null,
+   "last_modified": null,
+   "outcome": "listed",
+   "parts": "0aafdb58faa0792a7ad1f70c385f26639ca08ac0e7bbf85750e0f7b8bf49cb10",
+   "reason": "",
+   "sha256": "f2b0991f364066865eb27b55c59e05fea78765068eef2a500efe297f99d3f796",
+   "verification": "verified"
+  },
+  "https://tonepad.com/getFile.asp?id=115": {
+   "checked": "2026-10-31T00:39:14+00:00",
+   "entry": "tonepad-distortionplus",
+   "etag": null,
+   "last_modified": null,
+   "outcome": "listed",
+   "parts": "4ca794511f7b06fc6ec8b4448490bfb11eb2af55a02af140459c6d40b5c660d0",
+   "reason": "",
+   "sha256": "077b9768b3457889d2b33147360f0338c374953382a50ffacc432ec878364330",
+   "verification": "verified"
+  },
+  "https://tonepad.com/getFile.asp?id=116": {
+   "checked": "2026-10-31T00:39:52+00:00",
+   "entry": "tonepad-octavia",
+   "etag": null,
+   "last_modified": null,
+   "outcome": "listed",
+   "parts": "6d79891c0e712f2146807ebcbd92b1e9457d8fbda378245b14e4c861cb5f2ded",
+   "reason": "",
+   "sha256": "776e0e7cad30281074dd0539af3a53e45d47a286d0fe2d693fa411be072bae72",
+   "verification": "verified"
+  },
+  "https://tonepad.com/getFile.asp?id=117": {
+   "checked": "2026-10-31T00:40:27+00:00",
+   "entry": "tonepad-tonebender3knob",
+   "etag": null,
+   "last_modified": null,
+   "outcome": "listed",
+   "parts": "b486108ee8703c10c7512da98c5f2c764cffbc22e3da472df73c361d75734602",
+   "reason": "",
+   "sha256": "da30c1ed7a6c3a2002d79cca8057363c9ee2dc10cd29c29bf25f301b6c7a4571",
+   "verification": "verified"
+  },
+  "https://tonepad.com/getFile.asp?id=118": {
+   "checked": "2026-10-31T00:41:05+00:00",
+   "entry": "tonepad-bipolar",
+   "etag": null,
+   "last_modified": null,
+   "outcome": "listed",
+   "parts": "2ea46889297d25bf3210185056d14f3ebe427cf49476597dc2f29000eb340e52",
+   "reason": "",
+   "sha256": "b4fdb6e3735915e44cfa645615d1b06dd6fbd2cc70a5a5ac68b3cc7065b72b71",
+   "verification": "verified"
+  },
+  "https://tonepad.com/getFile.asp?id=119": {
+   "checked": "2026-10-31T00:41:38+00:00",
+   "entry": "tonepad-tubesoundfuzz",
+   "etag": null,
+   "last_modified": null,
+   "outcome": "listed",
+   "parts": "de9f99d3a263d19a4571ba7ac6f5c54d1bd863ed23c750c5f028d564c800b1d7",
+   "reason": "",
+   "sha256": "e5d0e88764dbe5db71df6c59655ab36d9173f82913ad1bda76ed42812d2d7ba2",
+   "verification": "verified"
+  },
+  "https://tonepad.com/getFile.asp?id=120": {
+   "checked": "2026-10-31T00:42:14+00:00",
+   "entry": "tonepad-octaviarm",
+   "etag": null,
+   "last_modified": null,
+   "outcome": "listed",
+   "parts": "0f777e6b28cc7a4e2518d2c40dc622cd659ec7f65b780e7aa8be860aa7d6daeb",
+   "reason": "",
+   "sha256": "2f14d6d5ce3a88c6ab3f405794d36aeb94f40eade0a1dde9dcccfbb443ca4bfa",
+   "verification": "verified"
+  },
+  "https://tonepad.com/getFile.asp?id=121": {
+   "checked": "2026-10-31T00:42:51+00:00",
+   "entry": "tonepad-compressor99",
+   "etag": null,
+   "last_modified": null,
+   "outcome": "listed",
+   "parts": "f0dd952fd69d10083c7d83ce23686ad2da1c13f87a2ca5c9ad2e08d249a3bb20",
+   "reason": "",
+   "sha256": "5bb197b64cda2e4aa5a55e9589e824a1dea4c8dac55ead785d2ea469d17dd67f",
+   "verification": "verified"
+  },
+  "https://tonepad.com/getFile.asp?id=122": {
+   "checked": "2026-10-31T00:43:28+00:00",
+   "entry": "tonepad-digitalreverb",
+   "etag": null,
+   "last_modified": null,
+   "outcome": "listed",
+   "parts": "2ea46889297d25bf3210185056d14f3ebe427cf49476597dc2f29000eb340e52",
+   "reason": "",
+   "sha256": "a7c7da58387fa6ec5844c67efa8b3639ecc17f3b7213d264f5b49023f8a3468b",
+   "verification": "verified"
+  },
+  "https://tonepad.com/getFile.asp?id=130": {
+   "checked": "2026-10-31T00:44:04+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": null,
+   "outcome": "not clean",
+   "parts": "2ea46889297d25bf3210185056d14f3ebe427cf49476597dc2f29000eb340e52",
+   "reason": "no parts were read",
+   "sha256": "276a89c672c231fdaed6c1f54301edf22f493c7667b8baf962bbfdb33856ec92",
+   "verification": "unverified"
+  },
+  "https://tonepad.com/getFile.asp?id=138": {
+   "checked": "2026-10-31T00:44:47+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": null,
+   "outcome": "not clean",
+   "parts": "2ea46889297d25bf3210185056d14f3ebe427cf49476597dc2f29000eb340e52",
+   "reason": "no parts were read",
+   "sha256": "cbaae9ac831a993dab56d9708067c329722eae6282971a0e44088a7695dd88ea",
+   "verification": "unverified"
+  },
+  "https://tonepad.com/getFile.asp?id=150": {
+   "checked": "2026-10-31T00:45:28+00:00",
+   "entry": "tonepad-speakersim",
+   "etag": null,
+   "last_modified": null,
+   "outcome": "listed",
+   "parts": "2ea46889297d25bf3210185056d14f3ebe427cf49476597dc2f29000eb340e52",
+   "reason": "",
+   "sha256": "aa3d8c53af56c6cccbdd5514ad1e3b40187a5721ed41b70137acb22d1e8a2a5c",
+   "verification": "verified"
+  },
+  "https://tonepad.com/getFile.asp?id=154": {
+   "checked": "2026-10-31T00:45:57+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": null,
+   "outcome": "not clean",
+   "parts": "2ea46889297d25bf3210185056d14f3ebe427cf49476597dc2f29000eb340e52",
+   "reason": "no parts were read",
+   "sha256": "86d9f0ec2f531a1e134cecd5de6df0aee4eacfb3a98c09bdb9575ebc6730a635",
+   "verification": "unverified"
+  },
+  "https://tonepad.com/getFile.asp?id=2": {
+   "checked": "2026-10-31T00:47:07+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": null,
+   "outcome": "not clean",
+   "parts": "296bba57667748ee5fa4b9de2e151e627a4c65238dc2614d508c2904278086f0",
+   "reason": "1 self-check warning(s), first: Unparsed value: R11 value 'Vol pot.' is not a recognizable resistor value.",
+   "sha256": "32ce7f7ca5314b9fc1e9f7d5ec92d4d4feca69f6845b679fa32f086435796021",
+   "verification": "unverified"
+  },
+  "https://tonepad.com/getFile.asp?id=24": {
+   "checked": "2026-10-31T00:47:27+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": null,
+   "outcome": "not clean",
+   "parts": "2ea46889297d25bf3210185056d14f3ebe427cf49476597dc2f29000eb340e52",
+   "reason": "no parts were read",
+   "sha256": "82d7c37ba3decb3f931a1c281497660224c862442b2dc91580700abc6e582789",
+   "verification": "unverified"
+  },
+  "https://tonepad.com/getFile.asp?id=29": {
+   "checked": "2026-10-31T00:48:03+00:00",
+   "entry": "tonepad-pulsar",
+   "etag": null,
+   "last_modified": null,
+   "outcome": "listed",
+   "parts": "9acca7f27b9bc95fce8eb6fa50a1e6d487c7c262de899595799ffa30549c3279",
+   "reason": "",
+   "sha256": "39adadbd427a40fc2522f9ade62848c4942814984603766b2c9cec00873adbff",
+   "verification": "verified"
+  },
+  "https://tonepad.com/getFile.asp?id=30": {
+   "checked": "2026-10-31T00:48:40+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": null,
+   "outcome": "failed",
+   "parts": null,
+   "reason": "couldn't fetch it: 500 Server Error: Internal Server Error for url: https://tonepad.com/getFile.asp?id=30",
+   "sha256": null,
+   "verification": ""
+  },
+  "https://tonepad.com/getFile.asp?id=31": {
+   "checked": "2026-10-31T00:56:17+00:00",
+   "entry": "tonepad-scrambler",
+   "etag": null,
+   "last_modified": null,
+   "outcome": "listed",
+   "parts": "d4aefce21fabe22d8fbd5008d712c3df7392b93b3df672ca4124fd0dcb1511eb",
+   "reason": "",
+   "sha256": "5fee11258e7313b0b2ae56330ac6b039e717dc640f15d36503c3cf15f396c867",
+   "verification": "verified"
+  },
+  "https://tonepad.com/getFile.asp?id=33": {
+   "checked": "2026-10-31T00:56:53+00:00",
+   "entry": "tonepad-rebotedelay",
+   "etag": null,
+   "last_modified": null,
+   "outcome": "listed",
+   "parts": "154cc3725d28c3053591797db1e8ea311d9056a37a9ed6cbd89492a7f366f42a",
+   "reason": "",
+   "sha256": "134f0314ecdf45ec4bd7f2acce552698250a94e81ab9624326610ba8c43cb944",
+   "verification": "verified"
+  },
+  "https://tonepad.com/getFile.asp?id=35": {
+   "checked": "2026-10-31T00:57:30+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": null,
+   "outcome": "failed",
+   "parts": null,
+   "reason": "couldn't fetch it: 500 Server Error: Internal Server Error for url: https://tonepad.com/getFile.asp?id=35",
+   "sha256": null,
+   "verification": ""
+  },
+  "https://tonepad.com/getFile.asp?id=36": {
+   "checked": "2026-10-31T01:05:11+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": null,
+   "outcome": "not clean",
+   "parts": "2ea46889297d25bf3210185056d14f3ebe427cf49476597dc2f29000eb340e52",
+   "reason": "This file couldn't be opened as a PDF.",
+   "sha256": "90dd4b872b5020010d1431c141ed25664c2c4f28b453202ddedd7847dc5537b4",
+   "verification": "unverified"
+  },
+  "https://tonepad.com/getFile.asp?id=38": {
+   "checked": "2026-10-31T01:05:44+00:00",
+   "entry": "tonepad-amzoverdrivepro",
+   "etag": null,
+   "last_modified": null,
+   "outcome": "listed",
+   "parts": "fdfdf768cbd80fcbd68c4110af64f180dbe7c07359d9c3e7d980fa786f58577e",
+   "reason": "",
+   "sha256": "087d6ff7ff21521a10d0a9e0b5a08f1ea2c9ec213d0c56e9cf55f510a7c17399",
+   "verification": "verified"
+  },
+  "https://tonepad.com/getFile.asp?id=39": {
+   "checked": "2026-10-31T01:06:22+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": null,
+   "outcome": "not clean",
+   "parts": "2ea46889297d25bf3210185056d14f3ebe427cf49476597dc2f29000eb340e52",
+   "reason": "no parts were read",
+   "sha256": "be735d201b049fe79090f80aa125d960bddc896bd450524ad15ab0174f13543d",
+   "verification": "unverified"
+  },
+  "https://tonepad.com/getFile.asp?id=40": {
+   "checked": "2026-10-31T01:06:56+00:00",
+   "entry": "tonepad-dod280comp",
+   "etag": null,
+   "last_modified": null,
+   "outcome": "listed",
+   "parts": "f1618742c70916a89de00851c90cc86048c4b159e876f4d8e7daf27c4b388443",
+   "reason": "",
+   "sha256": "a9034bf43528ef545af3ef3f516b8a6d103bcdcfe8a7aa89e099c56d44eb5c41",
+   "verification": "verified"
+  },
+  "https://tonepad.com/getFile.asp?id=42": {
+   "checked": "2026-10-31T01:07:32+00:00",
+   "entry": "tonepad-phase90",
+   "etag": null,
+   "last_modified": null,
+   "outcome": "listed",
+   "parts": "cca5bc617f3eec2fabb3b437a1d62eae76c4bea2893d407068d62394404cfe6f",
+   "reason": "",
+   "sha256": "5b42601b939608f050026c20c4531d6f2c55449dc3ab13c91195da13ef45cc12",
+   "verification": "verified"
+  },
+  "https://tonepad.com/getFile.asp?id=43": {
+   "checked": "2026-10-31T01:08:06+00:00",
+   "entry": "tonepad-realmctube",
+   "etag": null,
+   "last_modified": null,
+   "outcome": "listed",
+   "parts": "7b6fd0bd21fd761974dda5883ee6b90def6d9574ad265b35692628ff97bd4401",
+   "reason": "",
+   "sha256": "40ee04f48064281d22b2025be23b7185d5feaaf7b8b17a742884bc1f66dbe527",
+   "verification": "verified"
+  },
+  "https://tonepad.com/getFile.asp?id=45": {
+   "checked": "2026-10-31T01:08:39+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": null,
+   "outcome": "not clean",
+   "parts": "2ea46889297d25bf3210185056d14f3ebe427cf49476597dc2f29000eb340e52",
+   "reason": "no parts were read",
+   "sha256": "02bb30c4a52fbee99f98bc7e386acf6df12593803e001a48b5efc1c39f14f9d5",
+   "verification": "unverified"
+  },
+  "https://tonepad.com/getFile.asp?id=47": {
+   "checked": "2026-10-31T01:09:15+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": null,
+   "outcome": "not clean",
+   "parts": "34b15d1fdced12948328dad8108471ca8c454f66082274069f64a4271b0fff1c",
+   "reason": "2 self-check warning(s), first: Unparsed value: IC4b value '' is a placeholder, not a part; check the document for what to use.",
+   "sha256": "48c3da645b32c69a93ca8c46bb7dae197d94d11ffda411a5691e4a14c8ab24df",
+   "verification": "unverified"
+  },
+  "https://tonepad.com/getFile.asp?id=49": {
+   "checked": "2026-10-31T01:09:54+00:00",
+   "entry": "tonepad-flanger301",
+   "etag": null,
+   "last_modified": null,
+   "outcome": "listed",
+   "parts": "b509e5624b462db3a44176ae6425de48b72cdc1e12919fe6b8b51ba10018eec8",
+   "reason": "",
+   "sha256": "0e554dc547ab7a1e834bed2b098c615d5625c404fba591e4ab1ef350349c26b9",
+   "verification": "verified"
+  },
+  "https://tonepad.com/getFile.asp?id=50": {
+   "checked": "2026-10-31T01:10:29+00:00",
+   "entry": "tonepad-rebotedelay2",
+   "etag": null,
+   "last_modified": null,
+   "outcome": "listed",
+   "parts": "cf90b3a74b658f9ed21f89e766beedda040fc29c32cf75e4560b1ded947e0d9e",
+   "reason": "",
+   "sha256": "cafa1a0b3e1dd98addfabfcb677fc562e458b7a92cd85740e863432ce8f28395",
+   "verification": "verified"
+  },
+  "https://tonepad.com/getFile.asp?id=51": {
+   "checked": "2026-10-31T01:11:04+00:00",
+   "entry": "tonepad-stereomicroamp",
+   "etag": null,
+   "last_modified": null,
+   "outcome": "listed",
+   "parts": "3d84021b4d5eb61c92a05eb5b2a4e161899783396339a4db47fbb4f7263a7cb0",
+   "reason": "",
+   "sha256": "782b96505efe9917d9ed05afc95ccacc6e1f7b562d1e54479b83704c29972397",
+   "verification": "verified"
+  },
+  "https://tonepad.com/getFile.asp?id=52": {
+   "checked": "2026-10-31T01:11:39+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": null,
+   "outcome": "failed",
+   "parts": null,
+   "reason": "couldn't fetch it: 500 Server Error: Internal Server Error for url: https://tonepad.com/getFile.asp?id=52",
+   "sha256": null,
+   "verification": ""
+  },
+  "https://tonepad.com/getFile.asp?id=59": {
+   "checked": "2026-10-31T01:19:17+00:00",
+   "entry": "tonepad-wahwah",
+   "etag": null,
+   "last_modified": null,
+   "outcome": "listed",
+   "parts": "12739e69e4f7bd944d489698324081e1e8fd69698cdb4d652d413562adccbf90",
+   "reason": "",
+   "sha256": "7a7df09d32a5a83f110f0f3a14d0d81b9bceb92d996726e9a084dff201f19fac",
+   "verification": "verified"
+  },
+  "https://tonepad.com/getFile.asp?id=6": {
+   "checked": "2026-10-31T01:19:54+00:00",
+   "entry": "tonepad-microampdistplus",
+   "etag": null,
+   "last_modified": null,
+   "outcome": "listed",
+   "parts": "d3634ceefd7c09c06bfa0bfe557b2ae068c3f293224d9318a3b5f50ddfd84797",
+   "reason": "",
+   "sha256": "c67741d366ab4c1956792cb6581d61642f0edfa71700cc1aaec164160fbd75c8",
+   "verification": "verified"
+  },
+  "https://tonepad.com/getFile.asp?id=66": {
+   "checked": "2026-10-31T01:20:28+00:00",
+   "entry": "tonepad-amzmosfetboosterold",
+   "etag": null,
+   "last_modified": null,
+   "outcome": "listed",
+   "parts": "e3534b9dcd7dd7de672ae66f0b03bf162849213be1c72ba9daea0d84250989ab",
+   "reason": "",
+   "sha256": "1e04dd730f6433424c7530b9bac90f4e400b44856808a24c452c9f8ad1e0b922",
+   "verification": "verified"
+  },
+  "https://tonepad.com/getFile.asp?id=68": {
+   "checked": "2026-10-31T01:21:02+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": null,
+   "outcome": "not clean",
+   "parts": "2ea46889297d25bf3210185056d14f3ebe427cf49476597dc2f29000eb340e52",
+   "reason": "1 self-check warning(s), first: Parts listed by quantity: 2 row(s) of the parts list count parts by value and were not read ('1 - 4k7', '1 - 2k2'). Enter them by hand.",
+   "sha256": "1f232ec320315b6fe75a40dfb5a18634f44c326baf3a9f8501c79fe67aeea741",
+   "verification": "unverified"
+  },
+  "https://tonepad.com/getFile.asp?id=7": {
+   "checked": "2026-10-31T01:21:36+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": null,
+   "outcome": "not clean",
+   "parts": "2da0547184e33e4855c09fc31094049cd9970f59afcd7a102c6c0db5f15c100d",
+   "reason": "2 self-check warning(s), first: Category conflict: R21 ('1M pot') was classified as Potentiometers, but its designator indicates Resistors.",
+   "sha256": "6cc13f659805047610e4547060691446dae00ae7b33f2da7559ee492b4c286bd",
+   "verification": "unverified"
+  },
+  "https://tonepad.com/getFile.asp?id=70": {
+   "checked": "2026-10-31T01:22:12+00:00",
+   "entry": "tonepad-phase45",
+   "etag": null,
+   "last_modified": null,
+   "outcome": "listed",
+   "parts": "2ea46889297d25bf3210185056d14f3ebe427cf49476597dc2f29000eb340e52",
+   "reason": "",
+   "sha256": "9db97b1088e38bb067454645090cd3b11a3742dcb7e8b87ff5cd7994626fef40",
+   "verification": "verified"
+  },
+  "https://tonepad.com/getFile.asp?id=73": {
+   "checked": "2026-10-31T01:22:49+00:00",
+   "entry": "tonepad-bluebox",
+   "etag": null,
+   "last_modified": null,
+   "outcome": "listed",
+   "parts": "66069c6cfea76bebadc9ddd8e5660c91abd520862fd47797b08a280314a4193e",
+   "reason": "",
+   "sha256": "8ff2014300fb65fdd307029a771f52b7799e0c9f542d49f467a4bcd2a41b2dc3",
+   "verification": "verified"
+  },
+  "https://tonepad.com/getFile.asp?id=75": {
+   "checked": "2026-10-31T01:23:21+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": null,
+   "outcome": "not clean",
+   "parts": "2ea46889297d25bf3210185056d14f3ebe427cf49476597dc2f29000eb340e52",
+   "reason": "This file couldn't be opened as a PDF.",
+   "sha256": "867e36c98f022410b28cae8b76222b6545e00eaf7ac10c9ec22032c65afd5083",
+   "verification": "unverified"
+  },
+  "https://tonepad.com/getFile.asp?id=77": {
+   "checked": "2026-10-31T01:23:58+00:00",
+   "entry": "tonepad-mxrnoisegate2",
+   "etag": null,
+   "last_modified": null,
+   "outcome": "listed",
+   "parts": "848a58edc892bbdc26b04e0cef70e7482beb9e6ef8ddc1bbf2217ab857145937",
+   "reason": "",
+   "sha256": "0daefcabeffe6ac524c01ca697dd4575b61cba74d06332b2859fe226b1e4d838",
+   "verification": "verified"
+  },
+  "https://tonepad.com/getFile.asp?id=78": {
+   "checked": "2026-10-31T01:24:33+00:00",
+   "entry": "tonepad-distortion1",
+   "etag": null,
+   "last_modified": null,
+   "outcome": "listed",
+   "parts": "9cb82e5bfad5d8a80079d756002120244ccbc85ea80b19fb59eaec5ff4f2b3f4",
+   "reason": "",
+   "sha256": "e2218785e30d4d6ce32d3ba7a48706f5f95d1e34a45eccb0c7b98e76d83dee3e",
+   "verification": "verified"
+  },
+  "https://tonepad.com/getFile.asp?id=81": {
+   "checked": "2026-10-31T01:35:01+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": null,
+   "outcome": "not clean",
+   "parts": "ffc9438d94e0126127a03027d324d720e315236aedcc128eab132441e172d9d2",
+   "reason": "3 self-check warning(s), first: Conflicting duplicate: Ra is listed as both '100' and '470'; only '100' was used.",
+   "sha256": "6c7ecb2564a53f51f34243d685a0e58f47f28c0a888a27d2b8242498bc869762",
+   "verification": "unverified"
+  },
+  "https://tonepad.com/getFile.asp?id=82": {
+   "checked": "2026-10-31T01:25:07+00:00",
+   "entry": "tonepad-fuzzface",
+   "etag": null,
+   "last_modified": null,
+   "outcome": "listed",
+   "parts": "f980c9fa4c280937b1c8203a1d63383f536c03a1407fea7f414027a8dbd87b85",
+   "reason": "",
+   "sha256": "b8894298e18e9f0f663c5b074a6e19674a85a98f13f517e72e74b8e45465bd33",
+   "verification": "verified"
+  },
+  "https://tonepad.com/getFile.asp?id=83": {
+   "checked": "2026-10-31T01:25:41+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": null,
+   "outcome": "not clean",
+   "parts": "d2dc8b2abb62969b4693352abad6fc85fef2e31ef7b13fed267bcf6807db7b9a",
+   "reason": "2 self-check warning(s), first: Category conflict: R7 ('10k Log Pot.') was classified as Potentiometers, but its designator indicates Resistors.",
+   "sha256": "cfb9428dc6963382af76f066f5dcccecd82ddfe18e2464f8d5c18afae74b9ae9",
+   "verification": "unverified"
+  },
+  "https://tonepad.com/getFile.asp?id=84": {
+   "checked": "2026-10-31T01:26:14+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": null,
+   "outcome": "failed",
+   "parts": null,
+   "reason": "couldn't fetch it: ('Connection broken: IncompleteRead(98092 bytes read, 3168 more expected)', IncompleteRead(98092 bytes read, 3168 more expected))",
+   "sha256": null,
+   "verification": ""
+  },
+  "https://tonepad.com/getFile.asp?id=85": {
+   "checked": "2026-10-31T01:26:51+00:00",
+   "entry": "tonepad-neoctavia",
+   "etag": null,
+   "last_modified": null,
+   "outcome": "listed",
+   "parts": "0865a8497eaa0ca19bee1c3851a46f40b646ea5cc1dcfe4516c92d20ffcdba8d",
+   "reason": "",
+   "sha256": "f807117f9ba2fbdbea044c11f28c53d8c9b92cd4ecc89d2864089c8a06acf61c",
+   "verification": "verified"
+  },
+  "https://tonepad.com/getFile.asp?id=86": {
+   "checked": "2026-10-31T01:27:25+00:00",
+   "entry": "tonepad-tonebendermk2",
+   "etag": null,
+   "last_modified": null,
+   "outcome": "listed",
+   "parts": "d230afeaa0bed1b0528587789f3ab845b12bf4034fe484e92771748759882f51",
+   "reason": "",
+   "sha256": "22ef568c9bddb50d3e0ceffeef0fa7e50f7d4d2d716c6eff71b1327a8765c21e",
+   "verification": "verified"
+  },
+  "https://tonepad.com/getFile.asp?id=87": {
+   "checked": "2026-10-31T01:28:00+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": null,
+   "outcome": "not clean",
+   "parts": "181c329d82afde1a749fd16dc0554249ea9cfc5194c896a2893a1fdada6861b4",
+   "reason": "1 self-check warning(s), first: Parts listed by quantity: 2 row(s) of the parts list count parts by value and were not read ('1 - 4k7', '1 - 2k2'). Enter them by hand.",
+   "sha256": "142c2645152ff4764b63d0bbb9c78664919eae9a4cb74113ee77984d235717a9",
+   "verification": "unverified"
+  },
+  "https://tonepad.com/getFile.asp?id=88": {
+   "checked": "2026-10-31T01:28:31+00:00",
+   "entry": "tonepad-orangesqueezer2",
+   "etag": null,
+   "last_modified": null,
+   "outcome": "listed",
+   "parts": "0865a8497eaa0ca19bee1c3851a46f40b646ea5cc1dcfe4516c92d20ffcdba8d",
+   "reason": "",
+   "sha256": "ffdee505f8d12ff6dd57bfaeb94605736024f0163085d02dddc50dde42b33e62",
+   "verification": "verified"
+  },
+  "https://tonepad.com/getFile.asp?id=89": {
+   "checked": "2026-10-31T01:29:07+00:00",
+   "entry": "tonepad-rat",
+   "etag": null,
+   "last_modified": null,
+   "outcome": "listed",
+   "parts": "5fb88d9a393792b1b38656193f180ae8174ea5b219d2a7d4be5febc1a123b294",
+   "reason": "",
+   "sha256": "dc57d57212327ac4a90b19e3e57e038f5d4d7fc5da7eb1a16033a91a570d0e6c",
+   "verification": "verified"
+  },
+  "https://tonepad.com/getFile.asp?id=9": {
+   "checked": "2026-10-31T01:29:46+00:00",
+   "entry": "tonepad-rossdynacomp",
+   "etag": null,
+   "last_modified": null,
+   "outcome": "listed",
+   "parts": "8934334079b3eda49fca6bb17597ba6c11393866661a8fae4bd12cbbdbd94c0e",
+   "reason": "",
+   "sha256": "371ad440a6477f6fbef9c69d07f5db51b76ca8b78e91e71aa12d206042b2e965",
+   "verification": "verified"
+  },
+  "https://tonepad.com/getFile.asp?id=90": {
+   "checked": "2026-10-31T01:30:20+00:00",
+   "entry": "tonepad-greenringer",
+   "etag": null,
+   "last_modified": null,
+   "outcome": "listed",
+   "parts": "960e0021d66d9944b74ddd8ab31674959e32c2289b5f8c55b793b8844a291a98",
+   "reason": "",
+   "sha256": "def0d39fd0ae713e75efbfa83243be831e9039a44781dbf63857123a2d72e033",
+   "verification": "verified"
+  },
+  "https://tonepad.com/getFile.asp?id=91": {
+   "checked": "2026-10-31T01:30:53+00:00",
+   "entry": "tonepad-redranger",
+   "etag": null,
+   "last_modified": null,
+   "outcome": "listed",
+   "parts": "7d34274fe753ed23a7e8ae113f70e1ceb23593900c2d89c76fd1f3b069198fd4",
+   "reason": "",
+   "sha256": "43c306ca521715a87fc284f9c1fed6255d7fcb3097a0e51b9db060dced39bdb5",
+   "verification": "verified"
+  },
+  "https://tonepad.com/getFile.asp?id=92": {
+   "checked": "2026-10-31T01:31:31+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": null,
+   "outcome": "failed",
+   "parts": null,
+   "reason": "couldn't fetch it: ('Connection broken: IncompleteRead(78506 bytes read, 175 more expected)', IncompleteRead(78506 bytes read, 175 more expected))",
+   "sha256": null,
+   "verification": ""
+  },
+  "https://tonepad.com/getFile.asp?id=93": {
+   "checked": "2026-10-31T01:32:07+00:00",
+   "entry": "tonepad-blueclipper",
+   "etag": null,
+   "last_modified": null,
+   "outcome": "listed",
+   "parts": "9a4926298a10caf5c0c6c0a453a961951a3c26c5af4b407c4e563aa80bb91bee",
+   "reason": "",
+   "sha256": "5dc1f24740d0e54b80a765e1972b2ec477206f21db165cdaf4d282680532b26c",
+   "verification": "verified"
+  },
+  "https://tonepad.com/getFile.asp?id=94": {
+   "checked": "2026-10-31T01:35:35+00:00",
+   "entry": "tonepad-bigmuff",
+   "etag": null,
+   "last_modified": null,
+   "outcome": "updated",
+   "parts": "06ba1f129464239fad5466073b162bee6f61123d07b90daa8322ccab383af4f4",
+   "reason": "the document changed since it was listed; check it",
+   "sha256": "cef3219cecd7d558db18cc4b0a2179f6676872cb3198a5ce062d000dd297d554",
+   "verification": "verified"
+  },
+  "https://tonepad.com/getFile.asp?id=96": {
+   "checked": "2026-10-31T01:32:40+00:00",
+   "entry": "tonepad-maestrofiltersamplehold",
+   "etag": null,
+   "last_modified": null,
+   "outcome": "listed",
+   "parts": "e2dd9a48e80992d01772dded4c32591d81e9777970c58c7e2fbebf5d4fdeffec",
+   "reason": "",
+   "sha256": "4742e70dc2d58f438305b58371bf0035c4e068892fb7d05c80f3fb6c8f9706e4",
+   "verification": "verified"
+  },
+  "https://tonepad.com/getFile.asp?id=97": {
+   "checked": "2026-10-31T01:33:15+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": null,
+   "outcome": "not clean",
+   "parts": "97a03ed82b80de88c2d753422759199ff8d78fb8793cc3ccbca6b1abc92bc554",
+   "reason": "4 self-check warning(s), first: Unparsed value: C1 value '330p Pos1 33pF' runs into other text: check its value.",
+   "sha256": "205f23a65ef5350de498e92971b2b9db0faf06728194436db2cc5f263a086fb4",
+   "verification": "unverified"
+  },
+  "https://tonepad.com/getFile.asp?id=98": {
+   "checked": "2026-10-31T01:33:52+00:00",
+   "entry": "tonepad-rebotedelay25",
+   "etag": null,
+   "last_modified": null,
+   "outcome": "listed",
+   "parts": "a15e6f16061683cdaa5d592b831b9116f9fde9617a5512d38f8f1c49b753b982",
+   "reason": "",
+   "sha256": "747e3ceaec68cd47d0a05d8063d87651a2a0fec576232984fe901069ef8fa824",
+   "verification": "verified"
+  },
+  "https://tonepad.com/getFile.asp?id=99": {
+   "checked": "2026-10-31T01:34:26+00:00",
+   "entry": "tonepad-rossphaser",
+   "etag": null,
+   "last_modified": null,
+   "outcome": "listed",
+   "parts": "2ea46889297d25bf3210185056d14f3ebe427cf49476597dc2f29000eb340e52",
+   "reason": "",
+   "sha256": "ef4a93004e796e4c26db1a8e91ec122c0837a341474d648628ddb089809700f6",
+   "verification": "verified"
+  }
+ },
+ "pages": {
+  "https://tonepad.com/project.asp?id=1": {
+   "lastmod": null,
+   "listings": [
+    {
+     "document": "https://tonepad.com/getFile.asp?id=81",
+     "name": "tonepad_tubescreamer.pdf",
+     "page": "https://tonepad.com/project.asp?id=1"
+    }
+   ],
+   "read": "2026-10-30T23:51:42+00:00"
+  },
+  "https://tonepad.com/project.asp?id=10": {
+   "lastmod": null,
+   "listings": [
+    {
+     "document": "https://tonepad.com/getFile.asp?id=9",
+     "name": "tonepad_rossdynacomp.pdf",
+     "page": "https://tonepad.com/project.asp?id=10"
+    },
+    {
+     "document": "https://tonepad.com/getFile.asp?id=24",
+     "name": "tonepad_rodymod.pdf",
+     "page": "https://tonepad.com/project.asp?id=10"
+    }
+   ],
+   "read": "2026-10-30T23:52:38+00:00"
+  },
+  "https://tonepad.com/project.asp?id=11": {
+   "lastmod": null,
+   "listings": [
+    {
+     "document": "https://tonepad.com/getFile.asp?id=7",
+     "name": "tonepad_smallstone.pdf",
+     "page": "https://tonepad.com/project.asp?id=11"
+    }
+   ],
+   "read": "2026-10-30T23:53:13+00:00"
+  },
+  "https://tonepad.com/project.asp?id=12": {
+   "lastmod": null,
+   "listings": [
+    {
+     "document": "https://tonepad.com/getFile.asp?id=2",
+     "name": "tonepad_andertonvolumeretrofit.pdf",
+     "page": "https://tonepad.com/project.asp?id=12"
+    }
+   ],
+   "read": "2026-10-30T23:53:45+00:00"
+  },
+  "https://tonepad.com/project.asp?id=13": {
+   "lastmod": null,
+   "listings": [
+    {
+     "document": "https://tonepad.com/getFile.asp?id=70",
+     "name": "tonepad_phase45.pdf",
+     "page": "https://tonepad.com/project.asp?id=13"
+    }
+   ],
+   "read": "2026-10-30T23:54:21+00:00"
+  },
+  "https://tonepad.com/project.asp?id=14": {
+   "lastmod": null,
+   "listings": [
+    {
+     "document": "https://tonepad.com/getFile.asp?id=29",
+     "name": "tonepad_pulsar.pdf",
+     "page": "https://tonepad.com/project.asp?id=14"
+    }
+   ],
+   "read": "2026-10-30T23:54:54+00:00"
+  },
+  "https://tonepad.com/project.asp?id=15": {
+   "lastmod": null,
+   "listings": [
+    {
+     "document": "https://tonepad.com/getFile.asp?id=30",
+     "name": "tonepad_ax84tonebrewerypcb.pdf",
+     "page": "https://tonepad.com/project.asp?id=15"
+    },
+    {
+     "document": "https://tonepad.com/getFile.asp?id=39",
+     "name": "tonepad_ax84tonebrewerypcb_rev2.pdf",
+     "page": "https://tonepad.com/project.asp?id=15"
+    }
+   ],
+   "read": "2026-10-30T23:55:50+00:00"
+  },
+  "https://tonepad.com/project.asp?id=16": {
+   "lastmod": null,
+   "listings": [
+    {
+     "document": "https://tonepad.com/getFile.asp?id=31",
+     "name": "tonepad_scrambler.pdf",
+     "page": "https://tonepad.com/project.asp?id=16"
+    }
+   ],
+   "read": "2026-10-30T23:56:22+00:00"
+  },
+  "https://tonepad.com/project.asp?id=17": {
+   "lastmod": null,
+   "listings": [
+    {
+     "document": "https://tonepad.com/getFile.asp?id=33",
+     "name": "tonepad_rebotedelay.pdf",
+     "page": "https://tonepad.com/project.asp?id=17"
+    }
+   ],
+   "read": "2026-10-30T23:56:54+00:00"
+  },
+  "https://tonepad.com/project.asp?id=18": {
+   "lastmod": null,
+   "listings": [
+    {
+     "document": "https://tonepad.com/getFile.asp?id=35",
+     "name": "tonepad_mxrnoisegate.pdf",
+     "page": "https://tonepad.com/project.asp?id=18"
+    },
+    {
+     "document": "https://tonepad.com/getFile.asp?id=77",
+     "name": "tonepad_mxrnoisegate2.pdf",
+     "page": "https://tonepad.com/project.asp?id=18"
+    }
+   ],
+   "read": "2026-10-30T23:57:52+00:00"
+  },
+  "https://tonepad.com/project.asp?id=19": {
+   "lastmod": null,
+   "listings": [
+    {
+     "document": "https://tonepad.com/getFile.asp?id=36",
+     "name": "tonepad_easyface.pdf",
+     "page": "https://tonepad.com/project.asp?id=19"
+    }
+   ],
+   "read": "2026-10-30T23:58:31+00:00"
+  },
+  "https://tonepad.com/project.asp?id=2": {
+   "lastmod": null,
+   "listings": [
+    {
+     "document": "https://tonepad.com/getFile.asp?id=6",
+     "name": "tonepad_microampdistplus.pdf",
+     "page": "https://tonepad.com/project.asp?id=2"
+    },
+    {
+     "document": "https://tonepad.com/getFile.asp?id=115",
+     "name": "tonepad_distortionplus.pdf",
+     "page": "https://tonepad.com/project.asp?id=2"
+    }
+   ],
+   "read": "2026-10-30T23:59:19+00:00"
+  },
+  "https://tonepad.com/project.asp?id=20": {
+   "lastmod": null,
+   "listings": [
+    {
+     "document": "https://tonepad.com/getFile.asp?id=38",
+     "name": "tonepad_amzoverdrivepro.pdf",
+     "page": "https://tonepad.com/project.asp?id=20"
+    }
+   ],
+   "read": "2026-10-30T23:59:57+00:00"
+  },
+  "https://tonepad.com/project.asp?id=21": {
+   "lastmod": null,
+   "listings": [
+    {
+     "document": "https://tonepad.com/getFile.asp?id=40",
+     "name": "tonepad_dod280comp.pdf",
+     "page": "https://tonepad.com/project.asp?id=21"
+    }
+   ],
+   "read": "2026-10-31T00:00:31+00:00"
+  },
+  "https://tonepad.com/project.asp?id=22": {
+   "lastmod": null,
+   "listings": [
+    {
+     "document": "https://tonepad.com/getFile.asp?id=112",
+     "name": "tonepad_sansampgt2-2007.pdf",
+     "page": "https://tonepad.com/project.asp?id=22"
+    }
+   ],
+   "read": "2026-10-31T00:01:03+00:00"
+  },
+  "https://tonepad.com/project.asp?id=23": {
+   "lastmod": null,
+   "listings": [
+    {
+     "document": "https://tonepad.com/getFile.asp?id=43",
+     "name": "tonepad_realmctube.pdf",
+     "page": "https://tonepad.com/project.asp?id=23"
+    }
+   ],
+   "read": "2026-10-31T00:01:38+00:00"
+  },
+  "https://tonepad.com/project.asp?id=24": {
+   "lastmod": null,
+   "listings": [
+    {
+     "document": "https://tonepad.com/getFile.asp?id=45",
+     "name": "tonepad_vajra18wattamplifier.pdf",
+     "page": "https://tonepad.com/project.asp?id=24"
+    }
+   ],
+   "read": "2026-10-31T00:02:12+00:00"
+  },
+  "https://tonepad.com/project.asp?id=25": {
+   "lastmod": null,
+   "listings": [
+    {
+     "document": "https://tonepad.com/getFile.asp?id=47",
+     "name": "tonepad_rossphaserOLD.pdf",
+     "page": "https://tonepad.com/project.asp?id=25"
+    },
+    {
+     "document": "https://tonepad.com/getFile.asp?id=99",
+     "name": "tonepad_rossphaser.pdf",
+     "page": "https://tonepad.com/project.asp?id=25"
+    },
+    {
+     "document": "https://tonepad.com/getFile.asp?id=100",
+     "name": "tonepad_rossphaser_extra_phase_stages.pdf",
+     "page": "https://tonepad.com/project.asp?id=25"
+    }
+   ],
+   "read": "2026-10-31T00:03:23+00:00"
+  },
+  "https://tonepad.com/project.asp?id=26": {
+   "lastmod": null,
+   "listings": [
+    {
+     "document": "https://tonepad.com/getFile.asp?id=49",
+     "name": "tonepad_flanger301.pdf",
+     "page": "https://tonepad.com/project.asp?id=26"
+    },
+    {
+     "document": "https://tonepad.com/getFile.asp?id=52",
+     "name": "Ibanez_Flanger_FL301.pdf",
+     "page": "https://tonepad.com/project.asp?id=26"
+    }
+   ],
+   "read": "2026-10-31T00:04:13+00:00"
+  },
+  "https://tonepad.com/project.asp?id=27": {
+   "lastmod": null,
+   "listings": [
+    {
+     "document": "https://tonepad.com/getFile.asp?id=50",
+     "name": "tonepad_rebotedelay2.pdf",
+     "page": "https://tonepad.com/project.asp?id=27"
+    }
+   ],
+   "read": "2026-10-31T00:04:45+00:00"
+  },
+  "https://tonepad.com/project.asp?id=28": {
+   "lastmod": null,
+   "listings": [
+    {
+     "document": "https://tonepad.com/getFile.asp?id=51",
+     "name": "tonepad_stereomicroamp.pdf",
+     "page": "https://tonepad.com/project.asp?id=28"
+    }
+   ],
+   "read": "2026-10-31T00:05:17+00:00"
+  },
+  "https://tonepad.com/project.asp?id=29": {
+   "lastmod": null,
+   "listings": [
+    {
+     "document": "https://tonepad.com/getFile.asp?id=59",
+     "name": "tonepad_wahwah.pdf",
+     "page": "https://tonepad.com/project.asp?id=29"
+    }
+   ],
+   "read": "2026-10-31T00:05:53+00:00"
+  },
+  "https://tonepad.com/project.asp?id=3": {
+   "lastmod": null,
+   "listings": [
+    {
+     "document": "https://tonepad.com/getFile.asp?id=94",
+     "name": "tonepad_bigmuff.pdf",
+     "page": "https://tonepad.com/project.asp?id=3"
+    }
+   ],
+   "read": "2026-10-31T00:06:27+00:00"
+  },
+  "https://tonepad.com/project.asp?id=30": {
+   "lastmod": null,
+   "listings": [
+    {
+     "document": "https://tonepad.com/getFile.asp?id=66",
+     "name": "tonepad_amzmosfetboosterOLD.pdf",
+     "page": "https://tonepad.com/project.asp?id=30"
+    },
+    {
+     "document": "https://tonepad.com/getFile.asp?id=87",
+     "name": "tonepad_amzmosfetbooster.pdf",
+     "page": "https://tonepad.com/project.asp?id=30"
+    }
+   ],
+   "read": "2026-10-31T00:07:19+00:00"
+  },
+  "https://tonepad.com/project.asp?id=31": {
+   "lastmod": null,
+   "listings": [
+    {
+     "document": "https://tonepad.com/getFile.asp?id=68",
+     "name": "tonepad_lpb1.pdf",
+     "page": "https://tonepad.com/project.asp?id=31"
+    }
+   ],
+   "read": "2026-10-31T00:07:53+00:00"
+  },
+  "https://tonepad.com/project.asp?id=33": {
+   "lastmod": null,
+   "listings": [
+    {
+     "document": "https://tonepad.com/getFile.asp?id=73",
+     "name": "tonepad_bluebox.pdf",
+     "page": "https://tonepad.com/project.asp?id=33"
+    }
+   ],
+   "read": "2026-10-31T00:08:31+00:00"
+  },
+  "https://tonepad.com/project.asp?id=34": {
+   "lastmod": null,
+   "listings": [
+    {
+     "document": "https://tonepad.com/getFile.asp?id=75",
+     "name": "tonepad_bluesbreaker.pdf",
+     "page": "https://tonepad.com/project.asp?id=34"
+    }
+   ],
+   "read": "2026-10-31T00:09:07+00:00"
+  },
+  "https://tonepad.com/project.asp?id=35": {
+   "lastmod": null,
+   "listings": [],
+   "read": "2026-10-31T00:09:26+00:00"
+  },
+  "https://tonepad.com/project.asp?id=37": {
+   "lastmod": null,
+   "listings": [
+    {
+     "document": "https://tonepad.com/getFile.asp?id=78",
+     "name": "tonepad_distortion1.pdf",
+     "page": "https://tonepad.com/project.asp?id=37"
+    }
+   ],
+   "read": "2026-10-31T00:10:00+00:00"
+  },
+  "https://tonepad.com/project.asp?id=38": {
+   "lastmod": null,
+   "listings": [
+    {
+     "document": "https://tonepad.com/getFile.asp?id=82",
+     "name": "tonepad_fuzzface.pdf",
+     "page": "https://tonepad.com/project.asp?id=38"
+    }
+   ],
+   "read": "2026-10-31T00:10:38+00:00"
+  },
+  "https://tonepad.com/project.asp?id=39": {
+   "lastmod": null,
+   "listings": [
+    {
+     "document": "https://tonepad.com/getFile.asp?id=83",
+     "name": "tonepad_rangemaster.pdf",
+     "page": "https://tonepad.com/project.asp?id=39"
+    }
+   ],
+   "read": "2026-10-31T00:11:13+00:00"
+  },
+  "https://tonepad.com/project.asp?id=4": {
+   "lastmod": null,
+   "listings": [
+    {
+     "document": "https://tonepad.com/getFile.asp?id=113",
+     "name": "tonepad_envelopefilter.pdf",
+     "page": "https://tonepad.com/project.asp?id=4"
+    }
+   ],
+   "read": "2026-10-31T00:11:48+00:00"
+  },
+  "https://tonepad.com/project.asp?id=40": {
+   "lastmod": null,
+   "listings": [
+    {
+     "document": "https://tonepad.com/getFile.asp?id=83",
+     "name": "tonepad_rangemaster.pdf",
+     "page": "https://tonepad.com/project.asp?id=40"
+    }
+   ],
+   "read": "2026-10-31T00:12:19+00:00"
+  },
+  "https://tonepad.com/project.asp?id=41": {
+   "lastmod": null,
+   "listings": [
+    {
+     "document": "https://tonepad.com/getFile.asp?id=86",
+     "name": "tonepad_tonebendermk2.pdf",
+     "page": "https://tonepad.com/project.asp?id=41"
+    }
+   ],
+   "read": "2026-10-31T00:12:54+00:00"
+  },
+  "https://tonepad.com/project.asp?id=42": {
+   "lastmod": null,
+   "listings": [
+    {
+     "document": "https://tonepad.com/getFile.asp?id=84",
+     "name": "tonepad_commonsound_tremuluslune.pdf",
+     "page": "https://tonepad.com/project.asp?id=42"
+    }
+   ],
+   "read": "2026-10-31T00:13:26+00:00"
+  },
+  "https://tonepad.com/project.asp?id=43": {
+   "lastmod": null,
+   "listings": [
+    {
+     "document": "https://tonepad.com/getFile.asp?id=85",
+     "name": "tonepad_neoctavia.pdf",
+     "page": "https://tonepad.com/project.asp?id=43"
+    }
+   ],
+   "read": "2026-10-31T00:14:03+00:00"
+  },
+  "https://tonepad.com/project.asp?id=44": {
+   "lastmod": null,
+   "listings": [],
+   "read": "2026-10-31T00:14:21+00:00"
+  },
+  "https://tonepad.com/project.asp?id=45": {
+   "lastmod": null,
+   "listings": [
+    {
+     "document": "https://tonepad.com/getFile.asp?id=89",
+     "name": "tonepad_rat.pdf",
+     "page": "https://tonepad.com/project.asp?id=45"
+    }
+   ],
+   "read": "2026-10-31T00:14:59+00:00"
+  },
+  "https://tonepad.com/project.asp?id=46": {
+   "lastmod": null,
+   "listings": [
+    {
+     "document": "https://tonepad.com/getFile.asp?id=90",
+     "name": "tonepad_greenringer.pdf",
+     "page": "https://tonepad.com/project.asp?id=46"
+    }
+   ],
+   "read": "2026-10-31T00:15:31+00:00"
+  },
+  "https://tonepad.com/project.asp?id=47": {
+   "lastmod": null,
+   "listings": [
+    {
+     "document": "https://tonepad.com/getFile.asp?id=91",
+     "name": "tonepad_redranger.pdf",
+     "page": "https://tonepad.com/project.asp?id=47"
+    }
+   ],
+   "read": "2026-10-31T00:16:06+00:00"
+  },
+  "https://tonepad.com/project.asp?id=48": {
+   "lastmod": null,
+   "listings": [
+    {
+     "document": "https://tonepad.com/getFile.asp?id=92",
+     "name": "tonepad_purplepeaker.pdf",
+     "page": "https://tonepad.com/project.asp?id=48"
+    }
+   ],
+   "read": "2026-10-31T00:16:40+00:00"
+  },
+  "https://tonepad.com/project.asp?id=49": {
+   "lastmod": null,
+   "listings": [
+    {
+     "document": "https://tonepad.com/getFile.asp?id=93",
+     "name": "tonepad_blueclipper.pdf",
+     "page": "https://tonepad.com/project.asp?id=49"
+    }
+   ],
+   "read": "2026-10-31T00:17:13+00:00"
+  },
+  "https://tonepad.com/project.asp?id=5": {
+   "lastmod": null,
+   "listings": [
+    {
+     "document": "https://tonepad.com/getFile.asp?id=11",
+     "name": "tonepad_orangesqueezer.pdf",
+     "page": "https://tonepad.com/project.asp?id=5"
+    },
+    {
+     "document": "https://tonepad.com/getFile.asp?id=88",
+     "name": "tonepad_orangesqueezer2.pdf",
+     "page": "https://tonepad.com/project.asp?id=5"
+    }
+   ],
+   "read": "2026-10-31T00:18:06+00:00"
+  },
+  "https://tonepad.com/project.asp?id=50": {
+   "lastmod": null,
+   "listings": [
+    {
+     "document": "https://tonepad.com/getFile.asp?id=96",
+     "name": "tonepad_maestrofiltersamplehold.pdf",
+     "page": "https://tonepad.com/project.asp?id=50"
+    },
+    {
+     "document": "https://tonepad.com/getFile.asp?id=138",
+     "name": "tonepad_maestrofiltersamplehold2.pdf",
+     "page": "https://tonepad.com/project.asp?id=50"
+    }
+   ],
+   "read": "2026-10-31T00:19:01+00:00"
+  },
+  "https://tonepad.com/project.asp?id=51": {
+   "lastmod": null,
+   "listings": [
+    {
+     "document": "https://tonepad.com/getFile.asp?id=98",
+     "name": "tonepad_rebotedelay25.pdf",
+     "page": "https://tonepad.com/project.asp?id=51"
+    }
+   ],
+   "read": "2026-10-31T00:19:40+00:00"
+  },
+  "https://tonepad.com/project.asp?id=53": {
+   "lastmod": null,
+   "listings": [
+    {
+     "document": "https://tonepad.com/getFile.asp?id=101",
+     "name": "tonepad_chorusensemble2.pdf",
+     "page": "https://tonepad.com/project.asp?id=53"
+    }
+   ],
+   "read": "2026-10-31T00:20:15+00:00"
+  },
+  "https://tonepad.com/project.asp?id=54": {
+   "lastmod": null,
+   "listings": [
+    {
+     "document": "https://tonepad.com/getFile.asp?id=102",
+     "name": "tonepad_electricmistress.pdf",
+     "page": "https://tonepad.com/project.asp?id=54"
+    }
+   ],
+   "read": "2026-10-31T00:20:53+00:00"
+  },
+  "https://tonepad.com/project.asp?id=55": {
+   "lastmod": null,
+   "listings": [],
+   "read": "2026-10-31T00:21:13+00:00"
+  },
+  "https://tonepad.com/project.asp?id=56": {
+   "lastmod": null,
+   "listings": [
+    {
+     "document": "https://tonepad.com/getFile.asp?id=107",
+     "name": "tonepad_abselector.pdf",
+     "page": "https://tonepad.com/project.asp?id=56"
+    }
+   ],
+   "read": "2026-10-31T00:21:51+00:00"
+  },
+  "https://tonepad.com/project.asp?id=57": {
+   "lastmod": null,
+   "listings": [
+    {
+     "document": "https://tonepad.com/getFile.asp?id=108",
+     "name": "tonepad_guvnor.pdf",
+     "page": "https://tonepad.com/project.asp?id=57"
+    }
+   ],
+   "read": "2026-10-31T00:22:23+00:00"
+  },
+  "https://tonepad.com/project.asp?id=58": {
+   "lastmod": null,
+   "listings": [
+    {
+     "document": "https://tonepad.com/getFile.asp?id=109",
+     "name": "tonepad_folkurbanoctup.pdf",
+     "page": "https://tonepad.com/project.asp?id=58"
+    }
+   ],
+   "read": "2026-10-31T00:22:59+00:00"
+  },
+  "https://tonepad.com/project.asp?id=59": {
+   "lastmod": null,
+   "listings": [
+    {
+     "document": "https://tonepad.com/getFile.asp?id=111",
+     "name": "tonepad_pedalpower.pdf",
+     "page": "https://tonepad.com/project.asp?id=59"
+    }
+   ],
+   "read": "2026-10-31T00:23:33+00:00"
+  },
+  "https://tonepad.com/project.asp?id=6": {
+   "lastmod": null,
+   "listings": [
+    {
+     "document": "https://tonepad.com/getFile.asp?id=6",
+     "name": "tonepad_microampdistplus.pdf",
+     "page": "https://tonepad.com/project.asp?id=6"
+    }
+   ],
+   "read": "2026-10-31T00:24:09+00:00"
+  },
+  "https://tonepad.com/project.asp?id=61": {
+   "lastmod": null,
+   "listings": [
+    {
+     "document": "https://tonepad.com/getFile.asp?id=114",
+     "name": "tonepad_wahwahbasic.pdf",
+     "page": "https://tonepad.com/project.asp?id=61"
+    }
+   ],
+   "read": "2026-10-31T00:24:47+00:00"
+  },
+  "https://tonepad.com/project.asp?id=62": {
+   "lastmod": null,
+   "listings": [
+    {
+     "document": "https://tonepad.com/getFile.asp?id=116",
+     "name": "tonepad_octavia.pdf",
+     "page": "https://tonepad.com/project.asp?id=62"
+    }
+   ],
+   "read": "2026-10-31T00:25:26+00:00"
+  },
+  "https://tonepad.com/project.asp?id=63": {
+   "lastmod": null,
+   "listings": [
+    {
+     "document": "https://tonepad.com/getFile.asp?id=117",
+     "name": "tonepad_tonebender3knob.pdf",
+     "page": "https://tonepad.com/project.asp?id=63"
+    }
+   ],
+   "read": "2026-10-31T00:26:01+00:00"
+  },
+  "https://tonepad.com/project.asp?id=64": {
+   "lastmod": null,
+   "listings": [
+    {
+     "document": "https://tonepad.com/getFile.asp?id=118",
+     "name": "tonepad_bipolar.pdf",
+     "page": "https://tonepad.com/project.asp?id=64"
+    }
+   ],
+   "read": "2026-10-31T00:26:35+00:00"
+  },
+  "https://tonepad.com/project.asp?id=65": {
+   "lastmod": null,
+   "listings": [
+    {
+     "document": "https://tonepad.com/getFile.asp?id=119",
+     "name": "tonepad_tubesoundfuzz.pdf",
+     "page": "https://tonepad.com/project.asp?id=65"
+    }
+   ],
+   "read": "2026-10-31T00:27:13+00:00"
+  },
+  "https://tonepad.com/project.asp?id=66": {
+   "lastmod": null,
+   "listings": [
+    {
+     "document": "https://tonepad.com/getFile.asp?id=120",
+     "name": "tonepad_octaviarm.pdf",
+     "page": "https://tonepad.com/project.asp?id=66"
+    }
+   ],
+   "read": "2026-10-31T00:27:51+00:00"
+  },
+  "https://tonepad.com/project.asp?id=67": {
+   "lastmod": null,
+   "listings": [
+    {
+     "document": "https://tonepad.com/getFile.asp?id=121",
+     "name": "tonepad_compressor99.pdf",
+     "page": "https://tonepad.com/project.asp?id=67"
+    }
+   ],
+   "read": "2026-10-31T00:28:30+00:00"
+  },
+  "https://tonepad.com/project.asp?id=68": {
+   "lastmod": null,
+   "listings": [
+    {
+     "document": "https://tonepad.com/getFile.asp?id=122",
+     "name": "tonepad_digitalreverb.pdf",
+     "page": "https://tonepad.com/project.asp?id=68"
+    }
+   ],
+   "read": "2026-10-31T00:29:03+00:00"
+  },
+  "https://tonepad.com/project.asp?id=7": {
+   "lastmod": null,
+   "listings": [
+    {
+     "document": "https://tonepad.com/getFile.asp?id=42",
+     "name": "tonepad_phase90.pdf",
+     "page": "https://tonepad.com/project.asp?id=7"
+    }
+   ],
+   "read": "2026-10-31T00:29:36+00:00"
+  },
+  "https://tonepad.com/project.asp?id=71": {
+   "lastmod": null,
+   "listings": [
+    {
+     "document": "https://tonepad.com/getFile.asp?id=130",
+     "name": "tonepad_eatremolo.pdf",
+     "page": "https://tonepad.com/project.asp?id=71"
+    }
+   ],
+   "read": "2026-10-31T00:30:11+00:00"
+  },
+  "https://tonepad.com/project.asp?id=72": {
+   "lastmod": null,
+   "listings": [
+    {
+     "document": "https://tonepad.com/getFile.asp?id=150",
+     "name": "tonepad_speakersim.pdf",
+     "page": "https://tonepad.com/project.asp?id=72"
+    }
+   ],
+   "read": "2026-10-31T00:30:47+00:00"
+  },
+  "https://tonepad.com/project.asp?id=74": {
+   "lastmod": null,
+   "listings": [
+    {
+     "document": "https://tonepad.com/getFile.asp?id=154",
+     "name": "tonepad_rebote3delay.pdf",
+     "page": "https://tonepad.com/project.asp?id=74"
+    }
+   ],
+   "read": "2026-10-31T00:31:21+00:00"
+  },
+  "https://tonepad.com/project.asp?id=8": {
+   "lastmod": null,
+   "listings": [
+    {
+     "document": "https://tonepad.com/getFile.asp?id=97",
+     "name": "tonepad_smallclone.pdf",
+     "page": "https://tonepad.com/project.asp?id=8"
+    }
+   ],
+   "read": "2026-10-31T00:31:54+00:00"
+  },
+  "https://tonepad.com/project.asp?id=9": {
+   "lastmod": null,
+   "listings": [
+    {
+     "document": "https://tonepad.com/getFile.asp?id=9",
+     "name": "tonepad_rossdynacomp.pdf",
+     "page": "https://tonepad.com/project.asp?id=9"
+    },
+    {
+     "document": "https://tonepad.com/getFile.asp?id=24",
+     "name": "tonepad_rodymod.pdf",
+     "page": "https://tonepad.com/project.asp?id=9"
+    }
+   ],
+   "read": "2026-10-31T00:32:46+00:00"
+  }
+ }
+}

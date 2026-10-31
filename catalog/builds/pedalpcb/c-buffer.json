@@ -1,0 +1,211 @@
+{
+ "id": "c-buffer",
+ "publisher": "pedalpcb",
+ "title": "C-Buffer Module",
+ "document": "https://docs.pedalpcb.com/project/C-Buffer.pdf",
+ "page": "https://www.pedalpcb.com/product/pcb096/",
+ "file_name": "C-Buffer.pdf",
+ "sha256": "3925b5f5d424311386c1ab325058ecd06255514e0baee95c50a6fd9385cf95a8",
+ "checked": "2026-10-31T01:34:03+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "R1",
+     "category": "Resistors",
+     "value": "10M",
+     "location": {
+      "page": 0,
+      "x0": 57.6,
+      "top": 172.93630000000007,
+      "x1": 117.36300000000001,
+      "bottom": 183.93630000000007
+     }
+    },
+    {
+     "ref": "R2",
+     "category": "Resistors",
+     "value": "1k",
+     "location": {
+      "page": 0,
+      "x0": 57.6,
+      "top": 186.1363,
+      "x1": 108.343,
+      "bottom": 197.1363
+     }
+    },
+    {
+     "ref": "R3",
+     "category": "Resistors",
+     "value": "120k",
+     "location": {
+      "page": 0,
+      "x0": 57.6,
+      "top": 199.33630000000005,
+      "x1": 121.983,
+      "bottom": 210.33630000000005
+     }
+    },
+    {
+     "ref": "R5",
+     "category": "Resistors",
+     "value": "120k",
+     "location": {
+      "page": 0,
+      "x0": 57.6,
+      "top": 225.73630000000003,
+      "x1": 121.983,
+      "bottom": 236.73630000000003
+     }
+    },
+    {
+     "ref": "R4",
+     "category": "Resistors",
+     "value": "200k",
+     "location": {
+      "page": 0,
+      "x0": 57.6,
+      "top": 212.5363000000001,
+      "x1": 121.983,
+      "bottom": 223.5363000000001
+     }
+    },
+    {
+     "ref": "R6",
+     "category": "Resistors",
+     "value": "7.5k",
+     "location": {
+      "page": 0,
+      "x0": 57.6,
+      "top": 238.93630000000007,
+      "x1": 115.16300000000001,
+      "bottom": 249.93630000000007
+     }
+    },
+    {
+     "ref": "R7",
+     "category": "Resistors",
+     "value": "20k",
+     "location": {
+      "page": 0,
+      "x0": 57.6,
+      "top": 252.1363,
+      "x1": 115.16300000000001,
+      "bottom": 263.1363
+     }
+    },
+    {
+     "ref": "R8",
+     "category": "Resistors",
+     "value": "51",
+     "location": {
+      "page": 0,
+      "x0": 57.6,
+      "top": 265.33630000000005,
+      "x1": 115.16300000000001,
+      "bottom": 276.33630000000005
+     }
+    },
+    {
+     "ref": "C1",
+     "category": "Capacitors",
+     "value": "100n",
+     "location": {
+      "page": 0,
+      "x0": 57.6,
+      "top": 304.9363,
+      "x1": 121.32300000000001,
+      "bottom": 315.9363
+     }
+    },
+    {
+     "ref": "C2",
+     "category": "Capacitors",
+     "value": "4.7u",
+     "location": {
+      "page": 0,
+      "x0": 57.6,
+      "top": 318.1363,
+      "x1": 114.72300000000001,
+      "bottom": 329.1363
+     }
+    },
+    {
+     "ref": "C3",
+     "category": "Capacitors",
+     "value": "1n",
+     "location": {
+      "page": 0,
+      "x0": 57.6,
+      "top": 331.3363,
+      "x1": 107.683,
+      "bottom": 342.3363
+     }
+    },
+    {
+     "ref": "C4",
+     "category": "Capacitors",
+     "value": "22u",
+     "location": {
+      "page": 0,
+      "x0": 57.6,
+      "top": 344.5363,
+      "x1": 114.72300000000001,
+      "bottom": 355.5363
+     }
+    },
+    {
+     "ref": "C5",
+     "category": "Capacitors",
+     "value": "220u",
+     "location": {
+      "page": 0,
+      "x0": 57.6,
+      "top": 357.73629999999997,
+      "x1": 121.543,
+      "bottom": 368.73629999999997
+     }
+    },
+    {
+     "ref": "D1",
+     "category": "Diodes",
+     "value": "1N5817",
+     "location": {
+      "page": 0,
+      "x0": 57.6,
+      "top": 397.3363,
+      "x1": 171.83499999999998,
+      "bottom": 408.3363
+     }
+    },
+    {
+     "ref": "Q1",
+     "category": "Transistors",
+     "value": "BC549C",
+     "location": {
+      "page": 0,
+      "x0": 57.6,
+      "top": 436.9363,
+      "x1": 138.483,
+      "bottom": 447.9363
+     }
+    },
+    {
+     "ref": "SW1",
+     "category": "Switches",
+     "value": "Latching 3PDT Footswitch",
+     "location": {
+      "page": 0,
+      "x0": 57.6,
+      "top": 476.5363,
+      "x1": 234.84000000000003,
+      "bottom": 488.0203
+     }
+    }
+   ]
+  }
+ ]
+}

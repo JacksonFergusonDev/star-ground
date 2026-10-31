@@ -1,0 +1,187 @@
+{
+ "id": "fcp-micro-tweed-v1-0-insert",
+ "publisher": "fivecats",
+ "title": "fcp-micro-tweed-v1-0-insert",
+ "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/02/FCP-Micro-Tweed-V1-0-insert.pdf",
+ "page": "https://www.five-cats-pedals.co.uk/product/micro-jtm-micro-tweed-micro-champ-triple-pack/",
+ "file_name": "FCP-Micro-Tweed-V1-0-insert.pdf",
+ "sha256": "f47f179cdff3b94790a851735d9eb7e712b342b18ad9c65fd348b5a8ad47c0af",
+ "checked": "2026-10-31T00:55:44+00:00",
+ "read_by_ocr": true,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "R1",
+     "category": "Resistors",
+     "value": "1M",
+     "location": {
+      "page": 0,
+      "x0": 116.28194489135743,
+      "top": 350.6975316650391,
+      "x1": 169.05829350585938,
+      "bottom": 356.2975316650391
+     }
+    },
+    {
+     "ref": "R2",
+     "category": "Resistors",
+     "value": "2.2M",
+     "location": {
+      "page": 0,
+      "x0": 116.28194489135743,
+      "top": 357.93138658447265,
+      "x1": 171.95809608764648,
+      "bottom": 363.53138658447267
+     }
+    },
+    {
+     "ref": "R3",
+     "category": "Resistors",
+     "value": "3.3k",
+     "location": {
+      "page": 0,
+      "x0": 116.28194489135743,
+      "top": 365.45460153808597,
+      "x1": 169.9282269836426,
+      "bottom": 371.35460153808594
+     }
+    },
+    {
+     "ref": "R4",
+     "category": "Resistors",
+     "value": "330",
+     "location": {
+      "page": 0,
+      "x0": 116.28194489135743,
+      "top": 372.6884564575195,
+      "x1": 172.24806904907226,
+      "bottom": 378.78845645751954
+     }
+    },
+    {
+     "ref": "C1",
+     "category": "Capacitors",
+     "value": "47u",
+     "location": {
+      "page": 0,
+      "x0": 116.86190540771484,
+      "top": 388.0242463989258,
+      "x1": 173.11801712036134,
+      "bottom": 393.62424639892583
+     }
+    },
+    {
+     "ref": "C3",
+     "category": "Capacitors",
+     "value": "47u",
+     "location": {
+      "page": 0,
+      "x0": 116.86190540771484,
+      "top": 402.7813162719727,
+      "x1": 173.11801712036134,
+      "bottom": 408.3813162719727
+     }
+    },
+    {
+     "ref": "C2",
+     "category": "Capacitors",
+     "value": "47n",
+     "location": {
+      "page": 0,
+      "x0": 116.86190540771484,
+      "top": 395.5474613525391,
+      "x1": 173.11801712036134,
+      "bottom": 401.1474613525391
+     }
+    },
+    {
+     "ref": "C4",
+     "category": "Capacitors",
+     "value": "100n",
+     "location": {
+      "page": 0,
+      "x0": 116.86190540771484,
+      "top": 410.01517119140624,
+      "x1": 176.0178051086426,
+      "bottom": 415.61517119140626
+     }
+    },
+    {
+     "ref": "D1",
+     "category": "Diodes",
+     "value": "1N5817",
+     "location": {
+      "page": 0,
+      "x0": 116.28194489135743,
+      "top": 424.7722410644531,
+      "x1": 179.49756820678712,
+      "bottom": 430.87224106445314
+     }
+    },
+    {
+     "ref": "D2",
+     "category": "Diodes",
+     "value": "1N914",
+     "location": {
+      "page": 0,
+      "x0": 116.28194489135743,
+      "top": 432.29545601806643,
+      "x1": 177.17772614135743,
+      "bottom": 438.39545601806645
+     }
+    },
+    {
+     "ref": "D3",
+     "category": "Diodes",
+     "value": "1N914",
+     "location": {
+      "page": 0,
+      "x0": 116.28194489135743,
+      "top": 440.1080310058594,
+      "x1": 176.88775317993165,
+      "bottom": 445.7080310058594
+     }
+    },
+    {
+     "ref": "Q1",
+     "category": "Transistors",
+     "value": "2N5088",
+     "location": {
+      "page": 0,
+      "x0": 116.86190540771484,
+      "top": 454.8651008789063,
+      "x1": 180.07752872314452,
+      "bottom": 460.4651008789063
+     }
+    },
+    {
+     "ref": "VOLUME",
+     "category": "Potentiometers",
+     "value": "A500K",
+     "location": {
+      "page": 0,
+      "x0": 116.28194489135743,
+      "top": 469.62217075195315,
+      "x1": 176.88775317993165,
+      "bottom": 475.2221707519532
+     }
+    },
+    {
+     "ref": "GAIN",
+     "category": "Potentiometers",
+     "value": "B1K",
+     "location": {
+      "page": 0,
+      "x0": 116.28194489135743,
+      "top": 476.85602567138676,
+      "x1": 171.08814801635742,
+      "bottom": 483.1560256713868
+     }
+    }
+   ]
+  }
+ ]
+}

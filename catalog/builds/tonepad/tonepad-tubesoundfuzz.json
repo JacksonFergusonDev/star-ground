@@ -1,0 +1,22 @@
+{
+ "id": "tonepad-tubesoundfuzz",
+ "publisher": "tonepad",
+ "title": "Hex Sound Fuzz",
+ "document": "https://tonepad.com/getFile.asp?id=119",
+ "page": "https://tonepad.com/project.asp?id=65",
+ "file_name": "tonepad_tubesoundfuzz.pdf",
+ "sha256": "e5d0e88764dbe5db71df6c59655ab36d9173f82913ad1bda76ed42812d2d7ba2",
+ "checked": "2026-10-31T00:41:38+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": "CA Tube Sound Fuzz",
+   "parts": []
+  },
+  {
+   "name": "Llama mod",
+   "parts": []
+  }
+ ]
+}

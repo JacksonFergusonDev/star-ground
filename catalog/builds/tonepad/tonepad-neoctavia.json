@@ -1,0 +1,31 @@
+{
+ "id": "tonepad-neoctavia",
+ "publisher": "tonepad",
+ "title": "NeoCtaVia",
+ "document": "https://tonepad.com/getFile.asp?id=85",
+ "page": "https://tonepad.com/project.asp?id=43",
+ "file_name": "tonepad_neoctavia.pdf",
+ "sha256": "f807117f9ba2fbdbea044c11f28c53d8c9b92cd4ecc89d2864089c8a06acf61c",
+ "checked": "2026-10-31T01:26:51+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "IC1",
+     "category": "ICs",
+     "value": "4558",
+     "location": {
+      "page": 0,
+      "x0": 161.4254,
+      "top": 455.1612999999998,
+      "x1": 217.446,
+      "bottom": 467.1612999999998
+     }
+    }
+   ]
+  }
+ ]
+}

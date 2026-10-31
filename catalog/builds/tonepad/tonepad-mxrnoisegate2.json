@@ -1,0 +1,37 @@
+{
+ "id": "tonepad-mxrnoisegate2",
+ "publisher": "tonepad",
+ "title": "Callate Gate 2",
+ "document": "https://tonepad.com/getFile.asp?id=77",
+ "page": "https://tonepad.com/project.asp?id=18",
+ "file_name": "tonepad_mxrnoisegate2.pdf",
+ "sha256": "0daefcabeffe6ac524c01ca697dd4575b61cba74d06332b2859fe226b1e4d838",
+ "checked": "2026-10-31T01:23:58+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "IC1",
+     "category": "ICs",
+     "value": "4558",
+     "location": {
+      "page": 0,
+      "x0": 147.0254,
+      "top": 445.97309999999976,
+      "x1": 203.046,
+      "bottom": 457.97309999999976
+     }
+    },
+    {
+     "ref": "Ra",
+     "category": "Resistors",
+     "value": "150k",
+     "location": null
+    }
+   ]
+  }
+ ]
+}

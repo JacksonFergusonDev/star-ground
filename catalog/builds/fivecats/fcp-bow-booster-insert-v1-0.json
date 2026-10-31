@@ -1,0 +1,163 @@
+{
+ "id": "fcp-bow-booster-insert-v1-0",
+ "publisher": "fivecats",
+ "title": "fcp-bow-booster-insert-v1-0",
+ "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/02/FCP-Bow-Booster-Insert-V1-0.pdf",
+ "page": "https://www.five-cats-pedals.co.uk/product/bow-booster-eqd-arrows-clone/",
+ "file_name": "FCP-Bow-Booster-Insert-V1-0.pdf",
+ "sha256": "ae38d59338d860a47a1ffdd7073cbb5f6b6b51af21db86f1882aba3a9d13e589",
+ "checked": "2026-10-31T00:53:53+00:00",
+ "read_by_ocr": true,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "R1",
+     "category": "Resistors",
+     "value": "1M",
+     "location": {
+      "page": 0,
+      "x0": 132.52082475585937,
+      "top": 364.2971905883789,
+      "x1": 185.29717337036132,
+      "bottom": 369.8971905883789
+     }
+    },
+    {
+     "ref": "R2",
+     "category": "Resistors",
+     "value": "10M",
+     "location": {
+      "page": 0,
+      "x0": 132.52082475585937,
+      "top": 371.8204055419922,
+      "x1": 188.1969613586426,
+      "bottom": 377.42040554199224
+     }
+    },
+    {
+     "ref": "R3",
+     "category": "Resistors",
+     "value": "1.3k",
+     "location": {
+      "page": 0,
+      "x0": 132.52082475585937,
+      "top": 379.3436204956055,
+      "x1": 186.16710684814453,
+      "bottom": 385.24362049560546
+     }
+    },
+    {
+     "ref": "R4",
+     "category": "Resistors",
+     "value": "100k",
+     "location": {
+      "page": 0,
+      "x0": 132.52082475585937,
+      "top": 386.2881153808594,
+      "x1": 189.35688239135743,
+      "bottom": 392.18811538085936
+     }
+    },
+    {
+     "ref": "C1",
+     "category": "Capacitors",
+     "value": "100p",
+     "location": {
+      "page": 0,
+      "x0": 132.52082475585937,
+      "top": 401.33454528808596,
+      "x1": 192.25668497314453,
+      "bottom": 407.23454528808594
+     }
+    },
+    {
+     "ref": "C2",
+     "category": "Capacitors",
+     "value": "100u",
+     "location": {
+      "page": 0,
+      "x0": 132.52082475585937,
+      "top": 409.14712027587893,
+      "x1": 192.25668497314453,
+      "bottom": 414.74712027587896
+     }
+    },
+    {
+     "ref": "C3",
+     "category": "Capacitors",
+     "value": "4.7n",
+     "location": {
+      "page": 0,
+      "x0": 132.52082475585937,
+      "top": 416.09161516113284,
+      "x1": 190.80679097900392,
+      "bottom": 422.19161516113286
+     }
+    },
+    {
+     "ref": "C4",
+     "category": "Capacitors",
+     "value": "100n",
+     "location": {
+      "page": 0,
+      "x0": 132.52082475585937,
+      "top": 423.32547008056645,
+      "x1": 192.25668497314453,
+      "bottom": 429.42547008056647
+     }
+    },
+    {
+     "ref": "C5",
+     "category": "Capacitors",
+     "value": "10n",
+     "location": {
+      "page": 0,
+      "x0": 132.52082475585937,
+      "top": 431.42740510253907,
+      "x1": 189.35688239135743,
+      "bottom": 437.32740510253905
+     }
+    },
+    {
+     "ref": "D1",
+     "category": "Diodes",
+     "value": "1N5817",
+     "location": {
+      "page": 0,
+      "x0": 132.23083720092774,
+      "top": 446.18447497558594,
+      "x1": 195.44646051635743,
+      "bottom": 452.0844749755859
+     }
+    },
+    {
+     "ref": "Q1",
+     "category": "Transistors",
+     "value": "2N5089",
+     "location": {
+      "page": 0,
+      "x0": 132.52082475585937,
+      "top": 460.9415448486328,
+      "x1": 195.44646051635743,
+      "bottom": 466.8415448486328
+     }
+    },
+    {
+     "ref": "LEVEL",
+     "category": "Potentiometers",
+     "value": "B10K",
+     "location": {
+      "page": 0,
+      "x0": 132.23083720092774,
+      "top": 475.9879747558594,
+      "x1": 189.35688239135743,
+      "bottom": 481.5879747558594
+     }
+    }
+   ]
+  }
+ ]
+}

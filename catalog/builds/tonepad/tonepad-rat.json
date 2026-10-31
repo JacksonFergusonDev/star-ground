@@ -1,0 +1,31 @@
+{
+ "id": "tonepad-rat",
+ "publisher": "tonepad",
+ "title": "La Rata",
+ "document": "https://tonepad.com/getFile.asp?id=89",
+ "page": "https://tonepad.com/project.asp?id=45",
+ "file_name": "tonepad_rat.pdf",
+ "sha256": "dc57d57212327ac4a90b19e3e57e038f5d4d7fc5da7eb1a16033a91a570d0e6c",
+ "checked": "2026-10-31T01:29:07+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "IC1",
+     "category": "ICs",
+     "value": "LM308",
+     "location": {
+      "page": 0,
+      "x0": 269.4254,
+      "top": 402.53119999999996,
+      "x1": 335.44200000000006,
+      "bottom": 414.53119999999996
+     }
+    }
+   ]
+  }
+ ]
+}

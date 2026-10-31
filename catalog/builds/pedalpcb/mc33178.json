@@ -1,0 +1,43 @@
+{
+ "id": "mc33178",
+ "publisher": "pedalpcb",
+ "title": "MC33178, MC33179 Low Power, Low Noise Operational Amplifiers",
+ "document": "https://docs.pedalpcb.com/datasheet/MC33178.pdf",
+ "page": "https://www.pedalpcb.com/product/mc33178/",
+ "file_name": "MC33178.pdf",
+ "sha256": "171cf3bb0911eab5730b09911d404c1709a18bd6e51487ffa53c99552bec5326",
+ "checked": "2026-10-31T01:15:37+00:00",
+ "read_by_ocr": false,
+ "verified": false,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "J1",
+     "category": "Hardware/Misc",
+     "value": "0.09",
+     "location": {
+      "page": 17,
+      "x0": 421.79999999999995,
+      "top": 389.79599999999994,
+      "x1": 449.19599999999997,
+      "bottom": 395.79599999999994
+     }
+    },
+    {
+     "ref": "K1",
+     "category": "Relays",
+     "value": "0.19 0.25 0.007 0.010",
+     "location": {
+      "page": 17,
+      "x0": 421.32,
+      "top": 404.1959999999999,
+      "x1": 513.7254,
+      "bottom": 410.1959999999999
+     }
+    }
+   ]
+  }
+ ]
+}

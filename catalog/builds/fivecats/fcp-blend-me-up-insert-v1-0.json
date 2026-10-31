@@ -1,0 +1,139 @@
+{
+ "id": "fcp-blend-me-up-insert-v1-0",
+ "publisher": "fivecats",
+ "title": "fcp-blend-me-up-insert-v1-0",
+ "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/11/FCP-Blend-Me-Up-Insert-V1-0.pdf",
+ "page": "https://www.five-cats-pedals.co.uk/product/blend-me-up-wet-dry-signal-blender/",
+ "file_name": "FCP-Blend-Me-Up-Insert-V1-0.pdf",
+ "sha256": "5afa9a38eba26f70644a17c6d32e9b18529c74acab01ef5506aebf09be6408e9",
+ "checked": "2026-10-31T01:08:44+00:00",
+ "read_by_ocr": true,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "R1",
+     "category": "Resistors",
+     "value": "1M",
+     "location": {
+      "page": 0,
+      "x0": 52.427653088378904,
+      "top": 455.3327474609375,
+      "x1": 126.41829744873047,
+      "bottom": 465.2327474609375
+     }
+    },
+    {
+     "ref": "R2",
+     "category": "Resistors",
+     "value": "1M",
+     "location": {
+      "page": 0,
+      "x0": 52.427653088378904,
+      "top": 468.91211611328123,
+      "x1": 126.41829744873047,
+      "bottom": 480.41211611328123
+     }
+    },
+    {
+     "ref": "R3",
+     "category": "Resistors",
+     "value": "3.3k",
+     "location": {
+      "page": 0,
+      "x0": 52.427653088378904,
+      "top": 483.34017924804687,
+      "x1": 128.1095093017578,
+      "bottom": 494.84017924804687
+     }
+    },
+    {
+     "ref": "R4",
+     "category": "Resistors",
+     "value": "100k",
+     "location": {
+      "page": 0,
+      "x0": 52.427653088378904,
+      "top": 499.0413055175781,
+      "x1": 134.87436741943358,
+      "bottom": 509.2413055175781
+     }
+    },
+    {
+     "ref": "R5",
+     "category": "Resistors",
+     "value": "100k",
+     "location": {
+      "page": 0,
+      "x0": 52.427653088378904,
+      "top": 513.8937373046875,
+      "x1": 134.87436741943358,
+      "bottom": 524.0937373046876
+     }
+    },
+    {
+     "ref": "C1",
+     "category": "Capacitors",
+     "value": "1u",
+     "location": {
+      "page": 0,
+      "x0": 52.427653088378904,
+      "top": 543.1742322265625,
+      "x1": 128.1095093017578,
+      "bottom": 553.0742322265625
+     }
+    },
+    {
+     "ref": "C2",
+     "category": "Capacitors",
+     "value": "1u",
+     "location": {
+      "page": 0,
+      "x0": 52.427653088378904,
+      "top": 557.6022953613282,
+      "x1": 128.1095093017578,
+      "bottom": 568.1022953613282
+     }
+    },
+    {
+     "ref": "Q1",
+     "category": "Transistors",
+     "value": "2N5457",
+     "location": {
+      "page": 0,
+      "x0": 52.427653088378904,
+      "top": 587.0949317871093,
+      "x1": 136.83836608335434,
+      "bottom": 597.0949317871093
+     }
+    },
+    {
+     "ref": "BLEND1",
+     "category": "Potentiometers",
+     "value": "A100K",
+     "location": {
+      "page": 0,
+      "x0": 52.427653088378904,
+      "top": 630.5913055175781,
+      "x1": 140.7936249633789,
+      "bottom": 640.4913055175781
+     }
+    },
+    {
+     "ref": "LEVEL1",
+     "category": "Potentiometers",
+     "value": "100K",
+     "location": {
+      "page": 0,
+      "x0": 52.427653088378904,
+      "top": 616.1632423828125,
+      "x1": 134.87436741943358,
+      "bottom": 626.6632423828125
+     }
+    }
+   ]
+  }
+ ]
+}

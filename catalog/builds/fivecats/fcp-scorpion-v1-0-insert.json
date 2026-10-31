@@ -1,0 +1,211 @@
+{
+ "id": "fcp-scorpion-v1-0-insert",
+ "publisher": "fivecats",
+ "title": "fcp-scorpion-v1-0-insert",
+ "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2021/12/FCP-Scorpion-V1-0-insert.pdf",
+ "page": "https://www.five-cats-pedals.co.uk/product/scorpion-boost/",
+ "file_name": "FCP-Scorpion-V1-0-insert.pdf",
+ "sha256": "d322a203a6e3e067fa26d5c9e5c6977862e1e3dd8af606ffec5311ee4f76ea40",
+ "checked": "2026-10-31T00:53:19+00:00",
+ "read_by_ocr": true,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "R1",
+     "category": "Resistors",
+     "value": "220k",
+     "location": {
+      "page": 0,
+      "x0": 120.34166850585937,
+      "top": 344.33172766113285,
+      "x1": 178.04767421264648,
+      "bottom": 350.83172766113285
+     }
+    },
+    {
+     "ref": "R2",
+     "category": "Resistors",
+     "value": "68k",
+     "location": {
+      "page": 0,
+      "x0": 120.92162172546387,
+      "top": 351.5655825805664,
+      "x1": 176.0178051086426,
+      "bottom": 358.0655825805664
+     }
+    },
+    {
+     "ref": "R3",
+     "category": "Resistors",
+     "value": "8.2k",
+     "location": {
+      "page": 0,
+      "x0": 120.92162172546387,
+      "top": 358.7994375,
+      "x1": 175.43784459228516,
+      "bottom": 365.4994375
+     }
+    },
+    {
+     "ref": "R4",
+     "category": "Resistors",
+     "value": "1M",
+     "location": {
+      "page": 0,
+      "x0": 121.21160198364258,
+      "top": 366.9013725219727,
+      "x1": 174.56791111450195,
+      "bottom": 372.5013725219727
+     }
+    },
+    {
+     "ref": "C1",
+     "category": "Capacitors",
+     "value": "47u",
+     "location": {
+      "page": 0,
+      "x0": 121.21160198364258,
+      "top": 381.65844239501956,
+      "x1": 178.04767421264648,
+      "bottom": 387.9584423950196
+     }
+    },
+    {
+     "ref": "C6",
+     "category": "Capacitors",
+     "value": "47u",
+     "location": {
+      "page": 0,
+      "x0": 121.21160198364258,
+      "top": 418.9851571289063,
+      "x1": 178.04767421264648,
+      "bottom": 425.0851571289063
+     }
+    },
+    {
+     "ref": "C2",
+     "category": "Capacitors",
+     "value": "1n",
+     "location": {
+      "page": 0,
+      "x0": 121.21160198364258,
+      "top": 389.1816573486328,
+      "x1": 176.0178051086426,
+      "bottom": 395.28165734863285
+     }
+    },
+    {
+     "ref": "C3",
+     "category": "Capacitors",
+     "value": "68n",
+     "location": {
+      "page": 0,
+      "x0": 121.21160198364258,
+      "top": 396.9942323364258,
+      "x1": 178.04767421264648,
+      "bottom": 403.0942323364258
+     }
+    },
+    {
+     "ref": "C4",
+     "category": "Capacitors",
+     "value": "3.3n",
+     "location": {
+      "page": 0,
+      "x0": 121.21160198364258,
+      "top": 404.2280872558594,
+      "x1": 179.49756820678712,
+      "bottom": 410.1280872558594
+     }
+    },
+    {
+     "ref": "C5",
+     "category": "Capacitors",
+     "value": "47p",
+     "location": {
+      "page": 0,
+      "x0": 121.21160198364258,
+      "top": 411.75130220947267,
+      "x1": 176.30779266357422,
+      "bottom": 417.3513022094727
+     }
+    },
+    {
+     "ref": "C7",
+     "category": "Capacitors",
+     "value": "10n",
+     "location": {
+      "page": 0,
+      "x0": 121.21160198364258,
+      "top": 426.50837208251954,
+      "x1": 178.04767421264648,
+      "bottom": 432.60837208251957
+     }
+    },
+    {
+     "ref": "D1",
+     "category": "Diodes",
+     "value": "1N5817",
+     "location": {
+      "page": 0,
+      "x0": 120.92162172546387,
+      "top": 441.2654419555664,
+      "x1": 184.42722529907226,
+      "bottom": 447.36544195556644
+     }
+    },
+    {
+     "ref": "Q1",
+     "category": "Transistors",
+     "value": "2N222A",
+     "location": {
+      "page": 0,
+      "x0": 121.21160198364258,
+      "top": 456.60123189697265,
+      "x1": 185.0071858154297,
+      "bottom": 462.2012318969727
+     }
+    },
+    {
+     "ref": "BOOST",
+     "category": "Potentiometers",
+     "value": "B10K",
+     "location": {
+      "page": 0,
+      "x0": 121.21160198364258,
+      "top": 471.06894173583987,
+      "x1": 178.62763472900392,
+      "bottom": 476.96894173583985
+     }
+    },
+    {
+     "ref": "HEAT",
+     "category": "Potentiometers",
+     "value": "B1K",
+     "location": {
+      "page": 0,
+      "x0": 121.21160198364258,
+      "top": 478.0134658081055,
+      "x1": 176.0178051086426,
+      "bottom": 484.5134658081055
+     }
+    },
+    {
+     "ref": "RANGE",
+     "category": "Potentiometers",
+     "value": "A500K",
+     "location": {
+      "page": 0,
+      "x0": 121.21160198364258,
+      "top": 486.1153716430664,
+      "x1": 181.2374497558594,
+      "bottom": 492.2153716430664
+     }
+    }
+   ]
+  }
+ ]
+}

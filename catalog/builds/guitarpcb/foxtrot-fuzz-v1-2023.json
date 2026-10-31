@@ -1,0 +1,319 @@
+{
+ "id": "foxtrot-fuzz-v1-2023",
+ "publisher": "guitarpcb",
+ "title": "FOXTROT FUZZ v1 2022",
+ "document": "https://guitarpcb.com/wp-content/uploads/2023/08/Foxtrot-Fuzz-v1-2023.pdf",
+ "page": "https://guitarpcb.com/legacy-pcb-document-list/",
+ "file_name": "Foxtrot-Fuzz-v1-2023.pdf",
+ "sha256": "e61449655f4aa3500b84a9ead48f98cfb2251d940a844f934f39742aafe66075",
+ "checked": "2026-10-31T01:42:12+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "R1",
+     "category": "Resistors",
+     "value": "15k",
+     "location": {
+      "page": 0,
+      "x0": 121.02,
+      "top": 421.46375,
+      "x1": 183.41653,
+      "bottom": 432.45375
+     }
+    },
+    {
+     "ref": "C1",
+     "category": "Capacitors",
+     "value": "2.2u",
+     "location": {
+      "page": 0,
+      "x0": 233.17,
+      "top": 421.46375,
+      "x1": 299.39115499999997,
+      "bottom": 432.45375
+     }
+    },
+    {
+     "ref": "VOL",
+     "category": "Potentiometers",
+     "value": "B500k",
+     "location": {
+      "page": 0,
+      "x0": 352.06,
+      "top": 421.46375,
+      "x1": 452.39013500000004,
+      "bottom": 432.45375
+     }
+    },
+    {
+     "ref": "R2",
+     "category": "Resistors",
+     "value": "12k",
+     "location": {
+      "page": 0,
+      "x0": 121.02,
+      "top": 436.35375,
+      "x1": 183.41653,
+      "bottom": 447.34375
+     }
+    },
+    {
+     "ref": "C2",
+     "category": "Capacitors",
+     "value": "4.7n",
+     "location": {
+      "page": 0,
+      "x0": 233.17,
+      "top": 436.35375,
+      "x1": 299.39115499999997,
+      "bottom": 447.34375
+     }
+    },
+    {
+     "ref": "FUZZ",
+     "category": "Potentiometers",
+     "value": "C1k",
+     "location": {
+      "page": 0,
+      "x0": 349.93,
+      "top": 436.35375,
+      "x1": 446.393445,
+      "bottom": 447.34375
+     }
+    },
+    {
+     "ref": "R3",
+     "category": "Resistors",
+     "value": "100k",
+     "location": {
+      "page": 0,
+      "x0": 121.02,
+      "top": 451.27375,
+      "x1": 186.260995,
+      "bottom": 462.26375
+     }
+    },
+    {
+     "ref": "C3",
+     "category": "Capacitors",
+     "value": "22u",
+     "location": {
+      "page": 0,
+      "x0": 233.17,
+      "top": 451.27375,
+      "x1": 299.393245,
+      "bottom": 462.26375
+     }
+    },
+    {
+     "ref": "GRIT",
+     "category": "Potentiometers",
+     "value": "A50k",
+     "location": {
+      "page": 0,
+      "x0": 350.64,
+      "top": 451.27375,
+      "x1": 449.92139,
+      "bottom": 462.26375
+     }
+    },
+    {
+     "ref": "R4",
+     "category": "Resistors",
+     "value": "1k",
+     "location": {
+      "page": 0,
+      "x0": 121.02,
+      "top": 466.17375000000004,
+      "x1": 180.582065,
+      "bottom": 477.16375000000005
+     }
+    },
+    {
+     "ref": "R7",
+     "category": "Resistors",
+     "value": "1k",
+     "location": {
+      "page": 0,
+      "x0": 121.02,
+      "top": 510.88375,
+      "x1": 180.582065,
+      "bottom": 521.87375
+     }
+    },
+    {
+     "ref": "C4",
+     "category": "Capacitors",
+     "value": "100n",
+     "location": {
+      "page": 0,
+      "x0": 233.17,
+      "top": 466.17375000000004,
+      "x1": 302.22771,
+      "bottom": 477.16375000000005
+     }
+    },
+    {
+     "ref": "TR1",
+     "category": "Potentiometers",
+     "value": "50k",
+     "location": {
+      "page": 0,
+      "x0": 352.76,
+      "top": 466.17375000000004,
+      "x1": 446.40653,
+      "bottom": 477.16375000000005
+     }
+    },
+    {
+     "ref": "R5",
+     "category": "Resistors",
+     "value": "560",
+     "location": {
+      "page": 0,
+      "x0": 121.02,
+      "top": 481.07375,
+      "x1": 186.81358,
+      "bottom": 492.06375
+     }
+    },
+    {
+     "ref": "C5",
+     "category": "Capacitors",
+     "value": "10u",
+     "location": {
+      "page": 0,
+      "x0": 233.17,
+      "top": 481.07375,
+      "x1": 299.393245,
+      "bottom": 492.06375
+     }
+    },
+    {
+     "ref": "C6",
+     "category": "Capacitors",
+     "value": "10u",
+     "location": {
+      "page": 0,
+      "x0": 233.17,
+      "top": 495.96375,
+      "x1": 299.393245,
+      "bottom": 506.95375
+     }
+    },
+    {
+     "ref": "C7",
+     "category": "Capacitors",
+     "value": "10u",
+     "location": {
+      "page": 0,
+      "x0": 233.17,
+      "top": 510.88375,
+      "x1": 299.393245,
+      "bottom": 521.87375
+     }
+    },
+    {
+     "ref": "R6",
+     "category": "Resistors",
+     "value": "1.5k",
+     "location": {
+      "page": 0,
+      "x0": 121.02,
+      "top": 495.96375,
+      "x1": 183.33747499999998,
+      "bottom": 506.95375
+     }
+    },
+    {
+     "ref": "Q1",
+     "category": "Transistors",
+     "value": "Si-PNP",
+     "location": {
+      "page": 0,
+      "x0": 354.89,
+      "top": 495.96375,
+      "x1": 453.34538,
+      "bottom": 506.95375
+     }
+    },
+    {
+     "ref": "Q2",
+     "category": "Transistors",
+     "value": "Ge-PNP",
+     "location": {
+      "page": 0,
+      "x0": 354.89,
+      "top": 510.88375,
+      "x1": 455.47538,
+      "bottom": 521.87375
+     }
+    },
+    {
+     "ref": "R8",
+     "category": "Resistors",
+     "value": "1M",
+     "location": {
+      "page": 0,
+      "x0": 121.02,
+      "top": 525.78375,
+      "x1": 182.784095,
+      "bottom": 536.7737500000001
+     }
+    },
+    {
+     "ref": "D1",
+     "category": "Diodes",
+     "value": "1n5817",
+     "location": {
+      "page": 0,
+      "x0": 355.25,
+      "top": 525.78375,
+      "x1": 455.167585,
+      "bottom": 536.7737500000001
+     }
+    },
+    {
+     "ref": "R9",
+     "category": "Resistors",
+     "value": "1.8k",
+     "location": {
+      "page": 0,
+      "x0": 121.02,
+      "top": 540.68375,
+      "x1": 183.33747499999998,
+      "bottom": 551.67375
+     }
+    },
+    {
+     "ref": "IC1",
+     "category": "ICs",
+     "value": "7660S",
+     "location": {
+      "page": 0,
+      "x0": 231.75,
+      "top": 540.68375,
+      "x1": 304.71849499999996,
+      "bottom": 551.67375
+     }
+    },
+    {
+     "ref": "D2",
+     "category": "Diodes",
+     "value": "Status LED",
+     "location": {
+      "page": 0,
+      "x0": 355.25,
+      "top": 540.68375,
+      "x1": 462.17616,
+      "bottom": 551.67375
+     }
+    }
+   ]
+  }
+ ]
+}

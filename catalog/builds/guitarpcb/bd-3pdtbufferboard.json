@@ -1,0 +1,115 @@
+{
+ "id": "bd-3pdtbufferboard",
+ "publisher": "guitarpcb",
+ "title": "3PDT BUFFER v2",
+ "document": "https://guitarpcb.com/wp-content/uploads/2018/05/BD_3PDTBufferBoard.pdf",
+ "page": "https://guitarpcb.com/community/topic/direct-build-document-link-list/",
+ "file_name": "BD_3PDTBufferBoard.pdf",
+ "sha256": "e69b6c8826e54e1efcde8c71c49b1598b1262080985d76b322fe238055307cb8",
+ "checked": "2026-10-31T00:56:18+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "R1",
+     "category": "Resistors",
+     "value": "1M",
+     "location": {
+      "page": 0,
+      "x0": 183.479926608,
+      "top": 708.621773351312,
+      "x1": 231.3714976128915,
+      "bottom": 718.581773351312
+     }
+    },
+    {
+     "ref": "R2",
+     "category": "Resistors",
+     "value": "1M",
+     "location": {
+      "page": 0,
+      "x0": 183.479926608,
+      "top": 725.661766535312,
+      "x1": 231.3715470497816,
+      "bottom": 735.6217665353121
+     }
+    },
+    {
+     "ref": "C1",
+     "category": "Capacitors",
+     "value": "220n 63V",
+     "location": {
+      "page": 0,
+      "x0": 285.95993760886694,
+      "top": 708.621773351312,
+      "x1": 406.23915263293645,
+      "bottom": 718.581773351312
+     }
+    },
+    {
+     "ref": "C2",
+     "category": "Capacitors",
+     "value": "220n 63V",
+     "location": {
+      "page": 0,
+      "x0": 285.95988561599995,
+      "top": 725.661766535312,
+      "x1": 406.2390859574496,
+      "bottom": 735.6217665353121
+     }
+    },
+    {
+     "ref": "R3",
+     "category": "Resistors",
+     "value": "100k",
+     "location": {
+      "page": 0,
+      "x0": 183.479926608,
+      "top": 742.581559767392,
+      "x1": 239.09685961036058,
+      "bottom": 752.5415597673921
+     }
+    },
+    {
+     "ref": "R4",
+     "category": "Resistors",
+     "value": "3.3k",
+     "location": {
+      "page": 0,
+      "x0": 183.479926608,
+      "top": 759.5015529993921,
+      "x1": 233.77432423649333,
+      "bottom": 769.4615529993921
+     }
+    },
+    {
+     "ref": "IC1",
+     "category": "ICs",
+     "value": "TL071",
+     "location": {
+      "page": 0,
+      "x0": 288.7198866834768,
+      "top": 759.5015529993921,
+      "x1": 348.4942310462921,
+      "bottom": 769.4615529993921
+     }
+    },
+    {
+     "ref": "D1",
+     "category": "Diodes",
+     "value": "CA Bi-colour LED",
+     "location": {
+      "page": 0,
+      "x0": 285.9598946081028,
+      "top": 776.421546231392,
+      "x1": 401.1465730564621,
+      "bottom": 786.381546231392
+     }
+    }
+   ]
+  }
+ ]
+}

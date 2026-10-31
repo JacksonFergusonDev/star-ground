@@ -1,0 +1,415 @@
+{
+ "id": "twotone-pedalpcb",
+ "publisher": "pedalpcb",
+ "title": "Two Tone Fuzz",
+ "document": "https://docs.pedalpcb.com/project/TwoTone-PedalPCB.pdf",
+ "page": "https://www.pedalpcb.com/product/pcb622/",
+ "file_name": "TwoTone-PedalPCB.pdf",
+ "sha256": "26dbbba148e11e430845892e13361f176fbad9eeab53dd1aae9b68abcfcf4fc3",
+ "checked": "2026-10-31T02:46:17+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "R1",
+     "category": "Resistors",
+     "value": "1M",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 109.55999999999995,
+      "x1": 135.19240000000002,
+      "bottom": 121.55999999999995
+     }
+    },
+    {
+     "ref": "R2",
+     "category": "Resistors",
+     "value": "100k",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 123.97000000000003,
+      "x1": 146.5492,
+      "bottom": 135.97000000000003
+     }
+    },
+    {
+     "ref": "R5",
+     "category": "Resistors",
+     "value": "100k",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 167.20100000000002,
+      "x1": 146.5492,
+      "bottom": 179.20100000000002
+     }
+    },
+    {
+     "ref": "R3",
+     "category": "Resistors",
+     "value": "10k",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 138.38,
+      "x1": 139.8748,
+      "bottom": 150.38
+     }
+    },
+    {
+     "ref": "R4",
+     "category": "Resistors",
+     "value": "47",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 152.79099999999994,
+      "x1": 140.5348,
+      "bottom": 164.79099999999994
+     }
+    },
+    {
+     "ref": "R8",
+     "category": "Resistors",
+     "value": "47",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 210.43200000000002,
+      "x1": 140.5348,
+      "bottom": 222.43200000000002
+     }
+    },
+    {
+     "ref": "R6",
+     "category": "Resistors",
+     "value": "1k",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 181.611,
+      "x1": 133.2004,
+      "bottom": 193.611
+     }
+    },
+    {
+     "ref": "R7",
+     "category": "Resistors",
+     "value": "8.2k",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 196.02199999999993,
+      "x1": 139.87120000000002,
+      "bottom": 208.02199999999993
+     }
+    },
+    {
+     "ref": "CLR",
+     "category": "Resistors",
+     "value": "4.7k",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 224.84199999999998,
+      "x1": 139.87120000000002,
+      "bottom": 236.84199999999998
+     }
+    },
+    {
+     "ref": "C1",
+     "category": "Capacitors",
+     "value": "10n",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 253.663,
+      "x1": 138.5428,
+      "bottom": 265.663
+     }
+    },
+    {
+     "ref": "C9",
+     "category": "Capacitors",
+     "value": "10n",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 368.945,
+      "x1": 138.5428,
+      "bottom": 380.945
+     }
+    },
+    {
+     "ref": "C2",
+     "category": "Capacitors",
+     "value": "4.7u",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 268.073,
+      "x1": 138.5428,
+      "bottom": 280.073
+     }
+    },
+    {
+     "ref": "C5",
+     "category": "Capacitors",
+     "value": "4.7u",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 311.304,
+      "x1": 138.5428,
+      "bottom": 323.304
+     }
+    },
+    {
+     "ref": "C7",
+     "category": "Capacitors",
+     "value": "4.7u",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 340.12399999999997,
+      "x1": 138.5428,
+      "bottom": 352.12399999999997
+     }
+    },
+    {
+     "ref": "C3",
+     "category": "Capacitors",
+     "value": "15n",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 282.483,
+      "x1": 138.5428,
+      "bottom": 294.483
+     }
+    },
+    {
+     "ref": "C4",
+     "category": "Capacitors",
+     "value": "100n",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 296.894,
+      "x1": 145.21720000000002,
+      "bottom": 308.894
+     }
+    },
+    {
+     "ref": "C6",
+     "category": "Capacitors",
+     "value": "100n",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 325.714,
+      "x1": 145.21720000000002,
+      "bottom": 337.714
+     }
+    },
+    {
+     "ref": "C8",
+     "category": "Capacitors",
+     "value": "100n",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 354.53499999999997,
+      "x1": 145.21720000000002,
+      "bottom": 366.53499999999997
+     }
+    },
+    {
+     "ref": "C101",
+     "category": "Capacitors",
+     "value": "100n",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 397.76599999999996,
+      "x1": 145.21720000000002,
+      "bottom": 409.76599999999996
+     }
+    },
+    {
+     "ref": "C100",
+     "category": "Capacitors",
+     "value": "120u",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 383.35499999999996,
+      "x1": 145.21720000000002,
+      "bottom": 395.35499999999996
+     }
+    },
+    {
+     "ref": "C103",
+     "category": "Capacitors",
+     "value": "120u",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 426.58599999999996,
+      "x1": 145.21720000000002,
+      "bottom": 438.58599999999996
+     }
+    },
+    {
+     "ref": "C102",
+     "category": "Capacitors",
+     "value": "10u",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 412.176,
+      "x1": 138.5428,
+      "bottom": 424.176
+     }
+    },
+    {
+     "ref": "D100",
+     "category": "Diodes",
+     "value": "1N5817",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 455.407,
+      "x1": 160.55800000000002,
+      "bottom": 467.407
+     }
+    },
+    {
+     "ref": "IC100",
+     "category": "ICs",
+     "value": "TC1044SCPA",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 484.227,
+      "x1": 193.0024,
+      "bottom": 496.227
+     }
+    },
+    {
+     "ref": "Q1",
+     "category": "Transistors",
+     "value": "GT402D",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 513.048,
+      "x1": 163.8724,
+      "bottom": 525.048
+     }
+    },
+    {
+     "ref": "Q2",
+     "category": "Transistors",
+     "value": "GT402D",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 527.458,
+      "x1": 163.8724,
+      "bottom": 539.458
+     }
+    },
+    {
+     "ref": "Q3",
+     "category": "Transistors",
+     "value": "GT402B",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 541.869,
+      "x1": 163.2124,
+      "bottom": 553.869
+     }
+    },
+    {
+     "ref": "LEVEL",
+     "category": "Potentiometers",
+     "value": "A100K",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 570.6890000000001,
+      "x1": 154.552,
+      "bottom": 582.6890000000001
+     }
+    },
+    {
+     "ref": "ATTACK",
+     "category": "Potentiometers",
+     "value": "B1K",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 585.099,
+      "x1": 141.2032,
+      "bottom": 597.099
+     }
+    },
+    {
+     "ref": "BIAS",
+     "category": "Potentiometers",
+     "value": "B50K",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 599.51,
+      "x1": 147.8776,
+      "bottom": 611.51
+     }
+    },
+    {
+     "ref": "IMPED",
+     "category": "Potentiometers",
+     "value": "B100K",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 613.9200000000001,
+      "x1": 154.552,
+      "bottom": 625.9200000000001
+     }
+    },
+    {
+     "ref": "MK",
+     "category": "Switches",
+     "value": "DPDT ON/ON",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 642.741,
+      "x1": 157.8532,
+      "bottom": 654.741
+     }
+    },
+    {
+     "ref": "VOICE",
+     "category": "Switches",
+     "value": "DPDT ON/ON/ON",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 657.1510000000001,
+      "x1": 179.18679999999998,
+      "bottom": 669.1510000000001
+     }
+    }
+   ]
+  }
+ ]
+}

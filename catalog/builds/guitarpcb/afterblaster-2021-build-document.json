@@ -1,0 +1,151 @@
+{
+ "id": "afterblaster-2021-build-document",
+ "publisher": "guitarpcb",
+ "title": "Afterblaster v2 2021",
+ "document": "https://guitarpcb.com/wp-content/uploads/2021/12/Afterblaster-2021-Build-Document.pdf",
+ "page": "https://guitarpcb.com/legacy-pcb-document-list/",
+ "file_name": "Afterblaster-2021-Build-Document.pdf",
+ "sha256": "7e67845d1c94faeb0abb9ad8910d763aca7a3b6946f12eacf52d2c9f4432668d",
+ "checked": "2026-10-31T01:27:50+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "R1",
+     "category": "Resistors",
+     "value": "33k",
+     "location": {
+      "page": 0,
+      "x0": 190.37,
+      "top": 444.79,
+      "x1": 272.46916,
+      "bottom": 455.83000000000004
+     }
+    },
+    {
+     "ref": "R4",
+     "category": "Resistors",
+     "value": "33k",
+     "location": {
+      "page": 0,
+      "x0": 190.37,
+      "top": 502.99,
+      "x1": 272.46916,
+      "bottom": 514.03
+     }
+    },
+    {
+     "ref": "R3",
+     "category": "Resistors",
+     "value": "1k",
+     "location": {
+      "page": 0,
+      "x0": 190.37,
+      "top": 483.55,
+      "x1": 269.70917999999995,
+      "bottom": 494.59000000000003
+     }
+    },
+    {
+     "ref": "CLR",
+     "category": "Resistors",
+     "value": "1.8k",
+     "location": {
+      "page": 0,
+      "x0": 187.85,
+      "top": 522.31,
+      "x1": 272.41688,
+      "bottom": 533.3499999999999
+     }
+    },
+    {
+     "ref": "BIAS",
+     "category": "Potentiometers",
+     "value": "20k",
+     "location": {
+      "page": 0,
+      "x0": 185.69,
+      "top": 561.19,
+      "x1": 260.70916,
+      "bottom": 572.23
+     }
+    },
+    {
+     "ref": "C1",
+     "category": "Capacitors",
+     "value": "22u",
+     "location": {
+      "page": 0,
+      "x0": 342.19,
+      "top": 444.79,
+      "x1": 424.58844,
+      "bottom": 455.83000000000004
+     }
+    },
+    {
+     "ref": "Q1",
+     "category": "Transistors",
+     "value": "J113",
+     "location": {
+      "page": 0,
+      "x0": 341.35,
+      "top": 522.31,
+      "x1": 426.15712,
+      "bottom": 533.3499999999999
+     }
+    },
+    {
+     "ref": "VOL",
+     "category": "Potentiometers",
+     "value": "100k",
+     "location": {
+      "page": 0,
+      "x0": 338.59,
+      "top": 561.19,
+      "x1": 426.90999999999997,
+      "bottom": 572.23
+     }
+    },
+    {
+     "ref": "R2",
+     "category": "Resistors",
+     "value": "1M",
+     "location": {
+      "page": 0,
+      "x0": 190.37,
+      "top": 464.11,
+      "x1": 271.77894,
+      "bottom": 475.15000000000003
+     }
+    },
+    {
+     "ref": "C2",
+     "category": "Capacitors",
+     "value": "220n",
+     "location": {
+      "page": 0,
+      "x0": 342.19,
+      "top": 464.11,
+      "x1": 427.17928,
+      "bottom": 475.15000000000003
+     }
+    },
+    {
+     "ref": "D1",
+     "category": "Diodes",
+     "value": "Status LED",
+     "location": {
+      "page": 0,
+      "x0": 341.71,
+      "top": 502.99,
+      "x1": 439.92712,
+      "bottom": 514.03
+     }
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,139 @@
+{
+ "id": "buffer-board-v3-2021",
+ "publisher": "guitarpcb",
+ "title": "3PDT BUFFER Board v3 2021",
+ "document": "https://guitarpcb.com/wp-content/uploads/2018/05/Buffer-Board-v3-2021.pdf",
+ "page": "https://guitarpcb.com/legacy-pcb-document-list/",
+ "file_name": "Buffer-Board-v3-2021.pdf",
+ "sha256": "0bb16cdfbf3df04cc98f4e9f81ae85b623f096f5a49cfdeff37cbabac0c80af0",
+ "checked": "2026-10-31T00:57:26+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "R1",
+     "category": "Resistors",
+     "value": "1M",
+     "location": {
+      "page": 0,
+      "x0": 193.27,
+      "top": 450.24,
+      "x1": 260.30894,
+      "bottom": 461.28000000000003
+     }
+    },
+    {
+     "ref": "R2",
+     "category": "Resistors",
+     "value": "1M",
+     "location": {
+      "page": 0,
+      "x0": 193.27,
+      "top": 465.14000000000004,
+      "x1": 260.30894,
+      "bottom": 476.18000000000006
+     }
+    },
+    {
+     "ref": "C1",
+     "category": "Capacitors",
+     "value": "220n",
+     "location": {
+      "page": 0,
+      "x0": 315.48,
+      "top": 450.24,
+      "x1": 386.70842,
+      "bottom": 461.28000000000003
+     }
+    },
+    {
+     "ref": "C2",
+     "category": "Capacitors",
+     "value": "220n",
+     "location": {
+      "page": 0,
+      "x0": 315.48,
+      "top": 465.14000000000004,
+      "x1": 386.70842,
+      "bottom": 476.18000000000006
+     }
+    },
+    {
+     "ref": "R3",
+     "category": "Resistors",
+     "value": "100k",
+     "location": {
+      "page": 0,
+      "x0": 193.27,
+      "top": 480.02000000000004,
+      "x1": 263.39914,
+      "bottom": 491.06000000000006
+     }
+    },
+    {
+     "ref": "D1",
+     "category": "Diodes",
+     "value": "Status LED",
+     "location": {
+      "page": 0,
+      "x0": 314.76,
+      "top": 495.14000000000004,
+      "x1": 399.44671999999997,
+      "bottom": 506.18000000000006
+     }
+    },
+    {
+     "ref": "CLR",
+     "category": "Resistors",
+     "value": "1.8k",
+     "location": {
+      "page": 0,
+      "x0": 190.87,
+      "top": 510.02000000000004,
+      "x1": 260.83648,
+      "bottom": 521.0600000000001
+     }
+    },
+    {
+     "ref": "D2",
+     "category": "Diodes",
+     "value": "1n5817",
+     "location": {
+      "page": 0,
+      "x0": 314.76,
+      "top": 510.02000000000004,
+      "x1": 392.36096000000003,
+      "bottom": 521.0600000000001
+     }
+    },
+    {
+     "ref": "SW1",
+     "category": "Switches",
+     "value": "3PDT FS",
+     "location": {
+      "page": 0,
+      "x0": 188.71,
+      "top": 539.78,
+      "x1": 270.99280000000005,
+      "bottom": 550.8199999999999
+     }
+    },
+    {
+     "ref": "IC1",
+     "category": "ICs",
+     "value": "TL071",
+     "location": {
+      "page": 0,
+      "x0": 313.8,
+      "top": 539.78,
+      "x1": 388.77728,
+      "bottom": 550.8199999999999
+     }
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,343 @@
+{
+ "id": "bd-angry-red-camel-instructions",
+ "publisher": "guitarpcb",
+ "title": "Angry Red Camel",
+ "document": "https://guitarpcb.com/wp-content/uploads/2018/06/BD_Angry-Red-Camel_Instructions.pdf",
+ "page": "https://guitarpcb.com/community/topic/direct-build-document-link-list/",
+ "file_name": "BD_Angry-Red-Camel_Instructions.pdf",
+ "sha256": "ca2325ea9a5cc595c99e662d4a078bba3098978465a999f01197d2f8915c0fe2",
+ "checked": "2026-10-31T00:58:31+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "R1",
+     "category": "Resistors",
+     "value": "1M",
+     "location": {
+      "page": 0,
+      "x0": 117.75,
+      "top": 567.7537501125,
+      "x1": 194.97174578940295,
+      "bottom": 578.7437501125
+     }
+    },
+    {
+     "ref": "R5",
+     "category": "Resistors",
+     "value": "1M",
+     "location": {
+      "page": 0,
+      "x0": 117.75,
+      "top": 630.7537501125,
+      "x1": 194.97174578940295,
+      "bottom": 641.7437501125
+     }
+    },
+    {
+     "ref": "R10",
+     "category": "Resistors",
+     "value": "1M",
+     "location": {
+      "page": 0,
+      "x0": 115.5,
+      "top": 693.7537501125,
+      "x1": 194.97174578940295,
+      "bottom": 704.7437501125
+     }
+    },
+    {
+     "ref": "R2",
+     "category": "Resistors",
+     "value": "100k",
+     "location": {
+      "page": 0,
+      "x0": 117.75,
+      "top": 583.5037501125,
+      "x1": 197.96192217261148,
+      "bottom": 594.4937501125
+     }
+    },
+    {
+     "ref": "R3",
+     "category": "Resistors",
+     "value": "270k",
+     "location": {
+      "page": 0,
+      "x0": 117.75,
+      "top": 599.2537501125,
+      "x1": 176.96192217261148,
+      "bottom": 610.2437501125
+     }
+    },
+    {
+     "ref": "R4",
+     "category": "Resistors",
+     "value": "10M",
+     "location": {
+      "page": 0,
+      "x0": 117.75,
+      "top": 615.0037501125,
+      "x1": 197.54298143940292,
+      "bottom": 625.9937501125
+     }
+    },
+    {
+     "ref": "R7",
+     "category": "Resistors",
+     "value": "100",
+     "location": {
+      "page": 0,
+      "x0": 117.75,
+      "top": 646.5037501125,
+      "x1": 198.18364827480465,
+      "bottom": 657.4937501125
+     }
+    },
+    {
+     "ref": "R8",
+     "category": "Resistors",
+     "value": "1.8k",
+     "location": {
+      "page": 0,
+      "x0": 117.75,
+      "top": 662.2537501125,
+      "x1": 195.3908335342746,
+      "bottom": 673.2437501125
+     }
+    },
+    {
+     "ref": "R9",
+     "category": "Resistors",
+     "value": "33k",
+     "location": {
+      "page": 0,
+      "x0": 117.75,
+      "top": 678.0037501125,
+      "x1": 195.3906865226115,
+      "bottom": 688.9937501125
+     }
+    },
+    {
+     "ref": "R11",
+     "category": "Resistors",
+     "value": "1k",
+     "location": {
+      "page": 0,
+      "x0": 255.75,
+      "top": 567.7537501125,
+      "x1": 330.8194508726115,
+      "bottom": 578.7437501125
+     }
+    },
+    {
+     "ref": "C1",
+     "category": "Capacitors",
+     "value": "68n",
+     "location": {
+      "page": 0,
+      "x0": 258.0,
+      "top": 583.5037501125,
+      "x1": 334.1691411980414,
+      "bottom": 594.4937501125
+     }
+    },
+    {
+     "ref": "C2",
+     "category": "Capacitors",
+     "value": "100p",
+     "location": {
+      "page": 0,
+      "x0": 258.0,
+      "top": 599.2537501125,
+      "x1": 337.49037684804136,
+      "bottom": 610.2437501125
+     }
+    },
+    {
+     "ref": "C4",
+     "category": "Capacitors",
+     "value": "100p",
+     "location": {
+      "page": 0,
+      "x0": 258.0,
+      "top": 630.7537501125,
+      "x1": 337.49037684804136,
+      "bottom": 641.7437501125
+     }
+    },
+    {
+     "ref": "C3",
+     "category": "Capacitors",
+     "value": "33n",
+     "location": {
+      "page": 0,
+      "x0": 258.0,
+      "top": 615.0037501125,
+      "x1": 334.1691411980414,
+      "bottom": 625.9937501125
+     }
+    },
+    {
+     "ref": "C5",
+     "category": "Capacitors",
+     "value": "10u",
+     "location": {
+      "page": 0,
+      "x0": 258.0,
+      "top": 646.5037501125,
+      "x1": 336.96956535277906,
+      "bottom": 657.4937501125
+     }
+    },
+    {
+     "ref": "C6",
+     "category": "Capacitors",
+     "value": "100n",
+     "location": {
+      "page": 0,
+      "x0": 258.0,
+      "top": 662.2537501125,
+      "x1": 337.49037684804136,
+      "bottom": 673.2437501125
+     }
+    },
+    {
+     "ref": "C7",
+     "category": "Capacitors",
+     "value": "100u",
+     "location": {
+      "page": 0,
+      "x0": 258.0,
+      "top": 678.0037501125,
+      "x1": 339.54080100277906,
+      "bottom": 688.9937501125
+     }
+    },
+    {
+     "ref": "C8",
+     "category": "Capacitors",
+     "value": "22u",
+     "location": {
+      "page": 0,
+      "x0": 258.0,
+      "top": 693.7537501125,
+      "x1": 336.96956535277906,
+      "bottom": 704.7437501125
+     }
+    },
+    {
+     "ref": "C9",
+     "category": "Capacitors",
+     "value": "220n",
+     "location": {
+      "page": 0,
+      "x0": 398.25,
+      "top": 567.7537501125,
+      "x1": 479.99035397304135,
+      "bottom": 578.7437501125
+     }
+    },
+    {
+     "ref": "Q1",
+     "category": "Transistors",
+     "value": "J113",
+     "location": {
+      "page": 0,
+      "x0": 397.5,
+      "top": 583.5037501125,
+      "x1": 478.4699541592746,
+      "bottom": 594.4937501125
+     }
+    },
+    {
+     "ref": "TR1",
+     "category": "Potentiometers",
+     "value": "5k",
+     "location": {
+      "page": 0,
+      "x0": 396.0,
+      "top": 599.2537501125,
+      "x1": 458.31947374761154,
+      "bottom": 610.2437501125
+     }
+    },
+    {
+     "ref": "D1",
+     "category": "Diodes",
+     "value": "BiColor CA LED",
+     "location": {
+      "page": 0,
+      "x0": 398.25,
+      "top": 615.0037501125,
+      "x1": 501.2554229158148,
+      "bottom": 625.9937501125
+     }
+    },
+    {
+     "ref": "SW1",
+     "category": "Switches",
+     "value": "SPDT ON-ON",
+     "location": {
+      "page": 0,
+      "x0": 393.75,
+      "top": 630.7537501125,
+      "x1": 496.947791599124,
+      "bottom": 641.7437501125
+     }
+    },
+    {
+     "ref": "BOOST",
+     "category": "Potentiometers",
+     "value": "A100k",
+     "location": {
+      "page": 0,
+      "x0": 388.5,
+      "top": 646.5037501125,
+      "x1": 482.5721592476115,
+      "bottom": 657.4937501125
+     }
+    },
+    {
+     "ref": "GAIN",
+     "category": "Potentiometers",
+     "value": "B1M",
+     "location": {
+      "page": 0,
+      "x0": 393.0,
+      "top": 662.2537501125,
+      "x1": 479.20089466440294,
+      "bottom": 673.2437501125
+     }
+    },
+    {
+     "ref": "LEVEL",
+     "category": "Potentiometers",
+     "value": "A10k",
+     "location": {
+      "page": 0,
+      "x0": 391.5,
+      "top": 678.0037501125,
+      "x1": 480.0009007226115,
+      "bottom": 688.9937501125
+     }
+    },
+    {
+     "ref": "IC1",
+     "category": "ICs",
+     "value": "CD4049UBE",
+     "location": {
+      "page": 0,
+      "x0": 397.5,
+      "top": 693.7537501125,
+      "x1": 495.0591887455078,
+      "bottom": 704.7437501125
+     }
+    }
+   ]
+  }
+ ]
+}

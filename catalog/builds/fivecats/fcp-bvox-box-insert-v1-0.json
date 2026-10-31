@@ -1,0 +1,271 @@
+{
+ "id": "fcp-bvox-box-insert-v1-0",
+ "publisher": "fivecats",
+ "title": "fcp-bvox-box-insert-v1-0",
+ "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/04/FCP-BVox-Box-Insert-V1-0.pdf",
+ "page": "https://www.five-cats-pedals.co.uk/product/v-box-lovepedal-englishman-overdrive-clone/",
+ "file_name": "FCP-BVox-Box-Insert-V1-0.pdf",
+ "sha256": "539832cb364b4501aa75a2bd3e6e841a608f85fe9eebc7f51f1bc5c8d9ef48d7",
+ "checked": "2026-10-31T00:56:20+00:00",
+ "read_by_ocr": true,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "R1",
+     "category": "Resistors",
+     "value": "100",
+     "location": {
+      "page": 0,
+      "x0": 112.80218908996582,
+      "top": 322.91949375,
+      "x1": 168.76830595092773,
+      "bottom": 329.01949375000004
+     }
+    },
+    {
+     "ref": "R2",
+     "category": "Resistors",
+     "value": "2.2M",
+     "location": {
+      "page": 0,
+      "x0": 112.80218908996582,
+      "top": 330.1533486694336,
+      "x1": 169.05829350585938,
+      "bottom": 336.25334866943365
+     }
+    },
+    {
+     "ref": "R3",
+     "category": "Resistors",
+     "value": "2.2M",
+     "location": {
+      "page": 0,
+      "x0": 112.80218908996582,
+      "top": 337.6765636230469,
+      "x1": 169.05829350585938,
+      "bottom": 343.7765636230469
+     }
+    },
+    {
+     "ref": "R4",
+     "category": "Resistors",
+     "value": "470k",
+     "location": {
+      "page": 0,
+      "x0": 112.80218908996582,
+      "top": 345.48913861083986,
+      "x1": 169.9282269836426,
+      "bottom": 351.0891386108399
+     }
+    },
+    {
+     "ref": "R5",
+     "category": "Resistors",
+     "value": "3.3k",
+     "location": {
+      "page": 0,
+      "x0": 112.80218908996582,
+      "top": 352.1443026489258,
+      "x1": 167.02842440185546,
+      "bottom": 358.8443026489258
+     }
+    },
+    {
+     "ref": "R6",
+     "category": "Resistors",
+     "value": "330",
+     "location": {
+      "page": 0,
+      "x0": 112.80218908996582,
+      "top": 360.24620848388673,
+      "x1": 168.76830595092773,
+      "bottom": 365.84620848388676
+     }
+    },
+    {
+     "ref": "R7",
+     "category": "Resistors",
+     "value": "330",
+     "location": {
+      "page": 0,
+      "x0": 112.80218908996582,
+      "top": 367.19073255615234,
+      "x1": 169.05829350585938,
+      "bottom": 373.29073255615236
+     }
+    },
+    {
+     "ref": "C1",
+     "category": "Capacitors",
+     "value": "47u",
+     "location": {
+      "page": 0,
+      "x0": 112.80218908996582,
+      "top": 382.2371624633789,
+      "x1": 169.6382540222168,
+      "bottom": 388.53716246337893
+     }
+    },
+    {
+     "ref": "C4",
+     "category": "Capacitors",
+     "value": "47u",
+     "location": {
+      "page": 0,
+      "x0": 112.80218908996582,
+      "top": 404.51744729003906,
+      "x1": 169.6382540222168,
+      "bottom": 410.6174472900391
+     }
+    },
+    {
+     "ref": "C2",
+     "category": "Capacitors",
+     "value": "100n",
+     "location": {
+      "page": 0,
+      "x0": 112.80218908996582,
+      "top": 389.7603774169922,
+      "x1": 172.24806904907226,
+      "bottom": 395.8603774169922
+     }
+    },
+    {
+     "ref": "C3",
+     "category": "Capacitors",
+     "value": "470n",
+     "location": {
+      "page": 0,
+      "x0": 112.80218908996582,
+      "top": 397.2835923706055,
+      "x1": 172.24806904907226,
+      "bottom": 403.3835923706055
+     }
+    },
+    {
+     "ref": "C5",
+     "category": "Capacitors",
+     "value": "220n",
+     "location": {
+      "page": 0,
+      "x0": 112.80218908996582,
+      "top": 412.0406622436524,
+      "x1": 171.95809608764648,
+      "bottom": 418.1406622436524
+     }
+    },
+    {
+     "ref": "D1",
+     "category": "Diodes",
+     "value": "1N5817",
+     "location": {
+      "page": 0,
+      "x0": 112.80218908996582,
+      "top": 427.0870921508789,
+      "x1": 176.0178051086426,
+      "bottom": 433.1870921508789
+     }
+    },
+    {
+     "ref": "D2",
+     "category": "Diodes",
+     "value": "1N914B",
+     "location": {
+      "page": 0,
+      "x0": 112.80218908996582,
+      "top": 434.6103071044922,
+      "x1": 176.0178051086426,
+      "bottom": 440.71030710449224
+     }
+    },
+    {
+     "ref": "D3",
+     "category": "Diodes",
+     "value": "1N914B",
+     "location": {
+      "page": 0,
+      "x0": 112.80218908996582,
+      "top": 442.1335220581055,
+      "x1": 176.0178051086426,
+      "bottom": 448.03352205810546
+     }
+    },
+    {
+     "ref": "D4",
+     "category": "Diodes",
+     "value": "BAT46",
+     "location": {
+      "page": 0,
+      "x0": 113.09216934814454,
+      "top": 449.3673769775391,
+      "x1": 173.11801712036134,
+      "bottom": 455.4673769775391
+     }
+    },
+    {
+     "ref": "D5",
+     "category": "Diodes",
+     "value": "BAT46",
+     "location": {
+      "page": 0,
+      "x0": 112.80218908996582,
+      "top": 456.60123189697265,
+      "x1": 172.8280295654297,
+      "bottom": 462.7012318969727
+     }
+    },
+    {
+     "ref": "Q1",
+     "category": "Transistors",
+     "value": "2N5088",
+     "location": {
+      "page": 0,
+      "x0": 112.80218908996582,
+      "top": 471.93702183837894,
+      "x1": 176.0178051086426,
+      "bottom": 477.53702183837896
+     }
+    },
+    {
+     "ref": "FAIL",
+     "category": "Switches",
+     "value": "ON/OFF/ON",
+     "location": {
+      "page": 0,
+      "x0": 112.2222285736084,
+      "top": 486.6940917114258,
+      "x1": 186.16710684814453,
+      "bottom": 492.79409171142584
+     }
+    },
+    {
+     "ref": "GAIN",
+     "category": "Potentiometers",
+     "value": "B1K",
+     "location": {
+      "page": 0,
+      "x0": 112.80218908996582,
+      "top": 493.92794663085937,
+      "x1": 167.31841195678712,
+      "bottom": 499.82794663085934
+     }
+    },
+    {
+     "ref": "VOLUME",
+     "category": "Potentiometers",
+     "value": "B100K",
+     "location": {
+      "page": 0,
+      "x0": 112.2222285736084,
+      "top": 501.4511323974609,
+      "x1": 172.8280295654297,
+      "bottom": 507.55113239746095
+     }
+    }
+   ]
+  }
+ ]
+}

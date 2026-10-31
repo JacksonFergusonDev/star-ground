@@ -1,0 +1,163 @@
+{
+ "id": "apb-pedalpcb",
+ "publisher": "pedalpcb",
+ "title": "All-Points Booster",
+ "document": "https://docs.pedalpcb.com/project/APB-PedalPCB.pdf",
+ "page": "https://www.pedalpcb.com/product/pcb654/",
+ "file_name": "APB-PedalPCB.pdf",
+ "sha256": "401c48946d7a3c4ad3f17c05bd47ece133aba9b0a62826c9bcbddb5d2f082d05",
+ "checked": "2026-10-31T02:51:31+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "R1",
+     "category": "Resistors",
+     "value": "1M",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 109.55999999999995,
+      "x1": 135.19240000000002,
+      "bottom": 121.55999999999995
+     }
+    },
+    {
+     "ref": "R3",
+     "category": "Resistors",
+     "value": "1M",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 138.38,
+      "x1": 135.19240000000002,
+      "bottom": 150.38
+     }
+    },
+    {
+     "ref": "R2",
+     "category": "Resistors",
+     "value": "100k",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 123.97000000000003,
+      "x1": 146.5492,
+      "bottom": 135.97000000000003
+     }
+    },
+    {
+     "ref": "R4",
+     "category": "Resistors",
+     "value": "10k",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 152.79099999999994,
+      "x1": 139.8748,
+      "bottom": 164.79099999999994
+     }
+    },
+    {
+     "ref": "R5",
+     "category": "Resistors",
+     "value": "390",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 167.20100000000002,
+      "x1": 147.2092,
+      "bottom": 179.20100000000002
+     }
+    },
+    {
+     "ref": "CLR",
+     "category": "Resistors",
+     "value": "4.7k",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 181.611,
+      "x1": 139.87120000000002,
+      "bottom": 193.611
+     }
+    },
+    {
+     "ref": "C1",
+     "category": "Capacitors",
+     "value": "100n",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 210.43200000000002,
+      "x1": 145.21720000000002,
+      "bottom": 222.43200000000002
+     }
+    },
+    {
+     "ref": "C2",
+     "category": "Capacitors",
+     "value": "100n",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 224.84199999999998,
+      "x1": 145.21720000000002,
+      "bottom": 236.84199999999998
+     }
+    },
+    {
+     "ref": "C100",
+     "category": "Capacitors",
+     "value": "100u",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 239.25199999999995,
+      "x1": 145.21720000000002,
+      "bottom": 251.25199999999995
+     }
+    },
+    {
+     "ref": "D100",
+     "category": "Diodes",
+     "value": "1N5817",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 268.073,
+      "x1": 160.55800000000002,
+      "bottom": 280.073
+     }
+    },
+    {
+     "ref": "Q1",
+     "category": "Transistors",
+     "value": "2N5088",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 296.894,
+      "x1": 160.55800000000002,
+      "bottom": 308.894
+     }
+    },
+    {
+     "ref": "VOLUME",
+     "category": "Potentiometers",
+     "value": "A100K",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 325.714,
+      "x1": 154.552,
+      "bottom": 337.714
+     }
+    }
+   ]
+  }
+ ]
+}

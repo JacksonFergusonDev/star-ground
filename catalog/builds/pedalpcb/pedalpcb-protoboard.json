@@ -1,0 +1,18 @@
+{
+ "id": "pedalpcb-protoboard",
+ "publisher": "pedalpcb",
+ "title": "ProtoBoard",
+ "document": "https://docs.pedalpcb.com/project/PedalPCB-ProtoBoard.pdf",
+ "page": "https://www.pedalpcb.com/product/protoboard-blem/",
+ "file_name": "PedalPCB-ProtoBoard.pdf",
+ "sha256": "564303c193806e1a02a386d0863b2bad67887f02d4a14655ded87e24da011d99",
+ "checked": "2026-10-31T03:06:32+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": []
+  }
+ ]
+}

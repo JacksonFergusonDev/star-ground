@@ -1,0 +1,91 @@
+{
+ "id": "pedalpcb-auditorium",
+ "publisher": "pedalpcb",
+ "title": "Auditorium Test Platform",
+ "document": "https://docs.pedalpcb.com/project/PedalPCB-Auditorium.pdf",
+ "page": "https://www.pedalpcb.com/product/pcb365/",
+ "file_name": "PedalPCB-Auditorium.pdf",
+ "sha256": "5cfb68e8c7d8a25c9f9e726b874236177dada963852d8f09145ca1073df7110a",
+ "checked": "2026-10-31T01:54:17+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "INPUT JACK",
+     "category": "Hardware/Misc",
+     "value": "1/4\u201d Enclosed Jack",
+     "location": {
+      "page": 0,
+      "x0": 37.0,
+      "top": 589.373,
+      "x1": 290.6058,
+      "bottom": 601.373
+     }
+    },
+    {
+     "ref": "OUTPUT JACK",
+     "category": "Hardware/Misc",
+     "value": "1/4\u201d Enclosed Jack",
+     "location": {
+      "page": 0,
+      "x0": 37.0,
+      "top": 602.631,
+      "x1": 290.6058,
+      "bottom": 614.631
+     }
+    },
+    {
+     "ref": "DC JACK",
+     "category": "Hardware/Misc",
+     "value": "2.1mm Barrel-type DC jack",
+     "location": {
+      "page": 0,
+      "x0": 37.0,
+      "top": 629.145,
+      "x1": 333.26099999999997,
+      "bottom": 641.145
+     }
+    },
+    {
+     "ref": "TOGGLE SWITCH",
+     "category": "Switches",
+     "value": "3PDT Toggle Switch, LATCHING (ON/ON)",
+     "location": {
+      "page": 0,
+      "x0": 37.0,
+      "top": 655.66,
+      "x1": 413.94780000000003,
+      "bottom": 667.66
+     }
+    },
+    {
+     "ref": "POLYFUSE",
+     "category": "Hardware/Misc",
+     "value": "Resettable Poly Fuse (250mA)",
+     "location": {
+      "page": 0,
+      "x0": 37.0,
+      "top": 682.175,
+      "x1": 352.63019999999995,
+      "bottom": 694.175
+     }
+    },
+    {
+     "ref": "TERMINAL BLOCK",
+     "category": "Hardware/Misc",
+     "value": "5mm Screw Terminal Block, 2 position",
+     "location": {
+      "page": 0,
+      "x0": 37.0,
+      "top": 708.6903,
+      "x1": 391.74299999999994,
+      "bottom": 720.6903
+     }
+    }
+   ]
+  }
+ ]
+}

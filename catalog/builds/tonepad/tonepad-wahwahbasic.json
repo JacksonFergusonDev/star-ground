@@ -1,0 +1,43 @@
+{
+ "id": "tonepad-wahwahbasic",
+ "publisher": "tonepad",
+ "title": "Llora Nena Wah",
+ "document": "https://tonepad.com/getFile.asp?id=114",
+ "page": "https://tonepad.com/project.asp?id=61",
+ "file_name": "tonepad_wahwahbasic.pdf",
+ "sha256": "f2b0991f364066865eb27b55c59e05fea78765068eef2a500efe297f99d3f796",
+ "checked": "2026-10-31T00:38:40+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "Q1",
+     "category": "Transistors",
+     "value": "MPSA18",
+     "location": {
+      "page": 0,
+      "x0": 241.6961,
+      "top": 417.27160000000003,
+      "x1": 303.3423,
+      "bottom": 427.27160000000003
+     }
+    },
+    {
+     "ref": "Q2",
+     "category": "Transistors",
+     "value": "MPSA18",
+     "location": {
+      "page": 0,
+      "x0": 241.6961,
+      "top": 428.44320000000005,
+      "x1": 303.3423,
+      "bottom": 438.44320000000005
+     }
+    }
+   ]
+  }
+ ]
+}

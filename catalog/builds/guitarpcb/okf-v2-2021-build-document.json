@@ -1,0 +1,211 @@
+{
+ "id": "okf-v2-2021-build-document",
+ "publisher": "guitarpcb",
+ "title": "One-Knob Fuzz v2 2021",
+ "document": "https://guitarpcb.com/wp-content/uploads/2021/10/OKF-v2-2021-Build-Document.pdf",
+ "page": "https://guitarpcb.com/legacy-pcb-document-list/",
+ "file_name": "OKF-v2-2021-Build-Document.pdf",
+ "sha256": "f8fbcdec75b67e7df314e78b6ffc7a3e196e09af9abea914dc27920e1bcec56f",
+ "checked": "2026-10-31T01:27:16+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "R1",
+     "category": "Resistors",
+     "value": "10k",
+     "location": {
+      "page": 0,
+      "x0": 172.15,
+      "top": 432.02000000000004,
+      "x1": 245.12316,
+      "bottom": 443.06000000000006
+     }
+    },
+    {
+     "ref": "C3",
+     "category": "Capacitors",
+     "value": "220n",
+     "location": {
+      "page": 0,
+      "x0": 345.72,
+      "top": 432.02000000000004,
+      "x1": 425.21594,
+      "bottom": 443.06000000000006
+     }
+    },
+    {
+     "ref": "R2",
+     "category": "Resistors",
+     "value": "820",
+     "location": {
+      "page": 0,
+      "x0": 172.15,
+      "top": 446.90000000000003,
+      "x1": 248.25465999999997,
+      "bottom": 457.94000000000005
+     }
+    },
+    {
+     "ref": "C4",
+     "category": "Capacitors",
+     "value": "10u",
+     "location": {
+      "page": 0,
+      "x0": 345.72,
+      "top": 446.90000000000003,
+      "x1": 422.33596,
+      "bottom": 457.94000000000005
+     }
+    },
+    {
+     "ref": "R3",
+     "category": "Resistors",
+     "value": "2.2k",
+     "location": {
+      "page": 0,
+      "x0": 172.15,
+      "top": 461.78000000000003,
+      "x1": 245.20048000000003,
+      "bottom": 472.82000000000005
+     }
+    },
+    {
+     "ref": "C5",
+     "category": "Capacitors",
+     "value": "22u",
+     "location": {
+      "page": 0,
+      "x0": 345.72,
+      "top": 461.78000000000003,
+      "x1": 422.33596,
+      "bottom": 472.82000000000005
+     }
+    },
+    {
+     "ref": "R4",
+     "category": "Resistors",
+     "value": "150k",
+     "location": {
+      "page": 0,
+      "x0": 172.15,
+      "top": 476.66,
+      "x1": 247.76314,
+      "bottom": 487.70000000000005
+     }
+    },
+    {
+     "ref": "D1",
+     "category": "Diodes",
+     "value": "Status LED",
+     "location": {
+      "page": 0,
+      "x0": 345.48,
+      "top": 476.66,
+      "x1": 437.51912,
+      "bottom": 487.70000000000005
+     }
+    },
+    {
+     "ref": "R5",
+     "category": "Resistors",
+     "value": "1k",
+     "location": {
+      "page": 0,
+      "x0": 172.15,
+      "top": 491.54,
+      "x1": 242.24318,
+      "bottom": 502.58000000000004
+     }
+    },
+    {
+     "ref": "D2",
+     "category": "Diodes",
+     "value": "1N5817",
+     "location": {
+      "page": 0,
+      "x0": 345.48,
+      "top": 491.54,
+      "x1": 431.48432,
+      "bottom": 502.58000000000004
+     }
+    },
+    {
+     "ref": "R6",
+     "category": "Resistors",
+     "value": "1.8k",
+     "location": {
+      "page": 0,
+      "x0": 172.15,
+      "top": 506.45000000000005,
+      "x1": 245.20048000000003,
+      "bottom": 517.49
+     }
+    },
+    {
+     "ref": "VOL",
+     "category": "Potentiometers",
+     "value": "A500k",
+     "location": {
+      "page": 0,
+      "x0": 342.36,
+      "top": 506.45000000000005,
+      "x1": 428.03264,
+      "bottom": 517.49
+     }
+    },
+    {
+     "ref": "C1",
+     "category": "Capacitors",
+     "value": "100n",
+     "location": {
+      "page": 0,
+      "x0": 172.15,
+      "top": 521.33,
+      "x1": 248.05593999999996,
+      "bottom": 532.37
+     }
+    },
+    {
+     "ref": "Q1",
+     "category": "Transistors",
+     "value": "BC109",
+     "location": {
+      "page": 0,
+      "x0": 345.0,
+      "top": 521.33,
+      "x1": 428.36672000000004,
+      "bottom": 532.37
+     }
+    },
+    {
+     "ref": "C2",
+     "category": "Capacitors",
+     "value": "220p",
+     "location": {
+      "page": 0,
+      "x0": 172.15,
+      "top": 536.45,
+      "x1": 248.05593999999996,
+      "bottom": 547.49
+     }
+    },
+    {
+     "ref": "Q2",
+     "category": "Transistors",
+     "value": "BC108",
+     "location": {
+      "page": 0,
+      "x0": 345.0,
+      "top": 536.45,
+      "x1": 428.36672000000004,
+      "bottom": 547.49
+     }
+    }
+   ]
+  }
+ ]
+}

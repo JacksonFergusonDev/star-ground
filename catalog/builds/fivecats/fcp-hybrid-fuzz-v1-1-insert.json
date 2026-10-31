@@ -1,0 +1,235 @@
+{
+ "id": "fcp-hybrid-fuzz-v1-1-insert",
+ "publisher": "fivecats",
+ "title": "fcp-hybrid-fuzz-v1-1-insert",
+ "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2025/02/FCP-Hybrid-Fuzz-V1-1-Insert.pdf",
+ "page": "https://www.five-cats-pedals.co.uk/product/hybrid-germanium-fuzz/",
+ "file_name": "FCP-Hybrid-Fuzz-V1-1-Insert.pdf",
+ "sha256": "84d32dc076ffdc2dd781d58c628fe07bfb8caa1a14f97abe462bc06f1a21799b",
+ "checked": "2026-10-31T01:16:00+00:00",
+ "read_by_ocr": true,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "R1",
+     "category": "Resistors",
+     "value": "220k",
+     "location": {
+      "page": 0,
+      "x0": 73.56783872070312,
+      "top": 462.54680043945314,
+      "x1": 126.41829744873047,
+      "bottom": 470.84680043945315
+     }
+    },
+    {
+     "ref": "R6",
+     "category": "Resistors",
+     "value": "220k",
+     "location": {
+      "page": 0,
+      "x0": 73.56783872070312,
+      "top": 513.8937373046875,
+      "x1": 126.41829744873047,
+      "bottom": 521.3937373046875
+     }
+    },
+    {
+     "ref": "R2",
+     "category": "Resistors",
+     "value": "10k",
+     "location": {
+      "page": 0,
+      "x0": 73.56783872070312,
+      "top": 472.7313055175781,
+      "x1": 123.03587374267578,
+      "bottom": 480.7313055175781
+     }
+    },
+    {
+     "ref": "R3",
+     "category": "Resistors",
+     "value": "470",
+     "location": {
+      "page": 0,
+      "x0": 73.56783872070312,
+      "top": 483.34017924804687,
+      "x1": 126.41829744873047,
+      "bottom": 490.9401792480469
+     }
+    },
+    {
+     "ref": "R4",
+     "category": "Resistors",
+     "value": "47k",
+     "location": {
+      "page": 0,
+      "x0": 73.56783872070312,
+      "top": 492.67598984375,
+      "x1": 123.45866867675781,
+      "bottom": 500.97598984375
+     }
+    },
+    {
+     "ref": "R5",
+     "category": "Resistors",
+     "value": "5.6k",
+     "location": {
+      "page": 0,
+      "x0": 73.56783872070312,
+      "top": 502.43612626953126,
+      "x1": 124.72708559570313,
+      "bottom": 511.33612626953123
+     }
+    },
+    {
+     "ref": "C1",
+     "category": "Capacitors",
+     "value": "10u",
+     "location": {
+      "page": 0,
+      "x0": 74.41344464721679,
+      "top": 533.4140529785157,
+      "x1": 126.8411030883789,
+      "bottom": 541.5140529785157
+     }
+    },
+    {
+     "ref": "C3",
+     "category": "Capacitors",
+     "value": "10u",
+     "location": {
+      "page": 0,
+      "x0": 74.41344464721679,
+      "top": 553.5709002197266,
+      "x1": 126.41829744873047,
+      "bottom": 561.6709002197266
+     }
+    },
+    {
+     "ref": "C4",
+     "category": "Capacitors",
+     "value": "10u",
+     "location": {
+      "page": 0,
+      "x0": 73.56783872070312,
+      "top": 563.3310580566406,
+      "x1": 126.41829744873047,
+      "bottom": 571.4310580566406
+     }
+    },
+    {
+     "ref": "C2",
+     "category": "Capacitors",
+     "value": "100n",
+     "location": {
+      "page": 0,
+      "x0": 74.41344464721679,
+      "top": 543.1742322265625,
+      "x1": 129.37792622070313,
+      "bottom": 551.1742322265625
+     }
+    },
+    {
+     "ref": "D1",
+     "category": "Diodes",
+     "value": "1N5817",
+     "location": {
+      "page": 0,
+      "x0": 73.56783872070312,
+      "top": 583.7001110351562,
+      "x1": 129.1967268624442,
+      "bottom": 591.7001110351562
+     }
+    },
+    {
+     "ref": "Q1",
+     "category": "Transistors",
+     "value": "2N3904",
+     "location": {
+      "page": 0,
+      "x0": 74.41344464721679,
+      "top": 603.8569368652344,
+      "x1": 127.5457755859375,
+      "bottom": 611.9569368652344
+     }
+    },
+    {
+     "ref": "Q2",
+     "category": "Transistors",
+     "value": "AC128",
+     "location": {
+      "page": 0,
+      "x0": 74.41344464721679,
+      "top": 614.0414633544922,
+      "x1": 131.06913807373047,
+      "bottom": 622.0414633544922
+     }
+    },
+    {
+     "ref": "Q3",
+     "category": "Transistors",
+     "value": "AC128",
+     "location": {
+      "page": 0,
+      "x0": 73.56783872070312,
+      "top": 624.22598984375,
+      "x1": 131.06913807373047,
+      "bottom": 632.22598984375
+     }
+    },
+    {
+     "ref": "VOLUME",
+     "category": "Potentiometers",
+     "value": "B10K",
+     "location": {
+      "page": 0,
+      "x0": 73.56783872070312,
+      "top": 642.8975896240233,
+      "x1": 126.8411030883789,
+      "bottom": 651.1975896240233
+     }
+    },
+    {
+     "ref": "FUZZ",
+     "category": "Potentiometers",
+     "value": "B10K",
+     "location": {
+      "page": 0,
+      "x0": 73.56783872070312,
+      "top": 653.9308105957032,
+      "x1": 126.41829744873047,
+      "bottom": 661.9308105957032
+     }
+    },
+    {
+     "ref": "NOISE",
+     "category": "Potentiometers",
+     "value": "B10K",
+     "location": {
+      "page": 0,
+      "x0": 74.41344464721679,
+      "top": 664.9640529785156,
+      "x1": 126.41829744873047,
+      "bottom": 672.4640529785156
+     }
+    },
+    {
+     "ref": "COMP",
+     "category": "Potentiometers",
+     "value": "B10K",
+     "location": {
+      "page": 0,
+      "x0": 74.41344464721679,
+      "top": 674.7242322265625,
+      "x1": 126.41829744873047,
+      "bottom": 682.3242322265626
+     }
+    }
+   ]
+  }
+ ]
+}

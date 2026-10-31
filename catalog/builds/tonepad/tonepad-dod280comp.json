@@ -1,0 +1,55 @@
+{
+ "id": "tonepad-dod280comp",
+ "publisher": "tonepad",
+ "title": "Dos Ochenta Compressor",
+ "document": "https://tonepad.com/getFile.asp?id=40",
+ "page": "https://tonepad.com/project.asp?id=21",
+ "file_name": "tonepad_dod280comp.pdf",
+ "sha256": "a9034bf43528ef545af3ef3f516b8a6d103bcdcfe8a7aa89e099c56d44eb5c41",
+ "checked": "2026-10-31T01:06:56+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "IC1",
+     "category": "ICs",
+     "value": "LM358",
+     "location": {
+      "page": 0,
+      "x0": 147.0254,
+      "top": 463.3553999999998,
+      "x1": 213.0454,
+      "bottom": 475.3553999999998
+     }
+    },
+    {
+     "ref": "Q1",
+     "category": "Transistors",
+     "value": "NP4124",
+     "location": {
+      "page": 0,
+      "x0": 147.0254,
+      "top": 476.7612999999998,
+      "x1": 239.73139999999998,
+      "bottom": 488.7612999999998
+     }
+    },
+    {
+     "ref": "Q2",
+     "category": "Transistors",
+     "value": "NP4124",
+     "location": {
+      "page": 0,
+      "x0": 147.0254,
+      "top": 476.7612999999998,
+      "x1": 239.73139999999998,
+      "bottom": 488.7612999999998
+     }
+    }
+   ]
+  }
+ ]
+}

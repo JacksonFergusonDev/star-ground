@@ -1,0 +1,31 @@
+{
+ "id": "bat48",
+ "publisher": "pedalpcb",
+ "title": "BAT48",
+ "document": "https://docs.pedalpcb.com/datasheet/bat48.pdf",
+ "page": "https://www.pedalpcb.com/product/bat48/",
+ "file_name": "bat48.pdf",
+ "sha256": "eb8618f416e6d8eaa790e2c5d2a6a904828052930e8e53d9e53368cd95ac808a",
+ "checked": "2026-10-31T00:35:38+00:00",
+ "read_by_ocr": false,
+ "verified": false,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "Q1",
+     "category": "Transistors",
+     "value": "0.1 0.41 0.004 0.016",
+     "location": {
+      "page": 5,
+      "x0": 368.39970000000005,
+      "top": 283.32359999999994,
+      "x1": 529.011,
+      "bottom": 292.32359999999994
+     }
+    }
+   ]
+  }
+ ]
+}

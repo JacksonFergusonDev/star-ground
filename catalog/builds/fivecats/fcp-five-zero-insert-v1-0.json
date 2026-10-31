@@ -1,0 +1,235 @@
+{
+ "id": "fcp-five-zero-insert-v1-0",
+ "publisher": "fivecats",
+ "title": "fcp-five-zero-insert-v1-0",
+ "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/11/FCP-Five-Zero-Insert-V1-0.pdf",
+ "page": "https://www.five-cats-pedals.co.uk/product/cot-five-zero-lovepedal-cot-50/",
+ "file_name": "FCP-Five-Zero-Insert-V1-0.pdf",
+ "sha256": "b86d33748f1b669b68dd215a6c0c9091d2c2993d0a61a7ebbd435c8d151311e7",
+ "checked": "2026-10-31T01:09:16+00:00",
+ "read_by_ocr": true,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "R1",
+     "category": "Resistors",
+     "value": "1M",
+     "location": {
+      "page": 0,
+      "x0": 6.764858786773682,
+      "top": 485.46193686523435,
+      "x1": 82.86951997070312,
+      "bottom": 495.3619368652343
+     }
+    },
+    {
+     "ref": "R2",
+     "category": "Resistors",
+     "value": "3.3k",
+     "location": {
+      "page": 0,
+      "x0": 5.919251522064209,
+      "top": 499.0413055175781,
+      "x1": 87.52036059570312,
+      "bottom": 508.9413055175781
+     }
+    },
+    {
+     "ref": "R3",
+     "category": "Resistors",
+     "value": "2.2M",
+     "location": {
+      "page": 0,
+      "x0": 5.919251522064209,
+      "top": 513.045,
+      "x1": 90.90279500732422,
+      "bottom": 523.245
+     }
+    },
+    {
+     "ref": "R4",
+     "category": "Resistors",
+     "value": "47",
+     "location": {
+      "page": 0,
+      "x0": 6.764858786773682,
+      "top": 527.0487373046875,
+      "x1": 85.82914338989258,
+      "bottom": 536.9487373046875
+     }
+    },
+    {
+     "ref": "R5",
+     "category": "Resistors",
+     "value": "330",
+     "location": {
+      "page": 0,
+      "x0": 6.764858786773682,
+      "top": 540.6280631347656,
+      "x1": 89.21157780151367,
+      "bottom": 550.5280631347656
+     }
+    },
+    {
+     "ref": "C1",
+     "category": "Capacitors",
+     "value": "47u",
+     "location": {
+      "page": 0,
+      "x0": 6.764858786773682,
+      "top": 568.2111262695313,
+      "x1": 89.21157780151367,
+      "bottom": 578.1111262695313
+     }
+    },
+    {
+     "ref": "C4",
+     "category": "Capacitors",
+     "value": "47u",
+     "location": {
+      "page": 0,
+      "x0": 6.764858786773682,
+      "top": 609.7979267089844,
+      "x1": 89.21157780151367,
+      "bottom": 619.6979267089844
+     }
+    },
+    {
+     "ref": "C2",
+     "category": "Capacitors",
+     "value": "47n",
+     "location": {
+      "page": 0,
+      "x0": 7.187662419128418,
+      "top": 582.2148635742187,
+      "x1": 89.21157780151367,
+      "bottom": 592.4148635742188
+     }
+    },
+    {
+     "ref": "C3",
+     "category": "Capacitors",
+     "value": "100n",
+     "location": {
+      "page": 0,
+      "x0": 6.764858786773682,
+      "top": 595.7942322265625,
+      "x1": 94.28521871337891,
+      "bottom": 605.6942322265625
+     }
+    },
+    {
+     "ref": "D1",
+     "category": "Diodes",
+     "value": "1N5817",
+     "location": {
+      "page": 0,
+      "x0": 6.764858786773682,
+      "top": 637.3809898437501,
+      "x1": 101.05007683105468,
+      "bottom": 647.28098984375
+     }
+    },
+    {
+     "ref": "D2",
+     "category": "Diodes",
+     "value": "BAT46",
+     "location": {
+      "page": 0,
+      "x0": 6.764858786773682,
+      "top": 650.9603584960937,
+      "x1": 95.55363563232422,
+      "bottom": 661.1603584960937
+     }
+    },
+    {
+     "ref": "D3",
+     "category": "Diodes",
+     "value": "BAT46",
+     "location": {
+      "page": 0,
+      "x0": 6.764858786773682,
+      "top": 664.5396843261718,
+      "x1": 96.39923620605468,
+      "bottom": 674.7396843261719
+     }
+    },
+    {
+     "ref": "D4",
+     "category": "Diodes",
+     "value": "1N60P",
+     "location": {
+      "page": 0,
+      "x0": 6.764858786773682,
+      "top": 678.9677474609375,
+      "x1": 134.02876684570313,
+      "bottom": 688.8677474609375
+     }
+    },
+    {
+     "ref": "D5",
+     "category": "Diodes",
+     "value": "1N60P",
+     "location": {
+      "page": 0,
+      "x0": 6.764858786773682,
+      "top": 692.1227474609375,
+      "x1": 92.91110885976155,
+      "bottom": 702.0227474609375
+     }
+    },
+    {
+     "ref": "Q1",
+     "category": "Transistors",
+     "value": "2N5088",
+     "location": {
+      "page": 0,
+      "x0": 316.2571410888672,
+      "top": 485.46193686523435,
+      "x1": 411.38798178710937,
+      "bottom": 495.3619368652343
+     }
+    },
+    {
+     "ref": "GAIN",
+     "category": "Potentiometers",
+     "value": "B1K",
+     "location": {
+      "page": 0,
+      "x0": 316.2571410888672,
+      "top": 513.045,
+      "x1": 395.321453125,
+      "bottom": 523.245
+     }
+    },
+    {
+     "ref": "VOL",
+     "category": "Potentiometers",
+     "value": "A500K",
+     "location": {
+      "page": 0,
+      "x0": 315.41155122070313,
+      "top": 527.0487373046875,
+      "x1": 405.4687028320312,
+      "bottom": 536.9487373046875
+     }
+    },
+    {
+     "ref": "CLIP1",
+     "category": "Switches",
+     "value": "SW_SPDT",
+     "location": {
+      "page": 0,
+      "x0": 317.1027523681641,
+      "top": 554.6318004394532,
+      "x1": 419.42122470703123,
+      "bottom": 564.5318004394531
+     }
+    }
+   ]
+  }
+ ]
+}

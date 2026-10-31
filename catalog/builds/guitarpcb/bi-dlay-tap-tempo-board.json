@@ -1,0 +1,283 @@
+{
+ "id": "bi-dlay-tap-tempo-board",
+ "publisher": "guitarpcb",
+ "title": "Tap Tempo and Modulation Board v2 D\u2019Lay",
+ "document": "https://guitarpcb.com/wp-content/uploads/2018/06/BI_DLay-Tap-Tempo-Board.pdf",
+ "page": "https://guitarpcb.com/community/topic/direct-build-document-link-list/",
+ "file_name": "BI_DLay-Tap-Tempo-Board.pdf",
+ "sha256": "7b8b82a5e68c0d78d40f4989e4cb44dc1604ce668711cbe2a77eda382ef4b48e",
+ "checked": "2026-10-31T01:13:14+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "R1",
+     "category": "Resistors",
+     "value": "100k",
+     "location": {
+      "page": 0,
+      "x0": 105.62,
+      "top": 523.03,
+      "x1": 178.66400000000002,
+      "bottom": 534.0699999999999
+     }
+    },
+    {
+     "ref": "R5",
+     "category": "Resistors",
+     "value": "100k",
+     "location": {
+      "page": 0,
+      "x0": 105.62,
+      "top": 585.0699999999999,
+      "x1": 178.66400000000002,
+      "bottom": 596.1099999999999
+     }
+    },
+    {
+     "ref": "Q2",
+     "category": "Transistors",
+     "value": "BS170",
+     "location": {
+      "page": 0,
+      "x0": 348.31,
+      "top": 522.31,
+      "x1": 440.89768000000004,
+      "bottom": 534.0699999999999
+     }
+    },
+    {
+     "ref": "R2",
+     "category": "Resistors",
+     "value": "1k",
+     "location": {
+      "page": 0,
+      "x0": 105.62,
+      "top": 538.51,
+      "x1": 167.52318000000002,
+      "bottom": 549.55
+     }
+    },
+    {
+     "ref": "R3",
+     "category": "Resistors",
+     "value": "1k",
+     "location": {
+      "page": 0,
+      "x0": 105.62,
+      "top": 554.11,
+      "x1": 167.52318000000002,
+      "bottom": 565.15
+     }
+    },
+    {
+     "ref": "R4",
+     "category": "Resistors",
+     "value": "1k",
+     "location": {
+      "page": 0,
+      "x0": 105.62,
+      "top": 569.59,
+      "x1": 167.52318000000002,
+      "bottom": 580.63
+     }
+    },
+    {
+     "ref": "R6",
+     "category": "Resistors",
+     "value": "1k",
+     "location": {
+      "page": 0,
+      "x0": 105.62,
+      "top": 600.58,
+      "x1": 167.52318000000002,
+      "bottom": 611.62
+     }
+    },
+    {
+     "ref": "IC1",
+     "category": "ICs",
+     "value": "TTG_TAPTATION",
+     "location": {
+      "page": 0,
+      "x0": 347.71,
+      "top": 537.79,
+      "x1": 487.99432,
+      "bottom": 549.55
+     }
+    },
+    {
+     "ref": "IC2",
+     "category": "ICs",
+     "value": "MCP41100",
+     "location": {
+      "page": 0,
+      "x0": 347.71,
+      "top": 553.27,
+      "x1": 461.99512,
+      "bottom": 565.15
+     }
+    },
+    {
+     "ref": "IC3",
+     "category": "ICs",
+     "value": "78L05",
+     "location": {
+      "page": 0,
+      "x0": 347.71,
+      "top": 568.75,
+      "x1": 445.60792000000004,
+      "bottom": 580.63
+     }
+    },
+    {
+     "ref": "SW1",
+     "category": "Switches",
+     "value": "DPDT Momentary Stomp",
+     "location": {
+      "page": 0,
+      "x0": 318.29,
+      "top": 599.86,
+      "x1": 530.35312,
+      "bottom": 611.62
+     }
+    },
+    {
+     "ref": "C1",
+     "category": "Capacitors",
+     "value": "100n",
+     "location": {
+      "page": 0,
+      "x0": 105.62,
+      "top": 616.06,
+      "x1": 179.4368,
+      "bottom": 627.0999999999999
+     }
+    },
+    {
+     "ref": "C2",
+     "category": "Capacitors",
+     "value": "100n",
+     "location": {
+      "page": 0,
+      "x0": 105.62,
+      "top": 631.54,
+      "x1": 179.4368,
+      "bottom": 642.5799999999999
+     }
+    },
+    {
+     "ref": "C3",
+     "category": "Capacitors",
+     "value": "100n",
+     "location": {
+      "page": 0,
+      "x0": 105.62,
+      "top": 647.14,
+      "x1": 179.4368,
+      "bottom": 658.18
+     }
+    },
+    {
+     "ref": "C4",
+     "category": "Capacitors",
+     "value": "100n",
+     "location": {
+      "page": 0,
+      "x0": 105.62,
+      "top": 662.62,
+      "x1": 179.4368,
+      "bottom": 673.66
+     }
+    },
+    {
+     "ref": "S2",
+     "category": "Switches",
+     "value": "SPST",
+     "location": {
+      "page": 0,
+      "x0": 307.73,
+      "top": 615.34,
+      "x1": 434.32888,
+      "bottom": 627.0999999999999
+     }
+    },
+    {
+     "ref": "S4",
+     "category": "Switches",
+     "value": "SPST",
+     "location": {
+      "page": 0,
+      "x0": 319.85,
+      "top": 646.3,
+      "x1": 434.32888,
+      "bottom": 658.18
+     }
+    },
+    {
+     "ref": "S3",
+     "category": "Switches",
+     "value": "SPDT On-Off-On",
+     "location": {
+      "page": 0,
+      "x0": 319.85,
+      "top": 630.8199999999999,
+      "x1": 485.536,
+      "bottom": 642.5799999999999
+     }
+    },
+    {
+     "ref": "D1",
+     "category": "Diodes",
+     "value": "Tempo Clock LED",
+     "location": {
+      "page": 0,
+      "x0": 105.14,
+      "top": 678.1,
+      "x1": 233.66528000000002,
+      "bottom": 689.14
+     }
+    },
+    {
+     "ref": "TIME",
+     "category": "Potentiometers",
+     "value": "B100k",
+     "location": {
+      "page": 0,
+      "x0": 343.39,
+      "top": 677.26,
+      "x1": 440.90872,
+      "bottom": 689.14
+     }
+    },
+    {
+     "ref": "D2",
+     "category": "Diodes",
+     "value": "Tempo Scale LED",
+     "location": {
+      "page": 0,
+      "x0": 105.14,
+      "top": 693.576,
+      "x1": 232.82624,
+      "bottom": 704.616
+     }
+    },
+    {
+     "ref": "DEPTH",
+     "category": "Potentiometers",
+     "value": "A25k",
+     "location": {
+      "page": 0,
+      "x0": 339.79,
+      "top": 692.856,
+      "x1": 435.76408,
+      "bottom": 704.616
+     }
+    }
+   ]
+  }
+ ]
+}

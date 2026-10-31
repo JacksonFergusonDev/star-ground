@@ -1,0 +1,295 @@
+{
+ "id": "expresso-pedalpcb",
+ "publisher": "pedalpcb",
+ "title": "Expresso Expression Multiplexer",
+ "document": "https://docs.pedalpcb.com/project/Expresso-PedalPCB.pdf",
+ "page": "https://www.pedalpcb.com/product/pcb683/",
+ "file_name": "Expresso-PedalPCB.pdf",
+ "sha256": "2306085b2ee847f6d09d8b89a0572779b158524bfe321cef99a6f40798034574",
+ "checked": "2026-10-31T02:55:20+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "R1",
+     "category": "Resistors",
+     "value": "330",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 112.19600000000003,
+      "x1": 147.2092,
+      "bottom": 124.19600000000003
+     }
+    },
+    {
+     "ref": "R2",
+     "category": "Resistors",
+     "value": "330",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 128.36299999999994,
+      "x1": 147.2092,
+      "bottom": 140.36299999999994
+     }
+    },
+    {
+     "ref": "R3",
+     "category": "Resistors",
+     "value": "330",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 144.53099999999995,
+      "x1": 147.2092,
+      "bottom": 156.53099999999995
+     }
+    },
+    {
+     "ref": "R4",
+     "category": "Resistors",
+     "value": "330",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 160.69899999999996,
+      "x1": 147.2092,
+      "bottom": 172.69899999999996
+     }
+    },
+    {
+     "ref": "R5",
+     "category": "Resistors",
+     "value": "330",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 176.86599999999999,
+      "x1": 147.2092,
+      "bottom": 188.86599999999999
+     }
+    },
+    {
+     "ref": "C100",
+     "category": "Capacitors",
+     "value": "100u",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 209.202,
+      "x1": 145.21720000000002,
+      "bottom": 221.202
+     }
+    },
+    {
+     "ref": "C101",
+     "category": "Capacitors",
+     "value": "100u",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 225.36900000000003,
+      "x1": 145.21720000000002,
+      "bottom": 237.36900000000003
+     }
+    },
+    {
+     "ref": "C102",
+     "category": "Capacitors",
+     "value": "100n",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 241.53700000000003,
+      "x1": 145.21720000000002,
+      "bottom": 253.53700000000003
+     }
+    },
+    {
+     "ref": "D100",
+     "category": "Diodes",
+     "value": "1N5817",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 273.87199999999996,
+      "x1": 160.55800000000002,
+      "bottom": 285.87199999999996
+     }
+    },
+    {
+     "ref": "IC1",
+     "category": "ICs",
+     "value": "EXPRESSO",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 306.20799999999997,
+      "x1": 256.3858,
+      "bottom": 318.20799999999997
+     }
+    },
+    {
+     "ref": "IC100",
+     "category": "ICs",
+     "value": "L78L05",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 322.375,
+      "x1": 158.566,
+      "bottom": 334.375
+     }
+    },
+    {
+     "ref": "IC_A",
+     "category": "ICs",
+     "value": "MCP41010",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 338.543,
+      "x1": 178.55800000000002,
+      "bottom": 350.543
+     }
+    },
+    {
+     "ref": "IC_B",
+     "category": "ICs",
+     "value": "MCP41010",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 354.71,
+      "x1": 178.55800000000002,
+      "bottom": 366.71
+     }
+    },
+    {
+     "ref": "IC_C",
+     "category": "ICs",
+     "value": "MCP41010",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 370.878,
+      "x1": 178.55800000000002,
+      "bottom": 382.878
+     }
+    },
+    {
+     "ref": "JACK_IN",
+     "category": "Hardware/Misc",
+     "value": "NMJ6HCD2",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 403.21299999999997,
+      "x1": 182.5312,
+      "bottom": 415.21299999999997
+     }
+    },
+    {
+     "ref": "JACK_A",
+     "category": "Hardware/Misc",
+     "value": "NMJ6HCD2",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 419.381,
+      "x1": 182.5312,
+      "bottom": 431.381
+     }
+    },
+    {
+     "ref": "JACK_B",
+     "category": "Hardware/Misc",
+     "value": "NMJ6HCD2",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 435.549,
+      "x1": 182.5312,
+      "bottom": 447.549
+     }
+    },
+    {
+     "ref": "JACK_C",
+     "category": "Hardware/Misc",
+     "value": "NMJ6HCD2",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 451.716,
+      "x1": 182.5312,
+      "bottom": 463.716
+     }
+    },
+    {
+     "ref": "JACK_DC",
+     "category": "Hardware/Misc",
+     "value": "DC JACK",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 467.88399999999996,
+      "x1": 169.8616,
+      "bottom": 479.88399999999996
+     }
+    },
+    {
+     "ref": "LED_A",
+     "category": "Diodes",
+     "value": "Indicator LED",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 500.219,
+      "x1": 279.067,
+      "bottom": 512.219
+     }
+    },
+    {
+     "ref": "LED_B",
+     "category": "Diodes",
+     "value": "Indicator LED",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 516.387,
+      "x1": 279.067,
+      "bottom": 528.387
+     }
+    },
+    {
+     "ref": "LED_C",
+     "category": "Diodes",
+     "value": "Indicator LED",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 532.5550000000001,
+      "x1": 279.067,
+      "bottom": 544.5550000000001
+     }
+    },
+    {
+     "ref": "FS",
+     "category": "Switches",
+     "value": "SPST Momentary",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 564.89,
+      "x1": 300.8434,
+      "bottom": 576.89
+     }
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,163 @@
+{
+ "id": "cracklejack",
+ "publisher": "pedalpcb",
+ "title": "CrackleJack",
+ "document": "https://docs.pedalpcb.com/project/CrackleJack.pdf",
+ "page": "https://www.pedalpcb.com/product/cracklejack/",
+ "file_name": "CrackleJack.pdf",
+ "sha256": "59896bc122622f636c0c6b3e93d2d2af346e09031440eb5d4f58567aadfd0d97",
+ "checked": "2026-10-31T00:43:33+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "R1",
+     "category": "Resistors",
+     "value": "10M",
+     "location": {
+      "page": 1,
+      "x0": 36.0,
+      "top": 101.51319999999998,
+      "x1": 91.44,
+      "bottom": 110.51319999999998
+     }
+    },
+    {
+     "ref": "R2",
+     "category": "Resistors",
+     "value": "10M",
+     "location": {
+      "page": 1,
+      "x0": 36.0,
+      "top": 112.31319999999994,
+      "x1": 91.44,
+      "bottom": 121.31319999999994
+     }
+    },
+    {
+     "ref": "C1",
+     "category": "Capacitors",
+     "value": "100n",
+     "location": {
+      "page": 1,
+      "x0": 222.612,
+      "top": 101.51319999999998,
+      "x1": 281.292,
+      "bottom": 110.51319999999998
+     }
+    },
+    {
+     "ref": "Q1",
+     "category": "Transistors",
+     "value": "BS170",
+     "location": {
+      "page": 1,
+      "x0": 409.224,
+      "top": 101.51319999999998,
+      "x1": 474.56399999999996,
+      "bottom": 110.51319999999998
+     }
+    },
+    {
+     "ref": "C2",
+     "category": "Capacitors",
+     "value": "10u",
+     "location": {
+      "page": 1,
+      "x0": 222.612,
+      "top": 112.31319999999994,
+      "x1": 275.892,
+      "bottom": 121.31319999999994
+     }
+    },
+    {
+     "ref": "R3",
+     "category": "Resistors",
+     "value": "5.1k",
+     "location": {
+      "page": 1,
+      "x0": 36.0,
+      "top": 123.1132,
+      "x1": 89.64,
+      "bottom": 132.1132
+     }
+    },
+    {
+     "ref": "C3",
+     "category": "Capacitors",
+     "value": "100u",
+     "location": {
+      "page": 1,
+      "x0": 222.612,
+      "top": 123.1132,
+      "x1": 281.472,
+      "bottom": 132.1132
+     }
+    },
+    {
+     "ref": "R5",
+     "category": "Resistors",
+     "value": "4.7k",
+     "location": {
+      "page": 1,
+      "x0": 36.0,
+      "top": 133.91319999999996,
+      "x1": 89.64,
+      "bottom": 142.91319999999996
+     }
+    },
+    {
+     "ref": "D1",
+     "category": "Diodes",
+     "value": "1N4739",
+     "location": {
+      "page": 1,
+      "x0": 409.224,
+      "top": 133.91319999999996,
+      "x1": 479.784,
+      "bottom": 142.91319999999996
+     }
+    },
+    {
+     "ref": "D2",
+     "category": "Diodes",
+     "value": "1N5817",
+     "location": {
+      "page": 1,
+      "x0": 409.224,
+      "top": 144.71319999999992,
+      "x1": 479.784,
+      "bottom": 153.71319999999992
+     }
+    },
+    {
+     "ref": "VOLUME",
+     "category": "Potentiometers",
+     "value": "A100K",
+     "location": {
+      "page": 1,
+      "x0": 409.224,
+      "top": 177.1132,
+      "x1": 510.56399999999996,
+      "bottom": 186.1132
+     }
+    },
+    {
+     "ref": "GAIN",
+     "category": "Potentiometers",
+     "value": "C5K",
+     "location": {
+      "page": 1,
+      "x0": 409.224,
+      "top": 187.91319999999996,
+      "x1": 499.944,
+      "bottom": 196.91319999999996
+     }
+    }
+   ]
+  }
+ ]
+}

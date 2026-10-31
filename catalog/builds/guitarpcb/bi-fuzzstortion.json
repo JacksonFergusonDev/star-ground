@@ -1,0 +1,235 @@
+{
+ "id": "bi-fuzzstortion",
+ "publisher": "guitarpcb",
+ "title": "Fuzzstortion",
+ "document": "https://guitarpcb.com/wp-content/uploads/2018/08/BI_Fuzzstortion.pdf",
+ "page": "https://guitarpcb.com/community/topic/direct-build-document-link-list/",
+ "file_name": "BI_Fuzzstortion.pdf",
+ "sha256": "7a124d7e66677d7db7ef29772a58e46b99974485248a99e1e317157201b8c202",
+ "checked": "2026-10-31T01:18:06+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "R1",
+     "category": "Resistors",
+     "value": "10k",
+     "location": {
+      "page": 0,
+      "x0": 92.25,
+      "top": 492.33499520791287,
+      "x1": 163.22416162500002,
+      "bottom": 503.3249952079129
+     }
+    },
+    {
+     "ref": "R2",
+     "category": "Resistors",
+     "value": "10k",
+     "location": {
+      "page": 0,
+      "x0": 92.25,
+      "top": 518.5849952079129,
+      "x1": 163.22416162500002,
+      "bottom": 529.5749952079129
+     }
+    },
+    {
+     "ref": "R3",
+     "category": "Resistors",
+     "value": "22k",
+     "location": {
+      "page": 0,
+      "x0": 92.25,
+      "top": 544.8349952079129,
+      "x1": 163.22416162500002,
+      "bottom": 555.8249952079129
+     }
+    },
+    {
+     "ref": "R4",
+     "category": "Resistors",
+     "value": "200",
+     "location": {
+      "page": 0,
+      "x0": 92.25,
+      "top": 571.0849952079129,
+      "x1": 167.28022927182482,
+      "bottom": 582.0749952079129
+     }
+    },
+    {
+     "ref": "R5",
+     "category": "Resistors",
+     "value": "1.8k",
+     "location": {
+      "page": 0,
+      "x0": 92.25,
+      "top": 597.3349952079129,
+      "x1": 163.22431949487716,
+      "bottom": 608.3249952079129
+     }
+    },
+    {
+     "ref": "R6",
+     "category": "Resistors",
+     "value": "100",
+     "location": {
+      "page": 0,
+      "x0": 92.25,
+      "top": 623.5849952079129,
+      "x1": 167.28022927182482,
+      "bottom": 634.5749952079129
+     }
+    },
+    {
+     "ref": "C1",
+     "category": "Capacitors",
+     "value": "22n",
+     "location": {
+      "page": 0,
+      "x0": 226.5,
+      "top": 492.33499520791287,
+      "x1": 295.09155651987714,
+      "bottom": 503.3249952079129
+     }
+    },
+    {
+     "ref": "C2",
+     "category": "Capacitors",
+     "value": "1n",
+     "location": {
+      "page": 0,
+      "x0": 226.5,
+      "top": 518.5849952079129,
+      "x1": 291.9782371448771,
+      "bottom": 529.5749952079129
+     }
+    },
+    {
+     "ref": "C3",
+     "category": "Capacitors",
+     "value": "100u",
+     "location": {
+      "page": 0,
+      "x0": 226.5,
+      "top": 544.8349952079129,
+      "x1": 298.2048758948771,
+      "bottom": 555.8249952079129
+     }
+    },
+    {
+     "ref": "C6",
+     "category": "Capacitors",
+     "value": "100u",
+     "location": {
+      "page": 0,
+      "x0": 226.5,
+      "top": 623.5849952079129,
+      "x1": 298.2048758948771,
+      "bottom": 634.5749952079129
+     }
+    },
+    {
+     "ref": "C4",
+     "category": "Capacitors",
+     "value": "68n",
+     "location": {
+      "page": 0,
+      "x0": 226.5,
+      "top": 571.0849952079129,
+      "x1": 295.09155651987714,
+      "bottom": 582.0749952079129
+     }
+    },
+    {
+     "ref": "C5",
+     "category": "Capacitors",
+     "value": "100n",
+     "location": {
+      "page": 0,
+      "x0": 226.5,
+      "top": 597.3349952079129,
+      "x1": 298.2048758948771,
+      "bottom": 608.3249952079129
+     }
+    },
+    {
+     "ref": "Q1",
+     "category": "Transistors",
+     "value": "PF5102",
+     "location": {
+      "page": 0,
+      "x0": 355.5,
+      "top": 492.33499520791287,
+      "x1": 466.00103376987715,
+      "bottom": 503.3249952079129
+     }
+    },
+    {
+     "ref": "Q2",
+     "category": "Transistors",
+     "value": "MPSA13",
+     "location": {
+      "page": 0,
+      "x0": 355.5,
+      "top": 518.5849952079129,
+      "x1": 468.6299247698771,
+      "bottom": 529.5749952079129
+     }
+    },
+    {
+     "ref": "D1",
+     "category": "Diodes",
+     "value": "1N4001",
+     "location": {
+      "page": 0,
+      "x0": 356.25,
+      "top": 544.8349952079129,
+      "x1": 466.0064352698771,
+      "bottom": 555.8249952079129
+     }
+    },
+    {
+     "ref": "D2",
+     "category": "Diodes",
+     "value": "LED-CA-BiColor",
+     "location": {
+      "page": 0,
+      "x0": 356.25,
+      "top": 571.0849952079129,
+      "x1": 487.26630977099893,
+      "bottom": 582.0749952079129
+     }
+    },
+    {
+     "ref": "VOL",
+     "category": "Potentiometers",
+     "value": "A100k",
+     "location": {
+      "page": 0,
+      "x0": 351.75,
+      "top": 597.3349952079129,
+      "x1": 462.41920702500005,
+      "bottom": 608.3249952079129
+     }
+    },
+    {
+     "ref": "GAIN",
+     "category": "Potentiometers",
+     "value": "B250K",
+     "location": {
+      "page": 0,
+      "x0": 349.5,
+      "top": 623.5849952079129,
+      "x1": 463.5052861290012,
+      "bottom": 634.5749952079129
+     }
+    }
+   ]
+  }
+ ]
+}

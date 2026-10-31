@@ -1,0 +1,355 @@
+{
+ "id": "bd-fuzzybee",
+ "publisher": "guitarpcb",
+ "title": "bd-fuzzybee",
+ "document": "https://guitarpcb.com/wp-content/uploads/2018/06/BD_FuzzyBee.pdf",
+ "page": "https://guitarpcb.com/community/topic/direct-build-document-link-list/",
+ "file_name": "BD_FuzzyBee.pdf",
+ "sha256": "afd02853c62327fd14d3f17a1675430aac45bdb184ee964485dff0279df236e8",
+ "checked": "2026-10-31T01:05:03+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "R1",
+     "category": "Resistors",
+     "value": "100k",
+     "location": {
+      "page": 3,
+      "x0": 154.87728104677967,
+      "top": 97.08736927282621,
+      "x1": 233.3730194674296,
+      "bottom": 107.08736927282621
+     }
+    },
+    {
+     "ref": "R2",
+     "category": "Resistors",
+     "value": "470k",
+     "location": {
+      "page": 3,
+      "x0": 154.87728104677967,
+      "top": 109.83736874157626,
+      "x1": 233.3730194674296,
+      "bottom": 119.83736874157626
+     }
+    },
+    {
+     "ref": "R3",
+     "category": "Resistors",
+     "value": "10k",
+     "location": {
+      "page": 3,
+      "x0": 154.87728104677967,
+      "top": 122.58737046032616,
+      "x1": 230.8394679729942,
+      "bottom": 132.58737046032616
+     }
+    },
+    {
+     "ref": "R4",
+     "category": "Resistors",
+     "value": "10k",
+     "location": {
+      "page": 3,
+      "x0": 154.87728104677967,
+      "top": 135.3373699290761,
+      "x1": 230.8394679729942,
+      "bottom": 145.3373699290761
+     }
+    },
+    {
+     "ref": "R8",
+     "category": "Resistors",
+     "value": "10k",
+     "location": {
+      "page": 3,
+      "x0": 154.87728104677967,
+      "top": 186.33737530407575,
+      "x1": 230.8394679729942,
+      "bottom": 196.33737530407575
+     }
+    },
+    {
+     "ref": "R5",
+     "category": "Resistors",
+     "value": "3.3k",
+     "location": {
+      "page": 3,
+      "x0": 154.87728104677967,
+      "top": 148.08736939782614,
+      "x1": 230.83946707882575,
+      "bottom": 158.08736939782614
+     }
+    },
+    {
+     "ref": "R6",
+     "category": "Resistors",
+     "value": "27k",
+     "location": {
+      "page": 3,
+      "x0": 154.87728104677967,
+      "top": 160.83736886657607,
+      "x1": 216.8610360554289,
+      "bottom": 170.83736886657607
+     }
+    },
+    {
+     "ref": "R7",
+     "category": "Resistors",
+     "value": "15k",
+     "location": {
+      "page": 3,
+      "x0": 154.87728104677967,
+      "top": 173.58736833532612,
+      "x1": 230.8394679729942,
+      "bottom": 183.58736833532612
+     }
+    },
+    {
+     "ref": "R9",
+     "category": "Resistors",
+     "value": "1M",
+     "location": {
+      "page": 3,
+      "x0": 154.87728104677967,
+      "top": 199.0873747728258,
+      "x1": 230.3073641885609,
+      "bottom": 209.0873747728258
+     }
+    },
+    {
+     "ref": "R10",
+     "category": "Resistors",
+     "value": "1.8k",
+     "location": {
+      "page": 3,
+      "x0": 152.34374365234373,
+      "top": 211.83737424157584,
+      "x1": 230.83946707882575,
+      "bottom": 221.83737424157584
+     }
+    },
+    {
+     "ref": "BALANCE",
+     "category": "Potentiometers",
+     "value": "B5k",
+     "location": {
+      "page": 3,
+      "x0": 141.23569661517905,
+      "top": 224.58737371032578,
+      "x1": 231.02495751526544,
+      "bottom": 234.58737371032578
+     }
+    },
+    {
+     "ref": "SUSTAIN",
+     "category": "Potentiometers",
+     "value": "B100k",
+     "location": {
+      "page": 3,
+      "x0": 142.9345065443953,
+      "top": 237.33737317907583,
+      "x1": 236.09205300413652,
+      "bottom": 247.33737317907583
+     }
+    },
+    {
+     "ref": "TIMBRE",
+     "category": "Potentiometers",
+     "value": "B100k",
+     "location": {
+      "page": 3,
+      "x0": 144.2818139882575,
+      "top": 250.08737264782576,
+      "x1": 236.09205300413652,
+      "bottom": 260.08737264782576
+     }
+    },
+    {
+     "ref": "D3",
+     "category": "Diodes",
+     "value": "Bi-Color CA LED",
+     "location": {
+      "page": 3,
+      "x0": 154.51605106183092,
+      "top": 262.8373721165758,
+      "x1": 255.15951357151442,
+      "bottom": 272.8373721165758
+     }
+    },
+    {
+     "ref": "IC1",
+     "category": "ICs",
+     "value": "7660S",
+     "location": {
+      "page": 3,
+      "x0": 153.66666109722217,
+      "top": 275.58737158532574,
+      "x1": 220.93470752137353,
+      "bottom": 285.58737158532574
+     }
+    },
+    {
+     "ref": "D1",
+     "category": "Diodes",
+     "value": "1n34a",
+     "location": {
+      "page": 3,
+      "x0": 154.51605106183092,
+      "top": 288.33737105407573,
+      "x1": 236.12134039091012,
+      "bottom": 298.33737105407573
+     }
+    },
+    {
+     "ref": "D2",
+     "category": "Diodes",
+     "value": "1n4001",
+     "location": {
+      "page": 3,
+      "x0": 154.51605106183092,
+      "top": 301.0873705228258,
+      "x1": 238.79400259738685,
+      "bottom": 311.0873705228258
+     }
+    },
+    {
+     "ref": "C1",
+     "category": "Capacitors",
+     "value": "100n (16V minimum)",
+     "location": {
+      "page": 3,
+      "x0": 154.9261060447453,
+      "top": 313.83736999157577,
+      "x1": 233.72693284539812,
+      "bottom": 323.83736999157577
+     }
+    },
+    {
+     "ref": "C6",
+     "category": "Capacitors",
+     "value": "100n (16V minimum)",
+     "location": {
+      "page": 3,
+      "x0": 154.9261060447453,
+      "top": 364.83736786657573,
+      "x1": 233.72693284539812,
+      "bottom": 374.83736786657573
+     }
+    },
+    {
+     "ref": "C2",
+     "category": "Capacitors",
+     "value": "4.7u (16V minimum)",
+     "location": {
+      "page": 3,
+      "x0": 154.9261060447453,
+      "top": 326.58736946032576,
+      "x1": 231.31541765899448,
+      "bottom": 336.58736946032576
+     }
+    },
+    {
+     "ref": "C4",
+     "category": "Capacitors",
+     "value": "4.7u (16V minimum)",
+     "location": {
+      "page": 3,
+      "x0": 154.9261060447453,
+      "top": 339.33736892907575,
+      "x1": 231.31541765899448,
+      "bottom": 349.33736892907575
+     }
+    },
+    {
+     "ref": "C5",
+     "category": "Capacitors",
+     "value": "1n (16V minimum)",
+     "location": {
+      "page": 3,
+      "x0": 154.9261060447453,
+      "top": 352.08736839782574,
+      "x1": 228.6598298565274,
+      "bottom": 362.08736839782574
+     }
+    },
+    {
+     "ref": "C7",
+     "category": "Capacitors",
+     "value": "47u (16V minimum)",
+     "location": {
+      "page": 3,
+      "x0": 154.9261060447453,
+      "top": 377.5873673353258,
+      "x1": 231.31542090889673,
+      "bottom": 387.5873673353258
+     }
+    },
+    {
+     "ref": "C9",
+     "category": "Capacitors",
+     "value": "47u (16V minimum)",
+     "location": {
+      "page": 3,
+      "x0": 154.9261060447453,
+      "top": 403.08736627282576,
+      "x1": 231.31542090889673,
+      "bottom": 413.08736627282576
+     }
+    },
+    {
+     "ref": "C8",
+     "category": "Capacitors",
+     "value": "10u (16V minimum)",
+     "location": {
+      "page": 3,
+      "x0": 154.9261060447453,
+      "top": 390.33736680407577,
+      "x1": 231.31542090889673,
+      "bottom": 400.33736680407577
+     }
+    },
+    {
+     "ref": "Q1",
+     "category": "Transistors",
+     "value": "PNP Ge",
+     "location": {
+      "page": 3,
+      "x0": 154.22803607383156,
+      "top": 415.83736574157575,
+      "x1": 222.63106663106004,
+      "bottom": 425.83736574157575
+     }
+    },
+    {
+     "ref": "Q2",
+     "category": "Transistors",
+     "value": "PNP Ge",
+     "location": {
+      "page": 3,
+      "x0": 154.22803607383156,
+      "top": 428.58736521032574,
+      "x1": 222.63106663106004,
+      "bottom": 438.58736521032574
+     }
+    },
+    {
+     "ref": "Q3",
+     "category": "Transistors",
+     "value": "PNP Ge",
+     "location": {
+      "page": 3,
+      "x0": 154.22803607383156,
+      "top": 441.33736467907573,
+      "x1": 222.63106663106004,
+      "bottom": 451.33736467907573
+     }
+    }
+   ]
+  }
+ ]
+}

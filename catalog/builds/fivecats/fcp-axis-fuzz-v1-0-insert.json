@@ -1,0 +1,283 @@
+{
+ "id": "fcp-axis-fuzz-v1-0-insert",
+ "publisher": "fivecats",
+ "title": "fcp-axis-fuzz-v1-0-insert",
+ "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2021/12/FCP-Axis-Fuzz-V1-0-insert.pdf",
+ "page": "https://www.five-cats-pedals.co.uk/product/axis-fuzz/",
+ "file_name": "FCP-Axis-Fuzz-V1-0-insert.pdf",
+ "sha256": "2b63f302ac1c1d7c83e6d2e3b3ebea25d482a8a60938e9769159bbfd7740c8c2",
+ "checked": "2026-10-31T00:52:42+00:00",
+ "read_by_ocr": true,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "R1",
+     "category": "Resistors",
+     "value": "2.2M",
+     "location": {
+      "page": 0,
+      "x0": 120.92162172546387,
+      "top": 296.0095359375,
+      "x1": 176.88775317993165,
+      "bottom": 302.1095359375
+     }
+    },
+    {
+     "ref": "R2",
+     "category": "Resistors",
+     "value": "180k",
+     "location": {
+      "page": 0,
+      "x0": 120.92162172546387,
+      "top": 303.2433908569336,
+      "x1": 177.17772614135743,
+      "bottom": 309.34339085693364
+     }
+    },
+    {
+     "ref": "R3",
+     "category": "Resistors",
+     "value": "820k",
+     "location": {
+      "page": 0,
+      "x0": 120.92162172546387,
+      "top": 310.7666058105469,
+      "x1": 177.17772614135743,
+      "bottom": 316.8666058105469
+     }
+    },
+    {
+     "ref": "R4",
+     "category": "Resistors",
+     "value": "10k",
+     "location": {
+      "page": 0,
+      "x0": 120.92162172546387,
+      "top": 318.28982076416014,
+      "x1": 175.14787163085938,
+      "bottom": 324.1898207641601
+     }
+    },
+    {
+     "ref": "R5",
+     "category": "Resistors",
+     "value": "680k",
+     "location": {
+      "page": 0,
+      "x0": 120.92162172546387,
+      "top": 326.1023957519531,
+      "x1": 177.17772614135743,
+      "bottom": 331.70239575195313
+     }
+    },
+    {
+     "ref": "R6",
+     "category": "Resistors",
+     "value": "220",
+     "location": {
+      "page": 0,
+      "x0": 120.92162172546387,
+      "top": 333.3362506713867,
+      "x1": 176.88775317993165,
+      "bottom": 339.43625067138674
+     }
+    },
+    {
+     "ref": "R7",
+     "category": "Resistors",
+     "value": "100k",
+     "location": {
+      "page": 0,
+      "x0": 120.92162172546387,
+      "top": 340.859465625,
+      "x1": 177.17772614135743,
+      "bottom": 346.459465625
+     }
+    },
+    {
+     "ref": "R8",
+     "category": "Resistors",
+     "value": "39k",
+     "location": {
+      "page": 0,
+      "x0": 120.92162172546387,
+      "top": 348.3826805786133,
+      "x1": 175.14787163085938,
+      "bottom": 354.2826805786133
+     }
+    },
+    {
+     "ref": "R9",
+     "category": "Resistors",
+     "value": "47k",
+     "location": {
+      "page": 0,
+      "x0": 120.92162172546387,
+      "top": 356.1952555664063,
+      "x1": 174.56791111450195,
+      "bottom": 361.59525556640625
+     }
+    },
+    {
+     "ref": "R10",
+     "category": "Resistors",
+     "value": "22k",
+     "location": {
+      "page": 0,
+      "x0": 120.34166850585937,
+      "top": 362.8504196044922,
+      "x1": 175.14787163085938,
+      "bottom": 369.1504196044922
+     }
+    },
+    {
+     "ref": "C1",
+     "category": "Capacitors",
+     "value": "100n",
+     "location": {
+      "page": 0,
+      "x0": 120.92162172546387,
+      "top": 378.4755403930664,
+      "x1": 179.49756820678712,
+      "bottom": 383.8755403930664
+     }
+    },
+    {
+     "ref": "C5",
+     "category": "Capacitors",
+     "value": "100n",
+     "location": {
+      "page": 0,
+      "x0": 121.21160198364258,
+      "top": 407.7003492919922,
+      "x1": 180.36750168457033,
+      "bottom": 413.80034929199223
+     }
+    },
+    {
+     "ref": "C2",
+     "category": "Capacitors",
+     "value": "470p",
+     "location": {
+      "page": 0,
+      "x0": 121.21160198364258,
+      "top": 385.7093953125,
+      "x1": 180.36750168457033,
+      "bottom": 391.80939531250004
+     }
+    },
+    {
+     "ref": "C3",
+     "category": "Capacitors",
+     "value": "22u",
+     "location": {
+      "page": 0,
+      "x0": 121.21160198364258,
+      "top": 392.94325023193363,
+      "x1": 177.75768665771486,
+      "bottom": 399.04325023193365
+     }
+    },
+    {
+     "ref": "C4",
+     "category": "Capacitors",
+     "value": "22u",
+     "location": {
+      "page": 0,
+      "x0": 121.21160198364258,
+      "top": 400.4664651855469,
+      "x1": 177.75768665771486,
+      "bottom": 406.0664651855469
+     }
+    },
+    {
+     "ref": "C6",
+     "category": "Capacitors",
+     "value": "22u",
+     "location": {
+      "page": 0,
+      "x0": 120.92162172546387,
+      "top": 415.2235642456055,
+      "x1": 177.75768665771486,
+      "bottom": 421.12356424560545
+     }
+    },
+    {
+     "ref": "C7",
+     "category": "Capacitors",
+     "value": "2.2u",
+     "location": {
+      "page": 0,
+      "x0": 120.92162172546387,
+      "top": 422.4574191650391,
+      "x1": 179.20759524536135,
+      "bottom": 428.5574191650391
+     }
+    },
+    {
+     "ref": "D1",
+     "category": "Diodes",
+     "value": "1N5817",
+     "location": {
+      "page": 0,
+      "x0": 120.92162172546387,
+      "top": 437.7931799194336,
+      "x1": 183.55729182128906,
+      "bottom": 443.39317991943363
+     }
+    },
+    {
+     "ref": "Q1",
+     "category": "Transistors",
+     "value": "2N3906",
+     "location": {
+      "page": 0,
+      "x0": 120.92162172546387,
+      "top": 452.5502789794922,
+      "x1": 184.1372523376465,
+      "bottom": 458.1502789794922
+     }
+    },
+    {
+     "ref": "Q2",
+     "category": "Transistors",
+     "value": "2N3904",
+     "location": {
+      "page": 0,
+      "x0": 120.92162172546387,
+      "top": 460.0734939331055,
+      "x1": 184.1372523376465,
+      "bottom": 465.9734939331055
+     }
+    },
+    {
+     "ref": "FUZZ",
+     "category": "Potentiometers",
+     "value": "B2K",
+     "location": {
+      "page": 0,
+      "x0": 120.92162172546387,
+      "top": 474.5412037719727,
+      "x1": 175.43784459228516,
+      "bottom": 480.6412037719727
+     }
+    },
+    {
+     "ref": "LEVEL",
+     "category": "Potentiometers",
+     "value": "A50K",
+     "location": {
+      "page": 0,
+      "x0": 120.92162172546387,
+      "top": 482.06441872558594,
+      "x1": 178.04767421264648,
+      "bottom": 488.16441872558596
+     }
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,18 @@
+{
+ "id": "tonepad-sansampgt2-2007",
+ "publisher": "tonepad",
+ "title": "Sin Amp",
+ "document": "https://tonepad.com/getFile.asp?id=112",
+ "page": "https://tonepad.com/project.asp?id=22",
+ "file_name": "tonepad_sansampgt2-2007.pdf",
+ "sha256": "8c3f0dbec95fa9bb83c3ac718f1311fb8f5aef341f82afdc105c0ec412696080",
+ "checked": "2026-10-31T00:37:31+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": []
+  }
+ ]
+}

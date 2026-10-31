@@ -1,0 +1,163 @@
+{
+ "id": "bd-buff-n-blend",
+ "publisher": "guitarpcb",
+ "title": "Buff N\u2019 Blend",
+ "document": "https://guitarpcb.com/wp-content/uploads/2018/06/BD_Buff-N-Blend.pdf",
+ "page": "https://guitarpcb.com/community/topic/direct-build-document-link-list/",
+ "file_name": "BD_Buff-N-Blend.pdf",
+ "sha256": "ee81b91068e8568d3cf7a131449f7d6bb4f8df2fa2429d55fbec1d9c629fcb4f",
+ "checked": "2026-10-31T01:00:58+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "R1",
+     "category": "Resistors",
+     "value": "1M",
+     "location": {
+      "page": 0,
+      "x0": 134.96088169127358,
+      "top": 484.9105523811944,
+      "x1": 211.49683519768783,
+      "bottom": 495.9105523811944
+     }
+    },
+    {
+     "ref": "R2",
+     "category": "Resistors",
+     "value": "1M",
+     "location": {
+      "page": 0,
+      "x0": 134.96088169127358,
+      "top": 499.1725170611944,
+      "x1": 211.49683519768783,
+      "bottom": 510.1725170611944
+     }
+    },
+    {
+     "ref": "R3",
+     "category": "Resistors",
+     "value": "1M",
+     "location": {
+      "page": 0,
+      "x0": 134.96088169127358,
+      "top": 513.4344817411943,
+      "x1": 211.49683519768783,
+      "bottom": 524.4344817411943
+     }
+    },
+    {
+     "ref": "BALANCE",
+     "category": "Potentiometers",
+     "value": "A50k aka Blend",
+     "location": {
+      "page": 0,
+      "x0": 275.32863933127356,
+      "top": 484.9105523811944,
+      "x1": 407.94509500435606,
+      "bottom": 495.9105523811944
+     }
+    },
+    {
+     "ref": "C1",
+     "category": "Capacitors",
+     "value": "47n",
+     "location": {
+      "page": 0,
+      "x0": 275.32863933127356,
+      "top": 499.1725170611944,
+      "x1": 353.81362333144193,
+      "bottom": 510.1725170611944
+     }
+    },
+    {
+     "ref": "C2",
+     "category": "Capacitors",
+     "value": "10u",
+     "location": {
+      "page": 0,
+      "x0": 275.32863933127356,
+      "top": 513.4344817411943,
+      "x1": 353.81362333144193,
+      "bottom": 524.4344817411943
+     }
+    },
+    {
+     "ref": "R4",
+     "category": "Resistors",
+     "value": "3.3k",
+     "location": {
+      "page": 0,
+      "x0": 134.96088169127358,
+      "top": 527.6964464211944,
+      "x1": 212.66689305517104,
+      "bottom": 538.6964464211944
+     }
+    },
+    {
+     "ref": "D1",
+     "category": "Diodes",
+     "value": "CA Bicolor or Standard LED",
+     "location": {
+      "page": 0,
+      "x0": 275.32863933127356,
+      "top": 527.6964464211944,
+      "x1": 457.0434678162457,
+      "bottom": 538.6964464211944
+     }
+    },
+    {
+     "ref": "Q1",
+     "category": "Transistors",
+     "value": "J113",
+     "location": {
+      "page": 0,
+      "x0": 275.32863933127356,
+      "top": 541.9584111011943,
+      "x1": 357.1172077432591,
+      "bottom": 552.9584111011943
+     }
+    },
+    {
+     "ref": "R6",
+     "category": "Resistors",
+     "value": "100k",
+     "location": {
+      "page": 0,
+      "x0": 134.96088169127358,
+      "top": 556.2203757811944,
+      "x1": 218.24267081272578,
+      "bottom": 567.2203757811944
+     }
+    },
+    {
+     "ref": "R7",
+     "category": "Resistors",
+     "value": "100k",
+     "location": {
+      "page": 0,
+      "x0": 134.96088169127358,
+      "top": 570.4823404611943,
+      "x1": 218.24267081272578,
+      "bottom": 581.4823404611943
+     }
+    },
+    {
+     "ref": "R8",
+     "category": "Resistors",
+     "value": "1.8k",
+     "location": {
+      "page": 0,
+      "x0": 134.96088169127358,
+      "top": 584.7443051411944,
+      "x1": 212.66689305517104,
+      "bottom": 595.7443051411944
+     }
+    }
+   ]
+  }
+ ]
+}

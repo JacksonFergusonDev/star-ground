@@ -1,0 +1,643 @@
+{
+ "id": "ancestral-apparition-v3",
+ "publisher": "guitarpcb",
+ "title": "Ancestral Apparition v3",
+ "document": "https://guitarpcb.com/wp-content/uploads/2023/05/Ancestral-Apparition-v3.pdf",
+ "page": "https://guitarpcb.com/legacy-pcb-document-list/",
+ "file_name": "Ancestral-Apparition-v3.pdf",
+ "sha256": "602bdcebd867fac1cb44b11e92262ea1bb7173e3e231ecc6e5e1cb8722415c8a",
+ "checked": "2026-10-31T01:40:46+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "R1",
+     "category": "Resistors",
+     "value": "1.8k",
+     "location": {
+      "page": 1,
+      "x0": 42.72,
+      "top": 59.51999999999998,
+      "x1": 102.11088,
+      "bottom": 70.55999999999997
+     }
+    },
+    {
+     "ref": "R12",
+     "category": "Resistors",
+     "value": "10k",
+     "location": {
+      "page": 1,
+      "x0": 146.54,
+      "top": 59.51999999999998,
+      "x1": 208.74915999999996,
+      "bottom": 70.55999999999997
+     }
+    },
+    {
+     "ref": "R2",
+     "category": "Resistors",
+     "value": "10k",
+     "location": {
+      "page": 1,
+      "x0": 42.72,
+      "top": 73.58000000000004,
+      "x1": 102.16316,
+      "bottom": 84.62000000000003
+     }
+    },
+    {
+     "ref": "R3",
+     "category": "Resistors",
+     "value": "10k",
+     "location": {
+      "page": 1,
+      "x0": 42.72,
+      "top": 87.5,
+      "x1": 102.16316,
+      "bottom": 98.53999999999999
+     }
+    },
+    {
+     "ref": "R14",
+     "category": "Resistors",
+     "value": "10k",
+     "location": {
+      "page": 1,
+      "x0": 146.54,
+      "top": 87.5,
+      "x1": 208.74915999999996,
+      "bottom": 98.53999999999999
+     }
+    },
+    {
+     "ref": "R6",
+     "category": "Resistors",
+     "value": "10k",
+     "location": {
+      "page": 1,
+      "x0": 42.72,
+      "top": 129.26,
+      "x1": 102.16316,
+      "bottom": 140.29999999999998
+     }
+    },
+    {
+     "ref": "R17",
+     "category": "Resistors",
+     "value": "10k",
+     "location": {
+      "page": 1,
+      "x0": 146.54,
+      "top": 129.26,
+      "x1": 208.74915999999996,
+      "bottom": 140.29999999999998
+     }
+    },
+    {
+     "ref": "R22",
+     "category": "Resistors",
+     "value": "10k",
+     "location": {
+      "page": 1,
+      "x0": 146.54,
+      "top": 198.86,
+      "x1": 208.74915999999996,
+      "bottom": 209.9
+     }
+    },
+    {
+     "ref": "C1",
+     "category": "Capacitors",
+     "value": "100u",
+     "location": {
+      "page": 1,
+      "x0": 253.73,
+      "top": 59.51999999999998,
+      "x1": 315.93928,
+      "bottom": 70.55999999999997
+     }
+    },
+    {
+     "ref": "C2",
+     "category": "Capacitors",
+     "value": "100u",
+     "location": {
+      "page": 1,
+      "x0": 253.73,
+      "top": 73.58000000000004,
+      "x1": 315.93928,
+      "bottom": 84.62000000000003
+     }
+    },
+    {
+     "ref": "C10",
+     "category": "Capacitors",
+     "value": "100u",
+     "location": {
+      "page": 1,
+      "x0": 250.97,
+      "top": 184.93999999999994,
+      "x1": 315.93928,
+      "bottom": 195.97999999999993
+     }
+    },
+    {
+     "ref": "C12",
+     "category": "Capacitors",
+     "value": "100n",
+     "location": {
+      "page": 1,
+      "x0": 358.51,
+      "top": 59.51999999999998,
+      "x1": 423.48927999999995,
+      "bottom": 70.55999999999997
+     }
+    },
+    {
+     "ref": "C13",
+     "category": "Capacitors",
+     "value": "100n",
+     "location": {
+      "page": 1,
+      "x0": 358.51,
+      "top": 73.58000000000004,
+      "x1": 423.48927999999995,
+      "bottom": 84.62000000000003
+     }
+    },
+    {
+     "ref": "C14",
+     "category": "Capacitors",
+     "value": "100n",
+     "location": {
+      "page": 1,
+      "x0": 358.51,
+      "top": 87.5,
+      "x1": 423.48927999999995,
+      "bottom": 98.53999999999999
+     }
+    },
+    {
+     "ref": "C16",
+     "category": "Capacitors",
+     "value": "100n",
+     "location": {
+      "page": 1,
+      "x0": 358.51,
+      "top": 115.34000000000003,
+      "x1": 423.48927999999995,
+      "bottom": 126.38000000000002
+     }
+    },
+    {
+     "ref": "C9",
+     "category": "Capacitors",
+     "value": "100n",
+     "location": {
+      "page": 1,
+      "x0": 253.73,
+      "top": 171.01999999999998,
+      "x1": 315.93928,
+      "bottom": 182.05999999999997
+     }
+    },
+    {
+     "ref": "D1",
+     "category": "Diodes",
+     "value": "Status LED",
+     "location": {
+      "page": 1,
+      "x0": 462.46,
+      "top": 59.51999999999998,
+      "x1": 556.59712,
+      "bottom": 70.55999999999997
+     }
+    },
+    {
+     "ref": "R13",
+     "category": "Resistors",
+     "value": "100k",
+     "location": {
+      "page": 1,
+      "x0": 146.54,
+      "top": 73.58000000000004,
+      "x1": 211.49,
+      "bottom": 84.62000000000003
+     }
+    },
+    {
+     "ref": "D2",
+     "category": "Diodes",
+     "value": "1N5817",
+     "location": {
+      "page": 1,
+      "x0": 462.46,
+      "top": 73.58000000000004,
+      "x1": 550.25808,
+      "bottom": 84.62000000000003
+     }
+    },
+    {
+     "ref": "C3",
+     "category": "Capacitors",
+     "value": "10u",
+     "location": {
+      "page": 1,
+      "x0": 253.73,
+      "top": 87.5,
+      "x1": 313.19844,
+      "bottom": 98.53999999999999
+     }
+    },
+    {
+     "ref": "C20",
+     "category": "Capacitors",
+     "value": "10u",
+     "location": {
+      "page": 1,
+      "x0": 358.51,
+      "top": 171.01999999999998,
+      "x1": 420.74844,
+      "bottom": 182.05999999999997
+     }
+    },
+    {
+     "ref": "C11",
+     "category": "Capacitors",
+     "value": "10u",
+     "location": {
+      "page": 1,
+      "x0": 250.97,
+      "top": 198.86,
+      "x1": 313.19844,
+      "bottom": 209.9
+     }
+    },
+    {
+     "ref": "R4",
+     "category": "Resistors",
+     "value": "1M",
+     "location": {
+      "page": 1,
+      "x0": 42.72,
+      "top": 101.41999999999996,
+      "x1": 101.47294,
+      "bottom": 112.45999999999995
+     }
+    },
+    {
+     "ref": "R5",
+     "category": "Resistors",
+     "value": "1M",
+     "location": {
+      "page": 1,
+      "x0": 42.72,
+      "top": 115.34000000000003,
+      "x1": 101.47294,
+      "bottom": 126.38000000000002
+     }
+    },
+    {
+     "ref": "R15",
+     "category": "Resistors",
+     "value": "15k",
+     "location": {
+      "page": 1,
+      "x0": 146.54,
+      "top": 101.41999999999996,
+      "x1": 208.74915999999996,
+      "bottom": 112.45999999999995
+     }
+    },
+    {
+     "ref": "R16",
+     "category": "Resistors",
+     "value": "15k",
+     "location": {
+      "page": 1,
+      "x0": 146.54,
+      "top": 115.34000000000003,
+      "x1": 208.74915999999996,
+      "bottom": 126.38000000000002
+     }
+    },
+    {
+     "ref": "R18",
+     "category": "Resistors",
+     "value": "15k",
+     "location": {
+      "page": 1,
+      "x0": 146.54,
+      "top": 143.17999999999995,
+      "x1": 208.74915999999996,
+      "bottom": 154.21999999999994
+     }
+    },
+    {
+     "ref": "C4",
+     "category": "Capacitors",
+     "value": "220n",
+     "location": {
+      "page": 1,
+      "x0": 253.73,
+      "top": 101.41999999999996,
+      "x1": 315.93928,
+      "bottom": 112.45999999999995
+     }
+    },
+    {
+     "ref": "C15",
+     "category": "Capacitors",
+     "value": "1n",
+     "location": {
+      "page": 1,
+      "x0": 358.51,
+      "top": 101.41999999999996,
+      "x1": 417.86845999999997,
+      "bottom": 112.45999999999995
+     }
+    },
+    {
+     "ref": "IC1",
+     "category": "ICs",
+     "value": "PT2399",
+     "location": {
+      "page": 1,
+      "x0": 461.62,
+      "top": 101.41999999999996,
+      "x1": 549.4209599999999,
+      "bottom": 112.45999999999995
+     }
+    },
+    {
+     "ref": "C5",
+     "category": "Capacitors",
+     "value": "470n",
+     "location": {
+      "page": 1,
+      "x0": 253.73,
+      "top": 115.34000000000003,
+      "x1": 315.93928,
+      "bottom": 126.38000000000002
+     }
+    },
+    {
+     "ref": "C6",
+     "category": "Capacitors",
+     "value": "470n",
+     "location": {
+      "page": 1,
+      "x0": 253.73,
+      "top": 129.26,
+      "x1": 315.93928,
+      "bottom": 140.29999999999998
+     }
+    },
+    {
+     "ref": "C19",
+     "category": "Capacitors",
+     "value": "470n",
+     "location": {
+      "page": 1,
+      "x0": 358.51,
+      "top": 157.10000000000002,
+      "x1": 423.48927999999995,
+      "bottom": 168.14000000000001
+     }
+    },
+    {
+     "ref": "IC2",
+     "category": "ICs",
+     "value": "TL074",
+     "location": {
+      "page": 1,
+      "x0": 461.62,
+      "top": 115.34000000000003,
+      "x1": 546.0576,
+      "bottom": 126.38000000000002
+     }
+    },
+    {
+     "ref": "C17",
+     "category": "Capacitors",
+     "value": "10n",
+     "location": {
+      "page": 1,
+      "x0": 358.51,
+      "top": 129.26,
+      "x1": 420.74844,
+      "bottom": 140.29999999999998
+     }
+    },
+    {
+     "ref": "IC3",
+     "category": "ICs",
+     "value": "78L05",
+     "location": {
+      "page": 1,
+      "x0": 461.62,
+      "top": 129.26,
+      "x1": 546.168,
+      "bottom": 140.29999999999998
+     }
+    },
+    {
+     "ref": "IC4",
+     "category": "ICs",
+     "value": "78L05",
+     "location": {
+      "page": 1,
+      "x0": 461.62,
+      "top": 143.17999999999995,
+      "x1": 546.168,
+      "bottom": 154.21999999999994
+     }
+    },
+    {
+     "ref": "R7",
+     "category": "Resistors",
+     "value": "22k",
+     "location": {
+      "page": 1,
+      "x0": 42.72,
+      "top": 143.17999999999995,
+      "x1": 104.88192,
+      "bottom": 154.21999999999994
+     }
+    },
+    {
+     "ref": "R9",
+     "category": "Resistors",
+     "value": "22k",
+     "location": {
+      "page": 1,
+      "x0": 42.72,
+      "top": 171.01999999999998,
+      "x1": 102.16316,
+      "bottom": 182.05999999999997
+     }
+    },
+    {
+     "ref": "R21",
+     "category": "Resistors",
+     "value": "22k",
+     "location": {
+      "page": 1,
+      "x0": 146.54,
+      "top": 184.93999999999994,
+      "x1": 208.74915999999996,
+      "bottom": 195.97999999999993
+     }
+    },
+    {
+     "ref": "C7",
+     "category": "Capacitors",
+     "value": "2.2u",
+     "location": {
+      "page": 1,
+      "x0": 253.73,
+      "top": 143.17999999999995,
+      "x1": 313.10200000000003,
+      "bottom": 154.21999999999994
+     }
+    },
+    {
+     "ref": "C18",
+     "category": "Capacitors",
+     "value": "2.2n",
+     "location": {
+      "page": 1,
+      "x0": 358.51,
+      "top": 143.17999999999995,
+      "x1": 420.65200000000004,
+      "bottom": 154.21999999999994
+     }
+    },
+    {
+     "ref": "R8",
+     "category": "Resistors",
+     "value": "12k",
+     "location": {
+      "page": 1,
+      "x0": 42.72,
+      "top": 157.10000000000002,
+      "x1": 102.16316,
+      "bottom": 168.14000000000001
+     }
+    },
+    {
+     "ref": "R19",
+     "category": "Resistors",
+     "value": "1k",
+     "location": {
+      "page": 1,
+      "x0": 146.54,
+      "top": 157.10000000000002,
+      "x1": 205.86918000000003,
+      "bottom": 168.14000000000001
+     }
+    },
+    {
+     "ref": "C8",
+     "category": "Capacitors",
+     "value": "1u",
+     "location": {
+      "page": 1,
+      "x0": 253.73,
+      "top": 157.10000000000002,
+      "x1": 310.31845999999996,
+      "bottom": 168.14000000000001
+     }
+    },
+    {
+     "ref": "R20",
+     "category": "Resistors",
+     "value": "33k",
+     "location": {
+      "page": 1,
+      "x0": 146.54,
+      "top": 171.01999999999998,
+      "x1": 208.74915999999996,
+      "bottom": 182.05999999999997
+     }
+    },
+    {
+     "ref": "DECAY",
+     "category": "Potentiometers",
+     "value": "B5k",
+     "location": {
+      "page": 1,
+      "x0": 453.46,
+      "top": 171.01999999999998,
+      "x1": 541.22312,
+      "bottom": 182.05999999999997
+     }
+    },
+    {
+     "ref": "R10",
+     "category": "Resistors",
+     "value": "18k",
+     "location": {
+      "page": 1,
+      "x0": 39.96,
+      "top": 184.93999999999994,
+      "x1": 102.16316,
+      "bottom": 195.97999999999993
+     }
+    },
+    {
+     "ref": "DEPTH",
+     "category": "Potentiometers",
+     "value": "B2k",
+     "location": {
+      "page": 1,
+      "x0": 453.46,
+      "top": 184.93999999999994,
+      "x1": 541.22312,
+      "bottom": 195.97999999999993
+     }
+    },
+    {
+     "ref": "R11",
+     "category": "Resistors",
+     "value": "470",
+     "location": {
+      "page": 1,
+      "x0": 39.96,
+      "top": 198.86,
+      "x1": 105.34031999999999,
+      "bottom": 209.9
+     }
+    },
+    {
+     "ref": "BTDR-2H",
+     "category": "Hardware/Misc",
+     "value": "LONG",
+     "location": {
+      "page": 1,
+      "x0": 346.63,
+      "top": 198.86,
+      "x1": 425.2708,
+      "bottom": 209.9
+     }
+    },
+    {
+     "ref": "ATTACK",
+     "category": "Potentiometers",
+     "value": "B10k",
+     "location": {
+      "page": 1,
+      "x0": 450.7,
+      "top": 198.86,
+      "x1": 543.9561600000001,
+      "bottom": 209.9
+     }
+    }
+   ]
+  }
+ ]
+}

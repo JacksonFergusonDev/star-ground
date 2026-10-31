@@ -1,0 +1,37 @@
+{
+ "id": "bat42",
+ "publisher": "pedalpcb",
+ "title": "BAT42 BAT43",
+ "document": "https://docs.pedalpcb.com/datasheet/bat42.pdf",
+ "page": "https://www.pedalpcb.com/product/bat42/",
+ "file_name": "bat42.pdf",
+ "sha256": "665c2488dac322f809d26b77177c244290a480d042a9e29b45bd02a8acf8fd5c",
+ "checked": "2026-10-31T00:34:47+00:00",
+ "read_by_ocr": false,
+ "verified": false,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "VBR",
+     "category": "Potentiometers",
+     "value": "Tj = 25\u00b0C IR = 100m A",
+     "location": null
+    },
+    {
+     "ref": "h",
+     "category": "Potentiometers",
+     "value": "Tj = 25\u00b0C RL = 15KW CL = 300pF f = 45MHz Vi = 2V",
+     "location": {
+      "page": 1,
+      "x0": 92.06449999999995,
+      "top": 366.321,
+      "x1": 165.213,
+      "bottom": 375.36850000000004
+     }
+    }
+   ]
+  }
+ ]
+}

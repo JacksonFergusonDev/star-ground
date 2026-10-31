@@ -1,0 +1,199 @@
+{
+ "id": "fcp-amaze-boost-v1-0-insert",
+ "publisher": "fivecats",
+ "title": "fcp-amaze-boost-v1-0-insert",
+ "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/07/FCP-Amaze-Boost-V1-0-Insert.pdf",
+ "page": "https://www.five-cats-pedals.co.uk/product/amaze-boost-amz-mini-booster-clone/",
+ "file_name": "FCP-Amaze-Boost-V1-0-Insert.pdf",
+ "sha256": "ffd1e09f8b11c7bbe2992b0f27e627bd7d4b6b20ed85c5380185b1ec59f871b2",
+ "checked": "2026-10-31T01:04:18+00:00",
+ "read_by_ocr": true,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "R1",
+     "category": "Resistors",
+     "value": "1M",
+     "location": {
+      "page": 0,
+      "x0": 175.46352683105468,
+      "top": 380.6463055175781,
+      "x1": 245.22613620605472,
+      "bottom": 392.74630551757815
+     }
+    },
+    {
+     "ref": "R2",
+     "category": "Resistors",
+     "value": "1M",
+     "location": {
+      "page": 0,
+      "x0": 175.46352683105468,
+      "top": 399.3179267089844,
+      "x1": 245.22613620605472,
+      "bottom": 411.1179267089844
+     }
+    },
+    {
+     "ref": "R3",
+     "category": "Resistors",
+     "value": "1M",
+     "location": {
+      "page": 0,
+      "x0": 175.46352683105468,
+      "top": 417.5651792480469,
+      "x1": 244.38054633789065,
+      "bottom": 429.3651792480469
+     }
+    },
+    {
+     "ref": "R4",
+     "category": "Resistors",
+     "value": "100",
+     "location": {
+      "page": 0,
+      "x0": 175.46352683105468,
+      "top": 436.23680043945313,
+      "x1": 246.91734805908206,
+      "bottom": 448.03680043945315
+     }
+    },
+    {
+     "ref": "R5",
+     "category": "Resistors",
+     "value": "1k",
+     "location": {
+      "page": 0,
+      "x0": 175.46352683105468,
+      "top": 454.48405297851565,
+      "x1": 236.77008764648437,
+      "bottom": 466.8840529785156
+     }
+    },
+    {
+     "ref": "C1",
+     "category": "Capacitors",
+     "value": "47n",
+     "location": {
+      "page": 0,
+      "x0": 175.46352683105468,
+      "top": 490.5541894042969,
+      "x1": 247.9743835693359,
+      "bottom": 503.5541894042969
+     }
+    },
+    {
+     "ref": "C2",
+     "category": "Capacitors",
+     "value": "10p",
+     "location": {
+      "page": 0,
+      "x0": 175.88633247070314,
+      "top": 509.65017924804687,
+      "x1": 247.9743835693359,
+      "bottom": 523.0501792480469
+     }
+    },
+    {
+     "ref": "C3",
+     "category": "Capacitors",
+     "value": "3.3u -",
+     "location": {
+      "page": 0,
+      "x0": 175.88633247070314,
+      "top": 527.8974317871093,
+      "x1": 259.4543878566576,
+      "bottom": 540.2974317871093
+     }
+    },
+    {
+     "ref": "C4",
+     "category": "Capacitors",
+     "value": "220n",
+     "location": {
+      "page": 0,
+      "x0": 175.88633247070314,
+      "top": 546.5690529785156,
+      "x1": 254.7814879931641,
+      "bottom": 558.9690529785156
+     }
+    },
+    {
+     "ref": "C5",
+     "category": "Capacitors",
+     "value": "100u",
+     "location": {
+      "page": 0,
+      "x0": 175.46352683105468,
+      "top": 564.8163055175781,
+      "x1": 253.34397022949216,
+      "bottom": 577.8163055175781
+     }
+    },
+    {
+     "ref": "C6",
+     "category": "Capacitors",
+     "value": "10u",
+     "location": {
+      "page": 0,
+      "x0": 175.46352683105468,
+      "top": 583.4879267089843,
+      "x1": 248.18576497802735,
+      "bottom": 595.8879267089843
+     }
+    },
+    {
+     "ref": "D1",
+     "category": "Diodes",
+     "value": "1N5817",
+     "location": {
+      "page": 0,
+      "x0": 175.46352683105468,
+      "top": 620.8311690917968,
+      "x1": 263.68854921875,
+      "bottom": 632.6311690917968
+     }
+    },
+    {
+     "ref": "Q1",
+     "category": "Transistors",
+     "value": "2N5457",
+     "location": {
+      "page": 0,
+      "x0": 173.77231497802734,
+      "top": 657.75,
+      "x1": 265.37977177734376,
+      "bottom": 670.45
+     }
+    },
+    {
+     "ref": "Q2",
+     "category": "Transistors",
+     "value": "2N5457",
+     "location": {
+      "page": 0,
+      "x0": 173.77231497802734,
+      "top": 674.7242322265625,
+      "x1": 265.9435126302084,
+      "bottom": 689.0242322265625
+     }
+    },
+    {
+     "ref": "VOL1",
+     "category": "Potentiometers",
+     "value": "A100K",
+     "location": {
+      "page": 0,
+      "x0": 175.46352683105468,
+      "top": 713.3405163330078,
+      "x1": 253.6822061767578,
+      "bottom": 725.7405163330078
+     }
+    }
+   ]
+  }
+ ]
+}

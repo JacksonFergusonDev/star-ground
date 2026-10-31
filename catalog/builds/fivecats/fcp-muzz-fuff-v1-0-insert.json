@@ -1,0 +1,187 @@
+{
+ "id": "fcp-muzz-fuff-v1-0-insert",
+ "publisher": "fivecats",
+ "title": "fcp-muzz-fuff-v1-0-insert",
+ "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2024/03/FCP-Muzz-Fuff-V1-0-Insert.pdf",
+ "page": "https://www.five-cats-pedals.co.uk/product/muzz-fuff-ehx-muff-fuzz-clone/",
+ "file_name": "FCP-Muzz-Fuff-V1-0-Insert.pdf",
+ "sha256": "bc66061d2c30f4b5f8026ace1bb896ccf0c47f38de4afcdbe8be56e22ff7b0a6",
+ "checked": "2026-10-31T01:11:02+00:00",
+ "read_by_ocr": true,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "R1",
+     "category": "Resistors",
+     "value": "1M",
+     "location": {
+      "page": 0,
+      "x0": 227.891190625,
+      "top": 473.58,
+      "x1": 273.9767912353516,
+      "bottom": 481.88
+     }
+    },
+    {
+     "ref": "R2",
+     "category": "Resistors",
+     "value": "100k",
+     "location": {
+      "page": 0,
+      "x0": 227.891190625,
+      "top": 484.6132423828125,
+      "x1": 279.8960273681641,
+      "bottom": 493.2132423828125
+     }
+    },
+    {
+     "ref": "R3",
+     "category": "Resistors",
+     "value": "470k",
+     "location": {
+      "page": 0,
+      "x0": 227.04557934570312,
+      "top": 496.0708105957031,
+      "x1": 279.8960273681641,
+      "bottom": 505.2708105957031
+     }
+    },
+    {
+     "ref": "R4",
+     "category": "Resistors",
+     "value": "680k",
+     "location": {
+      "page": 0,
+      "x0": 227.04557934570312,
+      "top": 507.9527474609375,
+      "x1": 279.8960273681641,
+      "bottom": 516.5527474609374
+     }
+    },
+    {
+     "ref": "R6",
+     "category": "Resistors",
+     "value": "680k",
+     "location": {
+      "page": 0,
+      "x0": 227.04557934570312,
+      "top": 530.8679267089843,
+      "x1": 279.8960273681641,
+      "bottom": 539.7679267089843
+     }
+    },
+    {
+     "ref": "R5",
+     "category": "Resistors",
+     "value": "10k",
+     "location": {
+      "page": 0,
+      "x0": 227.04557934570312,
+      "top": 518.98598984375,
+      "x1": 275.6679923828125,
+      "bottom": 528.18598984375
+     }
+    },
+    {
+     "ref": "C1",
+     "category": "Capacitors",
+     "value": "10n",
+     "location": {
+      "page": 0,
+      "x0": 228.73678049316408,
+      "top": 553.7830631347656,
+      "x1": 279.8960273681641,
+      "bottom": 562.6830631347656
+     }
+    },
+    {
+     "ref": "C2",
+     "category": "Capacitors",
+     "value": "10u",
+     "location": {
+      "page": 0,
+      "x0": 228.73678049316408,
+      "top": 565.665,
+      "x1": 279.8960273681641,
+      "bottom": 573.9649999999999
+     }
+    },
+    {
+     "ref": "C3",
+     "category": "Capacitors",
+     "value": "100n",
+     "location": {
+      "page": 0,
+      "x0": 227.891190625,
+      "top": 577.5469368652343,
+      "x1": 283.70125671386717,
+      "bottom": 585.8469368652343
+     }
+    },
+    {
+     "ref": "D1",
+     "category": "Diodes",
+     "value": "1N5817",
+     "location": {
+      "page": 0,
+      "x0": 227.891190625,
+      "top": 600.4621161132812,
+      "x1": 289.1977086181641,
+      "bottom": 609.0621161132813
+     }
+    },
+    {
+     "ref": "D2",
+     "category": "Diodes",
+     "value": "1N34A",
+     "location": {
+      "page": 0,
+      "x0": 228.73678049316408,
+      "top": 611.9196843261719,
+      "x1": 285.81528491210935,
+      "bottom": 620.519684326172
+     }
+    },
+    {
+     "ref": "D3",
+     "category": "Diodes",
+     "value": "1N34A",
+     "location": {
+      "page": 0,
+      "x0": 227.891190625,
+      "top": 622.9529267089844,
+      "x1": 285.81528491210935,
+      "bottom": 631.8529267089843
+     }
+    },
+    {
+     "ref": "U1",
+     "category": "ICs",
+     "value": "JRRC4558",
+     "location": {
+      "page": 0,
+      "x0": 227.891190625,
+      "top": 646.7168004394531,
+      "x1": 290.7588354867788,
+      "bottom": 655.016800439453
+     }
+    },
+    {
+     "ref": "VOL",
+     "category": "Potentiometers",
+     "value": "A100K",
+     "location": {
+      "page": 0,
+      "x0": 227.04557934570312,
+      "top": 669.6319368652344,
+      "x1": 284.9696736328125,
+      "bottom": 677.9319368652343
+     }
+    }
+   ]
+  }
+ ]
+}

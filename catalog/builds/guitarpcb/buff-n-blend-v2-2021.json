@@ -1,0 +1,193 @@
+{
+ "id": "buff-n-blend-v2-2021",
+ "publisher": "guitarpcb",
+ "title": "Buff N\u2019 Blend v2 2021",
+ "document": "https://guitarpcb.com/wp-content/uploads/2018/06/Buff-N-Blend-v2-2021.pdf",
+ "page": "https://guitarpcb.com/legacy-pcb-document-list/",
+ "file_name": "Buff-N-Blend-v2-2021.pdf",
+ "sha256": "44994f1c55e7c6a92dfd075b53b0d1f72a7a812f4899a5fe8051a291ae3f3681",
+ "checked": "2026-10-31T01:14:07+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "R1",
+     "category": "Resistors",
+     "value": "1M",
+     "location": {
+      "page": 0,
+      "x0": 202.63,
+      "top": 438.74,
+      "x1": 268.94894,
+      "bottom": 449.78000000000003
+     }
+    },
+    {
+     "ref": "R2",
+     "category": "Resistors",
+     "value": "1M",
+     "location": {
+      "page": 0,
+      "x0": 202.63,
+      "top": 453.62,
+      "x1": 268.94894,
+      "bottom": 464.66
+     }
+    },
+    {
+     "ref": "R3",
+     "category": "Resistors",
+     "value": "1M",
+     "location": {
+      "page": 0,
+      "x0": 202.63,
+      "top": 468.5,
+      "x1": 268.94894,
+      "bottom": 479.54
+     }
+    },
+    {
+     "ref": "C1",
+     "category": "Capacitors",
+     "value": "47n",
+     "location": {
+      "page": 0,
+      "x0": 326.52,
+      "top": 438.74,
+      "x1": 400.14844,
+      "bottom": 449.78000000000003
+     }
+    },
+    {
+     "ref": "C2",
+     "category": "Capacitors",
+     "value": "10u",
+     "location": {
+      "page": 0,
+      "x0": 326.52,
+      "top": 453.62,
+      "x1": 400.14844,
+      "bottom": 464.66
+     }
+    },
+    {
+     "ref": "R4",
+     "category": "Resistors",
+     "value": "3.3k",
+     "location": {
+      "page": 0,
+      "x0": 202.63,
+      "top": 483.38,
+      "x1": 269.71648000000005,
+      "bottom": 494.42
+     }
+    },
+    {
+     "ref": "Q1",
+     "category": "Transistors",
+     "value": "J113",
+     "location": {
+      "page": 1,
+      "x0": 40.547039999999996,
+      "top": 89.18000000000006,
+      "x1": 78.81120000000001,
+      "bottom": 99.26000000000006
+     }
+    },
+    {
+     "ref": "R5",
+     "category": "Resistors",
+     "value": "10k",
+     "location": null
+    },
+    {
+     "ref": "BALANCE",
+     "category": "Potentiometers",
+     "value": "A100k",
+     "location": {
+      "page": 0,
+      "x0": 310.92,
+      "top": 498.26,
+      "x1": 406.00256,
+      "bottom": 509.3
+     }
+    },
+    {
+     "ref": "R6",
+     "category": "Resistors",
+     "value": "100k",
+     "location": {
+      "page": 0,
+      "x0": 202.63,
+      "top": 513.14,
+      "x1": 272.27914,
+      "bottom": 524.18
+     }
+    },
+    {
+     "ref": "R7",
+     "category": "Resistors",
+     "value": "100k",
+     "location": {
+      "page": 0,
+      "x0": 202.63,
+      "top": 528.29,
+      "x1": 272.27914,
+      "bottom": 539.3299999999999
+     }
+    },
+    {
+     "ref": "D1",
+     "category": "Diodes",
+     "value": "Status LED",
+     "location": {
+      "page": 0,
+      "x0": 326.04,
+      "top": 528.29,
+      "x1": 415.76671999999996,
+      "bottom": 539.3299999999999
+     }
+    },
+    {
+     "ref": "D2",
+     "category": "Diodes",
+     "value": "1N5817",
+     "location": {
+      "page": 0,
+      "x0": 326.04,
+      "top": 543.17,
+      "x1": 409.17526000000004,
+      "bottom": 554.2099999999999
+     }
+    },
+    {
+     "ref": "CLR",
+     "category": "Resistors",
+     "value": "1.8k",
+     "location": {
+      "page": 0,
+      "x0": 200.23,
+      "top": 558.05,
+      "x1": 269.71648000000005,
+      "bottom": 569.0899999999999
+     }
+    },
+    {
+     "ref": "SW1",
+     "category": "Switches",
+     "value": "3PDT-FS",
+     "location": {
+      "page": 0,
+      "x0": 321.96,
+      "top": 558.05,
+      "x1": 410.75188,
+      "bottom": 569.0899999999999
+     }
+    }
+   ]
+  }
+ ]
+}

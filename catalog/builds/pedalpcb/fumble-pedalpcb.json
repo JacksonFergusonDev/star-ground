@@ -1,0 +1,211 @@
+{
+ "id": "fumble-pedalpcb",
+ "publisher": "pedalpcb",
+ "title": "Fumble Boost",
+ "document": "https://docs.pedalpcb.com/project/Fumble-PedalPCB.pdf",
+ "page": "https://www.pedalpcb.com/product/pcb708/",
+ "file_name": "Fumble-PedalPCB.pdf",
+ "sha256": "1167d8b83f60554bb1778d9007434d527ef32bbb86a16b3fb23c5b7176ff9a55",
+ "checked": "2026-10-31T02:58:49+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "R1",
+     "category": "Resistors",
+     "value": "1.5M",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 112.80200000000002,
+      "x1": 141.8656,
+      "bottom": 124.80200000000002
+     }
+    },
+    {
+     "ref": "R2",
+     "category": "Resistors",
+     "value": "1M",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 129.37400000000002,
+      "x1": 135.19240000000002,
+      "bottom": 141.37400000000002
+     }
+    },
+    {
+     "ref": "R3",
+     "category": "Resistors",
+     "value": "5.6k",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 145.94600000000003,
+      "x1": 139.87120000000002,
+      "bottom": 157.94600000000003
+     }
+    },
+    {
+     "ref": "R4",
+     "category": "Resistors",
+     "value": "100",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 162.51800000000003,
+      "x1": 147.2092,
+      "bottom": 174.51800000000003
+     }
+    },
+    {
+     "ref": "CLR",
+     "category": "Resistors",
+     "value": "4.7k",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 179.08899999999994,
+      "x1": 139.87120000000002,
+      "bottom": 191.08899999999994
+     }
+    },
+    {
+     "ref": "C1",
+     "category": "Capacitors",
+     "value": "100n",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 212.23299999999995,
+      "x1": 145.21720000000002,
+      "bottom": 224.23299999999995
+     }
+    },
+    {
+     "ref": "C101",
+     "category": "Capacitors",
+     "value": "100n",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 295.092,
+      "x1": 145.21720000000002,
+      "bottom": 307.092
+     }
+    },
+    {
+     "ref": "C2",
+     "category": "Capacitors",
+     "value": "100p",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 228.80499999999995,
+      "x1": 145.21720000000002,
+      "bottom": 240.80499999999995
+     }
+    },
+    {
+     "ref": "C3",
+     "category": "Capacitors",
+     "value": "4.7u",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 245.37699999999995,
+      "x1": 138.5428,
+      "bottom": 257.37699999999995
+     }
+    },
+    {
+     "ref": "C4",
+     "category": "Capacitors",
+     "value": "10u",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 261.94899999999996,
+      "x1": 138.5428,
+      "bottom": 273.94899999999996
+     }
+    },
+    {
+     "ref": "C100",
+     "category": "Capacitors",
+     "value": "100u",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 278.52,
+      "x1": 145.21720000000002,
+      "bottom": 290.52
+     }
+    },
+    {
+     "ref": "D100",
+     "category": "Diodes",
+     "value": "1N5817",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 328.236,
+      "x1": 160.55800000000002,
+      "bottom": 340.236
+     }
+    },
+    {
+     "ref": "Q1",
+     "category": "Transistors",
+     "value": "J309",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 361.38,
+      "x1": 144.5428,
+      "bottom": 373.38
+     }
+    },
+    {
+     "ref": "INPUT",
+     "category": "Potentiometers",
+     "value": "B2M",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 394.52299999999997,
+      "x1": 143.19520000000003,
+      "bottom": 406.52299999999997
+     }
+    },
+    {
+     "ref": "LEVEL",
+     "category": "Potentiometers",
+     "value": "B10K",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 411.09499999999997,
+      "x1": 147.8776,
+      "bottom": 423.09499999999997
+     }
+    },
+    {
+     "ref": "BIAS",
+     "category": "Potentiometers",
+     "value": "20K",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 444.239,
+      "x1": 139.8748,
+      "bottom": 456.239
+     }
+    }
+   ]
+  }
+ ]
+}

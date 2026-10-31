@@ -1,0 +1,187 @@
+{
+ "id": "fcp-clanger-v1-1-insert",
+ "publisher": "fivecats",
+ "title": "fcp-clanger-v1-1-insert",
+ "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2026/01/FCP-Clanger-V1-1-Insert.pdf",
+ "page": "https://www.five-cats-pedals.co.uk/product/clanger-dba-octave-clang-clone/",
+ "file_name": "FCP-Clanger-V1-1-Insert.pdf",
+ "sha256": "341b62eba25044bea30e0fd93d743c2c11ee78c69192e3403e0da9b3d650d7df",
+ "checked": "2026-10-31T01:21:33+00:00",
+ "read_by_ocr": true,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "R1",
+     "category": "Resistors",
+     "value": "910k",
+     "location": {
+      "page": 0,
+      "x0": 35.09270483093262,
+      "top": 448.1187373046875,
+      "x1": 110.35175808105468,
+      "bottom": 457.6187373046875
+     }
+    },
+    {
+     "ref": "R2",
+     "category": "Resistors",
+     "value": "62k",
+     "location": {
+      "page": 0,
+      "x0": 35.09270483093262,
+      "top": 461.27373730468753,
+      "x1": 104.85530617675781,
+      "bottom": 471.1737373046875
+     }
+    },
+    {
+     "ref": "C1",
+     "category": "Capacitors",
+     "value": "1n",
+     "location": {
+      "page": 0,
+      "x0": 35.93831343383789,
+      "top": 488.0080631347656,
+      "x1": 104.85530617675781,
+      "bottom": 497.9080631347656
+     }
+    },
+    {
+     "ref": "C2",
+     "category": "Capacitors",
+     "value": "100n",
+     "location": {
+      "page": 0,
+      "x0": 36.361116397094726,
+      "top": 502.0118004394531,
+      "x1": 115.00259870605468,
+      "bottom": 510.9118004394531
+     }
+    },
+    {
+     "ref": "C3",
+     "category": "Capacitors",
+     "value": "47u",
+     "location": {
+      "page": 0,
+      "x0": 35.93831343383789,
+      "top": 515.1668004394531,
+      "x1": 110.35175808105468,
+      "bottom": 525.0668004394531
+     }
+    },
+    {
+     "ref": "C4",
+     "category": "Capacitors",
+     "value": "4.7u",
+     "location": {
+      "page": 0,
+      "x0": 35.93831343383789,
+      "top": 528.3218004394531,
+      "x1": 112.88858121337891,
+      "bottom": 538.2218004394531
+     }
+    },
+    {
+     "ref": "D1",
+     "category": "Diodes",
+     "value": "1N5817",
+     "location": {
+      "page": 0,
+      "x0": 36.361116397094726,
+      "top": 556.3292322265625,
+      "x1": 120.9218455444336,
+      "bottom": 564.9292322265625
+     }
+    },
+    {
+     "ref": "D2",
+     "category": "Diodes",
+     "value": "1N34A",
+     "location": {
+      "page": 0,
+      "x0": 35.93831343383789,
+      "top": 569.0598635742188,
+      "x1": 117.96222747802734,
+      "bottom": 578.9598635742187
+     }
+    },
+    {
+     "ref": "D3",
+     "category": "Diodes",
+     "value": "1N34A",
+     "location": {
+      "page": 0,
+      "x0": 35.93831343383789,
+      "top": 582.6392322265625,
+      "x1": 117.11661619873047,
+      "bottom": 591.5392322265625
+     }
+    },
+    {
+     "ref": "T1",
+     "category": "Transformers",
+     "value": "42TM002",
+     "location": {
+      "page": 0,
+      "x0": 35.09270483093262,
+      "top": 609.3735794677734,
+      "x1": 117.90937489959717,
+      "bottom": 618.4735794677734
+     }
+    },
+    {
+     "ref": "U1",
+     "category": "ICs",
+     "value": "LM741",
+     "location": {
+      "page": 0,
+      "x0": 35.93831343383789,
+      "top": 636.1079267089843,
+      "x1": 117.11661619873047,
+      "bottom": 646.0079267089843
+     }
+    },
+    {
+     "ref": "VOL1",
+     "category": "Potentiometers",
+     "value": "A10K",
+     "location": {
+      "page": 0,
+      "x0": 35.93831343383789,
+      "top": 662.4179267089844,
+      "x1": 111.620175,
+      "bottom": 672.6179267089844
+     }
+    },
+    {
+     "ref": "GAIN1",
+     "category": "Potentiometers",
+     "value": "B1M",
+     "location": {
+      "page": 0,
+      "x0": 36.361116397094726,
+      "top": 676.84598984375,
+      "x1": 108.23774058837891,
+      "bottom": 685.74598984375
+     }
+    },
+    {
+     "ref": "TONE1",
+     "category": "Potentiometers",
+     "value": "B250K",
+     "location": {
+      "page": 0,
+      "x0": 36.361116397094726,
+      "top": 690.8496843261719,
+      "x1": 115.42540434570313,
+      "bottom": 699.1496843261718
+     }
+    }
+   ]
+  }
+ ]
+}

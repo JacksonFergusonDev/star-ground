@@ -1,0 +1,199 @@
+{
+ "id": "stage-3-booster-v6-2022",
+ "publisher": "guitarpcb",
+ "title": "Stage 3 Booster v6 2022",
+ "document": "https://guitarpcb.com/wp-content/uploads/2022/06/Stage-3-Booster-v6-2022.pdf",
+ "page": "https://guitarpcb.com/product/stage-3-booster/",
+ "file_name": "Stage-3-Booster-v6-2022.pdf",
+ "sha256": "21bf2dfb53875882d6bc05a5f2d6e3347dc95cba25838cb4c5aab3a1a2be4935",
+ "checked": "2026-10-31T01:35:12+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "R1",
+     "category": "Resistors",
+     "value": "1k",
+     "location": {
+      "page": 0,
+      "x0": 183.53,
+      "top": 433.99,
+      "x1": 257.9492,
+      "bottom": 445.03000000000003
+     }
+    },
+    {
+     "ref": "R4",
+     "category": "Resistors",
+     "value": "1k",
+     "location": {
+      "page": 0,
+      "x0": 183.53,
+      "top": 487.51,
+      "x1": 257.94918,
+      "bottom": 498.55
+     }
+    },
+    {
+     "ref": "R3",
+     "category": "Resistors",
+     "value": "1M",
+     "location": {
+      "page": 0,
+      "x0": 183.53,
+      "top": 469.63,
+      "x1": 260.01894,
+      "bottom": 480.67
+     }
+    },
+    {
+     "ref": "R5",
+     "category": "Resistors",
+     "value": "1.8k",
+     "location": {
+      "page": 0,
+      "x0": 183.53,
+      "top": 505.39,
+      "x1": 260.65688,
+      "bottom": 516.43
+     }
+    },
+    {
+     "ref": "TR1",
+     "category": "Potentiometers",
+     "value": "10K",
+     "location": {
+      "page": 0,
+      "x0": 180.77,
+      "top": 576.8199999999999,
+      "x1": 261.08884,
+      "bottom": 587.8599999999999
+     }
+    },
+    {
+     "ref": "C1",
+     "category": "Capacitors",
+     "value": "22u",
+     "location": {
+      "page": 0,
+      "x0": 325.75,
+      "top": 433.99,
+      "x1": 404.15844,
+      "bottom": 445.03000000000003
+     }
+    },
+    {
+     "ref": "C3",
+     "category": "Capacitors",
+     "value": "220n",
+     "location": {
+      "page": 0,
+      "x0": 325.75,
+      "top": 469.63,
+      "x1": 409.65927999999997,
+      "bottom": 480.67
+     }
+    },
+    {
+     "ref": "D2",
+     "category": "Diodes",
+     "value": "1N5817",
+     "location": {
+      "page": 0,
+      "x0": 325.27,
+      "top": 505.39,
+      "x1": 413.15656,
+      "bottom": 516.43
+     }
+    },
+    {
+     "ref": "Q1",
+     "category": "Transistors",
+     "value": "J113",
+     "location": {
+      "page": 0,
+      "x0": 324.91,
+      "top": 541.06,
+      "x1": 405.72712,
+      "bottom": 552.0999999999999
+     }
+    },
+    {
+     "ref": "VOL",
+     "category": "Potentiometers",
+     "value": "A100K",
+     "location": {
+      "page": 0,
+      "x0": 322.15,
+      "top": 576.8199999999999,
+      "x1": 410.37304,
+      "bottom": 587.8599999999999
+     }
+    },
+    {
+     "ref": "R2",
+     "category": "Resistors",
+     "value": "33k",
+     "location": {
+      "page": 0,
+      "x0": 183.53,
+      "top": 451.87,
+      "x1": 260.70916,
+      "bottom": 462.91
+     }
+    },
+    {
+     "ref": "R6",
+     "category": "Resistors",
+     "value": "33k",
+     "location": {
+      "page": 0,
+      "x0": 183.53,
+      "top": 523.27,
+      "x1": 260.70916,
+      "bottom": 534.31
+     }
+    },
+    {
+     "ref": "C2",
+     "category": "Capacitors",
+     "value": "10n",
+     "location": {
+      "page": 0,
+      "x0": 325.75,
+      "top": 451.87,
+      "x1": 406.91844,
+      "bottom": 462.91
+     }
+    },
+    {
+     "ref": "D1",
+     "category": "Diodes",
+     "value": "Status LED",
+     "location": {
+      "page": 0,
+      "x0": 325.27,
+      "top": 487.51,
+      "x1": 419.52712,
+      "bottom": 498.55
+     }
+    },
+    {
+     "ref": "SW1",
+     "category": "Switches",
+     "value": "SPST",
+     "location": {
+      "page": 0,
+      "x0": 178.97,
+      "top": 558.94,
+      "x1": 263.24984,
+      "bottom": 569.98
+     }
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,235 @@
+{
+ "id": "bd-silent-tuning-buffer",
+ "publisher": "guitarpcb",
+ "title": "Silent Tuner",
+ "document": "https://guitarpcb.com/wp-content/uploads/2018/06/BD_Silent-Tuning-Buffer.pdf",
+ "page": "https://guitarpcb.com/community/topic/direct-build-document-link-list/",
+ "file_name": "BD_Silent-Tuning-Buffer.pdf",
+ "sha256": "80fcef4fb1f5f027d3c55d1e3ba26920200e72505820e00d080092aa4027bfec",
+ "checked": "2026-10-31T01:11:35+00:00",
+ "read_by_ocr": true,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "R1",
+     "category": "Resistors",
+     "value": "100k",
+     "location": {
+      "page": 0,
+      "x0": 131.5166015625,
+      "top": 588.4113098144531,
+      "x1": 209.23095703125,
+      "bottom": 598.6113098144532
+     }
+    },
+    {
+     "ref": "R7",
+     "category": "Resistors",
+     "value": "100k",
+     "location": {
+      "page": 0,
+      "x0": 257.8522393798828,
+      "top": 588.4113098144531,
+      "x1": 336.36365844726566,
+      "bottom": 598.6113098144532
+     }
+    },
+    {
+     "ref": "R2",
+     "category": "Resistors",
+     "value": "100k",
+     "location": {
+      "page": 0,
+      "x0": 130.7195278930664,
+      "top": 601.1854962158204,
+      "x1": 208.43387329101563,
+      "bottom": 611.3854962158205
+     }
+    },
+    {
+     "ref": "R8",
+     "category": "Resistors",
+     "value": "100k",
+     "location": {
+      "page": 0,
+      "x0": 257.8522393798828,
+      "top": 601.1854962158204,
+      "x1": 336.36365844726566,
+      "bottom": 611.3854962158205
+     }
+    },
+    {
+     "ref": "R9",
+     "category": "Resistors",
+     "value": "100k",
+     "location": {
+      "page": 0,
+      "x0": 257.8522393798828,
+      "top": 614.3588891601563,
+      "x1": 335.5665948486328,
+      "bottom": 624.3588891601563
+     }
+    },
+    {
+     "ref": "R6",
+     "category": "Resistors",
+     "value": "100k",
+     "location": {
+      "page": 0,
+      "x0": 130.32099609375,
+      "top": 652.6814685058594,
+      "x1": 208.43387329101563,
+      "bottom": 663.4814685058593
+     }
+    },
+    {
+     "ref": "C4",
+     "category": "Capacitors",
+     "value": "220n",
+     "location": {
+      "page": 0,
+      "x0": 383.3907934570313,
+      "top": 588.4113098144531,
+      "x1": 463.49635986328127,
+      "bottom": 598.6113098144532
+     }
+    },
+    {
+     "ref": "C5",
+     "category": "Capacitors",
+     "value": "220n",
+     "location": {
+      "page": 0,
+      "x0": 384.98496093750003,
+      "top": 601.1854962158204,
+      "x1": 462.69931640625003,
+      "bottom": 611.3854962158205
+     }
+    },
+    {
+     "ref": "C2",
+     "category": "Capacitors",
+     "value": "220n",
+     "location": {
+      "page": 0,
+      "x0": 258.64930297851566,
+      "top": 640.1068652343749,
+      "x1": 335.5665948486328,
+      "bottom": 650.306865234375
+     }
+    },
+    {
+     "ref": "C3",
+     "category": "Capacitors",
+     "value": "220n",
+     "location": {
+      "page": 0,
+      "x0": 257.8522393798828,
+      "top": 652.6814685058594,
+      "x1": 335.5665948486328,
+      "bottom": 663.4814685058593
+     }
+    },
+    {
+     "ref": "R3",
+     "category": "Resistors",
+     "value": "1.8k",
+     "location": {
+      "page": 0,
+      "x0": 130.7195278930664,
+      "top": 614.3588891601563,
+      "x1": 206.04266235351562,
+      "bottom": 624.3588891601563
+     }
+    },
+    {
+     "ref": "C6",
+     "category": "Capacitors",
+     "value": "2.2u",
+     "location": {
+      "page": 0,
+      "x0": 384.98496093750003,
+      "top": 614.3588891601563,
+      "x1": 461.50371093750005,
+      "bottom": 624.3588891601563
+     }
+    },
+    {
+     "ref": "R4",
+     "category": "Resistors",
+     "value": "1M",
+     "location": {
+      "page": 0,
+      "x0": 130.7195278930664,
+      "top": 627.1330755615235,
+      "x1": 206.83974609375002,
+      "bottom": 637.3330755615235
+     }
+    },
+    {
+     "ref": "R5",
+     "category": "Resistors",
+     "value": "1M",
+     "location": {
+      "page": 0,
+      "x0": 130.7195278930664,
+      "top": 640.1068652343749,
+      "x1": 206.83974609375002,
+      "bottom": 650.306865234375
+     }
+    },
+    {
+     "ref": "C1",
+     "category": "Capacitors",
+     "value": "100u",
+     "location": {
+      "page": 0,
+      "x0": 258.64930297851566,
+      "top": 627.1330755615235,
+      "x1": 335.5665948486328,
+      "bottom": 637.3330755615235
+     }
+    },
+    {
+     "ref": "D1",
+     "category": "Diodes",
+     "value": "BiColor CA LED",
+     "location": {
+      "page": 0,
+      "x0": 384.5863989257813,
+      "top": 627.1330755615235,
+      "x1": 485.01725830078135,
+      "bottom": 637.3330755615235
+     }
+    },
+    {
+     "ref": "IC1",
+     "category": "ICs",
+     "value": "TL072",
+     "location": {
+      "page": 0,
+      "x0": 382.59375,
+      "top": 640.1068652343749,
+      "x1": 465.09052734375,
+      "bottom": 650.306865234375
+     }
+    },
+    {
+     "ref": "MUTE",
+     "category": "Switches",
+     "value": "DPDT ON-ON",
+     "location": {
+      "page": 0,
+      "x0": 377.81132812500005,
+      "top": 652.6814685058594,
+      "x1": 480.2348364257813,
+      "bottom": 663.4814685058593
+     }
+    }
+   ]
+  }
+ ]
+}

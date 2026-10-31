@@ -1,0 +1,18 @@
+{
+ "id": "tonepad-speakersim",
+ "publisher": "tonepad",
+ "title": "tonepad-speakersim",
+ "document": "https://tonepad.com/getFile.asp?id=150",
+ "page": "https://tonepad.com/project.asp?id=72",
+ "file_name": "tonepad_speakersim.pdf",
+ "sha256": "aa3d8c53af56c6cccbdd5514ad1e3b40187a5721ed41b70137acb22d1e8a2a5c",
+ "checked": "2026-10-31T00:45:28+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": []
+  }
+ ]
+}
