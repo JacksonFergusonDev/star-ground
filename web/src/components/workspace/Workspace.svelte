@@ -14,12 +14,23 @@
     readDocument,
     warmUp,
   } from '../../lib/server';
+  import type { SharedProject } from '../../lib/share';
+  import { sharedProjects } from '../../lib/share';
   import type { Added, Card } from '../../lib/workspace.svelte';
-  import { files, ready, request, reviewable, Workspace } from '../../lib/workspace.svelte';
+  import {
+    builds,
+    count,
+    files,
+    ready,
+    request,
+    reviewable,
+    Workspace,
+  } from '../../lib/workspace.svelte';
   import AddProject from './AddProject.svelte';
   import MasterList from './MasterList.svelte';
   import ProjectCard from './ProjectCard.svelte';
   import Review from './Review.svelte';
+  import ShareLink from './ShareLink.svelte';
   import StockPanel from './StockPanel.svelte';
 
   const workspace = new Workspace();
@@ -55,7 +66,8 @@
 
   // A catalog build's "Add to build" opens `/app/?catalog=<publisher>/<name>`.
   // It's added once: the address loses the parameter, so a reload doesn't add it again.
-  let catalogProblem = $state<string | null>(null);
+  // What arriving by a catalog or share link did, or why it couldn't.
+  let notice = $state<{ message: string; problem: boolean } | null>(null);
   async function addFromCatalog(): Promise<void> {
     const address = new URL(window.location.href);
     const id = address.searchParams.get('catalog');
@@ -69,14 +81,55 @@
       const build = (await response.json()) as { title: string; document: string };
       await add({ kind: 'url', url: build.document, name: build.title, catalog: id });
     } catch {
-      catalogProblem =
-        "That catalog build couldn't be found. It may have been taken out of the catalog.";
+      notice = {
+        message: "That catalog build couldn't be found. It may have been taken out of the catalog.",
+        problem: true,
+      };
     }
+  }
+
+  // A share link (`/app/#share=…`) adds its projects beside the ones already here.
+  async function addFromShareLink(): Promise<void> {
+    let projects: SharedProject[] | null;
+    try {
+      projects = await sharedProjects(window.location.hash);
+    } catch (e) {
+      notice = { message: (e as Error).message, problem: true };
+      projects = [];
+    }
+    if (projects === null) return;
+    history.replaceState(history.state, '', window.location.pathname + window.location.search);
+    for (const project of projects) addShared(project);
+    if (projects.length)
+      notice = {
+        message: `Added ${count(projects.length, 'project')} from a shared link.`,
+        problem: false,
+      };
+  }
+
+  function addShared(project: SharedProject): void {
+    const reading = project.source.kind === 'url';
+    const card = workspace.add(
+      { name: project.name, count: 1, source: project.source },
+      reading ? { state: 'reading' } : undefined,
+    );
+    workspace.setCount(card, project.count);
+    card.checks[project.variant ?? ''] = Object.fromEntries(
+      project.corrections.map(({ ref, ...check }) => [ref, check]),
+    );
+    if (!reading) return;
+    // The build is chosen once the document is read and its builds are known.
+    void read(card.id, project.useOcr).then(() => {
+      const current = workspace.find(card.id);
+      if (current && project.variant && builds(current).includes(project.variant))
+        current.variant = project.variant;
+    });
   }
 
   onMount(() => {
     warmUp();
     void addFromCatalog();
+    void addFromShareLink();
     presets()
       .then((c) => (catalog = c))
       .catch(() => (catalog = { sources: [], categories: {}, presets: [] }));
@@ -225,8 +278,10 @@
   <div class="workspace">
     <section class="projects" aria-labelledby="projects-title">
       <h2 id="projects-title">Projects</h2>
-      {#if catalogProblem}
-        <p class="problem" role="alert">{catalogProblem}</p>
+      {#if notice?.problem}
+        <p class="notice" role="alert">{notice.message}</p>
+      {:else if notice}
+        <p class="notice" role="status">{notice.message}</p>
       {/if}
       {#if workspace.cards.length}
         <ul class="cards">
@@ -245,6 +300,9 @@
         </ul>
       {/if}
       <AddProject {catalog} onAdd={add} />
+      {#if workspace.cards.length}
+        <ShareLink cards={workspace.cards} />
+      {/if}
       <StockPanel stock={workspace.stock} onChange={(stock) => (workspace.stock = stock)} />
     </section>
 
@@ -282,7 +340,7 @@
     font-weight: 500;
     letter-spacing: -0.8px;
   }
-  .problem {
+  .notice {
     margin: 0;
     color: var(--muted);
   }

@@ -207,6 +207,8 @@ Probed on 2026-10-24: board renders in PedalPCB, GuitarPCB and Tonepad documents
 ### 10. Share links
 
 1. A build list encoded in a URL. Opening it loads the same projects into the workspace.
+    - **Copy a share link** in the workspace (`ShareLink.svelte`, `lib/share.ts`) puts every project but uploads in `/app/#share=…`: each project's source, name, count, chosen build, OCR choice and corrections, as deflate-compressed JSON in base64url. The fragment is never sent to a server, so a shared list stays between the people who share it. Opening the link adds its projects beside the ones already there rather than replacing them, so following a link never loses work; the other side reads linked documents again, and the shared build is chosen once its document's builds are known.
+    - Uploads can't travel: their files stay in the browser that added them. The share panel says how many are left out. A link that can't be read (cut short in copying) says so and adds nothing.
 
 ### 11. Cutover and launch
 
@@ -240,5 +242,5 @@ Probed on 2026-10-24: board renders in PedalPCB, GuitarPCB and Tonepad documents
 | 7. PCB highlighting | Not started: cost measured 2026-10-29; catalog documents only, so it lands with step 8 | #224 |
 | 8. Circuit catalog | In progress: the catalog job and verified list, the nightly workflow, and the catalog pages; the first full run is under way | #225, #227, #229, #230, this PR |
 | 9. Bench mode | Not started | |
-| 10. Share links | Not started | |
+| 10. Share links | Done 2026-10-31: every project but uploads, in the link's fragment | this PR |
 | 11. Cutover and launch | Not started | |
