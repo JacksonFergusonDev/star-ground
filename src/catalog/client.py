@@ -10,8 +10,9 @@ It is deliberately slow and plain:
   never less than `MIN_DELAY_S` plus up to `JITTER_S` more at random
   (docs.pedalpcb.com asks for 10 seconds). The job runs nightly, so going
   slowly costs nothing and is less likely to be turned away.
-- **Patient:** a 429 or a server error is waited out (its `Retry-After`, or
-  `BACKOFF_S`) and tried again, up to `RETRIES` times.
+- **Patient:** a 429, a server error, a timeout or a dropped connection is
+  waited out (a 429's `Retry-After`, or `BACKOFF_S`) and tried again, up to
+  `RETRIES` times.
 - **Stopped by a bot check:** a challenge (Cloudflare's, a 403, or a 429 that
   persists) ends the run for that site (`BlockedError`). Getting around it
   isn't attempted.
@@ -35,7 +36,7 @@ SITE = "https://star-ground.jacksonferguson.me"
 # much more at random, so the requests don't arrive on a beat.
 MIN_DELAY_S = 15.0
 JITTER_S = 5.0
-# How long to wait out a 429 or a server error that gives no Retry-After, and
+# How long to wait out a 429, a server error or no answer at all, and
 # how many times to try again: one minute, then two, then four.
 BACKOFF_S = 60.0
 RETRIES = 3
@@ -194,12 +195,32 @@ class PoliteClient:
                 response = self._session.get(
                     url, headers=headers, timeout=_TIMEOUT_S, stream=True
                 )
-            except requests.exceptions.ConnectionError as error:
+            except (
+                requests.exceptions.ConnectionError,
+                requests.exceptions.Timeout,
+            ) as error:
                 if "NameResolutionError" in repr(error):
                     raise GoneError(
                         f"{host} no longer exists (its name doesn't resolve)"
                     ) from None
-                raise ConnectionError(f"couldn't connect to {host}") from error
+                if attempt == RETRIES:
+                    raise ConnectionError(
+                        f"{host} didn't answer {url} in {RETRIES + 1} tries"
+                    ) from error
+                # A slow or dropped answer is waited out like a server error.
+                wait = BACKOFF_S * 2**attempt
+                logger.warning(
+                    "%s didn't answer %s (%s); waiting %.0f s before trying "
+                    "again (%d of %d)",
+                    host,
+                    url,
+                    type(error).__name__,
+                    wait,
+                    attempt + 1,
+                    RETRIES,
+                )
+                self._sleep(wait)
+                continue
             if _challenged(response):
                 self._blocked.add(host)
                 response.close()
