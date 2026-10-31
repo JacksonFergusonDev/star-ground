@@ -1,0 +1,3349 @@
+{
+ "id": "proposition-pedalpcb",
+ "publisher": "pedalpcb",
+ "title": "AND FEATURES",
+ "document": "https://docs.pedalpcb.com/project/Proposition-PedalPCB.pdf",
+ "page": "https://www.pedalpcb.com/product/pcb504/",
+ "file_name": "Proposition-PedalPCB.pdf",
+ "sha256": "d63370744f3298c5f56b21a2268df3797d7cfffa0634204e65e86694d609b12b",
+ "checked": "2026-10-31T10:07:58+00:00",
+ "read_by_ocr": false,
+ "verified": false,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "R1",
+     "count": 1,
+     "category": "Resistors",
+     "value": "1M",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 108.23599999999999,
+      "x1": 135.19240000000002,
+      "bottom": 120.23599999999999
+     }
+    },
+    {
+     "ref": "R13",
+     "count": 1,
+     "category": "Resistors",
+     "value": "1M",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 270.573,
+      "x1": 135.19240000000002,
+      "bottom": 282.573
+     }
+    },
+    {
+     "ref": "R2",
+     "count": 1,
+     "category": "Resistors",
+     "value": "2.2M",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 121.76400000000001,
+      "x1": 141.8656,
+      "bottom": 133.764
+     }
+    },
+    {
+     "ref": "R3",
+     "count": 1,
+     "category": "Resistors",
+     "value": "1.2k",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 135.29200000000003,
+      "x1": 139.87120000000002,
+      "bottom": 147.29200000000003
+     }
+    },
+    {
+     "ref": "R4",
+     "count": 1,
+     "category": "Resistors",
+     "value": "3.9k",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 148.81999999999994,
+      "x1": 139.87120000000002,
+      "bottom": 160.81999999999994
+     }
+    },
+    {
+     "ref": "R5",
+     "count": 1,
+     "category": "Resistors",
+     "value": "1.8k",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 162.34799999999996,
+      "x1": 139.87120000000002,
+      "bottom": 174.34799999999996
+     }
+    },
+    {
+     "ref": "R6",
+     "count": 1,
+     "category": "Resistors",
+     "value": "2.2k",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 175.87699999999995,
+      "x1": 139.87120000000002,
+      "bottom": 187.87699999999995
+     }
+    },
+    {
+     "ref": "R36",
+     "count": 1,
+     "category": "Resistors",
+     "value": "2.2k",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 581.717,
+      "x1": 139.87120000000002,
+      "bottom": 593.717
+     }
+    },
+    {
+     "ref": "R7",
+     "count": 1,
+     "category": "Resistors",
+     "value": "5.6k",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 189.40499999999997,
+      "x1": 139.87120000000002,
+      "bottom": 201.40499999999997
+     }
+    },
+    {
+     "ref": "R35",
+     "count": 1,
+     "category": "Resistors",
+     "value": "5.6k",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 568.1890000000001,
+      "x1": 139.87120000000002,
+      "bottom": 580.1890000000001
+     }
+    },
+    {
+     "ref": "R8",
+     "count": 1,
+     "category": "Resistors",
+     "value": "18k",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 202.933,
+      "x1": 139.8748,
+      "bottom": 214.933
+     }
+    },
+    {
+     "ref": "R52",
+     "count": 1,
+     "category": "Resistors",
+     "value": "18k",
+     "location": {
+      "page": 2,
+      "x0": 37.0,
+      "top": 162.34799999999996,
+      "x1": 139.8748,
+      "bottom": 174.34799999999996
+     }
+    },
+    {
+     "ref": "R9",
+     "count": 1,
+     "category": "Resistors",
+     "value": "2.7k",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 216.461,
+      "x1": 139.87120000000002,
+      "bottom": 228.461
+     }
+    },
+    {
+     "ref": "R10",
+     "count": 1,
+     "category": "Resistors",
+     "value": "3.3k",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 229.98900000000003,
+      "x1": 139.87120000000002,
+      "bottom": 241.98900000000003
+     }
+    },
+    {
+     "ref": "R11",
+     "count": 1,
+     "category": "Resistors",
+     "value": "27k",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 243.51699999999994,
+      "x1": 139.8748,
+      "bottom": 255.51699999999994
+     }
+    },
+    {
+     "ref": "R12",
+     "count": 1,
+     "category": "Resistors",
+     "value": "27k",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 257.04499999999996,
+      "x1": 139.8748,
+      "bottom": 269.04499999999996
+     }
+    },
+    {
+     "ref": "R51",
+     "count": 1,
+     "category": "Resistors",
+     "value": "27k",
+     "location": {
+      "page": 2,
+      "x0": 37.0,
+      "top": 148.81999999999994,
+      "x1": 139.8748,
+      "bottom": 160.81999999999994
+     }
+    },
+    {
+     "ref": "R54",
+     "count": 1,
+     "category": "Resistors",
+     "value": "27k",
+     "location": {
+      "page": 2,
+      "x0": 37.0,
+      "top": 189.40499999999997,
+      "x1": 139.8748,
+      "bottom": 201.40499999999997
+     }
+    },
+    {
+     "ref": "R14",
+     "count": 1,
+     "category": "Resistors",
+     "value": "470",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 284.101,
+      "x1": 147.2092,
+      "bottom": 296.101
+     }
+    },
+    {
+     "ref": "R34",
+     "count": 1,
+     "category": "Resistors",
+     "value": "470",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 554.6610000000001,
+      "x1": 147.2092,
+      "bottom": 566.6610000000001
+     }
+    },
+    {
+     "ref": "R55",
+     "count": 1,
+     "category": "Resistors",
+     "value": "470",
+     "location": {
+      "page": 2,
+      "x0": 37.0,
+      "top": 202.933,
+      "x1": 147.2092,
+      "bottom": 214.933
+     }
+    },
+    {
+     "ref": "R15",
+     "count": 1,
+     "category": "Resistors",
+     "value": "100k",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 297.62899999999996,
+      "x1": 146.5492,
+      "bottom": 309.62899999999996
+     }
+    },
+    {
+     "ref": "R32",
+     "count": 1,
+     "category": "Resistors",
+     "value": "100k",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 527.605,
+      "x1": 146.5492,
+      "bottom": 539.605
+     }
+    },
+    {
+     "ref": "R33",
+     "count": 1,
+     "category": "Resistors",
+     "value": "100k",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 541.133,
+      "x1": 146.5492,
+      "bottom": 553.133
+     }
+    },
+    {
+     "ref": "R44",
+     "count": 1,
+     "category": "Resistors",
+     "value": "100k",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 689.9417,
+      "x1": 146.5492,
+      "bottom": 701.9417
+     }
+    },
+    {
+     "ref": "R16",
+     "count": 1,
+     "category": "Resistors",
+     "value": "180k",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 311.157,
+      "x1": 146.5492,
+      "bottom": 323.157
+     }
+    },
+    {
+     "ref": "R17",
+     "count": 1,
+     "category": "Resistors",
+     "value": "56k",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 324.685,
+      "x1": 139.8748,
+      "bottom": 336.685
+     }
+    },
+    {
+     "ref": "R48",
+     "count": 1,
+     "category": "Resistors",
+     "value": "56k",
+     "location": {
+      "page": 2,
+      "x0": 37.0,
+      "top": 108.23599999999999,
+      "x1": 139.8748,
+      "bottom": 120.23599999999999
+     }
+    },
+    {
+     "ref": "R18",
+     "count": 1,
+     "category": "Resistors",
+     "value": "560",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 338.21299999999997,
+      "x1": 147.2092,
+      "bottom": 350.21299999999997
+     }
+    },
+    {
+     "ref": "R19",
+     "count": 1,
+     "category": "Resistors",
+     "value": "3k",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 351.741,
+      "x1": 133.2004,
+      "bottom": 363.741
+     }
+    },
+    {
+     "ref": "R20",
+     "count": 1,
+     "category": "Resistors",
+     "value": "33.2k",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 365.269,
+      "x1": 146.5456,
+      "bottom": 377.269
+     }
+    },
+    {
+     "ref": "R49",
+     "count": 1,
+     "category": "Resistors",
+     "value": "33.2k",
+     "location": {
+      "page": 2,
+      "x0": 37.0,
+      "top": 121.76400000000001,
+      "x1": 146.5456,
+      "bottom": 133.764
+     }
+    },
+    {
+     "ref": "R21",
+     "count": 1,
+     "category": "Resistors",
+     "value": "4.7M",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 378.79699999999997,
+      "x1": 141.8656,
+      "bottom": 390.79699999999997
+     }
+    },
+    {
+     "ref": "R22",
+     "count": 1,
+     "category": "Resistors",
+     "value": "1k",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 392.325,
+      "x1": 133.2004,
+      "bottom": 404.325
+     }
+    },
+    {
+     "ref": "R23",
+     "count": 1,
+     "category": "Resistors",
+     "value": "390",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 405.853,
+      "x1": 147.2092,
+      "bottom": 417.853
+     }
+    },
+    {
+     "ref": "R24",
+     "count": 1,
+     "category": "Resistors",
+     "value": "150k",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 419.381,
+      "x1": 146.5492,
+      "bottom": 431.381
+     }
+    },
+    {
+     "ref": "R25",
+     "count": 1,
+     "category": "Resistors",
+     "value": "10k",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 432.909,
+      "x1": 139.8748,
+      "bottom": 444.909
+     }
+    },
+    {
+     "ref": "R26",
+     "count": 1,
+     "category": "Resistors",
+     "value": "560k",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 446.43699999999995,
+      "x1": 146.5492,
+      "bottom": 458.43699999999995
+     }
+    },
+    {
+     "ref": "R27",
+     "count": 1,
+     "category": "Resistors",
+     "value": "47k",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 459.965,
+      "x1": 139.8748,
+      "bottom": 471.965
+     }
+    },
+    {
+     "ref": "R28",
+     "count": 1,
+     "category": "Resistors",
+     "value": "47k",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 473.493,
+      "x1": 139.8748,
+      "bottom": 485.493
+     }
+    },
+    {
+     "ref": "R101",
+     "count": 1,
+     "category": "Resistors",
+     "value": "47k",
+     "location": {
+      "page": 2,
+      "x0": 37.0,
+      "top": 229.98900000000003,
+      "x1": 139.8748,
+      "bottom": 241.98900000000003
+     }
+    },
+    {
+     "ref": "R102",
+     "count": 1,
+     "category": "Resistors",
+     "value": "47k",
+     "location": {
+      "page": 2,
+      "x0": 37.0,
+      "top": 243.51699999999994,
+      "x1": 139.8748,
+      "bottom": 255.51699999999994
+     }
+    },
+    {
+     "ref": "R29",
+     "count": 1,
+     "category": "Resistors",
+     "value": "82k",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 487.02099999999996,
+      "x1": 139.8748,
+      "bottom": 499.02099999999996
+     }
+    },
+    {
+     "ref": "R30",
+     "count": 1,
+     "category": "Resistors",
+     "value": "82k",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 500.549,
+      "x1": 139.8748,
+      "bottom": 512.549
+     }
+    },
+    {
+     "ref": "R43",
+     "count": 1,
+     "category": "Resistors",
+     "value": "82k",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 676.414,
+      "x1": 139.8748,
+      "bottom": 688.414
+     }
+    },
+    {
+     "ref": "R31",
+     "count": 1,
+     "category": "Resistors",
+     "value": "110k",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 514.077,
+      "x1": 145.6576,
+      "bottom": 526.077
+     }
+    },
+    {
+     "ref": "R38",
+     "count": 1,
+     "category": "Resistors",
+     "value": "110k",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 608.774,
+      "x1": 145.6576,
+      "bottom": 620.774
+     }
+    },
+    {
+     "ref": "R37",
+     "count": 1,
+     "category": "Resistors",
+     "value": "16k",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 595.245,
+      "x1": 139.8748,
+      "bottom": 607.245
+     }
+    },
+    {
+     "ref": "R39",
+     "count": 1,
+     "category": "Resistors",
+     "value": "1.5k",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 622.302,
+      "x1": 139.87120000000002,
+      "bottom": 634.302
+     }
+    },
+    {
+     "ref": "R40",
+     "count": 1,
+     "category": "Resistors",
+     "value": "15k",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 635.83,
+      "x1": 139.8748,
+      "bottom": 647.83
+     }
+    },
+    {
+     "ref": "R50",
+     "count": 1,
+     "category": "Resistors",
+     "value": "15k",
+     "location": {
+      "page": 2,
+      "x0": 37.0,
+      "top": 135.29200000000003,
+      "x1": 139.8748,
+      "bottom": 147.29200000000003
+     }
+    },
+    {
+     "ref": "R53",
+     "count": 1,
+     "category": "Resistors",
+     "value": "15k",
+     "location": {
+      "page": 2,
+      "x0": 37.0,
+      "top": 175.87699999999995,
+      "x1": 139.8748,
+      "bottom": 187.87699999999995
+     }
+    },
+    {
+     "ref": "R41",
+     "count": 1,
+     "category": "Resistors",
+     "value": "12k",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 649.358,
+      "x1": 139.8748,
+      "bottom": 661.358
+     }
+    },
+    {
+     "ref": "R42",
+     "count": 1,
+     "category": "Resistors",
+     "value": "120k",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 662.886,
+      "x1": 146.5492,
+      "bottom": 674.886
+     }
+    },
+    {
+     "ref": "R45",
+     "count": 1,
+     "category": "Resistors",
+     "value": "470k",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 703.4697,
+      "x1": 146.5492,
+      "bottom": 715.4697
+     }
+    },
+    {
+     "ref": "R46",
+     "count": 1,
+     "category": "Resistors",
+     "value": "8.2k",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 716.9978,
+      "x1": 139.87120000000002,
+      "bottom": 728.9978
+     }
+    },
+    {
+     "ref": "R47",
+     "count": 1,
+     "category": "Resistors",
+     "value": "68k",
+     "location": {
+      "page": 1,
+      "x0": 37.0,
+      "top": 730.5258,
+      "x1": 139.8748,
+      "bottom": 742.5258
+     }
+    },
+    {
+     "ref": "R100",
+     "count": 1,
+     "category": "Resistors",
+     "value": "4.7k",
+     "location": {
+      "page": 2,
+      "x0": 37.0,
+      "top": 216.461,
+      "x1": 139.87120000000002,
+      "bottom": 228.461
+     }
+    },
+    {
+     "ref": "RB1",
+     "count": 1,
+     "category": "Resistors",
+     "value": "6.2M",
+     "location": {
+      "page": 2,
+      "x0": 37.0,
+      "top": 270.573,
+      "x1": 141.8656,
+      "bottom": 282.573
+     }
+    },
+    {
+     "ref": "RB2",
+     "count": 1,
+     "category": "Resistors",
+     "value": "5.1M",
+     "location": {
+      "page": 2,
+      "x0": 37.0,
+      "top": 284.101,
+      "x1": 141.8656,
+      "bottom": 296.101
+     }
+    },
+    {
+     "ref": "C1",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "10n",
+     "location": {
+      "page": 2,
+      "x0": 37.0,
+      "top": 311.157,
+      "x1": 138.5428,
+      "bottom": 323.157
+     }
+    },
+    {
+     "ref": "C2",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "8.2n",
+     "location": {
+      "page": 2,
+      "x0": 37.0,
+      "top": 324.685,
+      "x1": 138.5428,
+      "bottom": 336.685
+     }
+    },
+    {
+     "ref": "C7",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "8.2n",
+     "location": {
+      "page": 2,
+      "x0": 37.0,
+      "top": 392.325,
+      "x1": 138.5428,
+      "bottom": 404.325
+     }
+    },
+    {
+     "ref": "C12",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "8.2n",
+     "location": {
+      "page": 2,
+      "x0": 37.0,
+      "top": 459.965,
+      "x1": 138.5428,
+      "bottom": 471.965
+     }
+    },
+    {
+     "ref": "C20",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "8.2n",
+     "location": {
+      "page": 2,
+      "x0": 37.0,
+      "top": 568.1890000000001,
+      "x1": 138.5428,
+      "bottom": 580.1890000000001
+     }
+    },
+    {
+     "ref": "C3",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "220n",
+     "location": {
+      "page": 2,
+      "x0": 37.0,
+      "top": 338.21299999999997,
+      "x1": 145.21720000000002,
+      "bottom": 350.21299999999997
+     }
+    },
+    {
+     "ref": "C8",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "220n",
+     "location": {
+      "page": 2,
+      "x0": 37.0,
+      "top": 405.853,
+      "x1": 145.21720000000002,
+      "bottom": 417.853
+     }
+    },
+    {
+     "ref": "C4",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "180n",
+     "location": {
+      "page": 2,
+      "x0": 37.0,
+      "top": 351.741,
+      "x1": 145.21720000000002,
+      "bottom": 363.741
+     }
+    },
+    {
+     "ref": "C26",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "180n",
+     "location": {
+      "page": 2,
+      "x0": 37.0,
+      "top": 649.358,
+      "x1": 145.21720000000002,
+      "bottom": 661.358
+     }
+    },
+    {
+     "ref": "C5",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "12n",
+     "location": {
+      "page": 2,
+      "x0": 37.0,
+      "top": 365.269,
+      "x1": 138.5428,
+      "bottom": 377.269
+     }
+    },
+    {
+     "ref": "C13",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "12n",
+     "location": {
+      "page": 2,
+      "x0": 37.0,
+      "top": 473.493,
+      "x1": 138.5428,
+      "bottom": 485.493
+     }
+    },
+    {
+     "ref": "C6",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "10u (25V minimum)",
+     "location": {
+      "page": 2,
+      "x0": 37.0,
+      "top": 378.79699999999997,
+      "x1": 138.5428,
+      "bottom": 390.79699999999997
+     }
+    },
+    {
+     "ref": "C15",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "10u (25V minimum)",
+     "location": {
+      "page": 2,
+      "x0": 37.0,
+      "top": 500.549,
+      "x1": 138.5428,
+      "bottom": 512.549
+     }
+    },
+    {
+     "ref": "C23",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "10u (25V minimum)",
+     "location": {
+      "page": 2,
+      "x0": 37.0,
+      "top": 608.774,
+      "x1": 138.5428,
+      "bottom": 620.774
+     }
+    },
+    {
+     "ref": "C28",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "10u (25V minimum)",
+     "location": {
+      "page": 2,
+      "x0": 37.0,
+      "top": 676.414,
+      "x1": 138.5428,
+      "bottom": 688.414
+     }
+    },
+    {
+     "ref": "C30",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "10u (25V minimum)",
+     "location": {
+      "page": 2,
+      "x0": 37.0,
+      "top": 703.4697,
+      "x1": 138.5428,
+      "bottom": 715.4697
+     }
+    },
+    {
+     "ref": "C102",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "10u (25V minimum)",
+     "location": {
+      "page": 3,
+      "x0": 37.0,
+      "top": 148.81999999999994,
+      "x1": 138.5428,
+      "bottom": 160.81999999999994
+     }
+    },
+    {
+     "ref": "C105",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "10u (25V minimum)",
+     "location": {
+      "page": 3,
+      "x0": 37.0,
+      "top": 189.40499999999997,
+      "x1": 138.5428,
+      "bottom": 201.40499999999997
+     }
+    },
+    {
+     "ref": "C9",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "1.8n",
+     "location": {
+      "page": 2,
+      "x0": 37.0,
+      "top": 419.381,
+      "x1": 138.5428,
+      "bottom": 431.381
+     }
+    },
+    {
+     "ref": "C10",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "560p",
+     "location": {
+      "page": 2,
+      "x0": 37.0,
+      "top": 432.909,
+      "x1": 145.21720000000002,
+      "bottom": 444.909
+     }
+    },
+    {
+     "ref": "C17",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "560p",
+     "location": {
+      "page": 2,
+      "x0": 37.0,
+      "top": 527.605,
+      "x1": 145.21720000000002,
+      "bottom": 539.605
+     }
+    },
+    {
+     "ref": "C11",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "150n",
+     "location": {
+      "page": 2,
+      "x0": 37.0,
+      "top": 446.43699999999995,
+      "x1": 145.21720000000002,
+      "bottom": 458.43699999999995
+     }
+    },
+    {
+     "ref": "C14",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "15p",
+     "location": {
+      "page": 2,
+      "x0": 37.0,
+      "top": 487.02099999999996,
+      "x1": 138.5428,
+      "bottom": 499.02099999999996
+     }
+    },
+    {
+     "ref": "C16",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "15n",
+     "location": {
+      "page": 2,
+      "x0": 37.0,
+      "top": 514.077,
+      "x1": 138.5428,
+      "bottom": 526.077
+     }
+    },
+    {
+     "ref": "C32",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "15n",
+     "location": {
+      "page": 2,
+      "x0": 37.0,
+      "top": 730.5258,
+      "x1": 138.5428,
+      "bottom": 742.5258
+     }
+    },
+    {
+     "ref": "C18",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "4.7n",
+     "location": {
+      "page": 2,
+      "x0": 37.0,
+      "top": 541.133,
+      "x1": 138.5428,
+      "bottom": 553.133
+     }
+    },
+    {
+     "ref": "C19",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "1.5n",
+     "location": {
+      "page": 2,
+      "x0": 37.0,
+      "top": 554.6610000000001,
+      "x1": 138.5428,
+      "bottom": 566.6610000000001
+     }
+    },
+    {
+     "ref": "C21",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "82p",
+     "location": {
+      "page": 2,
+      "x0": 37.0,
+      "top": 581.717,
+      "x1": 138.5428,
+      "bottom": 593.717
+     }
+    },
+    {
+     "ref": "C22",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "2.7n",
+     "location": {
+      "page": 2,
+      "x0": 37.0,
+      "top": 595.245,
+      "x1": 138.5428,
+      "bottom": 607.245
+     }
+    },
+    {
+     "ref": "C27",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "2.7n",
+     "location": {
+      "page": 2,
+      "x0": 37.0,
+      "top": 662.886,
+      "x1": 138.5428,
+      "bottom": 674.886
+     }
+    },
+    {
+     "ref": "C24",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "18n",
+     "location": {
+      "page": 2,
+      "x0": 37.0,
+      "top": 622.302,
+      "x1": 138.5428,
+      "bottom": 634.302
+     }
+    },
+    {
+     "ref": "C25",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "27n",
+     "location": {
+      "page": 2,
+      "x0": 37.0,
+      "top": 635.83,
+      "x1": 138.5428,
+      "bottom": 647.83
+     }
+    },
+    {
+     "ref": "C29",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "390p",
+     "location": {
+      "page": 2,
+      "x0": 37.0,
+      "top": 689.9417,
+      "x1": 145.21720000000002,
+      "bottom": 701.9417
+     }
+    },
+    {
+     "ref": "C31",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "3.3n",
+     "location": {
+      "page": 2,
+      "x0": 37.0,
+      "top": 716.9978,
+      "x1": 138.5428,
+      "bottom": 728.9978
+     }
+    },
+    {
+     "ref": "C33",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "1u (25V minimum)",
+     "location": {
+      "page": 3,
+      "x0": 37.0,
+      "top": 108.23599999999999,
+      "x1": 131.8684,
+      "bottom": 120.23599999999999
+     }
+    },
+    {
+     "ref": "C100",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "100u (25V minimum)",
+     "location": {
+      "page": 3,
+      "x0": 37.0,
+      "top": 121.76400000000001,
+      "x1": 145.21720000000002,
+      "bottom": 133.764
+     }
+    },
+    {
+     "ref": "C101",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "100n",
+     "location": {
+      "page": 3,
+      "x0": 37.0,
+      "top": 135.29200000000003,
+      "x1": 145.21720000000002,
+      "bottom": 147.29200000000003
+     }
+    },
+    {
+     "ref": "C103",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "100n",
+     "location": {
+      "page": 3,
+      "x0": 37.0,
+      "top": 162.34799999999996,
+      "x1": 145.21720000000002,
+      "bottom": 174.34799999999996
+     }
+    },
+    {
+     "ref": "C104",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "100u",
+     "location": {
+      "page": 3,
+      "x0": 37.0,
+      "top": 175.87699999999995,
+      "x1": 145.21720000000002,
+      "bottom": 187.87699999999995
+     }
+    },
+    {
+     "ref": "D1",
+     "count": 1,
+     "category": "Diodes",
+     "value": "1N914",
+     "location": {
+      "page": 3,
+      "x0": 37.0,
+      "top": 216.461,
+      "x1": 153.8836,
+      "bottom": 228.461
+     }
+    },
+    {
+     "ref": "D2",
+     "count": 1,
+     "category": "Diodes",
+     "value": "1N914",
+     "location": {
+      "page": 3,
+      "x0": 37.0,
+      "top": 229.98900000000003,
+      "x1": 153.8836,
+      "bottom": 241.98900000000003
+     }
+    },
+    {
+     "ref": "D3",
+     "count": 1,
+     "category": "Diodes",
+     "value": "1N914",
+     "location": {
+      "page": 3,
+      "x0": 37.0,
+      "top": 243.51699999999994,
+      "x1": 153.8836,
+      "bottom": 255.51699999999994
+     }
+    },
+    {
+     "ref": "D4",
+     "count": 1,
+     "category": "Diodes",
+     "value": "1N914",
+     "location": {
+      "page": 3,
+      "x0": 37.0,
+      "top": 257.04499999999996,
+      "x1": 153.8836,
+      "bottom": 269.04499999999996
+     }
+    },
+    {
+     "ref": "D5",
+     "count": 1,
+     "category": "Diodes",
+     "value": "1N914",
+     "location": {
+      "page": 3,
+      "x0": 37.0,
+      "top": 270.573,
+      "x1": 153.8836,
+      "bottom": 282.573
+     }
+    },
+    {
+     "ref": "D6",
+     "count": 1,
+     "category": "Diodes",
+     "value": "1N914",
+     "location": {
+      "page": 3,
+      "x0": 37.0,
+      "top": 284.101,
+      "x1": 153.8836,
+      "bottom": 296.101
+     }
+    },
+    {
+     "ref": "D7",
+     "count": 1,
+     "category": "Diodes",
+     "value": "1N914",
+     "location": {
+      "page": 3,
+      "x0": 37.0,
+      "top": 297.62899999999996,
+      "x1": 153.8836,
+      "bottom": 309.62899999999996
+     }
+    },
+    {
+     "ref": "D100",
+     "count": 1,
+     "category": "Diodes",
+     "value": "1N5817",
+     "location": {
+      "page": 3,
+      "x0": 37.0,
+      "top": 311.157,
+      "x1": 160.55800000000002,
+      "bottom": 323.157
+     }
+    },
+    {
+     "ref": "D101",
+     "count": 1,
+     "category": "Diodes",
+     "value": "1N5817",
+     "location": {
+      "page": 3,
+      "x0": 37.0,
+      "top": 324.685,
+      "x1": 160.55800000000002,
+      "bottom": 336.685
+     }
+    },
+    {
+     "ref": "D102",
+     "count": 1,
+     "category": "Diodes",
+     "value": "1N5817",
+     "location": {
+      "page": 3,
+      "x0": 37.0,
+      "top": 338.21299999999997,
+      "x1": 160.55800000000002,
+      "bottom": 350.21299999999997
+     }
+    },
+    {
+     "ref": "LED1",
+     "count": 1,
+     "category": "Diodes",
+     "value": "3mm Green LED",
+     "location": {
+      "page": 3,
+      "x0": 37.0,
+      "top": 365.269,
+      "x1": 299.7334,
+      "bottom": 377.269
+     }
+    },
+    {
+     "ref": "LED2",
+     "count": 1,
+     "category": "Diodes",
+     "value": "3mm Red LED",
+     "location": {
+      "page": 3,
+      "x0": 37.0,
+      "top": 378.79699999999997,
+      "x1": 288.3946,
+      "bottom": 390.79699999999997
+     }
+    },
+    {
+     "ref": "LED3",
+     "count": 1,
+     "category": "Diodes",
+     "value": "3mm Red LED",
+     "location": {
+      "page": 3,
+      "x0": 37.0,
+      "top": 392.325,
+      "x1": 288.3946,
+      "bottom": 404.325
+     }
+    },
+    {
+     "ref": "LED4",
+     "count": 1,
+     "category": "Diodes",
+     "value": "3mm Red LED",
+     "location": {
+      "page": 3,
+      "x0": 37.0,
+      "top": 405.853,
+      "x1": 288.3946,
+      "bottom": 417.853
+     }
+    },
+    {
+     "ref": "Q1",
+     "count": 1,
+     "category": "Transistors",
+     "value": "J201",
+     "location": {
+      "page": 3,
+      "x0": 37.0,
+      "top": 432.909,
+      "x1": 144.5428,
+      "bottom": 444.909
+     }
+    },
+    {
+     "ref": "IC1",
+     "count": 1,
+     "category": "ICs",
+     "value": "TL072",
+     "location": {
+      "page": 3,
+      "x0": 37.0,
+      "top": 459.965,
+      "x1": 152.54680000000002,
+      "bottom": 471.965
+     }
+    },
+    {
+     "ref": "IC2",
+     "count": 1,
+     "category": "ICs",
+     "value": "TL072",
+     "location": {
+      "page": 3,
+      "x0": 37.0,
+      "top": 473.493,
+      "x1": 152.54680000000002,
+      "bottom": 485.493
+     }
+    },
+    {
+     "ref": "IC3",
+     "count": 1,
+     "category": "ICs",
+     "value": "TL072",
+     "location": {
+      "page": 3,
+      "x0": 37.0,
+      "top": 487.02099999999996,
+      "x1": 152.54680000000002,
+      "bottom": 499.02099999999996
+     }
+    },
+    {
+     "ref": "IC4",
+     "count": 1,
+     "category": "ICs",
+     "value": "TL072",
+     "location": {
+      "page": 3,
+      "x0": 37.0,
+      "top": 500.549,
+      "x1": 152.54680000000002,
+      "bottom": 512.549
+     }
+    },
+    {
+     "ref": "IC5",
+     "count": 1,
+     "category": "ICs",
+     "value": "TL072",
+     "location": {
+      "page": 3,
+      "x0": 37.0,
+      "top": 514.077,
+      "x1": 152.54680000000002,
+      "bottom": 526.077
+     }
+    },
+    {
+     "ref": "IC100",
+     "count": 1,
+     "category": "ICs",
+     "value": "TC1044SCPA",
+     "location": {
+      "page": 3,
+      "x0": 37.0,
+      "top": 527.605,
+      "x1": 193.0024,
+      "bottom": 539.605
+     }
+    },
+    {
+     "ref": "VOLUME",
+     "count": 1,
+     "category": "Potentiometers",
+     "value": "A100K",
+     "location": {
+      "page": 3,
+      "x0": 37.0,
+      "top": 554.6610000000001,
+      "x1": 154.552,
+      "bottom": 566.6610000000001
+     }
+    },
+    {
+     "ref": "TREBLE",
+     "count": 1,
+     "category": "Potentiometers",
+     "value": "B500K",
+     "location": {
+      "page": 3,
+      "x0": 37.0,
+      "top": 568.1890000000001,
+      "x1": 154.552,
+      "bottom": 580.1890000000001
+     }
+    },
+    {
+     "ref": "BASS",
+     "count": 1,
+     "category": "Potentiometers",
+     "value": "B100K",
+     "location": {
+      "page": 3,
+      "x0": 37.0,
+      "top": 581.717,
+      "x1": 154.552,
+      "bottom": 593.717
+     }
+    },
+    {
+     "ref": "GAIN",
+     "count": 1,
+     "category": "Potentiometers",
+     "value": "A1M",
+     "location": {
+      "page": 3,
+      "x0": 37.0,
+      "top": 595.245,
+      "x1": 143.19520000000003,
+      "bottom": 607.245
+     }
+    }
+   ]
+  }
+ ],
+ "boards": {
+  "IC100": [
+   {
+    "page": 0,
+    "x0": 294.29468,
+    "top": 198.82199999999995,
+    "x1": 303.65468,
+    "bottom": 216.46199999999996
+   },
+   {
+    "page": 5,
+    "x0": 302.8860000000001,
+    "top": 233.1880549999999,
+    "x1": 311.16600000000005,
+    "bottom": 250.8280549999999
+   }
+  ],
+  "D102": [
+   {
+    "page": 0,
+    "x0": 334.97468000000003,
+    "top": 198.82199999999995,
+    "x1": 344.69468,
+    "bottom": 215.38199999999995
+   }
+  ],
+  "C100": [
+   {
+    "page": 0,
+    "x0": 223.01468,
+    "top": 199.18199999999996,
+    "x1": 230.93468000000001,
+    "bottom": 215.02199999999996
+   },
+   {
+    "page": 5,
+    "x0": 231.312975,
+    "top": 233.84107999999992,
+    "x1": 239.59297500000002,
+    "bottom": 249.32107999999994
+   }
+  ],
+  "D101": [
+   {
+    "page": 0,
+    "x0": 323.45468,
+    "top": 199.18199999999996,
+    "x1": 332.81468,
+    "bottom": 214.66199999999998
+   },
+   {
+    "page": 5,
+    "x0": 331.56005999999996,
+    "top": 235.53228499999994,
+    "x1": 339.48006,
+    "bottom": 248.49228499999992
+   }
+  ],
+  "C104": [
+   {
+    "page": 0,
+    "x0": 350.81468,
+    "top": 199.18199999999996,
+    "x1": 359.09468,
+    "bottom": 215.02199999999996
+   },
+   {
+    "page": 5,
+    "x0": 359.75759999999997,
+    "top": 234.09228499999992,
+    "x1": 369.1175999999999,
+    "bottom": 249.93228499999992
+   }
+  ],
+  "R100": [
+   {
+    "page": 0,
+    "x0": 253.61468000000002,
+    "top": 199.54199999999997,
+    "x1": 261.89468,
+    "bottom": 214.66199999999998
+   },
+   {
+    "page": 5,
+    "x0": 261.19297500000005,
+    "top": 233.12107999999992,
+    "x1": 270.912975,
+    "bottom": 250.0410799999999
+   }
+  ],
+  "D100": [
+   {
+    "page": 0,
+    "x0": 265.5096,
+    "top": 200.26199999999994,
+    "x1": 272.3496,
+    "bottom": 214.30199999999996
+   },
+   {
+    "page": 5,
+    "x0": 271.8000599999999,
+    "top": 233.01228499999993,
+    "x1": 281.16005999999993,
+    "bottom": 249.57228499999994
+   }
+  ],
+  "C102": [
+   {
+    "page": 0,
+    "x0": 288.17468,
+    "top": 240.94199999999995,
+    "x1": 294.65468000000004,
+    "bottom": 255.34199999999996
+   },
+   {
+    "page": 5,
+    "x0": 295.7000197326761,
+    "top": 274.83606943457977,
+    "x1": 303.26001973267614,
+    "bottom": 289.9560694345798
+   }
+  ],
+  "C101": [
+   {
+    "page": 0,
+    "x0": 241.02960000000002,
+    "top": 243.10199999999998,
+    "x1": 257.5896,
+    "bottom": 252.82199999999995
+   }
+  ],
+  "C103": [
+   {
+    "page": 0,
+    "x0": 339.6696,
+    "top": 243.10199999999998,
+    "x1": 357.6696,
+    "bottom": 252.82199999999995
+   },
+   {
+    "page": 5,
+    "x0": 347.95297500000004,
+    "top": 277.7610799999999,
+    "x1": 365.232975,
+    "bottom": 287.4810799999999
+   }
+  ],
+  "VOLUME": [
+   {
+    "page": 0,
+    "x0": 455.21468,
+    "top": 256.42199999999997,
+    "x1": 463.85468,
+    "bottom": 281.26199999999994
+   },
+   {
+    "page": 5,
+    "x0": 462.7400197326761,
+    "top": 290.31606943457973,
+    "x1": 471.3800197326761,
+    "bottom": 315.15606943457976
+   }
+  ],
+  "TREBLE": [
+   {
+    "page": 0,
+    "x0": 355.8696,
+    "top": 256.7819999999999,
+    "x1": 365.2296,
+    "bottom": 278.74199999999996
+   },
+   {
+    "page": 5,
+    "x0": 363.3660000000001,
+    "top": 291.5080549999999,
+    "x1": 371.6460000000001,
+    "bottom": 313.46805499999994
+   }
+  ],
+  "GAIN": [
+   {
+    "page": 0,
+    "x0": 156.0696,
+    "top": 260.38199999999995,
+    "x1": 165.4296,
+    "bottom": 276.222
+   },
+   {
+    "page": 4,
+    "x0": 314.3966,
+    "top": 152.40100000000007,
+    "x1": 321.9566,
+    "bottom": 159.96100000000007
+   },
+   {
+    "page": 5,
+    "x0": 166.10001973267612,
+    "top": 294.9960694345798,
+    "x1": 174.3800197326761,
+    "bottom": 310.47606943457976
+   }
+  ],
+  "C2": [
+   {
+    "page": 0,
+    "x0": 160.3896,
+    "top": 280.90199999999993,
+    "x1": 172.9896,
+    "bottom": 290.98199999999997
+   },
+   {
+    "page": 4,
+    "x0": 518.8046,
+    "top": 129.72100000000006,
+    "x1": 521.5406,
+    "bottom": 134.04100000000005
+   },
+   {
+    "page": 5,
+    "x0": 128.99759999999998,
+    "top": 324.8122849999999,
+    "x1": 140.87759999999997,
+    "bottom": 333.45228499999996
+   }
+  ],
+  "C31": [
+   {
+    "page": 0,
+    "x0": 422.82959999999997,
+    "top": 280.90199999999993,
+    "x1": 437.2296,
+    "bottom": 290.62199999999996
+   },
+   {
+    "page": 5,
+    "x0": 145.80005999999997,
+    "top": 542.9722849999999,
+    "x1": 159.12005999999997,
+    "bottom": 551.6122849999999
+   }
+  ],
+  "C32": [
+   {
+    "page": 0,
+    "x0": 340.7496,
+    "top": 281.26199999999994,
+    "x1": 355.5096,
+    "bottom": 290.62199999999996
+   },
+   {
+    "page": 5,
+    "x0": 144.72005999999996,
+    "top": 566.0122849999999,
+    "x1": 159.48005999999995,
+    "bottom": 575.3722849999999
+   }
+  ],
+  "C9": [
+   {
+    "page": 0,
+    "x0": 242.82960000000003,
+    "top": 281.62199999999996,
+    "x1": 253.9896,
+    "bottom": 290.26199999999994
+   }
+  ],
+  "R16": [
+   {
+    "page": 0,
+    "x0": 292.1496,
+    "top": 281.98199999999997,
+    "x1": 304.7496,
+    "bottom": 290.26199999999994
+   },
+   {
+    "page": 5,
+    "x0": 411.287475,
+    "top": 497.0010799999999,
+    "x1": 423.527475,
+    "bottom": 505.64107999999993
+   }
+  ],
+  "C3": [
+   {
+    "page": 0,
+    "x0": 120.42960000000001,
+    "top": 290.26199999999994,
+    "x1": 131.58960000000002,
+    "bottom": 299.26199999999994
+   },
+   {
+    "page": 0,
+    "x0": 401.93468,
+    "top": 369.82199999999995,
+    "x1": 410.21468,
+    "bottom": 383.50199999999995
+   }
+  ],
+  "C4": [
+   {
+    "page": 0,
+    "x0": 202.14960000000002,
+    "top": 290.26199999999994,
+    "x1": 213.3096,
+    "bottom": 299.26199999999994
+   },
+   {
+    "page": 5,
+    "x0": 363.71759999999995,
+    "top": 225.81228499999992,
+    "x1": 368.0376,
+    "bottom": 230.1322849999999
+   },
+   {
+    "page": 5,
+    "x0": 350.64005999999995,
+    "top": 315.8122849999999,
+    "x1": 361.44005999999996,
+    "bottom": 324.8122849999999
+   }
+  ],
+  "C14": [
+   {
+    "page": 0,
+    "x0": 341.4696,
+    "top": 295.6619999999999,
+    "x1": 355.14959999999996,
+    "bottom": 305.38199999999995
+   },
+   {
+    "page": 5,
+    "x0": 209.75445,
+    "top": 324.6280549999999,
+    "x1": 223.43445,
+    "bottom": 333.2680549999999
+   }
+  ],
+  "C5": [
+   {
+    "page": 0,
+    "x0": 243.18959999999998,
+    "top": 296.02199999999993,
+    "x1": 254.3496,
+    "bottom": 305.02199999999993
+   }
+  ],
+  "R12": [
+   {
+    "page": 0,
+    "x0": 160.3896,
+    "top": 296.38199999999995,
+    "x1": 173.3496,
+    "bottom": 305.02199999999993
+   },
+   {
+    "page": 5,
+    "x0": 333.83759999999995,
+    "top": 357.57228499999997,
+    "x1": 343.5576,
+    "bottom": 370.8922849999999
+   }
+  ],
+  "R51": [
+   {
+    "page": 0,
+    "x0": 292.1496,
+    "top": 296.38199999999995,
+    "x1": 305.1096,
+    "bottom": 304.6619999999999
+   }
+  ],
+  "R49": [
+   {
+    "page": 0,
+    "x0": 422.46959999999996,
+    "top": 296.38199999999995,
+    "x1": 436.8696,
+    "bottom": 304.6619999999999
+   }
+  ],
+  "R102": [
+   {
+    "page": 0,
+    "x0": 467.09468,
+    "top": 321.94199999999995,
+    "x1": 475.73467999999997,
+    "bottom": 338.14199999999994
+   },
+   {
+    "page": 5,
+    "x0": 474.59759999999994,
+    "top": 356.4922849999999,
+    "x1": 482.51759999999996,
+    "bottom": 372.33228499999996
+   }
+  ],
+  "R101": [
+   {
+    "page": 0,
+    "x0": 455.57468,
+    "top": 322.30199999999996,
+    "x1": 463.85468,
+    "bottom": 337.42199999999997
+   },
+   {
+    "page": 5,
+    "x0": 461.88045,
+    "top": 357.09499999999997,
+    "x1": 471.96045000000004,
+    "bottom": 371.49499999999995
+   }
+  ],
+  "R50": [
+   {
+    "page": 0,
+    "x0": 326.69468,
+    "top": 323.02199999999993,
+    "x1": 334.97468000000003,
+    "bottom": 336.70199999999994
+   }
+  ],
+  "R54": [
+   {
+    "page": 0,
+    "x0": 349.7496,
+    "top": 323.02199999999993,
+    "x1": 358.02959999999996,
+    "bottom": 337.42199999999997
+   },
+   {
+    "page": 5,
+    "x0": 223.43445,
+    "top": 357.7480549999999,
+    "x1": 232.07445,
+    "bottom": 371.7880549999999
+   }
+  ],
+  "R53": [
+   {
+    "page": 0,
+    "x0": 361.26959999999997,
+    "top": 323.02199999999993,
+    "x1": 369.5496,
+    "bottom": 337.42199999999997
+   }
+  ],
+  "R55": [
+   {
+    "page": 0,
+    "x0": 396.89468,
+    "top": 323.02199999999993,
+    "x1": 405.17467999999997,
+    "bottom": 336.70199999999994
+   }
+  ],
+  "R21": [
+   {
+    "page": 0,
+    "x0": 338.21468,
+    "top": 323.38199999999995,
+    "x1": 346.85468000000003,
+    "bottom": 336.342
+   },
+   {
+    "page": 5,
+    "x0": 456.59759999999994,
+    "top": 454.0522849999999,
+    "x1": 465.23759999999993,
+    "bottom": 466.29228499999994
+   }
+  ],
+  "R52": [
+   {
+    "page": 0,
+    "x0": 373.14959999999996,
+    "top": 323.38199999999995,
+    "x1": 381.7896,
+    "bottom": 337.42199999999997
+   }
+  ],
+  "R37": [
+   {
+    "page": 0,
+    "x0": 385.37468,
+    "top": 323.38199999999995,
+    "x1": 393.65468,
+    "bottom": 336.70199999999994
+   },
+   {
+    "page": 5,
+    "x0": 210.95999999999998,
+    "top": 357.09499999999997,
+    "x1": 220.68,
+    "bottom": 371.49499999999995
+   }
+  ],
+  "R15": [
+   {
+    "page": 0,
+    "x0": 250.38959999999997,
+    "top": 323.74199999999996,
+    "x1": 258.3096,
+    "bottom": 336.342
+   }
+  ],
+  "IC2": [
+   {
+    "page": 0,
+    "x0": 294.65468000000004,
+    "top": 324.462,
+    "x1": 303.29468,
+    "bottom": 335.62199999999996
+   },
+   {
+    "page": 5,
+    "x0": 302.9000197326761,
+    "top": 358.35606943457975,
+    "x1": 310.8200197326761,
+    "bottom": 369.8760694345798
+   }
+  ],
+  "IC5": [
+   {
+    "page": 0,
+    "x0": 426.05467999999996,
+    "top": 324.462,
+    "x1": 434.69468,
+    "bottom": 335.62199999999996
+   },
+   {
+    "page": 4,
+    "x0": 566.7566,
+    "top": 356.88100000000003,
+    "x1": 571.7246,
+    "bottom": 362.641
+   },
+   {
+    "page": 5,
+    "x0": 433.44045,
+    "top": 358.53499999999997,
+    "x1": 441.36045,
+    "bottom": 370.41499999999996
+   }
+  ],
+  "R2": [
+   {
+    "page": 0,
+    "x0": 121.85468000000004,
+    "top": 324.82199999999995,
+    "x1": 130.49468000000002,
+    "bottom": 335.26199999999994
+   },
+   {
+    "page": 5,
+    "x0": 410.869245,
+    "top": 532.306205,
+    "x1": 424.549245,
+    "bottom": 540.2262049999999
+   },
+   {
+    "page": 5,
+    "x0": 190.96747499999998,
+    "top": 593.1210799999999,
+    "x1": 201.047475,
+    "bottom": 600.6810799999998
+   }
+  ],
+  "R4": [
+   {
+    "page": 0,
+    "x0": 133.73468000000003,
+    "top": 324.82199999999995,
+    "x1": 142.37468,
+    "bottom": 335.26199999999994
+   },
+   {
+    "page": 5,
+    "x0": 223.36747499999998,
+    "top": 357.32107999999994,
+    "x1": 232.00747499999997,
+    "bottom": 371.0010799999999
+   }
+  ],
+  "R11": [
+   {
+    "page": 0,
+    "x0": 192.77468,
+    "top": 324.82199999999995,
+    "x1": 200.33468,
+    "bottom": 334.90199999999993
+   }
+  ],
+  "R3": [
+   {
+    "page": 0,
+    "x0": 109.9896,
+    "top": 325.18199999999996,
+    "x1": 117.90960000000001,
+    "bottom": 334.5419999999999
+   }
+  ],
+  "R5": [
+   {
+    "page": 0,
+    "x0": 215.4696,
+    "top": 325.18199999999996,
+    "x1": 223.02960000000002,
+    "bottom": 334.5419999999999
+   },
+   {
+    "page": 5,
+    "x0": 431.80151425692543,
+    "top": 330.6360694345798,
+    "x1": 442.96151425692545,
+    "bottom": 339.27606943457977
+   }
+  ],
+  "R8": [
+   {
+    "page": 0,
+    "x0": 228.05468000000002,
+    "top": 325.18199999999996,
+    "x1": 235.25468,
+    "bottom": 334.90199999999993
+   },
+   {
+    "page": 5,
+    "x0": 235.44045,
+    "top": 357.09499999999997,
+    "x1": 243.36045000000001,
+    "bottom": 371.135
+   },
+   {
+    "page": 5,
+    "x0": 392.40005999999994,
+    "top": 357.21228499999995,
+    "x1": 400.32005999999996,
+    "bottom": 370.8922849999999
+   },
+   {
+    "page": 5,
+    "x0": 369.36045,
+    "top": 359.255,
+    "x1": 377.64045,
+    "bottom": 369.335
+   }
+  ],
+  "R6": [
+   {
+    "page": 0,
+    "x0": 204.29468000000003,
+    "top": 325.5419999999999,
+    "x1": 212.21468,
+    "bottom": 334.90199999999993
+   },
+   {
+    "page": 5,
+    "x0": 118.80045000000001,
+    "top": 357.455,
+    "x1": 127.08045000000004,
+    "bottom": 371.135
+   }
+  ],
+  "R7": [
+   {
+    "page": 0,
+    "x0": 239.57468,
+    "top": 325.5419999999999,
+    "x1": 247.13468,
+    "bottom": 334.90199999999993
+   },
+   {
+    "page": 5,
+    "x0": 170.75759999999997,
+    "top": 453.6922849999999,
+    "x1": 180.47759999999994,
+    "bottom": 467.73228499999993
+   },
+   {
+    "page": 5,
+    "x0": 189.47759999999994,
+    "top": 508.41228499999994,
+    "x1": 202.43759999999997,
+    "bottom": 517.052285
+   }
+  ],
+  "R9": [
+   {
+    "page": 0,
+    "x0": 262.2696,
+    "top": 325.5419999999999,
+    "x1": 269.82959999999997,
+    "bottom": 334.90199999999993
+   },
+   {
+    "page": 5,
+    "x0": 270.19297500000005,
+    "top": 357.32107999999994,
+    "x1": 278.472975,
+    "bottom": 371.0010799999999
+   },
+   {
+    "page": 5,
+    "x0": 404.03759999999994,
+    "top": 359.0122849999999,
+    "x1": 413.03759999999994,
+    "bottom": 369.8122849999999
+   },
+   {
+    "page": 5,
+    "x0": 169.03297500000002,
+    "top": 389.0010799999999,
+    "x1": 181.992975,
+    "bottom": 397.64107999999993
+   }
+  ],
+  "R14": [
+   {
+    "page": 0,
+    "x0": 160.3896,
+    "top": 355.06199999999995,
+    "x1": 173.3496,
+    "bottom": 362.98199999999997
+   },
+   {
+    "page": 5,
+    "x0": 380.62924499999997,
+    "top": 356.986205,
+    "x1": 390.709245,
+    "bottom": 371.026205
+   }
+  ],
+  "C12": [
+   {
+    "page": 0,
+    "x0": 247.50959999999998,
+    "top": 356.86199999999997,
+    "x1": 261.9096,
+    "bottom": 366.94199999999995
+   },
+   {
+    "page": 5,
+    "x0": 128.88005999999996,
+    "top": 324.8122849999999,
+    "x1": 140.76005999999995,
+    "bottom": 333.45228499999996
+   }
+  ],
+  "C7": [
+   {
+    "page": 0,
+    "x0": 201.7896,
+    "top": 357.222,
+    "x1": 213.3096,
+    "bottom": 366.222
+   }
+  ],
+  "C13": [
+   {
+    "page": 0,
+    "x0": 335.3496,
+    "top": 357.222,
+    "x1": 348.6696,
+    "bottom": 366.222
+   },
+   {
+    "page": 5,
+    "x0": 169.20005999999995,
+    "top": 315.8122849999999,
+    "x1": 181.80005999999997,
+    "bottom": 324.45228499999996
+   }
+  ],
+  "C11": [
+   {
+    "page": 0,
+    "x0": 292.8696,
+    "top": 362.98199999999997,
+    "x1": 304.7496,
+    "bottom": 371.98199999999997
+   },
+   {
+    "page": 5,
+    "x0": 270.19297500000005,
+    "top": 478.2810799999999,
+    "x1": 278.472975,
+    "bottom": 489.08107999999993
+   }
+  ],
+  "D5": [
+   {
+    "page": 0,
+    "x0": 201.7896,
+    "top": 368.74199999999996,
+    "x1": 212.9496,
+    "bottom": 377.74199999999996
+   },
+   {
+    "page": 5,
+    "x0": 210.49120499999998,
+    "top": 426.82620499999996,
+    "x1": 221.291205,
+    "bottom": 435.46620499999995
+   }
+  ],
+  "Q1": [
+   {
+    "page": 0,
+    "x0": 148.49468000000002,
+    "top": 369.102,
+    "x1": 156.77468,
+    "bottom": 377.74199999999996
+   }
+  ],
+  "C105": [
+   {
+    "page": 0,
+    "x0": 437.21468,
+    "top": 369.102,
+    "x1": 445.13468,
+    "bottom": 384.222
+   },
+   {
+    "page": 5,
+    "x0": 444.71759999999995,
+    "top": 403.2922849999999,
+    "x1": 451.19759999999997,
+    "bottom": 418.0522849999999
+   }
+  ],
+  "R19": [
+   {
+    "page": 0,
+    "x0": 248.58960000000002,
+    "top": 369.462,
+    "x1": 260.82959999999997,
+    "bottom": 377.74199999999996
+   }
+  ],
+  "R20": [
+   {
+    "page": 0,
+    "x0": 334.9896,
+    "top": 369.462,
+    "x1": 349.02959999999996,
+    "bottom": 377.74199999999996
+   },
+   {
+    "page": 5,
+    "x0": 410.232975,
+    "top": 531.2010799999999,
+    "x1": 425.71297500000003,
+    "bottom": 541.28108
+   }
+  ],
+  "R10": [
+   {
+    "page": 0,
+    "x0": 201.4296,
+    "top": 380.98199999999997,
+    "x1": 214.02960000000002,
+    "bottom": 389.26199999999994
+   },
+   {
+    "page": 5,
+    "x0": 358.2,
+    "top": 358.53499999999997,
+    "x1": 366.12,
+    "bottom": 370.41499999999996
+   }
+  ],
+  "R18": [
+   {
+    "page": 0,
+    "x0": 248.2296,
+    "top": 381.342,
+    "x1": 260.82959999999997,
+    "bottom": 389.26199999999994
+   },
+   {
+    "page": 5,
+    "x0": 408.96,
+    "top": 506.85499999999996,
+    "x1": 424.44,
+    "bottom": 518.015
+   }
+  ],
+  "R17": [
+   {
+    "page": 0,
+    "x0": 335.7096,
+    "top": 381.342,
+    "x1": 348.3096,
+    "bottom": 389.62199999999996
+   }
+  ],
+  "C10": [
+   {
+    "page": 0,
+    "x0": 292.1496,
+    "top": 383.86199999999997,
+    "x1": 305.1096,
+    "bottom": 392.50199999999995
+   }
+  ],
+  "D4": [
+   {
+    "page": 0,
+    "x0": 201.7896,
+    "top": 392.14199999999994,
+    "x1": 212.9496,
+    "bottom": 401.50199999999995
+   }
+  ],
+  "C30": [
+   {
+    "page": 0,
+    "x0": 320.57468,
+    "top": 407.26199999999994,
+    "x1": 328.49468,
+    "bottom": 421.30199999999996
+   },
+   {
+    "page": 5,
+    "x0": 144.52747499999998,
+    "top": 519.6810799999998,
+    "x1": 159.28747499999997,
+    "bottom": 528.6810799999998
+   }
+  ],
+  "C15": [
+   {
+    "page": 0,
+    "x0": 255.7896,
+    "top": 409.06199999999995,
+    "x1": 262.9896,
+    "bottom": 420.222
+   },
+   {
+    "page": 5,
+    "x0": 210.24005999999997,
+    "top": 391.4122849999999,
+    "x1": 222.48005999999995,
+    "bottom": 400.0522849999999
+   }
+  ],
+  "C8": [
+   {
+    "page": 0,
+    "x0": 228.7896,
+    "top": 410.14199999999994,
+    "x1": 239.2296,
+    "bottom": 418.7819999999999
+   },
+   {
+    "page": 5,
+    "x0": 334.60747499999997,
+    "top": 478.64107999999993,
+    "x1": 342.16747499999997,
+    "bottom": 488.7210799999999
+   }
+  ],
+  "C26": [
+   {
+    "page": 0,
+    "x0": 355.8696,
+    "top": 410.14199999999994,
+    "x1": 369.90959999999995,
+    "bottom": 418.42199999999997
+   },
+   {
+    "page": 5,
+    "x0": 255.23999999999998,
+    "top": 391.655,
+    "x1": 270.72,
+    "bottom": 401.015
+   }
+  ],
+  "C28": [
+   {
+    "page": 0,
+    "x0": 387.53468,
+    "top": 419.14199999999994,
+    "x1": 395.81468,
+    "bottom": 432.46199999999993
+   },
+   {
+    "page": 5,
+    "x0": 262.96151425692545,
+    "top": 440.43606943457974,
+    "x1": 270.88151425692547,
+    "bottom": 455.1960694345798
+   }
+  ],
+  "R44": [
+   {
+    "page": 0,
+    "x0": 449.45468,
+    "top": 419.14199999999994,
+    "x1": 458.09468,
+    "bottom": 433.542
+   },
+   {
+    "page": 5,
+    "x0": 159.64151425692546,
+    "top": 453.3960694345798,
+    "x1": 167.56151425692545,
+    "bottom": 467.43606943457974
+   }
+  ],
+  "R43": [
+   {
+    "page": 0,
+    "x0": 461.33468,
+    "top": 419.14199999999994,
+    "x1": 469.97468,
+    "bottom": 433.18199999999996
+   },
+   {
+    "page": 5,
+    "x0": 168.95759999999996,
+    "top": 330.21228499999995,
+    "x1": 182.63759999999996,
+    "bottom": 339.57228499999997
+   }
+  ],
+  "R40": [
+   {
+    "page": 0,
+    "x0": 473.21468,
+    "top": 419.14199999999994,
+    "x1": 481.49468,
+    "bottom": 433.18199999999996
+   }
+  ],
+  "RB2": [
+   {
+    "page": 0,
+    "x0": 175.13468,
+    "top": 419.50199999999995,
+    "x1": 183.41467999999998,
+    "bottom": 432.82199999999995
+   }
+  ],
+  "R36": [
+   {
+    "page": 0,
+    "x0": 414.1896,
+    "top": 419.50199999999995,
+    "x1": 422.1096,
+    "bottom": 433.18199999999996
+   },
+   {
+    "page": 5,
+    "x0": 118.56600000000006,
+    "top": 356.66805499999987,
+    "x1": 129.36600000000007,
+    "bottom": 371.4280549999999
+   }
+  ],
+  "R42": [
+   {
+    "page": 0,
+    "x0": 425.70959999999997,
+    "top": 419.50199999999995,
+    "x1": 433.9896,
+    "bottom": 433.18199999999996
+   },
+   {
+    "page": 5,
+    "x0": 209.27759999999995,
+    "top": 414.45228499999996,
+    "x1": 223.67759999999998,
+    "bottom": 423.45228499999996
+   }
+  ],
+  "R41": [
+   {
+    "page": 0,
+    "x0": 437.93468,
+    "top": 419.50199999999995,
+    "x1": 446.21468,
+    "bottom": 432.46199999999993
+   },
+   {
+    "page": 5,
+    "x0": 201.02001973267608,
+    "top": 357.9960694345798,
+    "x1": 209.3000197326761,
+    "bottom": 370.59606943457976
+   }
+  ],
+  "RB1": [
+   {
+    "page": 0,
+    "x0": 151.37468,
+    "top": 419.86199999999997,
+    "x1": 160.01468,
+    "bottom": 432.46199999999993
+   }
+  ],
+  "R13": [
+   {
+    "page": 0,
+    "x0": 163.25468,
+    "top": 420.222,
+    "x1": 171.17468000000002,
+    "bottom": 432.46199999999993
+   },
+   {
+    "page": 5,
+    "x0": 300.407475,
+    "top": 330.32107999999994,
+    "x1": 313.007475,
+    "bottom": 339.68107999999995
+   }
+  ],
+  "D1": [
+   {
+    "page": 0,
+    "x0": 115.73468000000004,
+    "top": 420.94199999999995,
+    "x1": 125.09468,
+    "bottom": 431.02199999999993
+   }
+  ],
+  "D2": [
+   {
+    "page": 0,
+    "x0": 127.61468000000004,
+    "top": 420.94199999999995,
+    "x1": 136.97467999999998,
+    "bottom": 431.74199999999996
+   },
+   {
+    "page": 5,
+    "x0": 412.20005999999995,
+    "top": 554.8522849999999,
+    "x1": 422.64005999999995,
+    "bottom": 563.4922849999999
+   }
+  ],
+  "D3": [
+   {
+    "page": 0,
+    "x0": 139.49468000000002,
+    "top": 420.94199999999995,
+    "x1": 148.49468000000002,
+    "bottom": 431.74199999999996
+   },
+   {
+    "page": 5,
+    "x0": 412.0015142569254,
+    "top": 566.4360694345797,
+    "x1": 422.80151425692543,
+    "bottom": 575.0760694345797
+   }
+  ],
+  "R33": [
+   {
+    "page": 0,
+    "x0": 226.9896,
+    "top": 427.7819999999999,
+    "x1": 241.02960000000002,
+    "bottom": 436.06199999999995
+   },
+   {
+    "page": 5,
+    "x0": 187.56,
+    "top": 565.175,
+    "x1": 203.4,
+    "bottom": 576.6949999999999
+   }
+  ],
+  "R38": [
+   {
+    "page": 0,
+    "x0": 355.5096,
+    "top": 427.7819999999999,
+    "x1": 369.5496,
+    "bottom": 436.06199999999995
+   },
+   {
+    "page": 5,
+    "x0": 247.12151425692545,
+    "top": 357.27606943457977,
+    "x1": 255.40151425692545,
+    "bottom": 370.59606943457976
+   }
+  ],
+  "R35": [
+   {
+    "page": 0,
+    "x0": 355.14959999999996,
+    "top": 438.94199999999995,
+    "x1": 369.90959999999995,
+    "bottom": 448.662
+   },
+   {
+    "page": 5,
+    "x0": 142.56,
+    "top": 357.455,
+    "x1": 149.76,
+    "bottom": 370.41499999999996
+   }
+  ],
+  "R32": [
+   {
+    "page": 0,
+    "x0": 227.69468,
+    "top": 439.662,
+    "x1": 241.01468,
+    "bottom": 447.58199999999994
+   }
+  ],
+  "C22": [
+   {
+    "page": 0,
+    "x0": 261.89468,
+    "top": 442.18199999999996,
+    "x1": 271.97468000000003,
+    "bottom": 457.662
+   }
+  ],
+  "C25": [
+   {
+    "page": 0,
+    "x0": 326.33468,
+    "top": 442.18199999999996,
+    "x1": 335.69468,
+    "bottom": 457.30199999999996
+   },
+   {
+    "page": 5,
+    "x0": 299.52,
+    "top": 397.05499999999995,
+    "x1": 315.0,
+    "bottom": 406.41499999999996
+   }
+  ],
+  "R22": [
+   {
+    "page": 0,
+    "x0": 277.01468,
+    "top": 442.90199999999993,
+    "x1": 285.65468000000004,
+    "bottom": 456.58199999999994
+   },
+   {
+    "page": 5,
+    "x0": 444.71759999999995,
+    "top": 453.3322849999999,
+    "x1": 454.07759999999996,
+    "bottom": 467.73228499999993
+   }
+  ],
+  "R23": [
+   {
+    "page": 0,
+    "x0": 312.29468,
+    "top": 442.90199999999993,
+    "x1": 320.93468,
+    "bottom": 456.58199999999994
+   },
+   {
+    "page": 5,
+    "x0": 479.52045,
+    "top": 453.215,
+    "x1": 488.88045,
+    "bottom": 468.335
+   }
+  ],
+  "C16": [
+   {
+    "page": 0,
+    "x0": 294.65468000000004,
+    "top": 443.26199999999994,
+    "x1": 303.65468,
+    "bottom": 456.58199999999994
+   },
+   {
+    "page": 5,
+    "x0": 250.56005999999996,
+    "top": 315.8122849999999,
+    "x1": 263.16005999999993,
+    "bottom": 324.45228499999996
+   }
+  ],
+  "C27": [
+   {
+    "page": 0,
+    "x0": 445.8696,
+    "top": 461.98199999999997,
+    "x1": 461.70959999999997,
+    "bottom": 472.06199999999995
+   },
+   {
+    "page": 5,
+    "x0": 343.632975,
+    "top": 391.8810799999999,
+    "x1": 356.95297500000004,
+    "bottom": 400.5210799999999
+   }
+  ],
+  "C19": [
+   {
+    "page": 0,
+    "x0": 137.3496,
+    "top": 462.3419999999999,
+    "x1": 149.9496,
+    "bottom": 471.3419999999999
+   },
+   {
+    "page": 5,
+    "x0": 298.967475,
+    "top": 416.0010799999999,
+    "x1": 313.367475,
+    "bottom": 426.8010799999999
+   }
+  ],
+  "R29": [
+   {
+    "page": 0,
+    "x0": 180.89468,
+    "top": 462.3419999999999,
+    "x1": 194.57468,
+    "bottom": 471.3419999999999
+   },
+   {
+    "page": 5,
+    "x0": 235.67445,
+    "top": 461.4280549999999,
+    "x1": 249.71445,
+    "bottom": 470.4280549999999
+   }
+  ],
+  "R48": [
+   {
+    "page": 0,
+    "x0": 402.3096,
+    "top": 462.70199999999994,
+    "x1": 416.34959999999995,
+    "bottom": 471.3419999999999
+   }
+  ],
+  "IC4": [
+   {
+    "page": 0,
+    "x0": 359.09468,
+    "top": 467.02199999999993,
+    "x1": 367.37468,
+    "bottom": 479.26199999999994
+   },
+   {
+    "page": 5,
+    "x0": 367.0015142569254,
+    "top": 501.27606943457977,
+    "x1": 373.84151425692545,
+    "bottom": 512.0760694345797
+   }
+  ],
+  "IC3": [
+   {
+    "page": 0,
+    "x0": 230.21468,
+    "top": 467.38199999999995,
+    "x1": 238.49468000000002,
+    "bottom": 479.26199999999994
+   },
+   {
+    "page": 4,
+    "x0": 686.9966000000001,
+    "top": 132.24100000000004,
+    "x1": 691.7486,
+    "bottom": 138.00100000000006
+   },
+   {
+    "page": 5,
+    "x0": 239.04045000000002,
+    "top": 502.53499999999997,
+    "x1": 245.52045000000004,
+    "bottom": 511.895
+   }
+  ],
+  "R26": [
+   {
+    "page": 0,
+    "x0": 180.89468,
+    "top": 474.2219999999999,
+    "x1": 194.93468000000001,
+    "bottom": 482.86199999999997
+   },
+   {
+    "page": 5,
+    "x0": 118.44005999999996,
+    "top": 357.21228499999995,
+    "x1": 127.08005999999996,
+    "bottom": 370.8922849999999
+   },
+   {
+    "page": 5,
+    "x0": 363.491205,
+    "top": 472.546205,
+    "x1": 377.891205,
+    "bottom": 482.26620499999996
+   }
+  ],
+  "R46": [
+   {
+    "page": 0,
+    "x0": 402.3096,
+    "top": 474.58199999999994,
+    "x1": 416.34959999999995,
+    "bottom": 482.86199999999997
+   },
+   {
+    "page": 5,
+    "x0": 258.12,
+    "top": 356.375,
+    "x1": 267.48,
+    "bottom": 371.49499999999995
+   }
+  ],
+  "C24": [
+   {
+    "page": 0,
+    "x0": 326.33468,
+    "top": 483.2219999999999,
+    "x1": 335.69468,
+    "bottom": 498.3419999999999
+   }
+  ],
+  "C17": [
+   {
+    "page": 0,
+    "x0": 136.6296,
+    "top": 485.38199999999995,
+    "x1": 150.3096,
+    "bottom": 495.46199999999993
+   },
+   {
+    "page": 5,
+    "x0": 196.67759999999998,
+    "top": 455.85228499999994,
+    "x1": 203.87759999999997,
+    "bottom": 465.5722849999999
+   }
+  ],
+  "R45": [
+   {
+    "page": 0,
+    "x0": 402.65468,
+    "top": 485.38199999999995,
+    "x1": 417.41468,
+    "bottom": 494.74199999999996
+   },
+   {
+    "page": 5,
+    "x0": 182.16005999999996,
+    "top": 452.97228499999994,
+    "x1": 191.52005999999994,
+    "bottom": 467.73228499999993
+   }
+  ],
+  "C29": [
+   {
+    "page": 0,
+    "x0": 446.2296,
+    "top": 485.38199999999995,
+    "x1": 460.9896,
+    "bottom": 495.46199999999993
+   }
+  ],
+  "R27": [
+   {
+    "page": 0,
+    "x0": 180.18959999999998,
+    "top": 486.102,
+    "x1": 194.58960000000002,
+    "bottom": 494.38199999999995
+   },
+   {
+    "page": 5,
+    "x0": 363.407475,
+    "top": 531.9210799999998,
+    "x1": 377.087475,
+    "bottom": 539.8410799999999
+   }
+  ],
+  "R28": [
+   {
+    "page": 0,
+    "x0": 180.89468,
+    "top": 497.98199999999997,
+    "x1": 194.93468000000001,
+    "bottom": 506.26199999999994
+   }
+  ],
+  "R31": [
+   {
+    "page": 0,
+    "x0": 228.05468000000002,
+    "top": 497.98199999999997,
+    "x1": 240.65467999999998,
+    "bottom": 506.26199999999994
+   },
+   {
+    "page": 5,
+    "x0": 236.327475,
+    "top": 531.2010799999999,
+    "x1": 248.927475,
+    "bottom": 540.56108
+   }
+  ],
+  "R34": [
+   {
+    "page": 0,
+    "x0": 356.21468,
+    "top": 497.98199999999997,
+    "x1": 370.25468,
+    "bottom": 506.26199999999994
+   },
+   {
+    "page": 5,
+    "x0": 224.08151425692546,
+    "top": 357.27606943457977,
+    "x1": 231.64151425692543,
+    "bottom": 370.9560694345798
+   }
+  ],
+  "R47": [
+   {
+    "page": 0,
+    "x0": 402.3096,
+    "top": 497.98199999999997,
+    "x1": 416.34959999999995,
+    "bottom": 506.26199999999994
+   },
+   {
+    "page": 5,
+    "x0": 298.967475,
+    "top": 315.20107999999993,
+    "x1": 313.72747499999997,
+    "bottom": 326.0010799999999
+   }
+  ],
+  "C18": [
+   {
+    "page": 0,
+    "x0": 136.9896,
+    "top": 509.50199999999995,
+    "x1": 149.9496,
+    "bottom": 518.1419999999999
+   },
+   {
+    "page": 5,
+    "x0": 236.327475,
+    "top": 443.7210799999999,
+    "x1": 248.927475,
+    "bottom": 452.7210799999999
+   }
+  ],
+  "R25": [
+   {
+    "page": 0,
+    "x0": 180.18959999999998,
+    "top": 509.86199999999997,
+    "x1": 194.2296,
+    "bottom": 518.1419999999999
+   },
+   {
+    "page": 5,
+    "x0": 364.446,
+    "top": 460.3480549999999,
+    "x1": 378.846,
+    "bottom": 470.4280549999999
+   }
+  ],
+  "R39": [
+   {
+    "page": 0,
+    "x0": 402.6696,
+    "top": 509.86199999999997,
+    "x1": 416.34959999999995,
+    "bottom": 518.1419999999999
+   },
+   {
+    "page": 5,
+    "x0": 270.36006,
+    "top": 357.21228499999995,
+    "x1": 278.28005999999993,
+    "bottom": 370.8922849999999
+   }
+  ],
+  "D6": [
+   {
+    "page": 0,
+    "x0": 403.7496,
+    "top": 520.6619999999999,
+    "x1": 414.90959999999995,
+    "bottom": 530.0219999999999
+   }
+  ],
+  "R24": [
+   {
+    "page": 0,
+    "x0": 179.8296,
+    "top": 521.382,
+    "x1": 194.2296,
+    "bottom": 530.0219999999999
+   },
+   {
+    "page": 5,
+    "x0": 410.20151425692546,
+    "top": 543.0360694345798,
+    "x1": 424.60151425692544,
+    "bottom": 552.3960694345798
+   }
+  ],
+  "C20": [
+   {
+    "page": 0,
+    "x0": 136.2696,
+    "top": 532.182,
+    "x1": 150.6696,
+    "bottom": 542.262
+   }
+  ],
+  "D7": [
+   {
+    "page": 0,
+    "x0": 403.7496,
+    "top": 532.5419999999999,
+    "x1": 414.90959999999995,
+    "bottom": 542.262
+   }
+  ],
+  "R30": [
+   {
+    "page": 0,
+    "x0": 180.89468,
+    "top": 532.9019999999999,
+    "x1": 194.93468000000001,
+    "bottom": 541.5419999999999
+   },
+   {
+    "page": 5,
+    "x0": 235.24151425692546,
+    "top": 472.83606943457977,
+    "x1": 249.64151425692543,
+    "bottom": 481.83606943457977
+   }
+  ],
+  "R1": [
+   {
+    "page": 0,
+    "x0": 183.0696,
+    "top": 559.5419999999999,
+    "x1": 192.0696,
+    "bottom": 567.8219999999999
+   },
+   {
+    "page": 5,
+    "x0": 200.27759999999995,
+    "top": 357.57228499999997,
+    "x1": 208.91759999999994,
+    "bottom": 370.8922849999999
+   },
+   {
+    "page": 5,
+    "x0": 131.16600000000008,
+    "top": 359.54805499999986,
+    "x1": 138.36600000000007,
+    "bottom": 368.54805499999986
+   },
+   {
+    "page": 5,
+    "x0": 422.7660000000001,
+    "top": 454.9480549999999,
+    "x1": 430.326,
+    "bottom": 466.1080549999999
+   }
+  ],
+  "C1": [
+   {
+    "page": 0,
+    "x0": 182.70960000000002,
+    "top": 576.1019999999999,
+    "x1": 193.14960000000002,
+    "bottom": 585.8219999999999
+   },
+   {
+    "page": 5,
+    "x0": 191.05120499999998,
+    "top": 610.426205,
+    "x1": 201.131205,
+    "bottom": 619.066205
+   }
+  ],
+  "BASS": [
+   {
+    "page": 5,
+    "x0": 265.069245,
+    "top": 294.70620499999995,
+    "x1": 273.349245,
+    "bottom": 311.986205
+   }
+  ],
+  "C6": [
+   {
+    "page": 5,
+    "x0": 395.0600197326761,
+    "top": 455.91606943457975,
+    "x1": 401.9000197326761,
+    "bottom": 464.91606943457975
+   }
+  ]
+ }
+}

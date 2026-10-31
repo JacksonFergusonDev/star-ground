@@ -1,0 +1,145 @@
+{
+ "id": "tonepad-orangesqueezer",
+ "publisher": "tonepad",
+ "title": "Naranjito",
+ "document": "https://tonepad.com/getFile.asp?id=11",
+ "page": "https://tonepad.com/project.asp?id=5",
+ "file_name": "tonepad_orangesqueezer.pdf",
+ "sha256": "5844b78754b60d21d85c36e0ebbd3f4c1e8e273803881ff719f961bb9a0bdd23",
+ "checked": "2026-10-31T05:50:00+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "IC1",
+     "count": 1,
+     "category": "ICs",
+     "value": "4558",
+     "location": {
+      "page": 0,
+      "x0": 161.4254,
+      "top": 441.75539999999984,
+      "x1": 217.4667,
+      "bottom": 453.75539999999984
+     }
+    },
+    {
+     "ref": null,
+     "count": 3,
+     "category": "Resistors",
+     "value": "470k",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 2,
+     "category": "Capacitors",
+     "value": "47n",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Resistors",
+     "value": "100k",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Capacitors",
+     "value": "2.2n",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Resistors",
+     "value": "10k",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 4,
+     "category": "Capacitors",
+     "value": "4.7u",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Resistors",
+     "value": "4.7M",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Resistors",
+     "value": "390k",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 2,
+     "category": "Transistors",
+     "value": "2N5457",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Resistors",
+     "value": "220k",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Resistors",
+     "value": "1.5k",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Diodes",
+     "value": "1N100",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Resistors",
+     "value": "82k",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Resistors",
+     "value": "2.4k",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Potentiometers",
+     "value": "10k lin.",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Potentiometers",
+     "value": "10k log.",
+     "location": null
+    }
+   ]
+  }
+ ],
+ "boards": {}
+}

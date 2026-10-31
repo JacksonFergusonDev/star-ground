@@ -1,0 +1,193 @@
+{
+ "id": "tonepad-pedalpower",
+ "publisher": "tonepad",
+ "title": "Adjustable Pedalboard Power",
+ "document": "https://tonepad.com/getFile.asp?id=111",
+ "page": "https://tonepad.com/project.asp?id=59",
+ "file_name": "tonepad_pedalpower.pdf",
+ "sha256": "ad39bca156921e55d70a8c2deff18af926a2226b973f30d69605a0bfe1193dae",
+ "checked": "2026-10-31T05:50:36+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "D1",
+     "count": 1,
+     "category": "Diodes",
+     "value": "1N4002",
+     "location": {
+      "page": 0,
+      "x0": 270.4961,
+      "top": 482.72589999999997,
+      "x1": 349.1847,
+      "bottom": 494.72589999999997
+     }
+    },
+    {
+     "ref": "D2",
+     "count": 1,
+     "category": "Diodes",
+     "value": "1N4002",
+     "location": {
+      "page": 0,
+      "x0": 270.4961,
+      "top": 482.72589999999997,
+      "x1": 349.1847,
+      "bottom": 494.72589999999997
+     }
+    },
+    {
+     "ref": "D3",
+     "count": 1,
+     "category": "Diodes",
+     "value": "1N4002",
+     "location": {
+      "page": 0,
+      "x0": 270.4961,
+      "top": 482.72589999999997,
+      "x1": 349.1847,
+      "bottom": 494.72589999999997
+     }
+    },
+    {
+     "ref": "D4",
+     "count": 1,
+     "category": "Diodes",
+     "value": "1N4002",
+     "location": {
+      "page": 0,
+      "x0": 270.4961,
+      "top": 482.72589999999997,
+      "x1": 349.1847,
+      "bottom": 494.72589999999997
+     }
+    },
+    {
+     "ref": "D5",
+     "count": 1,
+     "category": "Diodes",
+     "value": "1N4002",
+     "location": {
+      "page": 0,
+      "x0": 270.4961,
+      "top": 482.72589999999997,
+      "x1": 349.1847,
+      "bottom": 494.72589999999997
+     }
+    },
+    {
+     "ref": "D6",
+     "count": 1,
+     "category": "Diodes",
+     "value": "1N4002",
+     "location": {
+      "page": 0,
+      "x0": 270.4961,
+      "top": 482.72589999999997,
+      "x1": 349.1847,
+      "bottom": 494.72589999999997
+     }
+    },
+    {
+     "ref": "IC1",
+     "count": 1,
+     "category": "ICs",
+     "value": "LM317 w/heatsink",
+     "location": {
+      "page": 0,
+      "x0": 270.4961,
+      "top": 496.13179999999994,
+      "x1": 396.533,
+      "bottom": 508.13179999999994
+     }
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Resistors",
+     "value": "240",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 2,
+     "category": "Capacitors",
+     "value": "470u",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Resistors",
+     "value": "1k",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Capacitors",
+     "value": "10u",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Potentiometers",
+     "value": "1k",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Capacitors",
+     "value": "47u",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 5,
+     "category": "Hardware/Misc",
+     "value": "DC Jacks",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 2,
+     "category": "Capacitors",
+     "value": "100n",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Transformers",
+     "value": "12VAC transformer",
+     "location": null
+    }
+   ]
+  }
+ ],
+ "boards": {
+  "D5": [
+   {
+    "page": 0,
+    "x0": 337.6621,
+    "top": 601.7262000000001,
+    "x1": 346.6081,
+    "bottom": 608.7262000000001
+   }
+  ],
+  "D6": [
+   {
+    "page": 0,
+    "x0": 399.486,
+    "top": 644.9262,
+    "x1": 408.43199999999996,
+    "bottom": 651.9262
+   }
+  ]
+ }
+}

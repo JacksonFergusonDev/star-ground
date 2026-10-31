@@ -1,0 +1,190 @@
+{
+ "id": "tonepad-rat",
+ "publisher": "tonepad",
+ "title": "La Rata",
+ "document": "https://tonepad.com/getFile.asp?id=89",
+ "page": "https://tonepad.com/project.asp?id=45",
+ "file_name": "tonepad_rat.pdf",
+ "sha256": "dc57d57212327ac4a90b19e3e57e038f5d4d7fc5da7eb1a16033a91a570d0e6c",
+ "checked": "2026-10-31T06:42:35+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "IC1",
+     "count": 1,
+     "category": "ICs",
+     "value": "LM308",
+     "location": {
+      "page": 0,
+      "x0": 269.4254,
+      "top": 402.53119999999996,
+      "x1": 335.44200000000006,
+      "bottom": 414.53119999999996
+     }
+    },
+    {
+     "ref": null,
+     "count": 2,
+     "category": "Resistors",
+     "value": "47",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Capacitors",
+     "value": "30p",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Transistors",
+     "value": "2N5458",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Resistors",
+     "value": "560",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Capacitors",
+     "value": "100p",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 2,
+     "category": "Resistors",
+     "value": "1k",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Capacitors",
+     "value": "1n",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Resistors",
+     "value": "1.5k",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Capacitors",
+     "value": "3.3n",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Resistors",
+     "value": "10k",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Capacitors",
+     "value": "10n",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 2,
+     "category": "Diodes",
+     "value": "1N914",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 2,
+     "category": "Resistors",
+     "value": "100k",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 2,
+     "category": "Capacitors",
+     "value": "22n",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Diodes",
+     "value": "1N4002",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 3,
+     "category": "Resistors",
+     "value": "1M",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 2,
+     "category": "Capacitors",
+     "value": "1u",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Capacitors",
+     "value": "2.2u",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 2,
+     "category": "Capacitors",
+     "value": "4.7u",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 3,
+     "category": "Potentiometers",
+     "value": "100k Log.",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Capacitors",
+     "value": "100u",
+     "location": null
+    }
+   ]
+  }
+ ],
+ "boards": {
+  "IC1": [
+   {
+    "page": 0,
+    "x0": 262.4006,
+    "top": 652.1857,
+    "x1": 273.2926,
+    "bottom": 659.1857
+   }
+  ]
+ }
+}

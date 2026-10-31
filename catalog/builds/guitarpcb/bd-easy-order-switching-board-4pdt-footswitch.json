@@ -1,0 +1,141 @@
+{
+ "id": "bd-easy-order-switching-board-4pdt-footswitch",
+ "publisher": "guitarpcb",
+ "title": "bd-easy-order-switching-board-4pdt-footswitch",
+ "document": "https://guitarpcb.com/wp-content/uploads/2018/06/BD_Easy-Order-Switching-Board-4PDT-Footswitch.pdf",
+ "page": "https://guitarpcb.com/community/topic/direct-build-document-link-list/",
+ "file_name": "BD_Easy-Order-Switching-Board-4PDT-Footswitch.pdf",
+ "sha256": "583414dcc204c322af806eeb32883e9fb74778df32097548bdaa7ac34e5dd60c",
+ "checked": "2026-10-31T06:19:08+00:00",
+ "read_by_ocr": false,
+ "verified": false,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "R1",
+     "count": 1,
+     "category": "Resistors",
+     "value": "1.8k - CLR",
+     "location": {
+      "page": 0,
+      "x0": 246.119901552,
+      "top": 615.5986737605588,
+      "x1": 293.4354128474189,
+      "bottom": 624.9586737605588
+     }
+    },
+    {
+     "ref": "D1",
+     "count": 1,
+     "category": "Diodes",
+     "value": "CA Bi-colour LED",
+     "location": {
+      "page": 0,
+      "x0": 246.119901552,
+      "top": 630.7186677125587,
+      "x1": 358.11468392445147,
+      "bottom": 640.0786677125587
+     }
+    },
+    {
+     "ref": "DA",
+     "count": 1,
+     "category": "Diodes",
+     "value": "LED",
+     "location": {
+      "page": 0,
+      "x0": 246.119901552,
+      "top": 645.7186617125587,
+      "x1": 296.4266091659556,
+      "bottom": 655.0786617125588
+     }
+    },
+    {
+     "ref": "DB",
+     "count": 1,
+     "category": "Diodes",
+     "value": "LED",
+     "location": {
+      "page": 0,
+      "x0": 246.119901552,
+      "top": 660.7186557125588,
+      "x1": 296.4266126282451,
+      "bottom": 670.0786557125588
+     }
+    },
+    {
+     "ref": "SW1",
+     "count": 1,
+     "category": "Switches",
+     "value": "4PDT Footswitch",
+     "location": {
+      "page": 0,
+      "x0": 246.119901552,
+      "top": 675.8386496645587,
+      "x1": 349.7153373978358,
+      "bottom": 685.1986496645587
+     }
+    }
+   ]
+  }
+ ],
+ "boards": {
+  "DB": [
+   {
+    "page": 0,
+    "x0": 234.71999999999997,
+    "top": 188.7600000000001,
+    "x1": 252.0,
+    "bottom": 202.0800000000001
+   },
+   {
+    "page": 2,
+    "x0": 266.4,
+    "top": 125.64000000000007,
+    "x1": 275.4,
+    "bottom": 132.84000000000006
+   }
+  ],
+  "DA": [
+   {
+    "page": 0,
+    "x0": 366.84,
+    "top": 188.7600000000001,
+    "x1": 384.12,
+    "bottom": 202.0800000000001
+   },
+   {
+    "page": 2,
+    "x0": 330.48,
+    "top": 125.28000000000007,
+    "x1": 340.19999999999993,
+    "bottom": 132.84000000000006
+   }
+  ],
+  "R1": [
+   {
+    "page": 0,
+    "x0": 239.04,
+    "top": 210.0000000000001,
+    "x1": 255.59999999999997,
+    "bottom": 222.9600000000001
+   },
+   {
+    "page": 0,
+    "x0": 350.03999999999996,
+    "top": 429.35999999999996,
+    "x1": 362.64,
+    "bottom": 438.0
+   },
+   {
+    "page": 2,
+    "x0": 267.84,
+    "top": 135.00000000000006,
+    "x1": 277.2,
+    "bottom": 142.92000000000007
+   }
+  ]
+ }
+}

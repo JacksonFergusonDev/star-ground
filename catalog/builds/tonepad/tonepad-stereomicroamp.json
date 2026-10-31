@@ -1,0 +1,161 @@
+{
+ "id": "tonepad-stereomicroamp",
+ "publisher": "tonepad",
+ "title": "Stereo IC Amp",
+ "document": "https://tonepad.com/getFile.asp?id=51",
+ "page": "https://tonepad.com/project.asp?id=28",
+ "file_name": "tonepad_stereomicroamp.pdf",
+ "sha256": "782b96505efe9917d9ed05afc95ccacc6e1f7b562d1e54479b83704c29972397",
+ "checked": "2026-10-31T06:24:08+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "D1",
+     "count": 1,
+     "category": "Diodes",
+     "value": "1N4001",
+     "location": {
+      "page": 0,
+      "x0": 406.22569999999996,
+      "top": 433.5591999999999,
+      "x1": 474.2537,
+      "bottom": 445.5591999999999
+     }
+    },
+    {
+     "ref": "IC1",
+     "count": 1,
+     "category": "ICs",
+     "value": "4558",
+     "location": {
+      "page": 0,
+      "x0": 406.22569999999996,
+      "top": 460.3703999999999,
+      "x1": 462.2537,
+      "bottom": 472.3703999999999
+     }
+    },
+    {
+     "ref": null,
+     "count": 2,
+     "category": "Resistors",
+     "value": "22M",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 2,
+     "category": "Capacitors",
+     "value": "10n",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 2,
+     "category": "Resistors",
+     "value": "10M",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Capacitors",
+     "value": "22u",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 2,
+     "category": "Resistors",
+     "value": "1k",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 2,
+     "category": "Capacitors",
+     "value": "15u",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 2,
+     "category": "Resistors",
+     "value": "100k",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 2,
+     "category": "Capacitors",
+     "value": "4.7u",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 2,
+     "category": "Resistors",
+     "value": "2.7k",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 2,
+     "category": "Capacitors",
+     "value": "51p",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 2,
+     "category": "Resistors",
+     "value": "56k",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 2,
+     "category": "Resistors",
+     "value": "10k",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 2,
+     "category": "Resistors",
+     "value": "470",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 2,
+     "category": "Potentiometers",
+     "value": "500kC (Rev. Log.)",
+     "location": null
+    }
+   ]
+  }
+ ],
+ "boards": {
+  "IC1": [
+   {
+    "page": 0,
+    "x0": 240.8006,
+    "top": 529.7857,
+    "x1": 251.6926,
+    "bottom": 536.7857
+   },
+   {
+    "page": 0,
+    "x0": 240.8006,
+    "top": 659.3857,
+    "x1": 251.6926,
+    "bottom": 666.3857
+   }
+  ]
+ }
+}

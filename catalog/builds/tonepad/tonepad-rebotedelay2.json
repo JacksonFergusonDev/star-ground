@@ -1,0 +1,213 @@
+{
+ "id": "tonepad-rebotedelay2",
+ "publisher": "tonepad",
+ "title": "Rebote 2 Delay",
+ "document": "https://tonepad.com/getFile.asp?id=50",
+ "page": "https://tonepad.com/project.asp?id=27",
+ "file_name": "tonepad_rebotedelay2.pdf",
+ "sha256": "cafa1a0b3e1dd98addfabfcb677fc562e458b7a92cd85740e863432ce8f28395",
+ "checked": "2026-10-31T06:23:36+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "IC1",
+     "count": 1,
+     "category": "ICs",
+     "value": "PT2399",
+     "location": {
+      "page": 0,
+      "x0": 270.4961,
+      "top": 381.92589999999996,
+      "x1": 341.87160000000006,
+      "bottom": 393.92589999999996
+     }
+    },
+    {
+     "ref": "IC2",
+     "count": 1,
+     "category": "ICs",
+     "value": "TL072",
+     "location": {
+      "page": 0,
+      "x0": 270.4961,
+      "top": 395.33179999999993,
+      "x1": 333.86650000000003,
+      "bottom": 407.33179999999993
+     }
+    },
+    {
+     "ref": "IC3",
+     "count": 1,
+     "category": "ICs",
+     "value": "5v Reg",
+     "location": {
+      "page": 0,
+      "x0": 270.4961,
+      "top": 408.7376999999999,
+      "x1": 337.86330000000004,
+      "bottom": 420.7376999999999
+     }
+    },
+    {
+     "ref": null,
+     "count": 2,
+     "category": "Resistors",
+     "value": "1M",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Capacitors",
+     "value": "100u",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Resistors",
+     "value": "510k",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 3,
+     "category": "Capacitors",
+     "value": "47u",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Resistors",
+     "value": "330k",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 5,
+     "category": "Capacitors",
+     "value": "1u",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Resistors",
+     "value": "100k",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 3,
+     "category": "Capacitors",
+     "value": "100n",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Resistors",
+     "value": "22k",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 3,
+     "category": "Capacitors",
+     "value": "82n",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 3,
+     "category": "Resistors",
+     "value": "15k",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 2,
+     "category": "Capacitors",
+     "value": "10n",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 2,
+     "category": "Potentiometers",
+     "value": "100k lin.",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 7,
+     "category": "Resistors",
+     "value": "10k",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Capacitors",
+     "value": "27n",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Potentiometers",
+     "value": "50k lin.",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Resistors",
+     "value": "12k",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 2,
+     "category": "Capacitors",
+     "value": "2.7n",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Resistors",
+     "value": "4.7k",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Capacitors",
+     "value": "100p",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 2,
+     "category": "Resistors",
+     "value": "1k",
+     "location": null
+    },
+    {
+     "ref": null,
+     "count": 1,
+     "category": "Capacitors",
+     "value": "5p",
+     "location": null
+    }
+   ]
+  }
+ ],
+ "boards": {}
+}

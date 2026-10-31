@@ -1,0 +1,188 @@
+{
+ "id": "the-test-rig",
+ "publisher": "guitarpcb",
+ "title": "the-test-rig",
+ "document": "https://guitarpcb.com/wp-content/uploads/2023/12/The-Test-Rig.pdf",
+ "page": "https://guitarpcb.com/product/new-guitarpcb-test-rig/",
+ "file_name": "The-Test-Rig.pdf",
+ "sha256": "c023fd8d9320d168d88318d74f5632ab9d57ccc006a5144c99ccdc9818c522a1",
+ "checked": "2026-10-31T07:05:40+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "R2",
+     "count": 1,
+     "category": "Resistors",
+     "value": "CLR - 1k8 (Bright) to 4k7 (Dimmer)",
+     "location": {
+      "page": 0,
+      "x0": 227.6984383436,
+      "top": 420.55303840473374,
+      "x1": 377.329363844589,
+      "bottom": 428.21303840473377
+     }
+    },
+    {
+     "ref": "SAG",
+     "count": 1,
+     "category": "Potentiometers",
+     "value": "B10k 9mm Pot w/ Plastic sleeve",
+     "location": {
+      "page": 0,
+      "x0": 225.1330582366,
+      "top": 440.9909087652637,
+      "x1": 373.69496330858715,
+      "bottom": 448.65090876526375
+     }
+    },
+    {
+     "ref": "SW1",
+     "count": 1,
+     "category": "Switches",
+     "value": "3PDT Foot Switch - Solder Lug",
+     "location": {
+      "page": 0,
+      "x0": 224.7084435982,
+      "top": 461.43585840198375,
+      "x1": 370.46971436123704,
+      "bottom": 469.0958584019838
+     }
+    },
+    {
+     "ref": "IN JACK",
+     "count": 1,
+     "category": "Hardware/Misc",
+     "value": "6.35mm 1/4\" Enclosed Jack",
+     "location": {
+      "page": 0,
+      "x0": 219.6130679374,
+      "top": 481.87372876251374,
+      "x1": 366.66789181176944,
+      "bottom": 489.53372876251376
+     }
+    },
+    {
+     "ref": "OUT JACK",
+     "count": 1,
+     "category": "Hardware/Misc",
+     "value": "6.35mm 1/4\" Enclosed Jack",
+     "location": {
+      "page": 0,
+      "x0": 216.1984585536,
+      "top": 492.10611456753975,
+      "x1": 366.66789181176944,
+      "bottom": 499.7661145675398
+     }
+    },
+    {
+     "ref": "R1",
+     "count": 1,
+     "category": "Resistors",
+     "value": "2k",
+     "location": {
+      "page": 0,
+      "x0": 227.6984383436,
+      "top": 410.33764286256377,
+      "x1": 326.7192620172674,
+      "bottom": 417.9976428625638
+     }
+    },
+    {
+     "ref": "DC Power",
+     "count": 1,
+     "category": "Hardware/Misc",
+     "value": "2.1MM DC",
+     "location": {
+      "page": 0,
+      "x0": 216.1984585536,
+      "top": 512.5475245661647,
+      "x1": 339.8420128015726,
+      "bottom": 520.2075245661647
+     }
+    },
+    {
+     "ref": "D1",
+     "count": 1,
+     "category": "Diodes",
+     "value": "Common Anode BiColor Status LED",
+     "location": {
+      "page": 0,
+      "x0": 227.6984383436,
+      "top": 532.9889345647898,
+      "x1": 379.3616933499076,
+      "bottom": 540.6489345647898
+     }
+    },
+    {
+     "ref": "CONN1",
+     "count": 1,
+     "category": "Hardware/Misc",
+     "value": "4 WAY Speaker Terminal (spring)",
+     "location": {
+      "page": 0,
+      "x0": 220.0376825758,
+      "top": 553.4300613923672,
+      "x1": 375.2370044447666,
+      "bottom": 561.0900613923671
+     }
+    }
+   ]
+  }
+ ],
+ "boards": {
+  "R2": [
+   {
+    "page": 1,
+    "x0": 298.2,
+    "top": 216.56000000000006,
+    "x1": 311.15999999999997,
+    "bottom": 225.56000000000006
+   }
+  ],
+  "SAG": [
+   {
+    "page": 1,
+    "x0": 239.88,
+    "top": 223.76000000000008,
+    "x1": 257.52,
+    "bottom": 232.76000000000008
+   },
+   {
+    "page": 1,
+    "x0": 244.96999999999997,
+    "top": 476.42,
+    "x1": 251.81,
+    "bottom": 487.94000000000005
+   },
+   {
+    "page": 1,
+    "x0": 278.45,
+    "top": 493.70000000000005,
+    "x1": 284.92999999999995,
+    "bottom": 505.94000000000005
+   }
+  ],
+  "D1": [
+   {
+    "page": 1,
+    "x0": 328.79999999999995,
+    "top": 244.2800000000001,
+    "x1": 341.76,
+    "bottom": 254.36000000000007
+   }
+  ],
+  "R1": [
+   {
+    "page": 1,
+    "x0": 246.36,
+    "top": 251.8400000000001,
+    "x1": 255.0,
+    "bottom": 261.56000000000006
+   }
+  ]
+ }
+}

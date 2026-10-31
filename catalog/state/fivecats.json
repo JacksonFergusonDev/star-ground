@@ -1,0 +1,3439 @@
+{
+ "documents": {
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2021/06/FCP-9V-Voltage-Convertor-Insert.pdf": {
+   "boards": 0,
+   "checked": "2026-10-31T06:02:36+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": "Wed, 02 Jun 2021 16:28:39 GMT",
+   "outcome": "not clean",
+   "parts": "2ea46889297d25bf3210185056d14f3ebe427cf49476597dc2f29000eb340e52",
+   "reason": "no parts were read",
+   "sha256": "103daba6823eb72c0f6c2758d3518b0d055f3afbe8111556a42f991a42f8420e",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2021/06/FCP-BBBoost-insert.pdf": {
+   "boards": 0,
+   "checked": "2026-10-31T06:02:55+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": "Wed, 02 Jun 2021 16:03:14 GMT",
+   "outcome": "not clean",
+   "parts": "2ea46889297d25bf3210185056d14f3ebe427cf49476597dc2f29000eb340e52",
+   "reason": "OCR's reading of the parts list: Partial",
+   "sha256": "698a21a293087a950fde40519fb806d36850229fed56ce64f4e2c63b026c6e8c",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2021/06/FCP-Dirty-Aztec-insert.pdf": {
+   "boards": 0,
+   "checked": "2026-10-31T06:03:14+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": "Thu, 17 Jun 2021 10:34:55 GMT",
+   "outcome": "not clean",
+   "parts": "257aeac6cb838b12070d7ed9c58441f65d21a258573753e213bf1895a8b4c1ee",
+   "reason": "2 self-check warning(s), first: Unextracted designator: Pre-Gain1 may be missing: OCR did not read it from the parts list. Check the document.",
+   "sha256": "44ee8a2b31c754f8ad15d5aafc24fa4b9abf8d881db5987720e38998e93e5f2f",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2021/06/FCP-Lord-of-this-world-insert.pdf": {
+   "boards": 0,
+   "checked": "2026-10-31T06:03:33+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": "Wed, 02 Jun 2021 16:24:04 GMT",
+   "outcome": "not clean",
+   "parts": "7d76abdb1b329dddbe5b2c146c2ceca90946819400735d8082749a549867b334",
+   "reason": "1 self-check warning(s), first: Unextracted designator: Volume may be missing: OCR did not read it from the parts list. Check the document.",
+   "sha256": "88d195322dcaab7423f7637570829b7bff7526dd211674f66967907fc205257e",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2021/06/FCP-Random-Cats-insert.pdf": {
+   "boards": 1,
+   "checked": "2026-10-31T06:03:54+00:00",
+   "entry": "fcp-random-cats-insert",
+   "etag": null,
+   "last_modified": "Fri, 04 Jun 2021 10:06:20 GMT",
+   "outcome": "listed",
+   "parts": "e8ba8e1a24ebe6954b8792459660e5af144f14d11c99df7be36a8a32f652d7f1",
+   "reason": "",
+   "sha256": "514668d8854ae5e0cb7198e0940586bab506d055b3ba85a3c5f922a483b5ef24",
+   "verification": "verified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2021/08/FCP-lemming-drop-insert-V1-0.pdf": {
+   "boards": 0,
+   "checked": "2026-10-31T06:04:20+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": "Thu, 14 Jul 2022 15:14:54 GMT",
+   "outcome": "not clean",
+   "parts": "c3408daa437dd01093411fcdd1a6cc4264c38d2cce2e777b116d666ce9c1ad5c",
+   "reason": "1 self-check warning(s), first: Unextracted designator: Vol may be missing: OCR did not read it from the parts list. Check the document.",
+   "sha256": "99097a17c49460507f8f5e96ac577261d817cd7cf258091adc9581e6654a7934",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2021/09/FCP-Carolina-Reaper-V1-1-insert.pdf": {
+   "boards": 1,
+   "checked": "2026-10-31T06:04:28+00:00",
+   "entry": "fcp-carolina-reaper-v1-1-insert",
+   "etag": null,
+   "last_modified": "Fri, 10 Sep 2021 14:14:41 GMT",
+   "outcome": "listed",
+   "parts": "c435a5352fe5dfbefc86aca456736398f48803ddcb89d7eb317a0bbef6d18e9a",
+   "reason": "",
+   "sha256": "8af5af5eb807a6a889a118d912fb649bbc95c48246e12f8f02a5c26b647c1dc6",
+   "verification": "verified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2021/09/FCP-LPB-Plus-insert-V1-0.pdf": {
+   "boards": 0,
+   "checked": "2026-10-31T06:04:59+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": "Fri, 17 Sep 2021 13:57:58 GMT",
+   "outcome": "not clean",
+   "parts": "2ea46889297d25bf3210185056d14f3ebe427cf49476597dc2f29000eb340e52",
+   "reason": "no parts were read",
+   "sha256": "60ae34cf997efbb42560746b1441c944a7bcc21611eb32c2167b61187e5f3619",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2021/09/FCP-Tonestack-with-LPB-insert-V1-0.pdf": {
+   "boards": 0,
+   "checked": "2026-10-31T06:05:02+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": "Sat, 25 Sep 2021 10:02:01 GMT",
+   "outcome": "not clean",
+   "parts": "af85de20d217eb3d74265033102ed6b6e866bfad9bc33af92a85abdacb1e3ef5",
+   "reason": "2 self-check warning(s), first: Unextracted designator: C1 may be missing: OCR did not read it from the parts list. Check the document.",
+   "sha256": "5df1e883a0bfca66c24a464b6f1a004a43ee5902309699d49431daf04b502cb2",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2021/09/FCP-Zonky-V1-1-Insert.pdf": {
+   "boards": 1,
+   "checked": "2026-10-31T06:05:21+00:00",
+   "entry": "fcp-zonky-v1-1-insert",
+   "etag": null,
+   "last_modified": "Fri, 03 Sep 2021 09:39:37 GMT",
+   "outcome": "listed",
+   "parts": "a7c9a4023dfc7359f833a284bd42b5ef67ac34ceada29693743b17f7783216a5",
+   "reason": "",
+   "sha256": "0b548a776050fcfebc7b4ef7498fb1a9493e5c81e5aad4c020ece71a388107e4",
+   "verification": "verified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2021/09/FCP-vesuvius-insert-V1-0.pdf": {
+   "boards": 0,
+   "checked": "2026-10-31T06:05:48+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": "Sat, 25 Sep 2021 10:48:40 GMT",
+   "outcome": "not clean",
+   "parts": "2ea46889297d25bf3210185056d14f3ebe427cf49476597dc2f29000eb340e52",
+   "reason": "OCR's reading of the parts list: Partial",
+   "sha256": "2208123e2d824d1d5454b135e26542867050234878ee80b4867d192360ab8408",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2021/11/FCP-Percolate-Me-V1-0-insert.pdf": {
+   "boards": 0,
+   "checked": "2026-10-31T06:05:55+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": "Fri, 05 Nov 2021 16:29:34 GMT",
+   "outcome": "not clean",
+   "parts": "2ea46889297d25bf3210185056d14f3ebe427cf49476597dc2f29000eb340e52",
+   "reason": "OCR's reading of the parts list: Partial",
+   "sha256": "910d79b391a350b7335a77f8512c27d08ce80949f18f6da28c20360a314e2498",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2021/11/FCP-SRV-Drive-V1-0-insert.pdf": {
+   "boards": 0,
+   "checked": "2026-10-31T06:06:12+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": "Sun, 07 Nov 2021 13:16:34 GMT",
+   "outcome": "not clean",
+   "parts": "6e76445596c2a4e642c456443bd41e0245259fac216c07ba7cbdf24d94d16cfc",
+   "reason": "2 self-check warning(s), first: Unextracted designator: FLAT may be missing: OCR did not read it from the parts list. Check the document.",
+   "sha256": "f449bf7bfc0efdc469d4fd932b1cd8a15929a11e85a252df4b0184ba4a10796e",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2021/11/FCP-llama-face-insert-V1-0.pdf": {
+   "boards": 0,
+   "checked": "2026-10-31T06:06:30+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": "Sun, 07 Nov 2021 15:18:29 GMT",
+   "outcome": "not clean",
+   "parts": "2ea46889297d25bf3210185056d14f3ebe427cf49476597dc2f29000eb340e52",
+   "reason": "OCR's reading of the parts list: Partial",
+   "sha256": "2c1c15bc91e33958fc7c98d04fe10962fa1e1936d5ba746d51464e77f9d7e648",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2021/12/FCP-Ashes-V1-0-insert.pdf": {
+   "boards": 1,
+   "checked": "2026-10-31T06:06:45+00:00",
+   "entry": "fcp-ashes-v1-0-insert",
+   "etag": null,
+   "last_modified": "Fri, 24 Dec 2021 00:20:52 GMT",
+   "outcome": "listed",
+   "parts": "3b90a220a6426598a1c1997d82a8cb96744d96f38fbb536dd6cd27978db1be90",
+   "reason": "",
+   "sha256": "15d58793f1b923956f064df8a3b7303e1603d5ee6053d159aa655b1e93bf2238",
+   "verification": "verified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2021/12/FCP-Axis-Fuzz-V1-0-insert.pdf": {
+   "boards": 1,
+   "checked": "2026-10-31T06:07:10+00:00",
+   "entry": "fcp-axis-fuzz-v1-0-insert",
+   "etag": null,
+   "last_modified": "Fri, 24 Dec 2021 00:20:23 GMT",
+   "outcome": "listed",
+   "parts": "b95cc2af62792767144c9901bcc87a05c3360740c7f417a9a4a0374d9f1d915b",
+   "reason": "",
+   "sha256": "2b63f302ac1c1d7c83e6d2e3b3ebea25d482a8a60938e9769159bbfd7740c8c2",
+   "verification": "verified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2021/12/FCP-SHO-MON-V1-0-insert.pdf": {
+   "boards": 1,
+   "checked": "2026-10-31T06:07:26+00:00",
+   "entry": "fcp-sho-mon-v1-0-insert",
+   "etag": null,
+   "last_modified": "Fri, 24 Dec 2021 00:19:14 GMT",
+   "outcome": "listed",
+   "parts": "cf715e8269214e30389fe92fce405034e08bdaadbc6cf0f75128e9eb96c18f9c",
+   "reason": "",
+   "sha256": "d1fd09fe4e85672dd12e916a268df042ce05e83b817e6bc22367e3abe5c70307",
+   "verification": "verified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2021/12/FCP-Scorpion-V1-0-insert.pdf": {
+   "boards": 1,
+   "checked": "2026-10-31T06:07:38+00:00",
+   "entry": "fcp-scorpion-v1-0-insert",
+   "etag": null,
+   "last_modified": "Fri, 24 Dec 2021 00:19:43 GMT",
+   "outcome": "listed",
+   "parts": "b577e6f98fc342171bf6fadd27fe4a3d861abfc1172354903489f37be048c585",
+   "reason": "",
+   "sha256": "d322a203a6e3e067fa26d5c9e5c6977862e1e3dd8af606ffec5311ee4f76ea40",
+   "verification": "verified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2021/12/FCP-The-Spanker-V1-0-insert.pdf": {
+   "boards": 1,
+   "checked": "2026-10-31T06:07:59+00:00",
+   "entry": "fcp-the-spanker-v1-0-insert",
+   "etag": null,
+   "last_modified": "Fri, 24 Dec 2021 00:18:34 GMT",
+   "outcome": "listed",
+   "parts": "520115deb0a22cfe95722e570389c0091cbd4869753d56714aaedf20863e50fa",
+   "reason": "",
+   "sha256": "120f20144441b815ce6ff2e1c241b8bf8072c0400668410b291e25e74dff1af4",
+   "verification": "verified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/02/FCP-Bow-Booster-Insert-V1-0.pdf": {
+   "boards": 1,
+   "checked": "2026-10-31T06:08:13+00:00",
+   "entry": "fcp-bow-booster-insert-v1-0",
+   "etag": null,
+   "last_modified": "Sun, 06 Feb 2022 22:37:05 GMT",
+   "outcome": "listed",
+   "parts": "efa501e337c26603dc868d04d1bb83ed9efa9ee33f47fc035d8e245c2a2b4772",
+   "reason": "",
+   "sha256": "ae38d59338d860a47a1ffdd7073cbb5f6b6b51af21db86f1882aba3a9d13e589",
+   "verification": "verified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/02/FCP-Buffer-Up-Insert-V1-0.pdf": {
+   "boards": 0,
+   "checked": "2026-10-31T06:08:36+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": "Sun, 06 Feb 2022 12:36:56 GMT",
+   "outcome": "not clean",
+   "parts": "2ea46889297d25bf3210185056d14f3ebe427cf49476597dc2f29000eb340e52",
+   "reason": "OCR's reading of the parts list: Partial",
+   "sha256": "1b49ad417c1a040d31aecc411fe9711b90ff711182e0e4ef9840288f717cc26a",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/02/FCP-Double-SHO-MON-V1-0.pdf": {
+   "boards": 0,
+   "checked": "2026-10-31T06:08:48+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": "Fri, 11 Feb 2022 11:32:20 GMT",
+   "outcome": "not clean",
+   "parts": "2ea46889297d25bf3210185056d14f3ebe427cf49476597dc2f29000eb340e52",
+   "reason": "OCR's reading of the parts list: Partial",
+   "sha256": "902abd16f48341d0a7e4b95d9ec683659b46a4ba2e83e9cbec4aa6dba51da30f",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/02/FCP-M-Drive-V1-0-insert.pdf": {
+   "boards": 1,
+   "checked": "2026-10-31T06:09:05+00:00",
+   "entry": "fcp-m-drive-v1-0-insert",
+   "etag": null,
+   "last_modified": "Sun, 27 Feb 2022 10:49:56 GMT",
+   "outcome": "listed",
+   "parts": "20578c23b05e2a612bf288c8b9a0af117fd553b48071301c93dc4884e5477a3a",
+   "reason": "",
+   "sha256": "0692bf088621b3b0935189039dbdbbdc8b9ec147e3c6b89dd578a3f4b385291a",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/02/FCP-Micro-Champ-V1-0-insert.pdf": {
+   "boards": 1,
+   "checked": "2026-10-31T06:09:24+00:00",
+   "entry": "fcp-micro-champ-v1-0-insert",
+   "etag": null,
+   "last_modified": "Sun, 27 Feb 2022 12:43:10 GMT",
+   "outcome": "listed",
+   "parts": "39990a1ad3b4af13f33cd67e6a8c6afc38d0fc74cc96492aa0c1fd2cb2268a47",
+   "reason": "",
+   "sha256": "26b6c9bacc283e4dddcbf1145e155623596b55fd45ec9b70db73ac52d5da61e0",
+   "verification": "verified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/02/FCP-Micro-JTM-Insert-V1-0.pdf": {
+   "boards": 1,
+   "checked": "2026-10-31T06:09:42+00:00",
+   "entry": "fcp-micro-jtm-insert-v1-0",
+   "etag": null,
+   "last_modified": "Mon, 02 May 2022 17:54:55 GMT",
+   "outcome": "listed",
+   "parts": "9558e56f309ce2d72101f8a1453d22c14cfd7618361ac6d042c260906e5ffd8e",
+   "reason": "",
+   "sha256": "7aae2d56b99f41b42b75c22f4db57588ee6f117fd804ab8e24c118c873e5c75b",
+   "verification": "verified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/02/FCP-Micro-Tweed-V1-0-insert.pdf": {
+   "boards": 1,
+   "checked": "2026-10-31T06:09:59+00:00",
+   "entry": "fcp-micro-tweed-v1-0-insert",
+   "etag": null,
+   "last_modified": "Sun, 27 Feb 2022 12:47:14 GMT",
+   "outcome": "listed",
+   "parts": "cd9274edc4eabc4507eb16a32388776af65be760dd87bbc5f2cd28e2c881e520",
+   "reason": "",
+   "sha256": "f47f179cdff3b94790a851735d9eb7e712b342b18ad9c65fd348b5a8ad47c0af",
+   "verification": "verified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/03/FCP-Buddha-Drive-Insert-V1-0.pdf": {
+   "boards": 1,
+   "checked": "2026-10-31T06:10:17+00:00",
+   "entry": "fcp-buddha-drive-insert-v1-0",
+   "etag": null,
+   "last_modified": "Sun, 27 Mar 2022 13:44:54 GMT",
+   "outcome": "listed",
+   "parts": "13ca528c9d28ee0dfb75e0579cb9e252ea36d515c94d23d11da7165fe6879917",
+   "reason": "",
+   "sha256": "6a5b6e559aea60d5c6f31035bf0ab77d12831e443ee045752e048588abea4c03",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/04/FCP-BVox-Box-Insert-V1-0.pdf": {
+   "boards": 1,
+   "checked": "2026-10-31T06:10:38+00:00",
+   "entry": "fcp-bvox-box-insert-v1-0",
+   "etag": null,
+   "last_modified": "Thu, 07 Apr 2022 08:08:46 GMT",
+   "outcome": "listed",
+   "parts": "b54433bf18ee6229f0e100495d4d4f6201413530294de9e0cbd98bd59ad14ecb",
+   "reason": "",
+   "sha256": "539832cb364b4501aa75a2bd3e6e841a608f85fe9eebc7f51f1bc5c8d9ef48d7",
+   "verification": "verified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/04/FCP-One-Punch-V1-0-Insert.pdf": {
+   "boards": 1,
+   "checked": "2026-10-31T06:10:53+00:00",
+   "entry": "fcp-one-punch-v1-0-insert",
+   "etag": null,
+   "last_modified": "Thu, 07 Apr 2022 14:05:54 GMT",
+   "outcome": "listed",
+   "parts": "abd0930b66d7d3c07583ec7dd9c4e8224dccc62341a98a0a4b530f4206d5a748",
+   "reason": "",
+   "sha256": "8069bddb69f43b6c46eb886930d617e37bcf698806186f179b9407b5a46ae194",
+   "verification": "verified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/04/FCP-Rattus-Insert-V1-0.pdf": {
+   "boards": 0,
+   "checked": "2026-10-31T06:11:08+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": "Thu, 07 Apr 2022 09:14:37 GMT",
+   "outcome": "not clean",
+   "parts": "2ea46889297d25bf3210185056d14f3ebe427cf49476597dc2f29000eb340e52",
+   "reason": "OCR's reading of the parts list: Partial",
+   "sha256": "590f82d33be2d8b9157b9297656895da74aa7566f7929e7b1ce5ec6e28715a70",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/05/FCP-Shouter-V1-0-Insert.pdf": {
+   "boards": 1,
+   "checked": "2026-10-31T06:11:24+00:00",
+   "entry": "fcp-shouter-v1-0-insert",
+   "etag": null,
+   "last_modified": "Fri, 20 May 2022 13:45:43 GMT",
+   "outcome": "listed",
+   "parts": "03e5bb7df1b9bc4ff4d5c2c0239cf7447d183d1ea4511ab48820eed1e163be73",
+   "reason": "",
+   "sha256": "9602800b4d5658104f48fd60b3907ee682fc37490a3e20fa192c725ea5f235a0",
+   "verification": "verified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/05/FCP-Trold-V1-0-Insert.pdf": {
+   "boards": 1,
+   "checked": "2026-10-31T06:11:40+00:00",
+   "entry": "fcp-trold-v1-0-insert",
+   "etag": null,
+   "last_modified": "Fri, 20 May 2022 12:27:54 GMT",
+   "outcome": "listed",
+   "parts": "c83618e7e87e724dada505f536f752b54abc5c34ea653c042a6ee61fb9dbaa01",
+   "reason": "",
+   "sha256": "5f7e68629e26a210b9887638b32742edafbae01438e957168314e95601ed32c3",
+   "verification": "verified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/07/FCP-Albus-V1-0-Insert.pdf": {
+   "boards": 1,
+   "checked": "2026-10-31T06:12:01+00:00",
+   "entry": "fcp-albus-v1-0-insert",
+   "etag": null,
+   "last_modified": "Wed, 13 Jul 2022 09:13:13 GMT",
+   "outcome": "listed",
+   "parts": "db67eca8df51c5407d76bd1c9a3762045846b4506fef44ab8747b57b487aadf6",
+   "reason": "",
+   "sha256": "c58b7799a7466b6d31d368c72f07107adab5cbee06adaa2bfe86e6e6bcd49463",
+   "verification": "verified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/07/FCP-Buzzumble-V1-0-Insert.pdf": {
+   "boards": 1,
+   "checked": "2026-10-31T06:12:23+00:00",
+   "entry": "fcp-buzzumble-v1-0-insert",
+   "etag": null,
+   "last_modified": "Tue, 04 Apr 2023 12:03:58 GMT",
+   "outcome": "listed",
+   "parts": "76413a4503717949fb5745d1d9b08e60a2919dccad8d4cd7f66ac5ffe19bcdcb",
+   "reason": "",
+   "sha256": "7cc5f940e32b6a54f15cf9ca0fbb5bdc91840a4dd376cd24d1cdcc82a2f46611",
+   "verification": "verified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/07/FCP-Fuzz-Mule-V1-0-Insert.pdf": {
+   "boards": 0,
+   "checked": "2026-10-31T06:13:02+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": "Wed, 13 Jul 2022 08:04:46 GMT",
+   "outcome": "not clean",
+   "parts": "f42e0a3bfe5af6e73cb359e5c45482ddc567282093d6730f446a29cf1e053ebc",
+   "reason": "1 self-check warning(s), first: Unextracted designator: TONE may be missing: OCR did not read it from the parts list. Check the document.",
+   "sha256": "e7958dfbdab4424c4621a27597ae10490c48205a6d2a1f42f2a0399327564d76",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/07/FCP-Jimi-Fuzz-V1-0-Insert.pdf": {
+   "boards": 1,
+   "checked": "2026-10-31T06:13:05+00:00",
+   "entry": "fcp-jimi-fuzz-v1-0-insert",
+   "etag": null,
+   "last_modified": "Wed, 13 Jul 2022 09:05:57 GMT",
+   "outcome": "listed",
+   "parts": "4a7b4c157ece505a480aa452d824d854515da0e575335329a84de720402ae486",
+   "reason": "",
+   "sha256": "6fa429a0f4404956b78559dea1c549c703980da03090aa7ca24b76bf3d17b670",
+   "verification": "verified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/07/FCP-Lanterns-V1-0-Insert.pdf": {
+   "boards": 0,
+   "checked": "2026-10-31T06:13:56+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": "Wed, 13 Jul 2022 09:28:22 GMT",
+   "outcome": "not clean",
+   "parts": "2ea46889297d25bf3210185056d14f3ebe427cf49476597dc2f29000eb340e52",
+   "reason": "OCR's reading of the parts list: Partial",
+   "sha256": "8cb396b96c4ca8adbfa6e8685e5fa8f3e1938b79485aa12ce9e517aa99007aed",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/07/FCP-Texan-Jingle-V1-0-insert.pdf": {
+   "boards": 0,
+   "checked": "2026-10-31T06:14:00+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": "Fri, 01 Jul 2022 11:03:43 GMT",
+   "outcome": "not clean",
+   "parts": "2ea46889297d25bf3210185056d14f3ebe427cf49476597dc2f29000eb340e52",
+   "reason": "OCR's reading of the parts list: Partial",
+   "sha256": "efb5bc2ff3fb08faf34870c1bc6507040f99987ba510ee98e26bb9a52adfd223",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/08/FCP-Krunch-V1-0-Insert.pdf": {
+   "boards": 1,
+   "checked": "2026-10-31T06:14:17+00:00",
+   "entry": "fcp-krunch-v1-0-insert",
+   "etag": null,
+   "last_modified": "Fri, 05 Aug 2022 12:49:34 GMT",
+   "outcome": "listed",
+   "parts": "d89eb100f91407a3a716a51e1c1174365e49be5f9f128998488fec11e8224aea",
+   "reason": "",
+   "sha256": "551f9c718b915d1e9823ba5d9a54ca9916a872c0c29bf9a863e59f111e5fcebb",
+   "verification": "verified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/10/FCP-Command-Fuzz-Insert-V1-0.pdf": {
+   "boards": 1,
+   "checked": "2026-10-31T06:14:47+00:00",
+   "entry": "fcp-command-fuzz-insert-v1-0",
+   "etag": null,
+   "last_modified": "Thu, 27 Oct 2022 13:05:55 GMT",
+   "outcome": "listed",
+   "parts": "de1148f2380c12b7b4ed03d02c59b242cd955d694989587c5eb08926c366112f",
+   "reason": "",
+   "sha256": "6f0c792e6a43b750dc1f139903e030b4672557980d659701cbefcbace1328490",
+   "verification": "verified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/10/FCP-Custom-Ranger-V1-0-insert-1.pdf": {
+   "boards": 0,
+   "checked": "2026-10-31T06:15:27+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": "Thu, 27 Oct 2022 11:30:47 GMT",
+   "outcome": "not clean",
+   "parts": "6c0878e93d47f84f863950a8b3072046954b1b5af35def356fbe4e67ac1eb5d1",
+   "reason": "2 self-check warning(s), first: Unreadable designator: The designator of '1P8T  1P8T' could not be read, so that part is missing from the list: check the document and add it by hand.",
+   "sha256": "07c6d27e9ca57d1d5d5692d0346d090b5b47b4034ce046568f328896db9d1577",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/10/FCP-DSOTF-Insert-V1-0.pdf": {
+   "boards": 1,
+   "checked": "2026-10-31T06:15:31+00:00",
+   "entry": "fcp-dsotf-insert-v1-0",
+   "etag": null,
+   "last_modified": "Thu, 27 Oct 2022 07:31:53 GMT",
+   "outcome": "listed",
+   "parts": "2917666443cb95d57c40cb58a7f32d9816c1483d7ad083f9f2409bda03d60f5d",
+   "reason": "",
+   "sha256": "91482a42c2c41491a054b44a18d96d3355c6a92a561aeff5618e6f79e53a56af",
+   "verification": "verified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/10/FCP-Deep-Down-Insert-V1-0.pdf": {
+   "boards": 1,
+   "checked": "2026-10-31T06:16:18+00:00",
+   "entry": "fcp-deep-down-insert-v1-0",
+   "etag": null,
+   "last_modified": "Thu, 27 Oct 2022 12:35:04 GMT",
+   "outcome": "listed",
+   "parts": "10ac7274dce972006cdb405e21951f780fe12d139ea29f0524c568be195b3a80",
+   "reason": "",
+   "sha256": "7645d7beca780eedda7cfd90d52d137d123e60f31fa13273fa5da2e366bccb16",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/10/FCP-Duck-Duck-V1-0-insert.pdf": {
+   "boards": 1,
+   "checked": "2026-10-31T06:17:18+00:00",
+   "entry": "fcp-duck-duck-v1-0-insert",
+   "etag": null,
+   "last_modified": "Wed, 26 Oct 2022 12:16:18 GMT",
+   "outcome": "listed",
+   "parts": "d9ea3e21917fd9d2c58c47efba8dede418e11548fceb241a39d8b42bbbd98953",
+   "reason": "",
+   "sha256": "f9e6ebd44b89082481e0df292d340d1c0cc5a2899f090e6ef17d734d2e32498b",
+   "verification": "verified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/10/FCP-FunkMachine-Insert-V1-0.pdf": {
+   "boards": 0,
+   "checked": "2026-10-31T06:17:32+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": "Wed, 26 Oct 2022 22:05:56 GMT",
+   "outcome": "not clean",
+   "parts": "2ea46889297d25bf3210185056d14f3ebe427cf49476597dc2f29000eb340e52",
+   "reason": "OCR's reading of the parts list: Partial",
+   "sha256": "deca8875e28c79f4e4be7ef262df77500e8734e3b8acd7d7429d907e9d818bb7",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/10/FCP-MicroMX-V1-0-Insert.pdf": {
+   "boards": 1,
+   "checked": "2026-10-31T06:17:42+00:00",
+   "entry": "fcp-micromx-v1-0-insert",
+   "etag": null,
+   "last_modified": "Wed, 26 Oct 2022 09:21:52 GMT",
+   "outcome": "listed",
+   "parts": "5b6928b7f3e4cd86e7033be47049fac1885b0bb114777b080f5733f3e7f44bc3",
+   "reason": "",
+   "sha256": "7852f0bbbcf0f226b1aee295278978ce9d679f897295e8fcd586d2287f6ce917",
+   "verification": "verified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/10/FCP-Mid-Spirit-Insert-V1-1.pdf": {
+   "boards": 1,
+   "checked": "2026-10-31T06:18:08+00:00",
+   "entry": "fcp-mid-spirit-insert-v1-1",
+   "etag": null,
+   "last_modified": "Thu, 27 Oct 2022 10:12:16 GMT",
+   "outcome": "listed",
+   "parts": "3de61990b5724a3884bad1f84fc68eccd8b96c48ab89fa8910190ed6fbd4e5ed",
+   "reason": "",
+   "sha256": "47dbd7efb7cadab708a3d75dfc0f4d714126272bb37e1fa4026a7262f1077b4b",
+   "verification": "verified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/10/FCP-Morningstar-Distortion-Insert-V1-0.pdf": {
+   "boards": 1,
+   "checked": "2026-10-31T06:18:51+00:00",
+   "entry": "fcp-morningstar-distortion-insert-v1-0",
+   "etag": null,
+   "last_modified": "Fri, 28 Oct 2022 05:34:45 GMT",
+   "outcome": "listed",
+   "parts": "a50b0cbeeedd31f74a554dc7fe98142520023dab30effb43192bcb9846cd5a9c",
+   "reason": "",
+   "sha256": "58e095124bc0f1495029e64db233f3f3681789a88c1c1aac56a95172357cc983",
+   "verification": "verified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/10/FCP-WoollyTron-Insert-V1-0.pdf": {
+   "boards": 1,
+   "checked": "2026-10-31T06:19:47+00:00",
+   "entry": "fcp-woollytron-insert-v1-0",
+   "etag": null,
+   "last_modified": "Fri, 28 Oct 2022 06:42:15 GMT",
+   "outcome": "listed",
+   "parts": "26f0c17d9c8e9a48e6d8d902a25029d1720bbf6b8f807199087fe7c16d2fec25",
+   "reason": "",
+   "sha256": "00c74e614507d68143eb8325c0b2d8c9efdee865798f0b5eaf698e0a95eb2721",
+   "verification": "verified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/03/FCP-Vintage-FuzzFace-Wiring-ISS1-ISS2.pdf": {
+   "boards": 0,
+   "checked": "2026-10-31T06:20:26+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": "Thu, 09 Mar 2023 16:12:06 GMT",
+   "outcome": "not clean",
+   "parts": "2ea46889297d25bf3210185056d14f3ebe427cf49476597dc2f29000eb340e52",
+   "reason": "no parts were read",
+   "sha256": "b2d633bc9a23b736d6930721b64c722d509d423e6a746a93e16be473c450eff1",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/06/FCP-J-Buffer-Insert-V1-0.pdf": {
+   "boards": 0,
+   "checked": "2026-10-31T06:20:33+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": "Sat, 03 Jun 2023 08:55:06 GMT",
+   "outcome": "not clean",
+   "parts": "2ea46889297d25bf3210185056d14f3ebe427cf49476597dc2f29000eb340e52",
+   "reason": "OCR's reading of the parts list: Partial",
+   "sha256": "af8195dd40b3e0c4419996783cbedef705cadb728d099f0f2a75973a436c03c9",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/06/FCP-K-Buffer-Insert-V1-0.pdf": {
+   "boards": 0,
+   "checked": "2026-10-31T06:20:46+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": "Sat, 03 Jun 2023 08:44:25 GMT",
+   "outcome": "not clean",
+   "parts": "7de6b3343afabfbad346a0f89490d399ee8bc6e433f69cb46ed830bc6504f5ff",
+   "reason": "1 self-check warning(s), first: Unextracted designator: D100 may be missing: OCR did not read it from the parts list. Check the document.",
+   "sha256": "4cccebca4247cb907c2b985d713cf8957fbc26a0d160d905e81669d5a707b242",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/06/FCP-Screamer-Insert-V1-0.pdf": {
+   "boards": 1,
+   "checked": "2026-10-31T06:21:03+00:00",
+   "entry": "fcp-screamer-insert-v1-0",
+   "etag": null,
+   "last_modified": "Thu, 01 Jun 2023 11:27:47 GMT",
+   "outcome": "listed",
+   "parts": "32eb9e376fdc213737ac918131682e84266479d835868434d07779fbc8854bc6",
+   "reason": "",
+   "sha256": "a8e5c20bbfee690c63a6275375790de76acf7753662fe2a509b2889569977acb",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/06/FCP-Squiddle-V1-0-Insert.pdf": {
+   "boards": 0,
+   "checked": "2026-10-31T06:22:00+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": "Sun, 04 Jun 2023 13:43:09 GMT",
+   "outcome": "not clean",
+   "parts": "2ea46889297d25bf3210185056d14f3ebe427cf49476597dc2f29000eb340e52",
+   "reason": "OCR's reading of the parts list: Partial",
+   "sha256": "7339f05d0987e4c59e1663d367db52aeb408d0d4209b1fee11671773be4882ff",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/06/FCP-Violetear-V1-0-Iinsert.pdf.pdf": {
+   "boards": 1,
+   "checked": "2026-10-31T06:22:05+00:00",
+   "entry": "fcp-violetear-v1-0-iinsert-pdf",
+   "etag": null,
+   "last_modified": "Tue, 06 Jun 2023 06:31:03 GMT",
+   "outcome": "listed",
+   "parts": "f4969d13a8b2c95dbf1c00dc3dea6045b8fca4aebd482d32ae66bee22ac7a47a",
+   "reason": "",
+   "sha256": "9db4dee9f64cba0a0d883473b9ba2f2dd93c2237120f31480df39c915f41f76f",
+   "verification": "verified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/07/FCP-Amaze-Boost-V1-0-Insert.pdf": {
+   "boards": 1,
+   "checked": "2026-10-31T06:22:33+00:00",
+   "entry": "fcp-amaze-boost-v1-0-insert",
+   "etag": null,
+   "last_modified": "Fri, 21 Jul 2023 15:43:47 GMT",
+   "outcome": "listed",
+   "parts": "c24549bdbab17261dd2fb69027227ea62d1dc06e23612835425dd7cf50337fe3",
+   "reason": "",
+   "sha256": "ffd1e09f8b11c7bbe2992b0f27e627bd7d4b6b20ed85c5380185b1ec59f871b2",
+   "verification": "verified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/07/FCP-BazzFuzz-V1-0-Insert.pdf": {
+   "boards": 0,
+   "checked": "2026-10-31T06:22:46+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": "Wed, 26 Jul 2023 20:07:06 GMT",
+   "outcome": "not clean",
+   "parts": "2ea46889297d25bf3210185056d14f3ebe427cf49476597dc2f29000eb340e52",
+   "reason": "OCR's reading of the parts list: Partial",
+   "sha256": "403eca4efbc5694217c018e4b7b4fb58b18a091e72d96a570aced08fb39aa2ee",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/07/FCP-Be-My-OD-V1-0-Insert.pdf": {
+   "boards": 1,
+   "checked": "2026-10-31T06:22:55+00:00",
+   "entry": "fcp-be-my-od-v1-0-insert",
+   "etag": null,
+   "last_modified": "Sun, 23 Jul 2023 12:35:53 GMT",
+   "outcome": "listed",
+   "parts": "323e0185ec5b68ca94dc6bff0fb5342c077ee799512e2e4cb85c210936ec0f44",
+   "reason": "",
+   "sha256": "9920ee2ad6acd8826396a0a71360e61143c84cb653366c4fe4ac3f1dda6c99f7",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/07/FCP-Dunder-Dirt-Cheap-Insert-V1-0.pdf": {
+   "boards": 0,
+   "checked": "2026-10-31T06:23:25+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": "Wed, 26 Jul 2023 21:07:28 GMT",
+   "outcome": "not clean",
+   "parts": "6992f68a38cb062ec2b72fa43690b2e9ca7d00701acb8cd06c7a9c17f73512fd",
+   "reason": "1 self-check warning(s), first: Unextracted designator: R20 may be missing: OCR did not read it from the parts list. Check the document.",
+   "sha256": "dd414ecdd871a181f6fe98f652698a7f3f821261a59d9cdf4647c5a8a4100dc8",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/07/FCP-Furious-Andrew-V1-0-Insert.pdf": {
+   "boards": 1,
+   "checked": "2026-10-31T06:23:32+00:00",
+   "entry": "fcp-furious-andrew-v1-0-insert",
+   "etag": null,
+   "last_modified": "Sun, 23 Jul 2023 21:36:30 GMT",
+   "outcome": "listed",
+   "parts": "b19b5f1f268f7770228ffb9bbe17f3e453fd371f542e564234ee0c6d121f0d47",
+   "reason": "",
+   "sha256": "e4b825500c822baf462fbca9136e6cbd00306e4e2478606b8f9dbd32e4d2c55f",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/07/FCP-Samurai-Boost-V1-1-Insert.pdf": {
+   "boards": 0,
+   "checked": "2026-10-31T06:23:58+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": "Sun, 30 Jul 2023 21:49:17 GMT",
+   "outcome": "not clean",
+   "parts": "7b80b5fd0a952d95d433e96ce6e7f2c918e4a43f3e956b33f18a65a961b833be",
+   "reason": "1 self-check warning(s), first: Unextracted designator: Boost may be missing: OCR did not read it from the parts list. Check the document.",
+   "sha256": "ab80e8e6ba91cb27b00fe30340f22b8581fcf0793349e651c6f713f2b48eab02",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/07/FCP-Super60-V1-1-Insert.pdf": {
+   "boards": 0,
+   "checked": "2026-10-31T06:24:07+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": "Tue, 25 Jul 2023 17:26:55 GMT",
+   "outcome": "not clean",
+   "parts": "3e6018aef80c26bd614fbb88c8cbb1c14a2e4d98e85605381bbf3fce3be8c683",
+   "reason": "1 self-check warning(s), first: Unextracted designator: HI/LOW1 may be missing: OCR did not read it from the parts list. Check the document.",
+   "sha256": "cbff341a187dc35447169be385e982debc36cdebbddb60735ae602f95188f149",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/07/FPC-Breaking-Blues-V1-0-Inesrt.pdf": {
+   "boards": 1,
+   "checked": "2026-10-31T06:24:25+00:00",
+   "entry": "fpc-breaking-blues-v1-0-inesrt",
+   "etag": null,
+   "last_modified": "Wed, 26 Jul 2023 20:47:02 GMT",
+   "outcome": "listed",
+   "parts": "afb11db3e4e8b0c9910da2e4e0dfd9434c058bbaa6a42f159eacb6235f679ca0",
+   "reason": "",
+   "sha256": "9c3fa07a0fe01bb27be5d6b3348fd21f2f15c786f57208e71e7d2e76133b4cb5",
+   "verification": "verified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/08/FCP-Governor-V1-1-Insert.pdf": {
+   "boards": 0,
+   "checked": "2026-10-31T06:24:49+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": "Wed, 02 Aug 2023 11:38:26 GMT",
+   "outcome": "not clean",
+   "parts": "8dd8a24c47eaad1447f612200a0a0dce989c4c5b77d0c509592674e667a79467",
+   "reason": "1 self-check warning(s), first: Unextracted designator: D2 may be missing: OCR did not read it from the parts list. Check the document.",
+   "sha256": "12a2910e237a3e7eb8708db4a4a138c6623ffbb16d9a29ab379ce0636f546ea0",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/08/FCP-Noise-Emsemble-V1-0-Insert.pdf": {
+   "boards": 1,
+   "checked": "2026-10-31T06:25:01+00:00",
+   "entry": "fcp-noise-emsemble-v1-0-insert",
+   "etag": null,
+   "last_modified": "Wed, 02 Aug 2023 08:55:57 GMT",
+   "outcome": "listed",
+   "parts": "3102094c3e88e153d414265d47f2352e94f52c97502de79e49b06d725556601e",
+   "reason": "",
+   "sha256": "188643dc0b378a9fa829feccfecc2c53dfa127770092accad1881c6063a67a4c",
+   "verification": "verified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/08/FCP-OKS-FUZZ-Insert-V1-2.pdf": {
+   "boards": 0,
+   "checked": "2026-10-31T06:25:24+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": "Wed, 30 Aug 2023 06:47:41 GMT",
+   "outcome": "not clean",
+   "parts": "2ea46889297d25bf3210185056d14f3ebe427cf49476597dc2f29000eb340e52",
+   "reason": "OCR's reading of the parts list: Partial",
+   "sha256": "407bce0bddfba72f2e5c5f39c64144d9330f026933961886915099408aa4a4e0",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/08/FCP-RUBY-Amp-Insert-FINAL.pdf": {
+   "boards": 1,
+   "checked": "2026-10-31T06:25:33+00:00",
+   "entry": "fcp-ruby-amp-insert-final",
+   "etag": null,
+   "last_modified": "Fri, 04 Aug 2023 07:00:10 GMT",
+   "outcome": "listed",
+   "parts": "ce20c8069ec89ce8d49fa39c34b2cf1af28176d63ca82331fbfefba2814656c3",
+   "reason": "",
+   "sha256": "9740bf4f27398782773e3baaf3f05c14bb31a73a9c0fc09cb2024075d92e5b06",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/08/FCP-Ring-Stinger-Insert-V1-0.pdf": {
+   "boards": 0,
+   "checked": "2026-10-31T06:26:21+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": "Wed, 02 Aug 2023 09:56:52 GMT",
+   "outcome": "not clean",
+   "parts": "225e70cb0417a9a8e9befc78f5b28044371e2d2d9bb13678cc31a19ad45a2ee1",
+   "reason": "1 self-check warning(s), first: Unextracted designator: HOT/HOTTER may be missing: OCR did not read it from the parts list. Check the document.",
+   "sha256": "9e3f3e575532c715c4e091198995c1c4a2c764e491fcabf80ebdacc6dddb5cda",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/08/FCP-Shredder-V1-1-Insert.pdf": {
+   "boards": 1,
+   "checked": "2026-10-31T06:26:28+00:00",
+   "entry": "fcp-shredder-v1-1-insert",
+   "etag": null,
+   "last_modified": "Wed, 02 Aug 2023 11:16:17 GMT",
+   "outcome": "listed",
+   "parts": "3f4f16781f6e80df12fcd2036a7b83d763cd22dfefa2e0fa970234e899f84a55",
+   "reason": "",
+   "sha256": "07664b60fab70cc7d48a9038e3b0d7766d1ff645ffc5014618ecbc8d02ae4d37",
+   "verification": "verified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/08/FCP-vintage-rams-head-muff-wiring-Insert-V1-0.pdf": {
+   "boards": 0,
+   "checked": "2026-10-31T06:26:52+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": "Fri, 04 Aug 2023 11:48:00 GMT",
+   "outcome": "not clean",
+   "parts": "2ea46889297d25bf3210185056d14f3ebe427cf49476597dc2f29000eb340e52",
+   "reason": "no parts were read",
+   "sha256": "90e46b4c5ed487cb5e46c520115c92b05b95a021cc7b8946be2b432d3d22448c",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/11/FCP-Blend-Me-Up-Insert-V1-0.pdf": {
+   "boards": 1,
+   "checked": "2026-10-31T06:27:08+00:00",
+   "entry": "fcp-blend-me-up-insert-v1-0",
+   "etag": null,
+   "last_modified": "Fri, 24 Nov 2023 21:22:12 GMT",
+   "outcome": "listed",
+   "parts": "eb80b04bcc5aac286c3c03d9bf511ac208db77f9b25a414a54eb50cc750be9e7",
+   "reason": "",
+   "sha256": "5afa9a38eba26f70644a17c6d32e9b18529c74acab01ef5506aebf09be6408e9",
+   "verification": "verified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/11/FCP-Boing-Boing-V1-0-Insert.pdf": {
+   "boards": 0,
+   "checked": "2026-10-31T06:27:24+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": "Fri, 24 Nov 2023 20:35:22 GMT",
+   "outcome": "not clean",
+   "parts": "9f0e73f28f1f3745d44c2b56f3aeab38e1453b3e33bda2e323823ddb81fa543f",
+   "reason": "1 self-check warning(s), first: Unextracted designator: U3 may be missing: OCR did not read it from the parts list. Check the document.",
+   "sha256": "cd44656ba40ba458b41153b7f97f7bc468a299a6110e0127e2ee6a073658e893",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/11/FCP-Five-Zero-Insert-V1-0.pdf": {
+   "boards": 1,
+   "checked": "2026-10-31T06:27:36+00:00",
+   "entry": "fcp-five-zero-insert-v1-0",
+   "etag": null,
+   "last_modified": "Fri, 24 Nov 2023 21:13:01 GMT",
+   "outcome": "listed",
+   "parts": "7bb2872b26553f373735a6c5fc12f82dcf5300d3cc524cad061cbcb87a2f3133",
+   "reason": "",
+   "sha256": "b86d33748f1b669b68dd215a6c0c9091d2c2993d0a61a7ebbd435c8d151311e7",
+   "verification": "verified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/11/FCP-Noise-Gater-Insert-V1-0.pdf": {
+   "boards": 1,
+   "checked": "2026-10-31T06:28:01+00:00",
+   "entry": "fcp-noise-gater-insert-v1-0",
+   "etag": null,
+   "last_modified": "Fri, 24 Nov 2023 20:54:42 GMT",
+   "outcome": "listed",
+   "parts": "b29d1782d8a0b8f60df552deabd2b73a5f5d36fc382b0781acc79374cdbb14a3",
+   "reason": "",
+   "sha256": "6215a95fbcc3ca4f4f2f1760acc2c8e4f9ed16dd74b8d039fe9f63b1321b2bbe",
+   "verification": "verified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/11/FCP-Phaser-R-Insert-V1-0.pdf": {
+   "boards": 1,
+   "checked": "2026-10-31T06:28:21+00:00",
+   "entry": "fcp-phaser-r-insert-v1-0",
+   "etag": null,
+   "last_modified": "Fri, 24 Nov 2023 21:47:32 GMT",
+   "outcome": "listed",
+   "parts": "cd28f38b87b30e9081c9891564753195b5d8ec34f48539cab224f7462cec9fa1",
+   "reason": "",
+   "sha256": "99d96afa2b0e65deb2b640d7a5126bca3f4d1acd4bfac9ac98aba9a34a9208d4",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/11/FCP-Transelector-V1-0-Insert.pdf": {
+   "boards": 0,
+   "checked": "2026-10-31T06:28:34+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": "Fri, 24 Nov 2023 21:39:30 GMT",
+   "outcome": "not clean",
+   "parts": "2ea46889297d25bf3210185056d14f3ebe427cf49476597dc2f29000eb340e52",
+   "reason": "no parts were read",
+   "sha256": "b8810066bd4eb68a50db6b0a0968b213055e4640854f0b8813d9cd4d7639d315",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2024/03/FCP-50-Shades-Of-Purple-Insert-V1-0.pdf": {
+   "boards": 1,
+   "checked": "2026-10-31T06:28:45+00:00",
+   "entry": "fcp-50-shades-of-purple-insert-v1-0",
+   "etag": null,
+   "last_modified": "Sat, 30 Mar 2024 09:34:56 GMT",
+   "outcome": "listed",
+   "parts": "a840a55f0d5caa3678235bd647e111ef5c7f30b1d5d3045e6f8dcb757c86e908",
+   "reason": "",
+   "sha256": "3c66061f8c0db28395e8a8b042f6c93b769488998707c3de07310324449e8ebf",
+   "verification": "verified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2024/03/FCP-Azathoth-Fuzz-V1-1-Insert.pdf": {
+   "boards": 1,
+   "checked": "2026-10-31T06:29:32+00:00",
+   "entry": "fcp-azathoth-fuzz-v1-1-insert",
+   "etag": null,
+   "last_modified": "Tue, 12 Mar 2024 21:31:32 GMT",
+   "outcome": "listed",
+   "parts": "784c65f1e8086f952bf88f1a32accaa6dde41f8f3830445d8b317c64416d9e62",
+   "reason": "",
+   "sha256": "65bf99775be282021d317f5e6704b14b8e6b959c0607a2ba35f8d7c7eb964336",
+   "verification": "verified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2024/03/FCP-Muzz-Fuff-V1-0-Insert.pdf": {
+   "boards": 1,
+   "checked": "2026-10-31T06:30:08+00:00",
+   "entry": "fcp-muzz-fuff-v1-0-insert",
+   "etag": null,
+   "last_modified": "Sun, 31 Mar 2024 20:16:25 GMT",
+   "outcome": "listed",
+   "parts": "3308d5beedbd92ac7a89f5815a44fd948c1c9b7985cf53ede32a35ec3134c90e",
+   "reason": "",
+   "sha256": "bc66061d2c30f4b5f8026ace1bb896ccf0c47f38de4afcdbe8be56e22ff7b0a6",
+   "verification": "verified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2024/03/FCP-Victory-III-V1-0-Insert.pdf": {
+   "boards": 0,
+   "checked": "2026-10-31T06:30:39+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": "Sun, 24 Mar 2024 08:58:58 GMT",
+   "outcome": "not clean",
+   "parts": "2ea46889297d25bf3210185056d14f3ebe427cf49476597dc2f29000eb340e52",
+   "reason": "OCR's reading of the parts list: Partial",
+   "sha256": "f1fd79c9780a7c146371018de54936afe35989290aa4bbdbf25b97ceceb887a4",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2024/04/FCP-Dual-Transmitter-V1.1-Insert-1.pdf": {
+   "boards": 0,
+   "checked": "2026-10-31T06:30:47+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": "Mon, 01 Apr 2024 20:59:30 GMT",
+   "outcome": "not clean",
+   "parts": "2ea46889297d25bf3210185056d14f3ebe427cf49476597dc2f29000eb340e52",
+   "reason": "OCR's reading of the parts list: Partial",
+   "sha256": "1476bd3d36581834c98f1585523b44bfaafef1549185e7421baa944246ba9fcd",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2024/06/FCP-24-Carat-Fuzz-Insert-V1-0.pdf": {
+   "boards": 0,
+   "checked": "2026-10-31T06:31:07+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": "Sat, 15 Jun 2024 13:14:51 GMT",
+   "outcome": "not clean",
+   "parts": "3c13ab32d6cffbcf5906e2c373209a927c8d2ece665223237bb7c5de166470c9",
+   "reason": "2 self-check warning(s), first: Unextracted designator: C4 may be missing: OCR did not read it from the parts list. Check the document.",
+   "sha256": "81c275d845c3b706cb062c0bcee69ac8b25b58da875f79a5fae38b278e4c4c75",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2024/07/FCP-4PDT-Order-Switcher-LED-Insert-V1-1.pdf": {
+   "boards": 0,
+   "checked": "2026-10-31T06:31:23+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": "Thu, 25 Jul 2024 13:22:47 GMT",
+   "outcome": "not clean",
+   "parts": "2ea46889297d25bf3210185056d14f3ebe427cf49476597dc2f29000eb340e52",
+   "reason": "no parts were read",
+   "sha256": "62f4f7cd433ebd0e31be78e054b8b57a9d915f5f8599580b2ba8ad266e371d81",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2024/07/FCP-NotSoClear-Insert-V1-1.pdf": {
+   "boards": 1,
+   "checked": "2026-10-31T06:31:42+00:00",
+   "entry": "fcp-notsoclear-insert-v1-1",
+   "etag": null,
+   "last_modified": "Wed, 31 Jul 2024 17:34:44 GMT",
+   "outcome": "listed",
+   "parts": "afbf84a16f5d4f0310a82fa523ae4f109c9f472d833d874bb97e69cc905c3ba4",
+   "reason": "",
+   "sha256": "068005cf33a6487b0b2d2d99535a03278e87d00dcc18c54e394e7ebf895e5b8a",
+   "verification": "verified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2024/10/FCP-Easy-Toggle-V1-0-Insert.pdf": {
+   "boards": 0,
+   "checked": "2026-10-31T06:32:09+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": "Sun, 20 Oct 2024 23:06:00 GMT",
+   "outcome": "not clean",
+   "parts": "2ea46889297d25bf3210185056d14f3ebe427cf49476597dc2f29000eb340e52",
+   "reason": "no parts were read",
+   "sha256": "6f09b1997577d6059c8aeac4383e36c0adcafc0d51ce223014b9ea480101419c",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2024/10/FCP-Gomorrah-V1-0-Insert.pdf": {
+   "boards": 0,
+   "checked": "2026-10-31T06:32:14+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": "Thu, 03 Oct 2024 15:51:46 GMT",
+   "outcome": "not clean",
+   "parts": "857200eaccc456188875119b22c5c545b75ab62ad49bd60c168e53dcf93d9839",
+   "reason": "1 self-check warning(s), first: Unextracted designator: C4 may be missing: OCR did not read it from the parts list. Check the document.",
+   "sha256": "e558009087e2c0dadd93c6918e63bbe86106b9c7e2bc3f411bd8edcbf4b31cf8",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2024/10/FCP-Inhabitant-Fuzz-V1-0-Insert.pdf": {
+   "boards": 1,
+   "checked": "2026-10-31T06:32:34+00:00",
+   "entry": "fcp-inhabitant-fuzz-v1-0-insert",
+   "etag": null,
+   "last_modified": "Thu, 03 Oct 2024 14:59:02 GMT",
+   "outcome": "listed",
+   "parts": "7c4745d63f0325e745d70b73b82630a24b127d793b7dceae0bcc2675e7535784",
+   "reason": "",
+   "sha256": "e83de93856ea88c14e30fc6e93af21e7e071658a092d4e642a14183d86cfa8cc",
+   "verification": "verified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2024/10/FCP-Moon-Trem-V1-1-Insert.pdf": {
+   "boards": 1,
+   "checked": "2026-10-31T06:33:03+00:00",
+   "entry": "fcp-moon-trem-v1-1-insert",
+   "etag": null,
+   "last_modified": "Thu, 17 Oct 2024 16:38:35 GMT",
+   "outcome": "listed",
+   "parts": "bd8091e46cb584b30f1ddd0dcb24e2e43a61de6ba83e24499a514240a5590066",
+   "reason": "",
+   "sha256": "df9c284557c0c1d07912a3e34995ddff7a83c318dfd97c8bb8e0dabd86dd3876",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2024/10/fcp-marshall-supafuzz-wiring-v1-1.pdf": {
+   "boards": 0,
+   "checked": "2026-10-31T06:33:41+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": "Sun, 20 Oct 2024 14:35:23 GMT",
+   "outcome": "not clean",
+   "parts": "2ea46889297d25bf3210185056d14f3ebe427cf49476597dc2f29000eb340e52",
+   "reason": "no parts were read",
+   "sha256": "d83120806687acdf547e6ce9dedb6bb2e86ffff889be746937f7bafd01576bd7",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2024/10/fcp-vintage-fuzz-face-wiring-V1-1.pdf": {
+   "boards": 0,
+   "checked": "2026-10-31T06:33:45+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": "Sun, 20 Oct 2024 14:37:05 GMT",
+   "outcome": "not clean",
+   "parts": "2ea46889297d25bf3210185056d14f3ebe427cf49476597dc2f29000eb340e52",
+   "reason": "no parts were read",
+   "sha256": "557b69b0ab68e788195f57947fb48ba20046b87f4a43d2c6027ac61e3a994e5f",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2024/12/FCP-Echoes-V1-0-Insert.pdf": {
+   "boards": 0,
+   "checked": "2026-10-31T06:34:03+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": "Sun, 08 Dec 2024 22:39:10 GMT",
+   "outcome": "not clean",
+   "parts": "2ea46889297d25bf3210185056d14f3ebe427cf49476597dc2f29000eb340e52",
+   "reason": "OCR's reading of the parts list: Partial",
+   "sha256": "84ef0bf12426b3220f9f8eabded288042ebb9c57d6805dae0599874e595ac270",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2024/12/FCP-Octavia-V1-0-Insert.pdf": {
+   "boards": 0,
+   "checked": "2026-10-31T06:34:23+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": "Sat, 07 Dec 2024 16:36:26 GMT",
+   "outcome": "not clean",
+   "parts": "9c23ed31422e193d8e6ed46ed4d48de86911d24196d8f62b3c4b73c7aa830e25",
+   "reason": "3 self-check warning(s), first: Unreadable designator: The designator of '60  22uF' could not be read, so that part is missing from the list: check the document and add it by hand.",
+   "sha256": "34c0cb8c032bd0ab13becb59df0ca127c909e13c43037dbccd5d1a412c70ed56",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2025/02/FCP-18V-Foot-Doubler-V1-Insert.pdf": {
+   "boards": 0,
+   "checked": "2026-10-31T06:34:42+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": "Sat, 01 Feb 2025 11:22:16 GMT",
+   "outcome": "not clean",
+   "parts": "c932e552e82299025a4305ab13049b0ee568ec85e9b4525b31c56d47b50ecd71",
+   "reason": "1 self-check warning(s), first: Unextracted designator: CLR may be missing: OCR did not read it from the parts list. Check the document.",
+   "sha256": "33aa2e4dbc64d88e8b06886bf1ee05412f5862cdc5ca0702d3a89671b95ce2e2",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2025/02/FCP-27VBoost-V1-0-Insert.pdf": {
+   "boards": 1,
+   "checked": "2026-10-31T06:34:58+00:00",
+   "entry": "fcp-27vboost-v1-0-insert",
+   "etag": null,
+   "last_modified": "Sun, 23 Feb 2025 22:07:24 GMT",
+   "outcome": "listed",
+   "parts": "7f0597387eb52fb7deb0dd2ae659817a16ebc2562860b64ab26f85cd2f0c3336",
+   "reason": "",
+   "sha256": "ff7d875f4d849704eb587d4aaa9f55e7a2831f2abc495cc7e5656a4685c1c37b",
+   "verification": "verified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2025/02/FCP-Easy-Foot-Insert-REVB.pdf": {
+   "boards": 0,
+   "checked": "2026-10-31T06:35:50+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": "Sun, 23 Feb 2025 10:42:36 GMT",
+   "outcome": "not clean",
+   "parts": "e4b070d97f2d29829d7dd04c0ffd3fa8a247b430c79c1e1e882397826d596d39",
+   "reason": "1 self-check warning(s), first: Unextracted designator: D2 may be missing: OCR did not read it from the parts list. Check the document.",
+   "sha256": "7cc182889afe3b10d59aad89aa23e2a147718a1a845c8f970caa2c73f3bec135",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2025/02/FCP-Hybrid-Fuzz-V1-1-Insert.pdf": {
+   "boards": 1,
+   "checked": "2026-10-31T06:35:57+00:00",
+   "entry": "fcp-hybrid-fuzz-v1-1-insert",
+   "etag": null,
+   "last_modified": "Sun, 16 Feb 2025 10:03:30 GMT",
+   "outcome": "listed",
+   "parts": "fdb481d493a7adf688c3b9d9d5e3b201501db45d940f66a96babe6aa66e990c9",
+   "reason": "",
+   "sha256": "84d32dc076ffdc2dd781d58c628fe07bfb8caa1a14f97abe462bc06f1a21799b",
+   "verification": "verified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2025/02/FCP-The-Prestige-V1-0-Insert.pdf": {
+   "boards": 0,
+   "checked": "2026-10-31T06:36:37+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": "Sun, 23 Feb 2025 22:37:09 GMT",
+   "outcome": "not clean",
+   "parts": "2ea46889297d25bf3210185056d14f3ebe427cf49476597dc2f29000eb340e52",
+   "reason": "OCR's reading of the parts list: Partial",
+   "sha256": "95ad8b99ef9ef33eab0bd05c4eb2e875f852a293a6d75dda9f04c30927e43e4a",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2025/03/FCP-Jive-By-Shooter-V1-0-Insert.pdf": {
+   "boards": 1,
+   "checked": "2026-10-31T06:36:43+00:00",
+   "entry": "fcp-jive-by-shooter-v1-0-insert",
+   "etag": null,
+   "last_modified": "Sun, 30 Mar 2025 17:01:56 GMT",
+   "outcome": "listed",
+   "parts": "ec4e20e1cd34c9495cefdd76ce6a08ae4d1ca42697387bfebf9eb6d79f5694bd",
+   "reason": "",
+   "sha256": "ac26587a5f93b513b1c205fd68ff3cec4d322edaab7cd3a2a9e7a3374d4e3412",
+   "verification": "verified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2025/04/FCP-F-Type-Fuzz-Insert.pdf": {
+   "boards": 1,
+   "checked": "2026-10-31T06:37:34+00:00",
+   "entry": "fcp-f-type-fuzz-insert",
+   "etag": null,
+   "last_modified": "Sat, 19 Apr 2025 12:47:21 GMT",
+   "outcome": "listed",
+   "parts": "dd82f071bad07857cacaf28cfabb07ca03c6d5ab91358788388596defec5584a",
+   "reason": "",
+   "sha256": "549f400be58ce3ae84ca477acf06c0551fa8e40ecd56823be9aa97209d6e80db",
+   "verification": "verified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2025/04/FCP-Gas-Drive-V1-0-Insert.pdf": {
+   "boards": 0,
+   "checked": "2026-10-31T06:38:27+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": "Thu, 24 Apr 2025 17:44:18 GMT",
+   "outcome": "not clean",
+   "parts": "2ea46889297d25bf3210185056d14f3ebe427cf49476597dc2f29000eb340e52",
+   "reason": "OCR's reading of the parts list: Partial",
+   "sha256": "bd9a8b2a89f191a87d619d09c35a4f99cc4abebb680d50b77662f72723119dc6",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2025/04/FCP-Labs-Insert.pdf": {
+   "boards": 0,
+   "checked": "2026-10-31T06:38:33+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": "Sat, 19 Apr 2025 09:44:54 GMT",
+   "outcome": "not clean",
+   "parts": "2ea46889297d25bf3210185056d14f3ebe427cf49476597dc2f29000eb340e52",
+   "reason": "OCR's reading of the parts list: Partial",
+   "sha256": "a14d72cb69a34b95232f97edbb72ebf1b521479cb393d0562229f8b754e2d1f9",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2025/04/FCP-My-Little-Horsey-Insert-V1-3.pdf": {
+   "boards": 0,
+   "checked": "2026-10-31T06:38:58+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": "Sat, 19 Apr 2025 17:19:25 GMT",
+   "outcome": "not clean",
+   "parts": "6cf25b78bab7c41a119c4f47f69b6e6661a542da5a80630588a7e46b8184cfe0",
+   "reason": "5 self-check warning(s), first: Unextracted designator: DIODE1 may be missing: OCR did not read it from the parts list. Check the document.",
+   "sha256": "53a6427dfc45116565d664f4b4b6072b37baab12811d71149c26e95817677455",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2025/07/FCP-Dist-Plus-V1-0-Insert.pdf": {
+   "boards": 1,
+   "checked": "2026-10-31T06:39:09+00:00",
+   "entry": "fcp-dist-plus-v1-0-insert",
+   "etag": null,
+   "last_modified": "Sun, 06 Jul 2025 16:58:10 GMT",
+   "outcome": "listed",
+   "parts": "8554a071897acc58bdbe33fcb3fd2710fea99d58373cf859251ed096382c6316",
+   "reason": "",
+   "sha256": "ecd15e131a29976a3bdfd787d5616cc6d9e43744a8156f99ab467ac7a7d96370",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2025/08/FCP-BBC-One-V1-0-Insert.pdf": {
+   "boards": 0,
+   "checked": "2026-10-31T06:39:53+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": "Fri, 01 Aug 2025 08:38:49 GMT",
+   "outcome": "not clean",
+   "parts": "2ea46889297d25bf3210185056d14f3ebe427cf49476597dc2f29000eb340e52",
+   "reason": "OCR's reading of the parts list: Partial",
+   "sha256": "a67dd2e675f5b3d644f904857d8184d5d93f92000b44d4880f87ad7910344fcd",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2025/08/FCP-EP30-V1-0-Insert-1.pdf": {
+   "boards": 1,
+   "checked": "2026-10-31T06:39:59+00:00",
+   "entry": "fcp-ep30-v1-0-insert-1",
+   "etag": null,
+   "last_modified": "Mon, 25 Aug 2025 07:48:48 GMT",
+   "outcome": "listed",
+   "parts": "9a793de5c8a23da0b83afcb8f2d1723e500b323248e0720e7252adf10eded749",
+   "reason": "",
+   "sha256": "5907398fafd1e32fc8485f4907690dabf3bacd6f288bdfdc5e4c1570835e97c9",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2025/08/FCP-Timmahhh-V1-4-insert.pdf": {
+   "boards": 1,
+   "checked": "2026-10-31T06:40:55+00:00",
+   "entry": "fcp-timmahhh-v1-4-insert",
+   "etag": null,
+   "last_modified": "Fri, 01 Aug 2025 11:41:45 GMT",
+   "outcome": "listed",
+   "parts": "307eb0659c9584f3886d93ca8563a05fd88438714461a01e64e4633cec0e8e37",
+   "reason": "",
+   "sha256": "f285fc3094f30a88fd6de739791f64ae836a3639234a3c862053e68027c0f986",
+   "verification": "verified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2025/09/FCP-385-Drive-V1-0-Insert.pdf": {
+   "boards": 0,
+   "checked": "2026-10-31T06:41:39+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": "Fri, 26 Sep 2025 11:28:44 GMT",
+   "outcome": "not clean",
+   "parts": "2ea46889297d25bf3210185056d14f3ebe427cf49476597dc2f29000eb340e52",
+   "reason": "OCR's reading of the parts list: Partial",
+   "sha256": "86f6b06c9b085eb12f6cbe4138bfb4bcf398c8e7efa48b374367443150e40a92",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2025/09/FCP-Tone-Monarch-V1-1.pdf": {
+   "boards": 0,
+   "checked": "2026-10-31T06:41:48+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": "Sun, 28 Sep 2025 21:15:33 GMT",
+   "outcome": "not clean",
+   "parts": "001101567daafb8e965a63aa7cbde8c6ba610c0f8997af0b7626307f585baef6",
+   "reason": "4 self-check warning(s), first: Unextracted designator: DIPSW1 may be missing: OCR did not read it from the parts list. Check the document.",
+   "sha256": "955cfec74519f61ac93a5f4138c33b658f8f161a10c2c788fcd06a9c65b6d51b",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2025/09/FCP-Tweed-57-V1-0-Insert.pdf": {
+   "boards": 0,
+   "checked": "2026-10-31T06:42:07+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": "Fri, 26 Sep 2025 13:29:34 GMT",
+   "outcome": "not clean",
+   "parts": "2ea46889297d25bf3210185056d14f3ebe427cf49476597dc2f29000eb340e52",
+   "reason": "OCR's reading of the parts list: Partial",
+   "sha256": "72dfd31756e706f2d0c7fc6b404a676a0cd76740bcabf9af48f34d8134c13909",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2025/09/FCP-YTMMM-V1-0-Insert.pdf": {
+   "boards": 0,
+   "checked": "2026-10-31T06:42:21+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": "Fri, 26 Sep 2025 11:09:13 GMT",
+   "outcome": "not clean",
+   "parts": "2b95f09c635507d56d23ec7f222bfa970bfaa7dc43f56034adab24da3f3d0ce9",
+   "reason": "3 self-check warning(s), first: Unextracted designator: OSC-SW may be missing: OCR did not read it from the parts list. Check the document.",
+   "sha256": "babec17b70ab938376a34407123373f8172e620da4fef517f679d549ebdaeb29",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2025/11/FCP-29-Boost-V1-1-Insert.pdf": {
+   "boards": 0,
+   "checked": "2026-10-31T06:42:42+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": "Sun, 09 Nov 2025 11:25:09 GMT",
+   "outcome": "not clean",
+   "parts": "2ea46889297d25bf3210185056d14f3ebe427cf49476597dc2f29000eb340e52",
+   "reason": "OCR's reading of the parts list: Partial",
+   "sha256": "5e203885279c3632342175fc33f9fb538ecba8a0edca98aa544cf469208a3ab8",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2025/11/FCP-29-Buffer-V1-0-Insert.pdf": {
+   "boards": 0,
+   "checked": "2026-10-31T06:42:56+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": "Sun, 09 Nov 2025 12:12:55 GMT",
+   "outcome": "not clean",
+   "parts": "da43b1767042d6e5d9338fb3434f14563c050118bc117a68cae1394c26001842",
+   "reason": "7 self-check warning(s), first: Unextracted designator: C13 may be missing: OCR did not read it from the parts list. Check the document.",
+   "sha256": "d65d249a1b234040eae58745cf3a1f941c1f11b71ebdd188d258e2ba0fd8f470",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2025/11/FCP-Ascenscion-Reverb-V1-4-Insert.pdf": {
+   "boards": 1,
+   "checked": "2026-10-31T06:43:11+00:00",
+   "entry": "fcp-ascenscion-reverb-v1-4-insert",
+   "etag": null,
+   "last_modified": "Sun, 09 Nov 2025 09:44:32 GMT",
+   "outcome": "listed",
+   "parts": "33d307a0e0e02b5e3691d8f014f247a0e6be209fa6c50de4ae6fdc6d5549792b",
+   "reason": "",
+   "sha256": "fed3894fd712fae67110f64dcc1d8f1b661033764d20c12df5115099db41f104",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2025/11/FCP-Creamy-Fuzz-V1-4-insert.pdf": {
+   "boards": 1,
+   "checked": "2026-10-31T06:44:09+00:00",
+   "entry": "fcp-creamy-fuzz-v1-4-insert",
+   "etag": null,
+   "last_modified": "Sun, 09 Nov 2025 00:26:58 GMT",
+   "outcome": "listed",
+   "parts": "dd3050b6291b47e09e3285510c09d7f53c44154cefd2c3dbf24ba9413dee41f8",
+   "reason": "",
+   "sha256": "b6045928d7c089668cd9f7a86d3208a4826c9c007d0506995a54b75105e3c563",
+   "verification": "verified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2026/01/FCP-Clanger-V1-1-Insert.pdf": {
+   "boards": 1,
+   "checked": "2026-10-31T06:44:50+00:00",
+   "entry": "fcp-clanger-v1-1-insert",
+   "etag": null,
+   "last_modified": "Fri, 02 Jan 2026 00:16:10 GMT",
+   "outcome": "listed",
+   "parts": "22ab0ec2cde4c9d929e79acbda8c54dc8f5349a20d50eb80912853d0a857507d",
+   "reason": "",
+   "sha256": "341b62eba25044bea30e0fd93d743c2c11ee78c69192e3403e0da9b3d650d7df",
+   "verification": "verified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2026/01/FCP-Engineers-Thumb-V1-0-Insert.pdf": {
+   "boards": 0,
+   "checked": "2026-10-31T06:45:23+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": "Fri, 02 Jan 2026 16:49:56 GMT",
+   "outcome": "not clean",
+   "parts": "2ea46889297d25bf3210185056d14f3ebe427cf49476597dc2f29000eb340e52",
+   "reason": "OCR's reading of the parts list: Partial",
+   "sha256": "ea0d5bd4311048a239b79fd299a8ce00127cf7ebcb2688407d34f0e643007f05",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2026/01/FCP-No-One-Knows-V1-0-Insert-1.pdf": {
+   "boards": 0,
+   "checked": "2026-10-31T06:45:30+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": "Sat, 03 Jan 2026 17:28:56 GMT",
+   "outcome": "not clean",
+   "parts": "be043f127ec5302c426dc599ada8a285072a2e858599618e0447965da9d0fa09",
+   "reason": "2 self-check warning(s), first: Unextracted designator: D8 may be missing: OCR did not read it from the parts list. Check the document.",
+   "sha256": "2bef6abb321abeac7e47ee2088470fdc3abed2d778a2cb951074041571547fab",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2026/01/FCP-Riff-Raider-V1-1-Insert.pdf": {
+   "boards": 0,
+   "checked": "2026-10-31T06:45:50+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": "Sun, 04 Jan 2026 10:45:37 GMT",
+   "outcome": "not clean",
+   "parts": "6b2cc2c8e95561435012370ab14c3345374271e98c3f2ace8c98a501bb4549fa",
+   "reason": "4 self-check warning(s), first: Unextracted designator: C9 may be missing: OCR did not read it from the parts list. Check the document.",
+   "sha256": "1a3f99b9147ee3efb2a617ebd4c4e9e4f4a87d3d9480539cf81d380d3239f102",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2026/01/FCP-Summit-Distortion-V1-0-Insert-1.pdf": {
+   "boards": 0,
+   "checked": "2026-10-31T06:46:04+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": "Fri, 02 Jan 2026 17:36:14 GMT",
+   "outcome": "not clean",
+   "parts": "2ea46889297d25bf3210185056d14f3ebe427cf49476597dc2f29000eb340e52",
+   "reason": "OCR's reading of the parts list: Partial",
+   "sha256": "e3b120a90f4af1d25ca33493f3aefaf1d001ca9344f499f2acd3224ecfb029e8",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2026/03/FCP-Amp-Fet-Amine-One-V1-1-Insert.pdf": {
+   "boards": 0,
+   "checked": "2026-10-31T06:46:23+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": "Fri, 13 Mar 2026 11:06:58 GMT",
+   "outcome": "not clean",
+   "parts": "2ea46889297d25bf3210185056d14f3ebe427cf49476597dc2f29000eb340e52",
+   "reason": "OCR's reading of the parts list: Partial",
+   "sha256": "27027feeb2d9d5930849b24cdb2fb770acbae5193305994af7dde162104e1961",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2026/03/FCP-Fromage-Fuzz-V1-1-Insert.pdf": {
+   "boards": 1,
+   "checked": "2026-10-31T06:46:43+00:00",
+   "entry": "fcp-fromage-fuzz-v1-1-insert",
+   "etag": null,
+   "last_modified": "Fri, 13 Mar 2026 13:01:13 GMT",
+   "outcome": "listed",
+   "parts": "e4c4695d2340fad3885c86e34850d6a3fa2ec19b5cbcd070d32626c24c671556",
+   "reason": "",
+   "sha256": "4f2944bb223b833e1a8c9616acd012e69fbdb7d708d748ef7b3ad9beaf827667",
+   "verification": "verified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2026/03/FCP-Rotarty-Selector-V1-0-Insert.pdf": {
+   "boards": 0,
+   "checked": "2026-10-31T06:47:40+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": "Tue, 10 Mar 2026 14:48:27 GMT",
+   "outcome": "not clean",
+   "parts": "2ea46889297d25bf3210185056d14f3ebe427cf49476597dc2f29000eb340e52",
+   "reason": "no parts were read",
+   "sha256": "665950acf0b91c11bf92c0638e3b5a13460c446ed849376a454f4af8b1cdb7ad",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2026/03/FCP-ZTrem-V1-1-Insert.pdf": {
+   "boards": 1,
+   "checked": "2026-10-31T06:47:44+00:00",
+   "entry": "fcp-ztrem-v1-1-insert",
+   "etag": null,
+   "last_modified": "Thu, 12 Mar 2026 18:20:27 GMT",
+   "outcome": "listed",
+   "parts": "8309bfdab21eb57b6ce6f3340b78962a4c2433f9c907cb8aa6326854f2ca18b4",
+   "reason": "",
+   "sha256": "a43c96b18a5b1405a5fe7e1e76f9a8705e9a05a35372f6a255cf022c1e1fdc46",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2026/04/fcp-vintage-fuzz-face-1590B-wiring-v1.pdf": {
+   "boards": 0,
+   "checked": "2026-10-31T06:48:56+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": "Wed, 29 Apr 2026 21:47:28 GMT",
+   "outcome": "not clean",
+   "parts": "2ea46889297d25bf3210185056d14f3ebe427cf49476597dc2f29000eb340e52",
+   "reason": "no parts were read",
+   "sha256": "9a2b5072ea758fbc7f4e3524770773d75ae6bea3bbf490920487c907ab5a16c7",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2026/05/FCP-Komandir-Bit-V1-0-Insert.pdf": {
+   "boards": 1,
+   "checked": "2026-10-31T06:49:06+00:00",
+   "entry": "fcp-komandir-bit-v1-0-insert",
+   "etag": null,
+   "last_modified": "Wed, 13 May 2026 13:21:03 GMT",
+   "outcome": "listed",
+   "parts": "b7f5e234d0e629d5a150dad1b89893c0b146807123c187826e7a22776a215e22",
+   "reason": "",
+   "sha256": "57217078d77bb5863d3e1a14578f326dd961c020255cdc528821448e1df75235",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2026/06/FCP-Addition-Drive-V1-0-Insert.pdf": {
+   "boards": 0,
+   "checked": "2026-10-31T06:50:01+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": "Fri, 26 Jun 2026 18:45:32 GMT",
+   "outcome": "not clean",
+   "parts": "2ea46889297d25bf3210185056d14f3ebe427cf49476597dc2f29000eb340e52",
+   "reason": "OCR's reading of the parts list: Partial",
+   "sha256": "74914087a58e0ef6a71776e87c64ec5dfead3123541be4e3d7af457d1e039a50",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2026/07/FCP-Vintage-Soda-V1-0-Insert.pdf": {
+   "boards": 0,
+   "checked": "2026-10-31T06:50:08+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": "Sun, 05 Jul 2026 20:34:32 GMT",
+   "outcome": "not clean",
+   "parts": "00a842f4422ef7033adad99f7978961027573f74046e75dcba4c9f67214d2114",
+   "reason": "1 self-check warning(s), first: Unextracted designator: Note may be missing: OCR did not read it from the parts list. Check the document.",
+   "sha256": "3102621185342c02de27b377692224b071838cc4cdfcfad43468ab7c27bb49a5",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2026/08/FCP-Danish-Pastry-V1-0-Insert.pdf": {
+   "boards": 0,
+   "checked": "2026-10-31T06:50:27+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": "Fri, 21 Aug 2026 14:18:29 GMT",
+   "outcome": "not clean",
+   "parts": "6313064ca84c02f1aeb62a7e7a53382aa6c81530f46f8666fe6e0f79b8c1a9ac",
+   "reason": "1 self-check warning(s), first: Unextracted designator: CLR may be missing: OCR did not read it from the parts list. Check the document.",
+   "sha256": "e021403c11cfaa74d628d92db0ba526958529a2ace60bac86e8cc782bbd6b595",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2026/08/FCP-Impending-Doom-Insert-V1.0.pdf": {
+   "boards": 0,
+   "checked": "2026-10-31T06:50:53+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": "Fri, 21 Aug 2026 15:29:36 GMT",
+   "outcome": "not clean",
+   "parts": "2ea46889297d25bf3210185056d14f3ebe427cf49476597dc2f29000eb340e52",
+   "reason": "OCR's reading of the parts list: Partial",
+   "sha256": "b218332fe4ad852370829cfd71cb84c22f7b780625109ce6e48ee8189480feef",
+   "verification": "unverified"
+  },
+  "https://www.five-cats-pedals.co.uk/wp-content/uploads/2026/10/FCP-Rat-King-V1-0-Insert-1.pdf": {
+   "boards": 0,
+   "checked": "2026-10-31T06:51:10+00:00",
+   "entry": null,
+   "etag": null,
+   "last_modified": "Thu, 08 Oct 2026 17:58:17 GMT",
+   "outcome": "not clean",
+   "parts": "2ea46889297d25bf3210185056d14f3ebe427cf49476597dc2f29000eb340e52",
+   "reason": "OCR's reading of the parts list: Partial",
+   "sha256": "f878a44fb2137356487c8cd5745a8d55d2333033eb4f5922005c571967eb5ce4",
+   "verification": "unverified"
+  }
+ },
+ "pages": {
+  "https://www.five-cats-pedals.co.uk/product/18v-3pdt-foot-doubler/": {
+   "lastmod": "2025-02-01T13:43:16+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2025/02/FCP-18V-Foot-Doubler-V1-Insert.pdf",
+     "name": "FCP-18V-Foot-Doubler-V1-Insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/18v-3pdt-foot-doubler/"
+    }
+   ],
+   "read": "2026-10-31T05:05:24+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/24-carat-fuzz-mythos-golden-fleece-clone/": {
+   "lastmod": "2024-07-23T12:41:30+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2024/06/FCP-24-Carat-Fuzz-Insert-V1-0.pdf",
+     "name": "FCP-24-Carat-Fuzz-Insert-V1-0.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/24-carat-fuzz-mythos-golden-fleece-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:05:43+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/27-club-boost-byoc-27v-amp-top/": {
+   "lastmod": "2025-05-24T16:00:38+00:00",
+   "listings": [],
+   "read": "2026-10-31T05:06:02+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/27-club-byoc-27v-boost-clone-pedal/": {
+   "lastmod": "2025-08-22T10:54:34+00:00",
+   "listings": [],
+   "read": "2026-10-31T05:06:21+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/27-club-byoc-27v-boost/": {
+   "lastmod": "2025-09-26T08:10:10+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2025/02/FCP-27VBoost-V1-0-Insert.pdf",
+     "name": "FCP-27VBoost-V1-0-Insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/27-club-byoc-27v-boost/"
+    }
+   ],
+   "read": "2026-10-31T05:06:39+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/29-boost-29-pedals-jfet-boost-clone/": {
+   "lastmod": "2025-11-21T09:31:35+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2025/11/FCP-29-Boost-V1-1-Insert.pdf",
+     "name": "FCP-29-Boost-V1-1-Insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/29-boost-29-pedals-jfet-boost-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:06:55+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/29-buffer-29-pedals-euna-clone/": {
+   "lastmod": "2025-11-28T09:19:52+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2025/11/FCP-29-Buffer-V1-0-Insert.pdf",
+     "name": "FCP-29-Buffer-V1-0-Insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/29-buffer-29-pedals-euna-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:07:13+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/29-buffer-pedal-29-pedals-euna-clone/": {
+   "lastmod": "2026-01-23T18:56:55+00:00",
+   "listings": [],
+   "read": "2026-10-31T05:07:30+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/385-drive-walrus-audio-385-overdrive-clone/": {
+   "lastmod": "2025-12-04T18:26:13+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2025/09/FCP-385-Drive-V1-0-Insert.pdf",
+     "name": "FCP-385-Drive-V1-0-Insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/385-drive-walrus-audio-385-overdrive-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:07:46+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/3pdt-black-nylon-washers-10-pack/": {
+   "lastmod": "2024-08-14T17:50:34+00:00",
+   "listings": [],
+   "read": "2026-10-31T05:08:01+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/3pdt-daughter-board-qty-1/": {
+   "lastmod": "2024-07-27T00:31:47+00:00",
+   "listings": [],
+   "read": "2026-10-31T05:08:20+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/3pdt-daughter-board-qty-10/": {
+   "lastmod": "2024-07-27T00:20:50+00:00",
+   "listings": [],
+   "read": "2026-10-31T05:08:36+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/3pdt-daughter-board-qty-5/": {
+   "lastmod": "2024-07-27T00:31:17+00:00",
+   "listings": [],
+   "read": "2026-10-31T05:08:54+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/3pdt-order-switcher/": {
+   "lastmod": "2024-07-22T11:59:20+00:00",
+   "listings": [],
+   "read": "2026-10-31T05:09:12+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/4pdt-order-toggle-with-led-10-pack/": {
+   "lastmod": "2024-07-25T13:28:41+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2024/07/FCP-4PDT-Order-Switcher-LED-Insert-V1-1.pdf",
+     "name": "FCP-4PDT-Order-Switcher-LED-Insert-V1-1.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/4pdt-order-toggle-with-led-10-pack/"
+    }
+   ],
+   "read": "2026-10-31T05:09:28+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/50-shades-of-purple-lovepedal-purple-plexi-clone/": {
+   "lastmod": "2024-07-23T12:41:31+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2024/03/FCP-50-Shades-Of-Purple-Insert-V1-0.pdf",
+     "name": "FCP-50-Shades-Of-Purple-Insert-V1-0.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/50-shades-of-purple-lovepedal-purple-plexi-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:09:48+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/57-shades-of-tweed-wampler-tweed-57-clone/": {
+   "lastmod": "2025-10-16T11:48:39+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2025/09/FCP-Tweed-57-V1-0-Insert.pdf",
+     "name": "FCP-Tweed-57-V1-0-Insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/57-shades-of-tweed-wampler-tweed-57-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:10:03+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/9v-voltage-inverter/": {
+   "lastmod": "2024-07-27T00:33:20+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2021/06/FCP-9V-Voltage-Convertor-Insert.pdf",
+     "name": "FCP-9V-Voltage-Convertor-Insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/9v-voltage-inverter/"
+    }
+   ],
+   "read": "2026-10-31T05:10:20+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/addition-drive-barber-fww-plus-clone/": {
+   "lastmod": "2026-07-26T09:40:12+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2026/06/FCP-Addition-Drive-V1-0-Insert.pdf",
+     "name": "FCP-Addition-Drive-V1-0-Insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/addition-drive-barber-fww-plus-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:10:35+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/albus-mad-professor-simble-overdrive-clone/": {
+   "lastmod": "2024-07-23T12:46:13+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/07/FCP-Albus-V1-0-Insert.pdf",
+     "name": "FCP-Albus-V1-0-Insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/albus-mad-professor-simble-overdrive-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:10:55+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/amaze-boost-amz-mini-booster-clone/": {
+   "lastmod": "2024-07-23T12:43:02+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/07/FCP-Amaze-Boost-V1-0-Insert.pdf",
+     "name": "FCP-Amaze-Boost-V1-0-Insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/amaze-boost-amz-mini-booster-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:11:14+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/amp-fet-amine-one-boss-fa-1-fet-amplifier-clone/": {
+   "lastmod": "2026-04-02T07:52:34+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2026/03/FCP-Amp-Fet-Amine-One-V1-1-Insert.pdf",
+     "name": "FCP-Amp-Fet-Amine-One-V1-1-Insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/amp-fet-amine-one-boss-fa-1-fet-amplifier-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:11:32+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/ascension-reverb-eqd-levitation-reverb-clone/": {
+   "lastmod": "2026-01-09T19:56:11+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2025/11/FCP-Ascenscion-Reverb-V1-4-Insert.pdf",
+     "name": "FCP-Ascenscion-Reverb-V1-4-Insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/ascension-reverb-eqd-levitation-reverb-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:11:50+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/ashes-eqd-black-ash-clone/": {
+   "lastmod": "2024-01-28T14:45:44+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2021/12/FCP-Ashes-V1-0-insert.pdf",
+     "name": "FCP-Ashes-V1-0-insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/ashes-eqd-black-ash-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:12:04+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/axis-fuzz/": {
+   "lastmod": "2024-01-28T14:46:01+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2021/12/FCP-Axis-Fuzz-V1-0-insert.pdf",
+     "name": "FCP-Axis-Fuzz-V1-0-insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/axis-fuzz/"
+    }
+   ],
+   "read": "2026-10-31T05:12:22+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/azathoth-dunwich-cthulhu-clone/": {
+   "lastmod": "2024-07-23T12:41:55+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2024/03/FCP-Azathoth-Fuzz-V1-1-Insert.pdf",
+     "name": "FCP-Azathoth-Fuzz-V1-1-Insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/azathoth-dunwich-cthulhu-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:12:42+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/bazz-fuzz-3-pack/": {
+   "lastmod": "2024-07-23T12:46:03+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/07/FCP-BazzFuzz-V1-0-Insert.pdf",
+     "name": "FCP-BazzFuzz-V1-0-Insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/bazz-fuzz-3-pack/"
+    }
+   ],
+   "read": "2026-10-31T05:13:01+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/bbboost/": {
+   "lastmod": "2024-01-23T13:09:31+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2021/06/FCP-BBBoost-insert.pdf",
+     "name": "FCP-BBBoost-insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/bbboost/"
+    }
+   ],
+   "read": "2026-10-31T05:13:21+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/bbc-one-dumble-bbc-1-jhs-notadumble-clean-channel/": {
+   "lastmod": "2025-08-05T12:04:06+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2025/08/FCP-BBC-One-V1-0-Insert.pdf",
+     "name": "FCP-BBC-One-V1-0-Insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/bbc-one-dumble-bbc-1-jhs-notadumble-clean-channel/"
+    }
+   ],
+   "read": "2026-10-31T05:13:40+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/be-my-od-freidman-be-od-clone/": {
+   "lastmod": "2024-07-23T12:43:00+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/07/FCP-Be-My-OD-V1-0-Insert.pdf",
+     "name": "FCP-Be-My-OD-V1-0-Insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/be-my-od-freidman-be-od-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:13:56+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/blend-me-up-wet-dry-signal-blender/": {
+   "lastmod": "2026-09-30T17:57:34+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/11/FCP-Blend-Me-Up-Insert-V1-0.pdf",
+     "name": "FCP-Blend-Me-Up-Insert-V1-0.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/blend-me-up-wet-dry-signal-blender/"
+    }
+   ],
+   "read": "2026-10-31T05:14:11+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/bmp-tonestack-with-lpb1/": {
+   "lastmod": "2024-01-28T14:47:22+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2021/09/FCP-Tonestack-with-LPB-insert-V1-0.pdf",
+     "name": "FCP-Tonestack-with-LPB-insert-V1-0.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/bmp-tonestack-with-lpb1/"
+    }
+   ],
+   "read": "2026-10-31T05:14:27+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/boing-boing-j-rockett-boing-spring-reverb-clone/": {
+   "lastmod": "2024-07-23T12:41:40+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/11/FCP-Boing-Boing-V1-0-Insert.pdf",
+     "name": "FCP-Boing-Boing-V1-0-Insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/boing-boing-j-rockett-boing-spring-reverb-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:14:43+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/boss-foot-plate-base-plate-replacement-2-pack-flat/": {
+   "lastmod": "2024-01-28T14:47:38+00:00",
+   "listings": [],
+   "read": "2026-10-31T05:15:01+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/bow-booster-eqd-arrows-clone/": {
+   "lastmod": "2024-01-28T14:47:55+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/02/FCP-Bow-Booster-Insert-V1-0.pdf",
+     "name": "FCP-Bow-Booster-Insert-V1-0.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/bow-booster-eqd-arrows-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:15:20+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/breaking-blues-marshall-bluesbreaker-clone/": {
+   "lastmod": "2024-07-23T12:42:54+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/07/FPC-Breaking-Blues-V1-0-Inesrt.pdf",
+     "name": "FPC-Breaking-Blues-V1-0-Inesrt.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/breaking-blues-marshall-bluesbreaker-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:15:38+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/buddha-drive-lovepedal-hermida-audio-zendrive-clone/": {
+   "lastmod": "2024-01-28T14:48:40+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/03/FCP-Buddha-Drive-Insert-V1-0.pdf",
+     "name": "FCP-Buddha-Drive-Insert-V1-0.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/buddha-drive-lovepedal-hermida-audio-zendrive-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:15:53+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/buffer-up-cornish-ld1-clone/": {
+   "lastmod": "2024-01-28T14:48:57+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/02/FCP-Buffer-Up-Insert-V1-0.pdf",
+     "name": "FCP-Buffer-Up-Insert-V1-0.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/buffer-up-cornish-ld1-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:16:10+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/buffer-up-custom-1590a-pedal-cornish-ld1-clone/": {
+   "lastmod": "2025-08-22T10:55:23+00:00",
+   "listings": [],
+   "read": "2026-10-31T05:16:29+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/buzzumble-limited-run-pedal-third-man-records-bumble-buzz-clone/": {
+   "lastmod": "2026-05-07T12:26:06+00:00",
+   "listings": [],
+   "read": "2026-10-31T05:16:48+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/buzzumble-third-man-records-bumble-buzz-clone/": {
+   "lastmod": "2024-09-12T11:46:23+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/07/FCP-Buzzumble-V1-0-Insert.pdf",
+     "name": "FCP-Buzzumble-V1-0-Insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/buzzumble-third-man-records-bumble-buzz-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:17:04+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/carolina-reaper-hot-sustain-fuzz/": {
+   "lastmod": "2024-01-28T14:49:52+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2021/09/FCP-Carolina-Reaper-V1-1-insert.pdf",
+     "name": "FCP-Carolina-Reaper-V1-1-insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/carolina-reaper-hot-sustain-fuzz/"
+    }
+   ],
+   "read": "2026-10-31T05:17:20+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/clanger-dba-octave-clang-clone/": {
+   "lastmod": "2026-01-02T00:30:23+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2026/01/FCP-Clanger-V1-1-Insert.pdf",
+     "name": "FCP-Clanger-V1-1-Insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/clanger-dba-octave-clang-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:17:36+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/classic-triple-pack-breaking-blues-shredder-governor/": {
+   "lastmod": "2024-07-23T12:42:52+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/07/FPC-Breaking-Blues-V1-0-Inesrt.pdf",
+     "name": "FPC-Breaking-Blues-V1-0-Inesrt.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/classic-triple-pack-breaking-blues-shredder-governor/"
+    },
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/08/FCP-Governor-V1-1-Insert.pdf",
+     "name": "FCP-Governor-V1-1-Insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/classic-triple-pack-breaking-blues-shredder-governor/"
+    },
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/08/FCP-Shredder-V1-1-Insert.pdf",
+     "name": "FCP-Shredder-V1-1-Insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/classic-triple-pack-breaking-blues-shredder-governor/"
+    }
+   ],
+   "read": "2026-10-31T05:17:54+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/command-fuzz-eqd-terminal-fuzz-clone/": {
+   "lastmod": "2024-07-23T12:45:55+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/10/FCP-Command-Fuzz-Insert-V1-0.pdf",
+     "name": "FCP-Command-Fuzz-Insert-V1-0.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/command-fuzz-eqd-terminal-fuzz-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:18:10+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/cot-five-zero-lovepedal-cot-50/": {
+   "lastmod": "2024-07-23T12:45:53+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/11/FCP-Five-Zero-Insert-V1-0.pdf",
+     "name": "FCP-Five-Zero-Insert-V1-0.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/cot-five-zero-lovepedal-cot-50/"
+    }
+   ],
+   "read": "2026-10-31T05:18:29+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/creamy-fuzz-frantone-cream-puff-clone/": {
+   "lastmod": "2025-11-09T00:32:54+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2025/11/FCP-Creamy-Fuzz-V1-4-insert.pdf",
+     "name": "FCP-Creamy-Fuzz-V1-4-insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/creamy-fuzz-frantone-cream-puff-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:18:48+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/custom-pedal-configurator/": {
+   "lastmod": "2024-08-03T23:24:45+00:00",
+   "listings": [],
+   "read": "2026-10-31T05:19:06+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/custom-ranger-fulltone-custom-shop-ranger-frequency-boost-clone/": {
+   "lastmod": "2024-07-23T12:41:32+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/10/FCP-Custom-Ranger-V1-0-insert-1.pdf",
+     "name": "FCP-Custom-Ranger-V1-0-insert-1.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/custom-ranger-fulltone-custom-shop-ranger-frequency-boost-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:19:24+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/danish-pastry-thorpy-fx-the-dane-mk-ii-clone/": {
+   "lastmod": "2026-08-21T14:35:02+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2026/08/FCP-Danish-Pastry-V1-0-Insert.pdf",
+     "name": "FCP-Danish-Pastry-V1-0-Insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/danish-pastry-thorpy-fx-the-dane-mk-ii-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:19:42+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/dark-side-of-the-fuzz-pedal-skreddy-pedals-lunar-module-clone/": {
+   "lastmod": "2025-05-24T14:19:59+00:00",
+   "listings": [],
+   "read": "2026-10-31T05:20:00+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/dark-side-of-the-fuzz-skreddy-pedals-lunar-module-clone/": {
+   "lastmod": "2024-07-23T12:46:01+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/10/FCP-DSOTF-Insert-V1-0.pdf",
+     "name": "FCP-DSOTF-Insert-V1-0.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/dark-side-of-the-fuzz-skreddy-pedals-lunar-module-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:20:16+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/deep-down-eqd-depths-clone/": {
+   "lastmod": "2026-09-30T17:57:07+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/10/FCP-Deep-Down-Insert-V1-0.pdf",
+     "name": "FCP-Deep-Down-Insert-V1-0.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/deep-down-eqd-depths-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:20:33+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/dirty-aztec-with-pre-gain-acapulco-gold-clone-boss-enclosure/": {
+   "lastmod": "2025-06-20T13:07:25+00:00",
+   "listings": [],
+   "read": "2026-10-31T05:20:51+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/dirty-aztec/": {
+   "lastmod": "2024-01-28T14:50:57+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2021/06/FCP-Dirty-Aztec-insert.pdf",
+     "name": "FCP-Dirty-Aztec-insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/dirty-aztec/"
+    }
+   ],
+   "read": "2026-10-31T05:21:08+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/dist-plus-mxr-dist-clone/": {
+   "lastmod": "2025-07-09T12:03:43+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2025/07/FCP-Dist-Plus-V1-0-Insert.pdf",
+     "name": "FCP-Dist-Plus-V1-0-Insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/dist-plus-mxr-dist-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:21:26+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/dod-mini-expression-volume-pedal-replacement-gear/": {
+   "lastmod": "2025-09-03T22:15:06+00:00",
+   "listings": [],
+   "read": "2026-10-31T05:21:46+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/double-sho-mon-zvex-super-duper-2-in-1-clone/": {
+   "lastmod": "2024-01-28T14:52:13+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/02/FCP-Double-SHO-MON-V1-0.pdf",
+     "name": "FCP-Double-SHO-MON-V1-0.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/double-sho-mon-zvex-super-duper-2-in-1-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:22:02+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/dpdt-easy-toggle-adapter-board-10-pack/": {
+   "lastmod": "2025-12-04T19:52:56+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2024/10/FCP-Easy-Toggle-V1-0-Insert.pdf",
+     "name": "FCP-Easy-Toggle-V1-0-Insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/dpdt-easy-toggle-adapter-board-10-pack/"
+    }
+   ],
+   "read": "2026-10-31T05:22:19+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/drinks-coaster-five-cats-pedals-logo/": {
+   "lastmod": "2026-08-08T14:56:35+00:00",
+   "listings": [],
+   "read": "2026-10-31T05:22:38+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/dual-transmitter-hudson-broadcast-dual-clone/": {
+   "lastmod": "2024-07-23T12:41:33+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2024/04/FCP-Dual-Transmitter-V1.1-Insert-1.pdf",
+     "name": "FCP-Dual-Transmitter-V1.1-Insert-1.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/dual-transmitter-hudson-broadcast-dual-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:22:55+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/dual-wield-boss-katana-50-mk1-mk2-external-speaker-adapter/": {
+   "lastmod": "2024-07-27T00:22:41+00:00",
+   "listings": [],
+   "read": "2026-10-31T05:23:14+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/duckduck-nurse-quacky-clone/": {
+   "lastmod": "2024-01-28T14:52:27+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/10/FCP-Duck-Duck-V1-0-insert.pdf",
+     "name": "FCP-Duck-Duck-V1-0-insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/duckduck-nurse-quacky-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:23:34+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/dunder-dirt-cheap-seymour-duncan-dirty-deed-distortion-clone/": {
+   "lastmod": "2024-07-23T12:42:51+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/07/FCP-Dunder-Dirt-Cheap-Insert-V1-0.pdf",
+     "name": "FCP-Dunder-Dirt-Cheap-Insert-V1-0.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/dunder-dirt-cheap-seymour-duncan-dirty-deed-distortion-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:23:49+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/dying-battery-simulator-sag-machine/": {
+   "lastmod": "2024-07-23T12:41:41+00:00",
+   "listings": [],
+   "read": "2026-10-31T05:24:05+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/e-p-3-0-echoplex-ep-3-pre-amp-clone/": {
+   "lastmod": "2025-08-25T08:13:53+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2025/08/FCP-EP30-V1-0-Insert-1.pdf",
+     "name": "FCP-EP30-V1-0-Insert-1.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/e-p-3-0-echoplex-ep-3-pre-amp-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:24:23+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/easy-foot-dual-fx-toggle-board-with-order-switching/": {
+   "lastmod": "2025-02-23T10:51:51+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2025/02/FCP-Easy-Foot-Insert-REVB.pdf",
+     "name": "FCP-Easy-Foot-Insert-REVB.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/easy-foot-dual-fx-toggle-board-with-order-switching/"
+    }
+   ],
+   "read": "2026-10-31T05:24:42+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/echoes-faux-analog-echo-delay/": {
+   "lastmod": "2025-05-22T11:59:11+00:00",
+   "listings": [],
+   "read": "2026-10-31T05:25:00+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/echoes-wampler-faux-analog-echo-clone/": {
+   "lastmod": "2024-12-08T22:41:59+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2024/12/FCP-Echoes-V1-0-Insert.pdf",
+     "name": "FCP-Echoes-V1-0-Insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/echoes-wampler-faux-analog-echo-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:25:19+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/engineers-thumb-valve-wizard-engineers-thumb-clone/": {
+   "lastmod": "2026-01-09T11:12:37+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2026/01/FCP-Engineers-Thumb-V1-0-Insert.pdf",
+     "name": "FCP-Engineers-Thumb-V1-0-Insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/engineers-thumb-valve-wizard-engineers-thumb-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:25:39+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/eqd-mega-pack/": {
+   "lastmod": "2024-07-23T12:42:48+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2021/12/FCP-Ashes-V1-0-insert.pdf",
+     "name": "FCP-Ashes-V1-0-insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/eqd-mega-pack/"
+    },
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/02/FCP-Bow-Booster-Insert-V1-0.pdf",
+     "name": "FCP-Bow-Booster-Insert-V1-0.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/eqd-mega-pack/"
+    },
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/10/FCP-Command-Fuzz-Insert-V1-0.pdf",
+     "name": "FCP-Command-Fuzz-Insert-V1-0.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/eqd-mega-pack/"
+    },
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/10/FCP-Deep-Down-Insert-V1-0.pdf",
+     "name": "FCP-Deep-Down-Insert-V1-0.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/eqd-mega-pack/"
+    },
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/07/FCP-Lanterns-V1-0-Insert.pdf",
+     "name": "FCP-Lanterns-V1-0-Insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/eqd-mega-pack/"
+    },
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/05/FCP-Shouter-V1-0-Insert.pdf",
+     "name": "FCP-Shouter-V1-0-Insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/eqd-mega-pack/"
+    },
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2021/12/FCP-The-Spanker-V1-0-insert.pdf",
+     "name": "FCP-The-Spanker-V1-0-insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/eqd-mega-pack/"
+    },
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/06/FCP-Squiddle-V1-0-Insert.pdf",
+     "name": "FCP-Squiddle-V1-0-Insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/eqd-mega-pack/"
+    },
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/06/FCP-Violetear-V1-0-Iinsert.pdf.pdf",
+     "name": "FCP-Violetear-V1-0-Iinsert.pdf.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/eqd-mega-pack/"
+    }
+   ],
+   "read": "2026-10-31T05:25:54+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/five-cats-pedals-labs-effect-pedals-testing-kit/": {
+   "lastmod": "2025-05-24T14:55:30+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2025/04/FCP-Labs-Insert.pdf",
+     "name": "FCP-Labs-Insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/five-cats-pedals-labs-effect-pedals-testing-kit/"
+    }
+   ],
+   "read": "2026-10-31T05:26:13+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/fromage-fuzz-lovetone-big-cheese-clone/": {
+   "lastmod": "2026-03-27T13:30:23+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2026/03/FCP-Fromage-Fuzz-V1-1-Insert.pdf",
+     "name": "FCP-Fromage-Fuzz-V1-1-Insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/fromage-fuzz-lovetone-big-cheese-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:26:31+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/funk-machine-seamoon-funk-machine-clone/": {
+   "lastmod": "2024-07-23T12:45:56+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/10/FCP-FunkMachine-Insert-V1-0.pdf",
+     "name": "FCP-FunkMachine-Insert-V1-0.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/funk-machine-seamoon-funk-machine-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:26:48+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/furious-andrew-jhs-angry-andy-clone/": {
+   "lastmod": "2024-07-23T12:42:46+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/07/FCP-Furious-Andrew-V1-0-Insert.pdf",
+     "name": "FCP-Furious-Andrew-V1-0-Insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/furious-andrew-jhs-angry-andy-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:27:03+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/fuzz-mule-walrus-audio-contraband-clone/": {
+   "lastmod": "2024-01-28T14:54:10+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/07/FCP-Fuzz-Mule-V1-0-Insert.pdf",
+     "name": "FCP-Fuzz-Mule-V1-0-Insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/fuzz-mule-walrus-audio-contraband-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:27:21+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/gas-drive-eqd-plumes-clone/": {
+   "lastmod": "2025-05-30T09:18:45+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2025/04/FCP-Gas-Drive-V1-0-Insert.pdf",
+     "name": "FCP-Gas-Drive-V1-0-Insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/gas-drive-eqd-plumes-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:27:37+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/gomorrah-eqd-zoar-clone/": {
+   "lastmod": "2024-10-11T14:16:08+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2024/10/FCP-Gomorrah-V1-0-Insert.pdf",
+     "name": "FCP-Gomorrah-V1-0-Insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/gomorrah-eqd-zoar-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:27:53+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/gorva-m45-c65-s90-drill-template-pack/": {
+   "lastmod": "2024-07-27T00:34:11+00:00",
+   "listings": [],
+   "read": "2026-10-31T05:28:10+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/governor-marshall-guvnor-clone/": {
+   "lastmod": "2024-07-23T12:42:55+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/08/FCP-Governor-V1-1-Insert.pdf",
+     "name": "FCP-Governor-V1-1-Insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/governor-marshall-guvnor-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:28:28+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/hammond-1590a1590b1590bb-1590b-top-jack-drill-templates-ultimate-pack/": {
+   "lastmod": "2026-08-20T09:09:54+00:00",
+   "listings": [],
+   "read": "2026-10-31T05:28:45+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/hybrid-germanium-fuzz/": {
+   "lastmod": "2025-02-16T10:08:30+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2025/02/FCP-Hybrid-Fuzz-V1-1-Insert.pdf",
+     "name": "FCP-Hybrid-Fuzz-V1-1-Insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/hybrid-germanium-fuzz/"
+    }
+   ],
+   "read": "2026-10-31T05:29:04+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/impending-doom-audio-surplus-effects-ok-doomer-clone/": {
+   "lastmod": "2026-09-24T13:58:41+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2026/08/FCP-Impending-Doom-Insert-V1.0.pdf",
+     "name": "FCP-Impending-Doom-Insert-V1.0.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/impending-doom-audio-surplus-effects-ok-doomer-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:29:23+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/inhabitant-fuzz-dod-carcosa-fuzz-clone/": {
+   "lastmod": "2024-10-03T15:29:31+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2024/10/FCP-Inhabitant-Fuzz-V1-0-Insert.pdf",
+     "name": "FCP-Inhabitant-Fuzz-V1-0-Insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/inhabitant-fuzz-dod-carcosa-fuzz-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:29:39+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/j-buffer-simple-jfet-buffer/": {
+   "lastmod": "2024-07-23T12:43:08+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/06/FCP-J-Buffer-Insert-V1-0.pdf",
+     "name": "FCP-J-Buffer-Insert-V1-0.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/j-buffer-simple-jfet-buffer/"
+    }
+   ],
+   "read": "2026-10-31T05:29:57+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/jfet-clean-boost-pedal/": {
+   "lastmod": "2026-08-26T20:19:58+00:00",
+   "listings": [],
+   "read": "2026-10-31T05:30:15+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/jimi-fuzz-dunlop-jhf1-clone/": {
+   "lastmod": "2024-01-28T14:54:56+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/07/FCP-Jimi-Fuzz-V1-0-Insert.pdf",
+     "name": "FCP-Jimi-Fuzz-V1-0-Insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/jimi-fuzz-dunlop-jhf1-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:30:30+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/jive-by-shooter-jptr-fx-jive-clone/": {
+   "lastmod": "2025-04-05T10:52:08+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2025/03/FCP-Jive-By-Shooter-V1-0-Insert.pdf",
+     "name": "FCP-Jive-By-Shooter-V1-0-Insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/jive-by-shooter-jptr-fx-jive-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:30:49+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/joyo-tremolo-tremulator-mod-kit/": {
+   "lastmod": "2024-07-27T00:37:35+00:00",
+   "listings": [],
+   "read": "2026-10-31T05:31:04+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/k-buffer-klon-style-buffer/": {
+   "lastmod": "2024-07-23T12:43:07+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/06/FCP-K-Buffer-Insert-V1-0.pdf",
+     "name": "FCP-K-Buffer-Insert-V1-0.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/k-buffer-klon-style-buffer/"
+    }
+   ],
+   "read": "2026-10-31T05:31:22+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/k-type-fuzz-keeley-fuzz-bender-clone/": {
+   "lastmod": "2025-06-27T12:42:14+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2025/04/FCP-F-Type-Fuzz-Insert.pdf",
+     "name": "FCP-F-Type-Fuzz-Insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/k-type-fuzz-keeley-fuzz-bender-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:31:38+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/komandir-bit-eqd-bit-commander-clone/": {
+   "lastmod": "2026-05-22T15:46:24+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2026/05/FCP-Komandir-Bit-V1-0-Insert.pdf",
+     "name": "FCP-Komandir-Bit-V1-0-Insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/komandir-bit-eqd-bit-commander-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:31:57+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/krunch-jhs-angry-charlie-v3-clone/": {
+   "lastmod": "2024-01-28T09:02:38+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/08/FCP-Krunch-V1-0-Insert.pdf",
+     "name": "FCP-Krunch-V1-0-Insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/krunch-jhs-angry-charlie-v3-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:32:14+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/lanterns-eqd-white-light-clone/": {
+   "lastmod": "2024-01-28T14:55:19+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/07/FCP-Lanterns-V1-0-Insert.pdf",
+     "name": "FCP-Lanterns-V1-0-Insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/lanterns-eqd-white-light-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:32:33+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/lemming-drop/": {
+   "lastmod": "2024-01-28T14:55:29+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2021/08/FCP-lemming-drop-insert-V1-0.pdf",
+     "name": "FCP-lemming-drop-insert-V1-0.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/lemming-drop/"
+    }
+   ],
+   "read": "2026-10-31T05:32:50+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/llama-face-red-llama-25th-anniversary-edition-clone/": {
+   "lastmod": "2024-01-28T14:55:39+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2021/11/FCP-llama-face-insert-V1-0.pdf",
+     "name": "FCP-llama-face-insert-V1-0.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/llama-face-red-llama-25th-anniversary-edition-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:33:07+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/lord-of-this-world-sabbra-cadabra-clone/": {
+   "lastmod": "2025-09-26T09:07:49+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2021/06/FCP-Lord-of-this-world-insert.pdf",
+     "name": "FCP-Lord-of-this-world-insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/lord-of-this-world-sabbra-cadabra-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:33:26+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/lpb-1-plus/": {
+   "lastmod": "2024-01-28T14:56:07+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2021/09/FCP-LPB-Plus-insert-V1-0.pdf",
+     "name": "FCP-LPB-Plus-insert-V1-0.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/lpb-1-plus/"
+    }
+   ],
+   "read": "2026-10-31T05:33:43+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/m-drive-emerson-em-drive-clone/": {
+   "lastmod": "2025-11-01T16:27:41+00:00",
+   "listings": [],
+   "read": "2026-10-31T05:34:00+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/marshall-guvnor-2-modkit/": {
+   "lastmod": "2024-07-27T00:37:15+00:00",
+   "listings": [],
+   "read": "2026-10-31T05:34:20+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/marshall-supa-fuzz-replica-vintage/": {
+   "lastmod": "2024-11-08T15:05:55+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2024/10/fcp-marshall-supafuzz-wiring-v1-1.pdf",
+     "name": "fcp-marshall-supafuzz-wiring-v1-1.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/marshall-supa-fuzz-replica-vintage/"
+    }
+   ],
+   "read": "2026-10-31T05:34:38+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/mega-board-bundle-01/": {
+   "lastmod": "2024-07-27T00:29:38+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2021/06/FCP-Dirty-Aztec-insert.pdf",
+     "name": "FCP-Dirty-Aztec-insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/mega-board-bundle-01/"
+    }
+   ],
+   "read": "2026-10-31T05:34:55+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/mega-board-bundle-02/": {
+   "lastmod": "2024-07-27T00:26:07+00:00",
+   "listings": [],
+   "read": "2026-10-31T05:35:14+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/mega-board-bundle-03/": {
+   "lastmod": "2025-05-21T12:17:58+00:00",
+   "listings": [],
+   "read": "2026-10-31T05:35:33+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/mega-board-bundle-04/": {
+   "lastmod": "2025-10-21T18:14:04+00:00",
+   "listings": [],
+   "read": "2026-10-31T05:35:49+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/mega-utility-board-bundle-01/": {
+   "lastmod": "2024-07-23T12:43:05+00:00",
+   "listings": [],
+   "read": "2026-10-31T05:36:05+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/micro-champ-lovepedal-champ-clone/": {
+   "lastmod": "2024-01-28T14:56:54+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/02/FCP-Micro-Champ-V1-0-insert.pdf",
+     "name": "FCP-Micro-Champ-V1-0-insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/micro-champ-lovepedal-champ-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:36:23+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/micro-jtm-lovepedal-jtm-clone/": {
+   "lastmod": "2024-01-28T14:57:10+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/02/FCP-Micro-JTM-Insert-V1-0.pdf",
+     "name": "FCP-Micro-JTM-Insert-V1-0.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/micro-jtm-lovepedal-jtm-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:36:39+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/micro-jtm-micro-tweed-micro-champ-triple-pack/": {
+   "lastmod": "2024-01-28T14:57:17+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/02/FCP-Micro-Champ-V1-0-insert.pdf",
+     "name": "FCP-Micro-Champ-V1-0-insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/micro-jtm-micro-tweed-micro-champ-triple-pack/"
+    },
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/02/FCP-Micro-JTM-Insert-V1-0.pdf",
+     "name": "FCP-Micro-JTM-Insert-V1-0.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/micro-jtm-micro-tweed-micro-champ-triple-pack/"
+    },
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/02/FCP-Micro-Tweed-V1-0-insert.pdf",
+     "name": "FCP-Micro-Tweed-V1-0-insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/micro-jtm-micro-tweed-micro-champ-triple-pack/"
+    }
+   ],
+   "read": "2026-10-31T05:36:55+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/micro-mx-mxr-microamp-clone/": {
+   "lastmod": "2024-01-28T14:57:26+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/10/FCP-MicroMX-V1-0-Insert.pdf",
+     "name": "FCP-MicroMX-V1-0-Insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/micro-mx-mxr-microamp-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:37:12+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/micro-tweed-lovepedal-woodrow-clone/": {
+   "lastmod": "2024-01-28T14:57:35+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/02/FCP-Micro-Tweed-V1-0-insert.pdf",
+     "name": "FCP-Micro-Tweed-V1-0-insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/micro-tweed-lovepedal-woodrow-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:37:28+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/mid-spirit-jhs-haunting-mids-clone/": {
+   "lastmod": "2024-07-23T12:41:57+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/10/FCP-Mid-Spirit-Insert-V1-1.pdf",
+     "name": "FCP-Mid-Spirit-Insert-V1-1.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/mid-spirit-jhs-haunting-mids-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:37:47+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/moon-trem-culturejam-shoot-the-moon-tremolo/": {
+   "lastmod": "2025-01-14T12:41:28+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2024/10/FCP-Moon-Trem-V1-1-Insert.pdf",
+     "name": "FCP-Moon-Trem-V1-1-Insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/moon-trem-culturejam-shoot-the-moon-tremolo/"
+    }
+   ],
+   "read": "2026-10-31T05:38:07+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/morningstar-distortion-revv-g4-clone/": {
+   "lastmod": "2024-07-23T12:45:59+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/10/FCP-Morningstar-Distortion-Insert-V1-0.pdf",
+     "name": "FCP-Morningstar-Distortion-Insert-V1-0.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/morningstar-distortion-revv-g4-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:38:22+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/muzz-fuff-ehx-muff-fuzz-clone/": {
+   "lastmod": "2024-07-23T12:41:28+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2024/03/FCP-Muzz-Fuff-V1-0-Insert.pdf",
+     "name": "FCP-Muzz-Fuff-V1-0-Insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/muzz-fuff-ehx-muff-fuzz-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:38:42+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/my-little-horsey-klon-clone-with-mods/": {
+   "lastmod": "2025-05-07T08:35:01+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2025/04/FCP-My-Little-Horsey-Insert-V1-3.pdf",
+     "name": "FCP-My-Little-Horsey-Insert-V1-3.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/my-little-horsey-klon-clone-with-mods/"
+    }
+   ],
+   "read": "2026-10-31T05:39:00+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/my-little-horsey-klon-pedal-clone-with-mods/": {
+   "lastmod": "2025-07-01T16:59:35+00:00",
+   "listings": [],
+   "read": "2026-10-31T05:39:16+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/mystery-fx-bundle-01-guitar-pedal-pcbs-01/": {
+   "lastmod": "2024-07-27T00:24:06+00:00",
+   "listings": [],
+   "read": "2026-10-31T05:39:35+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/mystery-machine-van-custom-walrus-audio-contraband-clone/": {
+   "lastmod": "2025-05-26T14:22:03+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/02/FCP-Double-SHO-MON-V1-0.pdf",
+     "name": "FCP-Double-SHO-MON-V1-0.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/mystery-machine-van-custom-walrus-audio-contraband-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:39:54+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/no-one-knows-preamp-peavey-decade-clone/": {
+   "lastmod": "2026-01-23T11:52:41+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2026/01/FCP-No-One-Knows-V1-0-Insert-1.pdf",
+     "name": "FCP-No-One-Knows-V1-0-Insert-1.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/no-one-knows-preamp-peavey-decade-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:40:12+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/noise-ensemble-fuzz/": {
+   "lastmod": "2024-07-23T12:42:49+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/08/FCP-Noise-Emsemble-V1-0-Insert.pdf",
+     "name": "FCP-Noise-Emsemble-V1-0-Insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/noise-ensemble-fuzz/"
+    }
+   ],
+   "read": "2026-10-31T05:40:32+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/noise-gator-mxr-noise-gate-clone/": {
+   "lastmod": "2024-07-23T12:41:39+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/11/FCP-Noise-Gater-Insert-V1-0.pdf",
+     "name": "FCP-Noise-Gater-Insert-V1-0.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/noise-gator-mxr-noise-gate-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:40:51+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/not-so-clear-mid-fi-electronics-clarinot-fuzz-clone/": {
+   "lastmod": "2024-08-01T09:13:23+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2024/07/FCP-NotSoClear-Insert-V1-1.pdf",
+     "name": "FCP-NotSoClear-Insert-V1-1.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/not-so-clear-mid-fi-electronics-clarinot-fuzz-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:41:11+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/octavia-pedal-in-a-silver-hammertone-case/": {
+   "lastmod": "2025-08-22T10:54:21+00:00",
+   "listings": [],
+   "read": "2026-10-31T05:41:27+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/octavia-roger-mayer-vision-octavia-clone/": {
+   "lastmod": "2024-12-07T16:46:39+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2024/12/FCP-Octavia-V1-0-Insert.pdf",
+     "name": "FCP-Octavia-V1-0-Insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/octavia-roger-mayer-vision-octavia-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:41:44+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/old-soda-devi-ever-soda-meiser-vintage-fuzz-master-clone/": {
+   "lastmod": "2026-07-10T09:01:36+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2026/07/FCP-Vintage-Soda-V1-0-Insert.pdf",
+     "name": "FCP-Vintage-Soda-V1-0-Insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/old-soda-devi-ever-soda-meiser-vintage-fuzz-master-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:42:02+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/one-knob-fuzz-choose-from-5-classic-fuzzs-handbuilt-by-us/": {
+   "lastmod": "2026-03-29T19:55:04+00:00",
+   "listings": [],
+   "read": "2026-10-31T05:42:18+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/one-knob-fuzz-dark-meat-head-sale/": {
+   "lastmod": "2025-12-08T11:12:49+00:00",
+   "listings": [],
+   "read": "2026-10-31T05:42:37+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/one-knob-fuzz-full-kit-with-uv-printed-enclosure/": {
+   "lastmod": "2025-03-02T19:52:21+00:00",
+   "listings": [],
+   "read": "2026-10-31T05:42:56+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/one-knob-fuzz-guitar-pcb-fuzz-5-variant-board-qty-1/": {
+   "lastmod": "2024-01-28T14:59:28+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/08/FCP-OKS-FUZZ-Insert-V1-2.pdf",
+     "name": "FCP-OKS-FUZZ-Insert-V1-2.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/one-knob-fuzz-guitar-pcb-fuzz-5-variant-board-qty-1/"
+    }
+   ],
+   "read": "2026-10-31T05:43:14+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/one-knob-fuzz-guitar-pcb-fuzz-5-variant-board-qty-5/": {
+   "lastmod": "2024-01-28T14:59:15+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/08/FCP-OKS-FUZZ-Insert-V1-2.pdf",
+     "name": "FCP-OKS-FUZZ-Insert-V1-2.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/one-knob-fuzz-guitar-pcb-fuzz-5-variant-board-qty-5/"
+    }
+   ],
+   "read": "2026-10-31T05:43:32+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/one-punch-greer-amps-sucker-punch-clone/": {
+   "lastmod": "2024-01-28T14:59:42+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/04/FCP-One-Punch-V1-0-Insert.pdf",
+     "name": "FCP-One-Punch-V1-0-Insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/one-punch-greer-amps-sucker-punch-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:43:52+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/peak-dca55-dca75-component-tester-speed-adapter-qty-2/": {
+   "lastmod": "2024-07-27T00:25:12+00:00",
+   "listings": [],
+   "read": "2026-10-31T05:44:11+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/percolate-me-interfax-hp-1-harmonic-percolator-clone/": {
+   "lastmod": "2024-01-28T15:00:04+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2021/11/FCP-Percolate-Me-V1-0-insert.pdf",
+     "name": "FCP-Percolate-Me-V1-0-insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/percolate-me-interfax-hp-1-harmonic-percolator-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:44:26+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/phase-r-mxr-phase-90-45/": {
+   "lastmod": "2024-07-23T12:45:51+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/11/FCP-Phaser-R-Insert-V1-0.pdf",
+     "name": "FCP-Phaser-R-Insert-V1-0.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/phase-r-mxr-phase-90-45/"
+    }
+   ],
+   "read": "2026-10-31T05:44:45+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/pot-magic-16mm-9mm-6mm-potentiometer-and-trim-pot-adapter-qty-10/": {
+   "lastmod": "2024-07-27T00:23:11+00:00",
+   "listings": [],
+   "read": "2026-10-31T05:45:01+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/power-board-adapter/": {
+   "lastmod": "2024-07-27T00:29:06+00:00",
+   "listings": [],
+   "read": "2026-10-31T05:45:17+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/pre-soldered-j201-smd-mmbbfj201-qty-10/": {
+   "lastmod": "2024-07-27T00:27:36+00:00",
+   "listings": [],
+   "read": "2026-10-31T05:45:37+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/random-cats-mid-fi-electronics-random-number-generator-clone/": {
+   "lastmod": "2024-01-28T15:01:34+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2021/06/FCP-Random-Cats-insert.pdf",
+     "name": "FCP-Random-Cats-insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/random-cats-mid-fi-electronics-random-number-generator-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:45:53+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/random-noise-generator-mid-fi-electronics-random-number-generator-clone/": {
+   "lastmod": "2025-06-20T13:06:35+00:00",
+   "listings": [],
+   "read": "2026-10-31T05:46:08+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/rat-with-nos-metal-can-lm308-clipping-diode-toggle/": {
+   "lastmod": "2025-05-26T14:22:47+00:00",
+   "listings": [],
+   "read": "2026-10-31T05:46:27+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/rattus-rat-rat2-you-dirty-rat-turbo-rat-clone/": {
+   "lastmod": "2024-01-28T15:01:42+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/04/FCP-Rattus-Insert-V1-0.pdf",
+     "name": "FCP-Rattus-Insert-V1-0.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/rattus-rat-rat2-you-dirty-rat-turbo-rat-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:46:44+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/resistor-to-trimmer-adapter-10-pack/": {
+   "lastmod": "2024-07-27T00:28:14+00:00",
+   "listings": [],
+   "read": "2026-10-31T05:47:00+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/riff-raider-mid-fi-deluxe-pitch-pirate-clone/": {
+   "lastmod": "2026-02-02T17:56:43+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2026/01/FCP-Riff-Raider-V1-1-Insert.pdf",
+     "name": "FCP-Riff-Raider-V1-1-Insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/riff-raider-mid-fi-deluxe-pitch-pirate-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:47:18+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/ring-stinger-steel-panther-tc-butthole-burner-pssy-melter-clone/": {
+   "lastmod": "2024-07-23T12:42:58+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/08/FCP-Ring-Stinger-Insert-V1-0.pdf",
+     "name": "FCP-Ring-Stinger-Insert-V1-0.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/ring-stinger-steel-panther-tc-butthole-burner-pssy-melter-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:47:36+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/roberts-transistor-radio-ruby-guitar-amp-in-red/": {
+   "lastmod": "2025-05-26T14:25:42+00:00",
+   "listings": [],
+   "read": "2026-10-31T05:47:56+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/roberts-transistor-radio-ruby-guitar-amp/": {
+   "lastmod": "2025-07-29T17:28:45+00:00",
+   "listings": [],
+   "read": "2026-10-31T05:48:15+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/rotary-selector-utility-board-5-pack/": {
+   "lastmod": "2026-03-10T14:50:06+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2026/03/FCP-Rotarty-Selector-V1-0-Insert.pdf",
+     "name": "FCP-Rotarty-Selector-V1-0-Insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/rotary-selector-utility-board-5-pack/"
+    }
+   ],
+   "read": "2026-10-31T05:48:31+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/ruby-amp-hand-wired-guitar-amplifier/": {
+   "lastmod": "2025-03-02T19:48:44+00:00",
+   "listings": [],
+   "read": "2026-10-31T05:48:51+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/ruby-amp-pcb-build-your-own-guitar-amplifier/": {
+   "lastmod": "2024-01-28T15:02:46+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/08/FCP-RUBY-Amp-Insert-FINAL.pdf",
+     "name": "FCP-RUBY-Amp-Insert-FINAL.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/ruby-amp-pcb-build-your-own-guitar-amplifier/"
+    }
+   ],
+   "read": "2026-10-31T05:49:09+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/ruby-guitar-amp-in-custom-transistor-radio-enclosure/": {
+   "lastmod": "2025-05-26T14:20:32+00:00",
+   "listings": [],
+   "read": "2026-10-31T05:49:27+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/ruby-guitar-amp-with-tone-control-in-a-fender-tweed-enclosure/": {
+   "lastmod": "2025-03-02T19:49:30+00:00",
+   "listings": [],
+   "read": "2026-10-31T05:49:43+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/samurai-boost-keeley-katana-boost-clone/": {
+   "lastmod": "2024-07-23T12:41:51+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/07/FCP-Samurai-Boost-V1-1-Insert.pdf",
+     "name": "FCP-Samurai-Boost-V1-1-Insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/samurai-boost-keeley-katana-boost-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:50:01+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/scorpion-boost/": {
+   "lastmod": "2024-01-28T15:03:03+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2021/12/FCP-Scorpion-V1-0-insert.pdf",
+     "name": "FCP-Scorpion-V1-0-insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/scorpion-boost/"
+    }
+   ],
+   "read": "2026-10-31T05:50:19+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/screamer-ts808-ts9-clone/": {
+   "lastmod": "2024-07-23T12:43:16+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/06/FCP-Screamer-Insert-V1-0.pdf",
+     "name": "FCP-Screamer-Insert-V1-0.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/screamer-ts808-ts9-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:50:37+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/sho-mon-zvex-sho-clone/": {
+   "lastmod": "2024-01-28T15:03:23+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2021/12/FCP-SHO-MON-V1-0-insert.pdf",
+     "name": "FCP-SHO-MON-V1-0-insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/sho-mon-zvex-sho-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:50:55+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/shouter-eqd-bellows-clone/": {
+   "lastmod": "2024-01-28T15:03:37+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/05/FCP-Shouter-V1-0-Insert.pdf",
+     "name": "FCP-Shouter-V1-0-Insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/shouter-eqd-bellows-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:51:14+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/shredder-marshall-shred-master-clone/": {
+   "lastmod": "2024-07-23T12:42:56+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/08/FCP-Shredder-V1-1-Insert.pdf",
+     "name": "FCP-Shredder-V1-1-Insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/shredder-marshall-shred-master-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:51:32+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/smd-to-to-92-adapter-qty-10/": {
+   "lastmod": "2024-07-27T00:30:12+00:00",
+   "listings": [],
+   "read": "2026-10-31T05:51:50+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/smd-to-to-92-adapter-qty-30/": {
+   "lastmod": "2024-07-27T00:30:43+00:00",
+   "listings": [],
+   "read": "2026-10-31T05:52:09+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/so16-smd-to-dip16-adapter-board-qty-20/": {
+   "lastmod": "2024-07-27T00:26:59+00:00",
+   "listings": [],
+   "read": "2026-10-31T05:52:26+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/so8-smd-to-dip8-adapter-board-qty-20/": {
+   "lastmod": "2024-07-27T00:26:32+00:00",
+   "listings": [],
+   "read": "2026-10-31T05:52:43+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/spanker/": {
+   "lastmod": "2024-01-28T15:11:09+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2021/12/FCP-The-Spanker-V1-0-insert.pdf",
+     "name": "FCP-The-Spanker-V1-0-insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/spanker/"
+    }
+   ],
+   "read": "2026-10-31T05:52:58+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/squiddle-eqd-tentacle-clone/": {
+   "lastmod": "2024-07-23T12:43:13+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/06/FCP-Squiddle-V1-0-Insert.pdf",
+     "name": "FCP-Squiddle-V1-0-Insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/squiddle-eqd-tentacle-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:53:13+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/srv-drive-boost-limited-edition-pedal/": {
+   "lastmod": "2025-12-08T13:33:50+00:00",
+   "listings": [],
+   "read": "2026-10-31T05:53:29+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/srv-drive-lovepedal-super-stevie-mod-six-clone/": {
+   "lastmod": "2024-01-28T15:11:23+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2021/11/FCP-SRV-Drive-V1-0-insert.pdf",
+     "name": "FCP-SRV-Drive-V1-0-insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/srv-drive-lovepedal-super-stevie-mod-six-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:53:46+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/summit-distortion-wampler-pinnacle-clone/": {
+   "lastmod": "2026-02-20T13:23:16+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2026/01/FCP-Summit-Distortion-V1-0-Insert-1.pdf",
+     "name": "FCP-Summit-Distortion-V1-0-Insert-1.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/summit-distortion-wampler-pinnacle-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:54:05+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/super-mega-bundle/": {
+   "lastmod": "2025-03-02T19:51:50+00:00",
+   "listings": [],
+   "read": "2026-10-31T05:54:21+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/super60-jhs-superbolt-v2-clone/": {
+   "lastmod": "2024-07-23T12:42:59+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/07/FCP-Super60-V1-1-Insert.pdf",
+     "name": "FCP-Super60-V1-1-Insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/super60-jhs-superbolt-v2-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:54:38+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/texan-jingle-cesar-diaz-texas-ranger-clone/": {
+   "lastmod": "2024-09-11T14:49:29+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/07/FCP-Texan-Jingle-V1-0-insert.pdf",
+     "name": "FCP-Texan-Jingle-V1-0-insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/texan-jingle-cesar-diaz-texas-ranger-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:54:54+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/the-deep-down-optical-vibe-machine/": {
+   "lastmod": "2025-05-26T14:23:31+00:00",
+   "listings": [],
+   "read": "2026-10-31T05:55:13+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/the-m-drive-emerson-custom-em-drive-transparent-overdrive-clone/": {
+   "lastmod": "2024-01-28T15:12:39+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/02/FCP-M-Drive-V1-0-insert.pdf",
+     "name": "FCP-M-Drive-V1-0-insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/the-m-drive-emerson-custom-em-drive-transparent-overdrive-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:55:28+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/the-original-rocket-sockets-pepers-pedals/": {
+   "lastmod": "2024-07-26T23:26:55+00:00",
+   "listings": [],
+   "read": "2026-10-31T05:55:44+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/the-prestige-jhs-prestige-clone/": {
+   "lastmod": "2025-03-21T15:31:23+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2025/02/FCP-The-Prestige-V1-0-Insert.pdf",
+     "name": "FCP-The-Prestige-V1-0-Insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/the-prestige-jhs-prestige-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:55:59+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/the-rat-king-dual-rats-with-clipping-toggles/": {
+   "lastmod": "2026-10-08T18:05:40+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2026/10/FCP-Rat-King-V1-0-Insert-1.pdf",
+     "name": "FCP-Rat-King-V1-0-Insert-1.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/the-rat-king-dual-rats-with-clipping-toggles/"
+    }
+   ],
+   "read": "2026-10-31T05:56:18+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/timmahhh-timmy-v3-clone/": {
+   "lastmod": "2025-08-15T08:10:01+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2025/08/FCP-Timmahhh-V1-4-insert.pdf",
+     "name": "FCP-Timmahhh-V1-4-insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/timmahhh-timmy-v3-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:56:36+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/timmeehh-timmy-v3-with-mods-clone/": {
+   "lastmod": "2025-12-23T14:58:32+00:00",
+   "listings": [],
+   "read": "2026-10-31T05:56:52+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/tone-monarch-analogman-king-of-tone-clone/": {
+   "lastmod": "2025-10-03T08:23:03+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2025/09/FCP-Tone-Monarch-V1-1.pdf",
+     "name": "FCP-Tone-Monarch-V1-1.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/tone-monarch-analogman-king-of-tone-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:57:08+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/transelector-transistor-selector/": {
+   "lastmod": "2024-09-12T11:41:33+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/11/FCP-Transelector-V1-0-Insert.pdf",
+     "name": "FCP-Transelector-V1-0-Insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/transelector-transistor-selector/"
+    }
+   ],
+   "read": "2026-10-31T05:57:27+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/trold-way-huge-angry-troll-clone/": {
+   "lastmod": "2024-01-28T15:13:03+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/05/FCP-Trold-V1-0-Insert.pdf",
+     "name": "FCP-Trold-V1-0-Insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/trold-way-huge-angry-troll-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:57:43+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/v-box-lovepedal-englishman-overdrive-clone/": {
+   "lastmod": "2024-01-28T15:13:09+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/04/FCP-BVox-Box-Insert-V1-0.pdf",
+     "name": "FCP-BVox-Box-Insert-V1-0.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/v-box-lovepedal-englishman-overdrive-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:58:01+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/velvet-delight-steel-panther-tc-butthole-burner-pssy-melter-clone-pedal/": {
+   "lastmod": "2026-07-15T14:58:21+00:00",
+   "listings": [],
+   "read": "2026-10-31T05:58:18+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/vesuvius-fuzz/": {
+   "lastmod": "2024-01-28T15:13:20+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2021/09/FCP-vesuvius-insert-V1-0.pdf",
+     "name": "FCP-vesuvius-insert-V1-0.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/vesuvius-fuzz/"
+    }
+   ],
+   "read": "2026-10-31T05:58:36+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/victory-iii-victory-jack-kraken-sheriff-clone/": {
+   "lastmod": "2024-07-23T12:41:36+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2024/03/FCP-Victory-III-V1-0-Insert.pdf",
+     "name": "FCP-Victory-III-V1-0-Insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/victory-iii-victory-jack-kraken-sheriff-clone/"
+    }
+   ],
+   "read": "2026-10-31T05:58:52+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/vintage-pcb-fuzz-face-iss1-iss2-dual-pack/": {
+   "lastmod": "2025-03-02T19:46:53+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/03/FCP-Vintage-FuzzFace-Wiring-ISS1-ISS2.pdf",
+     "name": "FCP-Vintage-FuzzFace-Wiring-ISS1-ISS2.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/vintage-pcb-fuzz-face-iss1-iss2-dual-pack/"
+    }
+   ],
+   "read": "2026-10-31T05:59:08+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/vintage-pcb-fuzz-face-iss1-pnp/": {
+   "lastmod": "2025-03-02T19:51:00+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/03/FCP-Vintage-FuzzFace-Wiring-ISS1-ISS2.pdf",
+     "name": "FCP-Vintage-FuzzFace-Wiring-ISS1-ISS2.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/vintage-pcb-fuzz-face-iss1-pnp/"
+    }
+   ],
+   "read": "2026-10-31T05:59:27+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/vintage-pcb-fuzz-face-iss2-npn/": {
+   "lastmod": "2025-03-02T19:51:24+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/03/FCP-Vintage-FuzzFace-Wiring-ISS1-ISS2.pdf",
+     "name": "FCP-Vintage-FuzzFace-Wiring-ISS1-ISS2.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/vintage-pcb-fuzz-face-iss2-npn/"
+    }
+   ],
+   "read": "2026-10-31T05:59:46+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/vintage-pcb-rams-head-big-muff-pi-v2/": {
+   "lastmod": "2025-03-02T19:45:22+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/08/FCP-vintage-rams-head-muff-wiring-Insert-V1-0.pdf",
+     "name": "FCP-vintage-rams-head-muff-wiring-Insert-V1-0.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/vintage-pcb-rams-head-big-muff-pi-v2/"
+    }
+   ],
+   "read": "2026-10-31T06:00:05+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/vintage-style-fuzz-face-1590b/": {
+   "lastmod": "2026-04-29T21:55:40+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2026/04/fcp-vintage-fuzz-face-1590B-wiring-v1.pdf",
+     "name": "fcp-vintage-fuzz-face-1590B-wiring-v1.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/vintage-style-fuzz-face-1590b/"
+    }
+   ],
+   "read": "2026-10-31T06:00:21+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/vintage-style-fuzz-face/": {
+   "lastmod": "2024-10-24T11:49:13+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2024/10/fcp-vintage-fuzz-face-wiring-V1-1.pdf",
+     "name": "fcp-vintage-fuzz-face-wiring-V1-1.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/vintage-style-fuzz-face/"
+    }
+   ],
+   "read": "2026-10-31T06:00:36+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/violetear-hummingbird-v2-clone/": {
+   "lastmod": "2024-07-23T12:43:09+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/06/FCP-Violetear-V1-0-Iinsert.pdf.pdf",
+     "name": "FCP-Violetear-V1-0-Iinsert.pdf.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/violetear-hummingbird-v2-clone/"
+    }
+   ],
+   "read": "2026-10-31T06:00:53+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/volenuator-classic-black-finish-passive-volume-attenuator/": {
+   "lastmod": "2024-07-27T00:36:03+00:00",
+   "listings": [],
+   "read": "2026-10-31T06:01:10+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/volenuator-tweed-finish-passive-volume-attenuator/": {
+   "lastmod": "2024-07-27T00:36:32+00:00",
+   "listings": [],
+   "read": "2026-10-31T06:01:26+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/woollytron-zvex-mastotron-clone/": {
+   "lastmod": "2024-07-23T12:46:02+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/10/FCP-WoollyTron-Insert-V1-0.pdf",
+     "name": "FCP-WoollyTron-Insert-V1-0.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/woollytron-zvex-mastotron-clone/"
+    }
+   ],
+   "read": "2026-10-31T06:01:43+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/youre-twistin-my-melon-man-eqd-data-corrupter-clone/": {
+   "lastmod": "2025-09-26T11:17:07+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2025/09/FCP-YTMMM-V1-0-Insert.pdf",
+     "name": "FCP-YTMMM-V1-0-Insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/youre-twistin-my-melon-man-eqd-data-corrupter-clone/"
+    }
+   ],
+   "read": "2026-10-31T06:02:00+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/zonky/": {
+   "lastmod": "2024-01-26T16:15:35+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2021/09/FCP-Zonky-V1-1-Insert.pdf",
+     "name": "FCP-Zonky-V1-1-Insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/zonky/"
+    }
+   ],
+   "read": "2026-10-31T06:02:18+00:00"
+  },
+  "https://www.five-cats-pedals.co.uk/product/ztrem-zvex-trem-seeker-clone/": {
+   "lastmod": "2026-03-12T18:02:19+00:00",
+   "listings": [
+    {
+     "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2026/03/FCP-ZTrem-V1-1-Insert.pdf",
+     "name": "FCP-ZTrem-V1-1-Insert.pdf",
+     "page": "https://www.five-cats-pedals.co.uk/product/ztrem-zvex-trem-seeker-clone/"
+    }
+   ],
+   "read": "2026-10-31T06:02:36+00:00"
+  }
+ }
+}

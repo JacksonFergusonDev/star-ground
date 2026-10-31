@@ -1,0 +1,343 @@
+{
+ "id": "latchingrelaybypass-pedalpcb",
+ "publisher": "pedalpcb",
+ "title": "Basic Relay Bypass",
+ "document": "https://docs.pedalpcb.com/project/LatchingRelayBypass-PedalPCB.pdf",
+ "page": "https://www.pedalpcb.com/product/pcb394/",
+ "file_name": "LatchingRelayBypass-PedalPCB.pdf",
+ "sha256": "0879f4cfc479a992f5b406d537e14102c37d7b62bc281951e3e7b72aa5a25087",
+ "checked": "2026-10-31T09:45:04+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {
+     "ref": "R1",
+     "count": 1,
+     "category": "Resistors",
+     "value": "10k",
+     "location": {
+      "page": 0,
+      "x0": 37.0,
+      "top": 230.57799999999997,
+      "x1": 139.8748,
+      "bottom": 242.57799999999997
+     }
+    },
+    {
+     "ref": "R2",
+     "count": 1,
+     "category": "Resistors",
+     "value": "10k",
+     "location": {
+      "page": 0,
+      "x0": 37.0,
+      "top": 244.106,
+      "x1": 139.8748,
+      "bottom": 256.106
+     }
+    },
+    {
+     "ref": "R4",
+     "count": 1,
+     "category": "Resistors",
+     "value": "10k",
+     "location": {
+      "page": 0,
+      "x0": 37.0,
+      "top": 271.16200000000003,
+      "x1": 139.8748,
+      "bottom": 283.16200000000003
+     }
+    },
+    {
+     "ref": "R5",
+     "count": 1,
+     "category": "Resistors",
+     "value": "10k",
+     "location": {
+      "page": 0,
+      "x0": 37.0,
+      "top": 284.69,
+      "x1": 139.8748,
+      "bottom": 296.69
+     }
+    },
+    {
+     "ref": "R6",
+     "count": 1,
+     "category": "Resistors",
+     "value": "10k",
+     "location": {
+      "page": 0,
+      "x0": 37.0,
+      "top": 298.21799999999996,
+      "x1": 139.8748,
+      "bottom": 310.21799999999996
+     }
+    },
+    {
+     "ref": "R3",
+     "count": 1,
+     "category": "Resistors",
+     "value": "100k",
+     "location": {
+      "page": 0,
+      "x0": 37.0,
+      "top": 257.634,
+      "x1": 146.5492,
+      "bottom": 269.634
+     }
+    },
+    {
+     "ref": "C1",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "1u MLCC",
+     "location": {
+      "page": 0,
+      "x0": 37.0,
+      "top": 325.274,
+      "x1": 131.8684,
+      "bottom": 337.274
+     }
+    },
+    {
+     "ref": "C2",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "100n",
+     "location": {
+      "page": 0,
+      "x0": 37.0,
+      "top": 338.80199999999996,
+      "x1": 145.21720000000002,
+      "bottom": 350.80199999999996
+     }
+    },
+    {
+     "ref": "C4",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "100n",
+     "location": {
+      "page": 0,
+      "x0": 37.0,
+      "top": 365.858,
+      "x1": 145.21720000000002,
+      "bottom": 377.858
+     }
+    },
+    {
+     "ref": "C3",
+     "count": 1,
+     "category": "Capacitors",
+     "value": "100u",
+     "location": {
+      "page": 0,
+      "x0": 37.0,
+      "top": 352.33,
+      "x1": 145.21720000000002,
+      "bottom": 364.33
+     }
+    },
+    {
+     "ref": "IC1",
+     "count": 1,
+     "category": "ICs",
+     "value": "NE555",
+     "location": {
+      "page": 0,
+      "x0": 37.0,
+      "top": 392.914,
+      "x1": 226.38580000000002,
+      "bottom": 404.914
+     }
+    },
+    {
+     "ref": "IC2",
+     "count": 1,
+     "category": "ICs",
+     "value": "78L09",
+     "location": {
+      "page": 0,
+      "x0": 37.0,
+      "top": 406.442,
+      "x1": 151.8916,
+      "bottom": 418.442
+     }
+    },
+    {
+     "ref": "Q1",
+     "count": 1,
+     "category": "Transistors",
+     "value": "2N3904",
+     "location": {
+      "page": 0,
+      "x0": 37.0,
+      "top": 433.498,
+      "x1": 160.55800000000002,
+      "bottom": 445.498
+     }
+    },
+    {
+     "ref": "Q2",
+     "count": 1,
+     "category": "Transistors",
+     "value": "2N3904",
+     "location": {
+      "page": 0,
+      "x0": 37.0,
+      "top": 447.02599999999995,
+      "x1": 160.55800000000002,
+      "bottom": 459.02599999999995
+     }
+    },
+    {
+     "ref": "Q4",
+     "count": 1,
+     "category": "Transistors",
+     "value": "2N3904",
+     "location": {
+      "page": 0,
+      "x0": 37.0,
+      "top": 474.082,
+      "x1": 160.55800000000002,
+      "bottom": 486.082
+     }
+    },
+    {
+     "ref": "Q3",
+     "count": 1,
+     "category": "Transistors",
+     "value": "2N3906",
+     "location": {
+      "page": 0,
+      "x0": 37.0,
+      "top": 460.554,
+      "x1": 160.55800000000002,
+      "bottom": 472.554
+     }
+    },
+    {
+     "ref": "K1",
+     "count": 1,
+     "category": "Relays",
+     "value": "TQ2-L-5V",
+     "location": {
+      "page": 0,
+      "x0": 37.0,
+      "top": 501.138,
+      "x1": 171.20680000000002,
+      "bottom": 513.1379999999999
+     }
+    },
+    {
+     "ref": "FS",
+     "count": 1,
+     "category": "Switches",
+     "value": "SPST Momentary",
+     "location": {
+      "page": 0,
+      "x0": 37.0,
+      "top": 514.6659999999999,
+      "x1": 301.0618,
+      "bottom": 526.6659999999999
+     }
+    }
+   ]
+  }
+ ],
+ "boards": {
+  "K1": [
+   {
+    "page": 0,
+    "x0": 309.365,
+    "top": 629.69,
+    "x1": 312.96500000000003,
+    "bottom": 633.65
+   },
+   {
+    "page": 0,
+    "x0": 309.005,
+    "top": 658.49,
+    "x1": 312.96500000000003,
+    "bottom": 662.8100000000001
+   }
+  ],
+  "R3": [
+   {
+    "page": 0,
+    "x0": 471.949824,
+    "top": 648.77,
+    "x1": 476.629824,
+    "bottom": 654.1700000000001
+   }
+  ],
+  "R6": [
+   {
+    "page": 0,
+    "x0": 439.54982399999994,
+    "top": 652.01,
+    "x1": 444.58982399999996,
+    "bottom": 657.05
+   }
+  ],
+  "IC1": [
+   {
+    "page": 0,
+    "x0": 540.125,
+    "top": 668.21,
+    "x1": 546.245,
+    "bottom": 672.53
+   }
+  ],
+  "R4": [
+   {
+    "page": 0,
+    "x0": 460.205,
+    "top": 674.33,
+    "x1": 465.245,
+    "bottom": 678.65
+   }
+  ],
+  "C2": [
+   {
+    "page": 0,
+    "x0": 325.08500000000004,
+    "top": 707.09,
+    "x1": 329.165,
+    "bottom": 711.41
+   }
+  ],
+  "R5": [
+   {
+    "page": 0,
+    "x0": 459.845,
+    "top": 720.41,
+    "x1": 464.525,
+    "bottom": 725.09
+   }
+  ],
+  "R1": [
+   {
+    "page": 0,
+    "x0": 357.46982399999996,
+    "top": 720.77,
+    "x1": 361.78982399999995,
+    "bottom": 725.81
+   }
+  ],
+  "Q4": [
+   {
+    "page": 0,
+    "x0": 437.885,
+    "top": 722.21,
+    "x1": 444.005,
+    "bottom": 727.25
+   }
+  ]
+ }
+}
