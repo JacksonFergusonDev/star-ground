@@ -67,6 +67,8 @@ class Event:
         outcome: What became of it.
         reason: Why, for anything but a plain success.
         verified: Whether its listed build has been checked by hand.
+        again: Whether it failed the same way on the last run, so it's
+            already known and doesn't fail the job.
     """
 
     publisher: str
@@ -74,6 +76,7 @@ class Event:
     outcome: Outcome
     reason: str = ""
     verified: bool = False
+    again: bool = False
 
 
 @dataclass(slots=True)
@@ -215,7 +218,7 @@ class Reporter:
         detail = f" ({event.reason})" if event.reason else ""
         if self.github:
             line = f"[{event.outcome}] {event.document}{detail}"
-            if event.outcome in (Outcome.FAILED, Outcome.BLOCKED):
+            if event.outcome in (Outcome.FAILED, Outcome.BLOCKED) and not event.again:
                 self.warning(
                     f"{event.document}{detail}",
                     title=f"{event.publisher}: {event.outcome}",

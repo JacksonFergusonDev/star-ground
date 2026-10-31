@@ -668,6 +668,25 @@ def test_a_reading_that_fails_is_reported_and_the_rest_go_on(
     )
 
 
+def test_a_document_that_fails_again_is_listed_but_known(
+    tmp_path: Path, run: Any
+) -> None:
+    def broken() -> _Web:
+        web = _docs(_pedalpcb_web())
+        web._pages["https://docs.pedalpcb.com/project/Fuzz.pdf"] = [_Response(500)]
+        return web
+
+    def fuzz(reporter: Reporter) -> Event:
+        return next(e for e in reporter.tally.events if e.document.endswith("Fuzz.pdf"))
+
+    first = fuzz(run(broken(), lambda upload: _reading()))
+    second = fuzz(run(broken(), lambda upload: _reading()))
+
+    assert (first.outcome, first.again) == (Outcome.FAILED, False)
+    assert (second.outcome, second.again) == (Outcome.FAILED, True)
+    assert second.reason.endswith("(it failed last run too)")
+
+
 def test_a_run_out_of_time_reads_no_more_and_removes_nothing(
     tmp_path: Path, run: Any
 ) -> None:

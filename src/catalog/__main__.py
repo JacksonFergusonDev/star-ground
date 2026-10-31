@@ -16,7 +16,8 @@ def main(argv: list[str] | None = None) -> int:
 
     Returns:
         0, or 1 when a document or page failed or a site turned the job away,
-        so a scheduled run that needs a look shows as failed.
+        so a scheduled run that needs a look shows as failed. A document that
+        failed on the last run too is listed but doesn't fail it again.
     """
     parser = argparse.ArgumentParser(
         prog="python -m src.catalog",
@@ -108,7 +109,9 @@ def main(argv: list[str] | None = None) -> int:
     )
     reporter.summary()
     events = reporter.tally.events
-    trouble = any(e.outcome in (Outcome.FAILED, Outcome.BLOCKED) for e in events)
+    trouble = any(
+        e.outcome in (Outcome.FAILED, Outcome.BLOCKED) and not e.again for e in events
+    )
     return 1 if trouble or any(reporter.tally.page_failures.values()) else 0
 
 

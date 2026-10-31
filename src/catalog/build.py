@@ -479,12 +479,21 @@ def build(
             return
         except Exception as error:  # A failed fetch is reported; the rest go on.
             reason = f"couldn't fetch it: {error}"
+            # A file broken on the publisher's side fails every night; it
+            # fails the job the first time, then is only listed.
+            again = previous.outcome == Outcome.FAILED
             record(
                 url,
                 replace(
                     previous, checked=checked, outcome=Outcome.FAILED, reason=reason
                 ),
-                Event(publisher, url, Outcome.FAILED, reason),
+                Event(
+                    publisher,
+                    url,
+                    Outcome.FAILED,
+                    f"{reason} (it failed last run too)" if again else reason,
+                    again=again,
+                ),
             )
             return
         if fetched.status == 304:
