@@ -352,8 +352,12 @@ def discover(
                 logger.warning(
                     "[%d/%d] %s not read: %s", number, len(chosen), page, error
                 )
+                # Its documents are kept as last read: they aren't known to
+                # be gone, and not adding them would remove their builds.
                 if before:
                     result.pages[page] = before
+                    for listing in before.listings:
+                        add(listing)
                 continue
             links: Iterable[Listing] = (
                 _file_index_links(client, page, html, source.file_index, source)
