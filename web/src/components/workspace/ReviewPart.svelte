@@ -12,6 +12,7 @@
     check,
     warnings,
     selected,
+    hovered = false,
     document,
     onSelect,
     onCheck,
@@ -20,6 +21,8 @@
     check: Check | null;
     warnings: string[];
     selected: boolean;
+    /** Pointed at on the board. */
+    hovered?: boolean;
     /** What a report names: the link, or the upload's name and hash. */
     document: string;
     onSelect: () => void;
@@ -86,7 +89,13 @@
   }
 </script>
 
-<li class="part" data-ref={part.ref} class:selected class:flagged={warnings.length && !check}>
+<li
+  class="part"
+  data-ref={part.ref}
+  class:selected
+  class:hovered
+  class:flagged={warnings.length && !check}
+>
   <div class="row">
     <button class="show" type="button" onclick={onSelect} aria-pressed={selected}>
       <span class="ref">{part.ref}</span>
@@ -171,6 +180,9 @@
   .part.flagged {
     border-style: dashed;
     border-color: var(--muted);
+  }
+  .part.hovered {
+    border-color: var(--accent-border);
   }
   .part.selected {
     border: 1px solid var(--accent);

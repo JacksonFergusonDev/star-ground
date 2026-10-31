@@ -32,6 +32,9 @@ const catalog = defineCollection({
     checked: z.string(),
     read_by_ocr: z.boolean(),
     verified: z.boolean(),
+    // Where its board and schematic draw each part: absent until the job
+    // has found them (step 7).
+    boards: z.record(z.string(), z.array(location)).optional(),
     builds: z.array(
       z.object({
         name: z.string().nullable(),

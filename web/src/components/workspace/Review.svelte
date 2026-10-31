@@ -4,6 +4,8 @@
   // document's order. Choosing a part in either place shows it in the other.
   import { onMount } from 'svelte';
   import type { ProjectResult } from '../../lib/api';
+  import type { BoardMarks } from '../../lib/boards';
+  import { boardBoxes, boardMarks, rowRef } from '../../lib/boards';
   import { readingOrder } from '../../lib/reading-order';
   import type { Card, Check } from '../../lib/workspace.svelte';
   import { checksOf, count } from '../../lib/workspace.svelte';
@@ -34,6 +36,17 @@
   // svelte-ignore state_referenced_locally
   let selected = $state<string | null>(focus);
   let onlyFlagged = $state(false);
+  // Where a catalog document's board draws each part; none for other files.
+  let marks = $state<BoardMarks | null>(null);
+  let hovered = $state<string | null>(null);
+
+  // Hashing copies the bytes before pdf.js takes them, so it runs alongside.
+  function loadAndFind(): Promise<ArrayBuffer> {
+    return load().then((bytes) => {
+      void boardMarks(bytes).then((found) => (marks = found));
+      return bytes;
+    });
+  }
 
   const checks = $derived(checksOf(card));
   // What a report names: the link, or the upload's name and content hash.
@@ -64,19 +77,22 @@
   // Warnings about parts the list doesn't have ('R9 may be missing').
   const missing = $derived([...warnings].filter(([ref]) => !parts.some((p) => p.ref === ref)));
 
-  const boxes = $derived<Box[]>(
-    parts.flatMap((p) =>
+  const tone = (ref: string): Box['tone'] =>
+    checks[ref] ? 'checked' : warnings.has(ref) ? 'flagged' : 'plain';
+  const boxes = $derived<Box[]>([
+    ...boardBoxes(marks, tone),
+    ...parts.flatMap((p) =>
       p.location
         ? [
             {
               ref: p.ref,
               location: p.location,
-              tone: checks[p.ref] ? 'checked' : warnings.has(p.ref) ? 'flagged' : 'plain',
+              tone: tone(p.ref),
             },
           ]
         : [],
     ),
-  );
+  ]);
 
   // A part chosen on the page scrolls into view in the list.
   let list = $state<HTMLUListElement>();
@@ -110,7 +126,14 @@
 
   <div class="panes">
     <div class="document">
-      <DocumentViewer {load} {boxes} {selected} onSelect={choose} />
+      <DocumentViewer
+        load={loadAndFind}
+        {boxes}
+        {selected}
+        onSelect={choose}
+        {hovered}
+        onHover={(ref) => (hovered = ref)}
+      />
     </div>
 
     <div class="parts">
@@ -136,13 +159,20 @@
             {/each}
           </ul>
         {/if}
-        <ul class="list" bind:this={list}>
+        <ul
+          class="list"
+          bind:this={list}
+          onmouseover={(e) => (hovered = rowRef(e))}
+          onfocusin={(e) => (hovered = rowRef(e))}
+          onmouseleave={() => (hovered = null)}
+        >
           {#each shown as part (part.ref)}
             <ReviewPart
               {part}
               check={checks[part.ref] ?? null}
               warnings={warnings.get(part.ref) ?? []}
               selected={selected === part.ref}
+              hovered={hovered === part.ref}
               {document}
               onSelect={() => (selected = part.ref)}
               onCheck={(check) => onCheck(part.ref, check)}

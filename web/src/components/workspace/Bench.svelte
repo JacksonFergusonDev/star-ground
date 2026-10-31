@@ -1,11 +1,13 @@
 <script lang="ts">
   // Bench mode: building one project, part by part, lowest parts first (the
   // field manual's order), with the document beside the checklist when there
-  // is one. Made for a laptop at the bench: Space places the current part and
+  // is one, lit up where a catalog document's board draws the part at hand. Made for a laptop at the bench: Space places the current part and
   // moves to the next, the arrow keys move between parts. Progress is kept
   // on the card.
   import { onMount } from 'svelte';
   import type { ProjectResult } from '../../lib/api';
+  import type { BoardMarks } from '../../lib/boards';
+  import { boardBoxes, boardMarks, rowRef } from '../../lib/boards';
   import type { Card } from '../../lib/workspace.svelte';
   import { count, placedOf } from '../../lib/workspace.svelte';
   import type { Box } from './DocumentViewer.svelte';
@@ -39,13 +41,24 @@
   // svelte-ignore state_referenced_locally
   let current = $state<string | null>(order.find((ref) => !placed.has(ref)) ?? order[0] ?? null);
 
-  const boxes = $derived<Box[]>(
-    project.parts.flatMap((p) =>
-      p.location
-        ? [{ ref: p.ref, location: p.location, tone: placed.has(p.ref) ? 'checked' : 'plain' }]
-        : [],
+  // Where a catalog document's board draws each part; none for other files.
+  let marks = $state<BoardMarks | null>(null);
+  let hovered = $state<string | null>(null);
+  // Hashing copies the bytes before pdf.js takes them, so it runs alongside.
+  function loadAndFind(from: () => Promise<ArrayBuffer>): Promise<ArrayBuffer> {
+    return from().then((bytes) => {
+      void boardMarks(bytes).then((found) => (marks = found));
+      return bytes;
+    });
+  }
+
+  const tone = (ref: string): Box['tone'] => (placed.has(ref) ? 'checked' : 'plain');
+  const boxes = $derived<Box[]>([
+    ...boardBoxes(marks, tone),
+    ...project.parts.flatMap((p) =>
+      p.location ? [{ ref: p.ref, location: p.location, tone: tone(p.ref) }] : [],
     ),
-  );
+  ]);
 
   let list = $state<HTMLOListElement>();
   function show(ref: string | null): void {
@@ -122,11 +135,25 @@
   <div class:panes={load !== null}>
     {#if load}
       <div class="document">
-        <DocumentViewer {load} {boxes} selected={current} onSelect={show} />
+        <DocumentViewer
+          load={() => loadAndFind(load)}
+          {boxes}
+          selected={current}
+          onSelect={show}
+          {hovered}
+          onHover={(ref) => (hovered = ref)}
+          prefer="board"
+        />
       </div>
     {/if}
 
-    <ol class="order" bind:this={list}>
+    <ol
+      class="order"
+      bind:this={list}
+      onmouseover={(e) => (hovered = rowRef(e))}
+      onfocusin={(e) => (hovered = rowRef(e))}
+      onmouseleave={() => (hovered = null)}
+    >
       {#each project.build_order as step (step.stage)}
         <li class="stage">
           <h3>{step.stage}</h3>
@@ -136,6 +163,7 @@
               <li
                 data-ref={ref}
                 class:current={current === ref}
+                class:hovered={hovered === ref}
                 class:placed={placed.has(ref)}
                 aria-current={current === ref ? 'step' : undefined}
               >
@@ -260,6 +288,9 @@
     border-radius: 5px;
     background: var(--panel);
     scroll-margin: 80px;
+  }
+  .stage li.hovered {
+    border-color: var(--accent-border);
   }
   .stage li.current {
     border-color: var(--accent-border);

@@ -1,6 +1,7 @@
 // Checking a project against its document, against a stand-in API and a PDF
 // made here: two parts-list rows at known places on one page.
 
+import { createHash } from 'node:crypto';
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 import type {
@@ -327,4 +328,59 @@ test('bench mode places parts in build order from the keyboard, and keeps them',
   await expect(page.getByText('All 2 parts placed.')).toBeVisible();
   await page.getByRole('button', { name: 'Start over' }).click();
   await expect(page.getByText('0 of 2 parts placed.')).toBeVisible();
+});
+
+test("a catalog document's board lights up the part at hand, and the other way round", async ({
+  page,
+}) => {
+  await stubMasterList(page);
+  // The catalog's hash stops at the final %%EOF, as the catalog job's does, so
+  // a publisher's per-download stamp after it doesn't change it.
+  const hash = createHash('sha256')
+    .update(DOCUMENT.subarray(0, DOCUMENT.lastIndexOf('%%EOF') + 5))
+    .digest('hex');
+  await page.route(`**/catalog/boards/${hash}.json`, (route) =>
+    route.fulfill({
+      json: { marks: { R1: [{ page: 0, x0: 400, top: 600, x1: 420, bottom: 612 }] } },
+    }),
+  );
+  await page.goto('/app/');
+  await page.getByRole('button', { name: 'Upload' }).click();
+  await page.getByLabel('Build documents (PDF)').setInputFiles({
+    name: 'Fuzz.pdf',
+    mimeType: 'application/pdf',
+    buffer: Buffer.concat([DOCUMENT, Buffer.from('% downloaded 2026-10-31 12:00\n')]),
+  });
+  await page.getByRole('button', { name: 'Add', exact: true }).click();
+  await page.getByRole('button', { name: 'Check the parts against the document' }).click();
+
+  const mark = page.getByRole('button', { name: 'R1 on the board: show it in the parts list' });
+  await expect(mark).toBeAttached();
+  await row(page, 'R1').hover();
+  await expect(mark).toHaveClass(/hovered/);
+
+  await page.mouse.move(0, 0);
+  await mark.hover();
+  await expect(row(page, 'R1')).toHaveClass(/hovered/);
+  await mark.click();
+  await expect(mark).toHaveClass(/selected/);
+
+  // Bench mode brings the board's mark for the part at hand into view.
+  await page.getByRole('button', { name: 'Back to the workspace' }).click();
+  await page.getByRole('button', { name: 'Build it, part by part' }).click();
+  await expect(
+    page.getByRole('button', { name: 'R1 on the board: show it in the parts list' }),
+  ).toHaveClass(/selected/);
+});
+
+test('a document the catalog lacks has no board marks', async ({ page }) => {
+  await stubMasterList(page);
+  const asked: string[] = [];
+  page.on('request', (r) => {
+    if (r.url().includes('/catalog/boards/')) asked.push(r.url());
+  });
+  await upload(page);
+  await page.getByRole('button', { name: 'Check the parts against the document' }).click();
+  await expect.poll(() => asked.length).toBe(1);
+  await expect(page.getByRole('button', { name: /on the board/ })).toHaveCount(0);
 });

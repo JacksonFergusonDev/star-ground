@@ -113,3 +113,18 @@ test('a build no longer in the catalog says so', async ({ page }) => {
   await page.goto('/app/?catalog=pedalpcb/gone');
   await expect(page.getByRole('alert')).toHaveText(/couldn't be found/);
 });
+
+test("a build's board positions are published by its document's hash", async ({ request }) => {
+  const response = await request.get(
+    '/catalog/boards/57d37c0c204c70904fa1cdf6d7e73457445f648f1e063f2f8a5ffa4da6054fb2.json',
+  );
+  expect(response.ok()).toBe(true);
+  expect(await response.json()).toEqual({
+    marks: { R1: [{ page: 2, x0: 120.5, top: 300, x1: 131, bottom: 308 }] },
+  });
+  // The Big Muff has none yet, so it has no file.
+  const muff = await request.get(
+    '/catalog/boards/7f117935d37e1b85c2904710987d50f36db616f62294619e0087605a913b890a.json',
+  );
+  expect(muff.status()).toBe(404);
+});

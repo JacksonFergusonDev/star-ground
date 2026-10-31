@@ -21,8 +21,8 @@ from src.bom_lib import (
     create_empty_inventory,
     create_empty_stats,
 )
-from src.bom_lib.types import make_component_key
-from src.catalog.build import Budget, State, build, clean, entry_id
+from src.bom_lib.types import Location, make_component_key
+from src.catalog.build import BOARDS_VERSION, Budget, State, build, clean, entry_id
 from src.catalog.client import (
     MIN_DELAY_S,
     BlockedError,
@@ -427,10 +427,21 @@ def test_an_entry_id_is_the_file_name_as_a_slug() -> None:
     assert entry_id(listing) == "big-muff-v2-build-doc"
 
 
+def _boards(
+    content: bytes, refs: list[str], listing: list[Location]
+) -> dict[str, list[Location]]:
+    """A board finder that finds each part once, below its parts list."""
+    return {ref: [Location(1, 10, 20, 30, 40)] for ref in refs}
+
+
 @pytest.fixture
 def run(tmp_path: Path) -> Any:
     def go(
-        web: _Web, read: Any, minutes: float = 60, documents: int | None = None
+        web: _Web,
+        read: Any,
+        minutes: float = 60,
+        documents: int | None = None,
+        boards: Any = _boards,
     ) -> Reporter:
         reporter = Reporter(github=True, stream=io.StringIO())
         clock = _Clock()
@@ -445,6 +456,7 @@ def run(tmp_path: Path) -> Any:
             None,
             documents,
             read,
+            boards,
         )
         return reporter
 
@@ -487,6 +499,66 @@ def test_an_unchanged_document_is_not_read_again(tmp_path: Path, run: Any) -> No
 
     assert reads == []
     assert {e.outcome for e in reporter.tally.events} == {Outcome.UNCHANGED}
+
+
+def test_a_listed_build_says_where_its_board_draws_each_part(
+    tmp_path: Path, run: Any
+) -> None:
+    run(_docs(_pedalpcb_web()), lambda upload: _reading())
+
+    fuzz = json.loads((tmp_path / "builds" / "pedalpcb" / "fuzz.json").read_text())
+    assert fuzz["boards"]["R1"] == [
+        {"page": 1, "x0": 10, "top": 20, "x1": 30, "bottom": 40}
+    ]
+    state = json.loads((tmp_path / "state" / "pedalpcb.json").read_text())
+    assert {d["boards"] for d in state["documents"].values()} == {BOARDS_VERSION}
+
+
+def test_a_build_listed_without_board_positions_gains_them_unread(
+    tmp_path: Path, run: Any
+) -> None:
+    run(_docs(_pedalpcb_web()), lambda upload: _reading())
+    # As listed before board positions existed.
+    state_path = tmp_path / "state" / "pedalpcb.json"
+    state = json.loads(state_path.read_text())
+    for document in state["documents"].values():
+        del document["boards"]
+    state_path.write_text(json.dumps(state))
+    fuzz_path = tmp_path / "builds" / "pedalpcb" / "fuzz.json"
+    fuzz = json.loads(fuzz_path.read_text())
+    del fuzz["boards"]
+    fuzz_path.write_text(json.dumps(fuzz))
+    reads: list[FileUpload] = []
+    web = _docs(_pedalpcb_web())
+
+    def read(upload: FileUpload) -> ParseResult:
+        reads.append(upload)
+        return _reading()
+
+    reporter = run(web, read)
+
+    assert reads == []
+    assert "boards" in json.loads(fuzz_path.read_text())
+    # Fetched in full: a 304 would leave nothing to find them in.
+    asked = dict(web.asked)
+    assert "If-None-Match" not in asked["https://docs.pedalpcb.com/project/Fuzz.pdf"]
+    fuzz_event = next(
+        e for e in reporter.tally.events if e.document.endswith("Fuzz.pdf")
+    )
+    assert fuzz_event.outcome == Outcome.UNCHANGED
+    assert "board positions added" in fuzz_event.reason
+
+
+def test_a_board_finder_failure_still_lists_the_build(tmp_path: Path, run: Any) -> None:
+    def broken(*_: Any) -> dict[str, list[Location]]:
+        raise ValueError("no pages")
+
+    reporter = run(_docs(_pedalpcb_web()), lambda upload: _reading(), boards=broken)
+
+    fuzz = json.loads((tmp_path / "builds" / "pedalpcb" / "fuzz.json").read_text())
+    assert fuzz["boards"] == {}
+    assert {e.outcome for e in reporter.tally.events} == {Outcome.LISTED}
+    assert "couldn't find where fuzz draws its parts" in reporter._stream.getvalue()
 
 
 def test_a_document_that_no_longer_reads_cleanly_is_taken_out(

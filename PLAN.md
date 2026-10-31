@@ -168,7 +168,7 @@ Probed on 2026-10-24: board renders in PedalPCB, GuitarPCB and Tonepad documents
 - "In the text layer" counts listed designators printed more than once (an upper bound on what's free). Aion's and Tonepad's boards and schematics are vector drawings, but about half their labels are drawn as shapes, not text.
 - The turned pass is needed: it found 6 to 10 more designators per board image. Re-reading only near-square boxes turned both ways (short sideways labels; RapidOCR already turns taller ones) found fewer and cost about as much, because recognizing hundreds of boxes, not detecting them, is most of the time.
 - A quarter of the images (56 of 206) held no designators: drilling and wiring guides, photos. Five Cats' longest document has 62 images.
-- Parts-list OCR measured 16 CPU-s on the M3 and 20 to 100 vCPU-s on Cloud Run, so a PedalPCB document's 25 CPU-s here is about 30 to 150 vCPU-s there: as much as its parts-list OCR. Offered on request, it would share OCR's hourly allowance with the parts lists that need it; hence catalog only. In GitHub Actions the cost is free minutes, and reading only the largest few images per document would still shorten the job.
+- Parts-list OCR measured 16 CPU-s on the M3 and 20 to 100 vCPU-s on Cloud Run, so a PedalPCB document's 25 CPU-s here is about 30 to 150 vCPU-s there: as much as its parts-list OCR. Offered on request, it would share OCR's hourly allowance with the parts lists that need it; hence catalog only. In GitHub Actions the cost is free minutes. The job reads every image: size doesn't pick out the board (Kliche Overdrive's wiring diagrams are bigger than its board render).
 
 **Only catalog documents are highlighted** (decided 2026-10-29). Highlighting is a nice-to-have, and the cost below makes OCR for it a poor use of the API's compute, so the API never computes board positions. Step 8's offline catalog job computes them, and this step lands with it.
 
@@ -177,6 +177,12 @@ Probed on 2026-10-24: board renders in PedalPCB, GuitarPCB and Tonepad documents
 1. An upload or link whose content hash matches a catalog build uses that build's positions. Any other document has no board view: no OCR, and no partial highlighting from a text layer that holds only half the labels (Aion FX, Tonepad).
 1. Positions belong to a content hash (the document hash, up to its final `%%EOF`; see step 8). The browser hashes the PDF it draws and compares it with the catalog's; on a mismatch it shows the document without highlighting and says the publisher has updated it since. Stale boxes on a changed layout would point at the wrong parts. The nightly check (step 8) recomputes them within a day.
 1. Only if heuristics fail for a publisher: a small pre-trained layout model on onnxruntime (for example, RapidLayout). No training.
+
+**Built 2026-10-31.**
+
+- `src/bom_lib/boards.py` finds each designator outside the parts list: words in the text layer on short label lines (prose naming a part doesn't count), and every distinct image covering at least 8% of its page, read by OCR upright and turned 90°. The catalog job stores the result in the entry as `boards` (each designator's places), and the document's state records the finder's `BOARDS_VERSION`. On two PedalPCB documents on the M3 it placed 44 of 49 and 32 of 75 parts, in 5 to 7 s each.
+- **Backfill:** an entry listed before board positions existed, or by an older finder, is fetched in full once more and gains them without being read or listed again, within the night's time budget, so a backlog spreads over a few nights. A finder failure is a warning; the build stays listed without positions.
+- The site publishes each document's positions at `/catalog/boards/<hash>.json`. The review and bench mode hash the PDF they draw (`lib/boards.ts`, the same hash as `document_hash`), so an upload or link of a catalog file is lit up too, and a changed file finds nothing. Board marks show only for the part at hand or the row pointed at; pointing at a mark lights up its row, and clicking it chooses the part. Bench mode brings the part's place on the board into view rather than its parts list row.
 
 ### 8. Circuit catalog
 
@@ -242,8 +248,8 @@ Probed on 2026-10-24: board renders in PedalPCB, GuitarPCB and Tonepad documents
 | 4. Walking skeleton | Done 2026-10-28: v2.5.0 deployed to Cloud Run and Pages; measurements recorded; OCR thread pinning is a follow-up | #213 |
 | 5. Build workspace | Done 2026-10-28: project cards, the live master list, build choice, the OCR offer, stock, every export and browser storage. Feedback moves to step 6's part reports, and the catalog as a source to step 8 | #216, #218 |
 | 6. Document review | Done 2026-10-29: part locations, the document viewer, confirm or correct in place, and part reports | #222, #223 |
-| 7. PCB highlighting | Not started: cost measured 2026-10-29; catalog documents only, so it lands with step 8 | #224 |
+| 7. PCB highlighting | Done 2026-10-31: the catalog job finds board positions, the site publishes them by hash, and the review and bench mode light them up | #224, this PR |
 | 8. Circuit catalog | In progress: the catalog job and verified list, the nightly workflow, and the catalog pages; the first full run is under way | #225, #227, #229, #230, this PR |
-| 9. Bench mode | Done 2026-10-31: the checklist in build order, keyboard-driven, saved, with the document beside it; the board view comes with step 7 | this PR |
+| 9. Bench mode | Done 2026-10-31: the checklist in build order, keyboard-driven, saved, with the document and board beside it | #233, #234 |
 | 10. Share links | Done 2026-10-31: every project but uploads, in the link's fragment | this PR |
 | 11. Cutover and launch | Not started | |
