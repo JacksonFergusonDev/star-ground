@@ -216,6 +216,19 @@ def test_each_part_says_where_it_was_read(client: TestClient) -> None:
     ]
 
 
+def test_each_project_gives_its_build_order(client: TestClient) -> None:
+    text = "IC1 TL072\nC2 100u\nR1 10k\nC1 100n\nR2 1k"
+    response = _post(client, "/api/master-list", [{"method": "paste", "text": text}])
+
+    (project,) = response.json()["projects"]
+    assert project["build_order"] == [
+        {"stage": "Resistors", "refs": ["R1", "R2"]},
+        {"stage": "Small capacitors", "refs": ["C1"]},
+        {"stage": "Electrolytic capacitors", "refs": ["C2"]},
+        {"stage": "Chips", "refs": ["IC1"]},
+    ]
+
+
 def test_stock_is_subtracted(client: TestClient) -> None:
     request = json.dumps({"projects": [{"method": "paste", "text": "R1 10k"}]})
     stock = b"Category,Part,Qty\nResistors,10k,1\n"

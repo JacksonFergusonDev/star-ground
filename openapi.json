@@ -631,6 +631,52 @@
         "title": "BuildNotChosen",
         "description": "A multi-circuit document's build wasn't chosen."
       },
+      "BuildStage": {
+        "type": "string",
+        "enum": [
+          "PCB",
+          "Resistors",
+          "Diodes",
+          "Sockets",
+          "Crystals and oscillators",
+          "Small capacitors",
+          "Inductors",
+          "Transistors",
+          "Electrolytic capacitors",
+          "Relays",
+          "Switches",
+          "Transformers",
+          "Potentiometers",
+          "Hardware",
+          "Chips",
+          "Other parts"
+        ],
+        "title": "BuildStage",
+        "description": "A step of a build, declared in the order it's soldered."
+      },
+      "BuildStep": {
+        "properties": {
+          "stage": {
+            "$ref": "#/components/schemas/BuildStage"
+          },
+          "refs": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Refs",
+            "description": "Its designators, in the order read."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "stage",
+          "refs"
+        ],
+        "title": "BuildStep",
+        "description": "One stage of soldering a project, lowest parts first."
+      },
       "ComponentCategory": {
         "description": "Categories of electronic components.",
         "enum": [
@@ -1188,6 +1234,14 @@
             "type": "array",
             "title": "Parts",
             "description": "Each designator read, in the order read, to check against the document."
+          },
+          "build_order": {
+            "items": {
+              "$ref": "#/components/schemas/BuildStep"
+            },
+            "type": "array",
+            "title": "Build Order",
+            "description": "Its designators by the stage they're soldered in, lowest parts first, as the field manual orders them."
           }
         },
         "additionalProperties": false,
@@ -1199,7 +1253,8 @@
           "ocr_reads",
           "options",
           "errors",
-          "parts"
+          "parts",
+          "build_order"
         ],
         "title": "ProjectResult",
         "description": "One project as it went onto the master list."

@@ -14,6 +14,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from src.bom_lib import ComponentCategory, ComponentOrigin, OcrVerdict, ParseWarningKind
 from src.bom_lib.errors import ErrorKind
+from src.bom_lib.stages import BuildStage
 
 # Generous for any real parts list, small enough to bound a request's work.
 MAX_TEXT_CHARS = 200_000
@@ -251,6 +252,13 @@ class ReadPartOut(_Model):
     )
 
 
+class BuildStep(_Model):
+    """One stage of soldering a project, lowest parts first."""
+
+    stage: BuildStage
+    refs: list[str] = Field(description="Its designators, in the order read.")
+
+
 class ProjectResult(_Model):
     """One project as it went onto the master list."""
 
@@ -263,6 +271,10 @@ class ProjectResult(_Model):
     parts: list[ReadPartOut] = Field(
         description="Each designator read, in the order read, to check against "
         "the document."
+    )
+    build_order: list[BuildStep] = Field(
+        description="Its designators by the stage they're soldered in, lowest "
+        "parts first, as the field manual orders them."
     )
 
 

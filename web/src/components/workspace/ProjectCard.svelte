@@ -13,6 +13,7 @@
     onRemove,
     onRead,
     onReview,
+    onBench,
   }: {
     card: Card;
     presetName: (key: string) => string;
@@ -21,6 +22,8 @@
     onRead: (ocr: boolean) => void;
     /** Opens the document beside its parts; null until the parts are listed. */
     onReview: (() => void) | null;
+    /** Opens bench mode; null until the parts are listed. */
+    onBench: (() => void) | null;
   } = $props();
 
   const choices = $derived(builds(card));
@@ -136,6 +139,11 @@
   {#if onReview}
     <button class="text-button review" type="button" onclick={onReview}>
       Check the parts against the document <Icon name="arrow-right" size={14} />
+    </button>
+  {/if}
+  {#if onBench}
+    <button class="text-button review" type="button" onclick={onBench}>
+      Build it, part by part <Icon name="arrow-right" size={14} />
     </button>
   {/if}
 </li>

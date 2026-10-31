@@ -28,6 +28,7 @@ const card = (over: Partial<Card>): Card => ({
   reading: null,
   read: { state: 'ready' },
   checks: {},
+  placed: {},
   ...over,
 });
 

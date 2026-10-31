@@ -48,6 +48,8 @@ export interface Card {
   read: ReadState;
   /** The parts checked, by build ('' for a document with one), then designator. */
   checks: Record<string, Record<string, Check>>;
+  /** The parts placed in bench mode, by build ('' for a document with one). */
+  placed: Record<string, string[]>;
 }
 
 const STORAGE_KEY = 'star-ground.workspace.v1';
@@ -71,6 +73,11 @@ export function reviewable(card: Card): boolean {
 /** The checks for the card's chosen build. */
 export function checksOf(card: Card): Record<string, Check> {
   return card.checks[card.variant ?? ''] ?? {};
+}
+
+/** The parts placed in bench mode for the card's chosen build. */
+export function placedOf(card: Card): string[] {
+  return card.placed[card.variant ?? ''] ?? [];
 }
 
 /** Why a card can't go on the master list yet, or null when it can. */
@@ -139,13 +146,14 @@ export class Workspace {
     // A reading interrupted by a reload can't resume; offer to read again.
     for (const card of this.cards) {
       card.checks ??= {};
+      card.placed ??= {};
       if (card.read.state === 'reading' || card.read.state === 'queued')
         card.read = { state: 'failed', message: 'Reading was interrupted. Read it again.' };
     }
   }
 
   add(
-    card: Omit<Card, 'id' | 'variant' | 'useOcr' | 'reading' | 'read' | 'checks'>,
+    card: Omit<Card, 'id' | 'variant' | 'useOcr' | 'reading' | 'read' | 'checks' | 'placed'>,
     read?: ReadState,
   ): Card {
     this.cards.push({
@@ -156,6 +164,7 @@ export class Workspace {
       reading: null,
       read: read ?? { state: 'ready' },
       checks: {},
+      placed: {},
     });
     return this.cards[this.cards.length - 1] as Card;
   }
@@ -176,6 +185,18 @@ export class Workspace {
     if (check) checks[ref] = check;
     else delete checks[ref];
     card.checks[build] = checks;
+  }
+
+  /** Records a part placed in bench mode, or takes it off. */
+  place(card: Card, ref: string, placed: boolean): void {
+    const build = card.variant ?? '';
+    const refs = (card.placed[build] ?? []).filter((r) => r !== ref);
+    card.placed[build] = placed ? [...refs, ref] : refs;
+  }
+
+  /** Forgets the card's bench progress for its chosen build. */
+  startOver(card: Card): void {
+    card.placed[card.variant ?? ''] = [];
   }
 
   setCount(card: Card, count: number): void {

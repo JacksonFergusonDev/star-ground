@@ -74,6 +74,7 @@ from src.bom_lib.errors import (
     record_bug,
 )
 from src.bom_lib.ocr import OcrGuard, needs_ocr, ocr_guard
+from src.bom_lib.stages import BuildStage, build_stage, stage_order
 from src.exporters import (
     generate_shopping_list_csv,
     generate_stock_update_csv,
@@ -89,6 +90,7 @@ from src.server.limits import (
 )
 from src.server.models import (
     BuildNotChosen,
+    BuildStep,
     DocumentReading,
     DocumentsMissing,
     ExportKind,
@@ -542,6 +544,17 @@ def _part(part: ReadPart) -> ReadPartOut:
     )
 
 
+def _build_order(parts: Sequence[ReadPart]) -> list[BuildStep]:
+    """A project's designators by soldering stage, lowest parts first."""
+    stages: dict[BuildStage, list[str]] = {}
+    for part in parts:
+        stages.setdefault(build_stage(part.category, part.value), []).append(part.ref)
+    return [
+        BuildStep(stage=stage, refs=refs)
+        for stage, refs in sorted(stages.items(), key=lambda s: stage_order(s[0]))
+    ]
+
+
 def _warning(w: ParseWarning) -> PartWarning:
     return PartWarning(kind=w.kind, ref=w.ref, message=w.message)
 
@@ -581,6 +594,7 @@ def _result(
                 options=list(p.options),
                 errors=[_problem(services, e) for e in p.errors],
                 parts=[_part(part) for part in p.parts],
+                build_order=_build_order(p.parts),
             )
         )
     stats = master.stats

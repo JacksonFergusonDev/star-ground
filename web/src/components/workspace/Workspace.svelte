@@ -27,6 +27,7 @@
     Workspace,
   } from '../../lib/workspace.svelte';
   import AddProject from './AddProject.svelte';
+  import Bench from './Bench.svelte';
   import MasterList from './MasterList.svelte';
   import ProjectCard from './ProjectCard.svelte';
   import Review from './Review.svelte';
@@ -48,6 +49,11 @@
   // the card's checks at once, and in the project once the list catches up.
   const projectOf = (id: string): ProjectResult | null =>
     result?.projects[listed.indexOf(id)] ?? null;
+
+  // The card being built in bench mode.
+  let benching = $state<string | null>(null);
+  const benched = $derived(benching ? (workspace.find(benching) ?? null) : null);
+  const benchProject = $derived(benched ? projectOf(benched.id) : null);
 
   function review(id: string, ref: string | null = null): void {
     reviewing = { id, ref };
@@ -263,7 +269,18 @@
   });
 </script>
 
-{#if reviewing && reviewed}
+{#if benched && benchProject}
+  {#key benched.id}
+    <Bench
+      card={benched}
+      project={benchProject}
+      load={reviewable(benched) ? () => load(benched) : null}
+      onPlace={(ref, placed) => workspace.place(benched, ref, placed)}
+      onStartOver={() => workspace.startOver(benched)}
+      onBack={() => (benching = null)}
+    />
+  {/key}
+{:else if reviewing && reviewed}
   {#key reviewed.id}
     <Review
       card={reviewed}
@@ -295,6 +312,7 @@
               onReview={reviewable(card) && projectOf(card.id)?.parts.length
                 ? () => review(card.id)
                 : null}
+              onBench={projectOf(card.id)?.build_order.length ? () => (benching = card.id) : null}
             />
           {/each}
         </ul>
