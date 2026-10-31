@@ -24,7 +24,9 @@ from src.bom_lib import (
 from src.bom_lib.types import Location, make_component_key
 from src.catalog.build import BOARDS_VERSION, Budget, State, build, clean, entry_id
 from src.catalog.client import (
+    BACKOFF_S,
     MIN_DELAY_S,
+    RETRIES,
     BlockedError,
     DisallowedError,
     GoneError,
@@ -75,7 +77,9 @@ class _Response:
 class _Web:
     """A fake session: answers by URL, in turn when a URL has several answers."""
 
-    def __init__(self, pages: Mapping[str, _Response | list[_Response]]) -> None:
+    def __init__(
+        self, pages: Mapping[str, _Response | list[_Response | Exception]]
+    ) -> None:
         self.headers: dict[str, str] = {}
         self._pages = {k: v if isinstance(v, list) else [v] for k, v in pages.items()}
         self.asked: list[tuple[str, dict[str, str]]] = []
@@ -85,7 +89,10 @@ class _Web:
         if url.endswith("/robots.txt") and url not in self._pages:
             return _Response(404)
         answers = self._pages.get(url) or [_Response(404)]
-        return answers.pop(0) if len(answers) > 1 else answers[0]
+        answer = answers.pop(0) if len(answers) > 1 else answers[0]
+        if isinstance(answer, Exception):
+            raise answer
+        return answer
 
     def urls(self) -> list[str]:
         return [u for u, _ in self.asked if not u.endswith("/robots.txt")]
@@ -210,6 +217,24 @@ def test_too_many_requests_is_waited_out() -> None:
 
     assert fetched.content == b"ok"
     assert 120 in clock.slept
+
+
+def test_a_timeout_is_waited_out() -> None:
+    web = _Web({"https://a.test/1": [requests.ReadTimeout(), _Response(body=b"ok")]})
+    clock = _Clock()
+
+    fetched = _client(web, clock).get("https://a.test/1")
+
+    assert fetched.content == b"ok"
+    assert BACKOFF_S in clock.slept
+
+
+def test_a_site_that_never_answers_fails_after_its_retries() -> None:
+    web = _Web({"https://a.test/1": [requests.ConnectTimeout()]})
+
+    with pytest.raises(ConnectionError, match="didn't answer"):
+        _client(web).get("https://a.test/1")
+    assert web.urls() == ["https://a.test/1"] * (RETRIES + 1)
 
 
 def test_too_many_requests_that_persists_stops_the_site() -> None:
