@@ -118,6 +118,8 @@ SOURCES: dict[Publisher, Source] = {
         sitemap="https://www.pedalpcb.com/sitemap_index.xml",
         product_sitemap="product-sitemap",
         documents_apart=True,
+        # Product pages also link the datasheets of their chips and transistors.
+        excluded=re.compile(r"datasheet", re.IGNORECASE),
     ),
     Publisher.GUITARPCB: Source(
         Publisher.GUITARPCB,

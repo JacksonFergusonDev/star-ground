@@ -206,21 +206,40 @@ def entry(
         "read_by_ocr": result.ocr is not None and result.ocr.has_parts,
         "verified": verified,
         "builds": [
-            {
-                "name": name,
-                "parts": [
-                    {
-                        "ref": part.ref,
-                        "category": part.category.value,
-                        "value": part.value,
-                        "location": asdict(part.location) if part.location else None,
-                    }
-                    for part in read_parts(build)
-                ],
-            }
+            {"name": name, "parts": _entry_parts(build)}
             for name, build in builds(result)
         ],
     }
+
+
+def _entry_parts(build: ParseResult) -> list[dict[str, Any]]:
+    """A build's parts: each designator, then each part counted by value.
+
+    A counted part ('2 - 47', as Tonepad lists most of a build) has no
+    designator, so its `ref` is None and its `count` says how many.
+    """
+    designated = [
+        {
+            "ref": part.ref,
+            "count": 1,
+            "category": part.category.value,
+            "value": part.value,
+            "location": asdict(part.location) if part.location else None,
+        }
+        for part in read_parts(build)
+    ]
+    counted = [
+        {
+            "ref": None,
+            "count": count,
+            "category": key.category.value,
+            "value": key.value,
+            "location": None,
+        }
+        for key, data in build.inventory.items()
+        if (count := sum(data["counted"].values()))
+    ]
+    return designated + counted
 
 
 @dataclass(frozen=True, slots=True)
@@ -366,7 +385,7 @@ def build(
         parts = [p for build in data["builds"] for p in build["parts"]]
         listing = [Location(**p["location"]) for p in parts if p["location"]]
         try:
-            found = boards(content, [p["ref"] for p in parts], listing)
+            found = boards(content, [p["ref"] for p in parts if p["ref"]], listing)
         except Exception as error:  # The build is still listed, without them.
             reporter.warning(
                 f"couldn't find where {entry_id} draws its parts: "
@@ -542,7 +561,9 @@ def build(
                 title=f"{publisher}: verified reading changed",
             )
         is_verified = verification == Verification.VERIFIED
-        if why is not None and is_verified:
+        # A hand check can't make a build of no parts worth listing.
+        empty = any(not build.inventory for _, build in builds(accepted))
+        if why is not None and is_verified and not empty:
             # Checked by hand, so its warnings were looked into.
             reporter.info(f"listed though not clean, as it was checked by hand ({why})")
         elif why is not None:

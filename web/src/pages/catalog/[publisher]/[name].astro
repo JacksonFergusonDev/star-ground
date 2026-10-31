@@ -91,7 +91,7 @@ const several = data.builds.length > 1;
           <tbody>
             {build.parts.map((part) => (
               <tr>
-                <th scope="row">{part.ref}</th>
+                <th scope="row">{part.ref ?? `${part.count} ×`}</th>
                 <td>{part.value}</td>
                 <td>{part.category}</td>
               </tr>

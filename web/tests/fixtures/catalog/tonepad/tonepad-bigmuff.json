@@ -15,212 +15,254 @@
       "parts": [
         {
           "ref": "C1",
+          "count": 1,
           "category": "Capacitors",
           "value": "1u",
           "location": null
         },
         {
           "ref": "C3",
+          "count": 1,
           "category": "Capacitors",
           "value": "1u",
           "location": null
         },
         {
           "ref": "C4",
+          "count": 1,
           "category": "Capacitors",
           "value": "1u",
           "location": null
         },
         {
           "ref": "C7",
+          "count": 1,
           "category": "Capacitors",
           "value": "1u",
           "location": null
         },
         {
           "ref": "C13",
+          "count": 1,
           "category": "Capacitors",
           "value": "1u",
           "location": null
         },
         {
           "ref": "R1",
+          "count": 1,
           "category": "Resistors",
           "value": "39k",
           "location": null
         },
         {
           "ref": "R17",
+          "count": 1,
           "category": "Resistors",
           "value": "39k",
           "location": null
         },
         {
           "ref": "R12",
+          "count": 1,
           "category": "Resistors",
           "value": "8.2k",
           "location": null
         },
         {
           "ref": "R7",
+          "count": 1,
           "category": "Resistors",
           "value": "8.2k",
           "location": null
         },
         {
           "ref": "C2",
+          "count": 1,
           "category": "Capacitors",
           "value": "500p",
           "location": null
         },
         {
           "ref": "C6",
+          "count": 1,
           "category": "Capacitors",
           "value": "500p",
           "location": null
         },
         {
           "ref": "C9",
+          "count": 1,
           "category": "Capacitors",
           "value": "500p",
           "location": null
         },
         {
           "ref": "R2",
+          "count": 1,
           "category": "Resistors",
           "value": "100k",
           "location": null
         },
         {
           "ref": "R13",
+          "count": 1,
           "category": "Resistors",
           "value": "100k",
           "location": null
         },
         {
           "ref": "R18",
+          "count": 1,
           "category": "Resistors",
           "value": "100k",
           "location": null
         },
         {
           "ref": "R8",
+          "count": 1,
           "category": "Resistors",
           "value": "100k",
           "location": null
         },
         {
           "ref": "R19",
+          "count": 1,
           "category": "Resistors",
           "value": "100k",
           "location": null
         },
         {
           "ref": "R3",
+          "count": 1,
           "category": "Resistors",
           "value": "470k",
           "location": null
         },
         {
           "ref": "R14",
+          "count": 1,
           "category": "Resistors",
           "value": "470k",
           "location": null
         },
         {
           "ref": "R9",
+          "count": 1,
           "category": "Resistors",
           "value": "470k",
           "location": null
         },
         {
           "ref": "R4",
+          "count": 1,
           "category": "Resistors",
           "value": "15k",
           "location": null
         },
         {
           "ref": "R15",
+          "count": 1,
           "category": "Resistors",
           "value": "15k",
           "location": null
         },
         {
           "ref": "R10",
+          "count": 1,
           "category": "Resistors",
           "value": "15k",
           "location": null
         },
         {
           "ref": "C5",
+          "count": 1,
           "category": "Capacitors",
           "value": "100n",
           "location": null
         },
         {
           "ref": "C8",
+          "count": 1,
           "category": "Capacitors",
           "value": "100n",
           "location": null
         },
         {
           "ref": "C12",
+          "count": 1,
           "category": "Capacitors",
           "value": "100n",
           "location": null
         },
         {
           "ref": "R5",
+          "count": 1,
           "category": "Resistors",
           "value": "100",
           "location": null
         },
         {
           "ref": "R16",
+          "count": 1,
           "category": "Resistors",
           "value": "100",
           "location": null
         },
         {
           "ref": "R11",
+          "count": 1,
           "category": "Resistors",
           "value": "100",
           "location": null
         },
         {
           "ref": "R6",
+          "count": 1,
           "category": "Resistors",
           "value": "1k",
           "location": null
         },
         {
           "ref": "R20",
+          "count": 1,
           "category": "Resistors",
           "value": "390k",
           "location": null
         },
         {
           "ref": "C10",
+          "count": 1,
           "category": "Capacitors",
           "value": "4n",
           "location": null
         },
         {
           "ref": "R21",
+          "count": 1,
           "category": "Resistors",
           "value": "10k",
           "location": null
         },
         {
           "ref": "C11",
+          "count": 1,
           "category": "Capacitors",
           "value": "10n",
           "location": null
         },
         {
           "ref": "R22",
+          "count": 1,
           "category": "Resistors",
           "value": "2.2k",
+          "location": null
+        },
+        {
+          "ref": null,
+          "count": 2,
+          "category": "Resistors",
+          "value": "47",
           "location": null
         }
       ]
@@ -230,198 +272,231 @@
       "parts": [
         {
           "ref": "C1",
+          "count": 1,
           "category": "Capacitors",
           "value": "100n",
           "location": null
         },
         {
           "ref": "C3",
+          "count": 1,
           "category": "Capacitors",
           "value": "100n",
           "location": null
         },
         {
           "ref": "C4",
+          "count": 1,
           "category": "Capacitors",
           "value": "100n",
           "location": null
         },
         {
           "ref": "C7",
+          "count": 1,
           "category": "Capacitors",
           "value": "100n",
           "location": null
         },
         {
           "ref": "C12",
+          "count": 1,
           "category": "Capacitors",
           "value": "100n",
           "location": null
         },
         {
           "ref": "C13",
+          "count": 1,
           "category": "Capacitors",
           "value": "100n",
           "location": null
         },
         {
           "ref": "R1",
+          "count": 1,
           "category": "Resistors",
           "value": "3.3k",
           "location": null
         },
         {
           "ref": "R12",
+          "count": 1,
           "category": "Resistors",
           "value": "8.2k",
           "location": null
         },
         {
           "ref": "R7",
+          "count": 1,
           "category": "Resistors",
           "value": "8.2k",
           "location": null
         },
         {
           "ref": "R2",
+          "count": 1,
           "category": "Resistors",
           "value": "82k",
           "location": null
         },
         {
           "ref": "R13",
+          "count": 1,
           "category": "Resistors",
           "value": "82k",
           "location": null
         },
         {
           "ref": "R3",
+          "count": 1,
           "category": "Resistors",
           "value": "390k",
           "location": null
         },
         {
           "ref": "R14",
+          "count": 1,
           "category": "Resistors",
           "value": "390k",
           "location": null
         },
         {
           "ref": "R9",
+          "count": 1,
           "category": "Resistors",
           "value": "390k",
           "location": null
         },
         {
           "ref": "R20",
+          "count": 1,
           "category": "Resistors",
           "value": "390k",
           "location": null
         },
         {
           "ref": "R4",
+          "count": 1,
           "category": "Resistors",
           "value": "22k",
           "location": null
         },
         {
           "ref": "R15",
+          "count": 1,
           "category": "Resistors",
           "value": "22k",
           "location": null
         },
         {
           "ref": "C5",
+          "count": 1,
           "category": "Capacitors",
           "value": "50n",
           "location": null
         },
         {
           "ref": "C8",
+          "count": 1,
           "category": "Capacitors",
           "value": "50n",
           "location": null
         },
         {
           "ref": "R5",
+          "count": 1,
           "category": "Resistors",
           "value": "820",
           "location": null
         },
         {
           "ref": "R16",
+          "count": 1,
           "category": "Resistors",
           "value": "820",
           "location": null
         },
         {
           "ref": "C6",
+          "count": 1,
           "category": "Capacitors",
           "value": "560p",
           "location": null
         },
         {
           "ref": "C9",
+          "count": 1,
           "category": "Capacitors",
           "value": "560p",
           "location": null
         },
         {
           "ref": "R6",
+          "count": 1,
           "category": "Resistors",
           "value": "1k",
           "location": null
         },
         {
           "ref": "R17",
+          "count": 1,
           "category": "Resistors",
           "value": "39k",
           "location": null
         },
         {
           "ref": "R18",
+          "count": 1,
           "category": "Resistors",
           "value": "39k",
           "location": null
         },
         {
           "ref": "R19",
+          "count": 1,
           "category": "Resistors",
           "value": "100k",
           "location": null
         },
         {
           "ref": "C10",
+          "count": 1,
           "category": "Capacitors",
           "value": "4n",
           "location": null
         },
         {
           "ref": "R10",
+          "count": 1,
           "category": "Resistors",
           "value": "12k",
           "location": null
         },
         {
           "ref": "R21",
+          "count": 1,
           "category": "Resistors",
           "value": "12k",
           "location": null
         },
         {
           "ref": "C11",
+          "count": 1,
           "category": "Capacitors",
           "value": "10n",
           "location": null
         },
         {
           "ref": "R11",
+          "count": 1,
           "category": "Resistors",
           "value": "150",
           "location": null
         },
         {
           "ref": "R22",
+          "count": 1,
           "category": "Resistors",
           "value": "2.7k",
           "location": null
@@ -433,210 +508,245 @@
       "parts": [
         {
           "ref": "C1",
+          "count": 1,
           "category": "Capacitors",
           "value": "100n",
           "location": null
         },
         {
           "ref": "C3",
+          "count": 1,
           "category": "Capacitors",
           "value": "100n",
           "location": null
         },
         {
           "ref": "C4",
+          "count": 1,
           "category": "Capacitors",
           "value": "100n",
           "location": null
         },
         {
           "ref": "C7",
+          "count": 1,
           "category": "Capacitors",
           "value": "100n",
           "location": null
         },
         {
           "ref": "C12",
+          "count": 1,
           "category": "Capacitors",
           "value": "100n",
           "location": null
         },
         {
           "ref": "C13",
+          "count": 1,
           "category": "Capacitors",
           "value": "100n",
           "location": null
         },
         {
           "ref": "R1",
+          "count": 1,
           "category": "Resistors",
           "value": "39k",
           "location": null
         },
         {
           "ref": "R12",
+          "count": 1,
           "category": "Resistors",
           "value": "10k",
           "location": null
         },
         {
           "ref": "R7",
+          "count": 1,
           "category": "Resistors",
           "value": "10k",
           "location": null
         },
         {
           "ref": "R21",
+          "count": 1,
           "category": "Resistors",
           "value": "10k",
           "location": null
         },
         {
           "ref": "C2",
+          "count": 1,
           "category": "Capacitors",
           "value": "470p",
           "location": null
         },
         {
           "ref": "C6",
+          "count": 1,
           "category": "Capacitors",
           "value": "470p",
           "location": null
         },
         {
           "ref": "C9",
+          "count": 1,
           "category": "Capacitors",
           "value": "470p",
           "location": null
         },
         {
           "ref": "R2",
+          "count": 1,
           "category": "Resistors",
           "value": "100k",
           "location": null
         },
         {
           "ref": "R13",
+          "count": 1,
           "category": "Resistors",
           "value": "100k",
           "location": null
         },
         {
           "ref": "R8",
+          "count": 1,
           "category": "Resistors",
           "value": "100k",
           "location": null
         },
         {
           "ref": "R19",
+          "count": 1,
           "category": "Resistors",
           "value": "100k",
           "location": null
         },
         {
           "ref": "R3",
+          "count": 1,
           "category": "Resistors",
           "value": "470k",
           "location": null
         },
         {
           "ref": "R14",
+          "count": 1,
           "category": "Resistors",
           "value": "470k",
           "location": null
         },
         {
           "ref": "R9",
+          "count": 1,
           "category": "Resistors",
           "value": "470k",
           "location": null
         },
         {
           "ref": "R20",
+          "count": 1,
           "category": "Resistors",
           "value": "470k",
           "location": null
         },
         {
           "ref": "R4",
+          "count": 1,
           "category": "Resistors",
           "value": "12k",
           "location": null
         },
         {
           "ref": "R15",
+          "count": 1,
           "category": "Resistors",
           "value": "12k",
           "location": null
         },
         {
           "ref": "R10",
+          "count": 1,
           "category": "Resistors",
           "value": "12k",
           "location": null
         },
         {
           "ref": "C5",
+          "count": 1,
           "category": "Capacitors",
           "value": "47n",
           "location": null
         },
         {
           "ref": "C8",
+          "count": 1,
           "category": "Capacitors",
           "value": "47n",
           "location": null
         },
         {
           "ref": "R5",
+          "count": 1,
           "category": "Resistors",
           "value": "390",
           "location": null
         },
         {
           "ref": "R16",
+          "count": 1,
           "category": "Resistors",
           "value": "390",
           "location": null
         },
         {
           "ref": "R11",
+          "count": 1,
           "category": "Resistors",
           "value": "390",
           "location": null
         },
         {
           "ref": "R6",
+          "count": 1,
           "category": "Resistors",
           "value": "1k",
           "location": null
         },
         {
           "ref": "R17",
+          "count": 1,
           "category": "Resistors",
           "value": "20k",
           "location": null
         },
         {
           "ref": "R18",
+          "count": 1,
           "category": "Resistors",
           "value": "22k",
           "location": null
         },
         {
           "ref": "C10",
+          "count": 1,
           "category": "Capacitors",
           "value": "3.9n",
           "location": null
         },
         {
           "ref": "C11",
+          "count": 1,
           "category": "Capacitors",
           "value": "10n",
           "location": null
         },
         {
           "ref": "R22",
+          "count": 1,
           "category": "Resistors",
           "value": "2k",
           "location": null
