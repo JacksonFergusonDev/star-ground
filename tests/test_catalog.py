@@ -579,6 +579,27 @@ def test_a_listed_build_says_where_its_board_draws_each_part(
     assert {d["boards"] for d in state["documents"].values()} == {BOARDS_VERSION}
 
 
+def test_an_entry_is_written_a_part_and_a_designator_per_line(
+    tmp_path: Path, run: Any
+) -> None:
+    def noisy(*_: Any) -> dict[str, list[Location]]:
+        return {"R1": [Location(1, 10.004999999, 20.5, 30.0, 101.51319999999998)]}
+
+    run(_docs(_pedalpcb_web()), lambda upload: _reading(), boards=noisy)
+
+    text = (tmp_path / "builds" / "pedalpcb" / "fuzz.json").read_text()
+    lines = [line.strip().rstrip(",") for line in text.splitlines()]
+    for part in json.loads(text)["builds"][0]["parts"]:
+        assert json.dumps(part) in lines
+    rounded = {"page": 1, "x0": 10.0, "top": 20.5, "x1": 30.0, "bottom": 101.51}
+    assert f'"R1": {json.dumps([rounded])}' in lines
+    state = (tmp_path / "state" / "pedalpcb.json").read_text()
+    for document in json.loads(state)["documents"].values():
+        assert json.dumps(document) in [
+            line.split(": ", 1)[-1].rstrip(",") for line in state.splitlines()
+        ]
+
+
 def test_a_build_listed_without_board_positions_gains_them_unread(
     tmp_path: Path, run: Any
 ) -> None:

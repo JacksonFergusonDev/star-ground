@@ -136,13 +136,13 @@ class State:
         )
 
     def save(self, path: Path) -> None:
-        """Writes the state, sorted so a run's changes diff cleanly."""
+        """Writes the state sorted, a page or document per line, to diff cleanly."""
         path.parent.mkdir(parents=True, exist_ok=True)
         data = {
             "pages": {url: asdict(page) for url, page in sorted(self.pages.items())},
             "documents": {url: asdict(d) for url, d in sorted(self.documents.items())},
         }
-        path.write_text(json.dumps(data, indent=1, sort_keys=True) + "\n")
+        path.write_text(_json(data, expand=2) + "\n")
 
 
 def clean(result: ParseResult) -> str | None:
@@ -177,6 +177,49 @@ def catalog_reading(reading: ParseResult) -> ParseResult:
     ocr = reading.ocr
     complete = ocr is not None and ocr.verdict == OcrVerdict.COMPLETE
     return replace(offered(reading, use_ocr=complete), ocr=ocr)
+
+
+def _json(value: Any, expand: int, indent: str = "") -> str:
+    """`value` as JSON, its outer `expand` levels laid out a member per line."""
+    if expand == 0 or not isinstance(value, dict | list) or not value:
+        return json.dumps(value)
+    inner = indent + " "
+    if isinstance(value, dict):
+        members = [
+            f"{inner}{json.dumps(key)}: {_json(member, expand - 1, inner)}"
+            for key, member in value.items()
+        ]
+        return "{\n" + ",\n".join(members) + f"\n{indent}}}"
+    items = [f"{inner}{_json(item, expand - 1, inner)}" for item in value]
+    return "[\n" + ",\n".join(items) + f"\n{indent}]"
+
+
+def _rounded(value: Any) -> Any:
+    """`value` with its coordinates kept to a hundredth of a point."""
+    if isinstance(value, float):
+        return round(value, 2)
+    if isinstance(value, dict):
+        return {key: _rounded(member) for key, member in value.items()}
+    if isinstance(value, list):
+        return [_rounded(item) for item in value]
+    return value
+
+
+# How far each part of an entry is laid out a member per line: a build down
+# to its parts, the boards down to each designator's positions.
+_ENTRY_LAYOUT = {"builds": 3, "boards": 1}
+
+
+def _write_entry(path: Path, data: dict[str, Any]) -> None:
+    """Writes an entry with one part, and one designator's positions, per line.
+
+    So a change to one part diffs as one line, rather than a field per line.
+    """
+    members = [
+        f" {json.dumps(key)}: {_json(_rounded(value), _ENTRY_LAYOUT.get(key, 0), ' ')}"
+        for key, value in data.items()
+    ]
+    path.write_text("{\n" + ",\n".join(members) + "\n}\n")
 
 
 def entry_id(listing: Listing) -> str:
@@ -375,7 +418,7 @@ def build(
             if path.exists():
                 data = json.loads(path.read_text())
                 data["verified"] = verification == Verification.VERIFIED
-                path.write_text(json.dumps(data, indent=1) + "\n")
+                _write_entry(path, data)
 
     def add_boards(entry_id: str, content: bytes) -> None:
         """Adds where the document draws each of its entry's parts."""
@@ -395,7 +438,7 @@ def build(
         data["boards"] = {
             ref: [asdict(loc) for loc in places] for ref, places in found.items()
         }
-        path.write_text(json.dumps(data, indent=1) + "\n")
+        _write_entry(path, data)
 
     def record(listing_url: str, document: DocumentState, event: Event) -> None:
         state.documents[listing_url] = document
@@ -591,9 +634,7 @@ def build(
             # Two documents published under one file name.
             listed["id"] += "-" + sha256(url.encode()).hexdigest()[:6]
         builds_dir.mkdir(parents=True, exist_ok=True)
-        (builds_dir / f"{listed['id']}.json").write_text(
-            json.dumps(listed, indent=1) + "\n"
-        )
+        _write_entry(builds_dir / f"{listed['id']}.json", listed)
         add_boards(listed["id"], fetched.content)
         outcome = Outcome.UPDATED if previous.entry else Outcome.LISTED
         reason = (
