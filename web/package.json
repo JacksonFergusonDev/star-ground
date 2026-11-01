@@ -11,7 +11,7 @@
     "preview": "astro preview",
     "check": "astro check",
     "types": "openapi-ts",
-    "lint": "npm run lint:eslint && npm run lint:stylelint",
+    "lint": "pnpm run lint:eslint && pnpm run lint:stylelint",
     "lint:eslint": "eslint .",
     "lint:stylelint": "stylelint \"src/**/*.{css,astro,svelte}\"",
     "format": "prettier --write .",
@@ -46,5 +46,6 @@
     "stylelint-config-html": "2.0.0",
     "stylelint-config-standard": "40.0.0",
     "typescript-eslint": "8.72.0"
-  }
+  },
+  "packageManager": "pnpm@12.16.1"
 }

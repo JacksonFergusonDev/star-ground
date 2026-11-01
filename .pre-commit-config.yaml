@@ -23,6 +23,8 @@ repos:
       - id: end-of-file-fixer
         exclude: \.py$
       - id: check-yaml
+        # pnpm 12 locks the package manager and project in separate documents.
+        args: [--allow-multiple-documents]
       - id: check-json
       - id: check-toml
 
@@ -93,42 +95,42 @@ repos:
     hooks:
       - id: prettier
         name: prettier
-        entry: bash -c 'cd web && npx prettier --write --ignore-unknown "${@#web/}"' --
+        entry: bash -c 'cd web && pnpm exec prettier --write --ignore-unknown "${@#web/}"' --
         language: system
         files: ^web/
         require_serial: true
 
       - id: eslint
         name: eslint
-        entry: bash -c 'cd web && npx eslint "${@#web/}"' --
+        entry: bash -c 'cd web && pnpm exec eslint "${@#web/}"' --
         language: system
         files: ^web/.*\.(astro|svelte|[cm]?[jt]s)$
         require_serial: true
 
       - id: stylelint
         name: stylelint
-        entry: bash -c 'cd web && npx stylelint "${@#web/}"' --
+        entry: bash -c 'cd web && pnpm exec stylelint "${@#web/}"' --
         language: system
         files: ^web/src/.*\.(astro|svelte|css)$
         require_serial: true
 
       - id: api-types
         name: API types match openapi.json
-        entry: bash -c 'cd web && npm run --silent types && git diff --exit-code -- src/lib/api'
+        entry: bash -c 'cd web && pnpm --silent run types && git diff --exit-code -- src/lib/api'
         language: system
-        files: ^(openapi\.json|web/(openapi-ts\.config\.ts|package-lock\.json|src/lib/api/))
+        files: ^(openapi\.json|web/(openapi-ts\.config\.ts|pnpm-lock\.yaml|pnpm-workspace\.yaml|package\.json|src/lib/api/))
         pass_filenames: false
 
       - id: astro-check
         name: astro check
-        entry: bash -c 'cd web && npm run --silent check'
+        entry: bash -c 'cd web && pnpm --silent run check'
         language: system
-        files: ^web/(src/|tsconfig\.json|astro\.config\.mjs|svelte\.config\.js|package-lock\.json)
+        files: ^web/(src/|tsconfig\.json|astro\.config\.mjs|svelte\.config\.js|pnpm-lock\.yaml|pnpm-workspace\.yaml|package\.json)
         pass_filenames: false
 
       - id: knip
         name: knip (unused files, exports, and dependencies)
-        entry: bash -c 'cd web && npm run --silent knip'
+        entry: bash -c 'cd web && pnpm --silent run knip'
         language: system
         files: ^web/
         pass_filenames: false
@@ -138,7 +140,7 @@ repos:
       # catalog entries they test against rather than the nightly catalog.
       - id: astro-build
         name: astro build
-        entry: bash -c 'cd web && CATALOG_DIR=tests/fixtures/catalog npm run --silent build'
+        entry: bash -c 'cd web && CATALOG_DIR=tests/fixtures/catalog pnpm --silent run build'
         language: system
         files: ^(web/|openapi\.json)
         pass_filenames: false
@@ -146,7 +148,7 @@ repos:
 
       - id: browser-tests
         name: browser tests
-        entry: bash -c 'cd web && npm run --silent test:browser'
+        entry: bash -c 'cd web && pnpm --silent run test:browser'
         language: system
         files: ^(web/|openapi\.json)
         pass_filenames: false

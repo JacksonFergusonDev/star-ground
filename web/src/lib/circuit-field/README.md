@@ -280,8 +280,8 @@ So the head is sharp (`HEAD` = 0.6 units ahead) and the tail trails behind (`TAI
 
 ## Checking your work
 
-- **Tests.** `tests/browser/circuit.spec.ts` checks that the SPICE netlist matches `circuit.ts` part for part, that the signal path is unbroken, and that the board routes completely with at most 4 jumpers. `tests/browser/pages.spec.ts` checks that the field's script loads only after the page has. Run them with `npm run test:browser` in `web/`.
-- **Look at the board.** Start the dev server (`npx astro dev` in `web/`), open the page, and run this in the browser console to draw the board alone, large, over the page:
+- **Tests.** `tests/browser/circuit.spec.ts` checks that the SPICE netlist matches `circuit.ts` part for part, that the signal path is unbroken, and that the board routes completely with at most 4 jumpers. `tests/browser/pages.spec.ts` checks that the field's script loads only after the page has. Run them with `pnpm run test:browser` in `web/`.
+- **Look at the board.** Start the dev server (`pnpm exec astro dev` in `web/`), open the page, and run this in the browser console to draw the board alone, large, over the page:
 
 ```js
 const { buildBoard } = await import('/src/lib/circuit-field/layout.ts');

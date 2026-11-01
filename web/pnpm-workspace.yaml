@@ -1,0 +1,3 @@
+# fsevents ships a prebuilt macOS watcher; its optional rebuild is unnecessary.
+allowBuilds:
+  fsevents: false

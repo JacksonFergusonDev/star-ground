@@ -125,33 +125,38 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        with:
+          package_json_file: web/package.json
+
       - name: Install Node
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: "24"
-          cache: npm
-          cache-dependency-path: web/package-lock.json
+          cache: pnpm
+          cache-dependency-path: web/pnpm-lock.yaml
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Lint
-        run: npm run lint
+        run: pnpm run lint
 
       - name: Format
-        run: npm run format:check
+        run: pnpm run format:check
 
       - name: Unused files, exports, and dependencies
-        run: npm run knip
+        run: pnpm run knip
 
       # The API's types are generated from openapi.json; they must match it.
       - name: Check API types are current
         run: |
-          npm run types
+          pnpm run types
           git diff --exit-code -- src/lib/api
 
       - name: Type check
-        run: npm run check
+        run: pnpm run check
 
       # The browser tests check the catalog pages against fixed entries, not
       # the nightly catalog. The real catalog is still checked by the schema
@@ -159,7 +164,7 @@ jobs:
       - name: Build
         env:
           CATALOG_DIR: tests/fixtures/catalog
-        run: npm run build
+        run: pnpm run build
 
       # The browser tests run in Playwright's image for the locked version, with
       # browsers and system packages preinstalled: installing them here with apt
@@ -167,7 +172,7 @@ jobs:
       - name: Resolve the locked Playwright image
         id: playwright-image
         run: |
-          version=$(node -p "require('./package-lock.json').packages['node_modules/@playwright/test'].version")
+          version=$(node -p "require('@playwright/test/package.json').version")
           tag="v${version}-noble"
           digest=$(curl --fail --silent --show-error --retry 3 --max-time 30 --head \
             --header 'Accept: application/vnd.docker.distribution.manifest.list.v2+json' \
@@ -207,15 +212,20 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        with:
+          package_json_file: web/package.json
+
       - name: Install Node
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: "24"
-          cache: npm
-          cache-dependency-path: web/package-lock.json
+          cache: pnpm
+          cache-dependency-path: web/pnpm-lock.yaml
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Download the build
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
@@ -232,7 +242,7 @@ jobs:
       - name: Browser tests
         env:
           SHARD: ${{ matrix.shard }}
-        run: xvfb-run --auto-servernum npm run test:browser -- --shard="$SHARD/3"
+        run: xvfb-run --auto-servernum pnpm run test:browser --shard="$SHARD/3"
 
       - name: Upload browser test results
         if: failure()

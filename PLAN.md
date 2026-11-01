@@ -19,8 +19,9 @@ Decided 2026-10-22 to 2026-10-24. A decision here changes only by editing this f
   - Astro matches jacksonferguson.me, so house-style, linting (ESLint, Stylelint, Prettier) and browser tests (Playwright with axe) work the same way.
   - Svelte over React: scoped plain CSS reads the house tokens directly, and a stateful workspace takes less code. React's larger ecosystem only matters for live collaboration, a native mobile app, or React-only vendor kits, none of which are planned. If one is ever needed, Astro can host a React island beside the Svelte ones.
   - No Tailwind and no component kit: house-style tokens and components only.
-  - **The site matches Protostar's landing page** (decided 2026-10-25): house-style's near-black palette with Star Ground's green accent, and the shared project-site shell from house-style v2 (header bar, hero field, jump links, section grid, footer, with a publisher note in the footer). house-style v2 split itself into parts so each site takes only what it uses; the website installs it with npm, so the repository no longer vendors a copy in `house/`.
+  - **The site matches Protostar's landing page** (decided 2026-10-25): house-style's near-black palette with Star Ground's green accent, and the shared project-site shell from house-style v2 (header bar, hero field, jump links, section grid, footer, with a publisher note in the footer). house-style v2 split itself into parts so each site takes only what it uses; the website installs it with pnpm, so the repository no longer vendors a copy in `house/`.
   - **The hero shows a real circuit** (decided 2026-10-25): a Big Muff π laid out as a single-sided board with a star ground, its signal path and ground returns animated in raw WebGL2. It replaces house-style's attractor field and three.js on Star Ground's site; a generated board read as fake because its connections meant nothing.
+- **Frontend packages:** pnpm, pinned in `web/package.json` (decided 2026-11-01). It replaces npm to share dependency files across local projects and make undeclared imports easier to catch. Local commands, hooks, CI and Docker use the same version and lockfile.
 - **Types:** the API's OpenAPI schema generates the frontend's TypeScript types (`@hey-api/openapi-ts`), so the two can't drift.
 - **Rejected:** NiceGUI and Reflex (Python UI frameworks that keep Streamlit's server-driven model and fight custom styling), a Vite SPA without a site framework (no static pages for the landing page and catalog), and a downloadable desktop app (Python, onnxruntime and OpenCV per platform, code signing and auto-update, for little gain over hosting at about $0).
 
@@ -95,7 +96,7 @@ The public repository holds publisher PDFs in `raw_boms/` (11, the presets' sour
 
 ### 3. Frontend foundation
 
-1. `web/`: an Astro project with the Svelte integration and the website's lint, format and test setup. It installs house-style with npm, pinned to a tag in `web/package.json`, and loads `branding/theme.css` for the accent.
+1. `web/`: an Astro project with the Svelte integration and the website's lint, format and test setup. It installs house-style with pnpm, pinned to a tag in `web/package.json`, and loads `branding/theme.css` for the accent.
 1. The landing page as a house page: section markers, the grid behind long pages, icons on standalone links, no emoji.
 1. CI job for the frontend: lint, type check (`astro check`), build, Playwright with axe.
 

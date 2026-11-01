@@ -52,7 +52,7 @@ export default defineConfig({
   webServer: siteUrl
     ? undefined
     : {
-        command: 'npx astro preview --ignore-lock --host 127.0.0.1 --port 4503',
+        command: 'pnpm exec astro preview --ignore-lock --host 127.0.0.1 --port 4503',
         url: baseURL,
         reuseExistingServer: false,
         timeout: 30_000,

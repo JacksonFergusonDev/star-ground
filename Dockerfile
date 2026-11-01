@@ -6,14 +6,16 @@ FROM node:24-bookworm@sha256:6449e19d8184d84062525b6a7524def03146c2cb04a7f08b076
 # The site reads Star Ground's accent from branding/, and the circuit
 # catalog's pages from catalog/, beside web/.
 WORKDIR /src/web
-COPY web/package.json web/package-lock.json ./
-RUN npm ci --no-audit --no-fund
+COPY web/package.json web/pnpm-lock.yaml web/pnpm-workspace.yaml ./
+# Bootstrap the exact pnpm version declared by the website.
+RUN npm install --global "$(node -p "require('./package.json').packageManager")" --no-audit --no-fund
+RUN pnpm install --frozen-lockfile
 COPY branding/ /src/branding/
 COPY catalog/ /src/catalog/
 COPY web/ ./
 # Same origin as the API, so the site calls /api directly.
 ENV PUBLIC_API_URL=""
-RUN npm run build
+RUN pnpm run build
 
 FROM python:3.14-slim@sha256:ce40764625a4ff50df3548277632e7f96c4e77fe75fa848aae9885476e7df5a4
 

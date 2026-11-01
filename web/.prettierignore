@@ -2,5 +2,5 @@ node_modules/
 dist/
 .astro/
 test-results/
-package-lock.json
+pnpm-lock.yaml
 src/lib/api/

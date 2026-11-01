@@ -102,12 +102,12 @@ serve-api: sync
 # Regenerate openapi.json and the website's API types after changing src/server/
 openapi: sync
     uv run python -m tools.export_openapi
-    npm --prefix web run types
+    pnpm --dir web run types
 
 # Install locked dependencies and start the website's dev server
 serve-web:
-    npm --prefix web ci
-    npm --prefix web run dev
+    pnpm --dir web install --frozen-lockfile
+    pnpm --dir web run dev
 
 # Refresh presets, offer to wait for CI, and verify local state before bumping
 bump part:
