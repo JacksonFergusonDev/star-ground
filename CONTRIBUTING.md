@@ -66,6 +66,12 @@ pnpm install --frozen-lockfile
 pnpm run dev
 ```
 
+pnpm rejects missing or incompatible peer dependencies. Registry package versions must be at least two weeks old, including transitive dependencies (`minimumReleaseAge: 20160`, in minutes). This applies locally, in CI, and in Docker, extending Renovate's update delay to manual changes too.
+
+For an urgent fix that cannot wait, add its exact package and version (for example, `package-name@1.2.3`) to `minimumReleaseAgeExclude` in `web/pnpm-workspace.yaml`, with a comment explaining the exception. Remove the exception once that release is two weeks old. Exempt only the versions needed for the fix.
+
+The initial exceptions preserve the versions already locked and tested when this policy was enabled on 2026-11-01, including the pinned pnpm and its platform binaries. They cover no newer releases. The comment above the list records when all of these exceptions can be removed.
+
 The site is at <http://127.0.0.1:4500/>. From the repository root, `just serve-web` installs the dependencies and starts it. Run `just serve-api` in a separate terminal tab; the site proxies `/api` to port 4501, so local development needs no `PUBLIC_API_URL` or CORS settings. After building, `pnpm run preview` in `web/` serves the build on port 4502 and uses the same API proxy.
 
 Star Ground reserves ports 4500–4504: website development, API, build preview, browser tests, and the Streamlit app (`just serve`), respectively. The personal site uses 4300–4302 and Protostar uses 4400–4401. Astro exits when its port is occupied instead of silently moving. Stop the existing server with `Ctrl+C` before starting another. For a second worktree, choose unused ports explicitly and update its proxy target if the API port changes.
