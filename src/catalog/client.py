@@ -12,7 +12,8 @@ It is deliberately slow and plain:
   slowly costs nothing and is less likely to be turned away.
 - **Patient:** a 429, a server error, a timeout or a dropped connection is
   waited out (a 429's `Retry-After`, or `BACKOFF_S`) and tried again, up to
-  `RETRIES` times.
+  `RETRIES` times. So is a sitemap that comes back as something else
+  (`discover`), as a site's error page sometimes does.
 - **Stopped by a bot check:** a challenge (Cloudflare's, a 403, or a 429 that
   persists) ends the run for that site (`BlockedError`). Getting around it
   isn't attempted.
@@ -157,6 +158,23 @@ class PoliteClient:
         companion = PoliteClient(self._session, self._sleep, self._clock, self._delay)
         self._companions.append(companion)
         return companion
+
+    def back_off(self, attempt: int, why: str) -> None:
+        """Waits before asking again after a bad answer, as for a server error.
+
+        Args:
+            attempt: How many tries have failed before this one, from 0.
+            why: What was wrong with the answer, for the log.
+        """
+        wait = BACKOFF_S * 2**attempt
+        logger.warning(
+            "%s; waiting %.0f s before trying again (%d of %d)",
+            why,
+            wait,
+            attempt + 1,
+            RETRIES,
+        )
+        self._sleep(wait)
 
     def _wait(self, host: str, delay: float) -> None:
         last = self._last.get(host)
