@@ -15,7 +15,7 @@ from pathlib import PurePosixPath
 from urllib.parse import parse_qs, unquote, urljoin, urlsplit, urlunsplit
 from xml.etree import ElementTree
 
-from src.catalog.client import PoliteClient
+from src.catalog.client import RETRIES, PoliteClient
 from src.catalog.sources import FileIndex, Source
 
 logger = logging.getLogger(__name__)
@@ -189,6 +189,27 @@ def _published_id(base: str, href: str, path: str, source: Source) -> str | None
     return urljoin(source.site, path.lstrip("/")) + f"?id={int(ids[0])}"
 
 
+def _sitemap(client: PoliteClient, url: str) -> ElementTree.Element:
+    """A sitemap, asked for again when what comes back isn't XML.
+
+    PedalPCB has answered its sitemap index with a 200 and a page that isn't
+    one, and a moment later with the sitemap.
+    """
+    for attempt in range(RETRIES):
+        try:
+            return ElementTree.fromstring(client.get(url).content)
+        except ElementTree.ParseError as error:
+            client.back_off(attempt, f"{url} didn't answer with a sitemap ({error})")
+    content = client.get(url).content
+    try:
+        return ElementTree.fromstring(content)
+    except ElementTree.ParseError as error:
+        raise ValueError(
+            f"{url} didn't answer with a sitemap in {RETRIES + 1} tries "
+            f"({error}; it began {content[:80]!r})"
+        ) from None
+
+
 def _sitemap_pages(client: PoliteClient, source: Source) -> dict[str, str | None]:
     """Product pages from the sitemaps, with each one's `<lastmod>`."""
     assert source.sitemap is not None
@@ -200,7 +221,7 @@ def _sitemap_pages(client: PoliteClient, source: Source) -> dict[str, str | None
             continue
         seen.add(url)
         logger.info("Sitemap %s", url)
-        root = ElementTree.fromstring(client.get(url).content)
+        root = _sitemap(client, url)
         kind = root.tag.rsplit("}", 1)[-1]
         if kind == "sitemapindex":
             for loc in root.findall("{*}sitemap/{*}loc"):

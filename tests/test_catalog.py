@@ -352,6 +352,31 @@ def _pedalpcb_web() -> _Web:
     )
 
 
+def test_a_sitemap_that_comes_back_as_another_page_is_asked_for_again() -> None:
+    web = _pedalpcb_web()
+    index = "https://www.pedalpcb.com/sitemap_index.xml"
+    web._pages[index] = [
+        _Response(body=b"<html><body><p>Down for maintenance</body></html>"),
+        _Response(body=_SITEMAP_INDEX),
+    ]
+    clock = _Clock()
+
+    found = discover(_client(web, clock), SOURCES[Publisher.PEDALPCB])
+
+    assert "https://docs.pedalpcb.com/project/Fuzz.pdf" in found.listings
+    assert BACKOFF_S in clock.slept
+
+
+def test_a_sitemap_that_never_comes_back_fails_after_its_retries() -> None:
+    web = _pedalpcb_web()
+    web._pages["https://www.pedalpcb.com/sitemap_index.xml"] = [
+        _Response(body=b"<html><body><p>Down for maintenance</body></html>")
+    ] * (RETRIES + 1)
+
+    with pytest.raises(ValueError, match="didn't answer with a sitemap in 4 tries"):
+        discover(_client(web), SOURCES[Publisher.PEDALPCB])
+
+
 def test_discovery_walks_only_product_sitemaps() -> None:
     web = _pedalpcb_web()
 
