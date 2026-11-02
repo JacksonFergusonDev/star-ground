@@ -1,0 +1,26 @@
+{
+ "id": "buffer-smd",
+ "publisher": "pedalpcb",
+ "title": "Simple JFET Buffer",
+ "document": "https://docs.pedalpcb.com/project/Buffer-SMD.pdf",
+ "page": "https://www.pedalpcb.com/product/jfetbuffer-smd/",
+ "file_name": "Buffer-SMD.pdf",
+ "sha256": "4a016b39731ad53b95a2bf6a616670deddc1e7e2740afe6d1ea5d097ab195fe8",
+ "checked": "2026-10-31T23:44:10+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {"ref": "R1", "count": 1, "category": "Resistors", "value": "3.3k", "location": {"page": 0, "x0": 50.27, "top": 381.16, "x1": 105.87, "bottom": 391.16}},
+    {"ref": "R2", "count": 1, "category": "Resistors", "value": "2.2M", "location": {"page": 0, "x0": 50.27, "top": 393.16, "x1": 107.87, "bottom": 403.16}},
+    {"ref": "R3", "count": 1, "category": "Resistors", "value": "2.2M", "location": {"page": 0, "x0": 50.27, "top": 405.16, "x1": 107.87, "bottom": 415.16}},
+    {"ref": "C1", "count": 1, "category": "Capacitors", "value": "100n", "location": {"page": 0, "x0": 50.27, "top": 441.16, "x1": 111.47, "bottom": 451.16}},
+    {"ref": "C2", "count": 1, "category": "Capacitors", "value": "10u MLCC", "location": {"page": 0, "x0": 50.27, "top": 453.16, "x1": 138.67, "bottom": 463.16}},
+    {"ref": "Q1", "count": 1, "category": "Transistors", "value": "MMBFJ201", "location": {"page": 0, "x0": 50.27, "top": 489.16, "x1": 143.07, "bottom": 499.16}}
+   ]
+  }
+ ],
+ "boards": {}
+}

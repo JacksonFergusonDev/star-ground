@@ -1,0 +1,43 @@
+{
+ "id": "2023-nostalgitone-singles-70s-boost",
+ "publisher": "guitarpcb",
+ "title": "NostalgiTone 70s Boost Single",
+ "document": "https://guitarpcb.com/wp-content/uploads/2024/01/2023-NostalgiTone-Singles-70s-Boost.pdf",
+ "page": "https://guitarpcb.com/community/topic/pedal-building-guides-mandatory-reading/",
+ "file_name": "2023-NostalgiTone-Singles-70s-Boost.pdf",
+ "sha256": "f1bd2baad84c8455c24a8c45308de2e2f2d31989e08909ce42ac710782e58751",
+ "checked": "2026-11-01T00:24:28+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {"ref": "R2", "count": 1, "category": "Resistors", "value": "220k", "location": {"page": 1, "x0": 93.12, "top": 463.94, "x1": 157.7, "bottom": 474.72}},
+    {"ref": "R4", "count": 1, "category": "Resistors", "value": "8.2k", "location": {"page": 1, "x0": 93.12, "top": 492.62, "x1": 154.99, "bottom": 503.4}},
+    {"ref": "D1", "count": 1, "category": "Diodes", "value": "1N5817", "location": {"page": 1, "x0": 93.12, "top": 521.42, "x1": 163.99, "bottom": 532.2}},
+    {"ref": "R1", "count": 1, "category": "Resistors", "value": "1M", "location": {"page": 1, "x0": 93.12, "top": 449.54, "x1": 154.16, "bottom": 460.32}},
+    {"ref": "R5", "count": 1, "category": "Resistors", "value": "1M", "location": {"page": 1, "x0": 93.12, "top": 507.02, "x1": 154.16, "bottom": 517.8}},
+    {"ref": "C2", "count": 1, "category": "Capacitors", "value": "3.3n", "location": {"page": 1, "x0": 202.32, "top": 449.54, "x1": 264.67, "bottom": 460.32}},
+    {"ref": "LED", "count": 1, "category": "Diodes", "value": "Status", "location": {"page": 1, "x0": 309.0, "top": 449.54, "x1": 379.31, "bottom": 460.32}},
+    {"ref": "C3", "count": 1, "category": "Capacitors", "value": "68n", "location": {"page": 1, "x0": 202.32, "top": 463.94, "x1": 264.4, "bottom": 474.72}},
+    {"ref": "R3", "count": 1, "category": "Resistors", "value": "68k", "location": {"page": 1, "x0": 93.12, "top": 478.22, "x1": 154.7, "bottom": 489.0}},
+    {"ref": "C4", "count": 1, "category": "Capacitors", "value": "47p", "location": {"page": 1, "x0": 202.32, "top": 478.22, "x1": 267.15, "bottom": 489.0}},
+    {"ref": "Q1", "count": 1, "category": "Transistors", "value": "2n2222", "location": {"page": 1, "x0": 310.8, "top": 478.22, "x1": 381.67, "bottom": 489.0}},
+    {"ref": "C5", "count": 1, "category": "Capacitors", "value": "10n", "location": {"page": 1, "x0": 202.32, "top": 492.62, "x1": 264.4, "bottom": 503.4}},
+    {"ref": "C6", "count": 1, "category": "Capacitors", "value": "47u", "location": {"page": 1, "x0": 202.32, "top": 507.02, "x1": 267.15, "bottom": 517.8}},
+    {"ref": "RANGE", "count": 1, "category": "Potentiometers", "value": "A500K", "location": {"page": 1, "x0": 301.2, "top": 507.02, "x1": 379.7, "bottom": 517.8}},
+    {"ref": "C7", "count": 1, "category": "Capacitors", "value": "100u", "location": {"page": 1, "x0": 202.32, "top": 521.42, "x1": 269.55, "bottom": 532.2}},
+    {"ref": "BOOST", "count": 1, "category": "Potentiometers", "value": "B10K", "location": {"page": 1, "x0": 301.8, "top": 521.42, "x1": 376.7, "bottom": 532.2}},
+    {"ref": "C1", "count": 1, "category": "Capacitors", "value": "1n", "location": {"page": 1, "x0": 93.12, "top": 535.7, "x1": 152.32, "bottom": 546.48}},
+    {"ref": "C8", "count": 1, "category": "Capacitors", "value": "100n", "location": {"page": 1, "x0": 202.32, "top": 535.7, "x1": 266.8, "bottom": 546.48}},
+    {"ref": "HEAT", "count": 1, "category": "Potentiometers", "value": "B1K", "location": {"page": 1, "x0": 305.4, "top": 535.7, "x1": 373.7, "bottom": 546.48}}
+   ]
+  }
+ ],
+ "boards": {
+  "HEAT": [{"page": 3, "x0": 344.64, "top": 282.84, "x1": 357.6, "bottom": 289.68}, {"page": 4, "x0": 344.28, "top": 282.84, "x1": 357.6, "bottom": 289.68}],
+  "RANGE": [{"page": 3, "x0": 252.12, "top": 283.2, "x1": 269.76, "bottom": 289.32}, {"page": 4, "x0": 251.88, "top": 282.48, "x1": 270.6, "bottom": 290.04}],
+  "BOOST": [{"page": 4, "x0": 296.88, "top": 274.56, "x1": 314.16, "bottom": 282.12}]
+ }
+}

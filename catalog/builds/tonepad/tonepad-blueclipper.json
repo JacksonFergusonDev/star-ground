@@ -1,0 +1,53 @@
+{
+ "id": "tonepad-blueclipper",
+ "publisher": "tonepad",
+ "title": "Clip Azul",
+ "document": "https://tonepad.com/getFile.asp?id=93",
+ "page": "https://tonepad.com/project.asp?id=49",
+ "file_name": "tonepad_blueclipper.pdf",
+ "sha256": "5dc1f24740d0e54b80a765e1972b2ec477206f21db165cdaf4d282680532b26c",
+ "checked": "2026-11-01T00:06:33+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {"ref": "R1", "count": 1, "category": "Resistors", "value": "200k", "location": {"page": 0, "x0": 72.0, "top": 371.13, "x1": 124.02, "bottom": 383.13}},
+    {"ref": "C1", "count": 1, "category": "Capacitors", "value": "47n", "location": {"page": 0, "x0": 183.03, "top": 371.13, "x1": 253.3, "bottom": 383.13}},
+    {"ref": "D1", "count": 1, "category": "Diodes", "value": "1N914", "location": {"page": 0, "x0": 291.03, "top": 371.13, "x1": 352.38, "bottom": 383.13}},
+    {"ref": "D2", "count": 1, "category": "Diodes", "value": "1N914", "location": {"page": 0, "x0": 291.03, "top": 384.53, "x1": 352.38, "bottom": 396.53}},
+    {"ref": "R2", "count": 1, "category": "Resistors", "value": "240k", "location": {"page": 0, "x0": 72.0, "top": 384.53, "x1": 124.02, "bottom": 396.53}},
+    {"ref": "C2", "count": 1, "category": "Capacitors", "value": "4.7u", "location": {"page": 0, "x0": 183.03, "top": 384.53, "x1": 239.95, "bottom": 396.53}},
+    {"ref": "C3", "count": 1, "category": "Capacitors", "value": "4.7u", "location": {"page": 0, "x0": 183.03, "top": 397.94, "x1": 239.95, "bottom": 409.94}},
+    {"ref": "R3", "count": 1, "category": "Resistors", "value": "150", "location": {"page": 0, "x0": 72.0, "top": 397.94, "x1": 118.02, "bottom": 409.94}},
+    {"ref": "R4", "count": 1, "category": "Resistors", "value": "150k", "location": {"page": 0, "x0": 72.0, "top": 411.34, "x1": 124.02, "bottom": 423.34}},
+    {"ref": "C4", "count": 1, "category": "Capacitors", "value": "33n", "location": {"page": 0, "x0": 183.03, "top": 411.34, "x1": 253.3, "bottom": 423.34}},
+    {"ref": "R5", "count": 1, "category": "Resistors", "value": "8.2k", "location": {"page": 0, "x0": 72.0, "top": 424.75, "x1": 151.36, "bottom": 436.75}},
+    {"ref": "C5", "count": 1, "category": "Capacitors", "value": "100u", "location": {"page": 0, "x0": 183.03, "top": 424.75, "x1": 243.29, "bottom": 436.75}},
+    {"ref": "R6", "count": 1, "category": "Resistors", "value": "10k", "location": {"page": 0, "x0": 72.0, "top": 438.15, "x1": 117.35, "bottom": 450.15}},
+    {"ref": "R7", "count": 1, "category": "Potentiometers", "value": "50k .", "location": {"page": 0, "x0": 72.0, "top": 451.56, "x1": 117.35, "bottom": 463.56}},
+    {"ref": "R8", "count": 1, "category": "Resistors", "value": "2.2M", "location": {"page": 0, "x0": 72.0, "top": 464.96, "x1": 164.02, "bottom": 476.96}},
+    {"ref": null, "count": 1, "category": "ICs", "value": "TL071", "location": null},
+    {"ref": null, "count": 1, "category": "Hardware/Misc", "value": "DIP SOCKET (Check Size)", "location": null}
+   ]
+  }
+ ],
+ "boards": {
+  "R7": [{"page": 0, "x0": 170.69, "top": 207.18, "x1": 175.81, "bottom": 211.18}, {"page": 0, "x0": 505.74, "top": 666.53, "x1": 514.69, "bottom": 673.53}],
+  "C5": [{"page": 0, "x0": 124.39, "top": 580.11, "x1": 133.33, "bottom": 587.11}],
+  "R1": [{"page": 0, "x0": 183.49, "top": 608.93, "x1": 192.43, "bottom": 615.93}],
+  "C1": [{"page": 0, "x0": 147.43, "top": 630.56, "x1": 156.38, "bottom": 637.56}],
+  "R5": [{"page": 0, "x0": 377.04, "top": 637.76, "x1": 385.99, "bottom": 644.76}],
+  "R6": [{"page": 0, "x0": 441.84, "top": 637.76, "x1": 450.79, "bottom": 644.76}],
+  "R3": [{"page": 0, "x0": 247.44, "top": 644.96, "x1": 256.39, "bottom": 651.96}],
+  "C3": [{"page": 0, "x0": 341.26, "top": 652.11, "x1": 350.21, "bottom": 659.11}],
+  "R8": [{"page": 0, "x0": 111.49, "top": 666.53, "x1": 120.43, "bottom": 673.53}],
+  "R2": [{"page": 0, "x0": 183.49, "top": 666.53, "x1": 192.43, "bottom": 673.53}],
+  "D1": [{"page": 0, "x0": 383.34, "top": 666.53, "x1": 392.28, "bottom": 673.53}],
+  "D2": [{"page": 0, "x0": 404.94, "top": 666.53, "x1": 413.88, "bottom": 673.53}],
+  "C4": [{"page": 0, "x0": 470.55, "top": 666.56, "x1": 479.5, "bottom": 673.56}],
+  "C2": [{"page": 0, "x0": 225.19, "top": 680.91, "x1": 234.13, "bottom": 687.91}],
+  "R4": [{"page": 0, "x0": 283.44, "top": 680.96, "x1": 292.39, "bottom": 687.96}]
+ }
+}

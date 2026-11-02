@@ -1,0 +1,26 @@
+{
+ "id": "tonepad-rossphaser-extra-phase-stages",
+ "publisher": "tonepad",
+ "title": "Ropez Extra Phase Stages",
+ "document": "https://tonepad.com/getFile.asp?id=100",
+ "page": "https://tonepad.com/project.asp?id=25",
+ "file_name": "tonepad_rossphaser_extra_phase_stages.pdf",
+ "sha256": "5fa44f2fd25cda2077df6613ad6bae6a331e302d1de21a63dfb006810972c9f6",
+ "checked": "2026-10-31T23:07:22+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {"ref": null, "count": 4, "category": "Resistors", "value": "1.8k", "location": null},
+    {"ref": null, "count": 4, "category": "Capacitors", "value": "3.3n", "location": null},
+    {"ref": null, "count": 4, "category": "Resistors", "value": "10k", "location": null},
+    {"ref": null, "count": 8, "category": "Resistors", "value": "27k", "location": null},
+    {"ref": null, "count": 2, "category": "ICs", "value": "LM13600", "location": null},
+    {"ref": null, "count": 2, "category": "Hardware/Misc", "value": "DIP SOCKET (Check Size)", "location": null}
+   ]
+  }
+ ],
+ "boards": {}
+}

@@ -1,0 +1,51 @@
+{
+ "id": "fcp-micromx-v1-0-insert",
+ "publisher": "fivecats",
+ "title": "fcp-micromx-v1-0-insert",
+ "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/10/FCP-MicroMX-V1-0-Insert.pdf",
+ "page": "https://www.five-cats-pedals.co.uk/product/micro-mx-mxr-microamp-clone/",
+ "file_name": "FCP-MicroMX-V1-0-Insert.pdf",
+ "sha256": "7852f0bbbcf0f226b1aee295278978ce9d679f897295e8fcd586d2287f6ce917",
+ "checked": "2026-10-31T23:38:21+00:00",
+ "read_by_ocr": true,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {"ref": "R1", "count": 1, "category": "Resistors", "value": "22M", "location": {"page": 0, "x0": 111.35, "top": 334.2, "x1": 168.19, "bottom": 340.3}},
+    {"ref": "R2", "count": 1, "category": "Resistors", "value": "100k", "location": {"page": 0, "x0": 111.93, "top": 341.73, "x1": 169.06, "bottom": 347.33}},
+    {"ref": "R3", "count": 1, "category": "Resistors", "value": "100k", "location": {"page": 0, "x0": 111.93, "top": 348.96, "x1": 169.06, "bottom": 354.56}},
+    {"ref": "R4", "count": 1, "category": "Resistors", "value": "2.7k", "location": {"page": 0, "x0": 111.93, "top": 356.2, "x1": 165.58, "bottom": 362.3}},
+    {"ref": "R5", "count": 1, "category": "Resistors", "value": "10M", "location": {"page": 0, "x0": 111.93, "top": 363.43, "x1": 168.19, "bottom": 369.73}},
+    {"ref": "R6", "count": 1, "category": "Resistors", "value": "1k", "location": {"page": 0, "x0": 111.35, "top": 370.95, "x1": 164.13, "bottom": 377.65}},
+    {"ref": "R7", "count": 1, "category": "Resistors", "value": "56k", "location": {"page": 0, "x0": 111.93, "top": 379.05, "x1": 166.45, "bottom": 384.65}},
+    {"ref": "R8", "count": 1, "category": "Resistors", "value": "470", "location": {"page": 0, "x0": 111.93, "top": 386.29, "x1": 168.19, "bottom": 391.89}},
+    {"ref": "R9", "count": 1, "category": "Resistors", "value": "10k", "location": {"page": 0, "x0": 111.93, "top": 393.81, "x1": 166.45, "bottom": 399.41}},
+    {"ref": "U1", "count": 1, "category": "ICs", "value": "TL061", "location": {"page": 0, "x0": 111.93, "top": 407.99, "x1": 171.09, "bottom": 414.09}},
+    {"ref": "C1", "count": 1, "category": "Capacitors", "value": "1u", "location": {"page": 0, "x0": 111.93, "top": 423.04, "x1": 166.45, "bottom": 429.74}},
+    {"ref": "C2", "count": 1, "category": "Capacitors", "value": "100n", "location": {"page": 0, "x0": 111.93, "top": 431.14, "x1": 171.38, "bottom": 437.04}},
+    {"ref": "C3", "count": 1, "category": "Capacitors", "value": "4.7u", "location": {"page": 0, "x0": 111.35, "top": 437.79, "x1": 169.93, "bottom": 444.49}},
+    {"ref": "C4", "count": 1, "category": "Capacitors", "value": "47p", "location": {"page": 0, "x0": 111.93, "top": 445.9, "x1": 169.06, "bottom": 452.0}},
+    {"ref": "C5", "count": 1, "category": "Capacitors", "value": "15u", "location": {"page": 0, "x0": 111.35, "top": 452.55, "x1": 169.06, "bottom": 459.25}},
+    {"ref": "D1", "count": 1, "category": "Diodes", "value": "1N4001", "location": {"page": 0, "x0": 111.35, "top": 467.89, "x1": 174.57, "bottom": 474.19}},
+    {"ref": "LEVEL", "count": 1, "category": "Potentiometers", "value": "C500K", "location": {"page": 0, "x0": 111.93, "top": 483.8, "x1": 171.96, "bottom": 489.9}}
+   ]
+  }
+ ],
+ "boards": {
+  "R3": [{"page": 0, "x0": 190.08, "top": 127.44, "x1": 201.24, "bottom": 140.76}],
+  "R5": [{"page": 0, "x0": 157.68, "top": 127.8, "x1": 167.4, "bottom": 140.04}],
+  "R2": [{"page": 0, "x0": 174.6, "top": 127.8, "x1": 183.6, "bottom": 140.04}],
+  "R6": [{"page": 0, "x0": 141.48, "top": 128.16, "x1": 151.2, "bottom": 140.4}],
+  "R7": [{"page": 0, "x0": 234.72, "top": 136.8, "x1": 245.88, "bottom": 149.76}],
+  "C2": [{"page": 0, "x0": 125.28, "top": 171.0, "x1": 134.64, "bottom": 183.6}],
+  "U1": [{"page": 0, "x0": 180.72, "top": 180.0, "x1": 192.96, "bottom": 189.36}],
+  "D1": [{"page": 0, "x0": 178.56, "top": 211.68, "x1": 191.88, "bottom": 222.84}],
+  "R1": [{"page": 0, "x0": 124.56, "top": 213.48, "x1": 135.36, "bottom": 226.44}],
+  "R9": [{"page": 0, "x0": 221.76, "top": 213.48, "x1": 232.56, "bottom": 226.44}],
+  "R4": [{"page": 0, "x0": 141.48, "top": 213.84, "x1": 151.2, "bottom": 226.08}],
+  "R8": [{"page": 0, "x0": 240.12, "top": 213.84, "x1": 249.84, "bottom": 226.08}],
+  "LEVEL": [{"page": 0, "x0": 175.68, "top": 238.68, "x1": 198.72, "bottom": 248.04}]
+ }
+}

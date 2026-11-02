@@ -1,0 +1,40 @@
+{
+ "id": "fcp-blend-me-up-insert-v1-0",
+ "publisher": "fivecats",
+ "title": "fcp-blend-me-up-insert-v1-0",
+ "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/11/FCP-Blend-Me-Up-Insert-V1-0.pdf",
+ "page": "https://www.five-cats-pedals.co.uk/product/blend-me-up-wet-dry-signal-blender/",
+ "file_name": "FCP-Blend-Me-Up-Insert-V1-0.pdf",
+ "sha256": "5afa9a38eba26f70644a17c6d32e9b18529c74acab01ef5506aebf09be6408e9",
+ "checked": "2026-10-31T23:47:30+00:00",
+ "read_by_ocr": true,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {"ref": "R1", "count": 1, "category": "Resistors", "value": "1M", "location": {"page": 0, "x0": 52.43, "top": 455.33, "x1": 126.42, "bottom": 465.23}},
+    {"ref": "R2", "count": 1, "category": "Resistors", "value": "1M", "location": {"page": 0, "x0": 52.43, "top": 468.91, "x1": 126.42, "bottom": 480.41}},
+    {"ref": "R3", "count": 1, "category": "Resistors", "value": "3.3k", "location": {"page": 0, "x0": 52.43, "top": 483.34, "x1": 128.11, "bottom": 494.84}},
+    {"ref": "R4", "count": 1, "category": "Resistors", "value": "100k", "location": {"page": 0, "x0": 52.43, "top": 499.04, "x1": 134.87, "bottom": 509.24}},
+    {"ref": "R5", "count": 1, "category": "Resistors", "value": "100k", "location": {"page": 0, "x0": 52.43, "top": 513.89, "x1": 134.87, "bottom": 524.09}},
+    {"ref": "C1", "count": 1, "category": "Capacitors", "value": "1u", "location": {"page": 0, "x0": 52.43, "top": 543.17, "x1": 128.11, "bottom": 553.07}},
+    {"ref": "C2", "count": 1, "category": "Capacitors", "value": "1u", "location": {"page": 0, "x0": 52.43, "top": 557.6, "x1": 128.11, "bottom": 568.1}},
+    {"ref": "Q1", "count": 1, "category": "Transistors", "value": "2N5457", "location": {"page": 0, "x0": 52.43, "top": 587.09, "x1": 136.84, "bottom": 597.09}},
+    {"ref": "BLEND1", "count": 1, "category": "Potentiometers", "value": "A100K", "location": {"page": 0, "x0": 52.43, "top": 630.59, "x1": 140.79, "bottom": 640.49}},
+    {"ref": "LEVEL1", "count": 1, "category": "Potentiometers", "value": "100K", "location": {"page": 0, "x0": 52.43, "top": 616.16, "x1": 134.87, "bottom": 626.66}}
+   ]
+  }
+ ],
+ "boards": {
+  "BLEND1": [{"page": 0, "x0": 126.87, "top": 231.73, "x1": 173.39, "bottom": 247.43}, {"page": 0, "x0": 419.94, "top": 537.31, "x1": 449.96, "bottom": 549.19}],
+  "LEVEL1": [{"page": 0, "x0": 201.06, "top": 251.25, "x1": 241.66, "bottom": 266.96}, {"page": 0, "x0": 464.1, "top": 548.77, "x1": 492.86, "bottom": 562.35}],
+  "R1": [{"page": 0, "x0": 82.23, "top": 291.57, "x1": 98.72, "bottom": 310.67}, {"page": 0, "x0": 393.05, "top": 575.08, "x1": 403.63, "bottom": 587.39}],
+  "R2": [{"page": 0, "x0": 105.48, "top": 291.57, "x1": 121.55, "bottom": 310.67}, {"page": 0, "x0": 406.83, "top": 574.23, "x1": 417.4, "bottom": 588.24}],
+  "R3": [{"page": 0, "x0": 127.9, "top": 291.57, "x1": 143.97, "bottom": 310.67}, {"page": 0, "x0": 420.97, "top": 575.08, "x1": 431.54, "bottom": 588.24}],
+  "R4": [{"page": 0, "x0": 151.16, "top": 291.57, "x1": 167.23, "bottom": 311.1}, {"page": 0, "x0": 434.5, "top": 574.23, "x1": 445.49, "bottom": 588.24}],
+  "R5": [{"page": 0, "x0": 173.39, "top": 291.57, "x1": 189.88, "bottom": 310.67}, {"page": 0, "x0": 448.69, "top": 574.23, "x1": 459.69, "bottom": 588.24}],
+  "C1": [{"page": 0, "x0": 61.08, "top": 298.79, "x1": 76.73, "bottom": 318.31}],
+  "Q1": [{"page": 0, "x0": 231.33, "top": 322.98, "x1": 247.82, "bottom": 337.41}, {"page": 0, "x0": 484.4, "top": 595.45, "x1": 494.13, "bottom": 603.09}]
+ }
+}

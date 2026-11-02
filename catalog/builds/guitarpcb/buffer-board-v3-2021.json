@@ -1,0 +1,40 @@
+{
+ "id": "buffer-board-v3-2021",
+ "publisher": "guitarpcb",
+ "title": "3PDT BUFFER Board v3 2021",
+ "document": "https://guitarpcb.com/wp-content/uploads/2018/05/Buffer-Board-v3-2021.pdf",
+ "page": "https://guitarpcb.com/legacy-pcb-document-list/",
+ "file_name": "Buffer-Board-v3-2021.pdf",
+ "sha256": "0bb16cdfbf3df04cc98f4e9f81ae85b623f096f5a49cfdeff37cbabac0c80af0",
+ "checked": "2026-10-31T23:30:11+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {"ref": "R1", "count": 1, "category": "Resistors", "value": "1M", "location": {"page": 0, "x0": 193.27, "top": 450.24, "x1": 260.31, "bottom": 461.28}},
+    {"ref": "R2", "count": 1, "category": "Resistors", "value": "1M", "location": {"page": 0, "x0": 193.27, "top": 465.14, "x1": 260.31, "bottom": 476.18}},
+    {"ref": "C1", "count": 1, "category": "Capacitors", "value": "220n", "location": {"page": 0, "x0": 315.48, "top": 450.24, "x1": 386.71, "bottom": 461.28}},
+    {"ref": "C2", "count": 1, "category": "Capacitors", "value": "220n", "location": {"page": 0, "x0": 315.48, "top": 465.14, "x1": 386.71, "bottom": 476.18}},
+    {"ref": "R3", "count": 1, "category": "Resistors", "value": "100k", "location": {"page": 0, "x0": 193.27, "top": 480.02, "x1": 263.4, "bottom": 491.06}},
+    {"ref": "D1", "count": 1, "category": "Diodes", "value": "Status LED", "location": {"page": 0, "x0": 314.76, "top": 495.14, "x1": 399.45, "bottom": 506.18}},
+    {"ref": "CLR", "count": 1, "category": "Resistors", "value": "1.8k", "location": {"page": 0, "x0": 190.87, "top": 510.02, "x1": 260.84, "bottom": 521.06}},
+    {"ref": "D2", "count": 1, "category": "Diodes", "value": "1n5817", "location": {"page": 0, "x0": 314.76, "top": 510.02, "x1": 392.36, "bottom": 521.06}},
+    {"ref": "SW1", "count": 1, "category": "Switches", "value": "3PDT FS", "location": {"page": 0, "x0": 188.71, "top": 539.78, "x1": 270.99, "bottom": 550.82}},
+    {"ref": "IC1", "count": 1, "category": "ICs", "value": "TL071", "location": {"page": 0, "x0": 313.8, "top": 539.78, "x1": 388.78, "bottom": 550.82}}
+   ]
+  }
+ ],
+ "boards": {
+  "D1": [{"page": 0, "x0": 325.88, "top": 222.76, "x1": 339.2, "bottom": 233.2}, {"page": 1, "x0": 258.98, "top": 55.83, "x1": 275.18, "bottom": 67.35}, {"page": 2, "x0": 436.32, "top": 96.15, "x1": 475.2, "bottom": 106.23}, {"page": 2, "x0": 333.36, "top": 128.19, "x1": 405.0, "bottom": 136.47}],
+  "D2": [{"page": 0, "x0": 220.04, "top": 235.72, "x1": 238.76, "bottom": 250.12}, {"page": 1, "x0": 133.69, "top": 43.23, "x1": 149.53, "bottom": 54.75}],
+  "CLR": [{"page": 0, "x0": 217.52, "top": 254.8, "x1": 241.28, "bottom": 268.48}, {"page": 1, "x0": 193.81, "top": 63.75, "x1": 214.33, "bottom": 74.55}, {"page": 2, "x0": 436.8, "top": 103.35, "x1": 443.8, "bottom": 112.71}, {"page": 2, "x0": 462.0, "top": 154.11, "x1": 471.72, "bottom": 159.87}, {"page": 2, "x0": 123.12, "top": 158.79, "x1": 133.56, "bottom": 164.91}],
+  "R1": [{"page": 0, "x0": 221.48, "top": 272.08, "x1": 239.12, "bottom": 285.04}, {"page": 1, "x0": 164.3, "top": 116.31, "x1": 179.42, "bottom": 128.19}],
+  "R2": [{"page": 0, "x0": 221.84, "top": 288.64, "x1": 239.12, "bottom": 301.96}, {"page": 1, "x0": 192.38, "top": 163.11, "x1": 207.86, "bottom": 174.63}],
+  "R3": [{"page": 0, "x0": 221.48, "top": 305.92, "x1": 238.76, "bottom": 318.52}, {"page": 1, "x0": 320.89, "top": 158.79, "x1": 337.09, "bottom": 169.59}],
+  "IC1": [{"page": 0, "x0": 220.55, "top": 335.44, "x1": 242.87, "bottom": 350.2}, {"page": 1, "x0": 239.37, "top": 148.71, "x1": 259.17, "bottom": 161.67}],
+  "C2": [{"page": 0, "x0": 287.0, "top": 368.92, "x1": 305.0, "bottom": 383.32}, {"page": 1, "x0": 277.17, "top": 147.63, "x1": 293.73, "bottom": 160.59}],
+  "C1": [{"page": 1, "x0": 145.57, "top": 156.99, "x1": 159.62, "bottom": 167.79}]
+ }
+}

@@ -1,0 +1,49 @@
+{
+ "id": "fcp-micro-jtm-insert-v1-0",
+ "publisher": "fivecats",
+ "title": "fcp-micro-jtm-insert-v1-0",
+ "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/02/FCP-Micro-JTM-Insert-V1-0.pdf",
+ "page": "https://www.five-cats-pedals.co.uk/product/micro-jtm-lovepedal-jtm-clone/",
+ "file_name": "FCP-Micro-JTM-Insert-V1-0.pdf",
+ "sha256": "7aae2d56b99f41b42b75c22f4db57588ee6f117fd804ab8e24c118c873e5c75b",
+ "checked": "2026-10-31T23:30:22+00:00",
+ "read_by_ocr": true,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {"ref": "R1", "count": 1, "category": "Resistors", "value": "1M", "location": {"page": 0, "x0": 122.37, "top": 352.43, "x1": 175.44, "bottom": 358.93}},
+    {"ref": "R2", "count": 1, "category": "Resistors", "value": "2.2M", "location": {"page": 0, "x0": 122.37, "top": 360.25, "x1": 178.05, "bottom": 366.35}},
+    {"ref": "R3", "count": 1, "category": "Resistors", "value": "3.3k", "location": {"page": 0, "x0": 122.66, "top": 367.77, "x1": 176.31, "bottom": 373.87}},
+    {"ref": "R5", "count": 1, "category": "Resistors", "value": "3.3k", "location": {"page": 0, "x0": 122.37, "top": 383.11, "x1": 176.31, "bottom": 388.71}},
+    {"ref": "R4", "count": 1, "category": "Resistors", "value": "330", "location": {"page": 0, "x0": 122.37, "top": 375.29, "x1": 178.05, "bottom": 381.19}},
+    {"ref": "C1", "count": 1, "category": "Capacitors", "value": "47u", "location": {"page": 0, "x0": 122.37, "top": 397.28, "x1": 178.63, "bottom": 403.38}},
+    {"ref": "C3", "count": 1, "category": "Capacitors", "value": "47u", "location": {"page": 0, "x0": 122.37, "top": 412.04, "x1": 179.21, "bottom": 418.14}},
+    {"ref": "C2", "count": 1, "category": "Capacitors", "value": "47n", "location": {"page": 0, "x0": 122.37, "top": 405.1, "x1": 179.21, "bottom": 411.0}},
+    {"ref": "C4", "count": 1, "category": "Capacitors", "value": "100n", "location": {"page": 0, "x0": 122.37, "top": 420.14, "x1": 181.82, "bottom": 426.04}},
+    {"ref": "D1", "count": 1, "category": "Diodes", "value": "1N5817", "location": {"page": 0, "x0": 122.37, "top": 435.19, "x1": 185.3, "bottom": 440.79}},
+    {"ref": "D2", "count": 1, "category": "Diodes", "value": "BAT46", "location": {"page": 0, "x0": 122.66, "top": 442.13, "x1": 182.69, "bottom": 448.23}},
+    {"ref": "D3", "count": 1, "category": "Diodes", "value": "BAT46", "location": {"page": 0, "x0": 122.37, "top": 449.95, "x1": 182.69, "bottom": 455.55}},
+    {"ref": "Q1", "count": 1, "category": "Transistors", "value": "2N5089", "location": {"page": 0, "x0": 122.37, "top": 464.7, "x1": 185.3, "bottom": 470.3}},
+    {"ref": "VOLUME", "count": 1, "category": "Potentiometers", "value": "A100K", "location": {"page": 0, "x0": 122.37, "top": 479.46, "x1": 182.11, "bottom": 485.36}},
+    {"ref": "BIAS", "count": 1, "category": "Potentiometers", "value": "B5K", "location": {"page": 0, "x0": 122.37, "top": 486.69, "x1": 176.89, "bottom": 492.99}}
+   ]
+  }
+ ],
+ "boards": {
+  "Q1": [{"page": 0, "x0": 190.8, "top": 140.76, "x1": 201.96, "bottom": 149.76}],
+  "R5": [{"page": 0, "x0": 137.52, "top": 162.72, "x1": 146.52, "bottom": 173.88}],
+  "D3": [{"page": 0, "x0": 287.64, "top": 163.44, "x1": 297.72, "bottom": 174.96}],
+  "D2": [{"page": 0, "x0": 271.44, "top": 167.04, "x1": 281.16, "bottom": 178.56}],
+  "C3": [{"page": 0, "x0": 255.24, "top": 171.36, "x1": 266.04, "bottom": 181.08}],
+  "C1": [{"page": 0, "x0": 116.64, "top": 172.8, "x1": 127.44, "bottom": 181.8}],
+  "BIAS": [{"page": 0, "x0": 266.04, "top": 193.32, "x1": 284.04, "bottom": 203.04}],
+  "R2": [{"page": 0, "x0": 186.12, "top": 193.68, "x1": 195.84, "bottom": 204.84}],
+  "R3": [{"page": 0, "x0": 201.24, "top": 193.68, "x1": 210.6, "bottom": 204.84}],
+  "R4": [{"page": 0, "x0": 216.0, "top": 193.68, "x1": 225.0, "bottom": 205.92}],
+  "R1": [{"page": 0, "x0": 157.32, "top": 194.76, "x1": 166.32, "bottom": 205.92}],
+  "C2": [{"page": 0, "x0": 172.08, "top": 194.76, "x1": 181.08, "bottom": 204.84}],
+  "D1": [{"page": 0, "x0": 118.08, "top": 227.16, "x1": 129.96, "bottom": 236.52}]
+ }
+}

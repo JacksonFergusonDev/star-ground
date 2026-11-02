@@ -1,0 +1,45 @@
+{
+ "id": "tonepad-sansampgt2-2007",
+ "publisher": "tonepad",
+ "title": "Sin Amp",
+ "document": "https://tonepad.com/getFile.asp?id=112",
+ "page": "https://tonepad.com/project.asp?id=22",
+ "file_name": "tonepad_sansampgt2-2007.pdf",
+ "sha256": "8c3f0dbec95fa9bb83c3ac718f1311fb8f5aef341f82afdc105c0ec412696080",
+ "checked": "2026-10-31T23:11:58+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {"ref": null, "count": 4, "category": "Resistors", "value": "1k", "location": null},
+    {"ref": null, "count": 9, "category": "Capacitors", "value": "22n", "location": null},
+    {"ref": null, "count": 4, "category": "Potentiometers", "value": "100k Lin.", "location": null},
+    {"ref": null, "count": 1, "category": "Resistors", "value": "2.2k", "location": null},
+    {"ref": null, "count": 2, "category": "Capacitors", "value": "47n", "location": null},
+    {"ref": null, "count": 2, "category": "Resistors", "value": "3.3k", "location": null},
+    {"ref": null, "count": 2, "category": "Capacitors", "value": "4.7n", "location": null},
+    {"ref": null, "count": 1, "category": "Resistors", "value": "6.2k", "location": null},
+    {"ref": null, "count": 6, "category": "Capacitors", "value": "10n", "location": null},
+    {"ref": null, "count": 4, "category": "ICs", "value": "TL072", "location": null},
+    {"ref": null, "count": 4, "category": "Hardware/Misc", "value": "DIP SOCKET (Check Size)", "location": null},
+    {"ref": null, "count": 11, "category": "Resistors", "value": "10k", "location": null},
+    {"ref": null, "count": 1, "category": "Capacitors", "value": "100n", "location": null},
+    {"ref": null, "count": 10, "category": "Resistors", "value": "22k", "location": null},
+    {"ref": null, "count": 2, "category": "Capacitors", "value": "220u", "location": null},
+    {"ref": null, "count": 1, "category": "Transistors", "value": "2N5088", "location": null},
+    {"ref": null, "count": 2, "category": "Resistors", "value": "33k", "location": null},
+    {"ref": null, "count": 1, "category": "Capacitors", "value": "560p", "location": null},
+    {"ref": null, "count": 4, "category": "Resistors", "value": "100k", "location": null},
+    {"ref": null, "count": 2, "category": "Capacitors", "value": "220p", "location": null},
+    {"ref": null, "count": 3, "category": "Resistors", "value": "330k", "location": null},
+    {"ref": null, "count": 2, "category": "Capacitors", "value": "2.2u", "location": null},
+    {"ref": null, "count": 2, "category": "Resistors", "value": "1M", "location": null},
+    {"ref": null, "count": 2, "category": "Capacitors", "value": "2.2n", "location": null},
+    {"ref": null, "count": 1, "category": "Capacitors", "value": "1n", "location": null}
+   ]
+  }
+ ],
+ "boards": {}
+}

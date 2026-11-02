@@ -1,0 +1,60 @@
+{
+ "id": "2023-nostalgitone-singles-spring-reverb",
+ "publisher": "guitarpcb",
+ "title": "NostalgiTone Spring Reverb Single",
+ "document": "https://guitarpcb.com/wp-content/uploads/2025/01/2023-NostalgiTone-Singles-Spring-Reverb.pdf",
+ "page": "https://guitarpcb.com/community/topic/pedal-building-guides-mandatory-reading/",
+ "file_name": "2023-NostalgiTone-Singles-Spring-Reverb.pdf",
+ "sha256": "54aeeb6b7824314ca834419642802e08c798c5b5b7e44138554ecabc8fae337b",
+ "checked": "2026-11-01T00:32:59+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {"ref": "R2", "count": 1, "category": "Resistors", "value": "220k", "location": {"page": 1, "x0": 84.6, "top": 434.88, "x1": 128.2, "bottom": 442.47}},
+    {"ref": "R4", "count": 1, "category": "Resistors", "value": "220k", "location": {"page": 1, "x0": 84.6, "top": 455.16, "x1": 128.2, "bottom": 462.75}},
+    {"ref": "R3", "count": 1, "category": "Resistors", "value": "220k", "location": {"page": 1, "x0": 84.6, "top": 444.96, "x1": 128.2, "bottom": 452.55}},
+    {"ref": "R6", "count": 1, "category": "Resistors", "value": "10k", "location": {"page": 1, "x0": 84.6, "top": 475.32, "x1": 126.16, "bottom": 482.91}},
+    {"ref": "R14", "count": 1, "category": "Resistors", "value": "10k", "location": {"page": 1, "x0": 156.96, "top": 455.16, "x1": 199.96, "bottom": 462.75}},
+    {"ref": "R5", "count": 1, "category": "Resistors", "value": "10k", "location": {"page": 1, "x0": 84.6, "top": 465.24, "x1": 126.16, "bottom": 472.83}},
+    {"ref": "R15", "count": 1, "category": "Resistors", "value": "10k", "location": {"page": 1, "x0": 156.96, "top": 465.24, "x1": 199.96, "bottom": 472.83}},
+    {"ref": "R8", "count": 1, "category": "Resistors", "value": "100k", "location": {"page": 1, "x0": 84.6, "top": 495.6, "x1": 128.2, "bottom": 503.19}},
+    {"ref": "R10", "count": 1, "category": "Resistors", "value": "1k", "location": {"page": 1, "x0": 83.16, "top": 515.88, "x1": 124.72, "bottom": 523.47}},
+    {"ref": "R11", "count": 1, "category": "Resistors", "value": "1k", "location": {"page": 1, "x0": 156.96, "top": 424.8, "x1": 198.52, "bottom": 432.39}},
+    {"ref": "R1", "count": 1, "category": "Resistors", "value": "1M", "location": {"page": 1, "x0": 84.6, "top": 424.8, "x1": 126.15, "bottom": 432.39}},
+    {"ref": "C5", "count": 1, "category": "Capacitors", "value": "470n", "location": {"page": 1, "x0": 232.32, "top": 424.8, "x1": 275.75, "bottom": 432.39}},
+    {"ref": "C4", "count": 1, "category": "Capacitors", "value": "470n", "location": {"page": 1, "x0": 158.4, "top": 515.88, "x1": 201.95, "bottom": 523.47}},
+    {"ref": "REG", "count": 1, "category": "ICs", "value": "L78L05", "location": {"page": 1, "x0": 303.6, "top": 424.8, "x1": 357.48, "bottom": 432.39}},
+    {"ref": "R12", "count": 1, "category": "Resistors", "value": "5.1k", "location": {"page": 1, "x0": 156.96, "top": 434.88, "x1": 200.16, "bottom": 442.47}},
+    {"ref": "R13", "count": 1, "category": "Resistors", "value": "5.1k", "location": {"page": 1, "x0": 156.96, "top": 444.96, "x1": 200.16, "bottom": 452.55}},
+    {"ref": "C6", "count": 1, "category": "Capacitors", "value": "4.7n", "location": {"page": 1, "x0": 232.32, "top": 434.88, "x1": 274.56, "bottom": 442.47}},
+    {"ref": "C7", "count": 1, "category": "Capacitors", "value": "220n", "location": {"page": 1, "x0": 232.32, "top": 444.96, "x1": 275.75, "bottom": 452.55}},
+    {"ref": "D1", "count": 1, "category": "Diodes", "value": "1N5817", "location": {"page": 1, "x0": 306.12, "top": 444.96, "x1": 358.92, "bottom": 452.55}},
+    {"ref": "C8", "count": 1, "category": "Capacitors", "value": "100u", "location": {"page": 1, "x0": 232.32, "top": 455.16, "x1": 277.68, "bottom": 462.75}},
+    {"ref": "WET", "count": 1, "category": "Potentiometers", "value": "A10K", "location": {"page": 1, "x0": 303.0, "top": 455.16, "x1": 355.27, "bottom": 462.75}},
+    {"ref": "C9", "count": 1, "category": "Capacitors", "value": "100n", "location": {"page": 1, "x0": 232.32, "top": 465.24, "x1": 275.75, "bottom": 472.83}},
+    {"ref": "C1", "count": 1, "category": "Capacitors", "value": "100n", "location": {"page": 1, "x0": 158.4, "top": 485.52, "x1": 201.95, "bottom": 493.11}},
+    {"ref": "SIZE", "count": 1, "category": "Potentiometers", "value": "B100K", "location": {"page": 1, "x0": 303.6, "top": 465.24, "x1": 356.71, "bottom": 472.83}},
+    {"ref": "C10", "count": 1, "category": "Capacitors", "value": "47u", "location": {"page": 1, "x0": 230.76, "top": 475.32, "x1": 275.64, "bottom": 482.91}},
+    {"ref": "C11", "count": 1, "category": "Capacitors", "value": "47u", "location": {"page": 1, "x0": 230.76, "top": 485.52, "x1": 275.64, "bottom": 493.11}},
+    {"ref": "DARKEN", "count": 1, "category": "Potentiometers", "value": "B25K", "location": {"page": 1, "x0": 297.0, "top": 475.32, "x1": 354.79, "bottom": 482.91}},
+    {"ref": "R7", "count": 1, "category": "Resistors", "value": "470", "location": {"page": 1, "x0": 84.6, "top": 485.52, "x1": 128.35, "bottom": 493.11}},
+    {"ref": "VOL", "count": 1, "category": "Potentiometers", "value": "50k", "location": {"page": 1, "x0": 303.6, "top": 485.52, "x1": 366.88, "bottom": 493.11}},
+    {"ref": "C2", "count": 1, "category": "Capacitors", "value": "150p", "location": {"page": 1, "x0": 158.4, "top": 495.6, "x1": 203.88, "bottom": 503.19}},
+    {"ref": "R9", "count": 1, "category": "Resistors", "value": "22k", "location": {"page": 1, "x0": 84.6, "top": 505.8, "x1": 126.16, "bottom": 513.39}},
+    {"ref": "C3", "count": 1, "category": "Capacitors", "value": "1u", "location": {"page": 1, "x0": 158.4, "top": 505.8, "x1": 200.4, "bottom": 513.39}},
+    {"ref": "IC1", "count": 1, "category": "ICs", "value": "TL072", "location": {"page": 1, "x0": 231.24, "top": 505.8, "x1": 277.56, "bottom": 513.39}},
+    {"ref": "LED", "count": 1, "category": "Diodes", "value": "Status", "location": {"page": 1, "x0": 304.56, "top": 505.8, "x1": 356.67, "bottom": 513.39}},
+    {"ref": "IC7", "count": 1, "category": "ICs", "value": "BTDR-3", "location": {"page": 1, "x0": 231.24, "top": 515.88, "x1": 280.08, "bottom": 523.47}},
+    {"ref": "CLR", "count": 1, "category": "Resistors", "value": "1.8k", "location": {"page": 1, "x0": 72.0, "top": 642.35, "x1": 464.87, "bottom": 650.39}}
+   ]
+  }
+ ],
+ "boards": {
+  "SIZE": [{"page": 3, "x0": 247.08, "top": 280.32, "x1": 260.76, "bottom": 288.24}, {"page": 4, "x0": 247.44, "top": 283.56, "x1": 260.04, "bottom": 290.4}],
+  "DARKEN": [{"page": 3, "x0": 348.24, "top": 283.2, "x1": 368.76, "bottom": 289.32}, {"page": 4, "x0": 348.24, "top": 285.36, "x1": 368.76, "bottom": 291.84}],
+  "WET": [{"page": 4, "x0": 300.0, "top": 285.36, "x1": 311.52, "bottom": 292.2}]
+ }
+}

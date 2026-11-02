@@ -1,0 +1,45 @@
+{
+ "id": "2023-nostalgitone-singles-fuzz",
+ "publisher": "guitarpcb",
+ "title": "NostalgiTone 60s Fuzz Single",
+ "document": "https://guitarpcb.com/wp-content/uploads/2023/12/2023-NostalgiTone-Singles-Fuzz.pdf",
+ "page": "https://guitarpcb.com/community/topic/pedal-building-guides-mandatory-reading/",
+ "file_name": "2023-NostalgiTone-Singles-Fuzz.pdf",
+ "sha256": "e28274f20aef63650256ea1207a56d5668bcf75021e8b533dd9a7975d4fae3d1",
+ "checked": "2026-11-01T00:23:24+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {"ref": "R2", "count": 1, "category": "Resistors", "value": "2.2M", "location": {"page": 1, "x0": 93.12, "top": 473.3, "x1": 157.4, "bottom": 484.08}},
+    {"ref": "R4", "count": 1, "category": "Resistors", "value": "120k", "location": {"page": 1, "x0": 93.12, "top": 501.98, "x1": 157.7, "bottom": 512.76}},
+    {"ref": "R6", "count": 1, "category": "Resistors", "value": "330", "location": {"page": 1, "x0": 93.12, "top": 530.78, "x1": 158.0, "bottom": 541.56}},
+    {"ref": "D1", "count": 1, "category": "Diodes", "value": "1N5817", "location": {"page": 1, "x0": 93.12, "top": 559.46, "x1": 164.0, "bottom": 570.24}},
+    {"ref": "R1", "count": 1, "category": "Resistors", "value": "1k", "location": {"page": 1, "x0": 93.12, "top": 458.9, "x1": 152.3, "bottom": 469.68}},
+    {"ref": "C1", "count": 1, "category": "Capacitors", "value": "4.7n", "location": {"page": 1, "x0": 205.32, "top": 458.9, "x1": 267.8, "bottom": 469.68}},
+    {"ref": "Q1", "count": 1, "category": "Transistors", "value": "BC183A", "location": {"page": 1, "x0": 316.92, "top": 458.9, "x1": 391.26, "bottom": 469.68}},
+    {"ref": "C2", "count": 1, "category": "Capacitors", "value": "1u", "location": {"page": 1, "x0": 205.32, "top": 473.3, "x1": 267.28, "bottom": 484.08}},
+    {"ref": "Q2", "count": 1, "category": "Transistors", "value": "BC183B", "location": {"page": 1, "x0": 316.92, "top": 473.3, "x1": 391.38, "bottom": 484.08}},
+    {"ref": "R3", "count": 1, "category": "Resistors", "value": "39k", "location": {"page": 1, "x0": 93.12, "top": 487.58, "x1": 154.7, "bottom": 498.36}},
+    {"ref": "C3", "count": 1, "category": "Capacitors", "value": "27p", "location": {"page": 1, "x0": 205.32, "top": 487.58, "x1": 270.28, "bottom": 498.36}},
+    {"ref": "C4", "count": 1, "category": "Capacitors", "value": "10u", "location": {"page": 1, "x0": 205.32, "top": 501.98, "x1": 270.28, "bottom": 512.76}},
+    {"ref": "FUZZ", "count": 1, "category": "Potentiometers", "value": "B1k", "location": {"page": 1, "x0": 312.12, "top": 501.98, "x1": 382.1, "bottom": 512.76}},
+    {"ref": "R5", "count": 1, "category": "Resistors", "value": "4.7k", "location": {"page": 1, "x0": 93.12, "top": 516.38, "x1": 155.0, "bottom": 527.16}},
+    {"ref": "C5", "count": 1, "category": "Capacitors", "value": "4.7u", "location": {"page": 1, "x0": 205.32, "top": 516.38, "x1": 267.8, "bottom": 527.16}},
+    {"ref": "VOL", "count": 1, "category": "Potentiometers", "value": "C500K", "location": {"page": 1, "x0": 313.92, "top": 516.38, "x1": 388.23, "bottom": 527.16}},
+    {"ref": "C6", "count": 1, "category": "Capacitors", "value": "10n", "location": {"page": 1, "x0": 205.32, "top": 530.78, "x1": 267.52, "bottom": 541.56}},
+    {"ref": "BASS", "count": 1, "category": "Potentiometers", "value": "C100K", "location": {"page": 1, "x0": 311.52, "top": 530.78, "x1": 388.23, "bottom": 541.56}},
+    {"ref": "R7", "count": 1, "category": "Resistors", "value": "27", "location": {"page": 1, "x0": 93.12, "top": 545.18, "x1": 155.6, "bottom": 555.96}},
+    {"ref": "C7", "count": 1, "category": "Capacitors", "value": "100u", "location": {"page": 1, "x0": 205.32, "top": 545.18, "x1": 272.68, "bottom": 555.96}},
+    {"ref": "BIAS", "count": 1, "category": "Potentiometers", "value": "10k", "location": {"page": 1, "x0": 312.72, "top": 545.18, "x1": 382.1, "bottom": 555.96}},
+    {"ref": "C8", "count": 1, "category": "Capacitors", "value": "100n", "location": {"page": 1, "x0": 205.32, "top": 559.46, "x1": 269.92, "bottom": 570.24}}
+   ]
+  }
+ ],
+ "boards": {
+  "BASS": [{"page": 3, "x0": 281.28, "top": 298.68, "x1": 294.96, "bottom": 305.52}],
+  "FUZZ": [{"page": 4, "x0": 346.44, "top": 283.56, "x1": 357.6, "bottom": 288.96}]
+ }
+}

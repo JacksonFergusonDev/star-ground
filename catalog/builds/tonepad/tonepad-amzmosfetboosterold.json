@@ -1,0 +1,41 @@
+{
+ "id": "tonepad-amzmosfetboosterold",
+ "publisher": "tonepad",
+ "title": "Mosboos",
+ "document": "https://tonepad.com/getFile.asp?id=66",
+ "page": "https://tonepad.com/project.asp?id=30",
+ "file_name": "tonepad_amzmosfetboosterOLD.pdf",
+ "sha256": "1e04dd730f6433424c7530b9bac90f4e400b44856808a24c452c9f8ad1e0b922",
+ "checked": "2026-10-31T23:54:17+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {"ref": "Ra", "count": 1, "category": "Resistors", "value": "4.7k", "location": {"page": 0, "x0": 57.6, "top": 448.96, "x1": 102.96, "bottom": 460.96}},
+    {"ref": "Rb", "count": 1, "category": "Resistors", "value": "22k", "location": {"page": 0, "x0": 57.6, "top": 462.36, "x1": 102.96, "bottom": 474.36}},
+    {"ref": "D1", "count": 1, "category": "Diodes", "value": "9.1v Zener", "location": {"page": 0, "x0": 161.43, "top": 462.36, "x1": 244.81, "bottom": 474.36}},
+    {"ref": "D2", "count": 1, "category": "Diodes", "value": "1N914", "location": {"page": 0, "x0": 161.43, "top": 475.77, "x1": 222.79, "bottom": 487.77}},
+    {"ref": "Q1", "count": 1, "category": "Transistors", "value": "BS170", "location": {"page": 0, "x0": 161.43, "top": 489.17, "x1": 224.14, "bottom": 501.17}},
+    {"ref": "Q2", "count": 1, "category": "Transistors", "value": "2N5485", "location": {"page": 0, "x0": 161.43, "top": 502.58, "x1": 230.14, "bottom": 514.58}},
+    {"ref": null, "count": 1, "category": "Resistors", "value": "62k", "location": null},
+    {"ref": null, "count": 1, "category": "Capacitors", "value": "47p", "location": null},
+    {"ref": null, "count": 1, "category": "Resistors", "value": "100k", "location": null},
+    {"ref": null, "count": 1, "category": "Capacitors", "value": "1n", "location": null},
+    {"ref": null, "count": 1, "category": "Resistors", "value": "10M", "location": null},
+    {"ref": null, "count": 1, "category": "Capacitors", "value": "100n", "location": null},
+    {"ref": null, "count": 2, "category": "Resistors", "value": "2.7k", "location": null},
+    {"ref": null, "count": 1, "category": "Capacitors", "value": "10u", "location": null},
+    {"ref": null, "count": 1, "category": "Resistors", "value": "1M", "location": null},
+    {"ref": null, "count": 1, "category": "Capacitors", "value": "100u", "location": null},
+    {"ref": null, "count": 1, "category": "Potentiometers", "value": "5k lin.", "location": null}
+   ]
+  }
+ ],
+ "boards": {
+  "D2": [{"page": 0, "x0": 506.86, "top": 580.11, "x1": 515.81, "bottom": 587.11}],
+  "Q2": [{"page": 0, "x0": 489.52, "top": 587.36, "x1": 498.86, "bottom": 594.36}],
+  "Q1": [{"page": 0, "x0": 387.5, "top": 624.45, "x1": 396.84, "bottom": 631.45}]
+ }
+}

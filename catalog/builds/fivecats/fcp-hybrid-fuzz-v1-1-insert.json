@@ -1,0 +1,57 @@
+{
+ "id": "fcp-hybrid-fuzz-v1-1-insert",
+ "publisher": "fivecats",
+ "title": "fcp-hybrid-fuzz-v1-1-insert",
+ "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2025/02/FCP-Hybrid-Fuzz-V1-1-Insert.pdf",
+ "page": "https://www.five-cats-pedals.co.uk/product/hybrid-germanium-fuzz/",
+ "file_name": "FCP-Hybrid-Fuzz-V1-1-Insert.pdf",
+ "sha256": "84d32dc076ffdc2dd781d58c628fe07bfb8caa1a14f97abe462bc06f1a21799b",
+ "checked": "2026-10-31T23:56:08+00:00",
+ "read_by_ocr": true,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {"ref": "R1", "count": 1, "category": "Resistors", "value": "220k", "location": {"page": 0, "x0": 73.57, "top": 462.55, "x1": 126.42, "bottom": 470.85}},
+    {"ref": "R6", "count": 1, "category": "Resistors", "value": "220k", "location": {"page": 0, "x0": 73.57, "top": 513.89, "x1": 126.42, "bottom": 521.39}},
+    {"ref": "R2", "count": 1, "category": "Resistors", "value": "10k", "location": {"page": 0, "x0": 73.57, "top": 472.73, "x1": 123.04, "bottom": 480.73}},
+    {"ref": "R3", "count": 1, "category": "Resistors", "value": "470", "location": {"page": 0, "x0": 73.57, "top": 483.34, "x1": 126.42, "bottom": 490.94}},
+    {"ref": "R4", "count": 1, "category": "Resistors", "value": "47k", "location": {"page": 0, "x0": 73.57, "top": 492.68, "x1": 123.46, "bottom": 500.98}},
+    {"ref": "R5", "count": 1, "category": "Resistors", "value": "5.6k", "location": {"page": 0, "x0": 73.57, "top": 502.44, "x1": 124.73, "bottom": 511.34}},
+    {"ref": "C1", "count": 1, "category": "Capacitors", "value": "10u", "location": {"page": 0, "x0": 74.41, "top": 533.41, "x1": 126.84, "bottom": 541.51}},
+    {"ref": "C3", "count": 1, "category": "Capacitors", "value": "10u", "location": {"page": 0, "x0": 74.41, "top": 553.57, "x1": 126.42, "bottom": 561.67}},
+    {"ref": "C4", "count": 1, "category": "Capacitors", "value": "10u", "location": {"page": 0, "x0": 73.57, "top": 563.33, "x1": 126.42, "bottom": 571.43}},
+    {"ref": "C2", "count": 1, "category": "Capacitors", "value": "100n", "location": {"page": 0, "x0": 74.41, "top": 543.17, "x1": 129.38, "bottom": 551.17}},
+    {"ref": "D1", "count": 1, "category": "Diodes", "value": "1N5817", "location": {"page": 0, "x0": 73.57, "top": 583.7, "x1": 129.2, "bottom": 591.7}},
+    {"ref": "Q1", "count": 1, "category": "Transistors", "value": "2N3904", "location": {"page": 0, "x0": 74.41, "top": 603.86, "x1": 127.55, "bottom": 611.96}},
+    {"ref": "Q2", "count": 1, "category": "Transistors", "value": "AC128", "location": {"page": 0, "x0": 74.41, "top": 614.04, "x1": 131.07, "bottom": 622.04}},
+    {"ref": "Q3", "count": 1, "category": "Transistors", "value": "AC128", "location": {"page": 0, "x0": 73.57, "top": 624.23, "x1": 131.07, "bottom": 632.23}},
+    {"ref": "VOLUME", "count": 1, "category": "Potentiometers", "value": "B10K", "location": {"page": 0, "x0": 73.57, "top": 642.9, "x1": 126.84, "bottom": 651.2}},
+    {"ref": "FUZZ", "count": 1, "category": "Potentiometers", "value": "B10K", "location": {"page": 0, "x0": 73.57, "top": 653.93, "x1": 126.42, "bottom": 661.93}},
+    {"ref": "NOISE", "count": 1, "category": "Potentiometers", "value": "B10K", "location": {"page": 0, "x0": 74.41, "top": 664.96, "x1": 126.42, "bottom": 672.46}},
+    {"ref": "COMP", "count": 1, "category": "Potentiometers", "value": "B10K", "location": {"page": 0, "x0": 74.41, "top": 674.72, "x1": 126.42, "bottom": 682.32}}
+   ]
+  }
+ ],
+ "boards": {
+  "FUZZ": [{"page": 0, "x0": 319.47, "top": 143.88, "x1": 477.63, "bottom": 181.65}, {"page": 0, "x0": 243.17, "top": 157.88, "x1": 269.81, "bottom": 169.77}, {"page": 0, "x0": 471.29, "top": 230.88, "x1": 542.34, "bottom": 250.83}, {"page": 0, "x0": 463.67, "top": 554.71, "x1": 478.68, "bottom": 566.59}],
+  "VOLUME": [{"page": 0, "x0": 40.36, "top": 155.76, "x1": 81.38, "bottom": 171.89}],
+  "C3": [{"page": 0, "x0": 41.87, "top": 185.05, "x1": 55.82, "bottom": 196.08}],
+  "R6": [{"page": 0, "x0": 78.0, "top": 209.24, "x1": 91.53, "bottom": 225.79}],
+  "R3": [{"page": 0, "x0": 97.45, "top": 211.36, "x1": 109.29, "bottom": 227.06}],
+  "C2": [{"page": 0, "x0": 114.79, "top": 211.78, "x1": 126.21, "bottom": 226.21}],
+  "R4": [{"page": 0, "x0": 177.8, "top": 212.63, "x1": 191.33, "bottom": 228.76}],
+  "R5": [{"page": 0, "x0": 197.25, "top": 213.06, "x1": 209.09, "bottom": 228.76}],
+  "Q1": [{"page": 0, "x0": 50.32, "top": 243.61, "x1": 64.28, "bottom": 254.65}, {"page": 0, "x0": 374.02, "top": 533.49, "x1": 565.17, "bottom": 547.5}],
+  "C1": [{"page": 0, "x0": 86.27, "top": 248.71, "x1": 100.23, "bottom": 259.32}],
+  "R2": [{"page": 0, "x0": 157.92, "top": 265.26, "x1": 171.03, "bottom": 281.39}],
+  "R1": [{"page": 0, "x0": 113.94, "top": 266.96, "x1": 127.48, "bottom": 283.51}],
+  "D1": [{"page": 0, "x0": 135.75, "top": 267.81, "x1": 149.71, "bottom": 284.36}],
+  "C4": [{"page": 0, "x0": 175.93, "top": 272.47, "x1": 192.0, "bottom": 284.36}],
+  "Q3": [{"page": 0, "x0": 266.0, "top": 289.45, "x1": 281.65, "bottom": 301.33}],
+  "Q2": [{"page": 0, "x0": 215.25, "top": 290.72, "x1": 230.06, "bottom": 301.76}, {"page": 0, "x0": 374.02, "top": 533.49, "x1": 565.17, "bottom": 547.5}],
+  "NOISE": [{"page": 0, "x0": 45.43, "top": 303.46, "x1": 76.3, "bottom": 317.04}],
+  "COMP": [{"page": 0, "x0": 241.66, "top": 303.46, "x1": 270.84, "bottom": 317.04}]
+ }
+}

@@ -1,0 +1,55 @@
+{
+ "id": "tonepad-tonebendermk2",
+ "publisher": "tonepad",
+ "title": "Tone Bender MKII",
+ "document": "https://tonepad.com/getFile.asp?id=86",
+ "page": "https://tonepad.com/project.asp?id=41",
+ "file_name": "tonepad_tonebendermk2.pdf",
+ "sha256": "22ef568c9bddb50d3e0ceffeef0fa7e50f7d4d2d716c6eff71b1327a8765c21e",
+ "checked": "2026-11-01T00:01:58+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {"ref": "R1", "count": 1, "category": "Resistors", "value": "100k", "location": {"page": 0, "x0": 57.6, "top": 381.93, "x1": 109.61, "bottom": 393.93}},
+    {"ref": "R4", "count": 1, "category": "Resistors", "value": "100k", "location": {"page": 0, "x0": 57.6, "top": 422.14, "x1": 109.61, "bottom": 434.14}},
+    {"ref": "C1", "count": 1, "category": "Capacitors", "value": "4.7u", "location": {"page": 0, "x0": 175.83, "top": 381.93, "x1": 232.75, "bottom": 393.93}},
+    {"ref": "C3", "count": 1, "category": "Capacitors", "value": "4.7u", "location": {"page": 0, "x0": 175.83, "top": 408.74, "x1": 232.75, "bottom": 420.74}},
+    {"ref": "Q1", "count": 1, "category": "Transistors", "value": "PNP Ge", "location": {"page": 0, "x0": 270.5, "top": 381.93, "x1": 341.18, "bottom": 393.93}},
+    {"ref": "Q2", "count": 1, "category": "Transistors", "value": "PNP Ge", "location": {"page": 0, "x0": 270.5, "top": 395.33, "x1": 341.18, "bottom": 407.33}},
+    {"ref": "Q3", "count": 1, "category": "Transistors", "value": "PNP Ge", "location": {"page": 0, "x0": 270.5, "top": 408.74, "x1": 341.18, "bottom": 420.74}},
+    {"ref": "R2", "count": 1, "category": "Resistors", "value": "10k", "location": {"page": 0, "x0": 57.6, "top": 395.33, "x1": 102.94, "bottom": 407.33}},
+    {"ref": "C2", "count": 1, "category": "Capacitors", "value": "100n", "location": {"page": 0, "x0": 175.83, "top": 395.33, "x1": 232.75, "bottom": 407.33}},
+    {"ref": "R3", "count": 1, "category": "Resistors", "value": "47k", "location": {"page": 0, "x0": 57.6, "top": 408.74, "x1": 102.94, "bottom": 420.74}},
+    {"ref": "C4", "count": 1, "category": "Capacitors", "value": "10n", "location": {"page": 0, "x0": 175.83, "top": 422.14, "x1": 239.42, "bottom": 434.14}},
+    {"ref": "R5", "count": 1, "category": "Resistors", "value": "1k", "location": {"page": 0, "x0": 57.6, "top": 435.55, "x1": 96.27, "bottom": 447.55}},
+    {"ref": "C5", "count": 1, "category": "Capacitors", "value": "47u", "location": {"page": 0, "x0": 175.83, "top": 435.55, "x1": 229.41, "bottom": 447.55}},
+    {"ref": "R6", "count": 1, "category": "Resistors", "value": "8.2k", "location": {"page": 0, "x0": 57.6, "top": 448.96, "x1": 136.94, "bottom": 460.96}},
+    {"ref": "R7", "count": 1, "category": "Resistors", "value": "2.2M", "location": {"page": 0, "x0": 57.6, "top": 462.36, "x1": 144.94, "bottom": 474.36}},
+    {"ref": "VR8", "count": 1, "category": "Potentiometers", "value": "1k lin.", "location": {"page": 0, "x0": 175.83, "top": 462.36, "x1": 241.17, "bottom": 474.36}},
+    {"ref": "VR9", "count": 1, "category": "Potentiometers", "value": "100k log.", "location": {"page": 0, "x0": 175.83, "top": 475.77, "x1": 258.52, "bottom": 487.77}}
+   ]
+  }
+ ],
+ "boards": {
+  "C5": [{"page": 0, "x0": 125.32, "top": 565.62, "x1": 134.27, "bottom": 572.62}],
+  "R2": [{"page": 0, "x0": 181.74, "top": 565.73, "x1": 190.69, "bottom": 572.73}],
+  "R3": [{"page": 0, "x0": 268.14, "top": 565.73, "x1": 277.08, "bottom": 572.73}],
+  "R5": [{"page": 0, "x0": 318.54, "top": 565.73, "x1": 327.48, "bottom": 572.73}],
+  "C2": [{"page": 0, "x0": 212.23, "top": 580.16, "x1": 221.18, "bottom": 587.16}],
+  "C4": [{"page": 0, "x0": 392.23, "top": 580.16, "x1": 401.18, "bottom": 587.16}],
+  "R6": [{"page": 0, "x0": 318.54, "top": 608.93, "x1": 327.48, "bottom": 615.93}],
+  "C1": [{"page": 0, "x0": 140.23, "top": 616.16, "x1": 149.18, "bottom": 623.16}],
+  "Q1": [{"page": 0, "x0": 190.55, "top": 623.35, "x1": 199.89, "bottom": 630.35}],
+  "Q2": [{"page": 0, "x0": 276.95, "top": 637.75, "x1": 286.29, "bottom": 644.75}],
+  "Q3": [{"page": 0, "x0": 327.35, "top": 637.75, "x1": 336.69, "bottom": 644.75}],
+  "R7": [{"page": 0, "x0": 109.74, "top": 644.93, "x1": 118.68, "bottom": 651.93}],
+  "R1": [{"page": 0, "x0": 152.94, "top": 644.93, "x1": 161.89, "bottom": 651.93}],
+  "VR9": [{"page": 0, "x0": 457.87, "top": 644.93, "x1": 471.49, "bottom": 651.93}],
+  "VR8": [{"page": 0, "x0": 349.87, "top": 666.53, "x1": 363.49, "bottom": 673.53}],
+  "R4": [{"page": 0, "x0": 305.04, "top": 673.76, "x1": 313.99, "bottom": 680.76}],
+  "C3": [{"page": 0, "x0": 384.52, "top": 680.82, "x1": 393.47, "bottom": 687.82}]
+ }
+}

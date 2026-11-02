@@ -1,0 +1,39 @@
+{
+ "id": "tonepad-mxrnoisegate2",
+ "publisher": "tonepad",
+ "title": "Callate Gate 2",
+ "document": "https://tonepad.com/getFile.asp?id=77",
+ "page": "https://tonepad.com/project.asp?id=18",
+ "file_name": "tonepad_mxrnoisegate2.pdf",
+ "sha256": "0daefcabeffe6ac524c01ca697dd4575b61cba74d06332b2859fe226b1e4d838",
+ "checked": "2026-10-31T23:57:50+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {"ref": "IC1", "count": 1, "category": "ICs", "value": "4558", "location": {"page": 0, "x0": 147.03, "top": 445.97, "x1": 203.05, "bottom": 457.97}},
+    {"ref": "Ra", "count": 1, "category": "Resistors", "value": "150k", "location": null},
+    {"ref": null, "count": 7, "category": "Resistors", "value": "1M", "location": null},
+    {"ref": null, "count": 3, "category": "Capacitors", "value": "10u", "location": null},
+    {"ref": null, "count": 1, "category": "Potentiometers", "value": "500k Log.", "location": null},
+    {"ref": null, "count": 1, "category": "Resistors", "value": "470k", "location": null},
+    {"ref": null, "count": 3, "category": "Capacitors", "value": "1u", "location": null},
+    {"ref": null, "count": 1, "category": "Capacitors", "value": "1u / NP", "location": null},
+    {"ref": null, "count": 2, "category": "Resistors", "value": "100k", "location": null},
+    {"ref": null, "count": 3, "category": "Capacitors", "value": "47n", "location": null},
+    {"ref": null, "count": 1, "category": "Diodes", "value": "5.1v Zener", "location": null},
+    {"ref": null, "count": 4, "category": "Resistors", "value": "22k", "location": null},
+    {"ref": null, "count": 2, "category": "Capacitors", "value": "10n", "location": null},
+    {"ref": null, "count": 1, "category": "Resistors", "value": "10k", "location": null},
+    {"ref": null, "count": 2, "category": "Resistors", "value": "1k", "location": null},
+    {"ref": null, "count": 2, "category": "Transistors", "value": "2N3904", "location": null},
+    {"ref": null, "count": 1, "category": "Resistors", "value": "680", "location": null},
+    {"ref": null, "count": 1, "category": "Transistors", "value": "2N5485 (2N5952 rotate 180deg)", "location": null},
+    {"ref": null, "count": 2, "category": "Resistors", "value": "100", "location": null}
+   ]
+  }
+ ],
+ "boards": {}
+}

@@ -1,0 +1,38 @@
+{
+ "id": "tonepad-stereomicroamp",
+ "publisher": "tonepad",
+ "title": "Stereo IC Amp",
+ "document": "https://tonepad.com/getFile.asp?id=51",
+ "page": "https://tonepad.com/project.asp?id=28",
+ "file_name": "tonepad_stereomicroamp.pdf",
+ "sha256": "782b96505efe9917d9ed05afc95ccacc6e1f7b562d1e54479b83704c29972397",
+ "checked": "2026-10-31T23:44:55+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {"ref": "D1", "count": 1, "category": "Diodes", "value": "1N4001", "location": {"page": 0, "x0": 406.23, "top": 433.56, "x1": 474.25, "bottom": 445.56}},
+    {"ref": "IC1", "count": 1, "category": "ICs", "value": "4558", "location": {"page": 0, "x0": 406.23, "top": 460.37, "x1": 462.25, "bottom": 472.37}},
+    {"ref": null, "count": 2, "category": "Resistors", "value": "22M", "location": null},
+    {"ref": null, "count": 2, "category": "Capacitors", "value": "10n", "location": null},
+    {"ref": null, "count": 2, "category": "Resistors", "value": "10M", "location": null},
+    {"ref": null, "count": 1, "category": "Capacitors", "value": "22u", "location": null},
+    {"ref": null, "count": 2, "category": "Resistors", "value": "1k", "location": null},
+    {"ref": null, "count": 2, "category": "Capacitors", "value": "15u", "location": null},
+    {"ref": null, "count": 2, "category": "Resistors", "value": "100k", "location": null},
+    {"ref": null, "count": 2, "category": "Capacitors", "value": "4.7u", "location": null},
+    {"ref": null, "count": 2, "category": "Resistors", "value": "2.7k", "location": null},
+    {"ref": null, "count": 2, "category": "Capacitors", "value": "51p", "location": null},
+    {"ref": null, "count": 2, "category": "Resistors", "value": "56k", "location": null},
+    {"ref": null, "count": 2, "category": "Resistors", "value": "10k", "location": null},
+    {"ref": null, "count": 2, "category": "Resistors", "value": "470", "location": null},
+    {"ref": null, "count": 2, "category": "Potentiometers", "value": "500kC (Rev. Log.)", "location": null}
+   ]
+  }
+ ],
+ "boards": {
+  "IC1": [{"page": 0, "x0": 240.8, "top": 529.79, "x1": 251.69, "bottom": 536.79}, {"page": 0, "x0": 240.8, "top": 659.39, "x1": 251.69, "bottom": 666.39}]
+ }
+}

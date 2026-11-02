@@ -1,0 +1,29 @@
+{
+ "id": "bd-easy-order-switching-board-4pdt-footswitch",
+ "publisher": "guitarpcb",
+ "title": "bd-easy-order-switching-board-4pdt-footswitch",
+ "document": "https://guitarpcb.com/wp-content/uploads/2018/06/BD_Easy-Order-Switching-Board-4PDT-Footswitch.pdf",
+ "page": "https://guitarpcb.com/community/topic/direct-build-document-link-list/",
+ "file_name": "BD_Easy-Order-Switching-Board-4PDT-Footswitch.pdf",
+ "sha256": "583414dcc204c322af806eeb32883e9fb74778df32097548bdaa7ac34e5dd60c",
+ "checked": "2026-10-31T23:37:59+00:00",
+ "read_by_ocr": false,
+ "verified": false,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {"ref": "R1", "count": 1, "category": "Resistors", "value": "1.8k - CLR", "location": {"page": 0, "x0": 246.12, "top": 615.6, "x1": 293.44, "bottom": 624.96}},
+    {"ref": "D1", "count": 1, "category": "Diodes", "value": "CA Bi-colour LED", "location": {"page": 0, "x0": 246.12, "top": 630.72, "x1": 358.11, "bottom": 640.08}},
+    {"ref": "DA", "count": 1, "category": "Diodes", "value": "LED", "location": {"page": 0, "x0": 246.12, "top": 645.72, "x1": 296.43, "bottom": 655.08}},
+    {"ref": "DB", "count": 1, "category": "Diodes", "value": "LED", "location": {"page": 0, "x0": 246.12, "top": 660.72, "x1": 296.43, "bottom": 670.08}},
+    {"ref": "SW1", "count": 1, "category": "Switches", "value": "4PDT Footswitch", "location": {"page": 0, "x0": 246.12, "top": 675.84, "x1": 349.72, "bottom": 685.2}}
+   ]
+  }
+ ],
+ "boards": {
+  "DB": [{"page": 0, "x0": 234.72, "top": 188.76, "x1": 252.0, "bottom": 202.08}, {"page": 2, "x0": 266.4, "top": 125.64, "x1": 275.4, "bottom": 132.84}],
+  "DA": [{"page": 0, "x0": 366.84, "top": 188.76, "x1": 384.12, "bottom": 202.08}, {"page": 2, "x0": 330.48, "top": 125.28, "x1": 340.2, "bottom": 132.84}],
+  "R1": [{"page": 0, "x0": 239.04, "top": 210.0, "x1": 255.6, "bottom": 222.96}, {"page": 0, "x0": 350.04, "top": 429.36, "x1": 362.64, "bottom": 438.0}, {"page": 2, "x0": 267.84, "top": 135.0, "x1": 277.2, "bottom": 142.92}]
+ }
+}

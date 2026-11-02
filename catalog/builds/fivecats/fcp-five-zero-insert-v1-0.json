@@ -1,0 +1,53 @@
+{
+ "id": "fcp-five-zero-insert-v1-0",
+ "publisher": "fivecats",
+ "title": "fcp-five-zero-insert-v1-0",
+ "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/11/FCP-Five-Zero-Insert-V1-0.pdf",
+ "page": "https://www.five-cats-pedals.co.uk/product/cot-five-zero-lovepedal-cot-50/",
+ "file_name": "FCP-Five-Zero-Insert-V1-0.pdf",
+ "sha256": "b86d33748f1b669b68dd215a6c0c9091d2c2993d0a61a7ebbd435c8d151311e7",
+ "checked": "2026-10-31T23:48:04+00:00",
+ "read_by_ocr": true,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {"ref": "R1", "count": 1, "category": "Resistors", "value": "1M", "location": {"page": 0, "x0": 6.76, "top": 485.46, "x1": 82.87, "bottom": 495.36}},
+    {"ref": "R2", "count": 1, "category": "Resistors", "value": "3.3k", "location": {"page": 0, "x0": 5.92, "top": 499.04, "x1": 87.52, "bottom": 508.94}},
+    {"ref": "R3", "count": 1, "category": "Resistors", "value": "2.2M", "location": {"page": 0, "x0": 5.92, "top": 513.04, "x1": 90.9, "bottom": 523.25}},
+    {"ref": "R4", "count": 1, "category": "Resistors", "value": "47", "location": {"page": 0, "x0": 6.76, "top": 527.05, "x1": 85.83, "bottom": 536.95}},
+    {"ref": "R5", "count": 1, "category": "Resistors", "value": "330", "location": {"page": 0, "x0": 6.76, "top": 540.63, "x1": 89.21, "bottom": 550.53}},
+    {"ref": "C1", "count": 1, "category": "Capacitors", "value": "47u", "location": {"page": 0, "x0": 6.76, "top": 568.21, "x1": 89.21, "bottom": 578.11}},
+    {"ref": "C4", "count": 1, "category": "Capacitors", "value": "47u", "location": {"page": 0, "x0": 6.76, "top": 609.8, "x1": 89.21, "bottom": 619.7}},
+    {"ref": "C2", "count": 1, "category": "Capacitors", "value": "47n", "location": {"page": 0, "x0": 7.19, "top": 582.21, "x1": 89.21, "bottom": 592.41}},
+    {"ref": "C3", "count": 1, "category": "Capacitors", "value": "100n", "location": {"page": 0, "x0": 6.76, "top": 595.79, "x1": 94.29, "bottom": 605.69}},
+    {"ref": "D1", "count": 1, "category": "Diodes", "value": "1N5817", "location": {"page": 0, "x0": 6.76, "top": 637.38, "x1": 101.05, "bottom": 647.28}},
+    {"ref": "D2", "count": 1, "category": "Diodes", "value": "BAT46", "location": {"page": 0, "x0": 6.76, "top": 650.96, "x1": 95.55, "bottom": 661.16}},
+    {"ref": "D3", "count": 1, "category": "Diodes", "value": "BAT46", "location": {"page": 0, "x0": 6.76, "top": 664.54, "x1": 96.4, "bottom": 674.74}},
+    {"ref": "D4", "count": 1, "category": "Diodes", "value": "1N60P", "location": {"page": 0, "x0": 6.76, "top": 678.97, "x1": 134.03, "bottom": 688.87}},
+    {"ref": "D5", "count": 1, "category": "Diodes", "value": "1N60P", "location": {"page": 0, "x0": 6.76, "top": 692.12, "x1": 92.91, "bottom": 702.02}},
+    {"ref": "Q1", "count": 1, "category": "Transistors", "value": "2N5088", "location": {"page": 0, "x0": 316.26, "top": 485.46, "x1": 411.39, "bottom": 495.36}},
+    {"ref": "GAIN", "count": 1, "category": "Potentiometers", "value": "B1K", "location": {"page": 0, "x0": 316.26, "top": 513.04, "x1": 395.32, "bottom": 523.25}},
+    {"ref": "VOL", "count": 1, "category": "Potentiometers", "value": "A500K", "location": {"page": 0, "x0": 315.41, "top": 527.05, "x1": 405.47, "bottom": 536.95}},
+    {"ref": "CLIP1", "count": 1, "category": "Switches", "value": "SW_SPDT", "location": {"page": 0, "x0": 317.1, "top": 554.63, "x1": 419.42, "bottom": 564.53}}
+   ]
+  }
+ ],
+ "boards": {
+  "D3": [{"page": 0, "x0": 113.76, "top": 183.35, "x1": 130.25, "bottom": 196.5}],
+  "D4": [{"page": 0, "x0": 188.19, "top": 185.05, "x1": 205.53, "bottom": 198.63}],
+  "D2": [{"page": 0, "x0": 108.02, "top": 202.02, "x1": 126.21, "bottom": 215.18}],
+  "D5": [{"page": 0, "x0": 193.26, "top": 203.29, "x1": 210.18, "bottom": 216.45}],
+  "R1": [{"page": 0, "x0": 49.9, "top": 219.85, "x1": 67.24, "bottom": 233.0}],
+  "C2": [{"page": 0, "x0": 106.99, "top": 221.12, "x1": 122.22, "bottom": 231.73}],
+  "R3": [{"page": 0, "x0": 202.15, "top": 226.21, "x1": 217.79, "bottom": 238.1}],
+  "R5": [{"page": 0, "x0": 106.75, "top": 240.22, "x1": 124.09, "bottom": 253.8}],
+  "R4": [{"page": 0, "x0": 202.57, "top": 244.04, "x1": 217.37, "bottom": 255.07}],
+  "Q1": [{"page": 0, "x0": 274.46, "top": 246.16, "x1": 288.42, "bottom": 256.35}],
+  "GAIN": [{"page": 0, "x0": 49.9, "top": 253.8, "x1": 72.32, "bottom": 265.68}],
+  "VOL": [{"page": 0, "x0": 243.17, "top": 254.65, "x1": 260.5, "bottom": 265.26}],
+  "D1": [{"page": 0, "x0": 146.32, "top": 294.12, "x1": 161.97, "bottom": 307.28}],
+  "R2": [{"page": 0, "x0": 209.09, "top": 294.54, "x1": 225.59, "bottom": 307.7}]
+ }
+}

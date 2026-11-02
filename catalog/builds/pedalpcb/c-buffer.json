@@ -1,0 +1,48 @@
+{
+ "id": "c-buffer",
+ "publisher": "pedalpcb",
+ "title": "C-Buffer Module",
+ "document": "https://docs.pedalpcb.com/project/C-Buffer.pdf",
+ "page": "https://www.pedalpcb.com/product/pcb096/",
+ "file_name": "C-Buffer.pdf",
+ "sha256": "3925b5f5d424311386c1ab325058ecd06255514e0baee95c50a6fd9385cf95a8",
+ "checked": "2026-11-01T00:08:36+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {"ref": "R1", "count": 1, "category": "Resistors", "value": "10M", "location": {"page": 0, "x0": 57.6, "top": 172.94, "x1": 117.36, "bottom": 183.94}},
+    {"ref": "R2", "count": 1, "category": "Resistors", "value": "1k", "location": {"page": 0, "x0": 57.6, "top": 186.14, "x1": 108.34, "bottom": 197.14}},
+    {"ref": "R3", "count": 1, "category": "Resistors", "value": "120k", "location": {"page": 0, "x0": 57.6, "top": 199.34, "x1": 121.98, "bottom": 210.34}},
+    {"ref": "R5", "count": 1, "category": "Resistors", "value": "120k", "location": {"page": 0, "x0": 57.6, "top": 225.74, "x1": 121.98, "bottom": 236.74}},
+    {"ref": "R4", "count": 1, "category": "Resistors", "value": "200k", "location": {"page": 0, "x0": 57.6, "top": 212.54, "x1": 121.98, "bottom": 223.54}},
+    {"ref": "R6", "count": 1, "category": "Resistors", "value": "7.5k", "location": {"page": 0, "x0": 57.6, "top": 238.94, "x1": 115.16, "bottom": 249.94}},
+    {"ref": "R7", "count": 1, "category": "Resistors", "value": "20k", "location": {"page": 0, "x0": 57.6, "top": 252.14, "x1": 115.16, "bottom": 263.14}},
+    {"ref": "R8", "count": 1, "category": "Resistors", "value": "51", "location": {"page": 0, "x0": 57.6, "top": 265.34, "x1": 115.16, "bottom": 276.34}},
+    {"ref": "C1", "count": 1, "category": "Capacitors", "value": "100n", "location": {"page": 0, "x0": 57.6, "top": 304.94, "x1": 121.32, "bottom": 315.94}},
+    {"ref": "C2", "count": 1, "category": "Capacitors", "value": "4.7u", "location": {"page": 0, "x0": 57.6, "top": 318.14, "x1": 114.72, "bottom": 329.14}},
+    {"ref": "C3", "count": 1, "category": "Capacitors", "value": "1n", "location": {"page": 0, "x0": 57.6, "top": 331.34, "x1": 107.68, "bottom": 342.34}},
+    {"ref": "C4", "count": 1, "category": "Capacitors", "value": "22u", "location": {"page": 0, "x0": 57.6, "top": 344.54, "x1": 114.72, "bottom": 355.54}},
+    {"ref": "C5", "count": 1, "category": "Capacitors", "value": "220u", "location": {"page": 0, "x0": 57.6, "top": 357.74, "x1": 121.54, "bottom": 368.74}},
+    {"ref": "D1", "count": 1, "category": "Diodes", "value": "1N5817", "location": {"page": 0, "x0": 57.6, "top": 397.34, "x1": 171.83, "bottom": 408.34}},
+    {"ref": "Q1", "count": 1, "category": "Transistors", "value": "BC549C", "location": {"page": 0, "x0": 57.6, "top": 436.94, "x1": 138.48, "bottom": 447.94}},
+    {"ref": "SW1", "count": 1, "category": "Switches", "value": "Latching 3PDT Footswitch", "location": {"page": 0, "x0": 57.6, "top": 476.54, "x1": 234.84, "bottom": 488.02}}
+   ]
+  }
+ ],
+ "boards": {
+  "C1": [{"page": 0, "x0": 371.44, "top": 189.59, "x1": 376.12, "bottom": 193.91}],
+  "R2": [{"page": 0, "x0": 402.04, "top": 189.95, "x1": 409.24, "bottom": 195.71}],
+  "Q1": [{"page": 0, "x0": 497.44, "top": 193.55, "x1": 504.64, "bottom": 199.67}],
+  "C4": [{"page": 0, "x0": 507.88, "top": 224.87, "x1": 515.44, "bottom": 230.63}],
+  "R5": [{"page": 0, "x0": 403.48, "top": 227.39, "x1": 411.04, "bottom": 233.15}],
+  "R4": [{"page": 0, "x0": 417.96, "top": 253.31, "x1": 424.08, "bottom": 260.51}],
+  "R6": [{"page": 0, "x0": 484.92, "top": 253.31, "x1": 491.04, "bottom": 260.51}],
+  "R7": [{"page": 0, "x0": 520.92, "top": 253.31, "x1": 527.04, "bottom": 260.87}],
+  "D1": [{"page": 0, "x0": 351.64, "top": 315.95, "x1": 357.76, "bottom": 320.27}],
+  "SW1": [{"page": 0, "x0": 456.84, "top": 323.87, "x1": 463.32, "bottom": 337.91}, {"page": 0, "x0": 498.16, "top": 323.87, "x1": 502.05, "bottom": 338.63}, {"page": 0, "x0": 413.56, "top": 326.03, "x1": 418.42, "bottom": 338.27}],
+  "C5": [{"page": 0, "x0": 359.28, "top": 340.07, "x1": 365.04, "bottom": 346.91}]
+ }
+}

@@ -1,0 +1,53 @@
+{
+ "id": "fcp-jive-by-shooter-v1-0-insert",
+ "publisher": "fivecats",
+ "title": "fcp-jive-by-shooter-v1-0-insert",
+ "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2025/03/FCP-Jive-By-Shooter-V1-0-Insert.pdf",
+ "page": "https://www.five-cats-pedals.co.uk/product/jive-by-shooter-jptr-fx-jive-clone/",
+ "file_name": "FCP-Jive-By-Shooter-V1-0-Insert.pdf",
+ "sha256": "ac26587a5f93b513b1c205fd68ff3cec4d322edaab7cd3a2a9e7a3374d4e3412",
+ "checked": "2026-10-31T23:56:51+00:00",
+ "read_by_ocr": true,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {"ref": "C1", "count": 1, "category": "Capacitors", "value": "10u", "location": {"page": 0, "x0": 38.48, "top": 451.09, "x1": 112.47, "bottom": 460.99}},
+    {"ref": "C3", "count": 1, "category": "Capacitors", "value": "10u", "location": {"page": 0, "x0": 38.48, "top": 478.25, "x1": 112.47, "bottom": 488.15}},
+    {"ref": "C2", "count": 1, "category": "Capacitors", "value": "100n", "location": {"page": 0, "x0": 39.32, "top": 465.09, "x1": 112.89, "bottom": 474.99}},
+    {"ref": "D1", "count": 1, "category": "Diodes", "value": "1N4148", "location": {"page": 0, "x0": 38.48, "top": 532.14, "x1": 123.46, "bottom": 542.04}},
+    {"ref": "D6", "count": 1, "category": "Diodes", "value": "1N4148", "location": {"page": 0, "x0": 38.48, "top": 600.04, "x1": 124.3, "bottom": 608.94}},
+    {"ref": "D7", "count": 1, "category": "Diodes", "value": "1N4148", "location": {"page": 0, "x0": 39.32, "top": 613.19, "x1": 124.3, "bottom": 621.79}},
+    {"ref": "D2", "count": 1, "category": "Diodes", "value": "9.1V", "location": {"page": 0, "x0": 38.48, "top": 545.3, "x1": 110.77, "bottom": 555.2}},
+    {"ref": "D3", "count": 1, "category": "Diodes", "value": "1N4001", "location": {"page": 0, "x0": 38.48, "top": 559.72, "x1": 124.3, "bottom": 568.02}},
+    {"ref": "D4", "count": 1, "category": "Diodes", "value": "1N4001", "location": {"page": 0, "x0": 39.32, "top": 572.03, "x1": 124.3, "bottom": 582.23}},
+    {"ref": "D5", "count": 1, "category": "Diodes", "value": "1N4001", "location": {"page": 0, "x0": 38.48, "top": 586.25, "x1": 124.3, "bottom": 595.15}},
+    {"ref": "GAIN1", "count": 1, "category": "Potentiometers", "value": "C5K", "location": {"page": 0, "x0": 39.32, "top": 626.77, "x1": 108.24, "bottom": 635.67}},
+    {"ref": "Q1", "count": 1, "category": "Transistors", "value": "BS170", "location": {"page": 0, "x0": 38.48, "top": 639.93, "x1": 117.12, "bottom": 648.83}},
+    {"ref": "R1", "count": 1, "category": "Resistors", "value": "1M", "location": {"page": 0, "x0": 38.48, "top": 653.08, "x1": 105.7, "bottom": 662.98}},
+    {"ref": "R2", "count": 1, "category": "Resistors", "value": "10M", "location": {"page": 0, "x0": 38.48, "top": 666.24, "x1": 110.35, "bottom": 676.14}},
+    {"ref": "R3", "count": 1, "category": "Resistors", "value": "10M", "location": {"page": 0, "x0": 38.48, "top": 680.24, "x1": 110.77, "bottom": 689.44}},
+    {"ref": "R4", "count": 1, "category": "Resistors", "value": "5.1k", "location": {"page": 0, "x0": 38.48, "top": 693.4, "x1": 106.97, "bottom": 703.3}},
+    {"ref": "VOLUME1", "count": 1, "category": "Potentiometers", "value": "A100K", "location": {"page": 0, "x0": 38.48, "top": 706.76, "x1": 118.39, "bottom": 715.86}},
+    {"ref": "CLIP1", "count": 1, "category": "Switches", "value": "SW_SPDT", "location": {"page": 0, "x0": 39.32, "top": 491.83, "x1": 193.22, "bottom": 501.73}},
+    {"ref": "CLIP2", "count": 1, "category": "Switches", "value": "SW_SPDT", "location": {"page": 0, "x0": 39.32, "top": 504.98, "x1": 193.38, "bottom": 514.88}},
+    {"ref": "CLIP3", "count": 1, "category": "Switches", "value": "SW_SPDT", "location": {"page": 0, "x0": 39.32, "top": 518.14, "x1": 192.68, "bottom": 528.04}}
+   ]
+  }
+ ],
+ "boards": {
+  "D3": [{"page": 0, "x0": 154.78, "top": 156.61, "x1": 167.47, "bottom": 167.22}],
+  "CLIP1": [{"page": 0, "x0": 208.49, "top": 167.64, "x1": 230.06, "bottom": 177.41}],
+  "D5": [{"page": 0, "x0": 216.1, "top": 198.2, "x1": 225.4, "bottom": 206.69}],
+  "C3": [{"page": 0, "x0": 137.44, "top": 202.02, "x1": 148.01, "bottom": 210.51}],
+  "C1": [{"page": 0, "x0": 168.74, "top": 202.02, "x1": 177.62, "bottom": 209.66}],
+  "CLIP2": [{"page": 0, "x0": 209.33, "top": 240.22, "x1": 230.06, "bottom": 249.98}],
+  "D6": [{"page": 0, "x0": 211.45, "top": 270.35, "x1": 224.14, "bottom": 280.96}],
+  "D2": [{"page": 0, "x0": 88.39, "top": 273.75, "x1": 99.8, "bottom": 282.24}],
+  "R2": [{"page": 0, "x0": 147.35, "top": 273.75, "x1": 161.31, "bottom": 284.36}],
+  "R3": [{"page": 0, "x0": 149.71, "top": 287.33, "x1": 159.01, "bottom": 295.39}],
+  "R4": [{"page": 0, "x0": 147.35, "top": 299.21, "x1": 160.04, "bottom": 307.28}],
+  "CLIP3": [{"page": 0, "x0": 208.49, "top": 312.37, "x1": 230.06, "bottom": 322.56}]
+ }
+}

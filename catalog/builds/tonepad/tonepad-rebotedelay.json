@@ -1,0 +1,45 @@
+{
+ "id": "tonepad-rebotedelay",
+ "publisher": "tonepad",
+ "title": "Rebote Delay",
+ "document": "https://tonepad.com/getFile.asp?id=33",
+ "page": "https://tonepad.com/project.asp?id=17",
+ "file_name": "tonepad_rebotedelay.pdf",
+ "sha256": "134f0314ecdf45ec4bd7f2acce552698250a94e81ab9624326610ba8c43cb944",
+ "checked": "2026-10-31T23:30:58+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {"ref": "IC1", "count": 1, "category": "ICs", "value": "PT2399", "location": {"page": 0, "x0": 270.5, "top": 410.73, "x1": 341.87, "bottom": 422.73}},
+    {"ref": "IC2", "count": 1, "category": "ICs", "value": "5v Reg", "location": {"page": 0, "x0": 270.5, "top": 424.13, "x1": 337.86, "bottom": 436.13}},
+    {"ref": "Q1", "count": 1, "category": "Transistors", "value": "2N5457", "location": {"page": 0, "x0": 270.5, "top": 464.35, "x1": 339.21, "bottom": 476.35}},
+    {"ref": null, "count": 1, "category": "Resistors", "value": "5.1M", "location": null},
+    {"ref": null, "count": 1, "category": "Capacitors", "value": "100u", "location": null},
+    {"ref": null, "count": 2, "category": "Resistors", "value": "100k", "location": null},
+    {"ref": null, "count": 2, "category": "Capacitors", "value": "47u", "location": null},
+    {"ref": null, "count": 1, "category": "Resistors", "value": "18k", "location": null},
+    {"ref": null, "count": 2, "category": "Capacitors", "value": "10u", "location": null},
+    {"ref": null, "count": 2, "category": "Resistors", "value": "15k", "location": null},
+    {"ref": null, "count": 2, "category": "Capacitors", "value": "4.7u", "location": null},
+    {"ref": null, "count": 4, "category": "Resistors", "value": "10k", "location": null},
+    {"ref": null, "count": 3, "category": "Capacitors", "value": "100n", "location": null},
+    {"ref": null, "count": 1, "category": "Resistors", "value": "6.8k", "location": null},
+    {"ref": null, "count": 2, "category": "Capacitors", "value": "82n", "location": null},
+    {"ref": null, "count": 1, "category": "Resistors", "value": "5.6k", "location": null},
+    {"ref": null, "count": 1, "category": "Capacitors", "value": "3.9n", "location": null},
+    {"ref": null, "count": 1, "category": "Resistors", "value": "4.7k", "location": null},
+    {"ref": null, "count": 1, "category": "Capacitors", "value": "3.3n", "location": null},
+    {"ref": null, "count": 1, "category": "Potentiometers", "value": "50k lin.", "location": null},
+    {"ref": null, "count": 1, "category": "Resistors", "value": "2.4k", "location": null},
+    {"ref": null, "count": 2, "category": "Capacitors", "value": "560p", "location": null},
+    {"ref": null, "count": 1, "category": "Potentiometers", "value": "50k log.", "location": null}
+   ]
+  }
+ ],
+ "boards": {
+  "Q1": [{"page": 0, "x0": 118.72, "top": 648.56, "x1": 128.06, "bottom": 655.56}]
+ }
+}
