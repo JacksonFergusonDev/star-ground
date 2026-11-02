@@ -788,15 +788,17 @@ def test_a_run_out_of_time_reads_no_more_and_removes_nothing(
     assert {e.outcome for e in reporter.tally.events} == {Outcome.POSTPONED}
     state = State.load(tmp_path / "state" / "pedalpcb.json")
     assert len(state.pages) == 2
+    assert all(page.postponed for page in state.pages.values())
+    assert all(document.postponed for document in state.documents.values())
 
 
-def test_pages_read_longest_ago_go_first() -> None:
+def test_pages_a_run_ran_out_of_time_for_go_first() -> None:
     web = _pedalpcb_web()
     drive = "https://www.pedalpcb.com/product/drive/"
     fuzz = "https://www.pedalpcb.com/product/fuzz/"
     known = {
-        drive: PageState("old", (), "2026-10-01T00:00:00+00:00"),
-        fuzz: PageState("old", (), "2026-10-29T00:00:00+00:00"),
+        drive: PageState("old", (), postponed=True),
+        fuzz: PageState("old", ()),
     }
     calls = iter([False, True])
 
@@ -807,8 +809,42 @@ def test_pages_read_longest_ago_go_first() -> None:
     pages = [u for u in web.urls() if "/product/" in u]
     assert pages == [drive]
     assert not found.complete
-    # The page left over keeps what it held last time.
-    assert found.pages[fuzz] == known[fuzz]
+    assert not found.pages[drive].postponed
+    # The page left over keeps what it held last time, and goes first next.
+    assert found.pages[fuzz] == PageState("old", (), postponed=True)
+
+
+def test_documents_a_run_ran_out_of_time_for_go_first(
+    tmp_path: Path, run: Any, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # Read after discovery, as for every publisher but PedalPCB.
+    pedalpcb = replace(SOURCES[Publisher.PEDALPCB], documents_apart=False)
+    monkeypatch.setitem(SOURCES, Publisher.PEDALPCB, pedalpcb)
+    run(_docs(_pedalpcb_web()), lambda upload: _reading())
+    state_path = tmp_path / "state" / "pedalpcb.json"
+    state = State.load(state_path)
+    fuzz = "https://docs.pedalpcb.com/project/Fuzz.pdf"
+    state.documents[fuzz] = replace(state.documents[fuzz], postponed=True)
+    state.save(state_path)
+    web = _docs(_pedalpcb_web())
+
+    run(web, lambda upload: _reading())
+
+    documents = [u for u in web.urls() if u.endswith(".pdf")]
+    assert documents == [fuzz, "https://docs.pedalpcb.com/project/Drive.pdf"]
+    assert not any(d.postponed for d in State.load(state_path).documents.values())
+
+
+def test_a_run_that_finds_nothing_new_leaves_the_state_as_it_was(
+    tmp_path: Path, run: Any
+) -> None:
+    run(_docs(_pedalpcb_web()), lambda upload: _reading())
+    state_path = tmp_path / "state" / "pedalpcb.json"
+    before = state_path.read_text()
+
+    run(_docs(_pedalpcb_web()), lambda upload: _reading())
+
+    assert state_path.read_text() == before
 
 
 def test_a_document_hash_ignores_what_follows_the_end_marker() -> None:

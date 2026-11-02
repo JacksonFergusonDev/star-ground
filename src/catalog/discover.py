@@ -8,8 +8,7 @@ taken from the last run (`PageState`).
 
 import logging
 from collections.abc import Callable, Iterable, Mapping
-from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from dataclasses import dataclass, field, replace
 from html.parser import HTMLParser
 from pathlib import PurePosixPath
 from urllib.parse import parse_qs, unquote, urljoin, urlsplit, urlunsplit
@@ -44,13 +43,13 @@ class PageState:
     Attributes:
         lastmod: The sitemap's `<lastmod>` for it then, if it gave one.
         listings: The documents it linked.
-        read: When it was last fetched (ISO 8601), so the pages read longest
-            ago go first when a run's time is short.
+        postponed: Whether the last run ran out of time before reading it,
+            so the next one reads it first.
     """
 
     lastmod: str | None
     listings: tuple[Listing, ...]
-    read: str = ""
+    postponed: bool = False
 
 
 @dataclass(slots=True)
@@ -321,11 +320,14 @@ def discover(
     else:
         pages = {}
     pages.update({p.url: None for p in source.document_pages})
-    # Pages never read, then those read longest ago, so a run out of time
-    # carries on where the last one stopped.
+    # Pages never read and those the last run ran out of time for go first,
+    # so a run out of time carries on where the last one stopped.
     ordered = sorted(
         pages.items(),
-        key=lambda item: (known[item[0]].read if item[0] in known else "", item[0]),
+        key=lambda item: (
+            item[0] in known and not known[item[0]].postponed,
+            item[0],
+        ),
     )
     # A sample takes pages spread across the list: the first few alone can be
     # parts and kits with no documents (PedalPCB's are capacitors).
@@ -354,7 +356,7 @@ def discover(
             )
             for later, _ in left:
                 if later in known:
-                    result.pages[later] = known[later]
+                    result.pages[later] = replace(known[later], postponed=True)
                     for listing in known[later].listings:
                         add(listing)
             break
@@ -367,7 +369,7 @@ def discover(
                 lastmod,
                 len(before.listings),
             )
-            state = before
+            state = replace(before, postponed=False)
         else:
             try:
                 html = client.get(page).text
@@ -380,7 +382,7 @@ def discover(
                 # Its documents are kept as last read: they aren't known to
                 # be gone, and not adding them would remove their builds.
                 if before:
-                    result.pages[page] = before
+                    result.pages[page] = replace(before, postponed=False)
                     for listing in before.listings:
                         add(listing)
                 continue
@@ -389,11 +391,7 @@ def discover(
                 if source.file_index
                 else pdf_links(page, html, source)
             )
-            state = PageState(
-                lastmod,
-                tuple(links),
-                datetime.now(UTC).isoformat(timespec="seconds"),
-            )
+            state = PageState(lastmod, tuple(links))
             logger.info(
                 "[%d/%d] %s: %d build documents",
                 number,

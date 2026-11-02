@@ -8,8 +8,9 @@ keeps the result only when it reads cleanly (`clean`). The catalog holds:
   where its board and schematic draw each part (`boards`, step 7).
 - `state/<publisher>.json`: what the last runs saw (each page's
   `<lastmod>`, each document's hash, `ETag` and outcome), so the next run asks
-  only about what may have changed, and documents checked longest ago go
-  first when a run's time is short.
+  only about what may have changed, and what a run ran out of time for goes
+  first in the next. It records no times, so a night that finds nothing new
+  leaves it as it was and proposes no update.
 
 The document's bytes are read in memory and dropped.
 """
@@ -85,7 +86,6 @@ class DocumentState:
         sha256: Its `verified.document_hash`, if it was read.
         etag: Its `ETag`, to ask whether it changed.
         last_modified: Its `Last-Modified`, likewise.
-        checked: When it was last asked about (ISO 8601).
         outcome: What became of it then.
         reason: Why, for anything but success.
         entry: Its entry's id, when it's listed.
@@ -93,18 +93,20 @@ class DocumentState:
         verification: Whether that reading was checked by hand, then.
         boards: The `BOARDS_VERSION` its entry's board positions came from;
             0 for none.
+        postponed: Whether the last run ran out of time before asking about
+            it, so the next one asks first.
     """
 
     sha256: str | None = None
     etag: str | None = None
     last_modified: str | None = None
-    checked: str = ""
     outcome: str = ""
     reason: str = ""
     entry: str | None = None
     parts: str | None = None
     verification: str = ""
     boards: int = 0
+    postponed: bool = False
 
 
 @dataclass(slots=True)
@@ -125,7 +127,7 @@ class State:
                 url: PageState(
                     page["lastmod"],
                     tuple(Listing(**listing) for listing in page["listings"]),
-                    page.get("read", ""),
+                    page["postponed"],
                 )
                 for url, page in raw["pages"].items()
             },
@@ -367,6 +369,11 @@ def _found_while_reading(
     return result[0]
 
 
+def _asked_before(document: DocumentState | None) -> bool:
+    """Whether a document waits behind the new and the postponed ones."""
+    return document is not None and not document.postponed
+
+
 def _now() -> str:
     return datetime.now(UTC).isoformat(timespec="seconds")
 
@@ -441,7 +448,7 @@ def build(
         _write_entry(path, data)
 
     def record(listing_url: str, document: DocumentState, event: Event) -> None:
-        state.documents[listing_url] = document
+        state.documents[listing_url] = replace(document, postponed=False)
         state.save(state_path)
         reporter.outcome(event)
 
@@ -450,6 +457,8 @@ def build(
         url = listing.document
         previous = state.documents.get(url, DocumentState())
         if budget.spent():
+            if url in state.documents:
+                state.documents[url] = replace(previous, postponed=True)
             reporter.outcome(
                 Event(
                     publisher,
@@ -485,7 +494,6 @@ def build(
                 url,
                 replace(
                     previous,
-                    checked=checked,
                     outcome=Outcome.BLOCKED,
                     reason=str(error),
                 ),
@@ -500,7 +508,6 @@ def build(
                 url,
                 replace(
                     previous,
-                    checked=checked,
                     outcome=Outcome.GONE,
                     reason=str(error),
                     entry=None,
@@ -513,7 +520,6 @@ def build(
                 url,
                 replace(
                     previous,
-                    checked=checked,
                     outcome=Outcome.DISALLOWED,
                     reason=str(error),
                 ),
@@ -527,9 +533,7 @@ def build(
             again = previous.outcome == Outcome.FAILED
             record(
                 url,
-                replace(
-                    previous, checked=checked, outcome=Outcome.FAILED, reason=reason
-                ),
+                replace(previous, outcome=Outcome.FAILED, reason=reason),
                 Event(
                     publisher,
                     url,
@@ -544,7 +548,7 @@ def build(
             mark(previous, kept)
             record(
                 url,
-                replace(previous, checked=checked, verification=kept),
+                replace(previous, verification=kept),
                 _unchanged(publisher, url, previous, "304 Not Modified", kept),
             )
             return
@@ -554,7 +558,6 @@ def build(
             sha256=digest,
             etag=fetched.etag,
             last_modified=fetched.last_modified,
-            checked=checked,
         )
         if (
             digest == previous.sha256
@@ -685,7 +688,7 @@ def build(
         listings = sorted(
             found.listings.values(),
             key=lambda li: (
-                state.documents.get(li.document, DocumentState()).checked,
+                _asked_before(state.documents.get(li.document)),
                 li.document,
             ),
         )[:document_limit]
