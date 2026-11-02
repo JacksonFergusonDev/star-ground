@@ -200,16 +200,13 @@ def _imports(path: Path) -> set[str]:
 
 
 @pytest.mark.parametrize(
-    "path",
-    [p for p in SRC.rglob("*.py") if p.name != "app_state.py"],
-    ids=lambda p: str(p.relative_to(SRC)),
+    "path", list(SRC.rglob("*.py")), ids=lambda p: str(p.relative_to(SRC))
 )
 def test_the_backend_does_not_depend_on_a_frontend(path: Path) -> None:
-    """No backend module imports a UI framework or the Streamlit app's state."""
-    forbidden = {"streamlit", "src.app_state"}
-    assert not {
-        m for m in _imports(path) if m.split(".")[0] in forbidden or m in forbidden
-    }
+    """No module outside the server imports the web framework."""
+    if path.is_relative_to(SRC / "server"):
+        pytest.skip("the server is the frontend's side of the API")
+    assert not {m for m in _imports(path) if m.split(".")[0] == "fastapi"}
 
 
 def test_a_short_stock_row_is_skipped() -> None:

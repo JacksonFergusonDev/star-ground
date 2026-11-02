@@ -551,8 +551,6 @@ def test_tayda_url_encoding():
 def test_hardware_search_term_validity():
     """
     Verifies that auto-injected hardware keys generate valid search terms/links.
-
-    (Simulates usage pattern in app.py).
     """
     inventory = Inventory()
 

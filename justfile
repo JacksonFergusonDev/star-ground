@@ -90,11 +90,6 @@ clean:
     find . -type d -name "__pycache__" -exec rm -rf {} +
     @printf "{{ green }}✔ Workspace cleaned{{ nc }}\n"
 
-# Start the Streamlit application
-serve: sync
-    @printf "\n{{ blue }}=== Launching Streamlit App ==={{ nc }}\n"
-    uv run streamlit run app.py
-
 # Start the HTTP API, reloading on changes (interactive docs at /api/docs)
 serve-api: sync
     uv run uvicorn src.server:app --reload --reload-dir src --host 127.0.0.1 --port 4501

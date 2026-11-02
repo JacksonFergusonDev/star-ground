@@ -7,8 +7,8 @@ downloads the publisher documents listed in `raw_boms/<source>/sources.json`
 the core library, and compiles them into a static Python dictionary
 (`_presets_data.py`).
 
-This allows the Streamlit app to load verified BOMs instantly without
-needing to parse files on-the-fly during runtime.
+This lets the API serve verified BOMs instantly without needing to parse
+files on-the-fly during runtime.
 """
 
 import json

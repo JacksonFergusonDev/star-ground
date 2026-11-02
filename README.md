@@ -37,7 +37,7 @@ In software, dependency resolution is **deterministic**: `uv sync` gives the sam
 
 *Star Ground* makes hardware logistics behave like software. Give it the build documents for the guitar pedals you plan to build, and it returns one shopping list, net of the parts you already own, plus printable build checklists and bin labels. Where it can't be sure it read a document right, it tells you exactly what to check.
 
-**🚀 [Try the Live App](https://star-ground.streamlit.app/)**
+**🚀 [Try the Live App](https://star-ground.jacksonferguson.me/app/)**
 
 <img src="assets/demo.gif" alt="Demo"
      style="display:block;margin-left:auto;margin-right:auto;width:70%;" />
@@ -150,7 +150,7 @@ Beyond parsing, the shopping list carries expert notes from a table of substitut
 1. **Ground-truth accuracy:** hand-labeled parts lists in `tests/golden/` grade every designator (correct, missing, extra, wrong category, wrong value) and check that each failure is warned. A baseline only ratchets upward. See [tests/golden/README.md](tests/golden/README.md).
 1. **Snapshot regression:** sample PDFs are parsed in CI and diffed against stored JSON, so any change in output is reviewed.
 1. **Property-based testing:** `Hypothesis` throws generated input at the parser, which must never crash, and at the buying math, which must stay sound.
-1. **Headless integration:** `Streamlit.AppTest` drives the app (upload, build choice, OCR opt-in, Generate) without a browser.
+1. **Browser tests:** Playwright drives the website in Chromium, Firefox and WebKit, at desktop and phone sizes, with an axe accessibility scan.
 
 See [tests/README.md](tests/README.md) for how to run each layer.
 
@@ -160,13 +160,14 @@ See [tests/README.md](tests/README.md) for how to run each layer.
 
 - **Python 3.14**: strictly typed (`mypy --strict`)
 - **uv**: dependency management and locking
-- **Streamlit**: web interface
+- **FastAPI**: the HTTP API
+- **Astro, Svelte 5**: the website and the app
 - **pdfplumber**: PDF words, lines and tables
 - **RapidOCR**: OCR for image-only parts lists (ONNX runtime)
 - **pyparsing, Pint**: value grammar and units
 - **fpdf2**: field manuals and sticker sheets
 - **Docker**: container image, published to GHCR on release
-- **GitHub Actions**: Ruff, Mypy and pytest (accuracy ratchet, snapshots, Hypothesis, AppTest) on every PR
+- **GitHub Actions**: Ruff, Mypy, pytest (accuracy ratchet, snapshots, Hypothesis) and the website's linters and browser tests on every PR
 
 ---
 
@@ -174,7 +175,6 @@ See [tests/README.md](tests/README.md) for how to run each layer.
 
 ```text
 .
-├── app.py                 <-- Streamlit web app (a frontend on src/api.py)
 ├── assets/                <-- Images and demo
 ├── examples/              <-- Sample generated build pack
 ├── raw_boms/              <-- Preset sources: PedalPCB document links, Tayda parts lists
@@ -194,7 +194,6 @@ See [tests/README.md](tests/README.md) for how to run each layer.
 │   │   └── sourcing.py    <-- Buffers, buying notes, hardware kit
 │   ├── server/            <-- HTTP API over api.py, for the web frontend
 │   ├── api.py             <-- The backend API every frontend calls
-│   ├── app_state.py       <-- The Streamlit app's session state
 │   ├── exporters.py       <-- CSV exports
 │   ├── feedback.py        <-- In-app feedback form (Google Sheets)
 │   └── pdf_generator.py   <-- Field manuals and sticker sheets
@@ -216,11 +215,11 @@ See [tests/README.md](tests/README.md) for how to run each layer.
 
 ### Option 1: Web Interface (Live App)
 
-**🌐 [Use the hosted app here](https://star-ground.streamlit.app/)**
+**🌐 [Use the hosted app here](https://star-ground.jacksonferguson.me/app/)**
 
 ### Option 2: Run via Docker
 
-The image is the rebuilt Star Ground: the website and its API in one container, at <http://localhost:8000>. While the rebuild is in progress it does less than the hosted app: paste a parts list and get its shopping list.
+The image is the website and its API in one container, at <http://localhost:8000>.
 
 You can pull the pre-built image directly from the GitHub Container Registry without building it yourself. Images support Linux on x86-64 (`linux/amd64`) and 64-bit ARM (`linux/arm64`). Docker selects the matching architecture on Linux hosts and in the Linux VM used by Docker Desktop on macOS and Windows.
 
@@ -248,8 +247,9 @@ cd star-ground
 # 2. Install Dependencies (Creates virtualenv automatically)
 uv sync
 
-# 3. Run App
-uv run streamlit run app.py
+# 3. Run the API, then the website in a second terminal (http://127.0.0.1:4500/)
+just serve-api
+just serve-web
 ```
 
 ---
@@ -258,7 +258,7 @@ uv run streamlit run app.py
 
 ### Now: rebuild the frontend, then launch
 
-1. **Replace Streamlit** with a FastAPI service over the backend API (`src/api.py`) and an Astro site with Svelte for the app, in the shared house style of my other sites. This is a redesign, not a port: a build workspace instead of a one-shot form, review warnings shown on the document itself, a catalog of supported circuits, and a bench mode for building. The steps, decisions and status are in [PLAN.md](PLAN.md).
+1. **Replace Streamlit** with a FastAPI service over the backend API (`src/api.py`) and an Astro site with Svelte for the app, in the shared house style of my other sites. This is a redesign, not a port: a build workspace instead of a one-shot form, review warnings shown on the document itself, a catalog of supported circuits, and a bench mode for building. The new app is built and Streamlit is gone; what's left before launch is in [PLAN.md](PLAN.md).
 1. **Launch on builder forums**, once the new frontend is up, so feedback is about the app people will keep using. Collect failures, with the document attached, so each can be labeled and added to the regression suite.
 1. **Measure again on unseen documents.** Every held-out test set has now been used for tuning. An honest accuracy figure needs a fresh set: documents users submit, or ones published after this release, set aside before anyone looks at them.
 
