@@ -250,7 +250,7 @@ Probed on 2026-10-24: board renders in PedalPCB, GuitarPCB and Tonepad documents
 | 5. Build workspace | Done 2026-10-28: project cards, the live master list, build choice, the OCR offer, stock, every export and browser storage. Feedback moves to step 6's part reports, and the catalog as a source to step 8 | #216, #218 |
 | 6. Document review | Done 2026-10-29: part locations, the document viewer, confirm or correct in place, and part reports | #222, #223 |
 | 7. PCB highlighting | Done 2026-10-31: the catalog job finds board positions, the site publishes them by hash, and the review and bench mode light them up | #224, this PR |
-| 8. Circuit catalog | In progress: the catalog job and verified list, the nightly workflow, and the catalog pages; the first full run is under way | #225, #227, #229, #230, this PR |
+| 8. Circuit catalog | Done 2026-11-01: the catalog job and verified list, the nightly workflow, and the catalog pages; the first full run listed 736 builds | #225, #227, #229, #230, #231, #246 |
 | 9. Bench mode | Done 2026-10-31: the checklist in build order, keyboard-driven, saved, with the document and board beside it | #233, #234 |
 | 10. Share links | Done 2026-10-31: every project but uploads, in the link's fragment | this PR |
 | 11. Cutover and launch | Not started | |
