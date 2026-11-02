@@ -1,0 +1,46 @@
+{
+ "id": "elsol-pedalpcb",
+ "publisher": "pedalpcb",
+ "title": "El Sol Distortion",
+ "document": "https://docs.pedalpcb.com/project/ElSol-PedalPCB.pdf",
+ "page": "https://www.pedalpcb.com/product/pcb385/",
+ "file_name": "ElSol-PedalPCB.pdf",
+ "sha256": "e57368925d9bd95503cf878aa40026503ab92ed4fa0388ecef9a25315048f491",
+ "checked": "2026-11-01T00:33:40+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {"ref": "R1", "count": 1, "category": "Resistors", "value": "1M", "location": {"page": 1, "x0": 37.0, "top": 108.24, "x1": 135.19, "bottom": 120.24}},
+    {"ref": "R2", "count": 1, "category": "Resistors", "value": "68k", "location": {"page": 1, "x0": 37.0, "top": 121.76, "x1": 139.87, "bottom": 133.76}},
+    {"ref": "R100", "count": 1, "category": "Resistors", "value": "4.7k", "location": {"page": 1, "x0": 37.0, "top": 135.29, "x1": 139.87, "bottom": 147.29}},
+    {"ref": "C1", "count": 1, "category": "Capacitors", "value": "10u", "location": {"page": 1, "x0": 37.0, "top": 162.35, "x1": 138.54, "bottom": 174.35}},
+    {"ref": "C2", "count": 1, "category": "Capacitors", "value": "10u", "location": {"page": 1, "x0": 37.0, "top": 175.88, "x1": 138.54, "bottom": 187.88}},
+    {"ref": "C3", "count": 1, "category": "Capacitors", "value": "1u", "location": {"page": 1, "x0": 37.0, "top": 189.4, "x1": 131.87, "bottom": 201.4}},
+    {"ref": "C4", "count": 1, "category": "Capacitors", "value": "1u", "location": {"page": 1, "x0": 37.0, "top": 202.93, "x1": 131.87, "bottom": 214.93}},
+    {"ref": "C5", "count": 1, "category": "Capacitors", "value": "4.7n", "location": {"page": 1, "x0": 37.0, "top": 216.46, "x1": 138.54, "bottom": 228.46}},
+    {"ref": "C100", "count": 1, "category": "Capacitors", "value": "100u", "location": {"page": 1, "x0": 37.0, "top": 229.99, "x1": 145.22, "bottom": 241.99}},
+    {"ref": "D100", "count": 1, "category": "Diodes", "value": "1N5817", "location": {"page": 1, "x0": 37.0, "top": 257.04, "x1": 160.56, "bottom": 269.04}},
+    {"ref": "IC1", "count": 1, "category": "ICs", "value": "LM386", "location": {"page": 1, "x0": 37.0, "top": 284.1, "x1": 155.21, "bottom": 296.1}},
+    {"ref": "IC2", "count": 1, "category": "ICs", "value": "LM386", "location": {"page": 1, "x0": 37.0, "top": 297.63, "x1": 155.21, "bottom": 309.63}},
+    {"ref": "VOLUME", "count": 1, "category": "Potentiometers", "value": "A100K", "location": {"page": 1, "x0": 37.0, "top": 324.69, "x1": 154.55, "bottom": 336.69}}
+   ]
+  }
+ ],
+ "boards": {
+  "VOLUME": [{"page": 0, "x0": 332.42, "top": 192.68, "x1": 346.1, "bottom": 240.2}, {"page": 2, "x0": 212.03, "top": 184.39, "x1": 224.63, "bottom": 223.27}],
+  "D100": [{"page": 0, "x0": 300.22, "top": 250.28, "x1": 330.46, "bottom": 264.68}, {"page": 2, "x0": 405.49, "top": 614.95, "x1": 418.09, "bottom": 641.59}],
+  "R100": [{"page": 0, "x0": 300.38, "top": 274.4, "x1": 330.98, "bottom": 288.44}, {"page": 2, "x0": 331.33, "top": 607.75, "x1": 342.85, "bottom": 632.23}],
+  "IC2": [{"page": 0, "x0": 391.82, "top": 337.76, "x1": 406.22, "bottom": 357.92}, {"page": 2, "x0": 169.69, "top": 262.51, "x1": 182.29, "bottom": 280.51}],
+  "C4": [{"page": 0, "x0": 295.7, "top": 338.12, "x1": 309.74, "bottom": 356.84}, {"page": 2, "x0": 143.41, "top": 419.11, "x1": 154.57, "bottom": 432.43}],
+  "IC1": [{"page": 0, "x0": 224.78, "top": 338.48, "x1": 237.74, "bottom": 355.76}, {"page": 2, "x0": 159.11, "top": 527.47, "x1": 172.43, "bottom": 546.55}],
+  "R2": [{"page": 0, "x0": 389.5, "top": 406.52, "x1": 408.58, "bottom": 420.92}, {"page": 2, "x0": 147.23, "top": 378.43, "x1": 160.55, "bottom": 393.19}],
+  "R1": [{"page": 0, "x0": 223.9, "top": 406.88, "x1": 240.1, "bottom": 419.84}, {"page": 2, "x0": 182.51, "top": 633.67, "x1": 195.83, "bottom": 644.83}],
+  "C5": [{"page": 0, "x0": 306.34, "top": 435.32, "x1": 325.06, "bottom": 450.44}],
+  "C1": [{"page": 0, "x0": 203.18, "top": 459.44, "x1": 216.86, "bottom": 475.28}, {"page": 2, "x0": 134.05, "top": 587.59, "x1": 143.41, "bottom": 599.83}],
+  "C3": [{"page": 2, "x0": 154.57, "top": 198.79, "x1": 165.73, "bottom": 212.11}],
+  "C100": [{"page": 2, "x0": 461.87, "top": 598.39, "x1": 485.63, "bottom": 609.55}]
+ }
+}

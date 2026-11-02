@@ -1,0 +1,44 @@
+{
+ "id": "tonepad-dod280comp",
+ "publisher": "tonepad",
+ "title": "Dos Ochenta Compressor",
+ "document": "https://tonepad.com/getFile.asp?id=40",
+ "page": "https://tonepad.com/project.asp?id=21",
+ "file_name": "tonepad_dod280comp.pdf",
+ "sha256": "a9034bf43528ef545af3ef3f516b8a6d103bcdcfe8a7aa89e099c56d44eb5c41",
+ "checked": "2026-10-31T23:40:54+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {"ref": "IC1", "count": 1, "category": "ICs", "value": "LM358", "location": {"page": 0, "x0": 147.03, "top": 463.36, "x1": 213.05, "bottom": 475.36}},
+    {"ref": "Q1", "count": 1, "category": "Transistors", "value": "NP4124", "location": {"page": 0, "x0": 147.03, "top": 476.76, "x1": 239.73, "bottom": 488.76}},
+    {"ref": "Q2", "count": 1, "category": "Transistors", "value": "NP4124", "location": {"page": 0, "x0": 147.03, "top": 476.76, "x1": 239.73, "bottom": 488.76}},
+    {"ref": null, "count": 2, "category": "Resistors", "value": "4.7k", "location": null},
+    {"ref": null, "count": 1, "category": "Capacitors", "value": "10n", "location": null},
+    {"ref": null, "count": 1, "category": "Potentiometers", "value": "500k", "location": null},
+    {"ref": null, "count": 1, "category": "Resistors", "value": "10k", "location": null},
+    {"ref": null, "count": 4, "category": "Capacitors", "value": "50n", "location": null},
+    {"ref": null, "count": 1, "category": "Potentiometers", "value": "100k Log", "location": null},
+    {"ref": null, "count": 3, "category": "Resistors", "value": "22k", "location": null},
+    {"ref": null, "count": 1, "category": "Capacitors", "value": "10u", "location": null},
+    {"ref": null, "count": 2, "category": "Resistors", "value": "100k", "location": null},
+    {"ref": null, "count": 1, "category": "Capacitors", "value": "47u", "location": null},
+    {"ref": null, "count": 1, "category": "Diodes", "value": "1N914 diode", "location": null},
+    {"ref": null, "count": 2, "category": "Resistors", "value": "220k", "location": null},
+    {"ref": null, "count": 1, "category": "Transistors", "value": "FET (2N5485 or similar)", "location": null},
+    {"ref": null, "count": 1, "category": "Resistors", "value": "470k", "location": null},
+    {"ref": null, "count": 1, "category": "Resistors", "value": "2.2k", "location": null},
+    {"ref": null, "count": 2, "category": "Resistors", "value": "1M", "location": null},
+    {"ref": null, "count": 1, "category": "Optoelectronics", "value": "VTL5C2", "location": null},
+    {"ref": null, "count": 1, "category": "Diodes", "value": "LED", "location": null}
+   ]
+  }
+ ],
+ "boards": {
+  "Q1": [{"page": 0, "x0": 377.75, "top": 673.75, "x1": 387.09, "bottom": 680.75}],
+  "Q2": [{"page": 0, "x0": 420.95, "top": 673.75, "x1": 430.29, "bottom": 680.75}]
+ }
+}

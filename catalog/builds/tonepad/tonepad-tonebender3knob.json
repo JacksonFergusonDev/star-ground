@@ -1,0 +1,41 @@
+{
+ "id": "tonepad-tonebender3knob",
+ "publisher": "tonepad",
+ "title": "Tone Bender 3 Knob",
+ "document": "https://tonepad.com/getFile.asp?id=117",
+ "page": "https://tonepad.com/project.asp?id=63",
+ "file_name": "tonepad_tonebender3knob.pdf",
+ "sha256": "da30c1ed7a6c3a2002d79cca8057363c9ee2dc10cd29c29bf25f301b6c7a4571",
+ "checked": "2026-10-31T23:14:57+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {"ref": "Q1", "count": 1, "category": "Transistors", "value": "PNP Ge", "location": {"page": 0, "x0": 270.5, "top": 381.93, "x1": 340.97, "bottom": 393.93}},
+    {"ref": "Q2", "count": 1, "category": "Transistors", "value": "PNP Ge", "location": {"page": 0, "x0": 270.5, "top": 395.33, "x1": 340.97, "bottom": 407.33}},
+    {"ref": "Q3", "count": 1, "category": "Transistors", "value": "PNP Ge", "location": {"page": 0, "x0": 270.5, "top": 408.74, "x1": 340.97, "bottom": 420.74}},
+    {"ref": null, "count": 1, "category": "Resistors", "value": "3.3k", "location": null},
+    {"ref": null, "count": 1, "category": "Capacitors", "value": "220p", "location": null},
+    {"ref": null, "count": 5, "category": "Resistors", "value": "10k", "location": null},
+    {"ref": null, "count": 1, "category": "Capacitors", "value": "2.2n", "location": null},
+    {"ref": null, "count": 1, "category": "Resistors", "value": "18k", "location": null},
+    {"ref": null, "count": 2, "category": "Capacitors", "value": "100n", "location": null},
+    {"ref": null, "count": 1, "category": "Resistors", "value": "47k", "location": null},
+    {"ref": null, "count": 1, "category": "Capacitors", "value": "220n", "location": null},
+    {"ref": null, "count": 2, "category": "Resistors", "value": "220k", "location": null},
+    {"ref": null, "count": 1, "category": "Capacitors", "value": "10u", "location": null},
+    {"ref": null, "count": 1, "category": "Resistors", "value": "1M", "location": null},
+    {"ref": null, "count": 1, "category": "Capacitors", "value": "22u", "location": null},
+    {"ref": null, "count": 1, "category": "Diodes", "value": "1N270", "location": null},
+    {"ref": null, "count": 3, "category": "Potentiometers", "value": "100kB", "location": null}
+   ]
+  }
+ ],
+ "boards": {
+  "Q1": [{"page": 0, "x0": 190.55, "top": 623.35, "x1": 199.89, "bottom": 630.35}],
+  "Q2": [{"page": 0, "x0": 219.35, "top": 623.35, "x1": 228.69, "bottom": 630.35}],
+  "Q3": [{"page": 0, "x0": 320.15, "top": 637.75, "x1": 329.49, "bottom": 644.75}]
+ }
+}

@@ -1,0 +1,52 @@
+{
+ "id": "bd-shonuff",
+ "publisher": "guitarpcb",
+ "title": "SHO\u2019 Nuff v3",
+ "document": "https://guitarpcb.com/wp-content/uploads/2018/06/BD_ShoNuff.pdf",
+ "page": "https://guitarpcb.com/community/topic/direct-build-document-link-list/",
+ "file_name": "BD_ShoNuff.pdf",
+ "sha256": "185af5dc2668be376db8607bad520e27f8f85658afedcc492e142176165cba39",
+ "checked": "2026-10-31T23:45:19+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {"ref": "R1", "count": 1, "category": "Resistors", "value": "33k", "location": {"page": 0, "x0": 157.2, "top": 520.77, "x1": 246.33, "bottom": 530.73}},
+    {"ref": "R3", "count": 1, "category": "Resistors", "value": "10M", "location": {"page": 0, "x0": 157.2, "top": 563.37, "x1": 248.33, "bottom": 573.33}},
+    {"ref": "R4", "count": 1, "category": "Resistors", "value": "10M", "location": {"page": 0, "x0": 157.2, "top": 584.73, "x1": 248.33, "bottom": 594.69}},
+    {"ref": "R5", "count": 1, "category": "Resistors", "value": "100k", "location": {"page": 0, "x0": 157.2, "top": 606.21, "x1": 249.16, "bottom": 616.17}},
+    {"ref": "R7", "count": 1, "category": "Resistors", "value": "3.3k", "location": {"page": 0, "x0": 157.2, "top": 648.69, "x1": 246.36, "bottom": 658.65}},
+    {"ref": "D2", "count": 1, "category": "Diodes", "value": "1N4148", "location": {"page": 0, "x0": 156.84, "top": 691.17, "x1": 254.76, "bottom": 701.13}},
+    {"ref": "D1", "count": 1, "category": "Diodes", "value": "1N4148", "location": {"page": 0, "x0": 156.84, "top": 669.93, "x1": 254.76, "bottom": 679.89}},
+    {"ref": "C1", "count": 1, "category": "Capacitors", "value": "100n", "location": {"page": 0, "x0": 351.12, "top": 520.77, "x1": 449.34, "bottom": 530.73}},
+    {"ref": "C3", "count": 1, "category": "Capacitors", "value": "47u", "location": {"page": 0, "x0": 351.12, "top": 563.37, "x1": 446.82, "bottom": 573.33}},
+    {"ref": "P2", "count": 1, "category": "Potentiometers", "value": "A100k", "location": {"page": 1, "x0": 283.8, "top": 258.34, "x1": 303.74, "bottom": 270.34}},
+    {"ref": "SW1", "count": 1, "category": "Switches", "value": "3PDT", "location": {"page": 0, "x0": 346.92, "top": 691.17, "x1": 449.88, "bottom": 701.13}},
+    {"ref": "R2", "count": 1, "category": "Resistors", "value": "1M", "location": {"page": 0, "x0": 157.2, "top": 542.01, "x1": 245.81, "bottom": 551.97}},
+    {"ref": "C2", "count": 1, "category": "Capacitors", "value": "10u", "location": {"page": 0, "x0": 351.12, "top": 542.01, "x1": 446.82, "bottom": 551.97}},
+    {"ref": "D3", "count": 1, "category": "Diodes", "value": "Bi-Color LED C.A.", "location": {"page": 0, "x0": 350.64, "top": 584.73, "x1": 474.01, "bottom": 594.69}},
+    {"ref": "R6", "count": 1, "category": "Resistors", "value": "5.1k", "location": {"page": 0, "x0": 157.2, "top": 627.45, "x1": 246.36, "bottom": 637.41}},
+    {"ref": "P1", "count": 1, "category": "Potentiometers", "value": "C5k", "location": null},
+    {"ref": "Q1", "count": 1, "category": "Transistors", "value": "BS170", "location": {"page": 0, "x0": 350.4, "top": 669.93, "x1": 451.8, "bottom": 679.89}}
+   ]
+  }
+ ],
+ "boards": {
+  "R6": [{"page": 0, "x0": 291.0, "top": 251.16, "x1": 316.2, "bottom": 269.52}, {"page": 2, "x0": 441.96, "top": 136.44, "x1": 453.84, "bottom": 145.08}, {"page": 2, "x0": 160.8, "top": 140.76, "x1": 172.68, "bottom": 149.76}],
+  "C2": [{"page": 0, "x0": 406.2, "top": 251.16, "x1": 428.52, "bottom": 269.16}],
+  "R5": [{"page": 0, "x0": 354.96, "top": 265.2, "x1": 373.68, "bottom": 290.04}, {"page": 2, "x0": 468.36, "top": 141.84, "x1": 477.72, "bottom": 153.0}, {"page": 2, "x0": 187.2, "top": 146.16, "x1": 196.56, "bottom": 158.04}],
+  "Q1": [{"page": 0, "x0": 207.84, "top": 269.88, "x1": 232.68, "bottom": 288.6}, {"page": 2, "x0": 408.84, "top": 144.0, "x1": 418.56, "bottom": 151.56}, {"page": 2, "x0": 127.68, "top": 149.04, "x1": 137.4, "bottom": 156.6}],
+  "R4": [{"page": 0, "x0": 291.0, "top": 277.08, "x1": 315.84, "bottom": 295.8}, {"page": 2, "x0": 442.32, "top": 146.88, "x1": 453.84, "bottom": 155.16}, {"page": 2, "x0": 161.52, "top": 152.28, "x1": 172.32, "bottom": 160.2}],
+  "R3": [{"page": 0, "x0": 290.52, "top": 300.48, "x1": 316.8, "bottom": 320.64}, {"page": 2, "x0": 442.32, "top": 156.96, "x1": 453.84, "bottom": 165.6}, {"page": 2, "x0": 161.16, "top": 162.36, "x1": 171.6, "bottom": 169.56}],
+  "D1": [{"page": 0, "x0": 315.48, "top": 324.24, "x1": 341.4, "bottom": 343.32}, {"page": 1, "x0": 277.32, "top": 622.44, "x1": 285.6, "bottom": 629.28}, {"page": 2, "x0": 453.48, "top": 167.4, "x1": 462.84, "bottom": 174.24}],
+  "C1": [{"page": 0, "x0": 234.48, "top": 324.96, "x1": 258.96, "bottom": 342.24}, {"page": 2, "x0": 418.92, "top": 166.32, "x1": 429.36, "bottom": 173.52}, {"page": 2, "x0": 138.12, "top": 171.36, "x1": 147.84, "bottom": 178.92}],
+  "D2": [{"page": 0, "x0": 315.12, "top": 351.6, "x1": 343.92, "bottom": 373.2}],
+  "R1": [{"page": 0, "x0": 221.88, "top": 352.32, "x1": 247.08, "bottom": 372.48}, {"page": 2, "x0": 414.24, "top": 177.84, "x1": 425.4, "bottom": 186.48}, {"page": 2, "x0": 133.44, "top": 183.6, "x1": 143.88, "bottom": 191.52}],
+  "C3": [{"page": 0, "x0": 403.32, "top": 362.4, "x1": 429.96, "bottom": 384.0}],
+  "R2": [{"page": 0, "x0": 222.48, "top": 374.64, "x1": 247.68, "bottom": 394.08}, {"page": 2, "x0": 414.24, "top": 186.48, "x1": 425.76, "bottom": 195.12}, {"page": 2, "x0": 133.2, "top": 191.88, "x1": 143.64, "bottom": 199.08}],
+  "R7": [{"page": 0, "x0": 315.84, "top": 374.64, "x1": 341.4, "bottom": 393.72}, {"page": 2, "x0": 453.48, "top": 187.2, "x1": 463.92, "bottom": 195.12}, {"page": 2, "x0": 171.24, "top": 191.52, "x1": 182.76, "bottom": 200.52}],
+  "D3": [{"page": 0, "x0": 292.08, "top": 394.08, "x1": 318.72, "bottom": 412.44}, {"page": 2, "x0": 443.76, "top": 195.12, "x1": 453.84, "bottom": 202.32}, {"page": 2, "x0": 162.96, "top": 200.16, "x1": 172.68, "bottom": 207.36}]
+ }
+}

@@ -1,0 +1,48 @@
+{
+ "id": "fcp-micro-champ-v1-0-insert",
+ "publisher": "fivecats",
+ "title": "fcp-micro-champ-v1-0-insert",
+ "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/02/FCP-Micro-Champ-V1-0-insert.pdf",
+ "page": "https://www.five-cats-pedals.co.uk/product/micro-champ-lovepedal-champ-clone/",
+ "file_name": "FCP-Micro-Champ-V1-0-insert.pdf",
+ "sha256": "26b6c9bacc283e4dddcbf1145e155623596b55fd45ec9b70db73ac52d5da61e0",
+ "checked": "2026-10-31T23:30:01+00:00",
+ "read_by_ocr": true,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {"ref": "R1", "count": 1, "category": "Resistors", "value": "1M", "location": {"page": 0, "x0": 116.28, "top": 364.3, "x1": 169.64, "bottom": 369.9}},
+    {"ref": "R2", "count": 1, "category": "Resistors", "value": "2.2M", "location": {"page": 0, "x0": 116.86, "top": 371.82, "x1": 172.25, "bottom": 377.42}},
+    {"ref": "R3", "count": 1, "category": "Resistors", "value": "3.3k", "location": {"page": 0, "x0": 116.28, "top": 379.05, "x1": 170.51, "bottom": 384.95}},
+    {"ref": "R4", "count": 1, "category": "Resistors", "value": "330", "location": {"page": 0, "x0": 116.28, "top": 386.58, "x1": 172.25, "bottom": 392.18}},
+    {"ref": "R5", "count": 1, "category": "Resistors", "value": "330", "location": {"page": 0, "x0": 116.28, "top": 394.1, "x1": 172.25, "bottom": 400.0}},
+    {"ref": "C1", "count": 1, "category": "Capacitors", "value": "47u", "location": {"page": 0, "x0": 116.86, "top": 409.15, "x1": 173.12, "bottom": 414.75}},
+    {"ref": "C3", "count": 1, "category": "Capacitors", "value": "47u", "location": {"page": 0, "x0": 116.86, "top": 423.9, "x1": 173.12, "bottom": 429.5}},
+    {"ref": "C2", "count": 1, "category": "Capacitors", "value": "22n", "location": {"page": 0, "x0": 116.86, "top": 416.67, "x1": 173.12, "bottom": 422.27}},
+    {"ref": "C4", "count": 1, "category": "Capacitors", "value": "100n", "location": {"page": 0, "x0": 116.86, "top": 431.43, "x1": 175.44, "bottom": 437.03}},
+    {"ref": "D1", "count": 1, "category": "Diodes", "value": "1N5817", "location": {"page": 0, "x0": 116.86, "top": 446.18, "x1": 179.21, "bottom": 452.08}},
+    {"ref": "D2", "count": 1, "category": "Diodes", "value": "1N34A", "location": {"page": 0, "x0": 116.86, "top": 453.42, "x1": 177.18, "bottom": 459.52}},
+    {"ref": "D3", "count": 1, "category": "Diodes", "value": "1N34A", "location": {"page": 0, "x0": 116.28, "top": 460.94, "x1": 177.18, "bottom": 466.84}},
+    {"ref": "Q1", "count": 1, "category": "Transistors", "value": "2N5088", "location": {"page": 0, "x0": 116.86, "top": 475.99, "x1": 179.5, "bottom": 481.59}},
+    {"ref": "VOLUME", "count": 1, "category": "Potentiometers", "value": "B100K", "location": {"page": 0, "x0": 116.28, "top": 490.75, "x1": 176.31, "bottom": 496.35}}
+   ]
+  }
+ ],
+ "boards": {
+  "D1": [{"page": 0, "x0": 88.2, "top": 136.44, "x1": 103.68, "bottom": 149.4}],
+  "D2": [{"page": 0, "x0": 280.08, "top": 146.52, "x1": 295.2, "bottom": 160.2}],
+  "C1": [{"page": 0, "x0": 112.68, "top": 164.52, "x1": 126.36, "bottom": 175.32}],
+  "D3": [{"page": 0, "x0": 280.44, "top": 171.72, "x1": 295.2, "bottom": 184.68}],
+  "C4": [{"page": 0, "x0": 185.76, "top": 177.12, "x1": 199.44, "bottom": 188.28}],
+  "R3": [{"page": 0, "x0": 90.0, "top": 192.6, "x1": 104.76, "bottom": 203.04}],
+  "C3": [{"page": 0, "x0": 305.64, "top": 203.04, "x1": 319.68, "bottom": 214.56}],
+  "R2": [{"page": 0, "x0": 89.64, "top": 212.04, "x1": 104.4, "bottom": 224.64}],
+  "Q1": [{"page": 0, "x0": 212.76, "top": 213.12, "x1": 226.8, "bottom": 224.28}],
+  "C2": [{"page": 0, "x0": 90.0, "top": 232.92, "x1": 103.68, "bottom": 243.72}],
+  "R5": [{"page": 0, "x0": 280.44, "top": 233.28, "x1": 294.12, "bottom": 244.8}],
+  "R1": [{"page": 0, "x0": 89.28, "top": 251.28, "x1": 103.68, "bottom": 262.44}],
+  "R4": [{"page": 0, "x0": 280.44, "top": 253.08, "x1": 294.84, "bottom": 264.24}]
+ }
+}

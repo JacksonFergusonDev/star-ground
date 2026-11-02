@@ -1,0 +1,39 @@
+{
+ "id": "tonepad-pedalpower",
+ "publisher": "tonepad",
+ "title": "Adjustable Pedalboard Power",
+ "document": "https://tonepad.com/getFile.asp?id=111",
+ "page": "https://tonepad.com/project.asp?id=59",
+ "file_name": "tonepad_pedalpower.pdf",
+ "sha256": "ad39bca156921e55d70a8c2deff18af926a2226b973f30d69605a0bfe1193dae",
+ "checked": "2026-10-31T23:11:24+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {"ref": "D1", "count": 1, "category": "Diodes", "value": "1N4002", "location": {"page": 0, "x0": 270.5, "top": 482.73, "x1": 349.18, "bottom": 494.73}},
+    {"ref": "D2", "count": 1, "category": "Diodes", "value": "1N4002", "location": {"page": 0, "x0": 270.5, "top": 482.73, "x1": 349.18, "bottom": 494.73}},
+    {"ref": "D3", "count": 1, "category": "Diodes", "value": "1N4002", "location": {"page": 0, "x0": 270.5, "top": 482.73, "x1": 349.18, "bottom": 494.73}},
+    {"ref": "D4", "count": 1, "category": "Diodes", "value": "1N4002", "location": {"page": 0, "x0": 270.5, "top": 482.73, "x1": 349.18, "bottom": 494.73}},
+    {"ref": "D5", "count": 1, "category": "Diodes", "value": "1N4002", "location": {"page": 0, "x0": 270.5, "top": 482.73, "x1": 349.18, "bottom": 494.73}},
+    {"ref": "D6", "count": 1, "category": "Diodes", "value": "1N4002", "location": {"page": 0, "x0": 270.5, "top": 482.73, "x1": 349.18, "bottom": 494.73}},
+    {"ref": "IC1", "count": 1, "category": "ICs", "value": "LM317 w/heatsink", "location": {"page": 0, "x0": 270.5, "top": 496.13, "x1": 396.53, "bottom": 508.13}},
+    {"ref": null, "count": 1, "category": "Resistors", "value": "240", "location": null},
+    {"ref": null, "count": 2, "category": "Capacitors", "value": "470u", "location": null},
+    {"ref": null, "count": 1, "category": "Resistors", "value": "1k", "location": null},
+    {"ref": null, "count": 1, "category": "Capacitors", "value": "10u", "location": null},
+    {"ref": null, "count": 1, "category": "Potentiometers", "value": "1k", "location": null},
+    {"ref": null, "count": 1, "category": "Capacitors", "value": "47u", "location": null},
+    {"ref": null, "count": 5, "category": "Hardware/Misc", "value": "DC Jacks", "location": null},
+    {"ref": null, "count": 2, "category": "Capacitors", "value": "100n", "location": null},
+    {"ref": null, "count": 1, "category": "Transformers", "value": "12VAC transformer", "location": null}
+   ]
+  }
+ ],
+ "boards": {
+  "D5": [{"page": 0, "x0": 337.66, "top": 601.73, "x1": 346.61, "bottom": 608.73}],
+  "D6": [{"page": 0, "x0": 399.49, "top": 644.93, "x1": 408.43, "bottom": 651.93}]
+ }
+}

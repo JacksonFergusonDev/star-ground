@@ -1,0 +1,61 @@
+{
+ "id": "2026-nostalgitone-fuzz-god",
+ "publisher": "guitarpcb",
+ "title": "NostalgiTone FUZZ GOD Single",
+ "document": "https://guitarpcb.com/wp-content/uploads/2026/08/2026-NostalgiTone-Fuzz-God.pdf",
+ "page": "https://guitarpcb.com/community/topic/pedal-building-guides-mandatory-reading/",
+ "file_name": "2026-NostalgiTone-Fuzz-God.pdf",
+ "sha256": "cd3107d726c1406d787e41dc65f88e176da3022bf1655f0472ed441e5e5c5ccb",
+ "checked": "2026-11-01T00:48:45+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": "FUZZ GOD",
+   "parts": [
+    {"ref": "R1", "count": 1, "category": "Resistors", "value": "1M", "location": {"page": 1, "x0": 86.0, "top": 387.85, "x1": 123.82, "bottom": 394.76}},
+    {"ref": "C1", "count": 1, "category": "Capacitors", "value": "100n", "location": {"page": 1, "x0": 155.98, "top": 387.85, "x1": 195.6, "bottom": 394.76}},
+    {"ref": "C5", "count": 1, "category": "Capacitors", "value": "100n", "location": {"page": 1, "x0": 155.98, "top": 424.7, "x1": 195.6, "bottom": 431.61}},
+    {"ref": "Q1", "count": 1, "category": "Transistors", "value": "2N2222", "location": {"page": 1, "x0": 226.88, "top": 387.85, "x1": 274.58, "bottom": 394.76}},
+    {"ref": "Q2", "count": 1, "category": "Transistors", "value": "2N2222", "location": {"page": 1, "x0": 226.88, "top": 397.06, "x1": 274.58, "bottom": 403.97}},
+    {"ref": "R2", "count": 1, "category": "Resistors", "value": "150k", "location": {"page": 1, "x0": 86.0, "top": 397.06, "x1": 125.67, "bottom": 403.97}},
+    {"ref": "C2", "count": 1, "category": "Capacitors", "value": "10u", "location": {"page": 1, "x0": 155.98, "top": 397.06, "x1": 194.22, "bottom": 403.97}},
+    {"ref": "R3", "count": 1, "category": "Resistors", "value": "1k", "location": {"page": 1, "x0": 86.0, "top": 406.27, "x1": 122.47, "bottom": 413.18}},
+    {"ref": "C3", "count": 1, "category": "Capacitors", "value": "220p", "location": {"page": 1, "x0": 155.98, "top": 406.27, "x1": 195.6, "bottom": 413.18}},
+    {"ref": "D1", "count": 1, "category": "Diodes", "value": "1N5817", "location": {"page": 1, "x0": 227.34, "top": 406.27, "x1": 274.58, "bottom": 413.18}},
+    {"ref": "R4", "count": 1, "category": "Resistors", "value": "10k", "location": {"page": 1, "x0": 86.0, "top": 415.47, "x1": 124.31, "bottom": 422.38}},
+    {"ref": "C4", "count": 1, "category": "Capacitors", "value": "100u", "location": {"page": 1, "x0": 155.98, "top": 415.47, "x1": 195.6, "bottom": 422.38}},
+    {"ref": "D2", "count": 1, "category": "Diodes", "value": "Status LED", "location": {"page": 1, "x0": 227.34, "top": 415.47, "x1": 278.64, "bottom": 422.38}},
+    {"ref": "R5", "count": 1, "category": "Resistors", "value": "820", "location": {"page": 1, "x0": 86.0, "top": 424.7, "x1": 125.79, "bottom": 431.61}},
+    {"ref": "MIGHT", "count": 1, "category": "Potentiometers", "value": "A500K", "location": {"page": 1, "x0": 220.89, "top": 424.7, "x1": 273.02, "bottom": 431.61}},
+    {"ref": "R6", "count": 1, "category": "Resistors", "value": "8.2k", "location": {"page": 1, "x0": 86.0, "top": 433.91, "x1": 124.04, "bottom": 440.82}},
+    {"ref": "C6", "count": 1, "category": "Capacitors", "value": "220n", "location": {"page": 1, "x0": 155.98, "top": 433.91, "x1": 195.6, "bottom": 440.82}},
+    {"ref": "CLR", "count": 1, "category": "Resistors", "value": "1.8k", "location": {"page": 1, "x0": 223.66, "top": 433.91, "x1": 261.7, "bottom": 440.82}}
+   ]
+  },
+  {
+   "name": "GOD OF THUNDER",
+   "parts": [
+    {"ref": "R1", "count": 1, "category": "Resistors", "value": "1M", "location": {"page": 1, "x0": 86.0, "top": 387.85, "x1": 123.82, "bottom": 394.76}},
+    {"ref": "C1", "count": 1, "category": "Capacitors", "value": "470n", "location": {"page": 1, "x0": 154.97, "top": 507.04, "x1": 195.3, "bottom": 514.06}},
+    {"ref": "Q1", "count": 1, "category": "Transistors", "value": "2N3904", "location": {"page": 1, "x0": 227.15, "top": 507.04, "x1": 275.71, "bottom": 514.06}},
+    {"ref": "Q2", "count": 1, "category": "Transistors", "value": "2N3904", "location": {"page": 1, "x0": 227.15, "top": 516.41, "x1": 275.71, "bottom": 523.43}},
+    {"ref": "R2", "count": 1, "category": "Resistors", "value": "120k", "location": {"page": 1, "x0": 83.72, "top": 516.41, "x1": 124.11, "bottom": 523.43}},
+    {"ref": "C2", "count": 1, "category": "Capacitors", "value": "10u", "location": {"page": 1, "x0": 155.98, "top": 397.06, "x1": 194.22, "bottom": 403.97}},
+    {"ref": "R3", "count": 1, "category": "Resistors", "value": "1k", "location": {"page": 1, "x0": 86.0, "top": 406.27, "x1": 122.47, "bottom": 413.18}},
+    {"ref": "C3", "count": 1, "category": "Capacitors", "value": "470p", "location": {"page": 1, "x0": 154.97, "top": 525.77, "x1": 195.3, "bottom": 532.79}},
+    {"ref": "D1", "count": 1, "category": "Diodes", "value": "1N5817", "location": {"page": 1, "x0": 227.34, "top": 406.27, "x1": 274.58, "bottom": 413.18}},
+    {"ref": "R4", "count": 1, "category": "Resistors", "value": "18k", "location": {"page": 1, "x0": 83.72, "top": 535.14, "x1": 122.73, "bottom": 542.16}},
+    {"ref": "C4", "count": 1, "category": "Capacitors", "value": "100u", "location": {"page": 1, "x0": 155.98, "top": 415.47, "x1": 195.6, "bottom": 422.38}},
+    {"ref": "D2", "count": 1, "category": "Diodes", "value": "Status LED", "location": {"page": 1, "x0": 227.34, "top": 415.47, "x1": 278.64, "bottom": 422.38}},
+    {"ref": "R5", "count": 1, "category": "Resistors", "value": "820", "location": {"page": 1, "x0": 86.0, "top": 424.7, "x1": 125.79, "bottom": 431.61}},
+    {"ref": "C5", "count": 1, "category": "Capacitors", "value": "100n", "location": {"page": 1, "x0": 155.98, "top": 424.7, "x1": 195.6, "bottom": 431.61}},
+    {"ref": "C6", "count": 1, "category": "Capacitors", "value": "100n", "location": {"page": 1, "x0": 154.97, "top": 553.88, "x1": 195.3, "bottom": 560.9}},
+    {"ref": "MIGHT", "count": 1, "category": "Potentiometers", "value": "A500K", "location": {"page": 1, "x0": 220.89, "top": 424.7, "x1": 273.02, "bottom": 431.61}},
+    {"ref": "R6", "count": 1, "category": "Resistors", "value": "4.7k", "location": {"page": 1, "x0": 83.72, "top": 553.88, "x1": 122.45, "bottom": 560.9}},
+    {"ref": "CLR", "count": 1, "category": "Resistors", "value": "1.8k", "location": {"page": 1, "x0": 223.66, "top": 433.91, "x1": 261.7, "bottom": 440.82}}
+   ]
+  }
+ ],
+ "boards": {}
+}

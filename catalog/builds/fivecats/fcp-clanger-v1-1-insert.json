@@ -1,0 +1,44 @@
+{
+ "id": "fcp-clanger-v1-1-insert",
+ "publisher": "fivecats",
+ "title": "fcp-clanger-v1-1-insert",
+ "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2026/01/FCP-Clanger-V1-1-Insert.pdf",
+ "page": "https://www.five-cats-pedals.co.uk/product/clanger-dba-octave-clang-clone/",
+ "file_name": "FCP-Clanger-V1-1-Insert.pdf",
+ "sha256": "341b62eba25044bea30e0fd93d743c2c11ee78c69192e3403e0da9b3d650d7df",
+ "checked": "2026-11-01T00:04:48+00:00",
+ "read_by_ocr": true,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {"ref": "R1", "count": 1, "category": "Resistors", "value": "910k", "location": {"page": 0, "x0": 35.09, "top": 448.12, "x1": 110.35, "bottom": 457.62}},
+    {"ref": "R2", "count": 1, "category": "Resistors", "value": "62k", "location": {"page": 0, "x0": 35.09, "top": 461.27, "x1": 104.86, "bottom": 471.17}},
+    {"ref": "C1", "count": 1, "category": "Capacitors", "value": "1n", "location": {"page": 0, "x0": 35.94, "top": 488.01, "x1": 104.86, "bottom": 497.91}},
+    {"ref": "C2", "count": 1, "category": "Capacitors", "value": "100n", "location": {"page": 0, "x0": 36.36, "top": 502.01, "x1": 115.0, "bottom": 510.91}},
+    {"ref": "C3", "count": 1, "category": "Capacitors", "value": "47u", "location": {"page": 0, "x0": 35.94, "top": 515.17, "x1": 110.35, "bottom": 525.07}},
+    {"ref": "C4", "count": 1, "category": "Capacitors", "value": "4.7u", "location": {"page": 0, "x0": 35.94, "top": 528.32, "x1": 112.89, "bottom": 538.22}},
+    {"ref": "D1", "count": 1, "category": "Diodes", "value": "1N5817", "location": {"page": 0, "x0": 36.36, "top": 556.33, "x1": 120.92, "bottom": 564.93}},
+    {"ref": "D2", "count": 1, "category": "Diodes", "value": "1N34A", "location": {"page": 0, "x0": 35.94, "top": 569.06, "x1": 117.96, "bottom": 578.96}},
+    {"ref": "D3", "count": 1, "category": "Diodes", "value": "1N34A", "location": {"page": 0, "x0": 35.94, "top": 582.64, "x1": 117.12, "bottom": 591.54}},
+    {"ref": "T1", "count": 1, "category": "Transformers", "value": "42TM002", "location": {"page": 0, "x0": 35.09, "top": 609.37, "x1": 117.91, "bottom": 618.47}},
+    {"ref": "U1", "count": 1, "category": "ICs", "value": "LM741", "location": {"page": 0, "x0": 35.94, "top": 636.11, "x1": 117.12, "bottom": 646.01}},
+    {"ref": "VOL1", "count": 1, "category": "Potentiometers", "value": "A10K", "location": {"page": 0, "x0": 35.94, "top": 662.42, "x1": 111.62, "bottom": 672.62}},
+    {"ref": "GAIN1", "count": 1, "category": "Potentiometers", "value": "B1M", "location": {"page": 0, "x0": 36.36, "top": 676.85, "x1": 108.24, "bottom": 685.75}},
+    {"ref": "TONE1", "count": 1, "category": "Potentiometers", "value": "B250K", "location": {"page": 0, "x0": 36.36, "top": 690.85, "x1": 115.43, "bottom": 699.15}}
+   ]
+  }
+ ],
+ "boards": {
+  "C4": [{"page": 0, "x0": 225.4, "top": 232.16, "x1": 238.51, "bottom": 242.77}],
+  "D2": [{"page": 0, "x0": 241.05, "top": 247.43, "x1": 255.85, "bottom": 258.47}],
+  "U1": [{"page": 0, "x0": 57.09, "top": 247.86, "x1": 71.89, "bottom": 259.32}],
+  "C3": [{"page": 0, "x0": 41.02, "top": 312.37, "x1": 55.82, "bottom": 322.98}],
+  "C1": [{"page": 0, "x0": 67.0, "top": 328.07, "x1": 77.57, "bottom": 342.08}],
+  "C2": [{"page": 0, "x0": 85.61, "top": 328.92, "x1": 96.18, "bottom": 342.08}],
+  "R2": [{"page": 0, "x0": 267.27, "top": 329.77, "x1": 280.38, "bottom": 345.9}],
+  "R1": [{"page": 0, "x0": 243.77, "top": 330.2, "x1": 256.88, "bottom": 345.9}],
+  "D1": [{"page": 0, "x0": 219.48, "top": 333.59, "x1": 230.48, "bottom": 347.17}]
+ }
+}

@@ -1,0 +1,51 @@
+{
+ "id": "fcp-shouter-v1-0-insert",
+ "publisher": "fivecats",
+ "title": "fcp-shouter-v1-0-insert",
+ "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/05/FCP-Shouter-V1-0-Insert.pdf",
+ "page": "https://www.five-cats-pedals.co.uk/product/eqd-mega-pack/",
+ "file_name": "FCP-Shouter-V1-0-Insert.pdf",
+ "sha256": "9602800b4d5658104f48fd60b3907ee682fc37490a3e20fa192c725ea5f235a0",
+ "checked": "2026-10-31T23:32:13+00:00",
+ "read_by_ocr": true,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {"ref": "R1", "count": 1, "category": "Resistors", "value": "10k", "location": {"page": 0, "x0": 112.22, "top": 343.46, "x1": 166.45, "bottom": 349.36}},
+    {"ref": "R2", "count": 1, "category": "Resistors", "value": "10k", "location": {"page": 0, "x0": 112.22, "top": 350.7, "x1": 166.45, "bottom": 357.2}},
+    {"ref": "R3", "count": 1, "category": "Resistors", "value": "22k", "location": {"page": 0, "x0": 112.22, "top": 358.22, "x1": 166.45, "bottom": 364.12}},
+    {"ref": "R4", "count": 1, "category": "Resistors", "value": "200", "location": {"page": 0, "x0": 112.22, "top": 365.45, "x1": 167.9, "bottom": 371.55}},
+    {"ref": "C1", "count": 1, "category": "Capacitors", "value": "22n", "location": {"page": 0, "x0": 112.22, "top": 380.79, "x1": 169.06, "bottom": 386.89}},
+    {"ref": "C2", "count": 1, "category": "Capacitors", "value": "1n", "location": {"page": 0, "x0": 112.22, "top": 388.02, "x1": 166.45, "bottom": 394.12}},
+    {"ref": "C3", "count": 1, "category": "Capacitors", "value": "100u", "location": {"page": 0, "x0": 112.22, "top": 395.55, "x1": 171.96, "bottom": 401.65}},
+    {"ref": "C6", "count": 1, "category": "Capacitors", "value": "100u", "location": {"page": 0, "x0": 112.22, "top": 418.12, "x1": 171.38, "bottom": 424.02}},
+    {"ref": "C4", "count": 1, "category": "Capacitors", "value": "100n", "location": {"page": 0, "x0": 112.22, "top": 402.78, "x1": 171.96, "bottom": 409.08}},
+    {"ref": "C5", "count": 1, "category": "Capacitors", "value": "68n", "location": {"page": 0, "x0": 112.8, "top": 410.3, "x1": 169.06, "bottom": 416.4}},
+    {"ref": "D1", "count": 1, "category": "Diodes", "value": "1N5817", "location": {"page": 0, "x0": 111.93, "top": 432.87, "x1": 175.44, "bottom": 438.97}},
+    {"ref": "Q1", "count": 1, "category": "Transistors", "value": "PF5102", "location": {"page": 0, "x0": 112.8, "top": 447.92, "x1": 197.19, "bottom": 453.32}},
+    {"ref": "Q2", "count": 1, "category": "Transistors", "value": "MPSA13", "location": {"page": 0, "x0": 112.8, "top": 455.15, "x1": 176.89, "bottom": 461.05}},
+    {"ref": "GAIN", "count": 1, "category": "Potentiometers", "value": "B250K", "location": {"page": 0, "x0": 112.22, "top": 471.07, "x1": 172.25, "bottom": 476.97}},
+    {"ref": "VOL", "count": 1, "category": "Potentiometers", "value": "B100k", "location": {"page": 0, "x0": 111.93, "top": 478.01, "x1": 171.38, "bottom": 484.11}}
+   ]
+  }
+ ],
+ "boards": {
+  "C1": [{"page": 0, "x0": 218.52, "top": 118.44, "x1": 232.56, "bottom": 129.24}],
+  "R1": [{"page": 0, "x0": 165.96, "top": 119.88, "x1": 180.36, "bottom": 131.04}],
+  "GAIN": [{"page": 0, "x0": 280.08, "top": 130.32, "x1": 304.92, "bottom": 144.72}],
+  "VOL": [{"page": 0, "x0": 87.48, "top": 131.4, "x1": 107.64, "bottom": 143.64}],
+  "C2": [{"page": 0, "x0": 217.8, "top": 138.6, "x1": 234.0, "bottom": 150.84}],
+  "R2": [{"page": 0, "x0": 165.6, "top": 138.96, "x1": 181.08, "bottom": 151.56}],
+  "C3": [{"page": 0, "x0": 86.4, "top": 154.8, "x1": 100.08, "bottom": 166.32}],
+  "C6": [{"page": 0, "x0": 131.04, "top": 154.8, "x1": 145.08, "bottom": 165.96}],
+  "R3": [{"page": 0, "x0": 165.6, "top": 158.76, "x1": 181.08, "bottom": 171.36}],
+  "C4": [{"page": 0, "x0": 217.8, "top": 159.12, "x1": 233.64, "bottom": 171.72}],
+  "R4": [{"page": 0, "x0": 165.96, "top": 179.28, "x1": 180.72, "bottom": 190.8}],
+  "C5": [{"page": 0, "x0": 217.8, "top": 180.36, "x1": 233.64, "bottom": 192.96}],
+  "D1": [{"page": 0, "x0": 89.28, "top": 182.88, "x1": 105.12, "bottom": 196.56}],
+  "Q1": [{"page": 0, "x0": 268.2, "top": 187.92, "x1": 283.68, "bottom": 200.52}],
+  "Q2": [{"page": 0, "x0": 299.88, "top": 189.0, "x1": 314.28, "bottom": 200.16}]
+ }
+}

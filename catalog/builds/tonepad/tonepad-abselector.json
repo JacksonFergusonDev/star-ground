@@ -1,0 +1,29 @@
+{
+ "id": "tonepad-abselector",
+ "publisher": "tonepad",
+ "title": "A/B Selector",
+ "document": "https://tonepad.com/getFile.asp?id=107",
+ "page": "https://tonepad.com/project.asp?id=56",
+ "file_name": "tonepad_abselector.pdf",
+ "sha256": "f964ea8612f6d462c99b7367e7aedc2ec84ef041c587a63b23e6903ad44284bf",
+ "checked": "2026-10-31T23:09:06+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {"ref": null, "count": 1, "category": "Resistors", "value": "2.2k", "location": null},
+    {"ref": null, "count": 2, "category": "Diodes", "value": "LEDs", "location": null},
+    {"ref": null, "count": 2, "category": "Hardware/Misc", "value": "LED mounts", "location": null},
+    {"ref": null, "count": 1, "category": "Hardware/Misc", "value": "Stereo jack", "location": null},
+    {"ref": null, "count": 2, "category": "Hardware/Misc", "value": "Mono jacks", "location": null},
+    {"ref": null, "count": 1, "category": "Switches", "value": "3PDT", "location": null},
+    {"ref": null, "count": 1, "category": "Hardware/Misc", "value": "DC jack", "location": null},
+    {"ref": null, "count": 1, "category": "Hardware/Misc", "value": "Battery snap", "location": null},
+    {"ref": null, "count": 1, "category": "Hardware/Misc", "value": "Enclosure", "location": null}
+   ]
+  }
+ ],
+ "boards": {}
+}

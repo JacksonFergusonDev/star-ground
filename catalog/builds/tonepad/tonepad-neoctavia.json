@@ -1,0 +1,37 @@
+{
+ "id": "tonepad-neoctavia",
+ "publisher": "tonepad",
+ "title": "NeoCtaVia",
+ "document": "https://tonepad.com/getFile.asp?id=85",
+ "page": "https://tonepad.com/project.asp?id=43",
+ "file_name": "tonepad_neoctavia.pdf",
+ "sha256": "f807117f9ba2fbdbea044c11f28c53d8c9b92cd4ecc89d2864089c8a06acf61c",
+ "checked": "2026-11-01T00:01:24+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {"ref": "IC1", "count": 1, "category": "ICs", "value": "4558", "location": {"page": 0, "x0": 161.43, "top": 455.16, "x1": 217.45, "bottom": 467.16}},
+    {"ref": null, "count": 1, "category": "Resistors", "value": "100", "location": null},
+    {"ref": null, "count": 1, "category": "Capacitors", "value": "220p", "location": null},
+    {"ref": null, "count": 1, "category": "Potentiometers", "value": "250k Lin", "location": null},
+    {"ref": null, "count": 1, "category": "Transformers", "value": "42TM022", "location": null},
+    {"ref": null, "count": 3, "category": "Resistors", "value": "10k", "location": null},
+    {"ref": null, "count": 1, "category": "Capacitors", "value": "100n", "location": null},
+    {"ref": null, "count": 1, "category": "Potentiometers", "value": "100k Log", "location": null},
+    {"ref": null, "count": 2, "category": "Diodes", "value": "Ge Diodes", "location": null},
+    {"ref": null, "count": 1, "category": "Resistors", "value": "100k", "location": null},
+    {"ref": null, "count": 2, "category": "Capacitors", "value": "1u", "location": null},
+    {"ref": null, "count": 1, "category": "Resistors", "value": "820k", "location": null},
+    {"ref": null, "count": 1, "category": "Capacitors", "value": "47u", "location": null},
+    {"ref": null, "count": 1, "category": "Resistors", "value": "1M", "location": null},
+    {"ref": null, "count": 2, "category": "Capacitors", "value": "22u", "location": null}
+   ]
+  }
+ ],
+ "boards": {
+  "IC1": [{"page": 0, "x0": 197.6, "top": 652.19, "x1": 207.33, "bottom": 659.19}, {"page": 0, "x0": 298.4, "top": 652.19, "x1": 308.13, "bottom": 659.19}]
+ }
+}

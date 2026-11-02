@@ -1,0 +1,45 @@
+{
+ "id": "apb-pedalpcb",
+ "publisher": "pedalpcb",
+ "title": "All-Points Booster",
+ "document": "https://docs.pedalpcb.com/project/APB-PedalPCB.pdf",
+ "page": "https://www.pedalpcb.com/product/pcb654/",
+ "file_name": "APB-PedalPCB.pdf",
+ "sha256": "401c48946d7a3c4ad3f17c05bd47ece133aba9b0a62826c9bcbddb5d2f082d05",
+ "checked": "2026-11-01T01:26:44+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {"ref": "R1", "count": 1, "category": "Resistors", "value": "1M", "location": {"page": 1, "x0": 37.0, "top": 109.56, "x1": 135.19, "bottom": 121.56}},
+    {"ref": "R3", "count": 1, "category": "Resistors", "value": "1M", "location": {"page": 1, "x0": 37.0, "top": 138.38, "x1": 135.19, "bottom": 150.38}},
+    {"ref": "R2", "count": 1, "category": "Resistors", "value": "100k", "location": {"page": 1, "x0": 37.0, "top": 123.97, "x1": 146.55, "bottom": 135.97}},
+    {"ref": "R4", "count": 1, "category": "Resistors", "value": "10k", "location": {"page": 1, "x0": 37.0, "top": 152.79, "x1": 139.87, "bottom": 164.79}},
+    {"ref": "R5", "count": 1, "category": "Resistors", "value": "390", "location": {"page": 1, "x0": 37.0, "top": 167.2, "x1": 147.21, "bottom": 179.2}},
+    {"ref": "CLR", "count": 1, "category": "Resistors", "value": "4.7k", "location": {"page": 1, "x0": 37.0, "top": 181.61, "x1": 139.87, "bottom": 193.61}},
+    {"ref": "C1", "count": 1, "category": "Capacitors", "value": "100n", "location": {"page": 1, "x0": 37.0, "top": 210.43, "x1": 145.22, "bottom": 222.43}},
+    {"ref": "C2", "count": 1, "category": "Capacitors", "value": "100n", "location": {"page": 1, "x0": 37.0, "top": 224.84, "x1": 145.22, "bottom": 236.84}},
+    {"ref": "C100", "count": 1, "category": "Capacitors", "value": "100u", "location": {"page": 1, "x0": 37.0, "top": 239.25, "x1": 145.22, "bottom": 251.25}},
+    {"ref": "D100", "count": 1, "category": "Diodes", "value": "1N5817", "location": {"page": 1, "x0": 37.0, "top": 268.07, "x1": 160.56, "bottom": 280.07}},
+    {"ref": "Q1", "count": 1, "category": "Transistors", "value": "2N5088", "location": {"page": 1, "x0": 37.0, "top": 296.89, "x1": 160.56, "bottom": 308.89}},
+    {"ref": "VOLUME", "count": 1, "category": "Potentiometers", "value": "A100K", "location": {"page": 1, "x0": 37.0, "top": 325.71, "x1": 154.55, "bottom": 337.71}}
+   ]
+  }
+ ],
+ "boards": {
+  "VOLUME": [{"page": 0, "x0": 317.04, "top": 215.31, "x1": 332.16, "bottom": 255.27}, {"page": 2, "x0": 390.58, "top": 270.7, "x1": 433.42, "bottom": 285.82}],
+  "Q1": [{"page": 0, "x0": 298.32, "top": 271.11, "x1": 311.64, "bottom": 282.99}, {"page": 2, "x0": 344.18, "top": 235.06, "x1": 358.94, "bottom": 247.66}],
+  "C1": [{"page": 0, "x0": 196.44, "top": 295.23, "x1": 210.48, "bottom": 308.19}, {"page": 2, "x0": 224.66, "top": 227.14, "x1": 238.7, "bottom": 238.66}],
+  "C2": [{"page": 0, "x0": 397.32, "top": 299.91, "x1": 413.88, "bottom": 313.59}, {"page": 2, "x0": 381.22, "top": 188.26, "x1": 397.42, "bottom": 202.3}],
+  "D100": [{"page": 0, "x0": 291.12, "top": 360.03, "x1": 317.4, "bottom": 374.79}, {"page": 2, "x0": 161.62, "top": 548.26, "x1": 187.9, "bottom": 562.3}],
+  "R4": [{"page": 0, "x0": 396.96, "top": 360.75, "x1": 413.88, "bottom": 374.07}, {"page": 2, "x0": 324.34, "top": 167.74, "x1": 337.3, "bottom": 185.38}],
+  "R3": [{"page": 0, "x0": 195.36, "top": 361.11, "x1": 211.2, "bottom": 373.35}, {"page": 2, "x0": 260.98, "top": 167.38, "x1": 274.3, "bottom": 184.66}],
+  "C100": [{"page": 0, "x0": 283.92, "top": 435.27, "x1": 296.88, "bottom": 461.55}, {"page": 2, "x0": 196.58, "top": 614.14, "x1": 210.26, "bottom": 639.7}],
+  "R5": [{"page": 0, "x0": 195.0, "top": 441.75, "x1": 211.56, "bottom": 454.71}, {"page": 2, "x0": 323.66, "top": 297.34, "x1": 336.98, "bottom": 314.26}],
+  "R2": [{"page": 0, "x0": 397.32, "top": 442.11, "x1": 413.88, "bottom": 455.07}, {"page": 2, "x0": 261.02, "top": 296.98, "x1": 274.34, "bottom": 314.26}],
+  "CLR": [{"page": 0, "x0": 395.16, "top": 522.75, "x1": 417.12, "bottom": 536.07}, {"page": 2, "x0": 172.42, "top": 460.78, "x1": 196.54, "bottom": 475.54}],
+  "R1": [{"page": 0, "x0": 196.44, "top": 523.47, "x1": 210.48, "bottom": 535.35}, {"page": 2, "x0": 170.26, "top": 297.7, "x1": 182.5, "bottom": 312.82}]
+ }
+}

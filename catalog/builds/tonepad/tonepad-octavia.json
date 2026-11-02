@@ -1,0 +1,47 @@
+{
+ "id": "tonepad-octavia",
+ "publisher": "tonepad",
+ "title": "TetaVia",
+ "document": "https://tonepad.com/getFile.asp?id=116",
+ "page": "https://tonepad.com/project.asp?id=62",
+ "file_name": "tonepad_octavia.pdf",
+ "sha256": "776e0e7cad30281074dd0539af3a53e45d47a286d0fe2d693fa411be072bae72",
+ "checked": "2026-10-31T23:14:19+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {"ref": "Q1", "count": 1, "category": "Transistors", "value": "2n5087", "location": {"page": 0, "x0": 161.43, "top": 475.77, "x1": 228.13, "bottom": 487.77}},
+    {"ref": "Q2", "count": 1, "category": "Transistors", "value": "2n4401", "location": {"page": 0, "x0": 161.43, "top": 489.17, "x1": 228.13, "bottom": 501.17}},
+    {"ref": "Q3", "count": 1, "category": "Transistors", "value": "2n4401", "location": {"page": 0, "x0": 161.43, "top": 502.58, "x1": 228.13, "bottom": 514.58}},
+    {"ref": null, "count": 1, "category": "Resistors", "value": "220", "location": null},
+    {"ref": null, "count": 1, "category": "Capacitors", "value": "150p", "location": null},
+    {"ref": null, "count": 1, "category": "Potentiometers", "value": "1k Lin", "location": null},
+    {"ref": null, "count": 1, "category": "Transformers", "value": "42TM022", "location": null},
+    {"ref": null, "count": 1, "category": "Resistors", "value": "470", "location": null},
+    {"ref": null, "count": 1, "category": "Capacitors", "value": "1n", "location": null},
+    {"ref": null, "count": 1, "category": "Potentiometers", "value": "500k Log", "location": null},
+    {"ref": null, "count": 2, "category": "Diodes", "value": "Ge Diodes (1N34)", "location": null},
+    {"ref": null, "count": 1, "category": "Resistors", "value": "1k", "location": null},
+    {"ref": null, "count": 1, "category": "Capacitors", "value": "100n", "location": null},
+    {"ref": null, "count": 1, "category": "Resistors", "value": "1.2k", "location": null},
+    {"ref": null, "count": 2, "category": "Capacitors", "value": "33u", "location": null},
+    {"ref": null, "count": 1, "category": "Resistors", "value": "22k", "location": null},
+    {"ref": null, "count": 2, "category": "Capacitors", "value": "100u", "location": null},
+    {"ref": null, "count": 1, "category": "Resistors", "value": "47k", "location": null},
+    {"ref": null, "count": 1, "category": "Resistors", "value": "180k", "location": null},
+    {"ref": null, "count": 1, "category": "Resistors", "value": "220k", "location": null},
+    {"ref": null, "count": 1, "category": "Resistors", "value": "680k", "location": null},
+    {"ref": null, "count": 1, "category": "Resistors", "value": "820k", "location": null},
+    {"ref": null, "count": 1, "category": "Resistors", "value": "1M", "location": null}
+   ]
+  }
+ ],
+ "boards": {
+  "Q1": [{"page": 0, "x0": 190.55, "top": 630.55, "x1": 199.89, "bottom": 637.55}],
+  "Q2": [{"page": 0, "x0": 269.75, "top": 630.55, "x1": 279.09, "bottom": 637.55}],
+  "Q3": [{"page": 0, "x0": 320.15, "top": 630.55, "x1": 329.49, "bottom": 637.55}]
+ }
+}

@@ -1,0 +1,51 @@
+{
+ "id": "tonepad-tubesoundfuzz",
+ "publisher": "tonepad",
+ "title": "Hex Sound Fuzz",
+ "document": "https://tonepad.com/getFile.asp?id=119",
+ "page": "https://tonepad.com/project.asp?id=65",
+ "file_name": "tonepad_tubesoundfuzz.pdf",
+ "sha256": "e5d0e88764dbe5db71df6c59655ab36d9173f82913ad1bda76ed42812d2d7ba2",
+ "checked": "2026-10-31T23:16:04+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": "CA Tube Sound Fuzz",
+   "parts": [
+    {"ref": null, "count": 1, "category": "Resistors", "value": "100", "location": null},
+    {"ref": null, "count": 2, "category": "Capacitors", "value": "10p", "location": null},
+    {"ref": null, "count": 2, "category": "Resistors", "value": "100k", "location": null},
+    {"ref": null, "count": 1, "category": "Capacitors", "value": "100n", "location": null},
+    {"ref": null, "count": 2, "category": "Resistors", "value": "1M", "location": null},
+    {"ref": null, "count": 1, "category": "Capacitors", "value": "50n", "location": null},
+    {"ref": null, "count": 1, "category": "Capacitors", "value": "10u", "location": null},
+    {"ref": null, "count": 1, "category": "Capacitors", "value": "100u", "location": null},
+    {"ref": null, "count": 1, "category": "Potentiometers", "value": "1M", "location": null},
+    {"ref": null, "count": 1, "category": "Potentiometers", "value": "10k Log", "location": null},
+    {"ref": null, "count": 1, "category": "ICs", "value": "CD4049", "location": null},
+    {"ref": null, "count": 1, "category": "Hardware/Misc", "value": "DIP SOCKET (Check Size)", "location": null}
+   ]
+  },
+  {
+   "name": "Llama mod",
+   "parts": [
+    {"ref": null, "count": 1, "category": "Resistors", "value": "1k", "location": null},
+    {"ref": null, "count": 1, "category": "Capacitors", "value": "51p", "location": null},
+    {"ref": null, "count": 2, "category": "Resistors", "value": "100k", "location": null},
+    {"ref": null, "count": 1, "category": "Capacitors", "value": "100p", "location": null},
+    {"ref": null, "count": 2, "category": "Resistors", "value": "1M", "location": null},
+    {"ref": null, "count": 1, "category": "Capacitors", "value": "68n", "location": null},
+    {"ref": null, "count": 1, "category": "Capacitors", "value": "33n", "location": null},
+    {"ref": null, "count": 1, "category": "Capacitors", "value": "10u tant.", "location": null},
+    {"ref": null, "count": 1, "category": "Potentiometers", "value": "1M", "location": null},
+    {"ref": null, "count": 1, "category": "Capacitors", "value": "330u", "location": null},
+    {"ref": null, "count": 1, "category": "Potentiometers", "value": "10k Log", "location": null},
+    {"ref": null, "count": 1, "category": "ICs", "value": "CD4049", "location": null},
+    {"ref": null, "count": 1, "category": "Hardware/Misc", "value": "DIP SOCKET (Check Size)", "location": null},
+    {"ref": null, "count": 1, "category": "Diodes", "value": "1n4001 diode", "location": null}
+   ]
+  }
+ ],
+ "boards": {}
+}

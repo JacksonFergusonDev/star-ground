@@ -1,0 +1,48 @@
+{
+ "id": "fcp-muzz-fuff-v1-0-insert",
+ "publisher": "fivecats",
+ "title": "fcp-muzz-fuff-v1-0-insert",
+ "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2024/03/FCP-Muzz-Fuff-V1-0-Insert.pdf",
+ "page": "https://www.five-cats-pedals.co.uk/product/muzz-fuff-ehx-muff-fuzz-clone/",
+ "file_name": "FCP-Muzz-Fuff-V1-0-Insert.pdf",
+ "sha256": "bc66061d2c30f4b5f8026ace1bb896ccf0c47f38de4afcdbe8be56e22ff7b0a6",
+ "checked": "2026-10-31T23:50:30+00:00",
+ "read_by_ocr": true,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {"ref": "R1", "count": 1, "category": "Resistors", "value": "1M", "location": {"page": 0, "x0": 227.89, "top": 473.58, "x1": 273.98, "bottom": 481.88}},
+    {"ref": "R2", "count": 1, "category": "Resistors", "value": "100k", "location": {"page": 0, "x0": 227.89, "top": 484.61, "x1": 279.9, "bottom": 493.21}},
+    {"ref": "R3", "count": 1, "category": "Resistors", "value": "470k", "location": {"page": 0, "x0": 227.05, "top": 496.07, "x1": 279.9, "bottom": 505.27}},
+    {"ref": "R4", "count": 1, "category": "Resistors", "value": "680k", "location": {"page": 0, "x0": 227.05, "top": 507.95, "x1": 279.9, "bottom": 516.55}},
+    {"ref": "R6", "count": 1, "category": "Resistors", "value": "680k", "location": {"page": 0, "x0": 227.05, "top": 530.87, "x1": 279.9, "bottom": 539.77}},
+    {"ref": "R5", "count": 1, "category": "Resistors", "value": "10k", "location": {"page": 0, "x0": 227.05, "top": 518.99, "x1": 275.67, "bottom": 528.19}},
+    {"ref": "C1", "count": 1, "category": "Capacitors", "value": "10n", "location": {"page": 0, "x0": 228.74, "top": 553.78, "x1": 279.9, "bottom": 562.68}},
+    {"ref": "C2", "count": 1, "category": "Capacitors", "value": "10u", "location": {"page": 0, "x0": 228.74, "top": 565.66, "x1": 279.9, "bottom": 573.96}},
+    {"ref": "C3", "count": 1, "category": "Capacitors", "value": "100n", "location": {"page": 0, "x0": 227.89, "top": 577.55, "x1": 283.7, "bottom": 585.85}},
+    {"ref": "D1", "count": 1, "category": "Diodes", "value": "1N5817", "location": {"page": 0, "x0": 227.89, "top": 600.46, "x1": 289.2, "bottom": 609.06}},
+    {"ref": "D2", "count": 1, "category": "Diodes", "value": "1N34A", "location": {"page": 0, "x0": 228.74, "top": 611.92, "x1": 285.82, "bottom": 620.52}},
+    {"ref": "D3", "count": 1, "category": "Diodes", "value": "1N34A", "location": {"page": 0, "x0": 227.89, "top": 622.95, "x1": 285.82, "bottom": 631.85}},
+    {"ref": "U1", "count": 1, "category": "ICs", "value": "JRRC4558", "location": {"page": 0, "x0": 227.89, "top": 646.72, "x1": 290.76, "bottom": 655.02}},
+    {"ref": "VOL", "count": 1, "category": "Potentiometers", "value": "A100K", "location": {"page": 0, "x0": 227.05, "top": 669.63, "x1": 284.97, "bottom": 677.93}}
+   ]
+  }
+ ],
+ "boards": {
+  "R5": [{"page": 0, "x0": 115.21, "top": 136.24, "x1": 137.2, "bottom": 152.79}],
+  "C2": [{"page": 0, "x0": 50.32, "top": 153.21, "x1": 71.05, "bottom": 170.19}],
+  "U1": [{"page": 0, "x0": 205.71, "top": 157.03, "x1": 225.16, "bottom": 179.53}],
+  "D3": [{"page": 0, "x0": 118.59, "top": 162.98, "x1": 141.85, "bottom": 182.07}],
+  "D2": [{"page": 0, "x0": 112.49, "top": 192.26, "x1": 134.9, "bottom": 210.51}],
+  "R4": [{"page": 0, "x0": 69.54, "top": 250.83, "x1": 86.03, "bottom": 272.47}],
+  "R1": [{"page": 0, "x0": 99.56, "top": 250.83, "x1": 118.17, "bottom": 272.9}],
+  "R3": [{"page": 0, "x0": 237.85, "top": 250.83, "x1": 256.46, "bottom": 273.75}],
+  "C3": [{"page": 0, "x0": 182.45, "top": 252.1, "x1": 198.94, "bottom": 273.75}],
+  "C1": [{"page": 0, "x0": 128.74, "top": 252.53, "x1": 145.24, "bottom": 274.17}],
+  "R2": [{"page": 0, "x0": 154.54, "top": 252.53, "x1": 173.15, "bottom": 275.02}],
+  "R6": [{"page": 0, "x0": 208.25, "top": 252.53, "x1": 225.16, "bottom": 273.75}],
+  "D1": [{"page": 0, "x0": 35.71, "top": 255.07, "x1": 54.74, "bottom": 278.42}]
+ }
+}

@@ -1,0 +1,40 @@
+{
+ "id": "tonepad-digitalreverb",
+ "publisher": "tonepad",
+ "title": "FraVerb (FV1)",
+ "document": "https://tonepad.com/getFile.asp?id=122",
+ "page": "https://tonepad.com/project.asp?id=68",
+ "file_name": "tonepad_digitalreverb.pdf",
+ "sha256": "a7c7da58387fa6ec5844c67efa8b3639ecc17f3b7213d264f5b49023f8a3468b",
+ "checked": "2026-10-31T23:17:53+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {"ref": null, "count": 1, "category": "Resistors", "value": "100", "location": null},
+    {"ref": null, "count": 1, "category": "Capacitors", "value": "100n", "location": null},
+    {"ref": null, "count": 2, "category": "Transistors", "value": "2N5457", "location": null},
+    {"ref": null, "count": 4, "category": "Resistors", "value": "1k", "location": null},
+    {"ref": null, "count": 2, "category": "Capacitors", "value": "2.2n", "location": null},
+    {"ref": null, "count": 1, "category": "ICs", "value": "FV-1", "location": null},
+    {"ref": null, "count": 1, "category": "Hardware/Misc", "value": "DIP SOCKET (Check Size)", "location": null},
+    {"ref": null, "count": 4, "category": "Resistors", "value": "10k", "location": null},
+    {"ref": null, "count": 2, "category": "Capacitors", "value": "1n", "location": null},
+    {"ref": null, "count": 1, "category": "ICs", "value": "LM78L33", "location": null},
+    {"ref": null, "count": 4, "category": "Resistors", "value": "20k", "location": null},
+    {"ref": null, "count": 2, "category": "Capacitors", "value": "47n", "location": null},
+    {"ref": null, "count": 6, "category": "Resistors", "value": "2.2M", "location": null},
+    {"ref": null, "count": 4, "category": "Capacitors", "value": "1u", "location": null},
+    {"ref": null, "count": 1, "category": "Diodes", "value": "LED", "location": null},
+    {"ref": null, "count": 2, "category": "Capacitors", "value": "3.3u", "location": null},
+    {"ref": null, "count": 3, "category": "Potentiometers", "value": "50k", "location": null},
+    {"ref": null, "count": 2, "category": "Capacitors", "value": "47u", "location": null},
+    {"ref": null, "count": 4, "category": "Switches", "value": "SPST switches", "location": null},
+    {"ref": null, "count": 1, "category": "Crystals/Oscillators", "value": "32.768 KHz", "location": null}
+   ]
+  }
+ ],
+ "boards": {}
+}

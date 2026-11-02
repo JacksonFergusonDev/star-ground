@@ -1,0 +1,60 @@
+{
+ "id": "bd-purp",
+ "publisher": "guitarpcb",
+ "title": "bd-purp",
+ "document": "https://guitarpcb.com/wp-content/uploads/2018/06/BD_PURP.pdf",
+ "page": "https://guitarpcb.com/community/topic/direct-build-document-link-list/",
+ "file_name": "BD_PURP.pdf",
+ "sha256": "6c1ca216eca37632c919768b719567141ba4479fcd2f8cbf8e6edc1d1980c3d8",
+ "checked": "2026-10-31T23:43:01+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {"ref": "D1", "count": 1, "category": "Diodes", "value": "V2, v3, 1n4001 \u2013 v4 = 1N5817", "location": {"page": 1, "x0": 87.3, "top": 55.97, "x1": 268.11, "bottom": 66.97}},
+    {"ref": "C6", "count": 1, "category": "Capacitors", "value": "10n", "location": {"page": 1, "x0": 346.71, "top": 55.97, "x1": 486.62, "bottom": 66.97}},
+    {"ref": "R1", "count": 1, "category": "Resistors", "value": "1M", "location": {"page": 1, "x0": 87.65, "top": 70.89, "x1": 209.21, "bottom": 81.89}},
+    {"ref": "R3", "count": 1, "category": "Resistors", "value": "1M", "location": {"page": 1, "x0": 87.65, "top": 101.04, "x1": 209.21, "bottom": 112.04}},
+    {"ref": "R4", "count": 1, "category": "Resistors", "value": "1M", "location": {"page": 1, "x0": 87.65, "top": 115.94, "x1": 209.21, "bottom": 126.94}},
+    {"ref": "C7", "count": 1, "category": "Capacitors", "value": "47u", "location": {"page": 1, "x0": 346.71, "top": 70.89, "x1": 486.62, "bottom": 81.89}},
+    {"ref": "C9", "count": 1, "category": "Capacitors", "value": "47u", "location": {"page": 1, "x0": 346.71, "top": 101.04, "x1": 486.62, "bottom": 112.04}},
+    {"ref": "C5", "count": 1, "category": "Capacitors", "value": "47u", "location": {"page": 1, "x0": 88.01, "top": 189.4, "x1": 210.18, "bottom": 200.4}},
+    {"ref": "R2", "count": 1, "category": "Resistors", "value": "200k", "location": {"page": 1, "x0": 87.65, "top": 85.79, "x1": 212.59, "bottom": 96.79}},
+    {"ref": "C8", "count": 1, "category": "Capacitors", "value": "10u", "location": {"page": 1, "x0": 346.71, "top": 85.79, "x1": 486.62, "bottom": 96.79}},
+    {"ref": "IC1", "count": 1, "category": "ICs", "value": "7660S", "location": {"page": 1, "x0": 345.29, "top": 115.94, "x1": 491.92, "bottom": 126.94}},
+    {"ref": "C1", "count": 1, "category": "Capacitors", "value": "6.8n", "location": {"page": 1, "x0": 88.01, "top": 130.86, "x1": 209.97, "bottom": 141.86}},
+    {"ref": "TR1", "count": 1, "category": "Potentiometers", "value": "100k", "location": {"page": 1, "x0": 329.69, "top": 130.86, "x1": 489.05, "bottom": 141.86}},
+    {"ref": "C2", "count": 1, "category": "Capacitors", "value": "22n", "location": {"page": 1, "x0": 88.01, "top": 146.11, "x1": 210.18, "bottom": 157.11}},
+    {"ref": "TR2", "count": 1, "category": "Potentiometers", "value": "10k", "location": {"page": 1, "x0": 329.33, "top": 146.11, "x1": 486.21, "bottom": 157.11}},
+    {"ref": "C3", "count": 1, "category": "Capacitors", "value": "47n", "location": {"page": 1, "x0": 88.01, "top": 161.0, "x1": 210.18, "bottom": 172.0}},
+    {"ref": "P1", "count": 1, "category": "Potentiometers", "value": "A10k", "location": {"page": 1, "x0": 329.69, "top": 161.0, "x1": 489.38, "bottom": 172.0}},
+    {"ref": "C4", "count": 1, "category": "Capacitors", "value": "150p", "location": {"page": 1, "x0": 88.01, "top": 175.92, "x1": 200.19, "bottom": 186.92}},
+    {"ref": "SW1", "count": 1, "category": "Switches", "value": "SPDT_ON-OFF-ON", "location": {"page": 1, "x0": 325.43, "top": 175.92, "x1": 518.83, "bottom": 186.92}},
+    {"ref": "Q1", "count": 1, "category": "Transistors", "value": "PNP 70-140 hFE", "location": {"page": 1, "x0": 346.0, "top": 189.4, "x1": 513.51, "bottom": 200.4}}
+   ]
+  }
+ ],
+ "boards": {
+  "C2": [{"page": 1, "x0": 365.85, "top": 228.17, "x1": 375.21, "bottom": 235.37}, {"page": 1, "x0": 149.5, "top": 229.33, "x1": 158.86, "bottom": 236.53}, {"page": 2, "x0": 120.2, "top": 100.01, "x1": 127.04, "bottom": 110.09}, {"page": 2, "x0": 126.72, "top": 405.23, "x1": 134.64, "bottom": 411.35}],
+  "SW1": [{"page": 1, "x0": 338.49, "top": 242.57, "x1": 351.09, "bottom": 249.41}, {"page": 1, "x0": 122.14, "top": 242.65, "x1": 135.09, "bottom": 250.57}],
+  "C6": [{"page": 1, "x0": 470.97, "top": 246.89, "x1": 480.33, "bottom": 253.73}, {"page": 2, "x0": 221.36, "top": 100.37, "x1": 228.56, "bottom": 110.81}, {"page": 2, "x0": 170.64, "top": 412.43, "x1": 177.84, "bottom": 417.83}],
+  "C4": [{"page": 1, "x0": 429.57, "top": 262.73, "x1": 438.93, "bottom": 269.57}, {"page": 1, "x0": 212.86, "top": 266.05, "x1": 222.22, "bottom": 272.89}, {"page": 2, "x0": 105.8, "top": 92.09, "x1": 111.56, "bottom": 100.73}],
+  "R2": [{"page": 1, "x0": 394.29, "top": 263.09, "x1": 404.01, "bottom": 270.29}, {"page": 1, "x0": 177.94, "top": 263.89, "x1": 187.66, "bottom": 271.09}, {"page": 2, "x0": 441.41, "top": 71.09, "x1": 450.05, "bottom": 76.85}, {"page": 2, "x0": 427.68, "top": 91.25, "x1": 434.88, "bottom": 100.61}, {"page": 2, "x0": 144.68, "top": 96.41, "x1": 151.52, "bottom": 106.49}, {"page": 2, "x0": 147.96, "top": 376.43, "x1": 155.88, "bottom": 381.83}],
+  "C3": [{"page": 1, "x0": 364.77, "top": 272.09, "x1": 374.13, "bottom": 279.29}, {"page": 1, "x0": 148.06, "top": 272.53, "x1": 157.41, "bottom": 279.73}, {"page": 2, "x0": 397.49, "top": 95.57, "x1": 403.25, "bottom": 104.21}, {"page": 2, "x0": 111.92, "top": 100.37, "x1": 118.76, "bottom": 110.45}, {"page": 2, "x0": 119.16, "top": 387.23, "x1": 124.92, "bottom": 391.91}],
+  "R3": [{"page": 1, "x0": 476.01, "top": 274.61, "x1": 485.01, "bottom": 282.53}, {"page": 2, "x0": 436.01, "top": 91.61, "x1": 441.41, "bottom": 99.89}, {"page": 2, "x0": 151.88, "top": 96.41, "x1": 158.72, "bottom": 106.13}, {"page": 2, "x0": 174.88, "top": 457.07, "x1": 180.64, "bottom": 464.63}],
+  "Q1": [{"page": 1, "x0": 454.41, "top": 287.21, "x1": 463.41, "bottom": 294.41}, {"page": 1, "x0": 238.06, "top": 287.65, "x1": 247.06, "bottom": 294.49}, {"page": 2, "x0": 399.24, "top": 64.97, "x1": 407.88, "bottom": 72.53}, {"page": 2, "x0": 114.48, "top": 69.05, "x1": 123.12, "bottom": 76.25}, {"page": 2, "x0": 161.64, "top": 430.07, "x1": 168.84, "bottom": 435.47}],
+  "C1": [{"page": 1, "x0": 357.93, "top": 298.73, "x1": 367.29, "bottom": 305.93}, {"page": 1, "x0": 141.57, "top": 299.17, "x1": 150.57, "bottom": 306.01}, {"page": 2, "x0": 413.69, "top": 96.29, "x1": 419.45, "bottom": 104.21}, {"page": 2, "x0": 128.84, "top": 100.37, "x1": 136.04, "bottom": 110.09}, {"page": 2, "x0": 126.72, "top": 397.31, "x1": 134.28, "bottom": 402.71}],
+  "C5": [{"page": 1, "x0": 463.41, "top": 299.09, "x1": 473.13, "bottom": 306.29}, {"page": 1, "x0": 247.06, "top": 300.97, "x1": 255.69, "bottom": 306.73}],
+  "R1": [{"page": 1, "x0": 344.25, "top": 304.49, "x1": 352.53, "bottom": 311.69}, {"page": 1, "x0": 141.22, "top": 354.97, "x1": 150.22, "bottom": 362.17}, {"page": 2, "x0": 421.61, "top": 92.69, "x1": 427.37, "bottom": 100.61}, {"page": 2, "x0": 137.84, "top": 97.85, "x1": 143.96, "bottom": 106.13}],
+  "TR2": [{"page": 1, "x0": 434.25, "top": 306.65, "x1": 447.57, "bottom": 314.93}, {"page": 2, "x0": 438.12, "top": 70.73, "x1": 450.36, "bottom": 77.57}, {"page": 2, "x0": 155.48, "top": 74.81, "x1": 167.36, "bottom": 81.65}, {"page": 2, "x0": 150.12, "top": 397.67, "x1": 159.48, "bottom": 402.71}],
+  "TR1": [{"page": 1, "x0": 389.25, "top": 309.17, "x1": 401.49, "bottom": 316.01}, {"page": 2, "x0": 418.68, "top": 71.81, "x1": 427.68, "bottom": 77.57}, {"page": 2, "x0": 131.76, "top": 75.17, "x1": 144.72, "bottom": 82.01}, {"page": 2, "x0": 133.92, "top": 417.11, "x1": 143.28, "bottom": 422.87}],
+  "D1": [{"page": 1, "x0": 341.18, "top": 353.09, "x1": 348.74, "bottom": 362.09}, {"page": 2, "x0": 470.16, "top": 105.29, "x1": 475.2, "bottom": 109.61}, {"page": 2, "x0": 187.56, "top": 110.45, "x1": 194.04, "bottom": 116.21}, {"page": 2, "x0": 429.84, "top": 199.61, "x1": 437.4, "bottom": 205.37}, {"page": 3, "x0": 217.08, "top": 154.26, "x1": 222.48, "bottom": 158.94}],
+  "C7": [{"page": 1, "x0": 170.74, "top": 353.53, "x1": 179.74, "bottom": 360.73}],
+  "R4": [{"page": 1, "x0": 356.85, "top": 354.17, "x1": 366.93, "bottom": 361.73}, {"page": 2, "x0": 442.85, "top": 91.61, "x1": 448.61, "bottom": 99.89}, {"page": 2, "x0": 159.44, "top": 96.05, "x1": 166.64, "bottom": 106.13}],
+  "C8": [{"page": 1, "x0": 378.81, "top": 376.85, "x1": 388.17, "bottom": 384.05}, {"page": 1, "x0": 163.18, "top": 377.65, "x1": 172.53, "bottom": 384.85}, {"page": 2, "x0": 130.68, "top": 466.07, "x1": 136.08, "bottom": 468.95}],
+  "C9": [{"page": 1, "x0": 461.61, "top": 400.61, "x1": 471.69, "bottom": 407.45}, {"page": 1, "x0": 245.25, "top": 401.77, "x1": 254.25, "bottom": 407.53}],
+  "IC1": [{"page": 2, "x0": 468.0, "top": 79.73, "x1": 479.16, "bottom": 86.21}, {"page": 2, "x0": 185.4, "top": 83.81, "x1": 198.0, "bottom": 91.73}, {"page": 2, "x0": 154.08, "top": 452.39, "x1": 165.24, "bottom": 459.59}]
+ }
+}

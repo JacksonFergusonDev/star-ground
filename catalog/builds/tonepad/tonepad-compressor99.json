@@ -1,0 +1,51 @@
+{
+ "id": "tonepad-compressor99",
+ "publisher": "tonepad",
+ "title": "Comp 99",
+ "document": "https://tonepad.com/getFile.asp?id=121",
+ "page": "https://tonepad.com/project.asp?id=67",
+ "file_name": "tonepad_compressor99.pdf",
+ "sha256": "5bb197b64cda2e4aa5a55e9589e824a1dea4c8dac55ead785d2ea469d17dd67f",
+ "checked": "2026-10-31T23:17:17+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {"ref": "IC1", "count": 1, "category": "ICs", "value": "LM13600", "location": {"page": 0, "x0": 247.83, "top": 405.83, "x1": 320.57, "bottom": 416.83}},
+    {"ref": null, "count": 1, "category": "Resistors", "value": "180", "location": null},
+    {"ref": null, "count": 1, "category": "Capacitors", "value": "3.3n", "location": null},
+    {"ref": null, "count": 5, "category": "Transistors", "value": "2N5088", "location": null},
+    {"ref": null, "count": 1, "category": "Resistors", "value": "1k", "location": null},
+    {"ref": null, "count": 2, "category": "Capacitors", "value": "10n", "location": null},
+    {"ref": null, "count": 1, "category": "Resistors", "value": "5.1k", "location": null},
+    {"ref": null, "count": 1, "category": "Capacitors", "value": "47n", "location": null},
+    {"ref": null, "count": 1, "category": "Resistors", "value": "9.1k", "location": null},
+    {"ref": null, "count": 1, "category": "Capacitors", "value": "56n", "location": null},
+    {"ref": null, "count": 3, "category": "Diodes", "value": "1N914", "location": null},
+    {"ref": null, "count": 8, "category": "Resistors", "value": "10k", "location": null},
+    {"ref": null, "count": 2, "category": "Capacitors", "value": "220n", "location": null},
+    {"ref": null, "count": 1, "category": "Resistors", "value": "12k", "location": null},
+    {"ref": null, "count": 1, "category": "Capacitors", "value": "2.2u", "location": null},
+    {"ref": null, "count": 1, "category": "Potentiometers", "value": "100k log. (100kA)", "location": null},
+    {"ref": null, "count": 1, "category": "Resistors", "value": "22k", "location": null},
+    {"ref": null, "count": 3, "category": "Capacitors", "value": "10u", "location": null},
+    {"ref": null, "count": 1, "category": "Potentiometers", "value": "100k lin.", "location": null},
+    {"ref": null, "count": 1, "category": "Resistors", "value": "24k", "location": null},
+    {"ref": null, "count": 2, "category": "Capacitors", "value": "47u", "location": null},
+    {"ref": null, "count": 1, "category": "Potentiometers", "value": "250k lin.", "location": null},
+    {"ref": null, "count": 1, "category": "Resistors", "value": "27k", "location": null},
+    {"ref": null, "count": 1, "category": "Potentiometers", "value": "10k", "location": null},
+    {"ref": null, "count": 1, "category": "Resistors", "value": "56k", "location": null},
+    {"ref": null, "count": 1, "category": "Resistors", "value": "100k", "location": null},
+    {"ref": null, "count": 2, "category": "Resistors", "value": "150k", "location": null},
+    {"ref": null, "count": 1, "category": "Resistors", "value": "510k", "location": null},
+    {"ref": null, "count": 3, "category": "Resistors", "value": "1M", "location": null}
+   ]
+  }
+ ],
+ "boards": {
+  "IC1": [{"page": 0, "x0": 248.0, "top": 666.59, "x1": 258.89, "bottom": 673.59}]
+ }
+}

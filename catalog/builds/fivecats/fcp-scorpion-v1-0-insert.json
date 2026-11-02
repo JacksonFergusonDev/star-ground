@@ -1,0 +1,52 @@
+{
+ "id": "fcp-scorpion-v1-0-insert",
+ "publisher": "fivecats",
+ "title": "fcp-scorpion-v1-0-insert",
+ "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2021/12/FCP-Scorpion-V1-0-insert.pdf",
+ "page": "https://www.five-cats-pedals.co.uk/product/scorpion-boost/",
+ "file_name": "FCP-Scorpion-V1-0-insert.pdf",
+ "sha256": "d322a203a6e3e067fa26d5c9e5c6977862e1e3dd8af606ffec5311ee4f76ea40",
+ "checked": "2026-10-31T23:28:13+00:00",
+ "read_by_ocr": true,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {"ref": "R1", "count": 1, "category": "Resistors", "value": "220k", "location": {"page": 0, "x0": 120.34, "top": 344.33, "x1": 178.05, "bottom": 350.83}},
+    {"ref": "R2", "count": 1, "category": "Resistors", "value": "68k", "location": {"page": 0, "x0": 120.92, "top": 351.57, "x1": 176.02, "bottom": 358.07}},
+    {"ref": "R3", "count": 1, "category": "Resistors", "value": "8.2k", "location": {"page": 0, "x0": 120.92, "top": 358.8, "x1": 175.44, "bottom": 365.5}},
+    {"ref": "R4", "count": 1, "category": "Resistors", "value": "1M", "location": {"page": 0, "x0": 121.21, "top": 366.9, "x1": 174.57, "bottom": 372.5}},
+    {"ref": "C1", "count": 1, "category": "Capacitors", "value": "47u", "location": {"page": 0, "x0": 121.21, "top": 381.66, "x1": 178.05, "bottom": 387.96}},
+    {"ref": "C6", "count": 1, "category": "Capacitors", "value": "47u", "location": {"page": 0, "x0": 121.21, "top": 418.99, "x1": 178.05, "bottom": 425.09}},
+    {"ref": "C2", "count": 1, "category": "Capacitors", "value": "1n", "location": {"page": 0, "x0": 121.21, "top": 389.18, "x1": 176.02, "bottom": 395.28}},
+    {"ref": "C3", "count": 1, "category": "Capacitors", "value": "68n", "location": {"page": 0, "x0": 121.21, "top": 396.99, "x1": 178.05, "bottom": 403.09}},
+    {"ref": "C4", "count": 1, "category": "Capacitors", "value": "3.3n", "location": {"page": 0, "x0": 121.21, "top": 404.23, "x1": 179.5, "bottom": 410.13}},
+    {"ref": "C5", "count": 1, "category": "Capacitors", "value": "47p", "location": {"page": 0, "x0": 121.21, "top": 411.75, "x1": 176.31, "bottom": 417.35}},
+    {"ref": "C7", "count": 1, "category": "Capacitors", "value": "10n", "location": {"page": 0, "x0": 121.21, "top": 426.51, "x1": 178.05, "bottom": 432.61}},
+    {"ref": "D1", "count": 1, "category": "Diodes", "value": "1N5817", "location": {"page": 0, "x0": 120.92, "top": 441.27, "x1": 184.43, "bottom": 447.37}},
+    {"ref": "Q1", "count": 1, "category": "Transistors", "value": "2N222A", "location": {"page": 0, "x0": 121.21, "top": 456.6, "x1": 185.01, "bottom": 462.2}},
+    {"ref": "BOOST", "count": 1, "category": "Potentiometers", "value": "B10K", "location": {"page": 0, "x0": 121.21, "top": 471.07, "x1": 178.63, "bottom": 476.97}},
+    {"ref": "HEAT", "count": 1, "category": "Potentiometers", "value": "B1K", "location": {"page": 0, "x0": 121.21, "top": 478.01, "x1": 176.02, "bottom": 484.51}},
+    {"ref": "RANGE", "count": 1, "category": "Potentiometers", "value": "A500K", "location": {"page": 0, "x0": 121.21, "top": 486.12, "x1": 181.24, "bottom": 492.22}}
+   ]
+  }
+ ],
+ "boards": {
+  "Q1": [{"page": 0, "x0": 201.24, "top": 164.16, "x1": 208.8, "bottom": 169.92}],
+  "RANGE": [{"page": 0, "x0": 122.04, "top": 167.4, "x1": 141.12, "bottom": 175.32}],
+  "BOOST": [{"page": 0, "x0": 235.8, "top": 167.4, "x1": 255.24, "bottom": 175.32}],
+  "C6": [{"page": 0, "x0": 207.36, "top": 183.6, "x1": 216.36, "bottom": 191.16}],
+  "C1": [{"page": 0, "x0": 160.56, "top": 185.4, "x1": 167.4, "bottom": 190.8}],
+  "C4": [{"page": 0, "x0": 240.12, "top": 191.52, "x1": 247.68, "bottom": 200.88}],
+  "C7": [{"page": 0, "x0": 259.56, "top": 191.52, "x1": 266.76, "bottom": 200.88}],
+  "C3": [{"page": 0, "x0": 230.04, "top": 191.88, "x1": 237.24, "bottom": 201.24}],
+  "R2": [{"page": 0, "x0": 122.76, "top": 192.6, "x1": 130.32, "bottom": 202.32}],
+  "R3": [{"page": 0, "x0": 134.64, "top": 192.6, "x1": 142.56, "bottom": 201.96}],
+  "R4": [{"page": 0, "x0": 146.88, "top": 192.6, "x1": 154.8, "bottom": 201.96}],
+  "R1": [{"page": 0, "x0": 110.52, "top": 192.96, "x1": 118.08, "bottom": 201.96}],
+  "C2": [{"page": 0, "x0": 221.04, "top": 192.96, "x1": 226.8, "bottom": 200.52}],
+  "D1": [{"page": 0, "x0": 183.96, "top": 202.32, "x1": 192.6, "bottom": 209.52}],
+  "HEAT": [{"page": 0, "x0": 181.08, "top": 210.96, "x1": 196.56, "bottom": 218.88}]
+ }
+}

@@ -1,0 +1,44 @@
+{
+ "id": "fcp-bow-booster-insert-v1-0",
+ "publisher": "fivecats",
+ "title": "fcp-bow-booster-insert-v1-0",
+ "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/02/FCP-Bow-Booster-Insert-V1-0.pdf",
+ "page": "https://www.five-cats-pedals.co.uk/product/bow-booster-eqd-arrows-clone/",
+ "file_name": "FCP-Bow-Booster-Insert-V1-0.pdf",
+ "sha256": "ae38d59338d860a47a1ffdd7073cbb5f6b6b51af21db86f1882aba3a9d13e589",
+ "checked": "2026-10-31T23:28:49+00:00",
+ "read_by_ocr": true,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {"ref": "R1", "count": 1, "category": "Resistors", "value": "1M", "location": {"page": 0, "x0": 132.52, "top": 364.3, "x1": 185.3, "bottom": 369.9}},
+    {"ref": "R2", "count": 1, "category": "Resistors", "value": "10M", "location": {"page": 0, "x0": 132.52, "top": 371.82, "x1": 188.2, "bottom": 377.42}},
+    {"ref": "R3", "count": 1, "category": "Resistors", "value": "1.3k", "location": {"page": 0, "x0": 132.52, "top": 379.34, "x1": 186.17, "bottom": 385.24}},
+    {"ref": "R4", "count": 1, "category": "Resistors", "value": "100k", "location": {"page": 0, "x0": 132.52, "top": 386.29, "x1": 189.36, "bottom": 392.19}},
+    {"ref": "C1", "count": 1, "category": "Capacitors", "value": "100p", "location": {"page": 0, "x0": 132.52, "top": 401.33, "x1": 192.26, "bottom": 407.23}},
+    {"ref": "C2", "count": 1, "category": "Capacitors", "value": "100u", "location": {"page": 0, "x0": 132.52, "top": 409.15, "x1": 192.26, "bottom": 414.75}},
+    {"ref": "C3", "count": 1, "category": "Capacitors", "value": "4.7n", "location": {"page": 0, "x0": 132.52, "top": 416.09, "x1": 190.81, "bottom": 422.19}},
+    {"ref": "C4", "count": 1, "category": "Capacitors", "value": "100n", "location": {"page": 0, "x0": 132.52, "top": 423.33, "x1": 192.26, "bottom": 429.43}},
+    {"ref": "C5", "count": 1, "category": "Capacitors", "value": "10n", "location": {"page": 0, "x0": 132.52, "top": 431.43, "x1": 189.36, "bottom": 437.33}},
+    {"ref": "D1", "count": 1, "category": "Diodes", "value": "1N5817", "location": {"page": 0, "x0": 132.23, "top": 446.18, "x1": 195.45, "bottom": 452.08}},
+    {"ref": "Q1", "count": 1, "category": "Transistors", "value": "2N5089", "location": {"page": 0, "x0": 132.52, "top": 460.94, "x1": 195.45, "bottom": 466.84}},
+    {"ref": "LEVEL", "count": 1, "category": "Potentiometers", "value": "B10K", "location": {"page": 0, "x0": 132.23, "top": 475.99, "x1": 189.36, "bottom": 481.59}}
+   ]
+  }
+ ],
+ "boards": {
+  "D1": [{"page": 0, "x0": 130.32, "top": 174.96, "x1": 141.48, "bottom": 188.28}],
+  "R1": [{"page": 0, "x0": 147.6, "top": 175.32, "x1": 158.4, "bottom": 188.28}],
+  "R2": [{"page": 0, "x0": 163.08, "top": 175.32, "x1": 173.88, "bottom": 189.0}],
+  "R3": [{"page": 0, "x0": 178.92, "top": 175.32, "x1": 190.08, "bottom": 187.92}],
+  "R4": [{"page": 0, "x0": 196.2, "top": 175.32, "x1": 205.2, "bottom": 187.92}],
+  "C3": [{"page": 0, "x0": 224.64, "top": 181.08, "x1": 233.64, "bottom": 192.96}],
+  "C4": [{"page": 0, "x0": 238.32, "top": 181.08, "x1": 248.04, "bottom": 193.68}],
+  "C5": [{"page": 0, "x0": 252.0, "top": 181.08, "x1": 261.36, "bottom": 193.68}],
+  "C1": [{"page": 0, "x0": 210.96, "top": 182.52, "x1": 219.96, "bottom": 192.96}],
+  "C2": [{"page": 0, "x0": 169.92, "top": 207.36, "x1": 182.88, "bottom": 218.16}],
+  "Q1": [{"page": 0, "x0": 228.24, "top": 209.52, "x1": 240.84, "bottom": 219.6}]
+ }
+}

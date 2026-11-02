@@ -1,0 +1,56 @@
+{
+ "id": "2026-nostalgitone-cock-it-wah-build-doc",
+ "publisher": "guitarpcb",
+ "title": "NostalgiTone Cock-It-Wah Single",
+ "document": "https://guitarpcb.com/wp-content/uploads/2026/08/2026-NostalgiTone-Cock-It-Wah-Build-Doc.pdf",
+ "page": "https://guitarpcb.com/community/topic/pedal-building-guides-mandatory-reading/",
+ "file_name": "2026-NostalgiTone-Cock-It-Wah-Build-Doc.pdf",
+ "sha256": "fa1da0822d08213736f3832fb3f58606557bcc6df06d5a227e0b9f16b836ef22",
+ "checked": "2026-11-01T00:48:24+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {"ref": "R1", "count": 1, "category": "Resistors", "value": "3.9M", "location": {"page": 1, "x0": 86.83, "top": 361.35, "x1": 137.65, "bottom": 370.26}},
+    {"ref": "R8", "count": 1, "category": "Resistors", "value": "10k", "location": {"page": 1, "x0": 175.85, "top": 361.35, "x1": 225.22, "bottom": 370.26}},
+    {"ref": "R11", "count": 1, "category": "Resistors", "value": "10k", "location": {"page": 1, "x0": 174.07, "top": 396.99, "x1": 225.22, "bottom": 405.9}},
+    {"ref": "R7", "count": 1, "category": "Resistors", "value": "10k", "location": {"page": 1, "x0": 86.83, "top": 432.62, "x1": 136.21, "bottom": 441.53}},
+    {"ref": "R15", "count": 1, "category": "Resistors", "value": "20k", "location": {"page": 1, "x0": 263.07, "top": 361.35, "x1": 314.23, "bottom": 370.26}},
+    {"ref": "C6", "count": 1, "category": "Capacitors", "value": "33n", "location": {"page": 1, "x0": 353.86, "top": 361.35, "x1": 404.92, "bottom": 370.26}},
+    {"ref": "IC1", "count": 1, "category": "ICs", "value": "TL072", "location": {"page": 1, "x0": 447.61, "top": 361.35, "x1": 505.52, "bottom": 370.26}},
+    {"ref": "R2", "count": 1, "category": "Resistors", "value": "1M", "location": {"page": 1, "x0": 86.83, "top": 373.22, "x1": 135.58, "bottom": 382.13}},
+    {"ref": "R3", "count": 1, "category": "Resistors", "value": "1M", "location": {"page": 1, "x0": 86.83, "top": 385.1, "x1": 135.58, "bottom": 394.01}},
+    {"ref": "R4", "count": 1, "category": "Resistors", "value": "1M", "location": {"page": 1, "x0": 86.83, "top": 396.99, "x1": 135.58, "bottom": 405.9}},
+    {"ref": "R9", "count": 1, "category": "Resistors", "value": "47k", "location": {"page": 1, "x0": 175.85, "top": 373.22, "x1": 225.22, "bottom": 382.13}},
+    {"ref": "R13", "count": 1, "category": "Resistors", "value": "47k", "location": {"page": 1, "x0": 174.07, "top": 420.74, "x1": 225.22, "bottom": 429.65}},
+    {"ref": "C7", "count": 1, "category": "Capacitors", "value": "4.7u", "location": {"page": 1, "x0": 353.86, "top": 373.22, "x1": 405.25, "bottom": 382.13}},
+    {"ref": "IC2", "count": 1, "category": "ICs", "value": "TL074", "location": {"page": 1, "x0": 447.61, "top": 373.22, "x1": 505.52, "bottom": 382.13}},
+    {"ref": "R10", "count": 1, "category": "Resistors", "value": "6.8k", "location": {"page": 1, "x0": 174.07, "top": 385.1, "x1": 224.87, "bottom": 394.01}},
+    {"ref": "C1", "count": 1, "category": "Capacitors", "value": "10n", "location": {"page": 1, "x0": 264.85, "top": 385.1, "x1": 314.14, "bottom": 394.01}},
+    {"ref": "C8", "count": 1, "category": "Capacitors", "value": "270p", "location": {"page": 1, "x0": 353.86, "top": 385.1, "x1": 406.69, "bottom": 394.01}},
+    {"ref": "TRIM", "count": 1, "category": "Potentiometers", "value": "500K", "location": {"page": 1, "x0": 443.46, "top": 385.1, "x1": 503.52, "bottom": 394.01}},
+    {"ref": "C2", "count": 1, "category": "Capacitors", "value": "220u", "location": {"page": 1, "x0": 264.85, "top": 396.99, "x1": 315.92, "bottom": 405.9}},
+    {"ref": "C9", "count": 1, "category": "Capacitors", "value": "1u", "location": {"page": 1, "x0": 353.86, "top": 396.99, "x1": 402.55, "bottom": 405.9}},
+    {"ref": "ZONE", "count": 1, "category": "Potentiometers", "value": "C10K", "location": {"page": 1, "x0": 442.87, "top": 396.99, "x1": 504.11, "bottom": 405.9}},
+    {"ref": "R5", "count": 1, "category": "Resistors", "value": "15k", "location": {"page": 1, "x0": 86.83, "top": 408.85, "x1": 136.21, "bottom": 417.76}},
+    {"ref": "R12", "count": 1, "category": "Resistors", "value": "4.7k", "location": {"page": 1, "x0": 174.07, "top": 408.85, "x1": 224.87, "bottom": 417.76}},
+    {"ref": "C3", "count": 1, "category": "Capacitors", "value": "330n", "location": {"page": 1, "x0": 264.85, "top": 408.85, "x1": 315.92, "bottom": 417.76}},
+    {"ref": "C10", "count": 1, "category": "Capacitors", "value": "1n", "location": {"page": 1, "x0": 352.08, "top": 408.85, "x1": 402.55, "bottom": 417.76}},
+    {"ref": "PEAK", "count": 1, "category": "Potentiometers", "value": "C500K", "location": {"page": 1, "x0": 443.46, "top": 408.85, "x1": 505.87, "bottom": 417.76}},
+    {"ref": "VOLUME", "count": 1, "category": "Potentiometers", "value": "C500K", "location": {"page": 1, "x0": 436.92, "top": 420.74, "x1": 505.87, "bottom": 429.65}},
+    {"ref": "R6", "count": 1, "category": "Resistors", "value": "1.5k", "location": {"page": 1, "x0": 86.83, "top": 420.74, "x1": 135.86, "bottom": 429.65}},
+    {"ref": "C4", "count": 1, "category": "Capacitors", "value": "3.3n", "location": {"page": 1, "x0": 264.85, "top": 420.74, "x1": 314.47, "bottom": 429.65}},
+    {"ref": "C5", "count": 1, "category": "Capacitors", "value": "3.3n", "location": {"page": 1, "x0": 264.85, "top": 432.62, "x1": 314.47, "bottom": 441.53}},
+    {"ref": "D1", "count": 1, "category": "Diodes", "value": "1N5817", "location": {"page": 1, "x0": 353.86, "top": 420.74, "x1": 411.76, "bottom": 429.65}},
+    {"ref": "R14", "count": 1, "category": "Resistors", "value": "2.2k", "location": {"page": 1, "x0": 174.07, "top": 432.62, "x1": 224.87, "bottom": 441.53}},
+    {"ref": "D2", "count": 1, "category": "Diodes", "value": "Status LED", "location": {"page": 1, "x0": 353.86, "top": 432.62, "x1": 417.0, "bottom": 441.53}},
+    {"ref": "CLR", "count": 1, "category": "Resistors", "value": "1.8k", "location": {"page": 1, "x0": 444.03, "top": 432.62, "x1": 491.88, "bottom": 441.53}}
+   ]
+  }
+ ],
+ "boards": {
+  "TRIM": [{"page": 1, "x0": 72.05, "top": 592.15, "x1": 89.81, "bottom": 600.31}]
+ }
+}

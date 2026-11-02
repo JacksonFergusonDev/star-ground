@@ -1,0 +1,41 @@
+{
+ "id": "tonepad-wahwahbasic",
+ "publisher": "tonepad",
+ "title": "Llora Nena Wah",
+ "document": "https://tonepad.com/getFile.asp?id=114",
+ "page": "https://tonepad.com/project.asp?id=61",
+ "file_name": "tonepad_wahwahbasic.pdf",
+ "sha256": "f2b0991f364066865eb27b55c59e05fea78765068eef2a500efe297f99d3f796",
+ "checked": "2026-10-31T23:13:11+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {"ref": "Q1", "count": 1, "category": "Transistors", "value": "MPSA18", "location": {"page": 0, "x0": 241.7, "top": 417.27, "x1": 303.34, "bottom": 427.27}},
+    {"ref": "Q2", "count": 1, "category": "Transistors", "value": "MPSA18", "location": {"page": 0, "x0": 241.7, "top": 428.44, "x1": 303.34, "bottom": 438.44}},
+    {"ref": null, "count": 1, "category": "Resistors", "value": "470", "location": null},
+    {"ref": null, "count": 2, "category": "Capacitors", "value": "10n", "location": null},
+    {"ref": null, "count": 2, "category": "Resistors", "value": "1k", "location": null},
+    {"ref": null, "count": 2, "category": "Capacitors", "value": "220n", "location": null},
+    {"ref": null, "count": 1, "category": "Resistors", "value": "1.5k", "location": null},
+    {"ref": null, "count": 1, "category": "Capacitors", "value": "4.7u", "location": null},
+    {"ref": null, "count": 1, "category": "Resistors", "value": "10k", "location": null},
+    {"ref": null, "count": 1, "category": "Capacitors", "value": "47u", "location": null},
+    {"ref": null, "count": 1, "category": "Resistors", "value": "22k", "location": null},
+    {"ref": null, "count": 1, "category": "Diodes", "value": "1N914", "location": null},
+    {"ref": null, "count": 1, "category": "Potentiometers", "value": "33k", "location": null},
+    {"ref": null, "count": 1, "category": "Potentiometers", "value": "Wah pot", "location": null},
+    {"ref": null, "count": 1, "category": "Resistors", "value": "68k", "location": null},
+    {"ref": null, "count": 1, "category": "Resistors", "value": "82k", "location": null},
+    {"ref": null, "count": 2, "category": "Resistors", "value": "470k", "location": null},
+    {"ref": null, "count": 1, "category": "Resistors", "value": "1M", "location": null}
+   ]
+  }
+ ],
+ "boards": {
+  "Q1": [{"page": 0, "x0": 236.66, "top": 616.11, "x1": 246.0, "bottom": 623.11}],
+  "Q2": [{"page": 0, "x0": 438.26, "top": 616.11, "x1": 447.6, "bottom": 623.11}]
+ }
+}
