@@ -124,10 +124,14 @@
     display: grid;
     gap: 14px;
     padding: 18px 20px;
-    border: 1px dashed var(--line);
+    border: 1px solid var(--line);
     border-radius: 5px;
+    background: var(--panel);
   }
   h2 {
+    max-width: none;
+    letter-spacing: 0;
+    line-height: 1.4;
     margin: 0;
     font-size: var(--fs-h4);
     font-weight: 500;
@@ -173,7 +177,7 @@
     border: 1px solid var(--line);
     border-radius: 5px;
     color: var(--text);
-    background: var(--panel);
+    background: var(--bg);
     font-family: var(--mono);
     font-size: var(--fs-ui);
   }
@@ -200,5 +204,28 @@
   button:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
+  }
+  input[type='file'] {
+    padding: 8px;
+    border: 1px dashed var(--line);
+    border-radius: 5px;
+    color: var(--muted);
+    background: var(--bg);
+    font-family: var(--sans);
+    font-size: var(--fs-ui);
+    cursor: pointer;
+  }
+  input[type='file']::file-selector-button {
+    margin-right: 12px;
+    padding: 8px 14px;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    color: var(--text);
+    background: var(--panel);
+    font: inherit;
+    cursor: pointer;
+  }
+  input[type='file']:hover::file-selector-button {
+    border-color: var(--muted);
   }
 </style>

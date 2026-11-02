@@ -3,8 +3,14 @@
 // tens of megabytes, live in IndexedDB. Either can be unavailable (a private
 // window, blocked storage), and the workspace then works for the visit only.
 
-import type { ComponentCategory, DocumentReading, MasterListRequest } from './api';
-import type { Stock } from './server';
+import type {
+  ComponentCategory,
+  DocumentReading,
+  MasterListRequest,
+  MasterListResult,
+  ProjectResult,
+} from './api';
+import type { Failure, Stock } from './server';
 
 /** Where a project's parts list comes from. */
 type Source =
@@ -211,6 +217,42 @@ export class Workspace {
       // Storage is full or blocked: the workspace lasts for this visit.
     }
   }
+}
+
+let shared: Workspace | undefined;
+
+/**
+ * The page's one workspace. The app and its sidebar are separate islands, and
+ * both read this one, so the sidebar follows every change the app makes.
+ */
+export function workspace(): Workspace {
+  return (shared ??= new Workspace());
+}
+
+/** The shopping list as last built from the workspace, shared like it. */
+export const listing = $state<{
+  result: MasterListResult | null;
+  updating: boolean;
+  error: Failure | null;
+  /** The cards the list's projects came from, in its order. */
+  listed: string[];
+}>({ result: null, updating: false, error: null, listed: [] });
+
+/** A card's project on the shopping list, as last built. */
+export function projectOf(id: string): ProjectResult | null {
+  return listing.result?.projects[listing.listed.indexOf(id)] ?? null;
+}
+
+/** The parts Star Ground's self-checks flagged on a card that the builder hasn't checked yet. */
+export function flagged(card: Card, project: ProjectResult | null): number {
+  if (!project) return 0;
+  // eslint-disable-next-line svelte/prefer-svelte-reactivity -- rebuilt by each call
+  const refs = new Set([
+    ...project.reviews.filter((r) => r.warnings.length).map((r) => r.ref),
+    ...project.ocr_reads.map((r) => r.ref),
+  ]);
+  const checks = checksOf(card);
+  return [...refs].filter((ref) => !checks[ref]).length;
 }
 
 interface Saved {

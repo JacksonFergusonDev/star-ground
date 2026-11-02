@@ -26,7 +26,7 @@
 </script>
 
 <section class="share" aria-labelledby="share-title">
-  <h3 id="share-title">Share</h3>
+  <h2 id="share-title">Share these projects</h2>
   <button class="hs-button" type="button" disabled={!shared.projects.length} onclick={copy}>
     {label}
   </button>
@@ -52,7 +52,10 @@
     gap: 10px;
     justify-items: start;
   }
-  h3 {
+  h2 {
+    max-width: none;
+    letter-spacing: 0;
+    line-height: 1.4;
     margin: 0;
     font-size: var(--fs-h4);
     font-weight: 500;

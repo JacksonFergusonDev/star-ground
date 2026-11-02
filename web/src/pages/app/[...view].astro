@@ -1,0 +1,25 @@
+---
+// Every page of the app, built as its own static page so its address opens it
+// directly. Each holds the same island, which reads the address and moves
+// between the pages without reloading.
+import type { GetStaticPaths } from 'astro';
+import Workspace from '../../components/workspace/Workspace.svelte';
+import App from '../../layouts/App.astro';
+import { views } from '../../lib/router.svelte';
+
+export const getStaticPaths = (() =>
+  Object.values(views).map(({ path, title }) => ({
+    params: { view: path.slice('/app/'.length, -1) || undefined },
+    props: { title },
+  }))) satisfies GetStaticPaths;
+
+const { title } = Astro.props;
+---
+
+<App
+  {title}
+  description="Add the pedals you're building and get one shopping list for all of them."
+  noindex
+>
+  <Workspace client:only="svelte" />
+</App>

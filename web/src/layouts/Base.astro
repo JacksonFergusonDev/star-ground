@@ -1,14 +1,10 @@
 ---
-// House styles load first, in house-style's order, then Star Ground's accent,
-// then the site's own layout.
-import 'house-style/css/fonts.css';
-import 'house-style/css/tokens.css';
-import 'house-style/css/components.css';
-import 'house-style/css/site.css';
-import '@branding/theme.css';
-import '../styles/global.css';
+// The home page and the site's other standalone pages: house-style's project
+// site shell around the page.
+import Icon from 'house-style/astro/Icon.astro';
 import SiteBar from 'house-style/astro/SiteBar.astro';
 import SiteFooter from 'house-style/astro/SiteFooter.astro';
+import Head from '../components/Head.astro';
 import { links } from '../lib/site';
 
 interface Props {
@@ -16,26 +12,13 @@ interface Props {
   description: string;
   noindex?: boolean;
 }
-const { title, description, noindex = false } = Astro.props;
-const pageTitle = title ? `${title} | Star Ground` : 'Star Ground';
-const canonical = new URL(Astro.url.pathname, Astro.site);
+const props = Astro.props;
 ---
 
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#0a0c0e" />
-    <meta name="description" content={description} />
-    <title>{pageTitle}</title>
-    {!noindex && <link rel="canonical" href={canonical} />}
-    {noindex && <meta name="robots" content="noindex" />}
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta property="og:title" content={pageTitle} />
-    <meta property="og:description" content={description} />
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content={canonical} />
+    <Head {...props} />
   </head>
   <body>
     <a class="hs-skip-link" href="#main">
@@ -45,12 +28,12 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
       name="Star Ground"
       logo="/favicon.svg"
       github={links.github}
-      nav={[
-        { label: 'How it works', href: '/#how-it-works' },
-        { label: 'Documents', href: '/#documents', wide: true },
-        { label: 'Accuracy', href: '/#accuracy', wide: true },
-      ]}
-    />
+      nav={[{ label: 'Circuit catalog', href: links.catalog }]}
+    >
+      <a slot="end" class="hs-bar-link hs-bar-link--accent" href={links.app}>
+        Open the app <Icon name="arrow-right" size={14} />
+      </a>
+    </SiteBar>
     <main id="main" class="page">
       <slot />
     </main>

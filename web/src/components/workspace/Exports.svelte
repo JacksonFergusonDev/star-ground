@@ -52,7 +52,7 @@
 </script>
 
 <section class="exports" aria-labelledby="exports-title">
-  <h3 id="exports-title">Download</h3>
+  <h2 id="exports-title">Download</h2>
   <button
     class="hs-button hs-button--primary"
     type="button"
@@ -95,9 +95,11 @@
   .exports {
     display: grid;
     gap: 12px;
-    margin-top: 20px;
   }
-  h3 {
+  h2 {
+    max-width: none;
+    letter-spacing: 0;
+    line-height: 1.4;
     margin: 0;
     font-size: var(--fs-h4);
     font-weight: 500;

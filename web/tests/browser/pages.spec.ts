@@ -3,8 +3,12 @@ import { expect, test } from '@playwright/test';
 
 const pages = [
   { path: '/', heading: "One shopping list for every pedal you're building." },
-  { path: '/app/', heading: 'Your builds.' },
-  { path: '/catalog/', heading: 'Circuit catalog.' },
+  { path: '/app/', heading: 'Projects' },
+  { path: '/app/list/', heading: 'Shopping list' },
+  { path: '/app/stock/', heading: 'Stock' },
+  { path: '/app/export/', heading: 'Export' },
+  { path: '/app/check/?project=gone', heading: "This project isn't here" },
+  { path: '/catalog/', heading: 'Circuit catalog' },
   { path: '/catalog/pedalpcb/theclap/', heading: 'The Clap' },
   { path: '/404.html', heading: "This page doesn't exist." },
 ];
@@ -33,12 +37,13 @@ for (const { path, heading } of pages) {
 
     test('marks every standalone link with a house icon', async ({ page }) => {
       // House style: a link outside a sentence carries an icon saying where it goes. The header
-      // bar's section links and the skip link are navigation chrome, not content links.
+      // bar, the app's sidebar, breadcrumbs, tabs and the skip link are navigation chrome, not
+      // content links.
       const bare = await page
         .locator('main a, .hs-footer-links a')
         .filter({ hasNot: page.locator('svg') })
         .evaluateAll((links) =>
-          links.filter((a) => !a.closest('p')).map((a) => a.textContent?.trim()),
+          links.filter((a) => !a.closest('p, nav')).map((a) => a.textContent?.trim()),
         );
       expect(bare).toEqual([]);
     });
@@ -79,13 +84,48 @@ test('uses the house fonts', async ({ page }) => {
   expect(loaded).toEqual(expect.arrayContaining(['DM Sans']));
 });
 
-test('section links reach their sections', async ({ page }, testInfo) => {
-  test.skip(testInfo.project.name.endsWith('-mobile'), 'Two section links hide on phones.');
+test('jump links reach their sections', async ({ page }) => {
   await page.goto('/');
   for (const name of ['How it works', 'Documents', 'Accuracy']) {
-    await page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name }).click();
+    await page
+      .getByRole('navigation', { name: 'On this page' })
+      .getByRole('link', { name: new RegExp(name, 'i') })
+      .click();
     await expect(page.locator(`section:target`)).toBeInViewport();
   }
+});
+
+test("the app's pages move without reloading, and the browser's back button works", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name.endsWith('-mobile'), 'The sidebar folds into a menu on phones.');
+  await page.goto('/app/');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Projects');
+  const nav = page.getByRole('navigation', { name: 'App' });
+  await nav.getByRole('link', { name: /Shopping list/ }).click();
+  await expect(page).toHaveURL(/\/app\/list\/$/);
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Shopping list');
+  await expect(page.getByRole('heading', { level: 1 })).toBeFocused();
+  await expect(nav.getByRole('link', { name: /Shopping list/ })).toHaveAttribute(
+    'aria-current',
+    'page',
+  );
+  expect(await page.evaluate(() => performance.getEntriesByType('navigation').length)).toBe(1);
+
+  await page.goBack();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Projects');
+  await expect(page).toHaveTitle('Projects | Star Ground');
+});
+
+test('the menu opens the app on phones', async ({ page }, testInfo) => {
+  test.skip(!testInfo.project.name.endsWith('-mobile'), 'The sidebar is always open on laptops.');
+  await page.goto('/app/');
+  const nav = page.getByRole('navigation', { name: 'App' });
+  await expect(nav).toBeHidden();
+  await page.getByRole('button', { name: 'Menu' }).click();
+  await nav.getByRole('link', { name: /Stock/ }).click();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Stock');
+  await expect(nav).toBeHidden();
 });
 
 test('the moving field survives a lost WebGL context', async ({ page }) => {

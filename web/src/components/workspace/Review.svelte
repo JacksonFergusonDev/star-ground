@@ -13,7 +13,6 @@
   import { checksOf, count } from '../../lib/workspace.svelte';
   import type { Box } from './DocumentViewer.svelte';
   import DocumentViewer from './DocumentViewer.svelte';
-  import Icon from './Icon.svelte';
   import ReviewPart from './ReviewPart.svelte';
 
   let {
@@ -22,7 +21,6 @@
     focus,
     load,
     onCheck,
-    onBack,
   }: {
     card: Card;
     /** The project as the master list has it; null while it updates. */
@@ -31,7 +29,6 @@
     focus: string | null;
     load: () => Promise<ArrayBuffer>;
     onCheck: (ref: string, check: Check | null) => void;
-    onBack: () => void;
   } = $props();
 
   // The part shown first; the builder chooses after.
@@ -111,26 +108,17 @@
     row?.scrollIntoView({ block, behavior: reduced ? 'auto' : 'smooth' });
   }
 
-  // The review replaces the workspace, so it opens at its own top, or at the
-  // part a warning asked to show.
-  let section = $state<HTMLElement>();
+  // The review opens at the part a warning asked to show.
   onMount(() => {
-    section?.scrollIntoView({ block: 'start' });
     if (selected) choose(selected, 'center');
   });
 </script>
 
-<section class="review" aria-labelledby="review-title" bind:this={section}>
-  <div class="head">
-    <button class="back" type="button" onclick={onBack}>
-      Back to the workspace <Icon name="arrow-left" size={14} />
-    </button>
-    <h2 id="review-title">Check {card.name}</h2>
-    <p class="note">
-      Each part is outlined where Star Ground read it. Compare it with the document, then mark it as
-      right or correct it; a correction changes the master list.
-    </p>
-  </div>
+<div class="review">
+  <p class="note">
+    Each part is outlined where Star Ground read it. Compare it with the document, then mark it as
+    right or correct it; a correction changes the shopping list.
+  </p>
 
   <div class="panes">
     <div class="document">
@@ -209,40 +197,12 @@
       {/if}
     </div>
   </div>
-</section>
+</div>
 
 <style>
   .review {
     display: grid;
     gap: 20px;
-    margin-top: 40px;
-    scroll-margin-top: calc(var(--hs-bar-height, 0px) + 16px);
-  }
-  .head {
-    display: grid;
-    gap: 10px;
-  }
-  .back {
-    display: inline-flex;
-    gap: 8px;
-    align-items: center;
-    justify-self: start;
-    padding: 0;
-    border: 0;
-    color: var(--muted);
-    background: none;
-    font: inherit;
-    font-size: var(--fs-ui);
-    cursor: pointer;
-  }
-  .back:hover {
-    color: var(--accent);
-  }
-  h2 {
-    margin: 0;
-    font-size: var(--fs-h3);
-    font-weight: 500;
-    letter-spacing: -0.8px;
   }
   .note {
     margin: 0;

@@ -2,6 +2,7 @@
 
 import argparse
 import json
+import re
 import subprocess
 import tempfile
 import time
@@ -58,6 +59,8 @@ def check_browser(url: str, artifacts: Path) -> None:
                 "R1 10k\nC1 100n\nU1 TL072"
             )
             page.get_by_role("button", name="Add", exact=True).click()
+            # The shopping list has its own page, reached without a reload.
+            page.get_by_role("link", name=re.compile(r"^To buy")).click()
             table = page.get_by_role("table")
             for part in ("10k", "100n", "TL072"):
                 expect(table.get_by_role("cell", name=part, exact=True)).to_be_visible()

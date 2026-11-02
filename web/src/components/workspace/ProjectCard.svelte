@@ -12,18 +12,21 @@
     onCount,
     onRemove,
     onRead,
-    onReview,
-    onBench,
+    flags,
+    checkLink,
+    buildLink,
   }: {
     card: Card;
     presetName: (key: string) => string;
     onCount: (count: number) => void;
     onRemove: () => void;
     onRead: (ocr: boolean) => void;
-    /** Opens the document beside its parts; null until the parts are listed. */
-    onReview: (() => void) | null;
-    /** Opens bench mode; null until the parts are listed. */
-    onBench: (() => void) | null;
+    /** The parts Star Ground flagged that the builder hasn't checked yet. */
+    flags: number;
+    /** The page that checks the parts against the document; null until they're listed. */
+    checkLink: string | null;
+    /** Bench mode's page; null until the parts are listed. */
+    buildLink: string | null;
   } = $props();
 
   const choices = $derived(builds(card));
@@ -58,7 +61,7 @@
   });
 </script>
 
-<li class="card" aria-labelledby={`name-${card.id}`}>
+<li class="card" id={`project-${card.id}`} aria-labelledby={`name-${card.id}`}>
   <div class="head">
     <label class="visually-hidden" for={`name-${card.id}`}>Project name</label>
     <input id={`name-${card.id}`} class="name" bind:value={card.name} />
@@ -136,15 +139,21 @@
     <p class="status">{waiting}</p>
   {/if}
 
-  {#if onReview}
-    <button class="text-button review" type="button" onclick={onReview}>
-      Check the parts against the document <Icon name="arrow-right" size={14} />
-    </button>
-  {/if}
-  {#if onBench}
-    <button class="text-button review" type="button" onclick={onBench}>
-      Build it, part by part <Icon name="arrow-right" size={14} />
-    </button>
+  {#if checkLink || buildLink}
+    <div class="actions">
+      {#if checkLink}
+        <a class="action" href={checkLink}>
+          Check the parts against the document
+          {#if flags}<span class="flags">{flags} flagged</span>{/if}
+          <Icon name="arrow-right" size={14} />
+        </a>
+      {/if}
+      {#if buildLink}
+        <a class="action" href={buildLink}>
+          Build it, part by part <Icon name="arrow-right" size={14} />
+        </a>
+      {/if}
+    </div>
   {/if}
 </li>
 
@@ -224,11 +233,31 @@
   .text-button:hover {
     color: var(--accent);
   }
-  .review {
+  .card:target {
+    border-color: var(--accent-border);
+  }
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 24px;
+    margin-top: 4px;
+    padding-top: 12px;
+    border-top: 1px solid var(--line);
+  }
+  .action {
     display: inline-flex;
     gap: 8px;
     align-items: center;
-    text-decoration: none;
+    color: var(--text);
+    font-size: var(--fs-ui);
+  }
+  .flags {
+    padding: 1px 7px;
+    border: 1px solid var(--accent-border);
+    border-radius: 999px;
+    color: var(--accent);
+    font-family: var(--mono);
+    font-size: var(--fs-label);
   }
   .text-button {
     justify-self: start;
@@ -272,7 +301,8 @@
   }
   input:focus-visible,
   select:focus-visible,
-  button:focus-visible {
+  button:focus-visible,
+  a:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
   }
