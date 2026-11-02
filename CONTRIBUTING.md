@@ -74,7 +74,7 @@ The initial exceptions preserve the versions already locked and tested when this
 
 The site is at <http://127.0.0.1:4500/>. From the repository root, `just serve-web` installs the dependencies and starts it. Run `just serve-api` in a separate terminal tab; the site proxies `/api` to port 4501, so local development needs no `PUBLIC_API_URL` or CORS settings. After building, `pnpm run preview` in `web/` serves the build on port 4502 and uses the same API proxy.
 
-Star Ground reserves ports 4500–4504: website development, API, build preview, browser tests, and the Streamlit app (`just serve`), respectively. The personal site uses 4300–4302 and Protostar uses 4400–4401. Astro exits when its port is occupied instead of silently moving. Stop the existing server with `Ctrl+C` before starting another. For a second worktree, choose unused ports explicitly and update its proxy target if the API port changes.
+Star Ground reserves ports 4500–4503: website development, API, build preview, and browser tests, respectively. The personal site uses 4300–4302 and Protostar uses 4400–4401. Astro exits when its port is occupied instead of silently moving. Stop the existing server with `Ctrl+C` before starting another. For a second worktree, choose unused ports explicitly and update its proxy target if the API port changes.
 
 Before opening a pull request, run what CI runs:
 
@@ -101,8 +101,6 @@ The website installs it with pnpm, pinned to a tag in `web/package.json` (`"hous
 - **astro:** the Astro components that render that shell.
 
 `web/src/layouts/Base.astro` loads the house stylesheets, then `branding/theme.css` (Star Ground's green accent), then `web/src/styles/global.css`, which holds only Star Ground's own page content. To adopt a newer release, run `pnpm add github:JacksonFergusonDev/house-style#vX.Y.Z` in `web/`, then the browser tests. Change shared styles in house-style and release them; never restyle the shell here.
-
-The current Streamlit app keeps its native navy theme in `.streamlit/config.toml` until the rebuilt site replaces it.
 
 When Zensical documentation is added, vendor the parts it uses with house-style's `scripts/vendor.py` (for example `--parts docs,site`), as Protostar does.
 

@@ -48,18 +48,9 @@ Standard unit tests often suffer from "tester bias"—we only test the inputs we
 **File:** `tests/test_api.py`
 
 - **Mechanism:** Drives `src/api.py` as a frontend would, with no UI: merging projects, refusing an unchosen build and reusing a reading untouched, carrying input errors to the master list, subtracting stock, and the generated documents named by each project's label.
-- **The Boundary:** Scans the imports of every backend module and fails if one imports Streamlit or the app's session state.
+- **The Boundary:** Scans the imports of every backend module and fails if one outside `src/server/` imports FastAPI.
 
-### 5. Headless Integration
-
-**File:** `tests/test_app.py`
-
-To ensure the UI is decoupled from the browser state, we run headless simulations using `Streamlit.AppTest`.
-
-- **Mechanism:** The test runner instantiates the full application kernel in memory, simulates user interactions (clicks, uploads, form submissions), and asserts the state of the dataframes.
-- **Coverage:** Verifies the full "Paste → Parse → Download" lifecycle, choosing a build and accepting OCR's parts, without a browser driver (Selenium/Puppeteer).
-
-### 6. URL Fetching over Real Sockets
+### 5. URL Fetching over Real Sockets
 
 **Files:** `tests/test_fetch.py`, `tests/test_fetch_server.py`, `tests/test_fetch_live.py`
 
@@ -73,7 +64,7 @@ To ensure the UI is decoupled from the browser state, we run headless simulation
 uv run pytest -m network
 ```
 
-### 7. Package Integrity
+### 6. Package Integrity
 
 **File:** `tests/test_package.py`
 

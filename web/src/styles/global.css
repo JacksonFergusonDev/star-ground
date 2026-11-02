@@ -85,11 +85,6 @@ code {
   flex-shrink: 0;
   white-space: nowrap;
 }
-.hero-note {
-  margin: 22px 0 0;
-  color: var(--muted);
-  font-size: var(--fs-ui);
-}
 .text-link {
   display: inline-flex;
   align-items: center;

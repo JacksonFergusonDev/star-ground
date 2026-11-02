@@ -134,11 +134,6 @@ class MasterList:
         """Each project's self-check failures to review, by label."""
         return {p.label: list(p.warnings) for p in self.projects if p.warnings}
 
-    @property
-    def option_notes(self) -> dict[str, list[str]]:
-        """Each project's interchangeable parts, by label."""
-        return {p.label: list(p.options) for p in self.projects if p.options}
-
     def shopping_list(
         self, show_hardware: bool = True, show_extras: bool = True
     ) -> list[ShoppingListRow]:

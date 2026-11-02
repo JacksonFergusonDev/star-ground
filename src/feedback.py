@@ -44,8 +44,8 @@ def _spreadsheet(credentials: Mapping[str, Any]) -> gspread.Spreadsheet:
 def connect_feedback_sheet(credentials: Mapping[str, Any]) -> gspread.Worksheet:
     """Opens the Google Sheet that in-app feedback is appended to.
 
-    The frontend supplies the credentials (Streamlit reads them from its
-    secrets) and decides how long to reuse the connection.
+    The server supplies the credentials (from its secret) and decides how
+    long to reuse the connection.
 
     Args:
         credentials: A Google service account's key, as its JSON fields.
