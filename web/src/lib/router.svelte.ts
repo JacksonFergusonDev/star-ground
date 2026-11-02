@@ -17,7 +17,7 @@ export const views: Record<View, { path: string; title: string }> = {
 };
 
 /** The page an address shows, or null outside the app. */
-export function viewOf(pathname: string): View | null {
+function viewOf(pathname: string): View | null {
   const path = pathname.endsWith('/') ? pathname : `${pathname}/`;
   const found = Object.entries(views).find(([, v]) => v.path === path);
   return found ? (found[0] as View) : null;
