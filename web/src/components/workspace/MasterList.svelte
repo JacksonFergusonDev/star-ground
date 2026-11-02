@@ -1,13 +1,12 @@
 <script lang="ts">
   // The master list: what to check, then what to buy across every project,
   // and the files to download.
-  import type { ExportKind, MasterListResult } from '../../lib/api';
-  import type { Download, Failure } from '../../lib/server';
+  import type { MasterListResult } from '../../lib/api';
+  import type { Failure } from '../../lib/server';
   import { explain } from '../../lib/server';
   import type { Options } from '../../lib/workspace.svelte';
   import { count } from '../../lib/workspace.svelte';
   import BugNotice from './BugNotice.svelte';
-  import Exports from './Exports.svelte';
   import Icon from './Icon.svelte';
 
   let {
@@ -15,16 +14,14 @@
     updating,
     error,
     options,
-    onExport,
-    onShow,
+    showHref,
   }: {
     result: MasterListResult | null;
     updating: boolean;
     error: Failure | null;
     options: Options;
-    onExport: (kind: ExportKind, excel: boolean) => Promise<Download>;
-    /** Shows a project's part (by its place on the list) in its document, if it has one. */
-    onShow: (project: number, ref: string) => (() => void) | null;
+    /** Where a project's part (by its place on the list) shows in its document, if it has one. */
+    showHref: (project: number, ref: string) => string | null;
   } = $props();
 
   const checks = $derived(
@@ -45,11 +42,8 @@
   const toBuy = $derived(rows.filter((r) => r.buy_qty > 0).length);
 </script>
 
-<section class="master" aria-labelledby="master-title" aria-busy={updating}>
-  <div class="title">
-    <h2 id="master-title">Master list</h2>
-    <p class="state" aria-live="polite">{updating ? 'Updating…' : ''}</p>
-  </div>
+<div class="master" aria-busy={updating}>
+  <p class="state" aria-live="polite">{updating ? 'Updating…' : ''}</p>
 
   {#if error}
     <p class="problem" role="alert">{error.message}</p>
@@ -59,7 +53,10 @@
   {/if}
 
   {#if !result}
-    <p class="empty">Add a project and its parts appear here, merged with every other project's.</p>
+    <div class="empty">
+      <p>Add a project and its parts appear here, merged with every other project's.</p>
+      <a class="hs-button" href="/app/">Add a project <Icon name="arrow-right" size={14} /></a>
+    </div>
   {:else}
     <p class="summary">
       {count(result.stats.parts_found, 'part')} read from {count(result.stats.lines_read, 'line')}
@@ -68,7 +65,7 @@
     </p>
 
     {#each unread as project (project.label)}
-      <h3>Couldn't read {project.label}</h3>
+      <h2>Couldn't read {project.label}</h2>
       {#each project.errors as problem, i (i)}
         <p class="note">{explain(problem)}</p>
         {#if problem.bug_code}
@@ -78,23 +75,23 @@
     {/each}
 
     {#if checks.length}
-      <h3>Check these parts</h3>
+      <h2 id="check">Check these parts</h2>
       <p class="note">
         Star Ground's self-checks found places where the list may not match the document. Compare
         these against it before ordering.
       </p>
       {#each checks as project (project.label)}
-        <h4>{project.label}</h4>
+        <h3>{project.label}</h3>
         <ul class="notes">
           {#each project.items as item, i (i)}
-            {@const show = onShow(project.index, item.ref)}
+            {@const show = showHref(project.index, item.ref)}
             <li>
               <code>{item.ref}</code>
               {item.message}
               {#if show}
-                <button class="show" type="button" onclick={show}>
+                <a class="show" href={show}>
                   Show in the document <Icon name="arrow-right" size={14} />
-                </button>
+                </a>
               {/if}
             </li>
           {/each}
@@ -103,10 +100,10 @@
     {/if}
 
     {#if choices.length}
-      <h3>Interchangeable parts</h3>
+      <h2>Interchangeable parts</h2>
       <p class="note">These documents offer alternatives. The first option listed was used.</p>
       {#each choices as project (project.label)}
-        <h4>{project.label}</h4>
+        <h3>{project.label}</h3>
         <ul class="notes">
           {#each project.options as text, i (i)}
             <li>{text}</li>
@@ -129,7 +126,7 @@
       </details>
     {/if}
 
-    <h3>Shopping list</h3>
+    <h2>Parts</h2>
     <div class="options">
       <label><input type="checkbox" bind:checked={options.hardware} /> Hardware kit</label>
       <label><input type="checkbox" bind:checked={options.extras} /> Sockets and adapters</label>
@@ -172,10 +169,8 @@
         </tbody>
       </table>
     </div>
-
-    <Exports {onExport} />
   {/if}
-</section>
+</div>
 
 <style>
   .master {
@@ -184,24 +179,15 @@
     gap: 14px;
     min-width: 0;
   }
-  .title {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 12px;
-  }
   h2 {
-    margin: 0;
-    font-size: var(--fs-h3);
-    font-weight: 500;
-    letter-spacing: -0.8px;
-  }
-  h3 {
+    max-width: none;
     margin: 20px 0 0;
     font-size: var(--fs-h4);
     font-weight: 500;
+    letter-spacing: 0;
+    scroll-margin-top: calc(var(--hs-bar-height) + 24px);
   }
-  h4 {
+  h3 {
     margin: 4px 0 0;
     color: var(--muted);
     font-family: var(--mono);
@@ -210,9 +196,20 @@
     letter-spacing: 0.08em;
     text-transform: uppercase;
   }
+  .state:empty {
+    display: none;
+  }
+  .empty {
+    display: grid;
+    gap: 14px;
+    justify-items: start;
+    padding: 28px;
+    border: 1px dashed var(--line);
+    border-radius: 5px;
+  }
   .state,
   .summary,
-  .empty,
+  .empty p,
   .note,
   .notes,
   details {
@@ -246,6 +243,7 @@
   .show:hover {
     color: var(--accent);
   }
+  .empty a:focus-visible,
   .show:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 2px;

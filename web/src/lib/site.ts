@@ -5,4 +5,5 @@ export const links = {
   linkedin: 'https://www.linkedin.com/in/jackson--ferguson/',
   email: 'mailto:jackson.ferguson0@gmail.com',
   app: '/app/',
+  catalog: '/catalog/',
 } as const;

@@ -5,9 +5,10 @@
 // JavaScript the whole list still shows.
 import { getCollection } from 'astro:content';
 import Icon from 'house-style/astro/Icon.astro';
-import Base from '../../layouts/Base.astro';
+import App from '../../layouts/App.astro';
 import type { Publisher } from '../../lib/catalog';
 import { buildPath, byTitle, partCount, publishers } from '../../lib/catalog';
+import { links } from '../../lib/site';
 
 const entries = (await getCollection('catalog')).sort(byTitle);
 const present = (Object.keys(publishers) as Publisher[]).filter((p) =>
@@ -16,20 +17,23 @@ const present = (Object.keys(publishers) as Publisher[]).filter((p) =>
 const verified = entries.filter((e) => e.data.verified).length;
 ---
 
-<Base
+<App
   title="Circuit catalog"
   description="Guitar pedal build documents whose parts lists Star Ground has already read, ready to add to a shopping list."
   noindex
 >
-  <section class="section" aria-labelledby="catalog-title">
-    <h1 id="catalog-title" class="catalog-title">
-      Circuit catalog.
-    </h1>
-    <p class="section-lede">
-      Build documents from PCB publishers whose parts lists Star Ground has already read. Find your
-      pedal and add it to your build. <strong>Verified</strong> builds were checked by hand against
-      the document; the rest were read automatically, so check their warnings once they're added.
-    </p>
+  <section aria-labelledby="catalog-title">
+    <header class="app-head">
+      <h1 id="catalog-title" class="app-title">
+        Circuit catalog
+      </h1>
+      <p class="app-lede">
+        Build documents from PCB publishers whose parts lists Star Ground has already read. Find
+        your pedal and add it to your projects. <strong>Verified</strong> builds were checked by
+        hand against the document; the rest were read automatically, so check their warnings once
+        they're added.
+      </p>
+    </header>
 
     {entries.length ? (
       <>
@@ -93,11 +97,15 @@ const verified = entries.filter((e) => e.data.verified).length;
     )}
 
     <p class="note">
-      Not listed? Upload the build document or paste a link to it in the{' '}
-      <a href="/app/">workspace</a>.
+      Not listed? Upload the build document or paste a link to it in your{' '}
+      <a href="/app/">projects</a>.
+    </p>
+    <p class="note">
+      Are you a PCB publisher? If you'd rather Star Ground didn't read your documents,{' '}
+      <a href={links.email}>email me</a> and I'll take them out.
     </p>
   </section>
-</Base>
+</App>
 
 <script>
   const form = document.querySelector<HTMLFormElement>('.filters');
@@ -132,18 +140,12 @@ const verified = entries.filter((e) => e.data.verified).length;
 </script>
 
 <style>
-  .catalog-title {
-    margin: 0 0 24px;
-    font-size: var(--fs-h2);
-    font-weight: 500;
-    letter-spacing: -1.6px;
-  }
   .filters {
     display: flex;
     flex-wrap: wrap;
     align-items: end;
     gap: 16px;
-    margin: 40px 0 16px;
+    margin: 0 0 16px;
   }
   .filters label {
     display: grid;
@@ -227,7 +229,7 @@ const verified = entries.filter((e) => e.data.verified).length;
     color: var(--muted);
   }
   .note a,
-  .section-lede a {
+  .app-lede a {
     text-decoration: underline;
     text-underline-offset: 3px;
   }

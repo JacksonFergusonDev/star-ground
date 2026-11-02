@@ -157,7 +157,8 @@ test('a warning shows its part where the linked document prints it', async ({ pa
   await page.getByLabel('Link to a build document').fill(URL_);
   await page.getByRole('button', { name: 'Add', exact: true }).click();
 
-  await page.getByRole('button', { name: 'Show in the document' }).click();
+  await page.getByRole('link', { name: /^To buy/ }).click();
+  await page.getByRole('link', { name: 'Show in the document' }).click();
 
   await expect(page.getByRole('heading', { name: 'Check Fuzz' })).toBeVisible();
   await expect(row(page, 'R2').getByRole('button', { name: /R2/ }).first()).toHaveAttribute(
@@ -195,7 +196,7 @@ test('a correction changes the master list and is reported', async ({ page }) =>
   });
   await upload(page);
 
-  await page.getByRole('button', { name: 'Check the parts against the document' }).click();
+  await page.getByRole('link', { name: /Check the parts against the document/ }).click();
   await row(page, 'R1').getByRole('button', { name: 'Wrong?' }).click();
   await page.getByLabel('What the document prints for R1').fill('10K');
   await page.getByLabel('Note (optional)').fill('The 0 is faint');
@@ -225,14 +226,14 @@ test('a correction changes the master list and is reported', async ({ page }) =>
 test('a part marked right is counted, and the workspace remembers it', async ({ page }) => {
   await stubMasterList(page);
   await upload(page);
-  await page.getByRole('button', { name: 'Check the parts against the document' }).click();
+  await page.getByRole('link', { name: /Check the parts against the document/ }).click();
   await expect(page.getByText('0 of 2 parts checked; 1 flagged')).toBeVisible();
 
   await row(page, 'R2').getByRole('button', { name: 'Looks right' }).click();
 
   await expect(page.getByText('1 of 2 parts checked.')).toBeVisible();
+  // The check has its own address, so a reload stays on it.
   await page.reload();
-  await page.getByRole('button', { name: 'Check the parts against the document' }).click();
   await expect(row(page, 'R2').getByRole('button', { name: 'Checked' })).toHaveAttribute(
     'aria-pressed',
     'true',
@@ -252,7 +253,7 @@ test("a value that isn't a part is explained where it was typed", async ({ page 
     }),
   );
   await upload(page);
-  await page.getByRole('button', { name: 'Check the parts against the document' }).click();
+  await page.getByRole('link', { name: /Check the parts against the document/ }).click();
   await row(page, 'R1').getByRole('button', { name: 'Wrong?' }).click();
   await page.getByLabel('What the document prints for R1').fill('zz');
   await page.getByRole('checkbox', { name: /Tell Star Ground/ }).uncheck();
@@ -288,7 +289,7 @@ test('parts read down each column, as the document lists them', async ({ page })
     route.fulfill({ json: listOf(project({ reviews: [], parts })) }),
   );
   await upload(page);
-  await page.getByRole('button', { name: 'Check the parts against the document' }).click();
+  await page.getByRole('link', { name: /Check the parts against the document/ }).click();
 
   await expect(page.locator('li[data-ref]')).toHaveCount(parts.length);
   const order = await page
@@ -303,7 +304,7 @@ test('bench mode places parts in build order from the keyboard, and keeps them',
   await stubMasterList(page);
   await upload(page);
 
-  await page.getByRole('button', { name: 'Build it, part by part' }).click();
+  await page.getByRole('link', { name: 'Build it, part by part' }).click();
   await expect(page.getByRole('heading', { name: 'Build Fuzz' })).toBeVisible();
   await expect(page.getByText('0 of 2 parts placed.')).toBeVisible();
   await expect(row(page, 'R1')).toHaveAttribute('aria-current', 'step');
@@ -321,7 +322,6 @@ test('bench mode places parts in build order from the keyboard, and keeps them',
   await expect(page.getByText('1 of 2 parts placed.')).toBeVisible();
 
   await page.reload();
-  await page.getByRole('button', { name: 'Build it, part by part' }).click();
   await expect(page.getByText('1 of 2 parts placed.')).toBeVisible();
   await expect(row(page, 'R2')).toHaveAttribute('aria-current', 'step');
 
@@ -349,7 +349,7 @@ test('parts counted by value are checked and placed with the rest', async ({ pag
   await page.route('**/api/master-list', (route) => route.fulfill({ json: listOf(tonepad) }));
   await upload(page);
 
-  await page.getByRole('button', { name: 'Check the parts against the document' }).click();
+  await page.getByRole('link', { name: /Check the parts against the document/ }).click();
   const counted = page.getByRole('list', { name: 'Counted by value' });
   await expect(counted.locator('li')).toHaveText([/2 ×\s*47/, /3 ×\s*100n/]);
   await expect(page.getByText('0 of 6 parts checked.')).toBeVisible();
@@ -357,8 +357,10 @@ test('parts counted by value are checked and placed with the rest', async ({ pag
   await row(page, '#Resistors 47').getByRole('button', { name: 'Looks right' }).click();
   await expect(page.getByText('2 of 6 parts checked.')).toBeVisible();
 
-  await page.getByRole('button', { name: 'Back to the workspace' }).click();
-  await page.getByRole('button', { name: 'Build it, part by part' }).click();
+  await page
+    .getByRole('navigation', { name: 'Project pages' })
+    .getByRole('link', { name: 'Build' })
+    .click();
   await expect(page.getByText('0 of 6 parts placed.')).toBeVisible();
   const order = await page
     .locator('li[data-ref]')
@@ -371,7 +373,6 @@ test('parts counted by value are checked and placed with the rest', async ({ pag
   await expect(page.getByText('2 of 6 parts placed.')).toBeVisible();
   await expect(row(page, '#Capacitors 100n')).toHaveAttribute('aria-current', 'step');
   await page.reload();
-  await page.getByRole('button', { name: 'Build it, part by part' }).click();
   await expect(row(page, '#Resistors 47').getByRole('checkbox')).toBeChecked();
 });
 
@@ -397,7 +398,7 @@ test("a catalog document's board lights up the part at hand, and the other way r
     buffer: Buffer.concat([DOCUMENT, Buffer.from('% downloaded 2026-10-31 12:00\n')]),
   });
   await page.getByRole('button', { name: 'Add', exact: true }).click();
-  await page.getByRole('button', { name: 'Check the parts against the document' }).click();
+  await page.getByRole('link', { name: /Check the parts against the document/ }).click();
 
   const mark = page.getByRole('button', { name: 'R1 on the board: show it in the parts list' });
   await expect(mark).toBeAttached();
@@ -411,8 +412,10 @@ test("a catalog document's board lights up the part at hand, and the other way r
   await expect(mark).toHaveClass(/selected/);
 
   // Bench mode brings the board's mark for the part at hand into view.
-  await page.getByRole('button', { name: 'Back to the workspace' }).click();
-  await page.getByRole('button', { name: 'Build it, part by part' }).click();
+  await page
+    .getByRole('navigation', { name: 'Project pages' })
+    .getByRole('link', { name: 'Build' })
+    .click();
   await expect(
     page.getByRole('button', { name: 'R1 on the board: show it in the parts list' }),
   ).toHaveClass(/selected/);
@@ -425,7 +428,7 @@ test('a document the catalog lacks has no board marks', async ({ page }) => {
     if (r.url().includes('/catalog/boards/')) asked.push(r.url());
   });
   await upload(page);
-  await page.getByRole('button', { name: 'Check the parts against the document' }).click();
+  await page.getByRole('link', { name: /Check the parts against the document/ }).click();
   await expect.poll(() => asked.length).toBe(1);
   await expect(page.getByRole('button', { name: /on the board/ })).toHaveCount(0);
 });

@@ -23,7 +23,7 @@ for (const path of [
 
 test('the catalog lists every build, with its mark', async ({ page }) => {
   await page.goto('/catalog/');
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Circuit catalog.');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Circuit catalog');
   await expect(page.getByText('2 builds, 1 verified')).toBeVisible();
   await expect(page.getByRole('link', { name: /The Clap.*Verified/ })).toBeVisible();
   await expect(page.getByRole('link', { name: /Gran Mango 3\.1416.*Unverified/ })).toBeVisible();

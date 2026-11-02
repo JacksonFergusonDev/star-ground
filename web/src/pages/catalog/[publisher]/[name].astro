@@ -5,7 +5,7 @@
 import type { GetStaticPaths } from 'astro';
 import { getCollection } from 'astro:content';
 import Icon from 'house-style/astro/Icon.astro';
-import Base from '../../../layouts/Base.astro';
+import App from '../../../layouts/App.astro';
 import type { CatalogEntry } from '../../../lib/catalog';
 import { partCount, publisherLink, publishers } from '../../../lib/catalog';
 
@@ -29,25 +29,30 @@ const checked = new Date(data.checked).toLocaleDateString('en', {
 const several = data.builds.length > 1;
 ---
 
-<Base
+<App
   title={`${data.title} (${publisher})`}
   description={`The parts list of ${publisher}'s ${data.title} build document, ${partCount(entry)} parts, ready to add to a Star Ground shopping list.`}
   noindex
 >
-  <article class="section build" aria-labelledby="build-title">
-    <p class="crumb">
-      <a class="text-link" href="/catalog/">
-        <Icon name="arrow-left" size={16} /> Circuit catalog
-      </a>
-    </p>
-    <p class="eyebrow">{publisher}</p>
-    <h1 id="build-title">{data.title}</h1>
-
-    <p class:list={['mark', { verified: data.verified }]}>
-      {data.verified
-        ? 'Verified: checked by hand against this document.'
-        : 'Unverified: read automatically, and not yet checked by hand.'}
-    </p>
+  <article class="build" aria-labelledby="build-title">
+    <header class="app-head">
+      <nav aria-label="Breadcrumb">
+        <ol class="app-crumbs">
+          <li>
+            <a href="/catalog/">Circuit catalog</a>
+          </li>
+          <li>{publisher}</li>
+        </ol>
+      </nav>
+      <h1 id="build-title" class="app-title">
+        {data.title}
+      </h1>
+      <p class:list={['mark', { verified: data.verified }]}>
+        {data.verified
+          ? 'Verified: checked by hand against this document.'
+          : 'Unverified: read automatically, and not yet checked by hand.'}
+      </p>
+    </header>
 
     <div class="actions">
       <a
@@ -101,30 +106,11 @@ const several = data.builds.length > 1;
       </section>
     ))}
   </article>
-</Base>
+</App>
 
 <style>
   .build {
     max-width: 760px;
-  }
-  .crumb {
-    margin: 0 0 40px;
-  }
-  .eyebrow {
-    margin: 0 0 12px;
-    color: var(--muted);
-    font-family: var(--mono);
-    font-size: var(--fs-label);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-  }
-  h1 {
-    margin: 0 0 20px;
-    font-size: var(--fs-h2);
-    font-weight: 500;
-    letter-spacing: -1.6px;
-    line-height: 1.2;
-    text-wrap: balance;
   }
   .mark {
     margin: 0;

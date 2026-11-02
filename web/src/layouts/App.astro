@@ -1,0 +1,31 @@
+---
+// The app's pages and the catalog's: the sidebar beside the page, in place of
+// the home page's header bar and footer.
+import Head from '../components/Head.astro';
+import Sidebar from '../components/workspace/Sidebar.svelte';
+
+interface Props {
+  title?: string;
+  description: string;
+  noindex?: boolean;
+}
+const props = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <Head {...props} />
+  </head>
+  <body>
+    <a class="hs-skip-link" href="#main">
+      Skip to content
+    </a>
+    <div class="app">
+      <Sidebar client:load path={Astro.url.pathname} />
+      <main id="main" class="app-main">
+        <slot />
+      </main>
+    </div>
+  </body>
+</html>

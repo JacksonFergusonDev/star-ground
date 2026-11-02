@@ -95,15 +95,22 @@ async function paste(page: Page, text: string): Promise<void> {
   await page.getByRole('button', { name: 'Add', exact: true }).click();
 }
 
+/** Opens the shopping list from the projects page, without reloading. */
+async function openList(page: Page): Promise<void> {
+  await page.getByRole('link', { name: /^To buy/ }).click();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Shopping list');
+}
+
 test.beforeEach(async ({ page }) => {
   await page.route('**/api/health', (route) => route.fulfill({ json: { status: 'ok' } }));
   await page.route('**/api/presets', (route) => route.fulfill({ json: catalog }));
 });
 
-test('a pasted list appears on the master list without a Generate button', async ({ page }) => {
+test('a pasted list appears on the shopping list without a Generate button', async ({ page }) => {
   const sent = await stubMasterList(page);
   await page.goto('/app/');
   await paste(page, 'R1 10k\nC1 100x');
+  await openList(page);
 
   const row = page.getByRole('row', { name: /10k/ });
   await expect(row).toContainText('Resistors');
@@ -112,11 +119,11 @@ test('a pasted list appears on the master list without a Generate button', async
   expect(sent.at(-1)?.projects[0]).toMatchObject({ method: 'paste', text: 'R1 10k\nC1 100x' });
 });
 
-test('changing a count updates the master list', async ({ page }) => {
+test('changing a count updates the shopping list', async ({ page }) => {
   const sent = await stubMasterList(page);
   await page.goto('/app/');
   await paste(page, 'R1 10k');
-  await expect(page.getByRole('row', { name: /10k/ })).toBeVisible();
+  await expect.poll(() => sent.length).toBeGreaterThan(0);
 
   await page.getByRole('spinbutton', { name: 'Pedals' }).fill('3');
   await page.getByRole('spinbutton', { name: 'Pedals' }).blur();
@@ -142,22 +149,28 @@ test('the workspace survives a reload', async ({ page }) => {
   await page.goto('/app/');
   await paste(page, 'R1 10k');
   await page.getByRole('textbox', { name: 'Project name' }).fill('Bench fuzz');
+  await openList(page);
   await expect(page.getByRole('row', { name: /10k/ })).toBeVisible();
 
   await page.reload();
 
-  await expect(page.getByRole('textbox', { name: 'Project name' })).toHaveValue('Bench fuzz');
   await expect(page.getByRole('row', { name: /10k/ })).toBeVisible();
+  await page.goto('/app/');
+  await expect(page.getByRole('textbox', { name: 'Project name' })).toHaveValue('Bench fuzz');
 });
 
-test('a removed project leaves the master list', async ({ page }) => {
+test('a removed project leaves the shopping list', async ({ page }) => {
   await stubMasterList(page);
   await page.goto('/app/');
   await paste(page, 'R1 10k');
+  await openList(page);
   await expect(page.getByRole('row', { name: /10k/ })).toBeVisible();
 
+  await page.goBack();
   await page.getByRole('button', { name: /^Remove/ }).click();
+  await page.goto('/app/list/');
 
+  await expect(page.getByText('Add a project and its parts appear here')).toBeVisible();
   await expect(page.getByRole('table')).toHaveCount(0);
 });
 
@@ -254,6 +267,7 @@ test('an upload the server no longer holds is sent again as a file', async ({ pa
   });
   await page.goto('/app/');
   await upload(page, 'Ungula.pdf');
+  await openList(page);
 
   await expect(page.getByRole('row', { name: /10k/ })).toBeVisible();
   expect(bodies[0]).not.toContain('filename=');
@@ -321,17 +335,20 @@ test('a stock CSV goes with each request and adds stock columns', async ({ page 
   });
   await page.goto('/app/');
   await paste(page, 'R1 10k');
+  await page.getByRole('link', { name: /None yet/ }).click();
   await page.getByLabel('Stock CSV').setInputFiles({
     name: 'stock.csv',
     mimeType: 'text/csv',
     buffer: Buffer.from('Category,Part,Qty\nResistors,10k,40\n'),
   });
+  await expect(page.getByText('Subtracting stock.csv from what to buy.')).toBeVisible();
+  await page.goto('/app/list/');
 
   await expect(page.getByRole('columnheader', { name: 'In stock' })).toBeVisible();
   await expect(page.getByText('0 to buy after your stock')).toBeVisible();
   expect(bodies.at(-1)).toContain('filename="stock.csv"');
 
-  await page.reload();
+  await page.goto('/app/stock/');
   await expect(page.getByText('Subtracting stock.csv from what to buy.')).toBeVisible();
 });
 
@@ -339,6 +356,7 @@ test('the list options go with the request', async ({ page }) => {
   const sent = await stubMasterList(page);
   await page.goto('/app/');
   await paste(page, 'R1 10k');
+  await openList(page);
   await expect(page.getByRole('row', { name: /10k/ })).toBeVisible();
 
   await page.getByRole('checkbox', { name: 'Hardware kit' }).uncheck();
@@ -360,7 +378,7 @@ test('a download saves the file the API exports', async ({ page }) => {
   });
   await page.goto('/app/');
   await paste(page, 'R1 10k');
-  await expect(page.getByRole('row', { name: /10k/ })).toBeVisible();
+  await page.goto('/app/export/');
 
   const download = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Shopping list', exact: true }).click();
@@ -397,6 +415,7 @@ test('a bug says so plainly and sends a report in one click', async ({ page }) =
   });
   await page.goto('/app/');
   await paste(page, 'R1 10k');
+  await openList(page);
 
   await expect(page.getByRole('heading', { name: "Couldn't read Blender" })).toBeVisible();
   await expect(page.getByText(BUG_MESSAGE)).toBeVisible();
@@ -418,6 +437,7 @@ test('without reports set up, the GitHub issue link carries the code', async ({ 
   );
   await page.goto('/app/');
   await paste(page, 'R1 10k');
+  await openList(page);
   await page.getByRole('button', { name: 'Send report' }).click();
 
   await expect(page.getByText("This server can't take reports.")).toBeVisible();
@@ -445,6 +465,7 @@ test("a public GitHub issue names a link's site, not the link", async ({ page })
   );
   await page.goto('/app/');
   await paste(page, 'R1 10k');
+  await openList(page);
 
   const href = await page.getByRole('link', { name: /Open a GitHub issue/ }).getAttribute('href');
   expect(href).not.toContain('secret');
@@ -453,7 +474,7 @@ test("a public GitHub issue names a link's site, not the link", async ({ page })
   );
 });
 
-test('a bug building the master list offers a report', async ({ page }) => {
+test('a bug building the shopping list offers a report', async ({ page }) => {
   await page.route('**/api/master-list', (route) =>
     route.fulfill({
       status: 500,

@@ -13,7 +13,6 @@
   import { count, placedOf } from '../../lib/workspace.svelte';
   import type { Box } from './DocumentViewer.svelte';
   import DocumentViewer from './DocumentViewer.svelte';
-  import Icon from './Icon.svelte';
 
   let {
     card,
@@ -21,7 +20,6 @@
     load,
     onPlace,
     onStartOver,
-    onBack,
   }: {
     card: Card;
     project: ProjectResult;
@@ -29,7 +27,6 @@
     load: (() => Promise<ArrayBuffer>) | null;
     onPlace: (ref: string, placed: boolean) => void;
     onStartOver: () => void;
-    onBack: () => void;
   } = $props();
 
   type Row = { label: string; value: string; count: number };
@@ -115,21 +112,13 @@
     event.preventDefault();
   }
 
-  let section = $state<HTMLElement>();
-  onMount(() => {
-    section?.scrollIntoView({ block: 'start' });
-    show(current);
-  });
+  onMount(() => show(current));
 </script>
 
 <svelte:window onkeydown={keydown} />
 
-<section class="bench" aria-labelledby="bench-title" bind:this={section}>
+<div class="bench">
   <div class="head">
-    <button class="back" type="button" onclick={onBack}>
-      Back to the workspace <Icon name="arrow-left" size={14} />
-    </button>
-    <h2 id="bench-title">Build {project.label}</h2>
     <p class="note">
       Lowest parts first, so the board sits flat as you go. Press <kbd>Space</kbd> to place the current
       part and move to the next, and the arrow keys to move between parts.
@@ -201,20 +190,17 @@
       {/each}
     </ol>
   </div>
-</section>
+</div>
 
 <style>
   .bench {
     display: grid;
     gap: 20px;
-    margin-top: 40px;
-    scroll-margin-top: calc(var(--hs-bar-height, 0px) + 16px);
   }
   .head {
     display: grid;
     gap: 10px;
   }
-  .back,
   .text-button {
     display: inline-flex;
     gap: 8px;
@@ -228,15 +214,8 @@
     font-size: var(--fs-ui);
     cursor: pointer;
   }
-  .back:hover,
   .text-button:hover {
     color: var(--accent);
-  }
-  h2 {
-    margin: 0;
-    font-size: var(--fs-h3);
-    font-weight: 500;
-    letter-spacing: -0.8px;
   }
   .note {
     margin: 0;

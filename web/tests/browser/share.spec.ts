@@ -79,7 +79,7 @@ test('a share link adds the same projects in another browser', async ({ browser 
     });
   }, JSON.stringify({ cards }));
   const page = await open(mine, []);
-  await page.goto('/app/');
+  await page.goto('/app/export/');
 
   await expect(page.getByText("so 1 upload isn't in the link")).toBeVisible();
   await page.getByRole('button', { name: 'Copy a share link' }).click();
