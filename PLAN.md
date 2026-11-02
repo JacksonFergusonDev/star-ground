@@ -225,7 +225,7 @@ Probed on 2026-10-24: board renders in PedalPCB, GuitarPCB and Tonepad documents
 1. Delete `app.py`, `src/app_state.py`, `.streamlit/` and the Streamlit dependency outright.
 1. Let search engines index the catalog pages and the workspace (drop their `noindex`), and link the catalog from the header bar and the home page.
 1. Update the README (live app link, quick start, project structure) and the house-style install box.
-1. Point the old `star-ground.streamlit.app` at the new site.
+1. Delete the old app from Streamlit Community Cloud. It isn't redirected (decided 2026-11-02): Community Cloud can't send a real redirect, and with no users yet a "moved" page isn't worth keeping Streamlit around for.
 1. Run the launch check from a user's side on documents from each publisher, then post on builder forums.
 
 ## After launch, in order of feedback
