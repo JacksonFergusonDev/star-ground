@@ -1,5 +1,5 @@
 // Builds the Big Muff π board (circuit.ts): places its parts, routes its
-// copper (router.ts), and describes two kinds of current for the animation.
+// copper (router.ts), and describes current paths for the animation.
 //
 // - Ground returns: the ground net is a tree rooted at the star, so each of its
 //   segments knows its distance from the star and which ground pins feed it.
@@ -9,6 +9,7 @@
 
 import {
   BOARD,
+  CLIPPING_STAGES,
   GROUND,
   PARTS,
   SIGNAL_PATH,
@@ -16,6 +17,7 @@ import {
   TONE_BRANCH,
   type PartSpec,
   type Side,
+  type SignalStep,
 } from './circuit';
 import { place, type Pad, type PlacedFootprint } from './footprints';
 import { distance, vec, type Vec } from './geometry';
@@ -59,19 +61,38 @@ interface FlowPad extends Pad {
   last: number;
 }
 
-export interface Board {
+interface FlowGeometry {
+  segments: FlowSegment[];
+  pads: FlowPad[];
+}
+
+interface PulsePath {
+  source: number;
+  length: number;
+}
+
+interface FeedbackFlow {
+  /** Distance along the main signal path to this stage's collector. */
+  offset: number;
+  forward: PulsePath;
+  reverse: PulsePath;
+}
+
+export interface Board extends FlowGeometry {
   width: number;
   height: number;
   star: Vec;
   parts: Part[];
   traces: Trace[];
   jumpers: Jumper[];
-  segments: FlowSegment[];
-  pads: FlowPad[];
   /** Each ground pin's distance to the star, by source id. */
   ground: number[];
   /** The signal's source id and the length of its path. */
-  signal: { source: number; length: number };
+  signal: PulsePath;
+  /** Alternating clipping loops, triggered when a note reaches their stage. */
+  feedback: FeedbackFlow[];
+  /** Supply flow from 9V through its connected resistors. */
+  supply: PulsePath;
   /** Pins the router couldn't reach; empty for a complete board. */
   failed: string[];
 }
@@ -146,7 +167,15 @@ export function buildBoard(): Board {
   const segments: FlowSegment[] = [];
   const pads: FlowPad[] = [];
   const ground = groundFlow(grid, nets.get(GROUND) as RoutedNet, parts, segments, pads);
-  const signal = signalFlow(grid, nets, parts, ground.length, segments, pads);
+  const flow = { segments, pads };
+  const { signal, feedback } = signalFlow(grid, nets, parts, ground.length, flow);
+  const supply = supplyFlow(
+    grid,
+    nets.get(SUPPLY) as RoutedNet,
+    parts,
+    signal.source + 1 + feedback.length * 2,
+    flow,
+  );
 
   return {
     width: BOARD.width,
@@ -159,6 +188,8 @@ export function buildBoard(): Board {
     pads,
     ground,
     signal,
+    feedback,
+    supply,
     failed: routed.flatMap((r) => r.failed.map((p) => `${r.net} at ${p.at.x},${p.at.y}`)),
   };
 }
@@ -320,8 +351,9 @@ function signalRoute(
   grid: Grid,
   nets: Map<string, RoutedNet>,
   parts: Part[],
-  steps: readonly [string, string, string][],
+  steps: readonly SignalStep[],
   start: Vec,
+  end: Vec,
 ): Route {
   const pad = (ref: string, net: string): Vec => {
     const part = parts.find((p) => p.spec.ref === ref) as Part;
@@ -344,6 +376,15 @@ function signalRoute(
     points.push(here);
     inside.push(true);
   }
+  const lastNet = steps[steps.length - 1]?.[2] as string;
+  const net = nets.get(lastNet);
+  const tail = net && treePath(net, grid.cell(here), grid.cell(end));
+  for (const cell of tail?.slice(1, -1) ?? []) {
+    points.push(grid.point(cell));
+    inside.push(false);
+  }
+  points.push(end);
+  inside.push(false);
   return { points, inside };
 }
 
@@ -355,57 +396,62 @@ function lengthsOf(points: Vec[]): number[] {
   return out;
 }
 
+interface FlowRoute extends Route {
+  source: number;
+  remaining: number[];
+  width: number;
+}
+
+// Uses the same geometry for all pulse types, including the actual pad centres.
+function emitFlow(r: FlowRoute, parts: Part[], flow: FlowGeometry): void {
+  for (let i = 1; i < r.points.length; i++) {
+    const a = r.points[i - 1] as Vec;
+    const b = r.points[i] as Vec;
+    if (distance(a, b) < 1e-6) continue;
+    flow.segments.push({
+      a,
+      b,
+      da: r.remaining[i - 1] as number,
+      db: r.remaining[i] as number,
+      first: r.source,
+      last: r.source,
+      width: r.inside[i - 1] ? WIDTH.body : r.width,
+    });
+  }
+  r.points.forEach((at, i) => {
+    for (const part of parts) {
+      const pad = part.footprint.pads.find((q) => distance(q.at, at) < 1e-6);
+      if (pad)
+        flow.pads.push({
+          ...pad,
+          distance: r.remaining[i] as number,
+          first: r.source,
+          last: r.source,
+        });
+    }
+  });
+}
+
 function signalFlow(
   grid: Grid,
   nets: Map<string, RoutedNet>,
   parts: Part[],
   source: number,
-  segments: FlowSegment[],
-  pads: FlowPad[],
-): { source: number; length: number } {
+  flow: FlowGeometry,
+): { signal: PulsePath; feedback: FeedbackFlow[] } {
   const find = (ref: string) => parts.find((p) => p.spec.ref === ref) as Part;
   const padOn = (ref: string, net: string) => {
     const part = find(ref);
     return (part.footprint.pads[part.spec.pins.indexOf(net)] as Pad).at;
   };
-  const main = signalRoute(grid, nets, parts, SIGNAL_PATH, find('IN').spec.at);
-  // Finish along the copper to the output pad.
-  const out = find('OUT').spec.at;
-  const outNet = nets.get('OUT');
-  const last = main.points[main.points.length - 1] as Vec;
-  const tail = outNet && treePath(outNet, grid.cell(last), grid.cell(out));
-  for (const cell of tail?.slice(1, -1) ?? []) {
-    main.points.push(grid.point(cell));
-    main.inside.push(false);
-  }
-  main.points.push(out);
-  main.inside.push(false);
-
+  const main = signalRoute(grid, nets, parts, SIGNAL_PATH, find('IN').spec.at, find('OUT').spec.at);
   const lengths = lengthsOf(main.points);
   const length = lengths[lengths.length - 1] as number;
-  const emit = (r: Route, remaining: (i: number) => number) => {
-    for (let i = 1; i < r.points.length; i++) {
-      const a = r.points[i - 1] as Vec;
-      const b = r.points[i] as Vec;
-      if (distance(a, b) < 1e-6) continue;
-      segments.push({
-        a,
-        b,
-        da: remaining(i - 1),
-        db: remaining(i),
-        first: source,
-        last: source,
-        width: r.inside[i - 1] ? WIDTH.body : WIDTH.signal,
-      });
-    }
-    r.points.forEach((at, i) => {
-      for (const part of parts) {
-        const pad = part.footprint.pads.find((q) => distance(q.at, at) < 1e-6);
-        if (pad) pads.push({ ...pad, distance: remaining(i), first: source, last: source });
-      }
-    });
-  };
-  emit(main, (i) => length - (lengths[i] as number));
+  emitFlow(
+    { ...main, source, remaining: lengths.map((d) => length - d), width: WIDTH.signal },
+    parts,
+    flow,
+  );
 
   // The tone stack's high-pass branch, timed to reach the tone pot's wiper
   // together with the main path.
@@ -414,12 +460,106 @@ function signalFlow(
   const startAt = main.points.findIndex((p) => distance(p, fromC3) < 1e-6);
   const endAt = main.points.findIndex((p) => distance(p, wiper) < 1e-6);
   if (startAt >= 0 && endAt >= 0) {
-    const branch = signalRoute(grid, nets, parts, TONE_BRANCH, fromC3);
+    const branch = signalRoute(grid, nets, parts, TONE_BRANCH, fromC3, wiper);
     const d0 = length - (lengths[startAt] as number);
     const d1 = length - (lengths[endAt] as number);
     const along = lengthsOf(branch.points);
     const total = along[along.length - 1] || 1;
-    emit(branch, (i) => d0 + ((d1 - d0) * (along[i] as number)) / total);
+    emitFlow(
+      {
+        ...branch,
+        source,
+        width: WIDTH.signal,
+        remaining: along.map((d) => d0 + ((d1 - d0) * d) / total),
+      },
+      parts,
+      flow,
+    );
+  }
+
+  // Each note excites one of the two conducting directions. The routes end
+  // back on the transistor, closing the loop along the existing copper.
+  const feedback = CLIPPING_STAGES.map((stage, i): FeedbackFlow => {
+    const collector = padOn(stage.transistor, stage.forward[0]?.[1] as string);
+    const at = main.points.findIndex((p) => distance(p, collector) < 1e-6);
+    const paths = [stage.forward, stage.reverse].map((steps, j): PulsePath => {
+      const from = steps[0]?.[1] as string;
+      const to = steps[steps.length - 1]?.[2] as string;
+      const route = signalRoute(
+        grid,
+        nets,
+        parts,
+        steps,
+        padOn(stage.transistor, from),
+        padOn(stage.transistor, to),
+      );
+      const along = lengthsOf(route.points);
+      const length = along[along.length - 1] as number;
+      const id = source + 1 + i * 2 + j;
+      emitFlow(
+        { ...route, source: id, width: WIDTH.signal, remaining: along.map((d) => length - d) },
+        parts,
+        flow,
+      );
+      return { source: id, length };
+    });
+    return {
+      offset: lengths[at] as number,
+      forward: paths[0] as PulsePath,
+      reverse: paths[1] as PulsePath,
+    };
+  });
+  return { signal: { source, length }, feedback };
+}
+
+// One pulse leaves 9V and fans out along the supply tree, then crosses each
+// supply resistor. Distances decrease away from 9V, so shared copper is drawn
+// once and all branches start together.
+function supplyFlow(
+  grid: Grid,
+  net: RoutedNet,
+  parts: Part[],
+  source: number,
+  flow: FlowGeometry,
+): PulsePath {
+  const resistors = parts.filter((p) => p.spec.kind === 'resistor' && p.spec.pins.includes(SUPPLY));
+  const length = Math.max(
+    ...resistors.map((part) => {
+      const pin = part.spec.pins.indexOf(SUPPLY);
+      const a = part.footprint.pads[pin] as Pad;
+      const b = part.footprint.pads[1 - pin] as Pad;
+      return (net.distance.get(grid.cell(a.at)) as number) + distance(a.at, b.at);
+    }),
+  );
+  for (const path of net.paths) {
+    emitFlow(
+      {
+        points: path.map((cell) => grid.point(cell)),
+        inside: path.slice(1).map(() => false),
+        source,
+        width: net.width,
+        remaining: path.map((cell) => length - (net.distance.get(cell) as number)),
+      },
+      parts,
+      flow,
+    );
+  }
+  for (const part of resistors) {
+    const pin = part.spec.pins.indexOf(SUPPLY);
+    const a = part.footprint.pads[pin] as Pad;
+    const b = part.footprint.pads[1 - pin] as Pad;
+    const d = length - (net.distance.get(grid.cell(a.at)) as number);
+    emitFlow(
+      {
+        points: [a.at, b.at],
+        inside: [true],
+        source,
+        width: net.width,
+        remaining: [d, d - distance(a.at, b.at)],
+      },
+      parts,
+      flow,
+    );
   }
   return { source, length };
 }

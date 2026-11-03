@@ -4,6 +4,8 @@
  * through every stage to the output, and ground returns run home to the star
  * ground. Returns leave their pads timed to reach the star together, so
  * wherever their paths join they meet and travel on as one brighter pulse.
+ * A faint supply pulse fans out from 9V, and notes trigger alternating pulses
+ * through the two clipping stages' feedback loops.
  *
  * It follows house-style's motion rules (GUIDELINES.md): subdued shades of the
  * accent, well below the text in contrast. house-style's `runField` keeps it
@@ -21,6 +23,7 @@ const MAX_EVENTS = 64;
 /** Pulse speeds (units a second), head, and tail (units, at ground speed). */
 const GROUND_SPEED = 9;
 const SIGNAL_SPEED = 30;
+const SUPPLY_SPEED = 7;
 const HEAD = 0.6;
 const TAIL = 7;
 const STAR_PAD = { radius: 1.15, drill: 0.6 };
@@ -204,6 +207,8 @@ export function startCircuitField(
   let time = 0;
   let nextWave = 0;
   let nextSignal = 0;
+  let nextSupply = 0;
+  let reverseFeedback = false;
   let events: PulseEvent[] = [];
   const eventData = new Float32Array(MAX_EVENTS * 4);
   let random = seeded(11);
@@ -287,8 +292,10 @@ export function startCircuitField(
   function prime() {
     random = seeded(11);
     events = [];
+    reverseFeedback = false;
     nextWave = time - Math.max(...board.ground) / GROUND_SPEED;
     nextSignal = time - board.signal.length / SIGNAL_SPEED;
+    nextSupply = time - board.supply.length / SUPPLY_SPEED;
     schedule();
   }
 
@@ -299,7 +306,26 @@ export function startCircuitField(
     while (nextSignal <= time) {
       const arrival = nextSignal + board.signal.length / SIGNAL_SPEED;
       events.push({ source: board.signal.source, arrival, speed: SIGNAL_SPEED, strength: 1 });
+      for (const stage of board.feedback) {
+        const path = reverseFeedback ? stage.reverse : stage.forward;
+        events.push({
+          source: path.source,
+          arrival: nextSignal + (stage.offset + path.length) / SIGNAL_SPEED,
+          speed: SIGNAL_SPEED,
+          strength: 0.5,
+        });
+      }
+      reverseFeedback = !reverseFeedback;
       nextSignal += 3.2 + random() * 2.4;
+    }
+    while (nextSupply <= time) {
+      events.push({
+        source: board.supply.source,
+        arrival: nextSupply + board.supply.length / SUPPLY_SPEED,
+        speed: SUPPLY_SPEED,
+        strength: 0.32,
+      });
+      nextSupply += 8.4;
     }
     while (nextWave <= time) {
       const pins = board.ground.map((_, id) => id).sort(() => random() - 0.5);
@@ -320,7 +346,7 @@ export function startCircuitField(
     let sum = 0.25;
     const arrivals = new Set(
       events
-        .filter((e) => e.source !== board.signal.source && e.arrival <= time)
+        .filter((e) => e.source < board.ground.length && e.arrival <= time)
         .map((e) => e.arrival),
     );
     for (const arrival of arrivals) sum += 0.9 * Math.exp(-(time - arrival) * 2.4);

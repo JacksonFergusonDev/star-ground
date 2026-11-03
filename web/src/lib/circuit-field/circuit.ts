@@ -123,11 +123,14 @@ add('VOLUME', 'pot', '500k', 55, 32, 2, ['VOL_TOP', 'OUT', GROUND], 'n');
 
 export const PARTS: readonly PartSpec[] = parts;
 
+/** A part crossed from one of its nets to another. */
+export type SignalStep = readonly [ref: string, from: string, to: string];
+
 /**
  * The guitar's path through the circuit, from the input jack to the output:
  * each step enters a part on one net and leaves it on another.
  */
-export const SIGNAL_PATH: readonly [ref: string, from: string, to: string][] = [
+export const SIGNAL_PATH: readonly SignalStep[] = [
   ['R1', 'IN', 'Q1IN'],
   ['C1', 'Q1IN', 'Q1B'],
   ['Q1', 'Q1B', 'Q1C'],
@@ -148,7 +151,40 @@ export const SIGNAL_PATH: readonly [ref: string, from: string, to: string][] = [
 ];
 
 /** The tone stack's high-pass branch, which rejoins the path at the tone pot. */
-export const TONE_BRANCH: readonly [ref: string, from: string, to: string][] = [
+export const TONE_BRANCH: readonly SignalStep[] = [
   ['C11', 'Q3C', 'TONE_HP'],
   ['TONE', 'TONE_HP', 'TONE_WIPER'],
+];
+
+/** The two conducting directions of a clipping stage's feedback loop. */
+export interface ClippingStage {
+  transistor: string;
+  forward: readonly SignalStep[];
+  reverse: readonly SignalStep[];
+}
+
+/** Alternating note pulses use the antiparallel diodes in their forward direction. */
+export const CLIPPING_STAGES: readonly ClippingStage[] = [
+  {
+    transistor: 'Q2',
+    forward: [
+      ['D1', 'Q2C', 'CLIP2'],
+      ['C6', 'CLIP2', 'Q2B'],
+    ],
+    reverse: [
+      ['C6', 'Q2B', 'CLIP2'],
+      ['D2', 'CLIP2', 'Q2C'],
+    ],
+  },
+  {
+    transistor: 'Q3',
+    forward: [
+      ['D3', 'Q3C', 'CLIP3'],
+      ['C9', 'CLIP3', 'Q3B'],
+    ],
+    reverse: [
+      ['C9', 'Q3B', 'CLIP3'],
+      ['D4', 'CLIP3', 'Q3C'],
+    ],
+  },
 ];

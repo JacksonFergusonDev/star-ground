@@ -1,9 +1,11 @@
 # Circuit field: the hero's circuit board
 
-The landing page's moving background is a real guitar pedal circuit, the Electro-Harmonix Big Muff π fuzz, drawn as a single-sided circuit board with a star ground. Two kinds of current move through it:
+The landing page's moving background is a real guitar pedal circuit, the Electro-Harmonix Big Muff π fuzz, drawn as a single-sided circuit board with a star ground. Four kinds of pulses move through it:
 
 - **The signal.** Every few seconds a pulse runs from the `IN` pad through each stage of the circuit to the `OUT` pad, the way a played note does.
 - **Ground returns.** Between notes, a few ground pins at a time send a pulse home along the copper to the star ground. They leave timed to arrive together, so where their paths join they merge into one brighter pulse, and the star pad flares when they land.
+- **Supply.** A faint, slow pulse leaves the 9V pad and fans out along the supply copper, then crosses each connected resistor.
+- **Clipping feedback.** When a note reaches Q2 or Q3, a smaller pulse runs through that stage's clipping loop. Successive notes alternate between the antiparallel diodes, each crossed in its conducting direction.
 
 Everything here is Star Ground's own code. It uses house-style's field canvas and pause button (`.hs-field`, `.hs-motion`) and its `runField`, which applies the motion rules to the drawing, but no shared drawing code and no three.js. This README is the handoff for anyone changing it.
 
@@ -24,17 +26,17 @@ Everything here is Star Ground's own code. It uses house-style's field canvas an
 
 ## Files
 
-| File                                  | What it holds                                                                                                                                                      |
-| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `circuit.ts`                          | **The source of truth.** Every part: designator, footprint, value, position, rotation, and the net on each pin. Also `SIGNAL_PATH` and `TONE_BRANCH`.              |
-| `big-muff.cir`                        | The same circuit as a SPICE netlist, runnable in ngspice. `tests/browser/circuit.spec.ts` fails if it and `circuit.ts` disagree.                                   |
-| `footprints.ts`                       | Real through-hole footprints at real sizes: pads in pin order, and silkscreen.                                                                                     |
-| `router.ts`                           | A single-layer grid router that lays the copper and records each net as a tree.                                                                                    |
-| `layout.ts`                           | `buildBoard()`: places parts, routes nets, and derives the traces, jumpers, and current-flow data the renderer needs.                                              |
-| `board.ts`                            | Draws the still board once with Canvas 2D (mask, copper, pads, holes, silkscreen).                                                                                 |
-| `field.ts`                            | `startCircuitField()`: fits the board to the hero, uploads it as a texture, and animates current with raw WebGL2, handing the drawing to house-style's `runField`. |
-| `geometry.ts`                         | Points, rectangles, quarter turns, and a seeded random generator.                                                                                                  |
-| `../../components/CircuitField.astro` | The canvas and pause button, and the script that loads `field.ts` once the page has loaded.                                                                        |
+| File                                  | What it holds                                                                                                                                                             |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `circuit.ts`                          | **The source of truth.** Every part: designator, footprint, value, position, rotation, and the net on each pin. Also `SIGNAL_PATH`, `TONE_BRANCH`, and `CLIPPING_STAGES`. |
+| `big-muff.cir`                        | The same circuit as a SPICE netlist, runnable in ngspice. `tests/browser/circuit.spec.ts` fails if it and `circuit.ts` disagree.                                          |
+| `footprints.ts`                       | Real through-hole footprints at real sizes: pads in pin order, and silkscreen.                                                                                            |
+| `router.ts`                           | A single-layer grid router that lays the copper and records each net as a tree.                                                                                           |
+| `layout.ts`                           | `buildBoard()`: places parts, routes nets, and derives the traces, jumpers, and current-flow data the renderer needs.                                                     |
+| `board.ts`                            | Draws the still board once with Canvas 2D (mask, copper, pads, holes, silkscreen).                                                                                        |
+| `field.ts`                            | `startCircuitField()`: fits the board to the hero, uploads it as a texture, and animates current with raw WebGL2, handing the drawing to house-style's `runField`.        |
+| `geometry.ts`                         | Points, rectangles, quarter turns, and a seeded random generator.                                                                                                         |
+| `../../components/CircuitField.astro` | The canvas and pause button, and the script that loads `field.ts` once the page has loaded.                                                                               |
 
 The pipeline, from netlist to pixels:
 
@@ -175,7 +177,7 @@ The jacks' sleeves and the battery's negative wire land on the star pad itself, 
 
 `TONE_BRANCH` is the high-pass branch, which leaves the main path at `Q3C` and rejoins it at `TONE_WIPER`: `Q3C` → **C11** → `TONE_HP` → **TONE** → `TONE_WIPER`.
 
-On the board, the animated route follows the actual copper between parts (through the net's routed tree) and cuts straight through each part from the pad it enters to the pad it leaves. The feedback parts, the bias resistors, the diodes, and the supply don't carry the animated signal; they're part of the circuit but not the path a note takes.
+On the board, the animated route follows the actual copper between parts (through the net's routed tree) and cuts straight through each part from the pad it enters to the pad it leaves. Separate pulses animate the supply and the clipping feedback through D1 to D4 and C6/C9. The remaining bias and passive feedback parts stay still. These pulses illustrate the circuit's paths; their timing and brightness are chosen for readability, not calculated by an electrical simulation.
 
 ## The board layout
 
@@ -237,6 +239,10 @@ So the head is sharp (`HEAD` = 0.6 units ahead) and the tail trails behind (`TAI
 
 **Signal.** One source id (after the ground pins), with distance measured to the `OUT` pad along the whole route. The tone branch's distances are stretched to start and end where the main path's do, so both reach the tone pot's wiper together.
 
+**Clipping feedback.** Each clipping stage has two additional source ids, one for each conducting direction of its antiparallel diode pair. `CLIPPING_STAGES` lists the parts and nets crossed. Both routes use the actual copper from the transistor to the diode/capacitor chain and back to the transistor. Each note triggers one direction when the main signal reaches that stage's collector, and the next note uses the other direction. The pulses run at signal speed and half its strength. Alternating on notes makes both branches visible without trying to display individual audio cycles.
+
+**Supply.** One additional source id covers the supply tree and the bodies of all resistors connected to it. Its distance is the longest route from 9V through a supply resistor, minus the distance travelled from 9V. A pulse therefore fans out from 9V at a constant speed, with shared copper drawn once. It runs every 8.4 seconds at 7 units/s and 0.32 strength. Only ground-return arrivals flare the star.
+
 ### Drawing
 
 - **The still board** is drawn once per resize with Canvas 2D (`board.ts`) at device resolution and uploaded as a texture. Each frame draws it as one full-screen triangle.
@@ -249,6 +255,9 @@ So the head is sharp (`HEAD` = 0.6 units ahead) and the tail trails behind (`TAI
 | Constant                      | Now                                                                                                                       | Effect                                                   |
 | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
 | `GROUND_SPEED`                | 9 units/s                                                                                                                 | How fast returns travel                                  |
+| `SUPPLY_SPEED`                | 7 units/s                                                                                                                 | How fast the faint supply pulse travels                  |
+| Supply interval and strength  | 8.4 s, 0.32                                                                                                               | Slow background flow from 9V                             |
+| Clipping feedback strength    | 0.5                                                                                                                       | Feedback stays below the main note                       |
 | `SIGNAL_SPEED`                | 30 units/s                                                                                                                | How fast a note crosses the board (about 9 s end to end) |
 | `HEAD`, `TAIL`                | 0.6, 7                                                                                                                    | Pulse shape                                              |
 | Signal interval               | 3.2 to 5.6 s                                                                                                              | `schedule()`                                             |
@@ -281,7 +290,7 @@ So the head is sharp (`HEAD` = 0.6 units ahead) and the tail trails behind (`TAI
 
 ## Checking your work
 
-- **Tests.** `tests/browser/circuit.spec.ts` checks that the SPICE netlist matches `circuit.ts` part for part, that the signal path is unbroken, and that the board routes completely with at most 4 jumpers. It also checks that copper reaches every pad's exact centre, terminal traces approach without a bend at a pad corner, and each animated ground return has a continuous path and distance to the star. `tests/browser/pages.spec.ts` checks that the field's script loads only after the page has. Run them with `pnpm run test:browser` in `web/`.
+- **Tests.** `tests/browser/circuit.spec.ts` checks that the SPICE netlist matches `circuit.ts` part for part, that the signal path is unbroken, and that the board routes completely with at most 4 jumpers. It also checks that copper reaches every pad's exact centre, terminal traces approach without a bend at a pad corner, and each animated ground return has a continuous path and distance to the star. Supply and clipping tests check that pulses stay on the copper or cross a part between its own pads, that every supply resistor is reached, and that the clipping diodes conduct in the chosen direction with each loop timed to its stage. `tests/browser/pages.spec.ts` checks that the field's script loads only after the page has. Run them with `pnpm run test:browser` in `web/`.
 - **Look at the board.** Start the dev server (`pnpm exec astro dev` in `web/`), open the page, and run this in the browser console to draw the board alone, large, over the page:
 
 ```js
@@ -357,7 +366,6 @@ The transistor model is approximate, so treat the numbers as the circuit's chara
 
 - **Values on the silkscreen.** Many DIY boards print values ("47k") beside designators; `PartSpec.value` already has them.
 - **Signal shape.** The signal pulse is the same before and after the clipping stages. It could visibly change after the diodes (brighter, wider, or doubled) to show distortion.
-- **Supply current.** `VCC` isn't animated. A slow, faint flow from the 9V pad into the collector resistors would complete the picture.
 - **Label overlap checks.** Labels are placed by hand; a check in the circuit test for silkscreen overlapping pads or other labels would catch mistakes.
 - **Mid-width overlap.** Around 1000 px wide, the board's left edge sits faintly behind the hero paragraph. The text guard keeps it readable, but the board could shrink or start further right at those widths.
 - **Router speed.** The search is Dijkstra over every cell and heading. An A* heuristic toward the nearest tree cell would make it faster if the board grows.
