@@ -1,0 +1,42 @@
+{
+ "id": "pedalpcb-intelligentrelaybypass",
+ "publisher": "pedalpcb",
+ "title": "Intelligent Relay Bypass",
+ "document": "https://docs.pedalpcb.com/project/PedalPCB-IntelligentRelayBypass.pdf",
+ "page": "https://www.pedalpcb.com/product/pcb395/",
+ "file_name": "PedalPCB-IntelligentRelayBypass.pdf",
+ "sha256": "28c9f9a1c5d830a143912c81061b5fae29183e6be23a9e694bce00835a22e18e",
+ "checked": "2026-11-03T20:54:07+00:00",
+ "read_by_ocr": false,
+ "verified": false,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {"ref": "R1", "count": 1, "category": "Resistors", "value": "10", "location": {"page": 0, "x0": 36.63, "top": 424.1, "x1": 94.19, "bottom": 435.1}},
+    {"ref": "R2", "count": 1, "category": "Resistors", "value": "10k", "location": {"page": 0, "x0": 36.63, "top": 435.1, "x1": 94.19, "bottom": 446.1}},
+    {"ref": "R3", "count": 1, "category": "Resistors", "value": "100k", "location": {"page": 0, "x0": 36.63, "top": 446.1, "x1": 101.01, "bottom": 457.1}},
+    {"ref": "C1", "count": 1, "category": "Capacitors", "value": "100n", "location": {"page": 0, "x0": 36.63, "top": 499.96, "x1": 100.35, "bottom": 510.96}},
+    {"ref": "C2", "count": 1, "category": "Capacitors", "value": "100n", "location": {"page": 0, "x0": 36.63, "top": 510.96, "x1": 100.35, "bottom": 521.96}},
+    {"ref": "C3", "count": 1, "category": "Capacitors", "value": "22n", "location": {"page": 0, "x0": 36.63, "top": 521.96, "x1": 93.53, "bottom": 532.96}},
+    {"ref": "C4", "count": 1, "category": "Capacitors", "value": "100u", "location": {"page": 0, "x0": 36.63, "top": 532.96, "x1": 100.57, "bottom": 543.96}},
+    {"ref": "D1", "count": 1, "category": "Diodes", "value": "1N5817", "location": {"page": 0, "x0": 36.63, "top": 563.37, "x1": 114.87, "bottom": 574.37}},
+    {"ref": "D2", "count": 1, "category": "Diodes", "value": "1N5817", "location": {"page": 0, "x0": 36.63, "top": 574.37, "x1": 114.87, "bottom": 585.37}},
+    {"ref": "IC1", "count": 1, "category": "ICs", "value": "L78L05", "location": {"page": 0, "x0": 36.63, "top": 606.65, "x1": 113.11, "bottom": 617.65}},
+    {"ref": "IC2", "count": 1, "category": "ICs", "value": "ATTINY13A", "location": {"page": 0, "x0": 36.63, "top": 617.65, "x1": 133.79, "bottom": 628.65}},
+    {"ref": "Q1", "count": 1, "category": "Transistors", "value": "2N3904", "location": {"page": 0, "x0": 36.63, "top": 628.65, "x1": 114.87, "bottom": 639.65}},
+    {"ref": "K1", "count": 1, "category": "Relays", "value": "TQ2-L-5V", "location": {"page": 0, "x0": 36.63, "top": 668.12, "x1": 124.99, "bottom": 679.12}},
+    {"ref": "SW1", "count": 1, "category": "Switches", "value": "Momentary Footswitch", "location": {"page": 0, "x0": 36.63, "top": 700.55, "x1": 195.39, "bottom": 711.55}}
+   ]
+  }
+ ],
+ "boards": {
+  "K1": [{"page": 0, "x0": 319.44, "top": 420.81, "x1": 324.12, "bottom": 425.85}, {"page": 0, "x0": 320.39, "top": 461.13, "x1": 328.67, "bottom": 466.17}],
+  "R2": [{"page": 0, "x0": 534.37, "top": 458.61, "x1": 539.4, "bottom": 463.29}],
+  "Q1": [{"page": 0, "x0": 560.28, "top": 461.85, "x1": 566.4, "bottom": 466.17}],
+  "R3": [{"page": 0, "x0": 422.63, "top": 478.41, "x1": 427.31, "bottom": 484.17}],
+  "IC1": [{"page": 0, "x0": 416.28, "top": 536.73, "x1": 423.12, "bottom": 541.05}],
+  "R1": [{"page": 0, "x0": 375.25, "top": 539.25, "x1": 380.64, "bottom": 543.57}],
+  "D1": [{"page": 0, "x0": 339.97, "top": 539.61, "x1": 344.29, "bottom": 542.85}]
+ }
+}
