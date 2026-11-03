@@ -120,14 +120,13 @@ const FOOTPRINTS: Record<PartKind, Footprint> = {
     ],
   },
   // 16 mm board-mount pot, 0.2 inch lug pitch: lug 1, wiper, lug 3. The body
-  // and shaft sit toward -y.
+  // and shaft sit toward -y, with each lug joined to the body outline.
   pot: {
     pads: [pad(-2, 0, 0.5), pad(0, 0, 0.5), pad(2, 0, 0.5)],
     silk: [
       circle(0, -4, 3.15),
       circle(0, -4, 1.05),
-      line(vec(-3.15, -4), vec(-3.15, -1.2)),
-      line(vec(3.15, -4), vec(3.15, -1.2)),
+      ...[-2, 0, 2].map((x) => line(vec(x, -0.65), vec(x, -4 + Math.sqrt(3.15 ** 2 - x ** 2)))),
     ],
   },
   // A wire pad for a jack or the battery, square as off-board pads usually are.

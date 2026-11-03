@@ -5,6 +5,7 @@ import { readFileSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
 import { GROUND, PARTS, SIGNAL_PATH, TONE_BRANCH } from '../../src/lib/circuit-field/circuit';
 import { buildBoard } from '../../src/lib/circuit-field/layout';
+import { distance, type Vec } from '../../src/lib/circuit-field/geometry';
 
 test.skip(
   ({ browserName, isMobile }) => browserName !== 'chromium' || isMobile,
@@ -88,4 +89,57 @@ test('the board routes completely, with few jumpers', () => {
     PARTS.flatMap((p) => p.pins).filter((n) => n === GROUND).length - 1,
   );
   expect(Math.min(...board.ground)).toBeGreaterThan(0);
+});
+
+test('copper reaches every pad at its exact centre', () => {
+  const board = buildBoard();
+  const lines = board.traces.flatMap((trace) =>
+    trace.points.slice(1).map((b, i) => ({ a: trace.points[i] as Vec, b })),
+  );
+  const onLine = (p: Vec, { a, b }: { a: Vec; b: Vec }) =>
+    Math.abs(distance(a, p) + distance(p, b) - distance(a, b)) < 1e-6;
+  for (const part of board.parts) {
+    for (const pad of part.footprint.pads) {
+      expect(
+        lines.some((line) => onLine(pad.at, line)),
+        part.spec.ref,
+      ).toBe(true);
+    }
+  }
+});
+
+test('every animated ground return runs continuously from its pad to the star', () => {
+  const board = buildBoard();
+  board.ground.forEach((length, source) => {
+    const pad = board.pads.find((p) => p.first === source && p.last === source);
+    expect(pad, `ground source ${source}`).toBeDefined();
+    const segments = board.segments
+      .filter((s) => s.first <= source && s.last >= source)
+      .sort((a, b) => b.da - a.da);
+    let at = pad?.at as Vec;
+    let remaining = length;
+    for (const segment of segments) {
+      expect(distance(at, segment.a), `ground source ${source}`).toBeLessThan(1e-6);
+      expect(segment.da).toBeCloseTo(remaining, 6);
+      expect(segment.da - segment.db).toBeCloseTo(distance(segment.a, segment.b), 6);
+      at = segment.b;
+      remaining = segment.db;
+    }
+    expect(at).toEqual(board.star);
+    expect(remaining).toBe(0);
+  });
+});
+
+test('terminal traces approach the centre without a bend at the pad corner', () => {
+  const board = buildBoard();
+  const vertices = board.traces.flatMap((trace) => trace.points);
+  for (const part of board.parts.filter((p) => p.spec.kind === 'terminal')) {
+    for (const pad of part.footprint.pads) {
+      const near = vertices.filter(
+        (p) => Math.abs(p.x - pad.at.x) <= pad.radius && Math.abs(p.y - pad.at.y) <= pad.radius,
+      );
+      expect(near.length, part.spec.ref).toBeGreaterThan(0);
+      for (const p of near) expect(distance(p, pad.at), part.spec.ref).toBeLessThan(1e-6);
+    }
+  }
 });

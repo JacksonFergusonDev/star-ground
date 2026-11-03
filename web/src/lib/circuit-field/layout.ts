@@ -115,19 +115,19 @@ export function buildBoard(): Board {
     return rank(a) - rank(b) || span(a) - span(b);
   });
 
-  const grid = makeGrid(BOARD.width, BOARD.height);
+  const grid = makeGrid(
+    BOARD.width,
+    BOARD.height,
+    parts.flatMap((p) => p.footprint.pads.map((pad) => pad.at)),
+  );
   const routed = route(grid, BOARD.width, BOARD.height, requests);
   const nets = new Map(routed.map((r) => [r.net, r]));
-  const padAt = new Map<number, Vec>();
-  for (const part of parts) {
-    for (const pad of part.footprint.pads) padAt.set(grid.cell(pad.at), pad.at);
-  }
 
   const traces: Trace[] = [];
   const jumpers: Jumper[] = [];
   for (const net of routed) {
     for (const path of net.paths) {
-      let run: Vec[] = [padAt.get(path[0] as number) ?? grid.point(path[0] as number)];
+      let run: Vec[] = [grid.point(path[0] as number)];
       for (let i = 1; i < path.length; i++) {
         const cell = path[i] as number;
         const prev = path[i - 1] as number;
@@ -145,7 +145,7 @@ export function buildBoard(): Board {
 
   const segments: FlowSegment[] = [];
   const pads: FlowPad[] = [];
-  const ground = groundFlow(grid, nets.get(GROUND) as RoutedNet, parts, padAt, segments, pads);
+  const ground = groundFlow(grid, nets.get(GROUND) as RoutedNet, parts, segments, pads);
   const signal = signalFlow(grid, nets, parts, ground.length, segments, pads);
 
   return {
@@ -208,7 +208,6 @@ function groundFlow(
   grid: Grid,
   net: RoutedNet,
   parts: Part[],
-  padAt: Map<number, Vec>,
   segments: FlowSegment[],
   pads: FlowPad[],
 ): number[] {
@@ -271,7 +270,7 @@ function groundFlow(
       const [first, last] = range.get(a) ?? [Infinity, -Infinity];
       if (first <= last) {
         segments.push({
-          a: start === 0 ? (padAt.get(a) ?? grid.point(a)) : grid.point(a),
+          a: grid.point(a),
           b: grid.point(cell),
           da: net.distance.get(a) ?? 0,
           db: net.distance.get(cell) ?? 0,

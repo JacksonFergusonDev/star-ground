@@ -196,6 +196,7 @@ On the board, the animated route follows the actual copper between parts (throug
 | `terminal`     | the pad                                 | Square wire pad for a jack or the battery  |
 | `star`         | the pad                                 | 2.3 unit pad with a silkscreen ring        |
 
+- **Pot outlines.** The body and shaft sit below the row of three solder pads on this board. Each lug has a short silkscreen line joining it to the body outline; the shaft is centred under the wiper.
 - **Labels.** `label` puts the designator north, south, east, or west of the part's outline (default: east of upright parts, north of the rest). Nothing checks labels for overlaps, so look after moving parts.
 
 ### Placement
@@ -210,8 +211,8 @@ The board reads left to right in signal order, the way a builder expects:
 
 `router.ts` lays the copper the way a careful hand layout looks:
 
-- **Grid.** A 0.05 inch grid (`GRID` = 0.5 units). A trace moves in the eight PCB directions only, a 45 degree turn costs a little, a 90 degree turn costs more, and anything sharper is forbidden. Traces keep `CLEARANCE` (0.3 units, 30 mil) from other nets' copper, and pay a little extra to run close to it, so they spread out.
-- **One net at a time.** Each net grows as a tree from its root pin (the star for `GND`, the 9V pad for `VCC`, the first-listed pin otherwise). Each remaining pin, nearest first, is joined to the tree by the cheapest path (Dijkstra over cell and heading). Pads join the tree whole, so traces can meet a pad anywhere on it.
+- **Grid.** A 0.05 inch grid (`GRID` = 0.5 units). The search moves in the eight PCB directions only, a 45 degree turn costs a little, a 90 degree turn costs more, and anything sharper is forbidden. A cell occupied by a pad keeps the pad's exact centre, including electrolytic pads that sit between grid points, so the drawn traces, animated current, and measured distances agree. Traces keep `CLEARANCE` (0.3 units, 30 mil) from other nets' copper, and pay a little extra to run close to it, so they spread out.
+- **One net at a time.** Each net grows as a tree from its root pin (the star for `GND`, the 9V pad for `VCC`, the first-listed pin otherwise). Each remaining pin, nearest first, is joined to the tree by the cheapest path (Dijkstra over cell and heading). Round pads join the tree whole, so traces can meet them anywhere. Square pads join only at their centres, keeping their approach straight instead of adding a bend at a corner. Connections through a round pad to its centre are explicit paths too, keeping the still copper and animated returns continuous all the way to the centre of the star.
 - **Order** (`layout.ts`): short signal nets first, then ground, then the supply. Routing ground or supply first walls the board off and forces long detours.
 - **Jumpers.** When a net can't get through, the search may hop a straight wire jumper (2 to 8 units long) between two free pad sites, at a cost (`JUMPER_COST` = 12) that makes it worth it only for a real detour. Jumpers are drawn as silkscreen lines between two pads, as single-sided boards print them.
 - **Wide copper.** `VCC` and `GND` are 0.6 units wide (60 mil), signals 0.4.
@@ -280,7 +281,7 @@ So the head is sharp (`HEAD` = 0.6 units ahead) and the tail trails behind (`TAI
 
 ## Checking your work
 
-- **Tests.** `tests/browser/circuit.spec.ts` checks that the SPICE netlist matches `circuit.ts` part for part, that the signal path is unbroken, and that the board routes completely with at most 4 jumpers. `tests/browser/pages.spec.ts` checks that the field's script loads only after the page has. Run them with `pnpm run test:browser` in `web/`.
+- **Tests.** `tests/browser/circuit.spec.ts` checks that the SPICE netlist matches `circuit.ts` part for part, that the signal path is unbroken, and that the board routes completely with at most 4 jumpers. It also checks that copper reaches every pad's exact centre, terminal traces approach without a bend at a pad corner, and each animated ground return has a continuous path and distance to the star. `tests/browser/pages.spec.ts` checks that the field's script loads only after the page has. Run them with `pnpm run test:browser` in `web/`.
 - **Look at the board.** Start the dev server (`pnpm exec astro dev` in `web/`), open the page, and run this in the browser console to draw the board alone, large, over the page:
 
 ```js

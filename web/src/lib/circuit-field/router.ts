@@ -62,16 +62,19 @@ export interface Grid {
   point(cell: number): Vec;
 }
 
-export function makeGrid(width: number, height: number): Grid {
+/** Makes a routing grid whose pad cells retain their exact physical centres. */
+export function makeGrid(width: number, height: number, pads: readonly Vec[]): Grid {
   const cols = Math.round(width / GRID) + 1;
   const rows = Math.round(height / GRID) + 1;
+  const cell = (p: Vec) =>
+    Math.min(rows - 1, Math.max(0, Math.round(p.y / GRID))) * cols +
+    Math.min(cols - 1, Math.max(0, Math.round(p.x / GRID)));
+  const centres = new Map(pads.map((p) => [cell(p), p]));
   return {
     cols,
     rows,
-    cell: (p) =>
-      Math.min(rows - 1, Math.max(0, Math.round(p.y / GRID))) * cols +
-      Math.min(cols - 1, Math.max(0, Math.round(p.x / GRID))),
-    point: (cell) => vec((cell % cols) * GRID, Math.floor(cell / cols) * GRID),
+    cell,
+    point: (cell) => centres.get(cell) ?? vec((cell % cols) * GRID, Math.floor(cell / cols) * GRID),
   };
 }
 
@@ -158,10 +161,12 @@ export function route(
       failed: [],
     };
 
-    // A pin's pad joins the tree whole, so traces can meet it anywhere.
+    // Round pads join the tree whole. Square pads take traces at their centre
+    // so the visible approach cannot stop at a corner of the pad.
     const joinPad = (pin: RouterPin) => {
       const centre = grid.cell(pin.at);
       tree[centre] = 1;
+      if (pin.square) return;
       for (let cell = 0; cell < size; cell++) {
         if (owner[cell] !== net || !isPad[cell] || tree[cell]) continue;
         const p = grid.point(cell);
@@ -224,6 +229,18 @@ export function route(
       result.paths.push(cells);
       joinPad(pin);
       joined.push(pin);
+    }
+    // Complete paths that met the tree at a pad's edge. Only keep pad links
+    // reached by a trace; drawing every pad cell would leave copper spokes
+    // protruding beyond otherwise untouched edges of the pad.
+    const connected = new Set(result.paths.flat());
+    const drawn = new Set(result.paths.flatMap((path) => path.slice(0, -1)));
+    for (const cell of connected) {
+      const next = parent.get(cell);
+      if (next === undefined || next < 0 || drawn.has(cell)) continue;
+      result.paths.push([cell, next]);
+      drawn.add(cell);
+      connected.add(next);
     }
     routed.push(result);
   });
