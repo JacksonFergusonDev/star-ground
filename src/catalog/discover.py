@@ -4,9 +4,16 @@ Discovery reads only HTML and XML: sitemaps, product pages and document
 lists. It never requests a document. A product page the sitemap says hasn't
 changed since the last run (`<lastmod>`) isn't fetched again; its links are
 taken from the last run (`PageState`).
+
+A sitemap doesn't say what's gone: PedalPCB's is split into pages that
+overlap and leave out a different few hundred products each night. So a page
+an earlier run read is visited even when the sitemap no longer lists it, and
+its documents are dropped only when the page itself is gone (404 or 410) or
+no longer links them.
 """
 
 import logging
+import re
 from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass, field, replace
 from html.parser import HTMLParser
@@ -14,7 +21,7 @@ from pathlib import PurePosixPath
 from urllib.parse import parse_qs, unquote, urljoin, urlsplit, urlunsplit
 from xml.etree import ElementTree
 
-from src.catalog.client import RETRIES, PoliteClient
+from src.catalog.client import RETRIES, GoneError, PoliteClient
 from src.catalog.sources import FileIndex, Source
 
 logger = logging.getLogger(__name__)
@@ -203,9 +210,15 @@ def _sitemap(client: PoliteClient, url: str) -> ElementTree.Element:
     try:
         return ElementTree.fromstring(content)
     except ElementTree.ParseError as error:
+        title = re.search(rb"<title[^>]*>([^<]*)", content, re.IGNORECASE)
+        answered = (
+            f"a page titled {title[1].decode(errors='replace').strip()!r}"
+            if title
+            else f"something beginning {content[:80]!r}"
+        )
         raise ValueError(
-            f"{url} didn't answer with a sitemap in {RETRIES + 1} tries "
-            f"({error}; it began {content[:80]!r})"
+            f"{url} didn't answer with a sitemap in {RETRIES + 1} tries, "
+            f"but with {answered} ({error})"
         ) from None
 
 
@@ -290,7 +303,8 @@ def discover(
         client: The polite client.
         source: The publisher.
         known: Each page as the last run read it; a product page whose
-            `<lastmod>` hasn't changed isn't fetched again.
+            `<lastmod>` hasn't changed isn't fetched again, and one the
+            sitemap no longer lists is still visited.
         limit: Read at most this many listing pages (a sample).
         spent: Whether the run's time is spent; the pages left keep what
             the last run found on them, and wait for the next run.
@@ -320,6 +334,12 @@ def discover(
     else:
         pages = {}
     pages.update({p.url: None for p in source.document_pages})
+    unlisted = [page for page in known if page not in pages]
+    if unlisted:
+        logger.info(
+            "%d pages read before aren't listed now; visiting them", len(unlisted)
+        )
+    pages.update(dict.fromkeys(unlisted))
     # Pages never read and those the last run ran out of time for go first,
     # so a run out of time carries on where the last one stopped.
     ordered = sorted(
@@ -373,6 +393,10 @@ def discover(
         else:
             try:
                 html = client.get(page).text
+            except GoneError as error:
+                # Its documents are no longer linked, unless another page does.
+                logger.info("[%d/%d] %s", number, len(chosen), error)
+                continue
             # A page failing is reported, and the rest go on.
             except Exception as error:
                 result.failures[page] = str(error)
@@ -391,7 +415,11 @@ def discover(
                 if source.file_index
                 else pdf_links(page, html, source)
             )
-            state = PageState(lastmod, tuple(links))
+            # One the sitemap left out keeps its `<lastmod>`, so it isn't
+            # read again when the sitemap lists it unchanged.
+            state = PageState(
+                lastmod or (before.lastmod if before else None), tuple(links)
+            )
             logger.info(
                 "[%d/%d] %s: %d build documents",
                 number,

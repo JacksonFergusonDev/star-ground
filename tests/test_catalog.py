@@ -377,6 +377,16 @@ def test_a_sitemap_that_never_comes_back_fails_after_its_retries() -> None:
         discover(_client(web), SOURCES[Publisher.PEDALPCB])
 
 
+def test_a_sitemap_that_never_comes_back_is_named_by_its_title() -> None:
+    web = _pedalpcb_web()
+    web._pages["https://www.pedalpcb.com/sitemap_index.xml"] = [
+        _Response(body=b"<html><head><title> Just a moment </title></head><body><p>")
+    ] * (RETRIES + 1)
+
+    with pytest.raises(ValueError, match="a page titled 'Just a moment'"):
+        discover(_client(web), SOURCES[Publisher.PEDALPCB])
+
+
 def test_discovery_walks_only_product_sitemaps() -> None:
     web = _pedalpcb_web()
 
@@ -701,9 +711,8 @@ def test_a_listed_document_found_not_to_be_a_build_is_removed(
     assert [e.name for e in entries] == ["drive.json"]
 
 
-def test_a_document_no_longer_linked_is_removed(tmp_path: Path, run: Any) -> None:
-    run(_docs(_pedalpcb_web()), lambda upload: _reading())
-    web = _docs(_pedalpcb_web())
+def _without_fuzz(web: _Web) -> _Web:
+    """The sitemap as it is some nights: without Fuzz's page."""
     web._pages["https://www.pedalpcb.com/product-sitemap.xml"] = [
         _Response(
             body=_PRODUCTS.replace(
@@ -711,6 +720,49 @@ def test_a_document_no_longer_linked_is_removed(tmp_path: Path, run: Any) -> Non
                 b"",
             )
         )
+    ]
+    return web
+
+
+def test_a_page_the_sitemap_leaves_out_keeps_its_builds(
+    tmp_path: Path, run: Any
+) -> None:
+    run(_docs(_pedalpcb_web()), lambda upload: _reading())
+    web = _without_fuzz(_docs(_pedalpcb_web()))
+
+    reporter = run(web, lambda upload: _reading())
+
+    # Visited, since the sitemap can't say it's gone.
+    assert "https://www.pedalpcb.com/product/fuzz/" in web.urls()
+    assert (tmp_path / "builds" / "pedalpcb" / "fuzz.json").exists()
+    assert Outcome.REMOVED not in {e.outcome for e in reporter.tally.events}
+    state = State.load(tmp_path / "state" / "pedalpcb.json")
+    assert state.pages["https://www.pedalpcb.com/product/fuzz/"].lastmod == "2026-01-01"
+
+
+def test_a_document_whose_page_is_gone_is_removed(tmp_path: Path, run: Any) -> None:
+    run(_docs(_pedalpcb_web()), lambda upload: _reading())
+    web = _without_fuzz(_docs(_pedalpcb_web()))
+    web._pages["https://www.pedalpcb.com/product/fuzz/"] = [_Response(404)]
+
+    reporter = run(web, lambda upload: _reading())
+
+    assert not (tmp_path / "builds" / "pedalpcb" / "fuzz.json").exists()
+    assert Outcome.REMOVED in {e.outcome for e in reporter.tally.events}
+    state = State.load(tmp_path / "state" / "pedalpcb.json")
+    assert "https://www.pedalpcb.com/product/fuzz/" not in state.pages
+
+
+def test_a_document_its_page_no_longer_links_is_removed(
+    tmp_path: Path, run: Any
+) -> None:
+    run(_docs(_pedalpcb_web()), lambda upload: _reading())
+    web = _docs(_pedalpcb_web())
+    web._pages["https://www.pedalpcb.com/product-sitemap.xml"] = [
+        _Response(body=_PRODUCTS.replace(b"2026-01-01", b"2026-03-03"))
+    ]
+    web._pages["https://www.pedalpcb.com/product/fuzz/"] = [
+        _Response(body=b"<p>Sold out</p>")
     ]
 
     reporter = run(web, lambda upload: _reading())
