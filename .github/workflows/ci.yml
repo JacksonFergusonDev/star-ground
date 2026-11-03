@@ -1,9 +1,9 @@
 name: CI
 
+# Pushes to main run it through deploy.yml, which deploys what passes, and
+# version tags through docker-publish.yml.
 on:
   workflow_call:
-  push:
-    branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
 
