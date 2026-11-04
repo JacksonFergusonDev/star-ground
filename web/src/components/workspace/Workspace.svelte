@@ -385,6 +385,7 @@
     updating={listing.updating}
     error={listing.error}
     options={workspace.options}
+    display={workspace.display}
     showHref={(index, ref) => {
       const id = listing.listed[index];
       const listed = id ? workspace.find(id) : undefined;
