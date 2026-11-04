@@ -10,6 +10,7 @@ import type {
   MasterListResult,
   ProjectResult,
 } from './api';
+import type { Paint } from './enclosure';
 import type { BandCount, Notation } from './parts';
 import type { Failure, Stock } from './server';
 
@@ -57,6 +58,8 @@ export interface Card {
   checks: Record<string, Record<string, Check>>;
   /** The parts placed in bench mode, by build ('' for a document with one). */
   placed: Record<string, string[]>;
+  /** The enclosure's paint; none until the builder picks one (see `paintOf`). */
+  paint?: Paint | null;
 }
 
 const STORAGE_KEY = 'star-ground.workspace.v1';
