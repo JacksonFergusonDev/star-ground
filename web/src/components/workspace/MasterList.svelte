@@ -54,7 +54,8 @@
 </script>
 
 <div class="master" aria-busy={updating}>
-  {#if updating}<SignalPulse label="Updating…" />{/if}
+  <!-- prettier-ignore -->
+  <p class="state" aria-live="polite">{#if updating}<SignalPulse label="Updating…" />{/if}</p>
 
   {#if error}
     <p class="problem" role="alert">{error.message}</p>
@@ -237,6 +238,7 @@
     letter-spacing: 0.08em;
     text-transform: uppercase;
   }
+  .state,
   .summary,
   .note,
   .notes,
@@ -245,6 +247,9 @@
     color: var(--muted);
     font-size: var(--fs-ui);
     line-height: 1.7;
+  }
+  .state:empty {
+    display: none;
   }
   .problem {
     margin: 0;
