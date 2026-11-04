@@ -269,12 +269,14 @@ So the head is sharp (`HEAD` = 0.6 units ahead) and the tail trails behind (`TAI
 
 ### Lifecycle
 
-`CircuitField.astro` imports `field.ts` through house-style's `afterLoad`, after the page's load event once the browser is idle (or a second after load at the latest), so the first screen paints as text. `startCircuitField()` returns nothing when WebGL2 is unavailable (the hero keeps its plain background, and the pause button stays hidden), and otherwise hands its drawing to house-style's `runField`, which follows the motion rules: still for reduced motion, paused off screen and in hidden tabs, stoppable with the pause button, and freed when client-side navigation removes the canvas. When the GPU resets or a phone reclaims memory, the WebGL context is lost; `runField` stops drawing until the browser restores it, then calls the scene's `restore()`, which builds the programs, texture, and buffers again and lays the board out on the next resize. `prime()` back-dates the first events so the first frame already has current in it.
+`CircuitField.astro` imports `field.ts` with the page, then starts drawing through house-style's `afterLoad`, after the page's load event once the browser is idle (or a second after load at the latest), so the first screen paints as text. The `circuit-board` Vite plugin in `astro.config.mjs` runs `buildBoard()` at build time and supplies the result through `virtual:circuit-board`. Visitors download the routed geometry with the drawing code instead of routing it themselves. Fetching the code after load and routing in the browser used to leave a visible gap on refresh before the board and pause button appeared.
+
+`startCircuitField()` returns nothing when WebGL2 is unavailable (the hero keeps its plain background, and the pause button stays hidden), and otherwise hands its drawing to house-style's `runField`, which follows the motion rules: still for reduced motion, paused off screen and in hidden tabs, stoppable with the pause button, and freed when client-side navigation removes the canvas. When the GPU resets or a phone reclaims memory, the WebGL context is lost; `runField` stops drawing until the browser restores it, then calls the scene's `restore()`, which builds the programs, texture, and buffers again and lays the board out on the next resize. `prime()` back-dates the first events so the first frame already has current in it.
 
 ## Rules
 
 - **Keep the circuit real.** Change parts, values, or connections only to match a cited schematic, and update `big-muff.cir` in the same change; the test enforces that they agree. Layout (positions, rotations, labels) is free to change.
-- **No 3D libraries.** Raw WebGL2 only. The whole field is one script of about 25 KB; three.js was roughly 600 KB.
+- **No 3D libraries.** Raw WebGL2 only. The browser downloads the drawing code and routed geometry; it needs neither the router nor three.js.
 - **House-style motion rules.** Below the text in contrast, still for reduced motion, paused off screen, with a working pause button. Don't remove the text guard.
 - **Deterministic.** No `Math.random()`; use `seeded()`, so the board and the motion are the same on every visit and in tests.
 - **Don't copy board artwork.** Circuits are fine to draw; another designer's PCB layout isn't. See [How it got here](#how-it-got-here).
