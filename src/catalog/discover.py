@@ -16,6 +16,7 @@ import logging
 import re
 from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass, field, replace
+from datetime import UTC, datetime
 from html.parser import HTMLParser
 from pathlib import PurePosixPath
 from urllib.parse import parse_qs, unquote, urljoin, urlsplit, urlunsplit
@@ -222,6 +223,25 @@ def _sitemap(client: PoliteClient, url: str) -> ElementTree.Element:
         ) from None
 
 
+def _when(lastmod: str) -> datetime | None:
+    """A `<lastmod>` as a time, in UTC when it gives no zone; None if unreadable."""
+    try:
+        when = datetime.fromisoformat(lastmod.strip())
+    except ValueError:
+        return None
+    return when if when.tzinfo else when.replace(tzinfo=UTC)
+
+
+def _newest(a: str | None, b: str | None) -> str | None:
+    """The later of two `<lastmod>`s; either, when one is missing or unreadable."""
+    if a is None or b is None:
+        return a or b
+    when_a, when_b = _when(a), _when(b)
+    if when_a is None or when_b is None:
+        return b
+    return b if when_b > when_a else a
+
+
 def _sitemap_pages(client: PoliteClient, source: Source) -> dict[str, str | None]:
     """Product pages from the sitemaps, with each one's `<lastmod>`."""
     assert source.sitemap is not None
@@ -251,7 +271,10 @@ def _sitemap_pages(client: PoliteClient, source: Source) -> dict[str, str | None
                     and source.allows(page)
                     and source.product_path in urlsplit(page).path
                 ):
-                    pages[page.strip()] = entry.findtext("{*}lastmod")
+                    # PedalPCB lists some products twice, with different
+                    # dates: the newer one says when it last changed.
+                    page = page.strip()
+                    pages[page] = _newest(pages.get(page), entry.findtext("{*}lastmod"))
     return pages
 
 
@@ -380,13 +403,15 @@ def discover(
                     for listing in known[later].listings:
                         add(listing)
             break
-        if before and lastmod and before.lastmod == lastmod:
+        # Only a later date is a change: one the same or earlier is the
+        # sitemap listing the page from an older copy.
+        if before and lastmod and _newest(before.lastmod, lastmod) == before.lastmod:
             logger.info(
                 "[%d/%d] %s unchanged since %s; %d documents as before",
                 number,
                 len(chosen),
                 page,
-                lastmod,
+                before.lastmod,
                 len(before.listings),
             )
             state = replace(before, postponed=False)

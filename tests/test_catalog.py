@@ -414,6 +414,40 @@ def test_a_page_unchanged_since_the_last_run_is_not_fetched() -> None:
     assert fuzz.document in found.listings
 
 
+def test_a_page_listed_twice_takes_its_newer_date() -> None:
+    web = _pedalpcb_web()
+    fuzz = "https://www.pedalpcb.com/product/fuzz/"
+    web._pages["https://www.pedalpcb.com/product-sitemap.xml"] = [
+        _Response(
+            body=_PRODUCTS.replace(
+                b"</urlset>",
+                f"<url><loc>{fuzz}</loc><lastmod>2025-06-01</lastmod></url></urlset>".encode(),
+            )
+        )
+    ]
+
+    found = discover(_client(web), SOURCES[Publisher.PEDALPCB])
+
+    assert found.pages[fuzz].lastmod == "2026-01-01"
+
+
+def test_a_page_listed_with_an_older_date_is_not_fetched() -> None:
+    web = _pedalpcb_web()
+    fuzz = Listing(
+        "https://docs.pedalpcb.com/project/Fuzz.pdf",
+        "https://www.pedalpcb.com/product/fuzz/",
+        "Fuzz.pdf",
+    )
+    page = "https://www.pedalpcb.com/product/fuzz/"
+    known = {page: PageState("2026-05-05T10:00:00+00:00", (fuzz,))}
+
+    found = discover(_client(web), SOURCES[Publisher.PEDALPCB], known)
+
+    assert page not in web.urls()
+    assert found.pages[page].lastmod == "2026-05-05T10:00:00+00:00"
+    assert fuzz.document in found.listings
+
+
 def test_a_page_that_fails_is_reported_and_the_rest_go_on() -> None:
     web = _pedalpcb_web()
     web._pages["https://www.pedalpcb.com/product/fuzz/"] = [_Response(500)] * 5
