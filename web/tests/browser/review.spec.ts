@@ -11,6 +11,7 @@ import type {
   PartReportIn,
   ProjectResult,
 } from '../../src/lib/api';
+import { hoverProblems } from './hover';
 
 const PAGE_HEIGHT = 792;
 
@@ -238,6 +239,21 @@ test('a part marked right is counted, and the workspace remembers it', async ({ 
     'aria-pressed',
     'true',
   );
+});
+
+test.describe('pointing at the check page', () => {
+  // The hover rule (hover.spec.ts) on the page only this file can open.
+  test.use({ reducedMotion: 'no-preference' });
+
+  test('every control reacts with a fade', async ({ page, browserName, isMobile }) => {
+    test.skip(browserName !== 'chromium' || isMobile, 'Hovering is a desktop pointer.');
+    await stubMasterList(page);
+    await upload(page);
+    await page.getByRole('link', { name: /Check the parts against the document/ }).click();
+    await row(page, 'R1').getByRole('button', { name: 'Wrong?' }).click();
+    await expect(page.getByText('0 of 2 parts checked; 1 flagged')).toBeVisible();
+    expect(await hoverProblems(page)).toEqual([]);
+  });
 });
 
 test("a value that isn't a part is explained where it was typed", async ({ page }) => {

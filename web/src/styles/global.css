@@ -226,7 +226,28 @@ h3 {
 
   display: grid;
   grid-template-columns: 248px minmax(0, 1fr);
-  min-height: 100vh;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+}
+/*
+ * On a laptop the page scrolls inside its own column rather than the window,
+ * so the overscroll bounce at either end moves the page and never the
+ * sidebar. On phones the window scrolls, under the sidebar's bar.
+ */
+.app-scroll {
+  /* Holds what's positioned inside the page, such as screen-reader-only
+     labels, which would otherwise hang below the window and let it scroll. */
+  position: relative;
+  min-width: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scroll-behavior: smooth;
+}
+/* The window never scrolls on a laptop, so a wheel over the sidebar moves nothing. */
+html:has(.app) {
+  overflow: hidden;
+  overscroll-behavior: none;
 }
 .app-main {
   width: 100%;
@@ -244,8 +265,66 @@ h3 {
   color: var(--text);
   background: transparent;
 }
-.app .hs-button:not(.hs-button--primary):hover {
-  border-color: var(--muted);
+
+/*
+ * How the app answers the pointer, in one place, so a new element follows it
+ * without asking (tests/browser/hover.spec.ts checks every page):
+ *
+ * - Every change of colour fades in over 0.2s instead of snapping. A component
+ *   that animates something else sets its own `transition`, which replaces
+ *   this one.
+ * - A link's text, or a disclosure's summary, turns the accent green, unless
+ *   it's a button or a card.
+ * - A button, a card, or a field lightens its border to a dim white, never
+ *   green: house-style's cards lighten their border, and never lift or glow.
+ *   A card is any element with the `hover-card` class that the pointer can act
+ *   on. One that's chosen, pressed or current keeps its accent border.
+ * - A field lights up only under the pointer itself. Browsers also count a
+ *   field as hovered while its label is, so a field whose label sits just
+ *   before it (the app's way) stays dark while the label is pointed at.
+ *
+ * Green on hover is for text. A border or background in the accent marks what
+ * is chosen or current, never what's under the pointer.
+ *
+ * The two hover colours are `!important` because they're rules for the whole
+ * app: a component's own scoped selector for a resting colour (Svelte's
+ * classes, Astro's attributes) is often more specific than any selector here,
+ * and would otherwise quietly win. Chosen states are left out by `:not()`.
+ */
+/* Pseudo-elements can't sit inside :where(), so they're listed beside it; a
+   file field's button fades with the box around it, as one. */
+.app :where(*),
+.app ::before,
+.app ::after,
+.app ::file-selector-button {
+  transition-duration: 0.2s;
+  transition-property: color, background-color, border-color, outline-color, fill, stroke, opacity;
+  transition-timing-function: ease;
+}
+.app :is(a[href]:not(.hs-button, .hover-card), summary):hover {
+  color: var(--accent) !important;
+}
+.app
+  :is(.hs-button, button, input, select, textarea, .hover-card):not(
+    .hs-button--primary,
+    .selected,
+    .current,
+    [aria-current],
+    [aria-pressed='true'],
+    [aria-expanded='true'],
+    :checked,
+    :disabled,
+    label:hover + *
+  ):hover {
+  border-color: var(--muted) !important;
+}
+/* A checkbox's or radio's label takes its click, so the label answers. */
+.app label:has(input:is([type='checkbox'], [type='radio']):not(:checked, :disabled)):hover,
+.app label:has(input:is([type='checkbox'], [type='radio']):not(:checked, :disabled)):hover > span {
+  color: var(--text) !important;
+}
+.app input[type='file']:not(label:hover + *):hover::file-selector-button {
+  border-color: var(--muted) !important;
 }
 .app-head {
   display: grid;
@@ -338,6 +417,16 @@ h3 {
 
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: auto 1fr;
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
+  }
+  .app-scroll {
+    overflow: visible;
+  }
+  html:has(.app) {
+    overflow: visible;
+    overscroll-behavior: auto;
   }
   .app-main {
     padding: 24px 16px 64px;

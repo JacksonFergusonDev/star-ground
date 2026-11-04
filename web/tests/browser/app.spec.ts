@@ -182,10 +182,38 @@ test('each project shows its pedal, with knobs named from its pots, in a paint t
   const pedal = page.getByRole('img', { name: /^Pasted list, painted/ });
   await expect(pedal).toHaveAccessibleName(/3 knobs \(VOLUME, GAIN\), 1 toggle$/);
   await page.getByText('Paint', { exact: true }).click();
-  await page.getByRole('radio', { name: 'Red' }).check();
+  await page.getByRole('radio', { name: 'Red', exact: true }).check();
   await expect(pedal).toHaveAccessibleName(/^Pasted list, painted red,/);
+  await page.getByRole('radio', { name: 'Hammered', exact: true }).check();
+  await expect(pedal).toHaveAccessibleName(/^Pasted list, painted red with a hammered finish,/);
   await page.reload();
-  await expect(page.getByRole('img', { name: /^Pasted list, painted red,/ })).toBeVisible();
+  await expect(
+    page.getByRole('img', { name: /^Pasted list, painted red with a hammered finish,/ }),
+  ).toBeVisible();
+});
+
+test('a reload shows the list as last built, without reading the documents again', async ({
+  page,
+}) => {
+  const sent = await stubMasterList(page);
+  await page.goto('/app/');
+  await paste(page, 'R1 10k');
+  await expect(page.getByRole('link', { name: /^To buy/ })).toContainText('1');
+  expect(sent).toHaveLength(1);
+
+  // A paint changes nothing the list is built from, so nothing is sent.
+  await page.getByText('Paint', { exact: true }).click();
+  await page.getByRole('radio', { name: 'Blue', exact: true }).check();
+  await page.reload();
+  await expect(page.getByRole('link', { name: /^To buy/ })).toContainText('1');
+  await expect(page.getByRole('link', { name: 'Build it, part by part' })).toBeVisible();
+  await page.waitForTimeout(800); // longer than the list's pause before it asks
+  expect(sent).toHaveLength(1);
+
+  // A change the list depends on builds it again.
+  await page.getByRole('spinbutton').fill('2');
+  await page.getByRole('spinbutton').blur();
+  await expect.poll(() => sent.length).toBe(2);
 });
 
 test('changing a count updates the shopping list', async ({ page }) => {

@@ -153,7 +153,7 @@
 
     <div class="foot">
       <p>Your projects stay in this browser.</p>
-      <a href="/">About Star Ground</a>
+      <a href="/"><span class="logo-icon" aria-hidden="true"></span> About Star Ground</a>
       <a href="https://github.com/JacksonFergusonDev/star-ground">
         <Icon name="brand-github" size={14} /> GitHub
       </a>
@@ -314,6 +314,16 @@
     align-items: center;
     justify-self: start;
     color: var(--muted);
+  }
+  /* The site's own logo, drawn in the text's colour like the icons beside it:
+     the logo file is a luminance mask, so its light strokes show and its
+     dark fill drops away. */
+  .logo-icon {
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
+    background-color: currentcolor;
+    mask: url('/favicon.svg') center / contain no-repeat luminance;
   }
   .foot a:hover {
     color: var(--accent);

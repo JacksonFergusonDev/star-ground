@@ -2,8 +2,8 @@
   // One project: its name, how many to build, where its parts list comes from,
   // and the choices its document asks for (a build, OCR) on the card itself.
   import type { ProjectResult } from '../../lib/api';
-  import { PAINTS, faceOf, paintOf } from '../../lib/enclosure';
-  import type { Paint } from '../../lib/enclosure';
+  import { FINISHES, PAINTS, faceOf, finishOf, paintOf } from '../../lib/enclosure';
+  import type { Finish, Paint } from '../../lib/enclosure';
   import type { Card } from '../../lib/workspace.svelte';
   import { blocker, builds, count, placedOf } from '../../lib/workspace.svelte';
   import BugNotice from './BugNotice.svelte';
@@ -49,6 +49,8 @@
     );
   });
   const paints = Object.entries(PAINTS) as [Paint, (typeof PAINTS)[Paint]][];
+  const finish = $derived(finishOf(card.finish));
+  const finishes = Object.entries(FINISHES) as [Finish, string][];
   const waiting = $derived(blocker(card));
   const ocr = $derived(card.reading?.ocr ?? null);
   // What a bug report names: the upload's file name or the link, never the file.
@@ -82,10 +84,20 @@
 
 <li class="card" id={`project-${card.id}`} aria-labelledby={`name-${card.id}`}>
   <div class="pedal">
-    <Enclosure name={card.name} {face} {paint} lit={finished} />
+    <Enclosure name={card.name} {face} {paint} {finish} lit={finished} />
     <details class="paint">
-      <summary>Paint</summary>
-      <fieldset>
+      <summary>
+        <!-- A paint brush, Star Ground's own drawing like the part symbols. -->
+        <svg class="brush" viewBox="0 0 16 16" width="13" height="13" aria-hidden="true">
+          <path d="M14.5 1.5 8.2 7.8" />
+          <path d="m9.6 9.2-2.8-2.8 1.4-1.4 2.8 2.8z" />
+          <path
+            d="M6.8 9.2c-1.6-.2-2.8.7-3.1 2.3-.2 1.2-.8 2-2.2 2.6 2.6.9 5.2.3 6.3-1.4.6-.9.4-2.2-.6-3.1z"
+          />
+        </svg>
+        Paint
+      </summary>
+      <fieldset class="swatches">
         <legend class="visually-hidden">Paint for {card.name}</legend>
         {#each paints as [key, coat] (key)}
           <label class="swatch" title={coat.name}>
@@ -98,6 +110,21 @@
             />
             <span style:background={coat.color}></span>
             <span class="visually-hidden">{coat.name}</span>
+          </label>
+        {/each}
+      </fieldset>
+      <fieldset class="finishes">
+        <legend class="visually-hidden">Finish for {card.name}</legend>
+        {#each finishes as [key, label] (key)}
+          <label class="finish">
+            <input
+              type="radio"
+              name={`finish-${card.id}`}
+              value={key}
+              checked={finish === key}
+              onchange={() => (card.finish = key)}
+            />
+            <span>{label}</span>
           </label>
         {/each}
       </fieldset>
@@ -222,7 +249,16 @@
     justify-items: center;
     align-content: start;
   }
+  /* The picker spans the drawing's width with its toggle centred, so opening
+     it, which widens what's inside, doesn't move the toggle. */
+  .paint {
+    justify-self: stretch;
+  }
   .paint summary {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    justify-content: center;
     color: var(--muted);
     font-family: var(--mono);
     font-size: var(--fs-label);
@@ -234,14 +270,20 @@
   .paint summary::-webkit-details-marker {
     display: none;
   }
-  .paint summary:hover {
-    color: var(--text);
-  }
   .paint[open] summary {
     color: var(--text);
   }
-  .paint fieldset {
+  .brush {
+    flex-shrink: 0;
+    fill: none;
+    stroke: currentcolor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.3;
+  }
+  .swatches {
     display: grid;
+    justify-content: center;
     grid-template-columns: repeat(4, 14px);
     gap: 6px;
     margin: 8px 0 0;
@@ -270,6 +312,49 @@
     border-radius: 50%;
   }
   .swatch input:checked + span {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  .swatch:hover span:not(.visually-hidden) {
+    border-color: var(--text);
+  }
+  .finishes {
+    display: grid;
+    gap: 2px;
+    text-align: center;
+    margin: 10px 0 0;
+    padding: 0;
+    border: 0;
+  }
+  .finish {
+    position: relative;
+    cursor: pointer;
+  }
+  .finish input {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+  .finish span {
+    display: block;
+    padding: 2px 6px;
+    border: 1px solid transparent;
+    border-radius: 3px;
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: var(--fs-label);
+  }
+  .finish:hover span {
+    color: var(--text);
+  }
+  .finish input:checked + span {
+    border-color: var(--accent-border);
+    color: var(--text);
+    background: var(--accent-soft);
+  }
+  .finish input:focus-visible + span {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
   }
