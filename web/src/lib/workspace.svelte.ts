@@ -245,7 +245,15 @@ let shared: Workspace | undefined;
  * both read this one, so the sidebar follows every change the app makes.
  */
 export function workspace(): Workspace {
-  return (shared ??= new Workspace());
+  if (!shared) {
+    shared = new Workspace();
+    // The list as last built, if the projects haven't changed since, so a
+    // reload shows it at once instead of reading every document again.
+    const next = request(shared.cards, shared.options);
+    const saved = next ? savedListing(listingKey(next, shared.stock)) : null;
+    if (saved) Object.assign(listing, saved);
+  }
+  return shared;
 }
 
 /** The shopping list as last built from the workspace, shared like it. */
@@ -255,7 +263,56 @@ export const listing = $state<{
   error: Failure | null;
   /** The cards the list's projects came from, in its order. */
   listed: string[];
-}>({ result: null, updating: false, error: null, listed: [] });
+  /** What the list was built from (`listingKey`), and when; null before the first. */
+  key: string | null;
+  builtAt: number;
+}>({ result: null, updating: false, error: null, listed: [], key: null, builtAt: 0 });
+
+// The last list built, kept in the browser beside the workspace. The API
+// gives the same list for the same request, so it's reused until the request
+// changes, or a day has passed and a publisher may have changed a document.
+const LISTING_KEY = 'star-ground.listing.v1';
+const LISTING_LIFE_MS = 24 * 60 * 60 * 1000;
+
+/** What a list is built from: the request and the stock it subtracts. */
+export function listingKey(next: MasterListRequest, stock: Stock | null): string {
+  return JSON.stringify([next, stock?.text ?? null]);
+}
+
+/** Whether the list showing was built from this key within the last day. */
+export function listingCurrent(key: string): boolean {
+  return (
+    listing.key === key && listing.result !== null && Date.now() - listing.builtAt < LISTING_LIFE_MS
+  );
+}
+
+/** Shows a list just built, and keeps it for the next visit. */
+export function keepListing(key: string, result: MasterListResult, listed: string[]): void {
+  Object.assign(listing, { result, listed, key, builtAt: Date.now(), error: null });
+  try {
+    const saved: SavedListing = { key, builtAt: listing.builtAt, result, listed };
+    localStorage.setItem(LISTING_KEY, JSON.stringify(saved));
+  } catch {
+    // Storage is full or blocked: the next visit builds the list again.
+  }
+}
+
+interface SavedListing {
+  key: string;
+  builtAt: number;
+  result: MasterListResult;
+  listed: string[];
+}
+
+/** The list kept from a last visit, if it was built from this key. */
+function savedListing(key: string): SavedListing | null {
+  try {
+    const saved = JSON.parse(localStorage.getItem(LISTING_KEY) ?? 'null') as SavedListing | null;
+    return saved?.key === key && saved.result ? saved : null;
+  } catch {
+    return null;
+  }
+}
 
 /** A card's project on the shopping list, as last built. */
 export function projectOf(id: string): ProjectResult | null {

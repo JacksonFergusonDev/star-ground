@@ -27,7 +27,10 @@
     count,
     files,
     flagged,
+    keepListing,
     listing,
+    listingCurrent,
+    listingKey,
     projectOf,
     ready,
     request,
@@ -266,9 +269,11 @@
     return exportFile(kind, excel, next, fileFor, workspace.stock);
   }
 
-  // Rebuild the shopping list whenever the cards change, after a short pause so
-  // typing a name or a count sends one request, not one per keystroke. A
-  // newer request supersedes an older one still in flight.
+  // Rebuild the shopping list whenever what it's built from changes, after a
+  // short pause so typing a name or a count sends one request, not one per
+  // keystroke. A newer request supersedes an older one still in flight. A
+  // change the list doesn't depend on (a paint, a part placed) sends nothing,
+  // and a reload reuses the list kept from the last visit (lib/workspace).
   let sequence = 0;
   $effect(() => {
     // Saving reads every card deeply, so any change re-runs this.
@@ -278,8 +283,11 @@
     const stock = workspace.stock;
     const mine = ++sequence;
     if (!next) {
-      listing.result = null;
-      listing.error = null;
+      Object.assign(listing, { result: null, error: null, updating: false, key: null });
+      return;
+    }
+    const key = listingKey(next, stock);
+    if (listingCurrent(key)) {
       listing.updating = false;
       return;
     }
@@ -287,10 +295,7 @@
     const timer = setTimeout(() => {
       masterList(next, fileFor, stock)
         .then((r) => {
-          if (mine !== sequence) return;
-          listing.result = r;
-          listing.listed = ids;
-          listing.error = null;
+          if (mine === sequence) keepListing(key, r, ids);
         })
         .catch((e: Error) => {
           if (mine === sequence) listing.error = { message: e.message, bugCode: bugOf(e) };

@@ -86,8 +86,18 @@
   <div class="pedal">
     <Enclosure name={card.name} {face} {paint} {finish} lit={finished} />
     <details class="paint">
-      <summary>Paint</summary>
-      <fieldset>
+      <summary>
+        <!-- A paint brush, Star Ground's own drawing like the part symbols. -->
+        <svg class="brush" viewBox="0 0 16 16" width="13" height="13" aria-hidden="true">
+          <path d="M14.5 1.5 8.2 7.8" />
+          <path d="m9.6 9.2-2.8-2.8 1.4-1.4 2.8 2.8z" />
+          <path
+            d="M6.8 9.2c-1.6-.2-2.8.7-3.1 2.3-.2 1.2-.8 2-2.2 2.6 2.6.9 5.2.3 6.3-1.4.6-.9.4-2.2-.6-3.1z"
+          />
+        </svg>
+        Paint
+      </summary>
+      <fieldset class="swatches">
         <legend class="visually-hidden">Paint for {card.name}</legend>
         {#each paints as [key, coat] (key)}
           <label class="swatch" title={coat.name}>
@@ -240,6 +250,9 @@
     align-content: start;
   }
   .paint summary {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
     color: var(--muted);
     font-family: var(--mono);
     font-size: var(--fs-label);
@@ -254,7 +267,15 @@
   .paint[open] summary {
     color: var(--text);
   }
-  .paint fieldset {
+  .brush {
+    flex-shrink: 0;
+    fill: none;
+    stroke: currentcolor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.3;
+  }
+  .swatches {
     display: grid;
     grid-template-columns: repeat(4, 14px);
     gap: 6px;

@@ -236,12 +236,17 @@ h3 {
  * sidebar. On phones the window scrolls, under the sidebar's bar.
  */
 .app-scroll {
+  /* Holds what's positioned inside the page, such as screen-reader-only
+     labels, which would otherwise hang below the window and let it scroll. */
+  position: relative;
   min-width: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
   scroll-behavior: smooth;
 }
+/* The window never scrolls on a laptop, so a wheel over the sidebar moves nothing. */
 html:has(.app) {
+  overflow: hidden;
   overscroll-behavior: none;
 }
 .app-main {
@@ -411,6 +416,7 @@ html:has(.app) {
     overflow: visible;
   }
   html:has(.app) {
+    overflow: visible;
     overscroll-behavior: auto;
   }
   .app-main {
