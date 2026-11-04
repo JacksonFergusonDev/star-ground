@@ -2,6 +2,7 @@
  "id": "creamery-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Creamery Compressor",
+ "effects": ["dynamics"],
  "document": "https://docs.pedalpcb.com/project/Creamery-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb301/",
  "file_name": "Creamery-PedalPCB.pdf",

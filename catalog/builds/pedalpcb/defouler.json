@@ -2,6 +2,7 @@
  "id": "defouler",
  "publisher": "pedalpcb",
  "title": "Defouler Distortion",
+ "effects": ["distortion"],
  "document": "https://docs.pedalpcb.com/project/Defouler.pdf",
  "page": "https://www.pedalpcb.com/product/defouler/",
  "file_name": "Defouler.pdf",

@@ -1,7 +1,8 @@
 {
  "id": "fcp-micro-jtm-insert-v1-0",
  "publisher": "fivecats",
- "title": "fcp-micro-jtm-insert-v1-0",
+ "title": "Micro JTM",
+ "effects": ["overdrive", "amp"],
  "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/02/FCP-Micro-JTM-Insert-V1-0.pdf",
  "page": "https://www.five-cats-pedals.co.uk/product/micro-jtm-lovepedal-jtm-clone/",
  "file_name": "FCP-Micro-JTM-Insert-V1-0.pdf",

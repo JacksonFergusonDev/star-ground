@@ -2,6 +2,7 @@
  "id": "stumble-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Stumble Boost",
+ "effects": ["boost"],
  "document": "https://docs.pedalpcb.com/project/Stumble-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb744/",
  "file_name": "Stumble-PedalPCB.pdf",

@@ -2,6 +2,7 @@
  "id": "chalumeau",
  "publisher": "pedalpcb",
  "title": "Chalumeau",
+ "effects": ["modulation"],
  "document": "https://docs.pedalpcb.com/project/Chalumeau.pdf",
  "page": "https://www.pedalpcb.com/product/chalumeau/",
  "file_name": "Chalumeau.pdf",

@@ -2,6 +2,7 @@
  "id": "bsidefuzz",
  "publisher": "pedalpcb",
  "title": "B-Side Fuzz",
+ "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/BSideFuzz.pdf",
  "page": "https://www.pedalpcb.com/product/pcb030/",
  "file_name": "BSideFuzz.pdf",

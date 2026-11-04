@@ -2,6 +2,7 @@
  "id": "kliche-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Kliche Overdrive",
+ "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/Kliche-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb003/",
  "file_name": "Kliche-PedalPCB.pdf",

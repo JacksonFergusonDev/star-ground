@@ -1,7 +1,8 @@
 {
  "id": "fcp-azathoth-fuzz-v1-1-insert",
  "publisher": "fivecats",
- "title": "fcp-azathoth-fuzz-v1-1-insert",
+ "title": "Azathoth",
+ "effects": ["fuzz"],
  "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2024/03/FCP-Azathoth-Fuzz-V1-1-Insert.pdf",
  "page": "https://www.five-cats-pedals.co.uk/product/azathoth-dunwich-cthulhu-clone/",
  "file_name": "FCP-Azathoth-Fuzz-V1-1-Insert.pdf",

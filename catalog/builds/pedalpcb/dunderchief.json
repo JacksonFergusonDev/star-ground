@@ -2,6 +2,7 @@
  "id": "dunderchief",
  "publisher": "pedalpcb",
  "title": "Dunder Chief Distortion",
+ "effects": ["distortion"],
  "document": "https://docs.pedalpcb.com/project/DunderChief.pdf",
  "page": "https://www.pedalpcb.com/product/dunderchief/",
  "file_name": "DunderChief.pdf",

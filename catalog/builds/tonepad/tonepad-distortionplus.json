@@ -2,6 +2,7 @@
  "id": "tonepad-distortionplus",
  "publisher": "tonepad",
  "title": "MAS Distortion",
+ "effects": ["distortion"],
  "document": "https://tonepad.com/getFile.asp?id=115",
  "page": "https://tonepad.com/project.asp?id=2",
  "file_name": "tonepad_distortionplus.pdf",

@@ -1,7 +1,8 @@
 {
  "id": "fcp-woollytron-insert-v1-0",
  "publisher": "fivecats",
- "title": "fcp-woollytron-insert-v1-0",
+ "title": "WoollyTron",
+ "effects": ["fuzz"],
  "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/10/FCP-WoollyTron-Insert-V1-0.pdf",
  "page": "https://www.five-cats-pedals.co.uk/product/woollytron-zvex-mastotron-clone/",
  "file_name": "FCP-WoollyTron-Insert-V1-0.pdf",

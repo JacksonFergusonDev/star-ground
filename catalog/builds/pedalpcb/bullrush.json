@@ -2,6 +2,7 @@
  "id": "bullrush",
  "publisher": "pedalpcb",
  "title": "Bullrush Overdrive",
+ "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/Bullrush.pdf",
  "page": "https://www.pedalpcb.com/product/pcb106/",
  "file_name": "Bullrush.pdf",

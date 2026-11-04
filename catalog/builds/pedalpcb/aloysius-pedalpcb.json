@@ -2,6 +2,7 @@
  "id": "aloysius-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Aloysius Fuzz",
+ "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/Aloysius-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb471/",
  "file_name": "Aloysius-PedalPCB.pdf",

@@ -2,6 +2,7 @@
  "id": "bbgun",
  "publisher": "pedalpcb",
  "title": "BB-Gun Overdrive",
+ "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/BBGun.pdf",
  "page": "https://www.pedalpcb.com/product/bbgun/",
  "file_name": "BBGun.pdf",

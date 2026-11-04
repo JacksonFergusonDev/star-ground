@@ -1,7 +1,8 @@
 {
  "id": "fcp-mid-spirit-insert-v1-1",
  "publisher": "fivecats",
- "title": "fcp-mid-spirit-insert-v1-1",
+ "title": "Mid Spirit",
+ "effects": ["filter"],
  "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/10/FCP-Mid-Spirit-Insert-V1-1.pdf",
  "page": "https://www.five-cats-pedals.co.uk/product/mid-spirit-jhs-haunting-mids-clone/",
  "file_name": "FCP-Mid-Spirit-Insert-V1-1.pdf",

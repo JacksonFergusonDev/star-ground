@@ -2,6 +2,7 @@
  "id": "hatchet-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Hatchet Overdrive",
+ "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/Hatchet-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb389/",
  "file_name": "Hatchet-PedalPCB.pdf",

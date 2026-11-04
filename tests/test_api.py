@@ -20,13 +20,10 @@ from src.api import (
     read_stock,
 )
 from src.bom_lib import (
-    BOM_PRESETS,
     ComponentCategory,
     ComponentKey,
     FileUpload,
     InputMethod,
-    ParseWarningKind,
-    PcbShop,
 )
 from src.bom_lib.errors import BuildNotChosenError, FetchError, UnreadablePartError
 
@@ -60,25 +57,8 @@ def test_pasted_projects_merge_into_one_master_list() -> None:
     assert row["BOM Qty"] == 3
 
 
-@pytest.mark.parametrize("key", sorted(BOM_PRESETS))
-def test_presets_raise_no_conflicting_duplicates(key: str) -> None:
-    project = Project(method=InputMethod.PRESET, data=BOM_PRESETS[key]["bom_text"])
-
-    master = generate_master_list([project])
-
-    conflicts = [
-        w
-        for w in master.stats["warnings"]
-        if w.kind == ParseWarningKind.CONFLICTING_DUPLICATE
-    ]
-    assert conflicts == []
-
-
-def test_a_preset_s_chips_still_get_sockets() -> None:
-    preset = BOM_PRESETS["[PedalPCB] [Boost] Triangulum Boost"]
-    master = generate_master_list(
-        [Project(method=InputMethod.PRESET, data=preset["bom_text"])]
-    )
+def test_a_parts_list_s_chips_get_sockets() -> None:
+    master = generate_master_list([Project(data="IC1 TL071\nIC100 TC1044SCPA")])
 
     socket = ComponentKey(ComponentCategory.HARDWARE_MISC, "DIP SOCKET (Check Size)")
     assert master.parts[socket]["qty"] == 2
@@ -248,67 +228,6 @@ def test_the_same_project_entered_twice_shares_its_label() -> None:
 
     assert [p.label for p in master.projects] == ["Fuzz", "Fuzz"]
     assert master.parts[R10K]["qty"] == 2
-
-
-def test_a_board_is_bought_where_the_preset_says_whatever_its_name() -> None:
-    master = generate_master_list(
-        [
-            Project(
-                name="My boost",
-                method=InputMethod.PRESET,
-                data="PCB Triangulum Boost PCB\nR1 10k",
-                pcb_shop=PcbShop.PEDALPCB,
-            ),
-            Project(name="PedalPCB-style clone", data="PCB Clone PCB"),
-        ]
-    )
-
-    links = {
-        r["Part"]: r["Tayda_Link"]
-        for r in master.shopping_list()
-        if r["Category"] == ComponentCategory.PCB.value
-    }
-    assert links["Triangulum Boost PCB"].startswith("https://www.pedalpcb.com")
-    assert links["Clone PCB"].startswith("https://www.taydaelectronics.com")
-
-
-def test_a_presets_publisher_document_is_linked_not_bundled() -> None:
-    url = "https://docs.pedalpcb.com/project/Kliche-PedalPCB.pdf"
-    master = generate_master_list(
-        [
-            Project(
-                name="Kliche",
-                method=InputMethod.PRESET,
-                data="R1 10k",
-                source_url=url,
-            )
-        ]
-    )
-
-    with zipfile.ZipFile(io.BytesIO(master.build_pack(b"", b""))) as zf:
-        sources = [n for n in zf.namelist() if n.startswith("Source Documents/")]
-        assert sources == ["Source Documents/Kliche Source Link.txt"]
-        assert url in zf.read(sources[0]).decode()
-
-
-def test_a_missing_preset_document_is_logged(
-    tmp_path: Path, caplog: pytest.LogCaptureFixture
-) -> None:
-    gone = tmp_path / "gone.pdf"
-    master = generate_master_list(
-        [
-            Project(
-                name="Boost",
-                method=InputMethod.PRESET,
-                data="R1 10k",
-                source_path=str(gone),
-            )
-        ]
-    )
-
-    with zipfile.ZipFile(io.BytesIO(master.build_pack(b"", b""))) as zf:
-        assert not any(n.startswith("Source Documents/") for n in zf.namelist())
-    assert f"Preset source document missing: {gone}" in caplog.text
 
 
 def test_a_correction_buys_the_part_the_document_prints() -> None:

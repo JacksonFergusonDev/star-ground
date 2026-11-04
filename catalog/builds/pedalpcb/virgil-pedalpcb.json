@@ -2,6 +2,7 @@
  "id": "virgil-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Virgil Overdrive",
+ "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/Virgil-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb598/",
  "file_name": "Virgil-PedalPCB.pdf",

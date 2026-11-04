@@ -2,6 +2,7 @@
  "id": "dingo",
  "publisher": "pedalpcb",
  "title": "Dingo Distortion",
+ "effects": ["distortion"],
  "document": "https://docs.pedalpcb.com/project/Dingo.pdf",
  "page": "https://www.pedalpcb.com/product/dingo/",
  "file_name": "Dingo.pdf",

@@ -2,6 +2,7 @@
  "id": "orokudrive",
  "publisher": "pedalpcb",
  "title": "Oroku Drive",
+ "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/OrokuDrive.pdf",
  "page": "https://www.pedalpcb.com/product/pcb306/",
  "file_name": "OrokuDrive.pdf",

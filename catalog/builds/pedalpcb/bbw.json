@@ -2,6 +2,7 @@
  "id": "bbw",
  "publisher": "pedalpcb",
  "title": "BBW",
+ "effects": ["dynamics"],
  "document": "https://docs.pedalpcb.com/project/BBW.pdf",
  "page": "https://www.pedalpcb.com/product/bbw/",
  "file_name": "BBW.pdf",

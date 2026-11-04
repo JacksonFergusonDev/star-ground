@@ -2,6 +2,7 @@
  "id": "cranky-charles-build-document",
  "publisher": "guitarpcb",
  "title": "Cranky Charles",
+ "effects": ["overdrive", "distortion"],
  "document": "https://guitarpcb.com/wp-content/uploads/2019/11/Cranky-Charles-Build-Document.pdf",
  "page": "https://guitarpcb.com/community/topic/direct-build-document-link-list/",
  "file_name": "Cranky-Charles-Build-Document.pdf",

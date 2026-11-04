@@ -30,7 +30,6 @@ from src.bom_lib.enums import (
     HardwareRole,
     OcrVerdict,
     ParseWarningKind,
-    PcbShop,
 )
 from src.bom_lib.errors import ReadError
 
@@ -192,10 +191,6 @@ class BuiltProject:
             it was one in Star Ground.
         options: Interchangeable choices resolved to the document's default.
         document: The source PDF's bytes, for the build pack.
-        source_path: A preset's typed parts list on disk, for the build pack.
-        source_url: A preset's build document at its publisher, linked from
-            the build pack.
-        pcb_shop: Where its board is bought, when a shop sells it.
         parts: Each designator its parts list read, in the order read, for
             checking against the document.
         counted: Each part its parts list counts by value instead.
@@ -208,9 +203,6 @@ class BuiltProject:
     errors: tuple[ReadError, ...] = ()
     options: tuple[str, ...] = ()
     document: bytes | None = None
-    source_path: str | None = None
-    source_url: str | None = None
-    pcb_shop: PcbShop | None = None
     parts: tuple[ReadPart, ...] = ()
     counted: tuple[CountedPart, ...] = ()
 

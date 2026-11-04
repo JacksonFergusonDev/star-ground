@@ -2,6 +2,7 @@
  "id": "crankycharles-v1-1-2020",
  "publisher": "guitarpcb",
  "title": "Cranky Charles v1.1 2020",
+ "effects": ["overdrive", "distortion"],
  "document": "https://guitarpcb.com/wp-content/uploads/2022/01/CrankyCharles_v1.1-2020.pdf",
  "page": "https://guitarpcb.com/community/topic/direct-build-document-link-list/",
  "file_name": "CrankyCharles_v1.1-2020.pdf",

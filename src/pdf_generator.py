@@ -11,7 +11,6 @@ ZIP archives for user download.
 import datetime
 import io
 import logging
-import os
 import re
 import zipfile
 from collections import defaultdict
@@ -568,7 +567,7 @@ def generate_master_zip(
             "CONTENTS:\n"
             "- Field Manuals/: Printable step-by-step checklists.\n"
             "- Sticker Sheets/: Labels for Avery 5160 (3x10).\n"
-            "- Source Documents/: The build docs you gave, or links to them.\n\n"
+            "- Source Documents/: The build docs you gave.\n\n"
             "Github Page:\n"
             "https://github.com/JacksonFergusonDev/star-ground\n"
         )
@@ -578,47 +577,15 @@ def generate_master_zip(
         _write_field_manuals(zf, inventory, projects)
         _write_stickers(zf, inventory, projects)
 
-        # 3. Source Documents (Preservation Logic)
+        # 3. Each upload's or link's document, as given.
         used_filenames = set()
 
         for project in _unique_projects(projects):
-            safe_name = _sanitize_filename(project.label)
-
-            file_content = None
-            dest_name = ""
-
-            # Strategy A: The document's bytes (URL/Upload)
-            if project.document:
-                file_content = project.document
-                dest_name = f"Source Documents/{safe_name} Source.pdf"
-
-            # Strategy B: Use Local Path (Preset)
-            elif project.source_path:
-                try:
-                    src_path = project.source_path
-                    _, ext = os.path.splitext(src_path)
-                    if not ext:
-                        ext = ".txt"
-
-                    with open(src_path, "rb") as f:
-                        file_content = f.read()
-                    dest_name = f"Source Documents/{safe_name} Source{ext}"
-                except OSError:
-                    logger.warning(
-                        "Preset source document missing: %s", project.source_path
-                    )
-
-            # Strategy C: Link to the publisher's document (Preset). Star
-            # Ground doesn't redistribute publishers' documents.
-            elif project.source_url:
-                file_content = (
-                    "Download the build document from its publisher:\n"
-                    f"{project.source_url}\n"
-                ).encode()
-                dest_name = f"Source Documents/{safe_name} Source Link.txt"
-
-            if file_content and dest_name and dest_name not in used_filenames:
-                zf.writestr(dest_name, file_content)
+            dest_name = (
+                f"Source Documents/{_sanitize_filename(project.label)} Source.pdf"
+            )
+            if project.document and dest_name not in used_filenames:
+                zf.writestr(dest_name, project.document)
                 used_filenames.add(dest_name)
 
     return zip_buffer.getvalue()

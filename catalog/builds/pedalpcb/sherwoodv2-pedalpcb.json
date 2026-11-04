@@ -2,6 +2,7 @@
  "id": "sherwoodv2-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Sherwood Overdrive",
+ "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/SherwoodV2-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb092/",
  "file_name": "SherwoodV2-PedalPCB.pdf",

@@ -27,10 +27,6 @@ Everything in `src/` except `server/` is the **backend**: it imports no web fram
   - **Role:** Splits extracted entries into common parts, *variants* (separate circuits in one document: Muffin Fuzz's versions, a Germanium and a Silicon list, a "Cleft mod") and *options* (interchangeable parts: through-hole or SMD). A multi-circuit result has no default build: `ParseResult.select()` must be called with the builder's choice, and the app asks for it.
 - **`bom_lib/verification.py`**: The self-checks.
   - **Role:** Independently re-reads the document and reports every place the output may disagree with it (unextracted designators, conflicting duplicates, category contradictions, unparseable values, bill-of-materials mismatches). The invariant: the parser may be wrong, but never *silently*.
-- **`bom_lib/presets.py`**: The entry point for static data.
-  - **Role:** Acts as the "Reference Library." It allows users to load pre-verified BOMs for known circuits (PedalPCB and Tayda projects) without parsing a file.
-- **`bom_lib/_presets_data.py`**: The static database.
-  - **Note:** This file is **auto-generated** by `tools/generate_presets.py`. It contains the raw text blobs of valid BOMs to ensure the presets are immutable and version-controlled.
 
 ### 2. Classification & Normalization (The Filter)
 
@@ -84,7 +80,7 @@ Everything in `src/` except `server/` is the **backend**: it imports no web fram
 
 ## 🧬 Data Flow
 
-1. **Input:** The user uploads a PDF or CSV, pastes text or a link, or picks a preset; `strategies/` dispatches it.
+1. **Input:** The user uploads a PDF or CSV, or pastes text or a link; `strategies/` dispatches it.
 1. **Parse:** `parser.py` and `layout.py` read the parts list; `builds.py` separates variants and options; `ocr.py` offers a reading of image-only lists.
 1. **Verify:** `verification.py` re-reads the document and attaches review warnings.
 1. **Classify & Normalize:** `classifier.py` tags each part; the grammar parses its value to a `Decimal`.

@@ -2,6 +2,7 @@
  "id": "dirtdauber-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Dirt Dauber Sub-Octave Fuzz",
+ "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/DirtDauber-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb491/",
  "file_name": "DirtDauber-PedalPCB.pdf",

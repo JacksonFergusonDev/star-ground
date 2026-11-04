@@ -1,7 +1,8 @@
 {
  "id": "fcp-micro-tweed-v1-0-insert",
  "publisher": "fivecats",
- "title": "fcp-micro-tweed-v1-0-insert",
+ "title": "Micro Tweed",
+ "effects": ["overdrive"],
  "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/02/FCP-Micro-Tweed-V1-0-insert.pdf",
  "page": "https://www.five-cats-pedals.co.uk/product/micro-jtm-micro-tweed-micro-champ-triple-pack/",
  "file_name": "FCP-Micro-Tweed-V1-0-insert.pdf",

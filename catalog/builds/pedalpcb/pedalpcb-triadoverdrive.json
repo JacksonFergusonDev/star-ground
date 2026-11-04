@@ -2,6 +2,7 @@
  "id": "pedalpcb-triadoverdrive",
  "publisher": "pedalpcb",
  "title": "Triad Overdrive",
+ "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/PedalPCB-TriadOverdrive.pdf",
  "page": "https://www.pedalpcb.com/product/pcb354/",
  "file_name": "PedalPCB-TriadOverdrive.pdf",

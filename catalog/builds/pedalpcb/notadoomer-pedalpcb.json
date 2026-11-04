@@ -2,6 +2,7 @@
  "id": "notadoomer-pedalpcb",
  "publisher": "pedalpcb",
  "title": "NOTADOOMER",
+ "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/NOTADOOMER-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb709/",
  "file_name": "NOTADOOMER-PedalPCB.pdf",

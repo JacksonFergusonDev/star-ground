@@ -1,7 +1,8 @@
 {
  "id": "fcp-shredder-v1-1-insert",
  "publisher": "fivecats",
- "title": "fcp-shredder-v1-1-insert",
+ "title": "Shredder",
+ "effects": ["distortion"],
  "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/08/FCP-Shredder-V1-1-Insert.pdf",
  "page": "https://www.five-cats-pedals.co.uk/product/classic-triple-pack-breaking-blues-shredder-governor/",
  "file_name": "FCP-Shredder-V1-1-Insert.pdf",

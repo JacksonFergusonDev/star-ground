@@ -6,15 +6,8 @@ import type {
   DocumentReading,
   MasterListRequest,
   MasterListResult,
-  PresetCatalog,
   Problem,
 } from '../../src/lib/api';
-
-const catalog: PresetCatalog = {
-  sources: ['PedalPCB'],
-  categories: { PedalPCB: ['Fuzz'] },
-  presets: [{ key: 'fuzz', source: 'PedalPCB', category: 'Fuzz', name: 'Sunflower Fuzz' }],
-};
 
 const result: MasterListResult = {
   projects: [
@@ -106,7 +99,6 @@ async function openList(page: Page): Promise<void> {
 
 test.beforeEach(async ({ page }) => {
   await page.route('**/api/health', (route) => route.fulfill({ json: { status: 'ok' } }));
-  await page.route('**/api/presets', (route) => route.fulfill({ json: catalog }));
 });
 
 test('a pasted list appears on the shopping list without a Generate button', async ({ page }) => {
@@ -226,19 +218,6 @@ test('changing a count updates the shopping list', async ({ page }) => {
   await page.getByRole('spinbutton', { name: 'Pedals' }).blur();
 
   await expect.poll(() => sent.at(-1)?.projects[0]?.count).toBe(3);
-});
-
-test('a preset is added by name', async ({ page }) => {
-  const sent = await stubMasterList(page);
-  await page.goto('/app/');
-  await page.getByRole('button', { name: 'Preset' }).click();
-  await page.getByRole('combobox', { name: 'Preset' }).selectOption('fuzz');
-  await page.getByRole('button', { name: 'Add', exact: true }).click();
-
-  await expect(page.getByRole('textbox', { name: 'Project name' })).toHaveValue('Sunflower Fuzz');
-  await expect
-    .poll(() => sent.at(-1)?.projects[0])
-    .toMatchObject({ method: 'preset', preset: 'fuzz' });
 });
 
 test('the workspace survives a reload', async ({ page }) => {

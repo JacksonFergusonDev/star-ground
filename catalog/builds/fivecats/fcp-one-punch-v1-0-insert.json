@@ -1,7 +1,8 @@
 {
  "id": "fcp-one-punch-v1-0-insert",
  "publisher": "fivecats",
- "title": "fcp-one-punch-v1-0-insert",
+ "title": "One Punch",
+ "effects": ["overdrive"],
  "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/04/FCP-One-Punch-V1-0-Insert.pdf",
  "page": "https://www.five-cats-pedals.co.uk/product/one-punch-greer-amps-sucker-punch-clone/",
  "file_name": "FCP-One-Punch-V1-0-Insert.pdf",

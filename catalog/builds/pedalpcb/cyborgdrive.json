@@ -2,6 +2,7 @@
  "id": "cyborgdrive",
  "publisher": "pedalpcb",
  "title": "Cyborg Drive",
+ "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/CyborgDrive.pdf",
  "page": "https://www.pedalpcb.com/product/pcb005/",
  "file_name": "CyborgDrive.pdf",

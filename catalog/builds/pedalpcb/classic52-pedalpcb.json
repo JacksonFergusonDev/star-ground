@@ -2,6 +2,7 @@
  "id": "classic52-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Classic '52 Fuzz",
+ "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/Classic52-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/classic52/",
  "file_name": "Classic52-PedalPCB.pdf",

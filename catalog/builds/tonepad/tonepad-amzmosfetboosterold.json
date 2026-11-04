@@ -2,6 +2,7 @@
  "id": "tonepad-amzmosfetboosterold",
  "publisher": "tonepad",
  "title": "Mosboos",
+ "effects": ["amp"],
  "document": "https://tonepad.com/getFile.asp?id=66",
  "page": "https://tonepad.com/project.asp?id=30",
  "file_name": "tonepad_amzmosfetboosterOLD.pdf",

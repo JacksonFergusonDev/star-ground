@@ -2,6 +2,7 @@
  "id": "cobbler-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Cobbler Preamp",
+ "effects": ["overdrive", "distortion"],
  "document": "https://docs.pedalpcb.com/project/Cobbler-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb540/",
  "file_name": "Cobbler-PedalPCB.pdf",

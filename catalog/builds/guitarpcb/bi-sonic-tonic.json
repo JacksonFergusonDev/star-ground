@@ -2,6 +2,7 @@
  "id": "bi-sonic-tonic",
  "publisher": "guitarpcb",
  "title": "Sonic Tonic",
+ "effects": ["boost", "filter"],
  "document": "https://guitarpcb.com/wp-content/uploads/2018/06/BI_Sonic-Tonic.pdf",
  "page": "https://guitarpcb.com/community/topic/direct-build-document-link-list/",
  "file_name": "BI_Sonic-Tonic.pdf",

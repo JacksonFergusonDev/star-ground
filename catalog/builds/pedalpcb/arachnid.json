@@ -2,6 +2,7 @@
  "id": "arachnid",
  "publisher": "pedalpcb",
  "title": "Arachnid v2",
+ "effects": ["reverb"],
  "document": "https://docs.pedalpcb.com/project/Arachnid.pdf",
  "page": "https://www.pedalpcb.com/product/spatialist/",
  "file_name": "Arachnid.pdf",

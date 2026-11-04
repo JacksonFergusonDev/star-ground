@@ -2,6 +2,7 @@
  "id": "revel-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Revel Overdrive",
+ "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/Revel-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb666/",
  "file_name": "Revel-PedalPCB.pdf",

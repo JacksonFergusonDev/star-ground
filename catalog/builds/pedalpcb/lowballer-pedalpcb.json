@@ -2,6 +2,7 @@
  "id": "lowballer-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Lowballer Twin Envelope Filter",
+ "effects": ["filter"],
  "document": "https://docs.pedalpcb.com/project/Lowballer-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb477/",
  "file_name": "Lowballer-PedalPCB.pdf",

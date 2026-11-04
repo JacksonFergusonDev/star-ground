@@ -2,6 +2,7 @@
  "id": "copperclad-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Copper Clad Fuzz",
+ "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/CopperClad-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb569/",
  "file_name": "CopperClad-PedalPCB.pdf",

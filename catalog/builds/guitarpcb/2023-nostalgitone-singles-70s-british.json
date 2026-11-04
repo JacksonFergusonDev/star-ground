@@ -1,7 +1,8 @@
 {
  "id": "2023-nostalgitone-singles-70s-british",
  "publisher": "guitarpcb",
- "title": "NostalgiTone 70s Bri(cid:21)sh Single",
+ "title": "2023 NostalgiTone Singles 70s British",
+ "effects": ["overdrive", "distortion"],
  "document": "https://guitarpcb.com/wp-content/uploads/2024/01/2023-NostalgiTone-Singles-70s-British.pdf",
  "page": "https://guitarpcb.com/community/topic/pedal-building-guides-mandatory-reading/",
  "file_name": "2023-NostalgiTone-Singles-70s-British.pdf",

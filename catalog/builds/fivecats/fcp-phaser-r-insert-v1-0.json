@@ -1,7 +1,8 @@
 {
  "id": "fcp-phaser-r-insert-v1-0",
  "publisher": "fivecats",
- "title": "fcp-phaser-r-insert-v1-0",
+ "title": "Phase-R",
+ "effects": ["modulation"],
  "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/11/FCP-Phaser-R-Insert-V1-0.pdf",
  "page": "https://www.five-cats-pedals.co.uk/product/phase-r-mxr-phase-90-45/",
  "file_name": "FCP-Phaser-R-Insert-V1-0.pdf",

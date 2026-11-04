@@ -2,6 +2,7 @@
  "id": "bmp-opamp-v4-2021",
  "publisher": "guitarpcb",
  "title": "BMP Opamp v4 2021",
+ "effects": ["fuzz", "distortion"],
  "document": "https://guitarpcb.com/wp-content/uploads/2018/06/BMP-OPAMP-v4-2021.pdf",
  "page": "https://guitarpcb.com/legacy-pcb-document-list/",
  "file_name": "BMP-OPAMP-v4-2021.pdf",

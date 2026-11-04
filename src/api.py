@@ -31,7 +31,6 @@ from src.bom_lib import (
     Inventory,
     ParseResult,
     ParseWarning,
-    PcbShop,
     ReadPart,
     ShoppingListRow,
     StatsDict,
@@ -56,7 +55,7 @@ from src.pdf_generator import generate_master_zip, generate_pdf_bundle
 PENDING_SOURCE = "__pending__"
 
 type ProjectData = str | FileUpload | None
-"""A project's parts list: pasted or preset text, a URL, or a file."""
+"""A project's parts list: pasted text, a URL, or a file."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -80,15 +79,11 @@ class Project:
         name: The project name typed in; blank to use the document's title.
         count: Number of pedals.
         method: How the parts list is given.
-        data: Pasted or preset text, a URL, or an uploaded file.
+        data: Pasted text, a URL, or an uploaded file.
         variant: The build chosen from a multi-circuit document.
         use_ocr: Whether to add the parts OCR read from image pages.
         reading: The document as `read_document` read it, if it was read
             ahead of time; it is read again otherwise.
-        source_path: A preset's typed parts list, for the build pack.
-        source_url: A preset's build document at its publisher, for the
-            build pack's link.
-        pcb_shop: The shop that sells a preset's board.
         corrections: Parts the builder corrected, applied to the chosen
             build's reading.
     """
@@ -100,9 +95,6 @@ class Project:
     variant: str | None = None
     use_ocr: bool = False
     reading: ParseResult | None = None
-    source_path: str | None = None
-    source_url: str | None = None
-    pcb_shop: PcbShop | None = None
     corrections: tuple[Correction, ...] = ()
 
     def __post_init__(self) -> None:
@@ -146,13 +138,7 @@ class MasterList:
         Returns:
             One row per part, in display order.
         """
-        return build_shopping_list(
-            self.kit,
-            self.stock,
-            show_hardware,
-            show_extras,
-            {p.label: p.pcb_shop for p in self.projects if p.pcb_shop},
-        )
+        return build_shopping_list(self.kit, self.stock, show_hardware, show_extras)
 
     def pdf_bundle(self) -> bytes:
         """A ZIP of each project's field manual and sticker sheet."""
@@ -177,7 +163,7 @@ def document_key(method: InputMethod, data: ProjectData) -> str | None:
     """Identifies an upload or link, to tell when its reading is stale.
 
     Only uploads and links are read ahead of time: they are the inputs that
-    can be multi-circuit or image-only PDFs. Text and presets are read when
+    can be multi-circuit or image-only PDFs. Pasted text is read when
     the master list is generated.
 
     Args:
@@ -185,7 +171,7 @@ def document_key(method: InputMethod, data: ProjectData) -> str | None:
         data: The project's parts list.
 
     Returns:
-        The document's identity, or None for text and presets.
+        The document's identity, or None for pasted text.
     """
     if method == InputMethod.UPLOAD_FILE and isinstance(data, FileUpload):
         return f"file:{data.fingerprint}"
@@ -463,9 +449,6 @@ def generate_master_list(
                 errors=tuple(p_stats["errors"]),
                 options=tuple(str(o) for o in result.options),
                 document=result.raw_content,
-                source_path=project.source_path,
-                source_url=project.source_url,
-                pcb_shop=project.pcb_shop,
                 parts=read_parts(result),
                 counted=counted_parts(result),
             )

@@ -2,6 +2,7 @@
  "id": "superflare-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Superflare Fuzz",
+ "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/Superflare-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb462/",
  "file_name": "Superflare-PedalPCB.pdf",

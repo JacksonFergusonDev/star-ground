@@ -2,6 +2,7 @@
  "id": "lotlizard-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Lot Lizard Octave Fuzz",
+ "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/LotLizard-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb603/",
  "file_name": "LotLizard-PedalPCB.pdf",

@@ -1,7 +1,8 @@
 {
  "id": "fcp-dsotf-insert-v1-0",
  "publisher": "fivecats",
- "title": "fcp-dsotf-insert-v1-0",
+ "title": "Dark Side of the Fuzz",
+ "effects": ["fuzz"],
  "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/10/FCP-DSOTF-Insert-V1-0.pdf",
  "page": "https://www.five-cats-pedals.co.uk/product/dark-side-of-the-fuzz-skreddy-pedals-lunar-module-clone/",
  "file_name": "FCP-DSOTF-Insert-V1-0.pdf",

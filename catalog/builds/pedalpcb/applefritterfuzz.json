@@ -2,6 +2,7 @@
  "id": "applefritterfuzz",
  "publisher": "pedalpcb",
  "title": "Apple Fritter Fuzz",
+ "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/AppleFritterFuzz.pdf",
  "page": "https://www.pedalpcb.com/product/applefritterfuzz/",
  "file_name": "AppleFritterFuzz.pdf",

@@ -2477,8 +2477,22 @@ _BYLINE = re.compile(
 )
 
 
+# A title has a word to it: '” x ” ca.' is a dimension's scraps (GuitarPCB SWAH v3).
+_TITLE_WORD = re.compile(r"[^\W\d_]{3}")
+# A glyph the font doesn't map to text: 'NostalgiTone 70s Bri(cid:21)sh Single'.
+_UNMAPPED_GLYPH = re.compile(r"\(cid:\d+\)")
+# 'AND FEATURES', the tail of a heading split across lines: no name starts so.
+_FRAGMENT = re.compile(r"(?:and|or)\b|&", re.IGNORECASE)
+
+
 def _is_title(text: str) -> bool:
-    return len(text.split()) <= _MAX_TITLE_WORDS and not _URL.search(text)
+    return (
+        len(text.split()) <= _MAX_TITLE_WORDS
+        and not _URL.search(text)
+        and _TITLE_WORD.search(text) is not None
+        and not _UNMAPPED_GLYPH.search(text)
+        and not _FRAGMENT.match(text)
+    )
 
 
 _TITLE_IGNORE = frozenset(

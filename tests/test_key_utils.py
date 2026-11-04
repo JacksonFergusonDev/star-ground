@@ -1,18 +1,14 @@
-"""Unit tests for component key utilities, RawBOMData protocols, and PresetData typing."""
+"""Unit tests for component key utilities and RawBOMData protocols."""
 
 import io
 
 from src.bom_lib import (
-    BOM_PRESETS,
     ComponentCategory,
     ComponentKey,
     PDFPageExtraction,
-    PresetCatalog,
     SupportsGetValue,
     SupportsRead,
-    get_preset_metadata,
     make_component_key,
-    parse_preset_key,
 )
 from src.bom_lib.enums import InputMethod
 from src.bom_lib.strategies.context import BOMParserContext
@@ -29,21 +25,6 @@ def test_make_component_key() -> None:
     key_pcb = make_component_key(ComponentCategory.PCB, "Big Muff")
     assert key_pcb == ComponentKey(ComponentCategory.PCB, "Big Muff")
     assert str(key_pcb) == "PCB | Big Muff"
-
-
-def test_parse_preset_key() -> None:
-    """Verifies parse_preset_key parses 3-part and 2-part preset keys, and handles invalid keys."""
-    # Standard format: [Source] [Category] Name
-    result = parse_preset_key("[PedalPCB] [Boost] Triangulum Boost")
-    assert result == ("PedalPCB", "Boost", "Triangulum Boost")
-
-    # 2-part format without category: [Source] Name
-    result_2part = parse_preset_key("[PedalPCB] Simple Fuzz")
-    assert result_2part == ("PedalPCB", "Misc", "Simple Fuzz")
-
-    # Invalid / empty formats
-    assert parse_preset_key("") is None
-    assert parse_preset_key("Plain String") is None
 
 
 def test_supports_read_and_getvalue_protocols() -> None:
@@ -73,18 +54,6 @@ def test_parser_context_with_raw_bom_data() -> None:
     # None / Empty
     res_empty = context.process(InputMethod.PASTE_TEXT, None, "Empty")
     assert len(res_empty.inventory) == 0
-
-
-def test_preset_data_typing() -> None:
-    """Verifies that PresetData type is used for BOM_PRESETS and contains bom_text."""
-    if BOM_PRESETS:
-        first_key = next(iter(BOM_PRESETS))
-        first_preset = BOM_PRESETS[first_key]
-        assert "bom_text" in first_preset
-        assert isinstance(first_preset["bom_text"], str)
-
-    catalog = get_preset_metadata()
-    assert isinstance(catalog, PresetCatalog)
 
 
 def test_pdf_page_extraction_type() -> None:

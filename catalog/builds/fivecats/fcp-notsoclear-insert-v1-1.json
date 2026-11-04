@@ -1,7 +1,8 @@
 {
  "id": "fcp-notsoclear-insert-v1-1",
  "publisher": "fivecats",
- "title": "fcp-notsoclear-insert-v1-1",
+ "title": "Not So Clear",
+ "effects": ["fuzz"],
  "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2024/07/FCP-NotSoClear-Insert-V1-1.pdf",
  "page": "https://www.five-cats-pedals.co.uk/product/not-so-clear-mid-fi-electronics-clarinot-fuzz-clone/",
  "file_name": "FCP-NotSoClear-Insert-V1-1.pdf",

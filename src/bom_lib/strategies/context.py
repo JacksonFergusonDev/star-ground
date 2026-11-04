@@ -94,7 +94,7 @@ class BOMParserContext:
         """Unified handler for processing Text, File, and URL inputs.
 
         Args:
-            method: The input method enum (InputMethod.PASTE_TEXT, InputMethod.PRESET, etc.).
+            method: The input method enum (InputMethod.PASTE_TEXT, InputMethod.FROM_URL, etc.).
             data: The raw data associated with the method (String, UploadedFile, etc.).
             source_name: A display name for logging and error messages.
 

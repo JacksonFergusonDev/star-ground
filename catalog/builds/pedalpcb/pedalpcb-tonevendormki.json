@@ -2,6 +2,7 @@
  "id": "pedalpcb-tonevendormki",
  "publisher": "pedalpcb",
  "title": "Tone Vendor MKI",
+ "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/PedalPCB-ToneVendorMKI.pdf",
  "page": "https://www.pedalpcb.com/product/tonevendormki/",
  "file_name": "PedalPCB-ToneVendorMKI.pdf",

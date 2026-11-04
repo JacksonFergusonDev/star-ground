@@ -2,6 +2,7 @@
  "id": "nostalgitone-voodoo-redux",
  "publisher": "guitarpcb",
  "title": "Voodoo Redux",
+ "effects": ["fuzz", "overdrive"],
  "document": "https://guitarpcb.com/wp-content/uploads/2024/02/NostalgiTone-Voodoo-Redux.pdf",
  "page": "https://guitarpcb.com/community/topic/pedal-building-guides-mandatory-reading/",
  "file_name": "NostalgiTone-Voodoo-Redux.pdf",

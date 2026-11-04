@@ -2,6 +2,7 @@
  "id": "ratt-deluxe-v4-5",
  "publisher": "guitarpcb",
  "title": "RATT DELUXE v4.5",
+ "effects": ["distortion"],
  "document": "https://guitarpcb.com/wp-content/uploads/2023/05/RATT-DELUXE-v4.5.pdf",
  "page": "https://guitarpcb.com/legacy-pcb-document-list/",
  "file_name": "RATT-DELUXE-v4.5.pdf",

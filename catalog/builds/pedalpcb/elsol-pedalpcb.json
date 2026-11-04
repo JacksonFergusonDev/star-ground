@@ -2,6 +2,7 @@
  "id": "elsol-pedalpcb",
  "publisher": "pedalpcb",
  "title": "El Sol Distortion",
+ "effects": ["distortion"],
  "document": "https://docs.pedalpcb.com/project/ElSol-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb385/",
  "file_name": "ElSol-PedalPCB.pdf",

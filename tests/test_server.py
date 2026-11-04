@@ -18,7 +18,6 @@ from pytest_mock import MockerFixture
 
 from src.api import read_document
 from src.bom_lib import (
-    BOM_PRESETS,
     BOMParserContext,
     ComponentCategory,
     FeedbackRating,
@@ -42,7 +41,6 @@ ROOT = Path(__file__).parent.parent
 SAMPLES = Path(__file__).parent / "samples"
 KLICHE = SAMPLES / "clean" / "Kliche-PedalPCB.pdf"
 UNGULA = SAMPLES / "dirty" / "Ungula.pdf"
-PRESET = next(iter(BOM_PRESETS))
 
 type Files = list[tuple[str, tuple[str, bytes, str]]]
 
@@ -80,14 +78,6 @@ def _post(
 
 def test_health(client: TestClient) -> None:
     assert client.get("/api/health").json() == {"status": "ok"}
-
-
-def test_presets_list_the_library(client: TestClient) -> None:
-    catalog = client.get("/api/presets").json()
-
-    assert {p["key"] for p in catalog["presets"]} == set(BOM_PRESETS)
-    assert "PedalPCB" in catalog["sources"]
-    assert all(catalog["categories"][s] for s in catalog["sources"])
 
 
 # --- Reading documents ahead of time ---
@@ -178,7 +168,6 @@ def test_a_master_list_merges_every_kind_of_project(client: TestClient) -> None:
         "/api/master-list",
         [
             {"method": "upload", "file": KLICHE.name, "count": 2},
-            {"method": "preset", "preset": PRESET},
             {"method": "paste", "text": "R1 10k\nC1 100n", "name": "Mine"},
         ],
         files=[("files", _pdf(KLICHE))],
@@ -186,12 +175,7 @@ def test_a_master_list_merges_every_kind_of_project(client: TestClient) -> None:
 
     assert response.status_code == 200
     result = response.json()
-    preset_name = PRESET.rsplit("] ", 1)[-1]
-    assert [p["label"] for p in result["projects"]] == [
-        "Kliche Overdrive",
-        preset_name,
-        "Mine",
-    ]
+    assert [p["label"] for p in result["projects"]] == ["Kliche Overdrive", "Mine"]
     assert result["stats"]["parts_found"] > 0
     assert result["has_stock"] is False
     tens = next(r for r in result["shopping_list"] if r["part"] == "10k")
@@ -321,7 +305,6 @@ def test_warnings_are_grouped_by_part(client: TestClient) -> None:
 @pytest.mark.parametrize(
     ("projects", "files", "message"),
     [
-        ([{"method": "preset", "preset": "[Nope] Nothing"}], [], "no preset"),
         ([{"method": "upload", "file": "missing.pdf"}], [], "No file named"),
         (
             [{"method": "upload", "file": KLICHE.name}],
@@ -329,7 +312,7 @@ def test_warnings_are_grouped_by_part(client: TestClient) -> None:
             "Two files",
         ),
     ],
-    ids=["unknown preset", "missing upload", "duplicate upload"],
+    ids=["missing upload", "duplicate upload"],
 )
 def test_bad_projects_are_refused(
     client: TestClient, projects: list[dict[str, Any]], files: Files, message: str

@@ -2,6 +2,7 @@
  "id": "pedalpcb-minnow",
  "publisher": "pedalpcb",
  "title": "Minnow",
+ "effects": ["filter"],
  "document": "https://docs.pedalpcb.com/project/PedalPCB-Minnow.pdf",
  "page": "https://www.pedalpcb.com/product/pcb367/",
  "file_name": "PedalPCB-Minnow.pdf",

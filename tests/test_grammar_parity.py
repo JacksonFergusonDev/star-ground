@@ -1,49 +1,126 @@
 """Verification test harness for Context-Free Grammar (CFG) value parsing.
 
-Validates that standard component values from preset data parse to valid Decimals,
+Validates that standard component values parse to valid Decimals,
 verifies that the grammar strictly rejects non-value tokens (part numbers, dimensions),
 and verifies correct handling of BS 1852 notation and unit-suffixed values.
 """
 
-import re
 from decimal import Decimal
 
 import pytest
 
 from src.bom_lib.grammar import parse_value_to_decimal as grammar_parse
-from src.bom_lib.presets import BOM_PRESETS
+
+# Every resistor, capacitor and inductor value printed in the parts lists the
+# app once shipped as presets (PedalPCB and Tayda kits), as written.
+STANDARD_VALUES = [
+    "1.2k",
+    "1.5K",
+    "1.5k",
+    "1.5n",
+    "1.8k",
+    "100",
+    "100k",
+    "100n",
+    "100p",
+    "100u",
+    "10M",
+    "10k",
+    "10n",
+    "10u",
+    "11k",
+    "120",
+    "12k",
+    "150k",
+    "150p",
+    "15k",
+    "15n",
+    "15p",
+    "16k",
+    "18k",
+    "18n",
+    "1K",
+    "1M",
+    "1k",
+    "1n",
+    "1u",
+    "2.2M",
+    "2.2k",
+    "2.2n",
+    "2.2u",
+    "2.4k",
+    "2.7k",
+    "20k",
+    "220",
+    "220k",
+    "220n",
+    "220p",
+    "220u",
+    "22M",
+    "22k",
+    "22n",
+    "22u",
+    "27k",
+    "27n",
+    "2M",
+    "2k",
+    "3.3M",
+    "3.3k",
+    "3.3n",
+    "3.9k",
+    "3.9n",
+    "30p",
+    "330",
+    "330k",
+    "33k",
+    "390",
+    "390k",
+    "390n",
+    "390p",
+    "392k",
+    "39k",
+    "4.7k",
+    "4.7n",
+    "4.7u",
+    "422k",
+    "430k",
+    "43k",
+    "47",
+    "470",
+    "470k",
+    "470n",
+    "470p",
+    "47k",
+    "47n",
+    "47p",
+    "47u",
+    "5.1k",
+    "560",
+    "560k",
+    "56k",
+    "6.8k",
+    "620k",
+    "680k",
+    "680p",
+    "68k",
+    "68n",
+    "8.2k",
+    "820",
+    "820k",
+    "820p",
+    "82k",
+    "82n",
+    "9.1k",
+]
 
 
-def _collect_preset_values() -> set[str]:
-    """Extracts all standard passive component values from the preset database."""
-    values: set[str] = set()
-    for preset_data in BOM_PRESETS.values():
-        bom_text = preset_data.get("bom_text", "")
-        for line in bom_text.splitlines():
-            line = line.strip()
-            if not line:
-                continue
-            parts = line.split(maxsplit=1)
-            if len(parts) < 2:
-                continue
-            designator, value_part = parts[0], parts[1]
-            if re.match(r"^[RCL]\d+$", designator):
-                first_token = value_part.split()[0]
-                if not first_token.endswith("mm") and first_token != "Jumper":
-                    values.add(first_token)
-    return values
-
-
-PRESET_STANDARD_VALUES = sorted(_collect_preset_values())
-
-
-@pytest.mark.parametrize("val_str", PRESET_STANDARD_VALUES)
-def test_preset_values_parsing(val_str: str) -> None:
-    """Verifies that CFG correctly parses all standard passive values from presets."""
+@pytest.mark.parametrize("val_str", STANDARD_VALUES)
+def test_standard_values_parsing(val_str: str) -> None:
+    """Verifies that CFG correctly parses standard passive values."""
     grammar_result = grammar_parse(val_str)
 
     assert grammar_result is not None, (
-        f"Grammar failed to parse standard preset value: '{val_str}'"
+        f"Grammar failed to parse standard value: '{val_str}'"
     )
     assert isinstance(grammar_result, Decimal)
 

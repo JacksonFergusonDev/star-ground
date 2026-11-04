@@ -2,6 +2,7 @@
  "id": "samurai-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Samurai Overdrive",
+ "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/Samurai-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb047/",
  "file_name": "Samurai-PedalPCB.pdf",

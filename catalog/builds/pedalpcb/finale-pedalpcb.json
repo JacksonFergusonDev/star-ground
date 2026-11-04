@@ -2,6 +2,7 @@
  "id": "finale-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Finale Overdrive",
+ "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/Finale-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb532/",
  "file_name": "Finale-PedalPCB.pdf",

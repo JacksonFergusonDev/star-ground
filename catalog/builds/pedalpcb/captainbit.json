@@ -2,6 +2,7 @@
  "id": "captainbit",
  "publisher": "pedalpcb",
  "title": "Captain Bit",
+ "effects": ["fuzz", "distortion"],
  "document": "https://docs.pedalpcb.com/project/CaptainBit.pdf",
  "page": "https://www.pedalpcb.com/product/captainbit/",
  "file_name": "CaptainBit.pdf",

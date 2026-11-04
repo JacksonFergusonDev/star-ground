@@ -2,6 +2,7 @@
  "id": "triadcompressor-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Triad Compressor",
+ "effects": ["dynamics"],
  "document": "https://docs.pedalpcb.com/project/TriadCompressor-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb435/",
  "file_name": "TriadCompressor-PedalPCB.pdf",

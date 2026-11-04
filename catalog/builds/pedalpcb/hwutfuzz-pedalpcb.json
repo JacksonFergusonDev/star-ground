@@ -2,6 +2,7 @@
  "id": "hwutfuzz-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Hwut Fuzz",
+ "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/HwutFuzz-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb473/",
  "file_name": "HwutFuzz-PedalPCB.pdf",

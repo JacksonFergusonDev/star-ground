@@ -2,6 +2,7 @@
  "id": "sheepylove-pcb026-hebridean-build-doc",
  "publisher": "pedalpcb",
  "title": "Sheepylove Hebridean Build Doc",
+ "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/sheepylove.com/Sheepylove-PCB026-Hebridean-build_doc.pdf",
  "page": "https://www.pedalpcb.com/product/pcb733/",
  "file_name": "Sheepylove-PCB026-Hebridean-build_doc.pdf",

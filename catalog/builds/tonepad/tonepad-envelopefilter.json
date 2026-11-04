@@ -2,6 +2,7 @@
  "id": "tonepad-envelopefilter",
  "publisher": "tonepad",
  "title": "A-gua Filter",
+ "effects": ["filter"],
  "document": "https://tonepad.com/getFile.asp?id=113",
  "page": "https://tonepad.com/project.asp?id=4",
  "file_name": "tonepad_envelopefilter.pdf",

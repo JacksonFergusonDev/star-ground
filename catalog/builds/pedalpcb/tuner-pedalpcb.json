@@ -2,6 +2,7 @@
  "id": "tuner-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Tuner",
+ "effects": ["utility"],
  "document": "https://docs.pedalpcb.com/project/Tuner-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/tuner/",
  "file_name": "Tuner-PedalPCB.pdf",

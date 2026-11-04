@@ -2,6 +2,7 @@
  "id": "sabbath",
  "publisher": "pedalpcb",
  "title": "Sabbath Distortion",
+ "effects": ["distortion"],
  "document": "https://docs.pedalpcb.com/project/Sabbath.pdf",
  "page": "https://www.pedalpcb.com/product/sabbath/",
  "file_name": "Sabbath.pdf",

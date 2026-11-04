@@ -2,6 +2,7 @@
  "id": "aldrinfuzz",
  "publisher": "pedalpcb",
  "title": "Aldrin Fuzz",
+ "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/AldrinFuzz.pdf",
  "page": "https://www.pedalpcb.com/product/pcb187/",
  "file_name": "AldrinFuzz.pdf",

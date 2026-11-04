@@ -2,6 +2,7 @@
  "id": "article59-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Article 59 Overdrive",
+ "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/Article59-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb716/",
  "file_name": "Article59-PedalPCB.pdf",

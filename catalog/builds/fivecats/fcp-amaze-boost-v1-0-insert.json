@@ -1,7 +1,8 @@
 {
  "id": "fcp-amaze-boost-v1-0-insert",
  "publisher": "fivecats",
- "title": "fcp-amaze-boost-v1-0-insert",
+ "title": "Amaze Boost",
+ "effects": ["boost"],
  "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/07/FCP-Amaze-Boost-V1-0-Insert.pdf",
  "page": "https://www.five-cats-pedals.co.uk/product/amaze-boost-amz-mini-booster-clone/",
  "file_name": "FCP-Amaze-Boost-V1-0-Insert.pdf",

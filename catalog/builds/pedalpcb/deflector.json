@@ -2,6 +2,7 @@
  "id": "deflector",
  "publisher": "pedalpcb",
  "title": "Deflector Reverb",
+ "effects": ["reverb"],
  "document": "https://docs.pedalpcb.com/project/Deflector.pdf",
  "page": "https://www.pedalpcb.com/product/pcb298/",
  "file_name": "Deflector.pdf",

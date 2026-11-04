@@ -2,6 +2,7 @@
  "id": "circulator",
  "publisher": "pedalpcb",
  "title": "Circulator",
+ "effects": ["modulation"],
  "document": "https://docs.pedalpcb.com/project/Circulator.pdf",
  "page": "https://www.pedalpcb.com/product/circulator/",
  "file_name": "Circulator.pdf",

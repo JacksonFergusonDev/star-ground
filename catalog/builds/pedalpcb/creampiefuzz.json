@@ -2,6 +2,7 @@
  "id": "creampiefuzz",
  "publisher": "pedalpcb",
  "title": "Cream Pie Fuzz",
+ "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/CreamPieFuzz.pdf",
  "page": "https://www.pedalpcb.com/product/creampiefuzz/",
  "file_name": "CreamPieFuzz.pdf",

@@ -2,6 +2,7 @@
  "id": "abyss",
  "publisher": "pedalpcb",
  "title": "The Abyss",
+ "effects": ["modulation"],
  "document": "https://docs.pedalpcb.com/project/Abyss.pdf",
  "page": "https://www.pedalpcb.com/product/abyss/",
  "file_name": "Abyss.pdf",

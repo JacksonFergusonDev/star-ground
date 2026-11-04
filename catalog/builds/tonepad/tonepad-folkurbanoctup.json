@@ -2,6 +2,7 @@
  "id": "tonepad-folkurbanoctup",
  "publisher": "tonepad",
  "title": "Folkurban OCTUP!",
+ "effects": ["fuzz"],
  "document": "https://tonepad.com/getFile.asp?id=109",
  "page": "https://tonepad.com/project.asp?id=58",
  "file_name": "tonepad_folkurbanoctup.pdf",

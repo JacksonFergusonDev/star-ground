@@ -2,6 +2,7 @@
  "id": "wilhelmscream-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Wilhelm Scream Overdrive",
+ "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/WilhelmScream-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb482/",
  "file_name": "WilhelmScream-PedalPCB.pdf",

@@ -2,6 +2,7 @@
  "id": "2026-nostalgitone-sonic-bloom",
  "publisher": "guitarpcb",
  "title": "NostalgiTone SONIC BLOOM Single",
+ "effects": ["boost"],
  "document": "https://guitarpcb.com/wp-content/uploads/2026/08/2026-NostalgiTone-SONIC-BLOOM.pdf",
  "page": "https://guitarpcb.com/community/topic/pedal-building-guides-mandatory-reading/",
  "file_name": "2026-NostalgiTone-SONIC-BLOOM.pdf",

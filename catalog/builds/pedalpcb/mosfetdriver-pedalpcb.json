@@ -2,6 +2,7 @@
  "id": "mosfetdriver-pedalpcb",
  "publisher": "pedalpcb",
  "title": "MOSFET Driver",
+ "effects": ["overdrive", "distortion"],
  "document": "https://docs.pedalpcb.com/project/MOSFETDriver-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb053/",
  "file_name": "MOSFETDriver-PedalPCB.pdf",

@@ -2,6 +2,7 @@
  "id": "overcastfuzz-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Overcast Fuzz",
+ "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/OvercastFuzz-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb724/",
  "file_name": "OvercastFuzz-PedalPCB.pdf",

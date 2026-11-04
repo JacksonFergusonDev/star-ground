@@ -2,6 +2,7 @@
  "id": "telluriandrive-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Tellurian Drive",
+ "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/TellurianDrive-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb525/",
  "file_name": "TellurianDrive-PedalPCB.pdf",

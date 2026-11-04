@@ -1,7 +1,8 @@
 {
  "id": "proposition-pedalpcb",
  "publisher": "pedalpcb",
- "title": "AND FEATURES",
+ "title": "Proposition Distortion",
+ "effects": ["distortion"],
  "document": "https://docs.pedalpcb.com/project/Proposition-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb504/",
  "file_name": "Proposition-PedalPCB.pdf",

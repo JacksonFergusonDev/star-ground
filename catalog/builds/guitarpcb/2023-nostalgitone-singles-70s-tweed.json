@@ -2,6 +2,7 @@
  "id": "2023-nostalgitone-singles-70s-tweed",
  "publisher": "guitarpcb",
  "title": "NostalgiTone 70s Tweed Single",
+ "effects": ["fuzz", "overdrive"],
  "document": "https://guitarpcb.com/wp-content/uploads/2024/01/2023-NostalgiTone-Singles-70s-Tweed.pdf",
  "page": "https://guitarpcb.com/community/topic/pedal-building-guides-mandatory-reading/",
  "file_name": "2023-NostalgiTone-Singles-70s-Tweed.pdf",

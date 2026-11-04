@@ -2,6 +2,7 @@
  "id": "episode-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Episode Boost",
+ "effects": ["boost"],
  "document": "https://docs.pedalpcb.com/project/Episode-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb398/",
  "file_name": "Episode-PedalPCB.pdf",

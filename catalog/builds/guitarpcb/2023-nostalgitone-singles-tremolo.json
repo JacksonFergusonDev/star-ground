@@ -2,6 +2,7 @@
  "id": "2023-nostalgitone-singles-tremolo",
  "publisher": "guitarpcb",
  "title": "NostalgiTone 60s Tremolo Single",
+ "effects": ["modulation"],
  "document": "https://guitarpcb.com/wp-content/uploads/2023/12/2023-NostalgiTone-Singles-Tremolo.pdf",
  "page": "https://guitarpcb.com/community/topic/pedal-building-guides-mandatory-reading/",
  "file_name": "2023-NostalgiTone-Singles-Tremolo.pdf",

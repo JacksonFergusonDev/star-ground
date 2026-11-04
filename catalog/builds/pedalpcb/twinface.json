@@ -2,6 +2,7 @@
  "id": "twinface",
  "publisher": "pedalpcb",
  "title": "Twin Face",
+ "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/TwinFace.pdf",
  "page": "https://www.pedalpcb.com/product/twinface/",
  "file_name": "TwinFace.pdf",

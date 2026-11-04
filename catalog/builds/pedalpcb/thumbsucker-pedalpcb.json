@@ -2,6 +2,7 @@
  "id": "thumbsucker-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Thumb Sucker",
+ "effects": ["dynamics"],
  "document": "https://docs.pedalpcb.com/project/ThumbSucker-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb137/",
  "file_name": "ThumbSucker-PedalPCB.pdf",

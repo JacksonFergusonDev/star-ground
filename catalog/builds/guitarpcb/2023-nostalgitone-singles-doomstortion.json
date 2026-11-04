@@ -1,7 +1,8 @@
 {
  "id": "2023-nostalgitone-singles-doomstortion",
  "publisher": "guitarpcb",
- "title": "NostalgiTone Doomstor(cid:21)on Single",
+ "title": "NostalgiTone Doomstortion Build Document",
+ "effects": ["overdrive", "distortion"],
  "document": "https://guitarpcb.com/wp-content/uploads/2024/11/2023-NostalgiTone-Singles-Doomstortion.pdf",
  "page": "https://guitarpcb.com/community/topic/pedal-building-guides-mandatory-reading/",
  "file_name": "2023-NostalgiTone-Singles-Doomstortion.pdf",

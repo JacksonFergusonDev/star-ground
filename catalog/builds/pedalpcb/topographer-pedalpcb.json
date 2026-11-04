@@ -2,6 +2,7 @@
  "id": "topographer-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Topographer Distortion",
+ "effects": ["distortion"],
  "document": "https://docs.pedalpcb.com/project/Topographer-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb432/",
  "file_name": "Topographer-PedalPCB.pdf",

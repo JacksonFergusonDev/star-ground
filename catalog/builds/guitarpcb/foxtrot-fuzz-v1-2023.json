@@ -2,6 +2,7 @@
  "id": "foxtrot-fuzz-v1-2023",
  "publisher": "guitarpcb",
  "title": "FOXTROT FUZZ v1 2022",
+ "effects": ["fuzz"],
  "document": "https://guitarpcb.com/wp-content/uploads/2023/08/Foxtrot-Fuzz-v1-2023.pdf",
  "page": "https://guitarpcb.com/legacy-pcb-document-list/",
  "file_name": "Foxtrot-Fuzz-v1-2023.pdf",

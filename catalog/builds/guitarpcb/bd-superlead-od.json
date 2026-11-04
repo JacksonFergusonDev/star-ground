@@ -2,6 +2,7 @@
  "id": "bd-superlead-od",
  "publisher": "guitarpcb",
  "title": "SuperLead O.D.",
+ "effects": ["overdrive", "distortion"],
  "document": "https://guitarpcb.com/wp-content/uploads/2018/12/BD_SuperLead-OD.pdf",
  "page": "https://guitarpcb.com/community/topic/direct-build-document-link-list/",
  "file_name": "BD_SuperLead-OD.pdf",

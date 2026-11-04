@@ -2,6 +2,7 @@
  "id": "pedalpcb-triaddistortion",
  "publisher": "pedalpcb",
  "title": "Triad Distortion",
+ "effects": ["distortion"],
  "document": "https://docs.pedalpcb.com/project/PedalPCB-TriadDistortion.pdf",
  "page": "https://www.pedalpcb.com/product/pcb353/",
  "file_name": "PedalPCB-TriadDistortion.pdf",

@@ -2,6 +2,7 @@
  "id": "toupeefuzz",
  "publisher": "pedalpcb",
  "title": "Toupee Fuzz",
+ "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/ToupeeFuzz.pdf",
  "page": "https://www.pedalpcb.com/product/toupee/",
  "file_name": "ToupeeFuzz.pdf",

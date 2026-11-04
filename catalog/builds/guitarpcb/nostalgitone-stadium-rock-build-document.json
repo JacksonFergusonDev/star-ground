@@ -2,6 +2,7 @@
  "id": "nostalgitone-stadium-rock-build-document",
  "publisher": "guitarpcb",
  "title": "NostalgiTone STADIUM ROCK Single",
+ "effects": ["overdrive", "distortion"],
  "document": "https://guitarpcb.com/wp-content/uploads/2026/09/NostalgiTone-STADIUM-ROCK-Build-Document.pdf",
  "page": "https://guitarpcb.com/community/topic/pedal-building-guides-mandatory-reading/",
  "file_name": "NostalgiTone-STADIUM-ROCK-Build-Document.pdf",

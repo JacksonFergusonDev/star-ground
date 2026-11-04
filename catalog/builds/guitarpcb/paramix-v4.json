@@ -2,6 +2,7 @@
  "id": "paramix-v4",
  "publisher": "guitarpcb",
  "title": "ParaMix v4",
+ "effects": ["utility"],
  "document": "https://guitarpcb.com/wp-content/uploads/2025/10/ParaMix-v4.pdf",
  "page": "https://guitarpcb.com/community/topic/direct-build-document-link-list/",
  "file_name": "ParaMix-v4.pdf",

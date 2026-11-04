@@ -2,6 +2,7 @@
  "id": "deathcap",
  "publisher": "pedalpcb",
  "title": "Death Cap Fuzz",
+ "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/DeathCap.pdf",
  "page": "https://www.pedalpcb.com/product/deathcap/",
  "file_name": "DeathCap.pdf",

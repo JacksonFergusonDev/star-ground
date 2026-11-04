@@ -2,6 +2,7 @@
  "id": "arche-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Arche Boost",
+ "effects": ["boost"],
  "document": "https://docs.pedalpcb.com/project/Arche-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb450/",
  "file_name": "Arche-PedalPCB.pdf",

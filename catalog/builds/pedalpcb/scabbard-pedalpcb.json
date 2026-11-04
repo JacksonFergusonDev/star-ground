@@ -2,6 +2,7 @@
  "id": "scabbard-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Scabbard Overdrive",
+ "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/Scabbard-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb665/",
  "file_name": "Scabbard-PedalPCB.pdf",

@@ -2,6 +2,7 @@
  "id": "duocast",
  "publisher": "pedalpcb",
  "title": "DuoCast",
+ "effects": ["fuzz", "overdrive", "distortion"],
  "document": "https://docs.pedalpcb.com/project/DuoCast.pdf",
  "page": "https://www.pedalpcb.com/product/duocast/",
  "file_name": "DuoCast.pdf",

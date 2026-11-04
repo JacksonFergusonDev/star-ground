@@ -1,7 +1,8 @@
 {
  "id": "fcp-micromx-v1-0-insert",
  "publisher": "fivecats",
- "title": "fcp-micromx-v1-0-insert",
+ "title": "Micro MX",
+ "effects": ["boost"],
  "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/10/FCP-MicroMX-V1-0-Insert.pdf",
  "page": "https://www.five-cats-pedals.co.uk/product/micro-mx-mxr-microamp-clone/",
  "file_name": "FCP-MicroMX-V1-0-Insert.pdf",

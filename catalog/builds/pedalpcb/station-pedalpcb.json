@@ -2,6 +2,7 @@
  "id": "station-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Station Wah",
+ "effects": ["filter"],
  "document": "https://docs.pedalpcb.com/project/Station-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb377/",
  "file_name": "Station-PedalPCB.pdf",

@@ -2,6 +2,7 @@
  "id": "pedalpcb-triangulum",
  "publisher": "pedalpcb",
  "title": "Triangulum Boost",
+ "effects": ["boost"],
  "document": "https://docs.pedalpcb.com/project/PedalPCB-Triangulum.pdf",
  "page": "https://www.pedalpcb.com/product/triangulum/",
  "file_name": "PedalPCB-Triangulum.pdf",

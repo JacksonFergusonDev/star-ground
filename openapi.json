@@ -28,28 +28,6 @@
         }
       }
     },
-    "/api/presets": {
-      "get": {
-        "tags": [
-          "presets"
-        ],
-        "summary": "Presets",
-        "description": "The preset library, for browsing by source and category.",
-        "operationId": "presets_api_presets_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PresetCatalog"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/documents/read": {
       "post": {
         "tags": [
@@ -1112,73 +1090,6 @@
         "title": "PartWarning",
         "description": "A place where the parts list may disagree with its document."
       },
-      "Preset": {
-        "properties": {
-          "key": {
-            "type": "string",
-            "title": "Key"
-          },
-          "source": {
-            "type": "string",
-            "title": "Source"
-          },
-          "category": {
-            "type": "string",
-            "title": "Category"
-          },
-          "name": {
-            "type": "string",
-            "title": "Name"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "key",
-          "source",
-          "category",
-          "name"
-        ],
-        "title": "Preset",
-        "description": "A circuit in the preset library."
-      },
-      "PresetCatalog": {
-        "properties": {
-          "sources": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Sources"
-          },
-          "categories": {
-            "additionalProperties": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            "type": "object",
-            "title": "Categories"
-          },
-          "presets": {
-            "items": {
-              "$ref": "#/components/schemas/Preset"
-            },
-            "type": "array",
-            "title": "Presets"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "sources",
-          "categories",
-          "presets"
-        ],
-        "title": "PresetCatalog",
-        "description": "The preset library."
-      },
       "Problem": {
         "additionalProperties": false,
         "description": "Why a request or a reading failed, written for the builder.",
@@ -1935,70 +1846,6 @@
         "title": "PasteProject",
         "type": "object"
       },
-      "PresetProject": {
-        "additionalProperties": false,
-        "description": "A preset from the library, by its key (see `GET /api/presets`).",
-        "properties": {
-          "name": {
-            "default": "",
-            "description": "Blank to use the document's title.",
-            "maxLength": 200,
-            "title": "Name",
-            "type": "string"
-          },
-          "count": {
-            "default": 1,
-            "description": "Number of pedals.",
-            "maximum": 100,
-            "minimum": 1,
-            "title": "Count",
-            "type": "integer"
-          },
-          "variant": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "The build chosen from a multi-circuit document.",
-            "title": "Variant"
-          },
-          "use_ocr": {
-            "default": false,
-            "description": "Add the parts OCR read from images.",
-            "title": "Use Ocr",
-            "type": "boolean"
-          },
-          "corrections": {
-            "description": "Parts the builder corrected, applied to the chosen build.",
-            "items": {
-              "$ref": "#/components/schemas/PartCorrection"
-            },
-            "maxItems": 500,
-            "title": "Corrections",
-            "type": "array"
-          },
-          "method": {
-            "const": "preset",
-            "title": "Method",
-            "type": "string"
-          },
-          "preset": {
-            "title": "Preset",
-            "type": "string"
-          }
-        },
-        "required": [
-          "method",
-          "preset"
-        ],
-        "title": "PresetProject",
-        "type": "object"
-      },
       "UploadProject": {
         "additionalProperties": false,
         "description": "An uploaded build document.\n\nIt's a file part of the same request, or a reading's `document`, so a page\nneedn't send the file with every change.",
@@ -2158,7 +2005,6 @@
               "discriminator": {
                 "mapping": {
                   "paste": "#/components/schemas/PasteProject",
-                  "preset": "#/components/schemas/PresetProject",
                   "upload": "#/components/schemas/UploadProject",
                   "url": "#/components/schemas/UrlProject"
                 },
@@ -2167,9 +2013,6 @@
               "oneOf": [
                 {
                   "$ref": "#/components/schemas/PasteProject"
-                },
-                {
-                  "$ref": "#/components/schemas/PresetProject"
                 },
                 {
                   "$ref": "#/components/schemas/UrlProject"

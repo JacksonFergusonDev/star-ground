@@ -14,7 +14,6 @@
   let {
     card,
     project,
-    presetName,
     onCount,
     onRemove,
     onRead,
@@ -25,7 +24,6 @@
     card: Card;
     /** Its parts as last listed; null until they are. */
     project: ProjectResult | null;
-    presetName: (key: string) => string;
     onCount: (count: number) => void;
     onRemove: () => void;
     onRead: (ocr: boolean) => void;
@@ -66,8 +64,6 @@
     switch (card.source.kind) {
       case 'paste':
         return `Pasted list, ${count(card.source.text.trim().split('\n').length, 'line')}`;
-      case 'preset':
-        return `Preset: ${presetName(card.source.key)}`;
       case 'upload':
         return `Upload: ${card.source.fileName}`;
       case 'url':

@@ -1,7 +1,8 @@
 {
  "id": "fx5x",
  "publisher": "pedalpcb",
- "title": "FX5X",
+ "title": "FX5X Distortion / Overdrive",
+ "effects": ["overdrive", "distortion"],
  "document": "https://docs.pedalpcb.com/project/FX5X.pdf",
  "page": "https://www.pedalpcb.com/product/fx5x/",
  "file_name": "FX5X.pdf",

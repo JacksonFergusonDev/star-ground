@@ -5,17 +5,9 @@
   // there's no Generate button. Everything is kept in the browser (see
   // lib/workspace.svelte.ts).
   import { onMount, tick } from 'svelte';
-  import type { ExportKind, PresetCatalog } from '../../lib/api';
+  import type { ExportKind } from '../../lib/api';
   import type { Download } from '../../lib/server';
-  import {
-    bugOf,
-    exportFile,
-    linkedPdf,
-    masterList,
-    presets,
-    readDocument,
-    warmUp,
-  } from '../../lib/server';
+  import { bugOf, exportFile, linkedPdf, masterList, readDocument, warmUp } from '../../lib/server';
   import type { View } from '../../lib/router.svelte';
   import { buildHref, checkHref, followAppLinks, router, views } from '../../lib/router.svelte';
   import type { SharedProject } from '../../lib/share';
@@ -52,7 +44,6 @@
   import StockPanel from './StockPanel.svelte';
 
   const workspace = pageWorkspace();
-  let catalog = $state<PresetCatalog | null>(null);
 
   const view = $derived<View>(router.view ?? 'projects');
   // The project a check or bench page is about.
@@ -102,9 +93,6 @@
     if (!file) throw new Error('The uploaded file is no longer stored here. Add it again.');
     return file.arrayBuffer();
   }
-
-  const presetName = (key: string): string =>
-    catalog?.presets.find((p) => p.key === key)?.name ?? key;
 
   // A catalog build's "Add to build" opens `/app/?catalog=<publisher>/<name>`.
   // It's added once: the address loses the parameter, so a reload doesn't add it again.
@@ -172,9 +160,6 @@
     warmUp();
     void addFromCatalog();
     void addFromShareLink();
-    presets()
-      .then((c) => (catalog = c))
-      .catch(() => (catalog = { sources: [], categories: {}, presets: [] }));
     return followAppLinks();
   });
 
@@ -220,13 +205,6 @@
     switch (added.kind) {
       case 'paste':
         workspace.add({ name: added.name, count: 1, source: { kind: 'paste', text: added.text } });
-        break;
-      case 'preset':
-        workspace.add({
-          name: presetName(added.key),
-          count: 1,
-          source: { kind: 'preset', key: added.key },
-        });
         break;
       case 'url': {
         const card = workspace.add(
@@ -360,7 +338,7 @@
       {:else}
         <p class="note">
           Only an uploaded document or a link can be checked against its document. This project's
-          parts come from a {card.source.kind === 'preset' ? 'preset' : 'pasted list'}.
+          parts come from a pasted list.
         </p>
       {/if}
     {:else if project && canBuild}
@@ -494,7 +472,6 @@
             <ProjectCard
               {card}
               project={listed}
-              {presetName}
               flags={flagged(card, listed)}
               onCount={(count) => workspace.setCount(card, count)}
               onRemove={() => workspace.remove(card.id)}
@@ -508,8 +485,8 @@
         </ul>
       {:else}
         <EmptyState title="Nothing on the bench yet" level={3}>
-          Add a build document, a link to one, a preset or a parts list. Or find your pedal in the
-          circuit catalog, whose parts lists are already read.
+          Add a build document, a link to one or a parts list. Or find your pedal in the circuit
+          catalog, whose parts lists are already read.
           {#snippet action()}
             <a class="hs-button" href="/catalog/">Browse the catalog {@render arrow()}</a>
           {/snippet}
@@ -517,7 +494,7 @@
       {/if}
     </section>
     <div class="adder" class:first={!workspace.cards.length}>
-      <AddProject {catalog} onAdd={add} />
+      <AddProject onAdd={add} />
     </div>
   </div>
 {/if}

@@ -2,6 +2,7 @@
  "id": "pastel-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Pastel Preamp",
+ "effects": ["fuzz", "overdrive", "distortion", "boost"],
  "document": "https://docs.pedalpcb.com/project/Pastel-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb501/",
  "file_name": "Pastel-PedalPCB.pdf",

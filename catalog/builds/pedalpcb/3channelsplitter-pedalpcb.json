@@ -2,6 +2,7 @@
  "id": "3channelsplitter-pedalpcb",
  "publisher": "pedalpcb",
  "title": "3-Channel Splitter",
+ "effects": ["utility"],
  "document": "https://docs.pedalpcb.com/project/3ChannelSplitter-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb631/",
  "file_name": "3ChannelSplitter-PedalPCB.pdf",

@@ -2,6 +2,7 @@
  "id": "sequeldistortion-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Sequel Distortion",
+ "effects": ["distortion"],
  "document": "https://docs.pedalpcb.com/project/SequelDistortion-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb637/",
  "file_name": "SequelDistortion-PedalPCB.pdf",

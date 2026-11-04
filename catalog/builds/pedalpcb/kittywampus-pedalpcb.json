@@ -2,6 +2,7 @@
  "id": "kittywampus-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Kittywampus Distortion",
+ "effects": ["distortion"],
  "document": "https://docs.pedalpcb.com/project/Kittywampus-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb675/",
  "file_name": "Kittywampus-PedalPCB.pdf",

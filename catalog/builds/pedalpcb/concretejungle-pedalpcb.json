@@ -2,6 +2,7 @@
  "id": "concretejungle-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Concrete Jungle Distortion",
+ "effects": ["distortion"],
  "document": "https://docs.pedalpcb.com/project/ConcreteJungle-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb647/",
  "file_name": "ConcreteJungle-PedalPCB.pdf",

@@ -2,6 +2,7 @@
  "id": "nineball-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Nine Ball Overdrive",
+ "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/NineBall-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb711/",
  "file_name": "NineBall-PedalPCB.pdf",

@@ -2,6 +2,7 @@
  "id": "bd-swah",
  "publisher": "guitarpcb",
  "title": "SWAH V4",
+ "effects": ["filter"],
  "document": "https://guitarpcb.com/wp-content/uploads/2018/07/BD_Swah.pdf",
  "page": "https://guitarpcb.com/community/topic/direct-build-document-link-list/",
  "file_name": "BD_Swah.pdf",

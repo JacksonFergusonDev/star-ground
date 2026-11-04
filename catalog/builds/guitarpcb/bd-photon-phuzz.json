@@ -2,6 +2,7 @@
  "id": "bd-photon-phuzz",
  "publisher": "guitarpcb",
  "title": "PHOTON PHUZZ",
+ "effects": ["fuzz"],
  "document": "https://guitarpcb.com/wp-content/uploads/2025/07/BD_Photon-Phuzz.pdf",
  "page": "https://guitarpcb.com/community/topic/direct-build-document-link-list/",
  "file_name": "BD_Photon-Phuzz.pdf",

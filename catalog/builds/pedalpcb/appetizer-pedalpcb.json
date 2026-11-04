@@ -2,6 +2,7 @@
  "id": "appetizer-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Appetizer Overdrive",
+ "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/Appetizer-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb634/",
  "file_name": "Appetizer-PedalPCB.pdf",

@@ -17,7 +17,6 @@ __all__ = [
     "expand_refs",
     "float_to_display_string",
     "float_to_search_string",
-    "get_clean_name",
     "natural_sort_key",
     "parse_value_to_decimal",
 ]
@@ -188,16 +187,3 @@ def float_to_display_string(val: float) -> str:
             return f"{num}{suffix}{decimal_part}"
 
     return base
-
-
-def get_clean_name(raw_key: str) -> str:
-    """Parses '[Source] [Category] Name' into 'Name - Source'."""
-    if not raw_key:
-        return ""
-    from src.bom_lib.presets import parse_preset_key
-
-    parsed = parse_preset_key(raw_key)
-    if parsed:
-        src, _cat, name = parsed
-        return f"{name} - {src}"
-    return raw_key

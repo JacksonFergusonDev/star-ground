@@ -2,6 +2,7 @@
  "id": "dragonsbreath-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Dragons Breath Boost",
+ "effects": ["boost"],
  "document": "https://docs.pedalpcb.com/project/DragonsBreath-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb402/",
  "file_name": "DragonsBreath-PedalPCB.pdf",

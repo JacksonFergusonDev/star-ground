@@ -2,6 +2,7 @@
  "id": "poptopboost",
  "publisher": "pedalpcb",
  "title": "Pop Top Boost",
+ "effects": ["boost"],
  "document": "https://docs.pedalpcb.com/project/PopTopBoost.pdf",
  "page": "https://www.pedalpcb.com/product/pcb230/",
  "file_name": "PopTopBoost.pdf",

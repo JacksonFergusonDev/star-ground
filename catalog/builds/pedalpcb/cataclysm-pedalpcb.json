@@ -2,6 +2,7 @@
  "id": "cataclysm-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Cataclysm Delay",
+ "effects": ["delay"],
  "document": "https://docs.pedalpcb.com/project/Cataclysm-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb028/",
  "file_name": "Cataclysm-PedalPCB.pdf",

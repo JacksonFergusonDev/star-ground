@@ -2,6 +2,7 @@
  "id": "germaniumii",
  "publisher": "pedalpcb",
  "title": "Germanium II Distortion",
+ "effects": ["distortion"],
  "document": "https://docs.pedalpcb.com/project/GermaniumII.pdf",
  "page": "https://www.pedalpcb.com/product/germaniumii/",
  "file_name": "GermaniumII.pdf",

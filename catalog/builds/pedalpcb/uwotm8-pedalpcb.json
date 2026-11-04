@@ -2,6 +2,7 @@
  "id": "uwotm8-pedalpcb",
  "publisher": "pedalpcb",
  "title": "UWotM8 Distortion",
+ "effects": ["distortion"],
  "document": "https://docs.pedalpcb.com/project/UWotM8-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb526/",
  "file_name": "UWotM8-PedalPCB.pdf",

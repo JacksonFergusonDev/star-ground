@@ -10,6 +10,10 @@ overlap and leave out a different few hundred products each night. So a page
 an earlier run read is visited even when the sitemap no longer lists it, and
 its documents are dropped only when the page itself is gone (404 or 410) or
 no longer links them.
+
+A page also says what it sells (`page_details`): the product's name, for a
+document that prints none, and the publisher's categories for it, from which
+the catalog says what kind of effect each build is (`effects`).
 """
 
 import logging
@@ -23,9 +27,14 @@ from urllib.parse import parse_qs, unquote, urljoin, urlsplit, urlunsplit
 from xml.etree import ElementTree
 
 from src.catalog.client import RETRIES, GoneError, PoliteClient
-from src.catalog.sources import FileIndex, Source
+from src.catalog.sources import DocumentPage, FileIndex, Source
 
 logger = logging.getLogger(__name__)
+
+# What a page read is taken from it. A page read by an older version (or
+# none: read before pages gave their names and categories) is read again,
+# though the sitemap says it hasn't changed.
+PAGE_VERSION = 1
 
 
 @dataclass(frozen=True, slots=True)
@@ -37,11 +46,17 @@ class Listing:
         page: The page that links it: the product page to buy the board
             from, or a list of documents.
         name: The document's file name, as published.
+        title: What the page calls it: the product's or project's name, or
+            on a list of documents the link's text. None if it says nothing.
+        categories: The publisher's categories for the product, as the page
+            names them ('fuzz', 'amp-in-a-box', 'tremolo').
     """
 
     document: str
     page: str
     name: str
+    title: str | None = None
+    categories: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -53,11 +68,13 @@ class PageState:
         listings: The documents it linked.
         postponed: Whether the last run ran out of time before reading it,
             so the next one reads it first.
+        version: The `PAGE_VERSION` it was read with.
     """
 
     lastmod: str | None
     listings: tuple[Listing, ...]
     postponed: bool = False
+    version: int = PAGE_VERSION
 
 
 @dataclass(slots=True)
@@ -138,6 +155,117 @@ def anchors(html: str) -> list[_Anchor]:
     return parser.anchors
 
 
+@dataclass(frozen=True, slots=True)
+class PageDetails:
+    """What a product or project page says about what it sells.
+
+    Attributes:
+        title: The product's or project's name, if the page names it.
+        categories: The publisher's categories for it, as the page names them.
+    """
+
+    title: str | None
+    categories: tuple[str, ...]
+
+
+# Tonepad lists related projects under 'More tremolo projects:', and projects
+# of the same difficulty under 'More INTERMEDIATE level projects:'.
+_RELATED = re.compile(r"More (?!.*\blevel\b)(.+?) projects:", re.IGNORECASE)
+
+
+class _Details(HTMLParser):
+    """A page's name for its product, and the categories it files it under.
+
+    WooCommerce (PedalPCB, GuitarPCB, Five Cats) names the product in the
+    page's first `<h1>`, gives the product's own element its categories as
+    `product_cat-<slug>` classes (beside `post-<id>`, where the page's
+    `<body>` says `postid-<id>`), and links its main category in the
+    breadcrumb. Tonepad names a project in its `projectLabel`, and its kind of
+    effect in the link to related projects.
+    """
+
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self.title: list[str] | None = None
+        self.categories: list[str] = []
+        self._post: str | None = None
+        self._open: list[str] = []
+        self._in_title = False
+        self._breadcrumb = False
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        attributes = dict(attrs)
+        classes = (attributes.get("class") or "").split()
+        if tag == "body":
+            self._post = next(
+                (c.removeprefix("postid-") for c in classes if c.startswith("postid-")),
+                None,
+            )
+        elif self._post and f"post-{self._post}" in classes:
+            self.categories += [
+                c.removeprefix("product_cat-")
+                for c in classes
+                if c.startswith("product_cat-")
+            ]
+        if tag == "nav" and "woocommerce-breadcrumb" in classes:
+            self._breadcrumb = True
+        elif tag == "a" and self._breadcrumb:
+            path = urlsplit(attributes.get("href") or "").path
+            if "/product-category/" in path:
+                self.categories.append(PurePosixPath(path).name)
+        if self.title is None and (
+            tag == "h1" or (tag == "span" and "projectLabel" in classes)
+        ):
+            self.title = []
+            self._in_title = True
+            self._open.append(tag)
+
+    def handle_data(self, data: str) -> None:
+        if self._in_title and self.title is not None:
+            self.title.append(data)
+        related = _RELATED.search(data)
+        if related:
+            self.categories.append(related[1].strip().lower())
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag == "nav":
+            self._breadcrumb = False
+        if self._open and tag == self._open[-1]:
+            self._open.pop()
+            self._in_title = False
+
+
+def page_details(html: str) -> PageDetails:
+    """What a product or project page says about what it sells.
+
+    Args:
+        html: The page.
+
+    Returns:
+        The product's name, if the page names one, and its categories, each
+        once in the order the page gives them.
+    """
+    parser = _Details()
+    parser.feed(html)
+    title = " ".join(" ".join(parser.title or []).split())
+    return PageDetails(title or None, tuple(dict.fromkeys(parser.categories)))
+
+
+def _title(listed: DocumentPage | None, label: str, details: PageDetails) -> str | None:
+    """What a page calls a document it links.
+
+    A product page names its product. A dedicated list of documents names
+    each in its link ('*PURP': the asterisk marks a new one); a page whose
+    links must say they're build documents ('Build Document (PDF)') and is
+    headed by something else names none.
+    """
+    if listed is None:
+        return details.title
+    if listed.label is None:
+        return " ".join(label.lstrip("*").split()) or None
+    return None
+
+
 def _name(url: str) -> str:
     return PurePosixPath(unquote(urlsplit(url).path)).name
 
@@ -154,6 +282,7 @@ def pdf_links(page: str, html: str, source: Source) -> list[Listing]:
         Its build documents' links, in the order they appear.
     """
     listed = next((p for p in source.document_pages if p.url == page), None)
+    details = page_details(html)
     on_product = source.product_path in urlsplit(page).path
     label_rule = (
         listed.label if listed else (source.product_label if on_product else None)
@@ -176,7 +305,19 @@ def pdf_links(page: str, html: str, source: Source) -> list[Listing]:
         clues = f"{unquote(url.path)} {anchor.label} {anchor.row}"
         if source.excluded and source.excluded.search(clues):
             continue
-        found.setdefault(document, Listing(document, page, _name(document)))
+        found.setdefault(
+            document,
+            Listing(
+                document,
+                page,
+                _name(document),
+                _title(listed, anchor.label, details),
+                details.categories,
+            ),
+        )
+    if listed is None and len(found) > 1:
+        # A bundle's page ('EQD Mega Pack') names the bundle, not each board.
+        return [replace(listing, title=None) for listing in found.values()]
     return list(found.values())
 
 
@@ -295,6 +436,7 @@ def _file_index_links(
     client: PoliteClient, page: str, html: str, index: FileIndex, source: Source
 ) -> list[Listing]:
     """A project's PDF attachments, through their information pages."""
+    details = page_details(html)
     found: list[Listing] = []
     for anchor in anchors(html):
         info = _published_id(page, anchor.href, index.file_info_path, source)
@@ -308,7 +450,15 @@ def _file_index_links(
             if (link := _published_id(info, item.href, index.download_path, source))
         }
         if len(downloads) == 1:
-            found.append(Listing(downloads.pop(), page, anchor.label))
+            found.append(
+                Listing(
+                    downloads.pop(),
+                    page,
+                    anchor.label,
+                    details.title,
+                    details.categories,
+                )
+            )
     return found
 
 
@@ -345,9 +495,19 @@ def discover(
         # the documents an unchanged page linked last time.
         if not source.is_build(listing.document):
             return
-        if listing.document not in result.listings:
+        first = result.listings.get(listing.document)
+        if first is None:
             result.listings[listing.document] = listing
             on_listing(listing)
+        else:
+            # GuitarPCB lists a document and sells its board, and Five Cats
+            # sells it alone and in bundles: each page may say something
+            # the other doesn't.
+            result.listings[listing.document] = replace(
+                first,
+                title=first.title or listing.title,
+                categories=tuple(dict.fromkeys(first.categories + listing.categories)),
+            )
 
     pages: dict[str, str | None]
     if source.file_index:
@@ -405,7 +565,12 @@ def discover(
             break
         # Only a later date is a change: one the same or earlier is the
         # sitemap listing the page from an older copy.
-        if before and lastmod and _newest(before.lastmod, lastmod) == before.lastmod:
+        if (
+            before
+            and before.version >= PAGE_VERSION
+            and lastmod
+            and _newest(before.lastmod, lastmod) == before.lastmod
+        ):
             logger.info(
                 "[%d/%d] %s unchanged since %s; %d documents as before",
                 number,

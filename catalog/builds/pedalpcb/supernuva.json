@@ -2,6 +2,7 @@
  "id": "supernuva",
  "publisher": "pedalpcb",
  "title": "SuperNuva",
+ "effects": ["overdrive", "distortion"],
  "document": "https://docs.pedalpcb.com/project/SuperNuva.pdf",
  "page": "https://www.pedalpcb.com/product/supernuva/",
  "file_name": "SuperNuva.pdf",

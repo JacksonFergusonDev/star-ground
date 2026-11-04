@@ -40,6 +40,14 @@ test('searching and filtering hide what does not match', async ({ page }) => {
   await expect(page.getByText('1 of 2 builds')).toBeVisible();
 
   await page.getByRole('searchbox', { name: 'Search' }).fill('');
+  await page.getByRole('combobox', { name: 'Effect' }).selectOption('Fuzz');
+  await expect(rows).toHaveCount(1);
+  await expect(rows).toContainText('Gran Mango');
+  await page.getByRole('combobox', { name: 'Effect' }).selectOption('Other');
+  await expect(rows).toHaveCount(1);
+  await expect(rows).toContainText('The Clap');
+  await page.getByRole('combobox', { name: 'Effect' }).selectOption('All effects');
+
   await page.getByRole('checkbox', { name: 'Verified only' }).check();
   await expect(rows).toHaveCount(1);
   await expect(rows).toContainText('The Clap');
@@ -83,9 +91,6 @@ test('Add to build adds the document to the workspace once', async ({ page }) =>
   };
   const read: string[] = [];
   await page.route('**/api/health', (route) => route.fulfill({ json: { status: 'ok' } }));
-  await page.route('**/api/presets', (route) =>
-    route.fulfill({ json: { sources: [], categories: {}, presets: [] } }),
-  );
   await page.route('**/api/master-list', (route) => route.abort('failed'));
   await page.route('**/api/documents/read', (route) => {
     read.push(route.request().postDataBuffer()?.toString() ?? '');

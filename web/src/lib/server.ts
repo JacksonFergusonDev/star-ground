@@ -11,7 +11,6 @@ import type {
   PartIn,
   PartOut,
   PartReportIn,
-  PresetCatalog,
   Problem,
   ReadEvent,
   ReportIn,
@@ -61,11 +60,6 @@ async function send(path: string, init?: RequestInit): Promise<Response> {
   // Cloud Run's own refusals (no capacity, an overloaded instance) carry no message.
   if (response.status === 429 || response.status >= 500) throw new ApiError(BUSY, response.status);
   throw new ApiError(`The server answered ${response.status}. Try again.`, response.status);
-}
-
-/** The preset library. */
-export async function presets(): Promise<PresetCatalog> {
-  return (await (await send('presets')).json()) as PresetCatalog;
 }
 
 /** Where a document comes from: an upload or a link. */

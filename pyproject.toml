@@ -193,11 +193,9 @@ style = "one"          # all list items numbered 1. – reduces diff noise
 paths = ["src", "tools"]
 min_confidence = 60
 ignore_names = [
-    # TypedDict keys, read as stats["..."] or preset["..."].
-    "bom_text",
+    # TypedDict keys, read as stats["..."].
     "errors",
     "extracted_title",
-    "full_key",
     "included",
     "lines_read",
     "polarized",

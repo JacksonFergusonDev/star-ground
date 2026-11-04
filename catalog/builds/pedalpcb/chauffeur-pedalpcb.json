@@ -2,6 +2,7 @@
  "id": "chauffeur-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Chauffeur Overdrive",
+ "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/Chauffeur-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb387/",
  "file_name": "Chauffeur-PedalPCB.pdf",

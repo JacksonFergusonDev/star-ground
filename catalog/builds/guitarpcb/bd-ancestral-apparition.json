@@ -2,6 +2,7 @@
  "id": "bd-ancestral-apparition",
  "publisher": "guitarpcb",
  "title": "Ancestral Apparition",
+ "effects": ["reverb"],
  "document": "https://guitarpcb.com/wp-content/uploads/2018/06/BD_Ancestral-Apparition.pdf",
  "page": "https://guitarpcb.com/community/topic/direct-build-document-link-list/",
  "file_name": "BD_Ancestral-Apparition.pdf",

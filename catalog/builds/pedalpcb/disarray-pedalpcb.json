@@ -2,6 +2,7 @@
  "id": "disarray-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Disarray Distortion",
+ "effects": ["distortion"],
  "document": "https://docs.pedalpcb.com/project/Disarray-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/disarray/",
  "file_name": "Disarray-PedalPCB.pdf",

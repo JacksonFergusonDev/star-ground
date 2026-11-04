@@ -38,7 +38,7 @@
     card: Card;
     project: ProjectResult;
     display: Display;
-    /** The document's bytes; null for a pasted list or a preset. */
+    /** The document's bytes; null for a pasted list. */
     load: (() => Promise<ArrayBuffer>) | null;
     onPlace: (ref: string, placed: boolean) => void;
     onStartOver: () => void;

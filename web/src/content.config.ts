@@ -25,6 +25,22 @@ const catalog = defineCollection({
     id: z.string(),
     publisher: z.enum(['pedalpcb', 'guitarpcb', 'tonepad', 'fivecats']),
     title: z.string(),
+    // What kind of effect it is (src/catalog/effects.py); none when nothing says.
+    effects: z.array(
+      z.enum([
+        'fuzz',
+        'overdrive',
+        'distortion',
+        'boost',
+        'dynamics',
+        'modulation',
+        'delay',
+        'reverb',
+        'filter',
+        'amp',
+        'utility',
+      ]),
+    ),
     document: z.url(),
     page: z.url(),
     file_name: z.string(),

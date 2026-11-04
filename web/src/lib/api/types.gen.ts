@@ -406,52 +406,6 @@ export type PartWarning = {
 };
 
 /**
- * Preset
- *
- * A circuit in the preset library.
- */
-export type Preset = {
-    /**
-     * Key
-     */
-    key: string;
-    /**
-     * Source
-     */
-    source: string;
-    /**
-     * Category
-     */
-    category: string;
-    /**
-     * Name
-     */
-    name: string;
-};
-
-/**
- * PresetCatalog
- *
- * The preset library.
- */
-export type PresetCatalog = {
-    /**
-     * Sources
-     */
-    sources: Array<string>;
-    /**
-     * Categories
-     */
-    categories: {
-        [key: string]: Array<string>;
-    };
-    /**
-     * Presets
-     */
-    presets: Array<Preset>;
-};
-
-/**
  * Problem
  *
  * Why a request or a reading failed, written for the builder.
@@ -960,52 +914,6 @@ export type PasteProject = {
 };
 
 /**
- * PresetProject
- *
- * A preset from the library, by its key (see `GET /api/presets`).
- */
-export type PresetProject = {
-    /**
-     * Name
-     *
-     * Blank to use the document's title.
-     */
-    name?: string;
-    /**
-     * Count
-     *
-     * Number of pedals.
-     */
-    count?: number;
-    /**
-     * Variant
-     *
-     * The build chosen from a multi-circuit document.
-     */
-    variant?: string | null;
-    /**
-     * Use Ocr
-     *
-     * Add the parts OCR read from images.
-     */
-    use_ocr?: boolean;
-    /**
-     * Corrections
-     *
-     * Parts the builder corrected, applied to the chosen build.
-     */
-    corrections?: Array<PartCorrection>;
-    /**
-     * Method
-     */
-    method: 'preset';
-    /**
-     * Preset
-     */
-    preset: string;
-};
-
-/**
  * UploadProject
  *
  * An uploaded build document.
@@ -1117,7 +1025,7 @@ export type MasterListRequest = {
     /**
      * Projects
      */
-    projects: Array<PasteProject | PresetProject | UrlProject | UploadProject>;
+    projects: Array<PasteProject | UrlProject | UploadProject>;
     /**
      * Show Hardware
      *
@@ -1147,22 +1055,6 @@ export type HealthApiHealthGetResponses = {
 };
 
 export type HealthApiHealthGetResponse = HealthApiHealthGetResponses[keyof HealthApiHealthGetResponses];
-
-export type PresetsApiPresetsGetData = {
-    body?: never;
-    path?: never;
-    query?: never;
-    url: '/api/presets';
-};
-
-export type PresetsApiPresetsGetResponses = {
-    /**
-     * Successful Response
-     */
-    200: PresetCatalog;
-};
-
-export type PresetsApiPresetsGetResponse = PresetsApiPresetsGetResponses[keyof PresetsApiPresetsGetResponses];
 
 export type ReadApiDocumentsReadPostData = {
     body?: BodyReadApiDocumentsReadPost;

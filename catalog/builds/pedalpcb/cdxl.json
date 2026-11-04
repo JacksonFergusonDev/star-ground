@@ -2,6 +2,7 @@
  "id": "cdxl",
  "publisher": "pedalpcb",
  "title": "CDXL Envelope Filter",
+ "effects": ["filter"],
  "document": "https://docs.pedalpcb.com/project/CDXL.pdf",
  "page": "https://www.pedalpcb.com/product/cdxl/",
  "file_name": "CDXL.pdf",

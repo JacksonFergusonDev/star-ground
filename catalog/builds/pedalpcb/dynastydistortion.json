@@ -2,6 +2,7 @@
  "id": "dynastydistortion",
  "publisher": "pedalpcb",
  "title": "Dynasty Distortion",
+ "effects": ["distortion"],
  "document": "https://docs.pedalpcb.com/project/DynastyDistortion.pdf",
  "page": "https://www.pedalpcb.com/product/dynasty-distortion/",
  "file_name": "DynastyDistortion.pdf",

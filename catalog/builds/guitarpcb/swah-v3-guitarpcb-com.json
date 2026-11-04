@@ -1,7 +1,8 @@
 {
  "id": "swah-v3-guitarpcb-com",
  "publisher": "guitarpcb",
- "title": "\u201d x \u201d ca.",
+ "title": "SWAH OLD v3",
+ "effects": ["filter"],
  "document": "https://guitarpcb.com/wp-content/uploads/2025/03/SWAH-v3-GuitarPCB.com_.pdf",
  "page": "https://guitarpcb.com/community/topic/direct-build-document-link-list/",
  "file_name": "SWAH-v3-GuitarPCB.com_.pdf",

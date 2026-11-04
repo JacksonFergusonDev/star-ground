@@ -2,6 +2,7 @@
  "id": "tonepad-orangesqueezer2",
  "publisher": "tonepad",
  "title": "Naranjito 2",
+ "effects": ["dynamics"],
  "document": "https://tonepad.com/getFile.asp?id=88",
  "page": "https://tonepad.com/project.asp?id=5",
  "file_name": "tonepad_orangesqueezer2.pdf",

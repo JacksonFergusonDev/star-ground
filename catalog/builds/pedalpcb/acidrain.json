@@ -2,6 +2,7 @@
  "id": "acidrain",
  "publisher": "pedalpcb",
  "title": "Acid Rain Fuzz",
+ "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/AcidRain.pdf",
  "page": "https://www.pedalpcb.com/product/acidrainfuzz/",
  "file_name": "AcidRain.pdf",

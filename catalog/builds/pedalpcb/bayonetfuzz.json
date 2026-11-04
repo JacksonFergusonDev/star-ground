@@ -2,6 +2,7 @@
  "id": "bayonetfuzz",
  "publisher": "pedalpcb",
  "title": "Bayonet Fuzz",
+ "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/BayonetFuzz.pdf",
  "page": "https://www.pedalpcb.com/product/bayonetfuzz/",
  "file_name": "BayonetFuzz.pdf",

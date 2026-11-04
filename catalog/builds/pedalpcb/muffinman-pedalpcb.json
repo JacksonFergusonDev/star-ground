@@ -2,6 +2,7 @@
  "id": "muffinman-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Muffin Man Fuzz",
+ "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/MuffinMan-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb660/",
  "file_name": "MuffinMan-PedalPCB.pdf",

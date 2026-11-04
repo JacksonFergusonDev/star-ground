@@ -2,6 +2,7 @@
  "id": "marigold-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Marigold Fuzz",
+ "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/Marigold-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb404/",
  "file_name": "Marigold-PedalPCB.pdf",

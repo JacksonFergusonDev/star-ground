@@ -2,6 +2,7 @@
  "id": "celestialdrive",
  "publisher": "pedalpcb",
  "title": "Celestial Drive",
+ "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/CelestialDrive.pdf",
  "page": "https://www.pedalpcb.com/product/celestialdrive/",
  "file_name": "CelestialDrive.pdf",

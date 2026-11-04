@@ -2,6 +2,7 @@
  "id": "seahorse",
  "publisher": "pedalpcb",
  "title": "Sea Horse",
+ "effects": ["modulation"],
  "document": "https://docs.pedalpcb.com/project/SeaHorse.pdf",
  "page": "https://www.pedalpcb.com/product/seahorse/",
  "file_name": "SeaHorse.pdf",

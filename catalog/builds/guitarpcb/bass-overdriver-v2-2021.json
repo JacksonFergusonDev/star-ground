@@ -2,6 +2,7 @@
  "id": "bass-overdriver-v2-2021",
  "publisher": "guitarpcb",
  "title": "Bass OD v2 2021",
+ "effects": ["overdrive"],
  "document": "https://guitarpcb.com/wp-content/uploads/2021/12/Bass-Overdriver-v2-2021.pdf",
  "page": "https://guitarpcb.com/legacy-pcb-document-list/",
  "file_name": "Bass-Overdriver-v2-2021.pdf",

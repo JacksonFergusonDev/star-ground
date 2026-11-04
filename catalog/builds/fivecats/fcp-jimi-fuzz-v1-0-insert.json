@@ -1,7 +1,8 @@
 {
  "id": "fcp-jimi-fuzz-v1-0-insert",
  "publisher": "fivecats",
- "title": "fcp-jimi-fuzz-v1-0-insert",
+ "title": "Jimi Fuzz",
+ "effects": ["fuzz"],
  "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/07/FCP-Jimi-Fuzz-V1-0-Insert.pdf",
  "page": "https://www.five-cats-pedals.co.uk/product/jimi-fuzz-dunlop-jhf1-clone/",
  "file_name": "FCP-Jimi-Fuzz-V1-0-Insert.pdf",

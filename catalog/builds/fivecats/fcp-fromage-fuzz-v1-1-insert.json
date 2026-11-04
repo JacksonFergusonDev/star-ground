@@ -1,7 +1,8 @@
 {
  "id": "fcp-fromage-fuzz-v1-1-insert",
  "publisher": "fivecats",
- "title": "fcp-fromage-fuzz-v1-1-insert",
+ "title": "Fromage Fuzz",
+ "effects": ["fuzz"],
  "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2026/03/FCP-Fromage-Fuzz-V1-1-Insert.pdf",
  "page": "https://www.five-cats-pedals.co.uk/product/fromage-fuzz-lovetone-big-cheese-clone/",
  "file_name": "FCP-Fromage-Fuzz-V1-1-Insert.pdf",

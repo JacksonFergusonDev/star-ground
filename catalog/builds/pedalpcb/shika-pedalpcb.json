@@ -2,6 +2,7 @@
  "id": "shika-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Shika Fuzz Sustainer",
+ "effects": ["fuzz", "dynamics"],
  "document": "https://docs.pedalpcb.com/project/Shika-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb452/",
  "file_name": "Shika-PedalPCB.pdf",

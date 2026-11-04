@@ -2,6 +2,7 @@
  "id": "parthenon-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Parthenon Overdrive",
+ "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/Parthenon-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb169/",
  "file_name": "Parthenon-PedalPCB.pdf",

@@ -1,7 +1,8 @@
 {
  "id": "fcp-creamy-fuzz-v1-4-insert",
  "publisher": "fivecats",
- "title": "fcp-creamy-fuzz-v1-4-insert",
+ "title": "Creamy Fuzz",
+ "effects": ["fuzz"],
  "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2025/11/FCP-Creamy-Fuzz-V1-4-insert.pdf",
  "page": "https://www.five-cats-pedals.co.uk/product/creamy-fuzz-frantone-cream-puff-clone/",
  "file_name": "FCP-Creamy-Fuzz-V1-4-insert.pdf",

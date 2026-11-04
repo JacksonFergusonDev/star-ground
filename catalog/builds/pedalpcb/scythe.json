@@ -2,6 +2,7 @@
  "id": "scythe",
  "publisher": "pedalpcb",
  "title": "Scythe Fuzz",
+ "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/Scythe.pdf",
  "page": "https://www.pedalpcb.com/product/scythe/",
  "file_name": "Scythe.pdf",

@@ -2,6 +2,7 @@
  "id": "add-verb-v1-5-2021",
  "publisher": "guitarpcb",
  "title": "ADD VERB",
+ "effects": ["reverb"],
  "document": "https://guitarpcb.com/wp-content/uploads/2022/02/ADD-VERB-v1.5-2021.pdf",
  "page": "https://guitarpcb.com/legacy-pcb-document-list/",
  "file_name": "ADD-VERB-v1.5-2021.pdf",

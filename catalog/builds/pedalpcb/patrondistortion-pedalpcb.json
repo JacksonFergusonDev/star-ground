@@ -2,6 +2,7 @@
  "id": "patrondistortion-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Patron Distortion",
+ "effects": ["distortion"],
  "document": "https://docs.pedalpcb.com/project/PatronDistortion-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb574/",
  "file_name": "PatronDistortion-PedalPCB.pdf",

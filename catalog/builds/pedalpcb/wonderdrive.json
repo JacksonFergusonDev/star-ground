@@ -2,6 +2,7 @@
  "id": "wonderdrive",
  "publisher": "pedalpcb",
  "title": "Wonder Drive (rev2)",
+ "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/WonderDrive.pdf",
  "page": "https://www.pedalpcb.com/product/wonderdrive/",
  "file_name": "WonderDrive.pdf",

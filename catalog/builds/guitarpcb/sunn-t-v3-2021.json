@@ -2,6 +2,7 @@
  "id": "sunn-t-v3-2021",
  "publisher": "guitarpcb",
  "title": "Sunn-T v3 2021",
+ "effects": ["overdrive", "distortion"],
  "document": "https://guitarpcb.com/wp-content/uploads/2022/02/Sunn-T-v3-2021.pdf",
  "page": "https://guitarpcb.com/legacy-pcb-document-list/",
  "file_name": "Sunn-T-v3-2021.pdf",

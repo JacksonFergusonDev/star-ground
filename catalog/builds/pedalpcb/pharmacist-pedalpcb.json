@@ -2,6 +2,7 @@
  "id": "pharmacist-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Pharmacist Overdrive",
+ "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/Pharmacist-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb426/",
  "file_name": "Pharmacist-PedalPCB.pdf",

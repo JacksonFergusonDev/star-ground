@@ -2,6 +2,7 @@
  "id": "tonepad-bigmuff",
  "publisher": "tonepad",
  "title": "Gran Mango 3.1416",
+ "effects": ["fuzz"],
  "document": "https://tonepad.com/getFile.asp?id=94",
  "page": "https://tonepad.com/project.asp?id=3",
  "file_name": "tonepad_bigmuff.pdf",

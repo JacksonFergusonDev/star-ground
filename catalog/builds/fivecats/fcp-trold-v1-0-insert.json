@@ -1,7 +1,8 @@
 {
  "id": "fcp-trold-v1-0-insert",
  "publisher": "fivecats",
- "title": "fcp-trold-v1-0-insert",
+ "title": "Trold",
+ "effects": ["distortion"],
  "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/05/FCP-Trold-V1-0-Insert.pdf",
  "page": "https://www.five-cats-pedals.co.uk/product/trold-way-huge-angry-troll-clone/",
  "file_name": "FCP-Trold-V1-0-Insert.pdf",

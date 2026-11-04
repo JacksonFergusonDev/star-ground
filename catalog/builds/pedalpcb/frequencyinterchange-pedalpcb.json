@@ -2,6 +2,7 @@
  "id": "frequencyinterchange-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Frequency Interchange",
+ "effects": ["filter"],
  "document": "https://docs.pedalpcb.com/project/FrequencyInterchange-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb553/",
  "file_name": "FrequencyInterchange-PedalPCB.pdf",

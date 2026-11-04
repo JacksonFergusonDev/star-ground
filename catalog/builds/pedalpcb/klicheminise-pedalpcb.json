@@ -2,6 +2,7 @@
  "id": "klicheminise-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Kliche Mini SE",
+ "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/KlicheMiniSE-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb529/",
  "file_name": "KlicheMiniSE-PedalPCB.pdf",

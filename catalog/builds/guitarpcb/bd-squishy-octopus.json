@@ -2,6 +2,7 @@
  "id": "bd-squishy-octopus",
  "publisher": "guitarpcb",
  "title": "Squishy Octopus",
+ "effects": ["filter"],
  "document": "https://guitarpcb.com/wp-content/uploads/2018/06/BD_Squishy-Octopus.pdf",
  "page": "https://guitarpcb.com/community/topic/direct-build-document-link-list/",
  "file_name": "BD_Squishy-Octopus.pdf",

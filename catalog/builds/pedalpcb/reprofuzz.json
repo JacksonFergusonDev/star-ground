@@ -2,6 +2,7 @@
  "id": "reprofuzz",
  "publisher": "pedalpcb",
  "title": "ReproFuzz",
+ "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/ReproFuzz.pdf",
  "page": "https://www.pedalpcb.com/product/reprofuzz/",
  "file_name": "ReproFuzz.pdf",

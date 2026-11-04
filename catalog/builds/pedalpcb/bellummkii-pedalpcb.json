@@ -2,6 +2,7 @@
  "id": "bellummkii-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Bellum MKII Fuzz",
+ "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/BellumMKII-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb381/",
  "file_name": "BellumMKII-PedalPCB.pdf",

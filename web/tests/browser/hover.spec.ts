@@ -3,7 +3,7 @@
 // review.spec.ts, which has the document it needs.
 
 import { expect, test } from '@playwright/test';
-import type { MasterListResult, PresetCatalog } from '../../src/lib/api';
+import type { MasterListResult } from '../../src/lib/api';
 import { hoverProblems } from './hover';
 
 // Hover is the pointer's, and the fades it checks are what reduced motion keeps.
@@ -12,12 +12,6 @@ test.skip(
   ({ browserName, isMobile }) => browserName !== 'chromium' || isMobile,
   'Hovering is a desktop pointer; one engine checks the rules.',
 );
-
-const catalog: PresetCatalog = {
-  sources: ['PedalPCB'],
-  categories: { PedalPCB: ['Fuzz'] },
-  presets: [{ key: 'fuzz', source: 'PedalPCB', category: 'Fuzz', name: 'Sunflower Fuzz' }],
-};
 
 const result: MasterListResult = {
   projects: [
@@ -75,7 +69,6 @@ const result: MasterListResult = {
 
 test.beforeEach(async ({ page }) => {
   await page.route('**/api/health', (route) => route.fulfill({ json: { status: 'ok' } }));
-  await page.route('**/api/presets', (route) => route.fulfill({ json: catalog }));
   await page.route('**/api/master-list', (route) => route.fulfill({ json: result }));
 });
 

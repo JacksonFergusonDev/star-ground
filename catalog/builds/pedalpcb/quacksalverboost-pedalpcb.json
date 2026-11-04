@@ -2,6 +2,7 @@
  "id": "quacksalverboost-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Quacksalver Boost",
+ "effects": ["boost"],
  "document": "https://docs.pedalpcb.com/project/QuacksalverBoost-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb533/",
  "file_name": "QuacksalverBoost-PedalPCB.pdf",

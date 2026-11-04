@@ -2,6 +2,7 @@
  "id": "minidrive",
  "publisher": "pedalpcb",
  "title": "Mini-Drive",
+ "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/Minidrive.pdf",
  "page": "https://www.pedalpcb.com/product/minidrive/",
  "file_name": "Minidrive.pdf",

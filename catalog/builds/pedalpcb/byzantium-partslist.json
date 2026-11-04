@@ -2,6 +2,7 @@
  "id": "byzantium-partslist",
  "publisher": "pedalpcb",
  "title": "Byzantium Flanger",
+ "effects": ["modulation"],
  "document": "https://www.pedalpcb.com/docs/Byzantium-PartsList.pdf",
  "page": "https://www.pedalpcb.com/product/pcb447/",
  "file_name": "Byzantium-PartsList.pdf",

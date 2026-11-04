@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 import subprocess
-import sys
 from collections.abc import Sequence
 
 import pytest
@@ -83,95 +82,6 @@ def test_check_checkout_rejects_invalid_git_state(
 
     assert exc_info.value.code == 1
     assert message in capsys.readouterr().err
-
-
-def test_prepare_inputs_returns_false_when_presets_unchanged(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    calls: list[Sequence[str]] = []
-
-    def fake_run(
-        cmd: Sequence[str], *, capture_output: bool = False
-    ) -> subprocess.CompletedProcess[str]:
-        _ = capture_output
-        calls.append(cmd)
-        return _completed()
-
-    monkeypatch.setattr(prepare_release, "run_repo_cmd", fake_run)
-
-    assert prepare_release.prepare_inputs() is False
-    assert calls == [
-        [sys.executable, "-m", "tools.generate_presets"],
-        ["git", "status", "--porcelain", "--", *prepare_release.RELEASE_INPUTS],
-    ]
-
-
-def test_prepare_inputs_commits_and_pushes_when_accepted(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    commands: list[list[str]] = []
-    outputs = iter(
-        [
-            _completed(),
-            _completed(stdout=" M src/bom_lib/_presets_data.py\n"),
-            _completed(stdout="diff --git a/src/bom_lib/_presets_data.py ...\n"),
-            _completed(),
-            _completed(),
-            _completed(),
-        ]
-    )
-
-    def fake_run(
-        cmd: Sequence[str], *, capture_output: bool = False
-    ) -> subprocess.CompletedProcess[str]:
-        _ = capture_output
-        commands.append(list(cmd))
-        return next(outputs)
-
-    monkeypatch.setattr(prepare_release, "run_repo_cmd", fake_run)
-    monkeypatch.setattr("sys.stdin.isatty", lambda: True)
-    monkeypatch.setattr(prepare_release, "confirm", lambda _q: True)
-
-    assert prepare_release.prepare_inputs() is True
-    assert commands[3:] == [
-        ["git", "add", "--", *prepare_release.RELEASE_INPUTS],
-        [
-            "git",
-            "commit",
-            "--only",
-            "-m",
-            "chore(release): refresh generated presets",
-            "--",
-            *prepare_release.RELEASE_INPUTS,
-        ],
-        ["git", "push"],
-    ]
-
-
-def test_prepare_inputs_stops_when_declined(
-    monkeypatch: pytest.MonkeyPatch,
-    capsys: pytest.CaptureFixture[str],
-) -> None:
-    outputs = iter(
-        [
-            _completed(),
-            _completed(stdout=" M src/bom_lib/_presets_data.py\n"),
-            _completed(stdout="diff --git a/src/bom_lib/_presets_data.py ...\n"),
-        ]
-    )
-    monkeypatch.setattr(
-        prepare_release,
-        "run_repo_cmd",
-        lambda _cmd, *, capture_output=False: next(outputs),
-    )
-    monkeypatch.setattr("sys.stdin.isatty", lambda: True)
-    monkeypatch.setattr(prepare_release, "confirm", lambda _q: False)
-
-    with pytest.raises(SystemExit) as exc_info:
-        prepare_release.prepare_inputs()
-
-    assert exc_info.value.code == 1
-    assert "not accepted" in capsys.readouterr().err
 
 
 def test_check_ci_passes_when_completed_run_succeeded(
@@ -263,24 +173,6 @@ def test_check_local_state_runs_uv_lock_check(
     prepare_release.check_local_state()
 
     assert commands == [["uv", "lock", "--check"]]
-
-
-def test_main_rechecks_checkout_when_inputs_are_refreshed(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    first = CheckoutState(repo="example/star-ground", sha="111111111111")
-    second = CheckoutState(repo="example/star-ground", sha="222222222222")
-    checkouts = iter([first, second, second, second])
-    verified_ci: list[CheckoutState] = []
-
-    monkeypatch.setattr(prepare_release, "check_checkout", lambda: next(checkouts))
-    monkeypatch.setattr(prepare_release, "prepare_inputs", lambda: True)
-    monkeypatch.setattr(prepare_release, "check_ci", verified_ci.append)
-    monkeypatch.setattr(prepare_release, "check_local_state", lambda: None)
-
-    prepare_release.main()
-
-    assert verified_ci == [second]
 
 
 def test_read_json_rejects_invalid_json(

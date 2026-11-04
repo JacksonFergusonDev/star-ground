@@ -2,6 +2,7 @@
  "id": "nostalgitone-behemoth-fuzz",
  "publisher": "guitarpcb",
  "title": "NostalgiTone Behemoth Fuzz",
+ "effects": ["fuzz"],
  "document": "https://guitarpcb.com/wp-content/uploads/2026/09/NostalgiTone-Behemoth-Fuzz.pdf",
  "page": "https://guitarpcb.com/product/nostalgitone-behemoth-fuzz-enormous-fuzz-tone/",
  "file_name": "NostalgiTone-Behemoth-Fuzz.pdf",

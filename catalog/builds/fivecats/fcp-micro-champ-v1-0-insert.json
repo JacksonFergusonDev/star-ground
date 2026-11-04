@@ -1,7 +1,8 @@
 {
  "id": "fcp-micro-champ-v1-0-insert",
  "publisher": "fivecats",
- "title": "fcp-micro-champ-v1-0-insert",
+ "title": "Micro Champ",
+ "effects": ["overdrive", "amp"],
  "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/02/FCP-Micro-Champ-V1-0-insert.pdf",
  "page": "https://www.five-cats-pedals.co.uk/product/micro-champ-lovepedal-champ-clone/",
  "file_name": "FCP-Micro-Champ-V1-0-insert.pdf",

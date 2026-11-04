@@ -2,6 +2,7 @@
  "id": "fistbump-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Fist Bump Overdrive",
+ "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/FistBump-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb741/",
  "file_name": "FistBump-PedalPCB.pdf",

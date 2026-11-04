@@ -2,6 +2,7 @@
  "id": "tonepad-abselector",
  "publisher": "tonepad",
  "title": "A/B Selector",
+ "effects": ["utility"],
  "document": "https://tonepad.com/getFile.asp?id=107",
  "page": "https://tonepad.com/project.asp?id=56",
  "file_name": "tonepad_abselector.pdf",

@@ -152,7 +152,7 @@ def serialize_inventory(inventory: Inventory) -> str:
                 if ref != "HW" and not ref.endswith("(Inj)"):
                     lines.append(f"{ref} {clean_val}")
         else:
-            # Fallback for things without refs (rare in presets)
+            # Fallback for parts without refs
             lines.append(f"{clean_val} (Qty: {data['qty']})")
 
     return "\n".join(lines)

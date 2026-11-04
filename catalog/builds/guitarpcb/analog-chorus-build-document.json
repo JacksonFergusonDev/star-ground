@@ -2,6 +2,7 @@
  "id": "analog-chorus-build-document",
  "publisher": "guitarpcb",
  "title": "NostalgiTone Analog Chorus Single",
+ "effects": ["modulation"],
  "document": "https://guitarpcb.com/wp-content/uploads/2025/07/Analog-Chorus-Build-Document.pdf",
  "page": "https://guitarpcb.com/community/topic/pedal-building-guides-mandatory-reading/",
  "file_name": "Analog-Chorus-Build-Document.pdf",

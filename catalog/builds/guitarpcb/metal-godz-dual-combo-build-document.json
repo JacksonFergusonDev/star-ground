@@ -2,6 +2,7 @@
  "id": "metal-godz-dual-combo-build-document",
  "publisher": "guitarpcb",
  "title": "Metal Godz - Dual Combo",
+ "effects": ["overdrive", "distortion"],
  "document": "https://guitarpcb.com/wp-content/uploads/2024/05/Metal-Godz-Dual-Combo-Build-Document.pdf",
  "page": "https://guitarpcb.com/community/topic/pedal-building-guides-mandatory-reading/",
  "file_name": "Metal-Godz-Dual-Combo-Build-Document.pdf",

@@ -2,6 +2,7 @@
  "id": "tonepad-neoctavia",
  "publisher": "tonepad",
  "title": "NeoCtaVia",
+ "effects": ["fuzz"],
  "document": "https://tonepad.com/getFile.asp?id=85",
  "page": "https://tonepad.com/project.asp?id=43",
  "file_name": "tonepad_neoctavia.pdf",
