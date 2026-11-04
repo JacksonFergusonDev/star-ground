@@ -93,6 +93,13 @@ repos:
   # so each one moves into web/ and drops the web/ prefix from the file names.
   - repo: local
     hooks:
+      - id: pnpm-lock-check
+        name: pnpm lock check
+        entry: pnpm --dir web install --lockfile-only --frozen-lockfile --ignore-scripts --offline
+        language: system
+        pass_filenames: false
+        files: ^(web/(package\.json|pnpm-lock\.yaml|pnpm-workspace\.yaml|\.npmrc)|\.npmrc|\.pre-commit-config\.yaml)$
+
       - id: prettier
         name: prettier
         entry: bash -c 'cd web && pnpm exec prettier --write --ignore-unknown "${@#web/}"' --
