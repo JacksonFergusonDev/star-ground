@@ -37,6 +37,7 @@
   import AddProject from './AddProject.svelte';
   import Bench from './Bench.svelte';
   import BugNotice from './BugNotice.svelte';
+  import EmptyState from './EmptyState.svelte';
   import Exports from './Exports.svelte';
   import Icon from './Icon.svelte';
   import MasterList from './MasterList.svelte';
@@ -44,6 +45,7 @@
   import ProjectCard from './ProjectCard.svelte';
   import Review from './Review.svelte';
   import ShareLink from './ShareLink.svelte';
+  import StockDrawers from './StockDrawers.svelte';
   import StockPanel from './StockPanel.svelte';
 
   const workspace = pageWorkspace();
@@ -398,7 +400,10 @@
     title="Stock"
     lede="The shopping list subtracts the parts you already own, so you buy only what's missing."
   />
-  <StockPanel stock={workspace.stock} onChange={(stock) => (workspace.stock = stock)} />
+  <div class="stock">
+    <StockPanel stock={workspace.stock} onChange={(stock) => (workspace.stock = stock)} />
+    <StockDrawers stock={workspace.stock} notation={workspace.display.notation} />
+  </div>
 {:else if view === 'export'}
   <PageHead
     title="Export"
@@ -408,11 +413,12 @@
     {#if ready(workspace.cards).length}
       <Exports onExport={exportList} />
     {:else}
-      <section class="empty">
-        <h2>Nothing to export yet</h2>
-        <p>Add a project, and its shopping list, cart files and build checklists appear here.</p>
-        <a class="hs-button" href={views.projects.path}>Add a project {@render arrow()}</a>
-      </section>
+      <EmptyState title="Nothing to export yet">
+        Add a project, and its shopping list, cart files and build checklists appear here.
+        {#snippet action()}
+          <a class="hs-button" href={views.projects.path}>Add a project {@render arrow()}</a>
+        {/snippet}
+      </EmptyState>
     {/if}
     {#if workspace.cards.length}
       <ShareLink cards={workspace.cards} />
@@ -492,13 +498,13 @@
           {/each}
         </ul>
       {:else}
-        <div class="empty">
-          <h3>No projects yet</h3>
-          <p>
-            Upload a build document, paste a link to one, pick a preset or paste a parts list. Or
-            find your pedal in the circuit catalog, whose parts lists are already read.
-          </p>
-        </div>
+        <EmptyState title="Nothing on the bench yet" level={3}>
+          Add a build document, a link to one, a preset or a parts list. Or find your pedal in the
+          circuit catalog, whose parts lists are already read.
+          {#snippet action()}
+            <a class="hs-button" href="/catalog/">Browse the catalog {@render arrow()}</a>
+          {/snippet}
+        </EmptyState>
       {/if}
     </section>
     <div class="adder" class:first={!workspace.cards.length}>
@@ -613,31 +619,14 @@
     position: sticky;
     top: calc(var(--hs-bar-height) + 24px);
   }
-  .empty {
+  .stock {
     display: grid;
-    gap: 10px;
-    justify-items: start;
-    padding: 28px;
-    border: 1px dashed var(--line);
-    border-radius: 5px;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 28px;
   }
-  .empty h2,
-  .empty h3 {
-    max-width: none;
-    margin: 0;
-    font-size: var(--fs-h4);
-    font-weight: 500;
-    letter-spacing: 0;
-  }
-  .empty p {
-    max-width: 56ch;
-    margin: 0;
-    color: var(--muted);
-    font-size: var(--fs-ui);
-    line-height: 1.7;
-  }
-  .empty .hs-button {
-    margin-top: 6px;
+  /* The upload field and the drawers shrink to a phone's column. */
+  .stock > :global(*) {
+    min-width: 0;
   }
   .export {
     display: grid;

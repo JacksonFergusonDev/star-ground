@@ -5,8 +5,18 @@ import Base from '../layouts/Base.astro';
 
 <Base title="Page not found" description="This page doesn't exist." noindex>
   <section class="hs-hero" aria-labelledby="missing-title">
-    <h1 id="missing-title">This page doesn't exist.</h1>
-    <p class="lede">The link may be old, or the address mistyped.</p>
+    <!-- A trace from pad to pad with a break in it: an open circuit. -->
+    <svg class="open-circuit" viewBox="0 0 240 40" width="336" height="56" aria-hidden="true">
+      <path class="copper" d="M14 20h46l14-12h28" />
+      <path class="copper" d="M138 8h28l14 12h46" />
+      <path class="spark" d="M112 4l-4 6h6l-4 6M128 12l4 6h-6l4 6" />
+      <circle class="pad" cx="14" cy="20" r="7" />
+      <circle class="pad" cx="226" cy="20" r="7" />
+      <circle class="end" cx="102" cy="8" r="3" />
+      <circle class="end" cx="138" cy="8" r="3" />
+    </svg>
+    <h1 id="missing-title">No continuity.</h1>
+    <p class="lede">This page doesn't exist. The link may be old, or the address mistyped.</p>
     <div class="actions">
       <a class="hs-button hs-button--primary" href="/">
         Back to Star Ground <Icon name="arrow-left" size={16} />
@@ -14,3 +24,33 @@ import Base from '../layouts/Base.astro';
     </div>
   </section>
 </Base>
+
+<style>
+  .open-circuit {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin-bottom: 28px;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .copper {
+    stroke: var(--accent);
+    stroke-opacity: 0.55;
+    stroke-width: 4;
+  }
+  .spark {
+    stroke: var(--muted);
+    stroke-width: 2;
+  }
+  .pad {
+    fill: var(--bg);
+    stroke: var(--muted);
+    stroke-width: 3;
+  }
+  .end {
+    fill: var(--accent);
+    fill-opacity: 0.55;
+  }
+</style>

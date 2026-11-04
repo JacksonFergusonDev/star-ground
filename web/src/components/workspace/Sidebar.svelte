@@ -226,7 +226,7 @@
     gap: 10px;
     align-items: center;
     justify-content: space-between;
-    padding: 7px 10px;
+    padding: 7px 10px 7px 18px;
     border-radius: 5px;
     color: var(--muted);
     font-size: var(--fs-ui);
@@ -242,15 +242,32 @@
   .item[aria-current='page'] {
     background: var(--accent-soft);
   }
+  /* The current page ends a trace run in from the sidebar's edge, at a pad. */
   .item[aria-current='page']::before {
     position: absolute;
-    top: 8px;
-    bottom: 8px;
-    left: 0;
-    width: 2px;
-    border-radius: 2px;
+    top: calc(50% - 1px);
+    left: -12px;
+    width: 16px;
+    height: 2px;
     background: var(--accent);
     content: '';
+  }
+  .item[aria-current='page']::after {
+    position: absolute;
+    top: calc(50% - 4px);
+    left: 3px;
+    width: 8px;
+    height: 8px;
+    border: 2px solid var(--accent);
+    border-radius: 50%;
+    background: var(--panel);
+    box-sizing: border-box;
+    content: '';
+  }
+  /* A project's own pages branch off its line. */
+  .sub .item[aria-current='page']::before {
+    left: -9px;
+    width: 13px;
   }
   .label {
     min-width: 0;

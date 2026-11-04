@@ -9,6 +9,7 @@
   import BugNotice from './BugNotice.svelte';
   import Enclosure from './Enclosure.svelte';
   import Icon from './Icon.svelte';
+  import SignalPulse from './SignalPulse.svelte';
 
   let {
     card,
@@ -129,9 +130,9 @@
     </p>
 
     {#if card.read.state === 'reading'}
-      <p class="status">Reading the document…</p>
+      <SignalPulse label="Reading the document…" />
     {:else if card.read.state === 'queued'}
-      <p class="status">Waiting for OCR: {card.read.position} ahead.</p>
+      <SignalPulse label={`Waiting for OCR: ${card.read.position} ahead.`} />
     {:else if card.read.state === 'failed'}
       <p class="status problem">{card.read.message}</p>
       {#if card.read.bugCode}
