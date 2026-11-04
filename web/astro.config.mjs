@@ -1,6 +1,7 @@
 import { fileURLToPath } from 'node:url';
 import svelte from '@astrojs/svelte';
 import { defineConfig, envField } from 'astro/config';
+import { buildBoard } from './src/lib/circuit-field/layout';
 
 // Star Ground's accent lives at the repository root, beside the logo.
 const repo = fileURLToPath(new URL('..', import.meta.url));
@@ -37,6 +38,21 @@ export default defineConfig({
   },
   devToolbar: { enabled: false },
   vite: {
+    plugins: [
+      {
+        name: 'circuit-board',
+        resolveId(id) {
+          if (id === 'virtual:circuit-board') return '\0virtual:circuit-board';
+        },
+        load(id) {
+          if (id === '\0virtual:circuit-board') {
+            // Routing is deterministic and independent of the viewport. Do it
+            // at build time, rather than making every visitor wait for it.
+            return `export default ${JSON.stringify(buildBoard())};`;
+          }
+        },
+      },
+    ],
     resolve: {
       alias: {
         '@branding': `${repo}branding`,

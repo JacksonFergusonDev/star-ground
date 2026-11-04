@@ -18,14 +18,13 @@ import Icon from 'house-style/astro/Icon.astro';
 
 <script>
   import { afterLoad } from 'house-style/js/field.js';
+  import { startCircuitField } from '../lib/circuit-field/field';
 
   const canvas = document.querySelector<HTMLCanvasElement>('[data-circuit-field]');
   const button = canvas?.nextElementSibling;
   if (canvas && button instanceof HTMLButtonElement) {
     afterLoad(() => {
-      import('../lib/circuit-field/field')
-        .then(({ startCircuitField }) => startCircuitField(canvas, button))
-        .catch(() => {});
+      startCircuitField(canvas, button);
     });
   }
 </script>

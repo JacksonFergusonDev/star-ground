@@ -15,9 +15,9 @@
  */
 
 import { resolveColor, runField, type Field, type FieldStyle } from 'house-style/js/field.js';
+import board from 'virtual:circuit-board';
 import { drawBoard } from './board';
 import { seeded, vec } from './geometry';
-import { buildBoard, type Board } from './layout';
 
 const MAX_EVENTS = 64;
 /** Pulse speeds (units a second), head, and tail (units, at ground speed). */
@@ -194,7 +194,6 @@ export function startCircuitField(
   let { boardProgram, currentProgram, uniforms, texture, instances, vao } = build();
 
   const paper = document.createElement('canvas');
-  const board: Board = buildBoard();
   let instanceCount = 0;
   let wide = false;
   let pixelScale = 1;

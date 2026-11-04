@@ -50,27 +50,42 @@ for (const { path, heading } of pages) {
   });
 }
 
-test('the moving field loads only after the page has', async ({ page }) => {
-  // House style: the first screen is text, and nothing heavy holds it up.
-  // Waits for the field's script itself, not the pause button: a browser
-  // without WebGL2 (headless Firefox on Linux) loads it but keeps the button
-  // hidden.
-  await page.goto('/');
-  const timing = () =>
-    page.evaluate(() => {
+test('the moving field starts after load without fetching more scripts, including on refresh', async ({
+  page,
+}) => {
+  // Prepare the code with the page, but leave GPU work until after load.
+  // Record the attempt even in browsers without WebGL2.
+  await page.addInitScript(() => {
+    const getContext = HTMLCanvasElement.prototype.getContext;
+    Object.defineProperty(HTMLCanvasElement.prototype, 'getContext', {
+      value(this: HTMLCanvasElement, type: string, options?: unknown) {
+        if (type === 'webgl2') performance.mark('circuit-start');
+        return Reflect.apply(getContext, this, [type, options]);
+      },
+    });
+  });
+  for (const refresh of [false, true]) {
+    if (refresh) await page.reload();
+    else await page.goto('/');
+    await page.waitForFunction(() => performance.getEntriesByName('circuit-start').length > 0);
+    const { loaded, started, scripts } = await page.evaluate(() => {
       const [navigation] = performance.getEntriesByType(
         'navigation',
       ) as PerformanceNavigationTiming[];
-      const field = performance
+      const scripts = performance
         .getEntriesByType('resource')
-        .filter((entry) => /\/field\.[\w-]+\.js$/.test(entry.name))
+        .filter((entry) => /\.js(?:\?|$)/.test(entry.name))
         .map((entry) => entry.startTime);
-      return { loaded: navigation.loadEventEnd, field };
+      return {
+        loaded: navigation.loadEventEnd,
+        started: performance.getEntriesByName('circuit-start')[0]!.startTime,
+        scripts,
+      };
     });
-  // WebKit records the resource entry a moment after the response arrives.
-  await expect.poll(async () => (await timing()).field.length).toBeGreaterThan(0);
-  const { loaded, field } = await timing();
-  for (const start of field) expect(start).toBeGreaterThanOrEqual(loaded);
+    expect(started).toBeGreaterThanOrEqual(loaded);
+    expect(scripts.length).toBeGreaterThan(0);
+    for (const start of scripts) expect(start).toBeLessThan(loaded);
+  }
 });
 
 test('uses the house fonts', async ({ page }) => {
