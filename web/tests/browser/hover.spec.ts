@@ -104,6 +104,37 @@ test('only the page scrolls, never the window, so the sidebar stays put', async 
   await expect(sidebar).toBeInViewport();
 });
 
+test('a field lights up under the pointer, not under its label', async ({ page }) => {
+  await page.goto('/app/');
+  const field = page.getByLabel('Build documents (PDF)');
+  const border = () =>
+    field.evaluate((el) => {
+      document.getAnimations().forEach((a) => a.finish());
+      const style = getComputedStyle(el);
+      const button = getComputedStyle(el, '::file-selector-button');
+      return [style.borderTopColor, button.borderTopColor];
+    });
+  const rest = await border();
+  await page.getByText('Build documents (PDF)').hover();
+  await page.waitForTimeout(300); // longer than a fade, so one would show
+  expect(await border()).toEqual(rest);
+  // The field and its button change together, with the same fade. The
+  // button's fade isn't among the document's animations, so it's waited out.
+  await field.hover();
+  await expect
+    .poll(async () => {
+      const [box, button] = await border();
+      return box !== rest[0] && button === box;
+    })
+    .toBe(true);
+  const fades = await field.evaluate((el) =>
+    [getComputedStyle(el), getComputedStyle(el, '::file-selector-button')].map(
+      (s) => s.transitionDuration,
+    ),
+  );
+  expect(fades).toEqual(['0.2s', '0.2s']);
+});
+
 test('every control in the app reacts to the pointer with a fade', async ({ page }) => {
   await page.goto('/app/');
   // Before any project: the empty workspace and the ways to add one.

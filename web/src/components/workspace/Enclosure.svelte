@@ -66,8 +66,8 @@
   <defs>
     <!-- Hammertone: fine noise, lit from the top left, multiplied into the paint. -->
     <filter id={`hammered-${uid}`} x="0" y="0" width="1" height="1">
-      <feTurbulence type="fractalNoise" baseFrequency="0.2" numOctaves="1" seed="7" />
-      <feGaussianBlur stdDeviation="0.5" />
+      <feTurbulence type="fractalNoise" baseFrequency="0.38" numOctaves="1" seed="7" />
+      <feGaussianBlur stdDeviation="0.3" />
       <feDiffuseLighting surfaceScale="2.2" lighting-color="#ffffff" result="lit">
         <feDistantLight azimuth="225" elevation="58" />
       </feDiffuseLighting>

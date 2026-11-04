@@ -279,6 +279,9 @@ html:has(.app) {
  *   green: house-style's cards lighten their border, and never lift or glow.
  *   A card is any element with the `hover-card` class that the pointer can act
  *   on. One that's chosen, pressed or current keeps its accent border.
+ * - A field lights up only under the pointer itself. Browsers also count a
+ *   field as hovered while its label is, so a field whose label sits just
+ *   before it (the app's way) stays dark while the label is pointed at.
  *
  * Green on hover is for text. A border or background in the accent marks what
  * is chosen or current, never what's under the pointer.
@@ -288,7 +291,12 @@ html:has(.app) {
  * classes, Astro's attributes) is often more specific than any selector here,
  * and would otherwise quietly win. Chosen states are left out by `:not()`.
  */
-.app :where(*, *::before, *::after, *::file-selector-button) {
+/* Pseudo-elements can't sit inside :where(), so they're listed beside it; a
+   file field's button fades with the box around it, as one. */
+.app :where(*),
+.app ::before,
+.app ::after,
+.app ::file-selector-button {
   transition-duration: 0.2s;
   transition-property: color, background-color, border-color, outline-color, fill, stroke, opacity;
   transition-timing-function: ease;
@@ -305,7 +313,8 @@ html:has(.app) {
     [aria-pressed='true'],
     [aria-expanded='true'],
     :checked,
-    :disabled
+    :disabled,
+    label:hover + *
   ):hover {
   border-color: var(--muted) !important;
 }
@@ -314,7 +323,7 @@ html:has(.app) {
 .app label:has(input:is([type='checkbox'], [type='radio']):not(:checked, :disabled)):hover > span {
   color: var(--text) !important;
 }
-.app input[type='file']:hover::file-selector-button {
+.app input[type='file']:not(label:hover + *):hover::file-selector-button {
   border-color: var(--muted) !important;
 }
 .app-head {

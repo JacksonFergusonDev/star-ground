@@ -249,10 +249,16 @@
     justify-items: center;
     align-content: start;
   }
+  /* The picker spans the drawing's width with its toggle centred, so opening
+     it, which widens what's inside, doesn't move the toggle. */
+  .paint {
+    justify-self: stretch;
+  }
   .paint summary {
-    display: inline-flex;
+    display: flex;
     gap: 6px;
     align-items: center;
+    justify-content: center;
     color: var(--muted);
     font-family: var(--mono);
     font-size: var(--fs-label);
@@ -277,6 +283,7 @@
   }
   .swatches {
     display: grid;
+    justify-content: center;
     grid-template-columns: repeat(4, 14px);
     gap: 6px;
     margin: 8px 0 0;
@@ -314,6 +321,7 @@
   .finishes {
     display: grid;
     gap: 2px;
+    text-align: center;
     margin: 10px 0 0;
     padding: 0;
     border: 0;
