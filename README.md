@@ -16,7 +16,7 @@
 
 [![Version](https://img.shields.io/github/v/release/JacksonFergusonDev/star-ground?style=flat-square&labelColor=0A0A0A&color=4ade80)](https://github.com/JacksonFergusonDev/star-ground/releases)
 ![Python Version](https://img.shields.io/badge/python-3.14-4ade80?style=flat-square&labelColor=0A0A0A&logo=python&logoColor=white)
-[![CI](https://github.com/JacksonFergusonDev/star-ground/actions/workflows/ci.yml/badge.svg?style=flat-square)](https://github.com/JacksonFergusonDev/star-ground/actions/workflows/ci.yml)
+[![Deploy](https://github.com/JacksonFergusonDev/star-ground/actions/workflows/deploy.yml/badge.svg?style=flat-square)](https://github.com/JacksonFergusonDev/star-ground/actions/workflows/deploy.yml)
 [![Docker](https://github.com/JacksonFergusonDev/star-ground/actions/workflows/docker-publish.yml/badge.svg?style=flat-square)](https://github.com/JacksonFergusonDev/star-ground/actions/workflows/docker-publish.yml)
 [![Ruff](https://img.shields.io/badge/style-ruff-4ade80?style=flat-square&labelColor=0A0A0A)](https://github.com/astral-sh/ruff)
 [![Mypy](https://img.shields.io/badge/mypy-checked-4ade80?style=flat-square&labelColor=0A0A0A)](https://mypy-lang.org/)

@@ -5,9 +5,11 @@ Star Ground runs in two places (PLAN.md, "Hosting and cost"):
 - **The API** runs on Google Cloud Run, scaling to zero, from the same Docker image GHCR publishes.
 - **The site** is served by GitHub Pages at `star-ground.jacksonferguson.me`, built to call the API's Cloud Run URL.
 
-A release tag (`v*`) does both, in `.github/workflows/docker-publish.yml`. After the image is tested, signed and published to GHCR, the `deploy-api` job copies that exact image to Artifact Registry and deploys it. Then `deploy-site` builds the site against the API's URL and publishes it to Pages. The site goes live after the API, so it never calls routes the running API doesn't have yet.
+Every push to `main` that passes CI deploys both, in `.github/workflows/deploy.yml`. The `deploy-api` job copies the exact `linux/amd64` image CI tested to Artifact Registry and deploys it. Then `deploy-site` builds the site against the API's URL and publishes it to Pages, and `check-live` waits for Pages to serve that commit and pastes a parts list into the live site. The site goes live after the API, so it never calls routes the running API doesn't have yet. A newer push cancels a deploy still running, so the newest commit always wins.
 
-Both deploy jobs are skipped until the repository variable `GCP_PROJECT_ID` exists, so releases still publish the image before Google Cloud is set up.
+Version tags (`v*`) no longer deploy. They publish the self-hosted image to GHCR (`.github/workflows/docker-publish.yml`), for people who pin a version. The hosted site has no versions: its visitors always get what's live.
+
+The deploy jobs are skipped until the repository variable `GCP_PROJECT_ID` exists.
 
 ## One-time setup
 
@@ -39,7 +41,7 @@ gcloud billing budgets create --billing-account "$BILLING" \
 
 ### 2. The image registry and the service's account
 
-Cloud Run can't pull from GHCR, so releases copy the image into Artifact Registry. The service runs as its own account with no roles: the API calls no Google APIs. Feedback reports, which write to a Google Sheet, are left off until a later step adds their key as a secret.
+Cloud Run can't pull from GHCR, so deploys copy the image into Artifact Registry. The service runs as its own account with no roles: the API calls no Google APIs. Feedback reports, which write to a Google Sheet, are left off until a later step adds their key as a secret.
 
 ```bash
 gcloud artifacts repositories create star-ground --project "$PROJECT" \
@@ -50,11 +52,11 @@ gcloud iam service-accounts create star-ground-run --project "$PROJECT" \
 
 ### 3. Let GitHub Actions deploy, without a key
 
-Workload identity federation lets release runs from this repository act as a deploy account, with no stored key. The provider accepts only tokens from this repository.
+Workload identity federation lets deploy runs from this repository act as a deploy account, with no stored key. The provider accepts only tokens from this repository.
 
 ```bash
 gcloud iam service-accounts create star-ground-deploy --project "$PROJECT" \
-  --display-name "Star Ground releases"
+  --display-name "Star Ground deploys"
 DEPLOY="star-ground-deploy@$PROJECT.iam.gserviceaccount.com"
 RUNTIME="star-ground-run@$PROJECT.iam.gserviceaccount.com"
 
@@ -87,11 +89,11 @@ gh variable set GCP_SERVICE_ACCOUNT --repo "$REPO" --body "$DEPLOY"
 gh variable set GCP_WORKLOAD_IDENTITY_PROVIDER --repo "$REPO" --body "$POOL/providers/star-ground"
 ```
 
-The deploy job runs in the `production` environment. GitHub creates it on the first release; to allow only release tags to deploy, add a deployment tag rule `v*` under Settings, Environments, production.
+The deploy job runs in the `production` environment, which GitHub creates on the first deploy. To allow only `main` to deploy, add a deployment branch rule `main` under Settings, Environments, production.
 
 ### 4. Create the service and open it to the public
 
-The site calls the API from visitors' browsers, so the service must accept unauthenticated requests. Deploys keep a service's access policy, so this is set once, here, on a placeholder that the first release replaces:
+The site calls the API from visitors' browsers, so the service must accept unauthenticated requests. Deploys keep a service's access policy, so this is set once, here, on a placeholder that the first deploy replaces:
 
 ```bash
 gcloud run deploy star-ground --project "$PROJECT" --region "$REGION" \
@@ -105,7 +107,7 @@ gcloud run services add-iam-policy-binding star-ground --project "$PROJECT" \
 ### 5. GitHub Pages and DNS
 
 1. Under Settings, Pages, set the source to **GitHub Actions** and the custom domain to `star-ground.jacksonferguson.me`. (`web/public/CNAME` records the domain too.)
-1. Under Settings, Environments, `github-pages`, add a deployment tag rule `v*`. GitHub creates that environment allowing only `main`, and releases deploy from tags.
+1. Leave Settings, Environments, `github-pages` allowing only `main`, as GitHub creates it.
 1. At the DNS host for `jacksonferguson.me`, add a `CNAME` record from `star-ground` to `jacksonfergusondev.github.io`.
 1. Once GitHub has issued the certificate, turn on **Enforce HTTPS**.
 
@@ -158,29 +160,45 @@ gcloud pubsub topics publish star-ground-budget --project "$PROJECT" \
 gcloud run services update star-ground --project "$PROJECT" --region "$REGION" --ingress all
 ```
 
-Releases keep the service's ingress, so a release doesn't undo a cutoff. The budget resets each month, but the service stays closed until you run that command.
+Deploys keep the service's ingress, so a deploy doesn't undo a cutoff. The budget resets each month, but the service stays closed until you run that command.
 
 ### 7. Image cleanup
 
-Every release copies an image of about 300 MB into Artifact Registry, which bills storage past 0.5 GB. [`cleanup-policy.json`](cleanup-policy.json) keeps the three newest images, so the last three releases can still be rolled back to:
+Every deploy copies an image of about 300 MB into Artifact Registry, which bills storage past 0.5 GB. Deploys share most of their layers, which the registry stores once. [`cleanup-policy.json`](cleanup-policy.json) keeps the ten newest images, so the last ten deploys can still be rolled back to:
 
 ```bash
 gcloud artifacts repositories set-cleanup-policies star-ground --project "$PROJECT" \
   --location "$REGION" --policy deploy/cleanup-policy.json --no-dry-run
 ```
 
-Releases copy only the `linux/amd64` image, so each release is one image in the registry. Releases before v2.6.0 copied the whole multi-architecture index, whose parts the rule would count separately. So turn the rule on (`--no-dry-run`) only after a release from v2.6.0 on has deployed.
+Deploys copy only the `linux/amd64` image, so each deploy is one image in the registry. Releases before v2.6.0 copied the whole multi-architecture index, whose parts the rule would count separately. So turn the rule on (`--no-dry-run`) only after a deploy from `main` has run.
 
-## Releasing
+## Deploying and rolling back
 
-Tag a release as before (`tools/prepare_release.py`, then push the `v*` tag). The run's summary links the deployed API, and the `github-pages` environment links the site.
+Merging to `main` deploys. The run's summary links the deployed API, the `github-pages` environment links the site, and `https://star-ground.jacksonferguson.me/version.json` names the commit the site was built from. If `check-live` fails, the run keeps the browser's trace and screenshot as the `live-check` artifact.
+
+To undo a bad change, revert it on `main`: the revert deploys like any other push. If the API is broken and can't wait for a deploy, send its traffic back to the last good revision, which takes seconds:
+
+```bash
+gcloud run revisions list --service star-ground --project "$PROJECT" --region "$REGION"
+gcloud run services update-traffic star-ground --project "$PROJECT" --region "$REGION" \
+  --to-revisions star-ground-00042-abc=100
+```
+
+While traffic is pinned to a revision, deploys create new revisions but don't send them traffic, so the fix you merge won't go live. Once it has deployed, return traffic to the newest revision:
+
+```bash
+gcloud run services update-traffic star-ground --project "$PROJECT" --region "$REGION" --to-latest
+```
+
+To publish a self-hosted image, tag a release as before (`tools/prepare_release.py`, then push the `v*` tag).
 
 The image serves the site itself when `STAR_GROUND_SITE_DIR` names it, which the Dockerfile sets for self-hosting. The deploy clears it, so the Cloud Run URL serves only the API, and allows only the Pages origin (`STAR_GROUND_CORS_ORIGINS`). It also sets:
 
 - `STAR_GROUND_TRUST_PROXY=1`, so the rate limiter reads the client's address from `X-Forwarded-For`, where Cloud Run appends it as the last entry.
 - `STAR_GROUND_OCR_THREADS=2`, matching `--cpu 2`. An instance reports 5 CPUs, and OCR sized to 5 threads ran slower than with 2.
 
-The deploy updates these variables and keeps any others, so settings made by hand survive a release.
+The deploy updates these variables and keeps any others, so settings made by hand survive a deploy.
 
 ## Feedback and bug reports
 
@@ -200,7 +218,7 @@ gcloud run services update star-ground --project "$PROJECT" --region "$REGION" \
 rm feedback-key.json
 ```
 
-The sheet must be shared with the service account's email as an editor. The Reports tab is created on the first report. Releases keep the secret, as they keep other settings made by hand.
+The sheet must be shared with the service account's email as an editor. The Reports tab is created on the first report. Deploys keep the secret, as they keep other settings made by hand.
 
 Each bug is also written to Cloud Run's log as `Bug <code>: …` with its traceback, so a report can be matched to its log entry:
 
@@ -211,7 +229,7 @@ gcloud logging read 'resource.labels.service_name="star-ground" AND textPayload:
 
 ## Turning OCR off
 
-OCR is the expensive part of the API: one document takes an instance's CPUs for 10 to 50 seconds. If it ever causes trouble, turn it off without a release. Image parts lists are then reported as images and never offered for OCR:
+OCR is the expensive part of the API: one document takes an instance's CPUs for 10 to 50 seconds. If it ever causes trouble, turn it off without a deploy. Image parts lists are then reported as images and never offered for OCR:
 
 ```bash
 gcloud run services update star-ground --project "$PROJECT" --region "$REGION" \
