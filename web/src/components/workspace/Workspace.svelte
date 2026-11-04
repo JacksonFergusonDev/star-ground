@@ -357,6 +357,7 @@
         <Bench
           {card}
           {project}
+          display={workspace.display}
           load={reviewable(card) ? () => load(card) : null}
           onPlace={(ref, placed) => workspace.place(card, ref, placed)}
           onStartOver={() => workspace.startOver(card)}

@@ -10,7 +10,7 @@ import type {
   MasterListResult,
   ProjectResult,
 } from './api';
-import type { Notation } from './parts';
+import type { BandCount, Notation } from './parts';
 import type { Failure, Stock } from './server';
 
 /** Where a project's parts list comes from. */
@@ -103,9 +103,10 @@ export interface Options {
   extras: boolean;
 }
 
-/** How the builder likes parts shown: values in decimal or '4k7' form. */
+/** How the builder likes parts shown: values in decimal or '4k7' form, and resistors' bands. */
 export interface Display {
   notation: Notation;
+  bands: BandCount;
 }
 
 /** The cards that can go on the master list, in order: its projects. */
@@ -149,7 +150,7 @@ export class Workspace {
   cards = $state<Card[]>([]);
   stock = $state<Stock | null>(null);
   options = $state<Options>({ hardware: true, extras: true });
-  display = $state<Display>({ notation: 'decimal' });
+  display = $state<Display>({ notation: 'decimal', bands: 5 });
 
   constructor() {
     const saved = load();

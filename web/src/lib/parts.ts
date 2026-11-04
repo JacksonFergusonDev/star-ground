@@ -1,12 +1,16 @@
 // What a part's value says to a builder at the bench: its value written the
-// way they prefer (4.7k or 4k7), a pot's taper, and the drawing for its kind.
+// way they prefer (4.7k or 4k7), a pot's taper, a resistor's colour bands, and
+// the drawing for its kind.
 // The API sends values in decimal form ('4.7k', '100n', 'B100K'); everything
 // here reads that text and never changes what was read.
 
-import type { ComponentCategory } from './api';
+import type { BuildStage, ComponentCategory } from './api';
 
 /** How a value is written: '4.7k', or the European '4k7' (IEC 60062's RKM code). */
 export type Notation = 'decimal' | 'rkm';
+
+/** How many bands a resistor shows: 4 (two digits, 5%) or 5 (three digits, 1%). */
+export type BandCount = 4 | 5;
 
 // Categories whose values are numbers with a unit prefix.
 const NUMERIC = new Set<string>(['Resistors', 'Capacitors', 'Inductors', 'Potentiometers']);
@@ -15,6 +19,19 @@ const NUMERIC = new Set<string>(['Resistors', 'Capacitors', 'Inductors', 'Potent
 // '390R', '100n', '4u7'. Lowercase 'm' is left out: in parts lists it means
 // mega as often as milli.
 const VALUE = /^(\d+)(?:[.,](\d+))?\s*([pnuµkKMRr]?)(\d*)$/;
+
+const POWER: Record<string, number> = {
+  p: -12,
+  n: -9,
+  u: -6,
+  µ: -6,
+  '': 0,
+  R: 0,
+  r: 0,
+  k: 3,
+  K: 3,
+  M: 6,
+};
 
 /** A value read as its digits and prefix: '4.7k' is whole '4', fraction '7', prefix 'k'. */
 interface Reading {
@@ -92,6 +109,69 @@ export function formatValue(value: string, category: string, notation: Notation)
   return write(value, notation, category === 'Resistors' ? 'R' : '');
 }
 
+/** A resistor band's colour, by the digit it stands for (-2 silver to 9 white). */
+type Band =
+  | 'black'
+  | 'brown'
+  | 'red'
+  | 'orange'
+  | 'yellow'
+  | 'green'
+  | 'blue'
+  | 'violet'
+  | 'grey'
+  | 'white'
+  | 'gold'
+  | 'silver';
+
+const DIGITS: Band[] = [
+  'black',
+  'brown',
+  'red',
+  'orange',
+  'yellow',
+  'green',
+  'blue',
+  'violet',
+  'grey',
+  'white',
+];
+
+const MULTIPLIER = (power: number): Band | null =>
+  power === -2 ? 'silver' : power === -1 ? 'gold' : (DIGITS[power] ?? null);
+
+/**
+ * A resistor's colour bands: its digits, the multiplier, then the tolerance
+ * (gold for 5% on four bands, brown for 1% on five). Null when the value
+ * isn't a resistance, or needs more digits than the bands hold.
+ */
+export function bands(value: string, count: BandCount): Band[] | null {
+  const reading = read(value);
+  if (!reading) return null;
+  const power = POWER[reading.prefix];
+  if (power === undefined || power < 0) return null;
+  let digits = `${reading.whole}${reading.fraction}`.replace(/^0+/, '');
+  let exponent = power - reading.fraction.length;
+  if (!digits) return null;
+  while (digits.length > 1 && digits.endsWith('0')) {
+    digits = digits.slice(0, -1);
+    exponent += 1;
+  }
+  const significant = count - 2;
+  if (digits.length > significant) return null;
+  while (digits.length < significant) {
+    digits += '0';
+    exponent -= 1;
+  }
+  const multiplier = MULTIPLIER(exponent);
+  if (!multiplier) return null;
+  return [
+    ...[...digits].map((d) => DIGITS[Number(d)] as Band),
+    multiplier,
+    count === 4 ? 'gold' : 'brown',
+  ];
+}
+
 /** The drawings a part can carry, one per kind of part. */
 export type PartKind =
   | 'resistor'
@@ -133,3 +213,25 @@ const BY_CATEGORY: Record<ComponentCategory, PartKind> = {
 /** The drawing for a shopping list category ('Resistors'); 'other' for one it doesn't know. */
 export const kindOfCategory = (category: string): PartKind =>
   BY_CATEGORY[category as ComponentCategory] ?? 'other';
+
+const BY_STAGE: Record<BuildStage, PartKind> = {
+  PCB: 'board',
+  Resistors: 'resistor',
+  Diodes: 'diode',
+  Sockets: 'socket',
+  'Crystals and oscillators': 'crystal',
+  'Small capacitors': 'capacitor',
+  Inductors: 'inductor',
+  Transistors: 'transistor',
+  'Electrolytic capacitors': 'electrolytic',
+  Relays: 'relay',
+  Switches: 'switch',
+  Transformers: 'transformer',
+  Potentiometers: 'pot',
+  Hardware: 'hardware',
+  Chips: 'chip',
+  'Other parts': 'other',
+};
+
+/** The drawing for a build stage, which tells electrolytics and sockets apart. */
+export const kindOfStage = (stage: BuildStage): PartKind => BY_STAGE[stage];

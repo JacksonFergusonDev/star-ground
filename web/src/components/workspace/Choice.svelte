@@ -1,23 +1,27 @@
-<script lang="ts">
-  // How values are written: '4.7k', or '4k7' as many build documents and
-  // European builders write them. Kept with the workspace, so every page
+<script lang="ts" generics="T extends string | number">
+  // A small choice of how parts are shown, such as '4.7k' or '4k7' values, or
+  // four or five resistor bands. Kept with the workspace, so every page
   // follows the builder's choice.
-  import type { Notation } from '../../lib/parts';
-
-  let { notation = $bindable() }: { notation: Notation } = $props();
-
-  const choices: { value: Notation; label: string }[] = [
-    { value: 'decimal', label: '4.7k' },
-    { value: 'rkm', label: '4k7' },
-  ];
+  let {
+    legend,
+    name,
+    options,
+    value = $bindable(),
+  }: {
+    legend: string;
+    /** The radio group's name, unique on the page. */
+    name: string;
+    options: { value: T; label: string }[];
+    value: T;
+  } = $props();
 </script>
 
 <fieldset class="choice">
-  <legend>Values</legend>
-  {#each choices as choice (choice.value)}
+  <legend>{legend}</legend>
+  {#each options as option (option.value)}
     <label>
-      <input type="radio" name="notation" value={choice.value} bind:group={notation} />
-      <span>{choice.label}</span>
+      <input type="radio" {name} value={option.value} bind:group={value} />
+      <span>{option.label}</span>
     </label>
   {/each}
 </fieldset>
