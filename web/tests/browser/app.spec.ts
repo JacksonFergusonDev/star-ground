@@ -158,6 +158,36 @@ test('the shopping list writes values as the builder prefers and folds long note
   await expect(fold).toHaveAttribute('open');
 });
 
+test('each project shows its pedal, with knobs named from its pots, in a paint the builder picks', async ({
+  page,
+}) => {
+  const listed = result.projects[0] as MasterListResult['projects'][number];
+  await stubMasterList(page, {
+    ...result,
+    projects: [
+      {
+        ...listed,
+        parts: [
+          { ref: 'VOLUME', category: 'Potentiometers', value: 'A100k', location: null },
+          { ref: 'GAIN', category: 'Potentiometers', value: 'B500k', location: null },
+          { ref: 'VR3', category: 'Potentiometers', value: 'B10k', location: null },
+          { ref: 'SW1', category: 'Switches', value: 'SPDT ON/ON', location: null },
+        ],
+      },
+    ],
+  });
+  await page.goto('/app/');
+  await paste(page, 'VOLUME A100k');
+
+  const pedal = page.getByRole('img', { name: /^Pasted list, painted/ });
+  await expect(pedal).toHaveAccessibleName(/3 knobs \(VOLUME, GAIN\), 1 toggle$/);
+  await page.getByText('Paint', { exact: true }).click();
+  await page.getByRole('radio', { name: 'Red' }).check();
+  await expect(pedal).toHaveAccessibleName(/^Pasted list, painted red,/);
+  await page.reload();
+  await expect(page.getByRole('img', { name: /^Pasted list, painted red,/ })).toBeVisible();
+});
+
 test('changing a count updates the shopping list', async ({ page }) => {
   const sent = await stubMasterList(page);
   await page.goto('/app/');

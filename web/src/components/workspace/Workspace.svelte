@@ -478,6 +478,7 @@
             {@const listed = projectOf(card.id)}
             <ProjectCard
               {card}
+              project={listed}
               {presetName}
               flags={flagged(card, listed)}
               onCount={(count) => workspace.setCount(card, count)}

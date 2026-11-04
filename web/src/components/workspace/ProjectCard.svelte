@@ -1,13 +1,18 @@
 <script lang="ts">
   // One project: its name, how many to build, where its parts list comes from,
   // and the choices its document asks for (a build, OCR) on the card itself.
+  import type { ProjectResult } from '../../lib/api';
+  import { PAINTS, faceOf, paintOf } from '../../lib/enclosure';
+  import type { Paint } from '../../lib/enclosure';
   import type { Card } from '../../lib/workspace.svelte';
-  import { blocker, builds, count } from '../../lib/workspace.svelte';
+  import { blocker, builds, count, placedOf } from '../../lib/workspace.svelte';
   import BugNotice from './BugNotice.svelte';
+  import Enclosure from './Enclosure.svelte';
   import Icon from './Icon.svelte';
 
   let {
     card,
+    project,
     presetName,
     onCount,
     onRemove,
@@ -17,6 +22,8 @@
     buildLink,
   }: {
     card: Card;
+    /** Its parts as last listed; null until they are. */
+    project: ProjectResult | null;
     presetName: (key: string) => string;
     onCount: (count: number) => void;
     onRemove: () => void;
@@ -30,6 +37,17 @@
   } = $props();
 
   const choices = $derived(builds(card));
+  const paint = $derived(paintOf(card.id, card.paint));
+  const face = $derived(faceOf(project));
+  // The LED lights once bench mode has every part placed.
+  const finished = $derived.by(() => {
+    if (!project?.build_order.length) return false;
+    const placed = new Set(placedOf(card));
+    return project.build_order.every((step) =>
+      [...step.refs, ...step.counted].every((ref) => placed.has(ref)),
+    );
+  });
+  const paints = Object.entries(PAINTS) as [Paint, (typeof PAINTS)[Paint]][];
   const waiting = $derived(blocker(card));
   const ocr = $derived(card.reading?.ocr ?? null);
   // What a bug report names: the upload's file name or the link, never the file.
@@ -62,109 +80,216 @@
 </script>
 
 <li class="card" id={`project-${card.id}`} aria-labelledby={`name-${card.id}`}>
-  <div class="head">
-    <label class="visually-hidden" for={`name-${card.id}`}>Project name</label>
-    <input id={`name-${card.id}`} class="name" bind:value={card.name} />
-    <label class="count">
-      <span>Pedals</span>
-      <input
-        type="number"
-        min="1"
-        max="100"
-        value={card.count}
-        onchange={(e) => onCount(e.currentTarget.valueAsNumber)}
-      />
-    </label>
-    <button class="remove" type="button" onclick={onRemove} aria-label={`Remove ${card.name}`}>
-      <Icon name="close" />
-    </button>
-  </div>
-  <p class="source">
-    {#if card.source.kind === 'url' && card.source.catalog}
-      From the <a href={`/catalog/${card.source.catalog}/`}>catalog</a>: {source}
-    {:else}
-      {source}
-    {/if}
-  </p>
-
-  {#if card.read.state === 'reading'}
-    <p class="status">Reading the document…</p>
-  {:else if card.read.state === 'queued'}
-    <p class="status">Waiting for OCR: {card.read.position} ahead.</p>
-  {:else if card.read.state === 'failed'}
-    <p class="status problem">{card.read.message}</p>
-    {#if card.read.bugCode}
-      <BugNotice code={card.read.bugCode} document={documentName} />
-    {/if}
-    <button class="text-button" type="button" onclick={() => onRead(card.useOcr)}>
-      Read it again
-    </button>
-  {/if}
-
-  {#if card.reading?.ocr_offered && card.read.state === 'ready'}
-    <div class="offer">
-      <p>
-        This parts list is an image. Star Ground can read it by OCR, which takes a few seconds a
-        page, and lists every part it read for you to check.
-      </p>
-      <button class="hs-button" type="button" onclick={() => onRead(true)}>Read it by OCR</button>
-    </div>
-  {/if}
-
-  {#if ocr}
-    <div class="offer">
-      <p>{ocr.message}</p>
-      {#if ocr.has_parts}
-        <label class="check">
-          <input type="checkbox" bind:checked={card.useOcr} />
-          Add the {ocr.parts_read} parts OCR read
-        </label>
-      {/if}
-    </div>
-  {/if}
-
-  {#if choices.length}
-    <label class="build">
-      <span>Build</span>
-      <select bind:value={card.variant}>
-        <option value={null} disabled>Choose a build</option>
-        {#each choices as name (name)}
-          <option value={name}>{name}</option>
+  <div class="pedal">
+    <Enclosure name={card.name} {face} {paint} lit={finished} />
+    <details class="paint">
+      <summary>Paint</summary>
+      <fieldset>
+        <legend class="visually-hidden">Paint for {card.name}</legend>
+        {#each paints as [key, coat] (key)}
+          <label class="swatch" title={coat.name}>
+            <input
+              type="radio"
+              name={`paint-${card.id}`}
+              value={key}
+              checked={paint === key}
+              onchange={() => (card.paint = key)}
+            />
+            <span style:background={coat.color}></span>
+            <span class="visually-hidden">{coat.name}</span>
+          </label>
         {/each}
-      </select>
-    </label>
-  {/if}
-
-  {#if waiting && card.read.state === 'ready'}
-    <p class="status">{waiting}</p>
-  {/if}
-
-  {#if checkLink || buildLink}
-    <div class="actions">
-      {#if checkLink}
-        <a class="action" href={checkLink}>
-          Check the parts against the document
-          {#if flags}<span class="flags">{flags} flagged</span>{/if}
-          <Icon name="arrow-right" size={14} />
-        </a>
-      {/if}
-      {#if buildLink}
-        <a class="action" href={buildLink}>
-          Build it, part by part <Icon name="arrow-right" size={14} />
-        </a>
-      {/if}
+      </fieldset>
+    </details>
+  </div>
+  <div class="body">
+    <div class="head">
+      <label class="visually-hidden" for={`name-${card.id}`}>Project name</label>
+      <input id={`name-${card.id}`} class="name" bind:value={card.name} />
+      <label class="count">
+        <span>Pedals</span>
+        <input
+          type="number"
+          min="1"
+          max="100"
+          value={card.count}
+          onchange={(e) => onCount(e.currentTarget.valueAsNumber)}
+        />
+      </label>
+      <button class="remove" type="button" onclick={onRemove} aria-label={`Remove ${card.name}`}>
+        <Icon name="close" />
+      </button>
     </div>
-  {/if}
+    <p class="source">
+      {#if card.source.kind === 'url' && card.source.catalog}
+        From the <a href={`/catalog/${card.source.catalog}/`}>catalog</a>: {source}
+      {:else}
+        {source}
+      {/if}
+    </p>
+
+    {#if card.read.state === 'reading'}
+      <p class="status">Reading the document…</p>
+    {:else if card.read.state === 'queued'}
+      <p class="status">Waiting for OCR: {card.read.position} ahead.</p>
+    {:else if card.read.state === 'failed'}
+      <p class="status problem">{card.read.message}</p>
+      {#if card.read.bugCode}
+        <BugNotice code={card.read.bugCode} document={documentName} />
+      {/if}
+      <button class="text-button" type="button" onclick={() => onRead(card.useOcr)}>
+        Read it again
+      </button>
+    {/if}
+
+    {#if card.reading?.ocr_offered && card.read.state === 'ready'}
+      <div class="offer">
+        <p>
+          This parts list is an image. Star Ground can read it by OCR, which takes a few seconds a
+          page, and lists every part it read for you to check.
+        </p>
+        <button class="hs-button" type="button" onclick={() => onRead(true)}>Read it by OCR</button>
+      </div>
+    {/if}
+
+    {#if ocr}
+      <div class="offer">
+        <p>{ocr.message}</p>
+        {#if ocr.has_parts}
+          <label class="check">
+            <input type="checkbox" bind:checked={card.useOcr} />
+            Add the {ocr.parts_read} parts OCR read
+          </label>
+        {/if}
+      </div>
+    {/if}
+
+    {#if choices.length}
+      <label class="build">
+        <span>Build</span>
+        <select bind:value={card.variant}>
+          <option value={null} disabled>Choose a build</option>
+          {#each choices as name (name)}
+            <option value={name}>{name}</option>
+          {/each}
+        </select>
+      </label>
+    {/if}
+
+    {#if waiting && card.read.state === 'ready'}
+      <p class="status">{waiting}</p>
+    {/if}
+
+    {#if checkLink || buildLink}
+      <div class="actions">
+        {#if checkLink}
+          <a class="action" href={checkLink}>
+            Check the parts against the document
+            {#if flags}<span class="flags">{flags} flagged</span>{/if}
+            <Icon name="arrow-right" size={14} />
+          </a>
+        {/if}
+        {#if buildLink}
+          <a class="action" href={buildLink}>
+            Build it, part by part <Icon name="arrow-right" size={14} />
+          </a>
+        {/if}
+      </div>
+    {/if}
+  </div>
 </li>
 
 <style>
   .card {
     display: grid;
-    gap: 10px;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 20px;
     padding: 18px 20px;
     border: 1px solid var(--line);
     border-radius: 5px;
     background: var(--panel);
+  }
+  .body {
+    display: grid;
+    align-content: start;
+    gap: 10px;
+    min-width: 0;
+  }
+  .pedal {
+    display: grid;
+    gap: 8px;
+    justify-items: center;
+    align-content: start;
+  }
+  .paint summary {
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: var(--fs-label);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    list-style: none;
+  }
+  .paint summary::-webkit-details-marker {
+    display: none;
+  }
+  .paint summary:hover {
+    color: var(--text);
+  }
+  .paint[open] summary {
+    color: var(--text);
+  }
+  .paint fieldset {
+    display: grid;
+    grid-template-columns: repeat(4, 14px);
+    gap: 6px;
+    margin: 8px 0 0;
+    padding: 0;
+    border: 0;
+  }
+  .swatch {
+    position: relative;
+    display: block;
+    width: 14px;
+    height: 14px;
+    cursor: pointer;
+  }
+  .swatch input {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+  .swatch span:not(.visually-hidden) {
+    display: block;
+    width: 14px;
+    height: 14px;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+  }
+  .swatch input:checked + span {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  .swatch input:focus-visible + span {
+    outline: 2px solid var(--text);
+    outline-offset: 2px;
+  }
+  summary:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  @media (width <= 520px) {
+    .card {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .pedal {
+      grid-template-columns: auto auto;
+      justify-content: start;
+      align-items: start;
+      gap: 16px;
+    }
   }
   .head {
     display: flex;
