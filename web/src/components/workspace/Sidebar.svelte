@@ -153,7 +153,7 @@
 
     <div class="foot">
       <p>Your projects stay in this browser.</p>
-      <a href="/">About Star Ground</a>
+      <a href="/"><Icon name="star-ground" size={16} /> About Star Ground</a>
       <a href="https://github.com/JacksonFergusonDev/star-ground">
         <Icon name="brand-github" size={14} /> GitHub
       </a>

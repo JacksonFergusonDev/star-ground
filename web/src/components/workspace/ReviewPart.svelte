@@ -95,7 +95,7 @@
 </script>
 
 <li
-  class="part"
+  class="part hover-card"
   data-ref={designated?.ref ?? counted?.key}
   class:selected
   class:hovered
@@ -193,8 +193,14 @@
     border-style: dashed;
     border-color: var(--muted);
   }
+  /* Pointed at here or on the document: a dim white border, as the pointer
+     gives any card (global.css). A flagged card's border is already dim. */
   .part.hovered {
-    border-color: var(--accent-border);
+    border-color: var(--muted);
+  }
+  .part.flagged:hover,
+  .part.flagged.hovered {
+    border-color: var(--text);
   }
   .part.selected {
     border: 1px solid var(--accent);
@@ -249,7 +255,9 @@
     white-space: nowrap;
     cursor: pointer;
   }
-  .action:hover,
+  .action:hover {
+    color: var(--text);
+  }
   .action[aria-pressed='true'],
   .action[aria-expanded='true'] {
     border-color: var(--accent-border);

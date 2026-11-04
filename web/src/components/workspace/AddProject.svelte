@@ -153,6 +153,9 @@
     text-transform: uppercase;
     cursor: pointer;
   }
+  .ways button:hover {
+    color: var(--text);
+  }
   .ways button[aria-pressed='true'] {
     border-color: var(--accent-border);
     color: var(--text);
@@ -224,8 +227,5 @@
     background: var(--panel);
     font: inherit;
     cursor: pointer;
-  }
-  input[type='file']:hover::file-selector-button {
-    border-color: var(--muted);
   }
 </style>

@@ -10,7 +10,7 @@ import type {
   MasterListResult,
   ProjectResult,
 } from './api';
-import type { Paint } from './enclosure';
+import type { Finish, Paint } from './enclosure';
 import type { BandCount, Notation } from './parts';
 import type { Failure, Stock } from './server';
 
@@ -60,6 +60,8 @@ export interface Card {
   placed: Record<string, string[]>;
   /** The enclosure's paint; none until the builder picks one (see `paintOf`). */
   paint?: Paint | null;
+  /** The paint's finish; matte until the builder picks another. */
+  finish?: Finish | null;
 }
 
 const STORAGE_KEY = 'star-ground.workspace.v1';

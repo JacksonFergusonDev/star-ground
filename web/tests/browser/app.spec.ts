@@ -182,10 +182,14 @@ test('each project shows its pedal, with knobs named from its pots, in a paint t
   const pedal = page.getByRole('img', { name: /^Pasted list, painted/ });
   await expect(pedal).toHaveAccessibleName(/3 knobs \(VOLUME, GAIN\), 1 toggle$/);
   await page.getByText('Paint', { exact: true }).click();
-  await page.getByRole('radio', { name: 'Red' }).check();
+  await page.getByRole('radio', { name: 'Red', exact: true }).check();
   await expect(pedal).toHaveAccessibleName(/^Pasted list, painted red,/);
+  await page.getByRole('radio', { name: 'Hammered', exact: true }).check();
+  await expect(pedal).toHaveAccessibleName(/^Pasted list, painted red with a hammered finish,/);
   await page.reload();
-  await expect(page.getByRole('img', { name: /^Pasted list, painted red,/ })).toBeVisible();
+  await expect(
+    page.getByRole('img', { name: /^Pasted list, painted red with a hammered finish,/ }),
+  ).toBeVisible();
 });
 
 test('changing a count updates the shopping list', async ({ page }) => {

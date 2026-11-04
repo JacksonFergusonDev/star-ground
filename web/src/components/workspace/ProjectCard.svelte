@@ -2,8 +2,8 @@
   // One project: its name, how many to build, where its parts list comes from,
   // and the choices its document asks for (a build, OCR) on the card itself.
   import type { ProjectResult } from '../../lib/api';
-  import { PAINTS, faceOf, paintOf } from '../../lib/enclosure';
-  import type { Paint } from '../../lib/enclosure';
+  import { FINISHES, PAINTS, faceOf, finishOf, paintOf } from '../../lib/enclosure';
+  import type { Finish, Paint } from '../../lib/enclosure';
   import type { Card } from '../../lib/workspace.svelte';
   import { blocker, builds, count, placedOf } from '../../lib/workspace.svelte';
   import BugNotice from './BugNotice.svelte';
@@ -49,6 +49,8 @@
     );
   });
   const paints = Object.entries(PAINTS) as [Paint, (typeof PAINTS)[Paint]][];
+  const finish = $derived(finishOf(card.finish));
+  const finishes = Object.entries(FINISHES) as [Finish, string][];
   const waiting = $derived(blocker(card));
   const ocr = $derived(card.reading?.ocr ?? null);
   // What a bug report names: the upload's file name or the link, never the file.
@@ -82,7 +84,7 @@
 
 <li class="card" id={`project-${card.id}`} aria-labelledby={`name-${card.id}`}>
   <div class="pedal">
-    <Enclosure name={card.name} {face} {paint} lit={finished} />
+    <Enclosure name={card.name} {face} {paint} {finish} lit={finished} />
     <details class="paint">
       <summary>Paint</summary>
       <fieldset>
@@ -98,6 +100,21 @@
             />
             <span style:background={coat.color}></span>
             <span class="visually-hidden">{coat.name}</span>
+          </label>
+        {/each}
+      </fieldset>
+      <fieldset class="finishes">
+        <legend class="visually-hidden">Finish for {card.name}</legend>
+        {#each finishes as [key, label] (key)}
+          <label class="finish">
+            <input
+              type="radio"
+              name={`finish-${card.id}`}
+              value={key}
+              checked={finish === key}
+              onchange={() => (card.finish = key)}
+            />
+            <span>{label}</span>
           </label>
         {/each}
       </fieldset>
@@ -234,9 +251,6 @@
   .paint summary::-webkit-details-marker {
     display: none;
   }
-  .paint summary:hover {
-    color: var(--text);
-  }
   .paint[open] summary {
     color: var(--text);
   }
@@ -270,6 +284,48 @@
     border-radius: 50%;
   }
   .swatch input:checked + span {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  .swatch:hover span:not(.visually-hidden) {
+    border-color: var(--text);
+  }
+  .finishes {
+    display: grid;
+    gap: 2px;
+    margin: 10px 0 0;
+    padding: 0;
+    border: 0;
+  }
+  .finish {
+    position: relative;
+    cursor: pointer;
+  }
+  .finish input {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+  .finish span {
+    display: block;
+    padding: 2px 6px;
+    border: 1px solid transparent;
+    border-radius: 3px;
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: var(--fs-label);
+  }
+  .finish:hover span {
+    color: var(--text);
+  }
+  .finish input:checked + span {
+    border-color: var(--accent-border);
+    color: var(--text);
+    background: var(--accent-soft);
+  }
+  .finish input:focus-visible + span {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
   }

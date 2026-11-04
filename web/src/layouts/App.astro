@@ -23,9 +23,12 @@ const props = Astro.props;
     </a>
     <div class="app">
       <Sidebar client:load path={Astro.url.pathname} />
-      <main id="main" class="app-main">
-        <slot />
-      </main>
+      <!-- The page scrolls here, not the window, so the sidebar stays put when it bounces. -->
+      <div class="app-scroll" data-app-scroll>
+        <main id="main" class="app-main">
+          <slot />
+        </main>
+      </div>
     </div>
   </body>
 </html>

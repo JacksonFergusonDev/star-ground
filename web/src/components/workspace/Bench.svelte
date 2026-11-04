@@ -444,6 +444,10 @@
   .current .pad {
     border-color: var(--accent);
   }
+  /* The pad under the pointer brightens: a click solders this part. */
+  li:not(.current, .placed) label:hover .pad {
+    border-color: var(--text);
+  }
   .placed .pad {
     border-color: color-mix(in srgb, var(--text) 60%, var(--bg));
     background: radial-gradient(

@@ -23,6 +23,19 @@ export const PAINTS = {
 
 export type Paint = keyof typeof PAINTS;
 
+/** How the paint is finished: flat, glossy, or hammertone's dimpled metal. */
+export const FINISHES = {
+  matte: 'Matte',
+  gloss: 'Gloss',
+  hammered: 'Hammered',
+} as const;
+
+export type Finish = keyof typeof FINISHES;
+
+/** A card's finish: the builder's choice, or matte until they pick one. */
+export const finishOf = (chosen: Finish | null | undefined): Finish =>
+  chosen && chosen in FINISHES ? chosen : 'matte';
+
 const PAINT_KEYS = Object.keys(PAINTS) as Paint[];
 
 /** A card's paint: the builder's choice, or one picked from its id so each project differs. */
@@ -100,7 +113,10 @@ export function layout(face: Face): Layout {
   const count = face.knobs.length;
   const width = count <= 3 ? 60 : count <= 6 ? 66 : 92;
   const perRow = rows(count);
-  const knob = count <= 1 ? 9 : count <= 3 ? 8 : 7;
+  // A knob takes at most this share of its slot in the fullest row, so
+  // neighbours never touch: three across a narrow box get smaller knobs.
+  const slot = width / (Math.max(1, ...perRow) + 1);
+  const knob = Math.min(count <= 1 ? 9 : 8, slot * 0.4);
   const rowGap = knob * 2 + 9;
   const knobs: Layout['knobs'] = [];
   let index = 0;

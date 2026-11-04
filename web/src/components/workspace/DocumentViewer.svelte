@@ -256,7 +256,6 @@
     cursor: pointer;
   }
   .zoom button:hover:not(:disabled) {
-    border-color: var(--accent-border);
     color: var(--accent);
   }
   .zoom button:disabled {

@@ -1,6 +1,9 @@
 <script lang="ts">
   // house-style's icons for Svelte islands, inlined like its Icon.astro so they
   // take the text's colour. Decoration only: the label carries the meaning.
+  // Star Ground's own mark sits beside them: a link to its about page shows it,
+  // as house-style has a link to jacksonferguson.me show that site's mark.
+  import starGround from '../../assets/star-ground-mark.svg?raw';
   import arrowLeft from 'house-style/icons/arrow-left.svg?raw';
   import arrowRight from 'house-style/icons/arrow-right.svg?raw';
   import arrowUpRight from 'house-style/icons/arrow-up-right.svg?raw';
@@ -15,6 +18,7 @@
     'brand-github': brandGithub,
     close,
     jacksonferguson,
+    'star-ground': starGround,
   } as const;
 
   let { name, size = 16 }: { name: keyof typeof icons; size?: number } = $props();
