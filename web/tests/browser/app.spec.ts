@@ -419,6 +419,9 @@ test('a stock CSV goes with each request and adds stock columns', async ({ page 
 
   await page.goto('/app/stock/');
   await expect(page.getByText('Subtracting stock.csv from what to buy.')).toBeVisible();
+  // The stock shows as a cabinet of labelled drawers.
+  const drawers = page.getByRole('region', { name: 'In your drawers' });
+  await expect(drawers.getByRole('listitem')).toHaveText([/10k\s*×40/]);
 });
 
 test('the list options go with the request', async ({ page }) => {

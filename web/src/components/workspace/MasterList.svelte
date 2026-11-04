@@ -10,7 +10,9 @@
   import BugNotice from './BugNotice.svelte';
   import Icon from './Icon.svelte';
   import Choice from './Choice.svelte';
+  import EmptyState from './EmptyState.svelte';
   import PartSymbol from './PartSymbol.svelte';
+  import SignalPulse from './SignalPulse.svelte';
   import TaperCurve from './TaperCurve.svelte';
 
   let {
@@ -52,7 +54,7 @@
 </script>
 
 <div class="master" aria-busy={updating}>
-  <p class="state" aria-live="polite">{updating ? 'Updating…' : ''}</p>
+  {#if updating}<SignalPulse label="Updating…" />{/if}
 
   {#if error}
     <p class="problem" role="alert">{error.message}</p>
@@ -62,10 +64,12 @@
   {/if}
 
   {#if !result}
-    <div class="empty">
-      <p>Add a project and its parts appear here, merged with every other project's.</p>
-      <a class="hs-button" href="/app/">Add a project <Icon name="arrow-right" size={14} /></a>
-    </div>
+    <EmptyState title="Nothing to buy yet">
+      Add a project and its parts appear here, merged with every other project's.
+      {#snippet action()}
+        <a class="hs-button" href="/app/">Add a project <Icon name="arrow-right" size={14} /></a>
+      {/snippet}
+    </EmptyState>
   {:else}
     <p class="summary">
       {count(result.stats.parts_found, 'part')} read from {count(result.stats.lines_read, 'line')}
@@ -233,20 +237,7 @@
     letter-spacing: 0.08em;
     text-transform: uppercase;
   }
-  .state:empty {
-    display: none;
-  }
-  .empty {
-    display: grid;
-    gap: 14px;
-    justify-items: start;
-    padding: 28px;
-    border: 1px dashed var(--line);
-    border-radius: 5px;
-  }
-  .state,
   .summary,
-  .empty p,
   .note,
   .notes,
   details {
@@ -280,7 +271,6 @@
   .show:hover {
     color: var(--accent);
   }
-  .empty a:focus-visible,
   .show:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
