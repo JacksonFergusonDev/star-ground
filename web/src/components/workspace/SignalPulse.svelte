@@ -5,11 +5,13 @@
   // runs on its own needs a pause control past a few seconds (house-style's
   // motion rules), so the pulse runs three times and rests, and runs again
   // each time the words change (queued, then reading). Readers who asked for
-  // reduced motion see the trace still; the words say what's happening.
+  // reduced motion see the trace still; the words say what's happening. It
+  // isn't a live region itself: where a wait should be announced, the page
+  // puts it in one.
   let { label }: { label: string } = $props();
 </script>
 
-<span class="pulse" role="status">
+<span class="pulse">
   {#key label}
     <svg viewBox="0 0 64 12" width="64" height="12" aria-hidden="true" focusable="false">
       <path class="copper" d="M4 6h14l6-4h16l6 4h14" />
