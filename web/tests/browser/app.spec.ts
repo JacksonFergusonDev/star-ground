@@ -79,12 +79,15 @@ function requestOf(body: string): MasterListRequest {
 }
 
 /** The requests the page sent to the master list, parsed. */
-async function stubMasterList(page: Page): Promise<MasterListRequest[]> {
+async function stubMasterList(
+  page: Page,
+  answer: MasterListResult = result,
+): Promise<MasterListRequest[]> {
   const sent: MasterListRequest[] = [];
   await page.route('**/api/master-list', (route) => {
     const body = route.request().postDataBuffer()?.toString() ?? '';
     sent.push(requestOf(body));
-    return route.fulfill({ json: result });
+    return route.fulfill({ json: answer });
   });
   return sent;
 }
@@ -117,6 +120,42 @@ test('a pasted list appears on the shopping list without a Generate button', asy
   await expect(row.getByRole('link', { name: 'Tayda' })).toBeVisible();
   await expect(page.getByText('Check its value.')).toBeVisible();
   expect(sent.at(-1)?.projects[0]).toMatchObject({ method: 'paste', text: 'R1 10k\nC1 100x' });
+});
+
+test('the shopping list writes values as the builder prefers and folds long notes', async ({
+  page,
+}) => {
+  const row = result.shopping_list[0] as MasterListResult['shopping_list'][number];
+  const note =
+    'Socket recommended. Try an LM308N for the vintage sound, or an OP07 for a tighter, modern one.';
+  await stubMasterList(page, {
+    ...result,
+    shopping_list: [
+      { ...row, part: '4.7k' },
+      { ...row, category: 'Potentiometers', part: 'B100k', notes: '' },
+      { ...row, category: 'ICs', part: 'LM308', notes: note },
+    ],
+  });
+  await page.goto('/app/');
+  await paste(page, 'R1 4.7k');
+  await openList(page);
+
+  await expect(page.getByRole('columnheader', { name: 'Buy from' })).toBeVisible();
+  await expect(page.getByRole('row', { name: /4\.7k/ })).toBeVisible();
+  await expect(page.getByRole('row', { name: /B100k/ })).toContainText('Linear taper');
+
+  await page.getByRole('radio', { name: '4k7' }).check();
+  await expect(page.getByRole('row', { name: /4k7/ })).toBeVisible();
+  await expect(page.getByRole('row', { name: /B100k/ })).toBeVisible();
+  // The choice is kept with the workspace.
+  await page.reload();
+  await expect(page.getByRole('row', { name: /4k7/ })).toBeVisible();
+
+  // A long note shows one line until it's opened.
+  const fold = page.getByRole('row', { name: /LM308/ }).locator('details');
+  await expect(fold).not.toHaveAttribute('open');
+  await fold.getByText(note).click();
+  await expect(fold).toHaveAttribute('open');
 });
 
 test('changing a count updates the shopping list', async ({ page }) => {

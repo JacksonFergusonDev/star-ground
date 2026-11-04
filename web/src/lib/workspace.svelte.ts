@@ -10,6 +10,7 @@ import type {
   MasterListResult,
   ProjectResult,
 } from './api';
+import type { Notation } from './parts';
 import type { Failure, Stock } from './server';
 
 /** Where a project's parts list comes from. */
@@ -102,6 +103,11 @@ export interface Options {
   extras: boolean;
 }
 
+/** How the builder likes parts shown: values in decimal or '4k7' form. */
+export interface Display {
+  notation: Notation;
+}
+
 /** The cards that can go on the master list, in order: its projects. */
 export function ready(cards: Card[]): Card[] {
   return cards.filter((c) => blocker(c) === null);
@@ -143,12 +149,14 @@ export class Workspace {
   cards = $state<Card[]>([]);
   stock = $state<Stock | null>(null);
   options = $state<Options>({ hardware: true, extras: true });
+  display = $state<Display>({ notation: 'decimal' });
 
   constructor() {
     const saved = load();
     this.cards = saved.cards ?? [];
     this.stock = saved.stock ?? null;
     this.options = { ...this.options, ...saved.options };
+    this.display = { ...this.display, ...saved.display };
     // A reading interrupted by a reload can't resume; offer to read again.
     for (const card of this.cards) {
       card.checks ??= {};
@@ -211,7 +219,12 @@ export class Workspace {
 
   save(): void {
     try {
-      const saved: Saved = { cards: this.cards, stock: this.stock, options: this.options };
+      const saved: Saved = {
+        cards: this.cards,
+        stock: this.stock,
+        options: this.options,
+        display: this.display,
+      };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
     } catch {
       // Storage is full or blocked: the workspace lasts for this visit.
@@ -259,6 +272,7 @@ interface Saved {
   cards: Card[];
   stock: Stock | null;
   options: Options;
+  display: Display;
 }
 
 function load(): Partial<Saved> {

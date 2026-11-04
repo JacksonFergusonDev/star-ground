@@ -4,22 +4,28 @@
   import type { MasterListResult } from '../../lib/api';
   import type { Failure } from '../../lib/server';
   import { explain } from '../../lib/server';
-  import type { Options } from '../../lib/workspace.svelte';
+  import { formatValue, kindOfCategory, readPot } from '../../lib/parts';
+  import type { Display, Options } from '../../lib/workspace.svelte';
   import { count } from '../../lib/workspace.svelte';
   import BugNotice from './BugNotice.svelte';
   import Icon from './Icon.svelte';
+  import NotationChoice from './NotationChoice.svelte';
+  import PartSymbol from './PartSymbol.svelte';
+  import TaperCurve from './TaperCurve.svelte';
 
   let {
     result,
     updating,
     error,
     options,
+    display,
     showHref,
   }: {
     result: MasterListResult | null;
     updating: boolean;
     error: Failure | null;
     options: Options;
+    display: Display;
     /** Where a project's part (by its place on the list) shows in its document, if it has one. */
     showHref: (project: number, ref: string) => string | null;
   } = $props();
@@ -40,6 +46,9 @@
   const unread = $derived((result?.projects ?? []).filter((p) => p.errors.length));
   const rows = $derived(result?.shopping_list ?? []);
   const toBuy = $derived(rows.filter((r) => r.buy_qty > 0).length);
+
+  // A note longer than this folds to one line, the rest a click away.
+  const LONG_NOTE = 60;
 </script>
 
 <div class="master" aria-busy={updating}>
@@ -130,6 +139,8 @@
     <div class="options">
       <label><input type="checkbox" bind:checked={options.hardware} /> Hardware kit</label>
       <label><input type="checkbox" bind:checked={options.extras} /> Sockets and adapters</label>
+      <span class="spacer"></span>
+      <NotationChoice bind:notation={display.notation} />
     </div>
     <div class="table">
       <table>
@@ -143,20 +154,38 @@
             {/if}
             <th scope="col" class="qty">Buy</th>
             <th scope="col">Notes</th>
-            <th scope="col"><span class="visually-hidden">Supplier</span></th>
+            <th scope="col">Buy from</th>
           </tr>
         </thead>
         <tbody>
           {#each rows as row (row.origin + row.category + row.part)}
+            {@const taper = row.category === 'Potentiometers' ? readPot(row.part).taper : null}
             <tr class:covered={row.buy_qty === 0}>
-              <td class="part">{row.part}</td>
-              <td>{row.category}</td>
+              <td class="part">
+                <span class="value">
+                  {formatValue(row.part, row.category, display.notation)}
+                  {#if taper}<TaperCurve {taper} />{/if}
+                </span>
+              </td>
+              <td class="category">
+                <span class="kind"
+                  ><PartSymbol kind={kindOfCategory(row.category)} />{row.category}</span
+                >
+              </td>
               {#if result.has_stock}
                 <td class="qty">{row.bom_qty}</td>
                 <td class="qty">{row.in_stock ?? 0}</td>
               {/if}
               <td class="qty">{row.buy_qty}</td>
-              <td class="notes-cell">{row.notes}</td>
+              <td class="notes-cell">
+                {#if row.notes.length > LONG_NOTE}
+                  <details>
+                    <summary>{row.notes}</summary>
+                  </details>
+                {:else}
+                  {row.notes}
+                {/if}
+              </td>
               <td class="link">
                 {#if row.supplier_url && row.buy_qty > 0}
                   <a href={row.supplier_url} target="_blank" rel="noopener noreferrer">
@@ -255,6 +284,9 @@
     color: var(--muted);
     font-size: var(--fs-ui);
   }
+  .spacer {
+    flex: 1;
+  }
   .options label {
     display: flex;
     gap: 8px;
@@ -264,8 +296,6 @@
     color: var(--muted);
   }
   .table {
-    /* Holds the hidden column heading, so it scrolls with the table. */
-    position: relative;
     overflow-x: auto;
     border: 1px solid var(--line);
     border-radius: 5px;
@@ -303,8 +333,46 @@
     text-align: right;
     font-variant-numeric: tabular-nums;
   }
-  .notes-cell {
+  .value,
+  .kind {
+    display: inline-flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .category {
+    white-space: nowrap;
+  }
+  .kind {
+    color: var(--text);
+  }
+  .kind :global(.symbol) {
     color: var(--muted);
+  }
+  .notes-cell {
+    min-width: 16ch;
+    max-width: 40ch;
+    color: var(--muted);
+  }
+  /* A long note shows its first line; opening it shows the rest. */
+  .notes-cell details {
+    color: inherit;
+    font-size: inherit;
+  }
+  .notes-cell summary {
+    display: block;
+    cursor: pointer;
+  }
+  .notes-cell details:not([open]) summary {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .notes-cell summary:hover {
+    color: var(--text);
+  }
+  .notes-cell summary:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
   }
   .link a {
     display: inline-flex;
@@ -315,13 +383,5 @@
   }
   .link a:hover {
     color: var(--accent);
-  }
-  .visually-hidden {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
   }
 </style>
