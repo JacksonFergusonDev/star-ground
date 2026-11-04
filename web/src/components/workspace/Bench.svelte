@@ -1,43 +1,68 @@
 <script lang="ts">
   // Bench mode: building one project, part by part, lowest parts first (the
   // field manual's order), with the document beside the checklist when there
-  // is one, lit up where a catalog document's board draws the part at hand. Made for a laptop at the bench: Space places the current part and
-  // moves to the next, the arrow keys move between parts. Progress is kept
-  // on the card. A part the document counts by value ('2 - 47') is one row,
-  // placed all at once and keyed '#<category> <value>' (its `key`).
+  // is one, lit up where a catalog document's board draws the part at hand.
+  // Made for a laptop at the bench: Space places the current part and moves
+  // to the next, the arrow keys move between parts. Progress is kept on the
+  // card. A part the document counts by value ('2 - 47') is one row, placed
+  // all at once and keyed '#<category> <value>' (its `key`).
+  //
+  // It looks like the board it builds: each part's pad fills with solder as
+  // it's placed, designators are lettered like silkscreen, resistors show
+  // their bands, and the progress is a trace that ends at a star ground.
   import { onMount } from 'svelte';
-  import type { BuildStep, ProjectResult } from '../../lib/api';
+  import type { BuildStage, BuildStep, ComponentCategory, ProjectResult } from '../../lib/api';
   import type { BoardMarks } from '../../lib/boards';
   import { boardBoxes, boardMarks, rowRef } from '../../lib/boards';
-  import type { Card } from '../../lib/workspace.svelte';
+  import { formatValue, kindOfStage, readPot } from '../../lib/parts';
+  import type { Card, Display } from '../../lib/workspace.svelte';
   import { count, placedOf } from '../../lib/workspace.svelte';
+  import Choice from './Choice.svelte';
   import type { Box } from './DocumentViewer.svelte';
   import DocumentViewer from './DocumentViewer.svelte';
+  import HeightProfile from './HeightProfile.svelte';
+  import OrientationHint from './OrientationHint.svelte';
+  import PartSymbol from './PartSymbol.svelte';
+  import ResistorBands from './ResistorBands.svelte';
+  import TaperCurve from './TaperCurve.svelte';
+  import TraceProgress from './TraceProgress.svelte';
 
   let {
     card,
     project,
+    display,
     load,
     onPlace,
     onStartOver,
   }: {
     card: Card;
     project: ProjectResult;
+    display: Display;
     /** The document's bytes; null for a pasted list or a preset. */
     load: (() => Promise<ArrayBuffer>) | null;
     onPlace: (ref: string, placed: boolean) => void;
     onStartOver: () => void;
   } = $props();
 
-  type Row = { label: string; value: string; count: number };
+  type Row = { label: string; value: string; category: ComponentCategory; count: number };
+
+  // Stages named as builders say them.
+  const STAGE_NAMES: Partial<Record<BuildStage, string>> = { Hardware: 'Off-board wiring' };
+  const stageName = (stage: BuildStage): string => STAGE_NAMES[stage] ?? stage;
 
   const placed = $derived(new Set(placedOf(card)));
   // Each row by its designator, or a counted part's key.
   const rows = $derived(
     new Map<string, Row>([
-      ...project.parts.map((p) => [p.ref, { label: p.ref, value: p.value, count: 1 }] as const),
+      ...project.parts.map(
+        (p) => [p.ref, { label: p.ref, value: p.value, category: p.category, count: 1 }] as const,
+      ),
       ...project.counted.map(
-        (c) => [c.key, { label: `${c.count} ×`, value: c.value, count: c.count }] as const,
+        (c) =>
+          [
+            c.key,
+            { label: `${c.count} ×`, value: c.value, category: c.category, count: c.count },
+          ] as const,
       ),
     ]),
   );
@@ -48,6 +73,15 @@
     keys.reduce((n, key) => n + (rows.get(key)?.count ?? 1), 0);
   const total = $derived(sum(order));
   const done = $derived(sum(order.filter((ref) => placed.has(ref))));
+  const stages = $derived(
+    project.build_order.map((step) => ({
+      name: stageName(step.stage),
+      total: sum(stepRows(step)),
+      done: sum(stepRows(step).filter((ref) => placed.has(ref))),
+    })),
+  );
+  const kinds = $derived(project.build_order.map((step) => kindOfStage(step.stage)));
+  const socketed = $derived(project.build_order.some((step) => step.stage === 'Sockets'));
 
   // The part at hand: the first not yet placed, until the builder moves.
   // svelte-ignore state_referenced_locally
@@ -124,15 +158,37 @@
       part and move to the next, and the arrow keys to move between parts.
     </p>
     <div class="progress">
-      <p class="note" role="status">
+      <p class="note count" role="status">
         {done === total && total
-          ? `All ${count(total, 'part')} placed.`
+          ? `All ${count(total, 'part')} placed. Ready to box.`
           : `${done} of ${count(total, 'part')} placed.`}
       </p>
-      <meter min="0" max={total || 1} value={done} aria-label="Parts placed"></meter>
+      <TraceProgress {stages} {done} {total} />
+      <meter class="visually-hidden" min="0" max={total || 1} value={done} aria-label="Parts placed"
+      ></meter>
       {#if done}
         <button class="text-button" type="button" onclick={onStartOver}>Start over</button>
       {/if}
+    </div>
+    <div class="choices">
+      <Choice
+        legend="Values"
+        name="notation"
+        options={[
+          { value: 'decimal', label: '4.7k' },
+          { value: 'rkm', label: '4k7' },
+        ]}
+        bind:value={display.notation}
+      />
+      <Choice
+        legend="Bands"
+        name="bands"
+        options={[
+          { value: 4, label: '4' },
+          { value: 5, label: '5' },
+        ]}
+        bind:value={display.bands}
+      />
     </div>
   </div>
 
@@ -158,12 +214,25 @@
       onfocusin={(e) => (hovered = rowRef(e))}
       onmouseleave={() => (hovered = null)}
     >
-      {#each project.build_order as step (step.stage)}
-        <li class="stage">
-          <h3>{step.stage}</h3>
+      {#each project.build_order as step, i (step.stage)}
+        {@const kind = kinds[i] ?? 'other'}
+        {@const tally = stages[i]}
+        <li class="stage" class:complete={tally && tally.done === tally.total}>
+          <div class="stage-head">
+            <h3><PartSymbol {kind} size={21} />{stageName(step.stage)}</h3>
+            <span class="tally">{tally?.done ?? 0}/{tally?.total ?? 0}</span>
+            <span class="climb"><HeightProfile {kinds} at={i} /></span>
+          </div>
+          <OrientationHint {kind} />
+          {#if kind === 'chip' && socketed}
+            <p class="tip">Press each chip into its socket; don't solder it.</p>
+          {/if}
           <ul>
             {#each stepRows(step) as ref (ref)}
               {@const row = rows.get(ref)}
+              {@const category = row?.category ?? 'Unknown'}
+              {@const taper =
+                category === 'Potentiometers' ? readPot(row?.value ?? '').taper : null}
               <li
                 data-ref={ref}
                 class:current={current === ref}
@@ -180,8 +249,18 @@
                       onPlace(ref, e.currentTarget.checked);
                     }}
                   />
+                  <span class="pad" aria-hidden="true"></span>
                   <span class="ref">{row?.label ?? ref}</span>
-                  <span class="value">{row?.value ?? ''}</span>
+                  <span class="value"
+                    >{formatValue(row?.value ?? '', category, display.notation)}</span
+                  >
+                  <span class="extra">
+                    {#if category === 'Resistors'}
+                      <ResistorBands value={row?.value ?? ''} count={display.bands} />
+                    {:else if taper}
+                      <TaperCurve {taper} />
+                    {/if}
+                  </span>
                 </label>
               </li>
             {/each}
@@ -199,7 +278,7 @@
   }
   .head {
     display: grid;
-    gap: 10px;
+    gap: 12px;
   }
   .text-button {
     display: inline-flex;
@@ -237,10 +316,14 @@
     gap: 8px 18px;
     align-items: center;
   }
-  meter {
-    flex: 1 1 160px;
-    max-width: 320px;
-    accent-color: var(--accent);
+  .count {
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+  }
+  .choices {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 22px;
   }
   .panes {
     display: grid;
@@ -255,14 +338,26 @@
   }
   .order {
     display: grid;
-    gap: 22px;
+    gap: 18px;
     max-width: 640px;
     margin: 0;
     padding: 0;
     list-style: none;
   }
+  .stage {
+    display: grid;
+    gap: 6px;
+  }
+  .stage-head {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+  }
   h3 {
-    margin: 0 0 8px;
+    display: inline-flex;
+    gap: 8px;
+    align-items: center;
+    margin: 0;
     color: var(--muted);
     font-family: var(--mono);
     font-size: var(--fs-label);
@@ -270,52 +365,145 @@
     letter-spacing: 0.08em;
     text-transform: uppercase;
   }
+  .complete h3 {
+    color: var(--accent);
+  }
+  .tally {
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: var(--fs-label);
+    font-variant-numeric: tabular-nums;
+  }
+  .climb {
+    margin-left: auto;
+  }
+  .tip {
+    margin: 0;
+    color: var(--muted);
+    font-size: var(--fs-label);
+  }
   .stage ul {
-    display: grid;
-    gap: 4px;
     margin: 0;
     padding: 0;
-    list-style: none;
-  }
-  .stage li {
+    overflow: hidden;
     border: 1px solid var(--line);
     border-radius: 5px;
     background: var(--panel);
+    list-style: none;
+  }
+  .stage ul li {
+    position: relative;
     scroll-margin: 80px;
   }
-  .stage li.hovered {
-    border-color: var(--accent-border);
+  .stage ul li + li {
+    border-top: 1px solid var(--line);
   }
-  .stage li.current {
-    border-color: var(--accent-border);
+  .stage ul li.hovered {
+    background: color-mix(in srgb, var(--muted) 7%, transparent);
+  }
+  .stage ul li.current {
     background: var(--accent-soft);
   }
-  .stage li.placed .ref,
-  .stage li.placed .value {
-    color: var(--muted);
-    text-decoration: line-through;
+  .stage ul li.current::before {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 2px;
+    background: var(--accent);
+    content: '';
   }
   label {
     display: grid;
-    grid-template-columns: auto 5em minmax(0, 1fr);
-    gap: 12px;
+    grid-template-columns: 16px 8.5em minmax(5em, auto) minmax(0, 1fr);
+    gap: 14px;
     align-items: center;
-    padding: 9px 12px;
+    padding: 6px 12px;
     cursor: pointer;
   }
+  /* The checkbox stays for the keyboard and screen readers; the pad shows it. */
   input {
-    accent-color: var(--accent);
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: 0;
+    opacity: 0;
   }
-  .ref,
+  /* A bare pad, then a solder joint once the part is placed. */
+  .pad {
+    width: 16px;
+    height: 16px;
+    border: 3px solid color-mix(in srgb, var(--muted) 70%, transparent);
+    border-radius: 50%;
+    background: var(--bg);
+    transition:
+      background-color 150ms,
+      border-color 150ms,
+      transform 150ms;
+  }
+  .current .pad {
+    border-color: var(--accent);
+  }
+  .placed .pad {
+    border-color: color-mix(in srgb, var(--text) 60%, var(--bg));
+    background: radial-gradient(
+      circle at 35% 32%,
+      var(--text) 0 18%,
+      color-mix(in srgb, var(--text) 62%, var(--bg)) 55%,
+      color-mix(in srgb, var(--text) 35%, var(--bg)) 100%
+    );
+    transform: scale(1.06);
+  }
+  input:focus-visible + .pad {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  /* Designators lettered like a board's silkscreen. */
+  .ref {
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: var(--fs-ui);
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    overflow-wrap: anywhere;
+  }
   .value {
     font-family: var(--mono);
     font-size: var(--fs-ui);
     overflow-wrap: anywhere;
   }
-  button:focus-visible,
-  input:focus-visible {
+  .extra {
+    display: flex;
+    align-items: center;
+    min-height: 16px;
+  }
+  .placed .ref,
+  .placed .value {
+    color: var(--muted);
+  }
+  .placed .value {
+    text-decoration: line-through;
+  }
+  .placed .extra {
+    opacity: 0.45;
+  }
+  button:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
+  }
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .pad {
+      transition: none;
+    }
   }
   @media (width <= 900px) {
     .panes {
@@ -327,8 +515,13 @@
       height: 42vh;
       background: var(--bg);
     }
-    .stage li {
+    .stage ul li {
       scroll-margin-top: calc(var(--hs-bar-height, 0px) + 42vh + 32px);
+    }
+  }
+  @media (width <= 600px) {
+    .climb {
+      display: none;
     }
   }
 </style>

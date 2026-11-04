@@ -9,7 +9,7 @@
   import { count } from '../../lib/workspace.svelte';
   import BugNotice from './BugNotice.svelte';
   import Icon from './Icon.svelte';
-  import NotationChoice from './NotationChoice.svelte';
+  import Choice from './Choice.svelte';
   import PartSymbol from './PartSymbol.svelte';
   import TaperCurve from './TaperCurve.svelte';
 
@@ -140,7 +140,15 @@
       <label><input type="checkbox" bind:checked={options.hardware} /> Hardware kit</label>
       <label><input type="checkbox" bind:checked={options.extras} /> Sockets and adapters</label>
       <span class="spacer"></span>
-      <NotationChoice bind:notation={display.notation} />
+      <Choice
+        legend="Values"
+        name="notation"
+        options={[
+          { value: 'decimal', label: '4.7k' },
+          { value: 'rkm', label: '4k7' },
+        ]}
+        bind:value={display.notation}
+      />
     </div>
     <div class="table">
       <table>

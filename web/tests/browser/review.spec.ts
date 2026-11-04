@@ -326,7 +326,7 @@ test('bench mode places parts in build order from the keyboard, and keeps them',
   await expect(row(page, 'R2')).toHaveAttribute('aria-current', 'step');
 
   await row(page, 'R2').getByRole('checkbox').check();
-  await expect(page.getByText('All 2 parts placed.')).toBeVisible();
+  await expect(page.getByText('All 2 parts placed. Ready to box.')).toBeVisible();
   await page.getByRole('button', { name: 'Start over' }).click();
   await expect(page.getByText('0 of 2 parts placed.')).toBeVisible();
 });
@@ -374,6 +374,16 @@ test('parts counted by value are checked and placed with the rest', async ({ pag
   await expect(row(page, '#Capacitors 100n')).toHaveAttribute('aria-current', 'step');
   await page.reload();
   await expect(row(page, '#Resistors 47').getByRole('checkbox')).toBeChecked();
+
+  // Resistors show their bands, read from the value, in the builder's choice of four or five.
+  const bands = row(page, '#Resistors 47').getByRole('img');
+  await expect(bands).toHaveAccessibleName('Bands: yellow, violet, black, gold, brown');
+  await page.getByRole('radio', { name: '4', exact: true }).check();
+  await expect(bands).toHaveAccessibleName('Bands: yellow, violet, black, gold');
+  await page.getByRole('radio', { name: '4k7' }).check();
+  await expect(row(page, '#Resistors 47')).toContainText('47R');
+  // A chip says which way round it goes.
+  await expect(page.getByText("Notch matches the board's notch")).toBeVisible();
 });
 
 test("a catalog document's board lights up the part at hand, and the other way round", async ({
