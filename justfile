@@ -101,8 +101,23 @@ openapi: sync
 
 # Install locked dependencies and start the website's dev server
 serve-web:
+    #!/usr/bin/env bash
+    set -euo pipefail
     pnpm --dir web install --frozen-lockfile
-    pnpm --dir web run dev
+    if [[ -t 0 ]]; then
+        status=$(pnpm --dir web exec astro dev status)
+        if [[ $status =~ Dev\ server\ running\ at\ ([^[:space:]]+)\ \(pid\ ([0-9]+), ]]; then
+            printf 'Astro is already running at %s (PID %s).\n' "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}"
+            if ! read -r -p 'Stop it and start a new server? [y/N] ' answer; then
+                exit 0
+            fi
+            case "$answer" in
+                [Yy]|[Yy][Ee][Ss]) pnpm --dir web exec astro dev stop ;;
+                *) exit 0 ;;
+            esac
+        fi
+    fi
+    exec pnpm --dir web run dev
 
 # Refresh presets, offer to wait for CI, and verify local state before bumping
 bump part:
