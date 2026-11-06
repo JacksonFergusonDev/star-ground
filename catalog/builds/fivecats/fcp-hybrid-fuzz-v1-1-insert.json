@@ -1,8 +1,7 @@
 {
  "id": "fcp-hybrid-fuzz-v1-1-insert",
  "publisher": "fivecats",
- "title": "Hybrid Germanium Fuzz",
- "effects": ["fuzz"],
+ "title": "fcp-hybrid-fuzz-v1-1-insert",
  "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2025/02/FCP-Hybrid-Fuzz-V1-1-Insert.pdf",
  "page": "https://www.five-cats-pedals.co.uk/product/hybrid-germanium-fuzz/",
  "file_name": "FCP-Hybrid-Fuzz-V1-1-Insert.pdf",

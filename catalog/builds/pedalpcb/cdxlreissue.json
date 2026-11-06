@@ -2,7 +2,6 @@
  "id": "cdxlreissue",
  "publisher": "pedalpcb",
  "title": "CDXL Reissue Envelope Filter",
- "effects": ["filter"],
  "document": "https://docs.pedalpcb.com/project/CDXLReissue.pdf",
  "page": "https://www.pedalpcb.com/product/cdxl-reissue/",
  "file_name": "CDXLReissue.pdf",

@@ -2,7 +2,6 @@
  "id": "squidward",
  "publisher": "pedalpcb",
  "title": "Squidward",
- "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/Squidward.pdf",
  "page": "https://www.pedalpcb.com/product/squidward/",
  "file_name": "Squidward.pdf",

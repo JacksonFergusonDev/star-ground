@@ -2,7 +2,6 @@
  "id": "schadenfreude-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Schadenfreude Distortion",
- "effects": ["distortion"],
  "document": "https://docs.pedalpcb.com/project/Schadenfreude-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb189/",
  "file_name": "Schadenfreude-PedalPCB.pdf",

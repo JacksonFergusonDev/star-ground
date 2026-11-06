@@ -2,7 +2,6 @@
  "id": "duophase",
  "publisher": "pedalpcb",
  "title": "Duo-Phase",
- "effects": ["modulation"],
  "document": "https://docs.pedalpcb.com/project/DuoPhase.pdf",
  "page": "https://www.pedalpcb.com/product/duophase/",
  "file_name": "DuoPhase.pdf",

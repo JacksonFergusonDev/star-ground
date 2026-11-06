@@ -2,7 +2,6 @@
  "id": "greengage",
  "publisher": "pedalpcb",
  "title": "Greengage Overdrive",
- "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/Greengage.pdf",
  "page": "https://www.pedalpcb.com/product/greengage/",
  "file_name": "Greengage.pdf",

@@ -2,7 +2,6 @@
  "id": "arkaim",
  "publisher": "pedalpcb",
  "title": "Arkaim Fuzz",
- "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/Arkaim.pdf",
  "page": "https://www.pedalpcb.com/product/arkaimfuzz/",
  "file_name": "Arkaim.pdf",

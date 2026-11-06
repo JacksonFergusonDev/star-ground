@@ -2,7 +2,6 @@
  "id": "cheesemonger",
  "publisher": "pedalpcb",
  "title": "CheeseMonger Fuzz",
- "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/CheeseMonger.pdf",
  "page": "https://www.pedalpcb.com/product/cheesemonger/",
  "file_name": "CheeseMonger.pdf",

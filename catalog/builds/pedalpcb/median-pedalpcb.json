@@ -2,7 +2,6 @@
  "id": "median-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Median Compressor",
- "effects": ["dynamics"],
  "document": "https://docs.pedalpcb.com/project/Median-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb676/",
  "file_name": "Median-PedalPCB.pdf",

@@ -2,7 +2,6 @@
  "id": "bolide-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Bolide Distortion",
- "effects": ["distortion"],
  "document": "https://docs.pedalpcb.com/project/Bolide-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb403/",
  "file_name": "Bolide-PedalPCB.pdf",

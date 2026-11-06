@@ -2,7 +2,6 @@
  "id": "fetcitydrive-pedalpcb",
  "publisher": "pedalpcb",
  "title": "FET City Drive",
- "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/FETCityDrive-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb073/",
  "file_name": "FETCityDrive-PedalPCB.pdf",

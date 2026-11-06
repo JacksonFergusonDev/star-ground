@@ -2,7 +2,6 @@
  "id": "moonshottremolo",
  "publisher": "pedalpcb",
  "title": "Moonshot Tremolo",
- "effects": ["modulation"],
  "document": "https://docs.pedalpcb.com/project/MoonshotTremolo.pdf",
  "page": "https://www.pedalpcb.com/product/moonshot/",
  "file_name": "MoonshotTremolo.pdf",

@@ -2,7 +2,6 @@
  "id": "guvernator",
  "publisher": "pedalpcb",
  "title": "Guvernator Distortion",
- "effects": ["distortion"],
  "document": "https://docs.pedalpcb.com/project/Guvernator.pdf",
  "page": "https://www.pedalpcb.com/product/guvernator/",
  "file_name": "Guvernator.pdf",

@@ -2,7 +2,6 @@
  "id": "stockfuzz-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Stock Fuzz",
- "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/StockFuzz-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb739/",
  "file_name": "StockFuzz-PedalPCB.pdf",

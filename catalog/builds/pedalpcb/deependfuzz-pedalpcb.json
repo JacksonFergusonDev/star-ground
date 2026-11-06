@@ -2,7 +2,6 @@
  "id": "deependfuzz-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Deep End Fuzz",
- "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/DeepEndFuzz-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb679/",
  "file_name": "DeepEndFuzz-PedalPCB.pdf",

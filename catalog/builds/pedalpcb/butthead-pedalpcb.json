@@ -2,7 +2,6 @@
  "id": "butthead-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Butt Head Distortion",
- "effects": ["distortion"],
  "document": "https://docs.pedalpcb.com/project/ButtHead-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb578/",
  "file_name": "ButtHead-PedalPCB.pdf",

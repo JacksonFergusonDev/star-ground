@@ -2,7 +2,6 @@
  "id": "410fuzz-pedalpcb",
  "publisher": "pedalpcb",
  "title": "410 Fuzz",
- "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/410Fuzz-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb410/",
  "file_name": "410Fuzz-PedalPCB.pdf",

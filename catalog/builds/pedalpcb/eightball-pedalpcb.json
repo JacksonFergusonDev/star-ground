@@ -2,7 +2,6 @@
  "id": "eightball-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Eight Ball Overdrive",
- "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/EightBall-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb704/",
  "file_name": "EightBall-PedalPCB.pdf",

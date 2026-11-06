@@ -2,7 +2,6 @@
  "id": "slammer-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Slammer Overdrive",
- "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/Slammer-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb726/",
  "file_name": "Slammer-PedalPCB.pdf",

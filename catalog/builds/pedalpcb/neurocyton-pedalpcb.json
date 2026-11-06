@@ -2,7 +2,6 @@
  "id": "neurocyton-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Neurocyton Preamp",
- "effects": ["overdrive", "distortion"],
  "document": "https://docs.pedalpcb.com/project/Neurocyton-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb456/",
  "file_name": "Neurocyton-PedalPCB.pdf",

@@ -2,7 +2,6 @@
  "id": "fuchsiafuzz",
  "publisher": "pedalpcb",
  "title": "Fuchsia Fuzz",
- "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/FuchsiaFuzz.pdf",
  "page": "https://www.pedalpcb.com/product/fuchsiafuzz/",
  "file_name": "FuchsiaFuzz.pdf",

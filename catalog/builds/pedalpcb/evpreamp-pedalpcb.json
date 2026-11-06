@@ -2,7 +2,6 @@
  "id": "evpreamp-pedalpcb",
  "publisher": "pedalpcb",
  "title": "ElectroVibe Preamp",
- "effects": ["boost"],
  "document": "https://docs.pedalpcb.com/project/EVPreamp-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb483/",
  "file_name": "EVPreamp-PedalPCB.pdf",

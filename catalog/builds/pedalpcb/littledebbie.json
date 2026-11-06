@@ -2,7 +2,6 @@
  "id": "littledebbie",
  "publisher": "pedalpcb",
  "title": "Little Debbie",
- "effects": ["overdrive", "distortion"],
  "document": "https://docs.pedalpcb.com/project/LittleDebbie.pdf",
  "page": "https://www.pedalpcb.com/product/littledebbie/",
  "file_name": "LittleDebbie.pdf",

@@ -2,7 +2,6 @@
  "id": "gluetrapfuzz-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Glue Trap Fuzz",
- "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/GlueTrapFuzz-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb728/",
  "file_name": "GlueTrapFuzz-PedalPCB.pdf",

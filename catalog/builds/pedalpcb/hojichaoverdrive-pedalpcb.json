@@ -2,7 +2,6 @@
  "id": "hojichaoverdrive-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Hojicha Overdrive",
- "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/HojichaOverdrive-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb652/",
  "file_name": "HojichaOverdrive-PedalPCB.pdf",

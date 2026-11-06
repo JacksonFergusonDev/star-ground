@@ -2,7 +2,6 @@
  "id": "starboardfuzz",
  "publisher": "pedalpcb",
  "title": "Starboard Fuzz",
- "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/StarboardFuzz.pdf",
  "page": "https://www.pedalpcb.com/product/starboardfuzz/",
  "file_name": "StarboardFuzz.pdf",

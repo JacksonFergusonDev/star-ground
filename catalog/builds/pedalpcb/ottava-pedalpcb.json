@@ -2,7 +2,6 @@
  "id": "ottava-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Ottava Octave Fuzz",
- "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/Ottava-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb627/",
  "file_name": "Ottava-PedalPCB.pdf",

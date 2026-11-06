@@ -2,7 +2,6 @@
  "id": "warscythe",
  "publisher": "pedalpcb",
  "title": "War Scythe",
- "effects": ["fuzz", "overdrive", "distortion"],
  "document": "https://docs.pedalpcb.com/project/WarScythe.pdf",
  "page": "https://www.pedalpcb.com/product/warscythe/",
  "file_name": "WarScythe.pdf",

@@ -2,7 +2,6 @@
  "id": "emberboost",
  "publisher": "pedalpcb",
  "title": "Ember Boost",
- "effects": ["boost"],
  "document": "https://docs.pedalpcb.com/project/EmberBoost.pdf",
  "page": "https://www.pedalpcb.com/product/emberboost/",
  "file_name": "EmberBoost.pdf",

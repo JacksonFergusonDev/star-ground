@@ -2,7 +2,6 @@
  "id": "dogbytefuzz-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Dog Byte Fuzz",
- "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/DogByteFuzz-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb731/",
  "file_name": "DogByteFuzz-PedalPCB.pdf",

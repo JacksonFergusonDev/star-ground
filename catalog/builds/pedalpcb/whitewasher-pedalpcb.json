@@ -2,7 +2,6 @@
  "id": "whitewasher-pedalpcb",
  "publisher": "pedalpcb",
  "title": "White Washer Distortion",
- "effects": ["distortion"],
  "document": "https://docs.pedalpcb.com/project/WhiteWasher-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb692/",
  "file_name": "WhiteWasher-PedalPCB.pdf",

@@ -2,7 +2,6 @@
  "id": "tonepad-fuzzface",
  "publisher": "tonepad",
  "title": "Pelusa Face",
- "effects": ["fuzz"],
  "document": "https://tonepad.com/getFile.asp?id=82",
  "page": "https://tonepad.com/project.asp?id=38",
  "file_name": "tonepad_fuzzface.pdf",

@@ -2,7 +2,6 @@
  "id": "hypedfuzz",
  "publisher": "pedalpcb",
  "title": "Hyped Fuzz",
- "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/HypedFuzz.pdf",
  "page": "https://www.pedalpcb.com/product/pcb155/",
  "file_name": "HypedFuzz.pdf",

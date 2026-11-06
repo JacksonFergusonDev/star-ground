@@ -2,7 +2,6 @@
  "id": "integralpreamp",
  "publisher": "pedalpcb",
  "title": "Integral Preamp",
- "effects": ["boost", "filter"],
  "document": "https://docs.pedalpcb.com/project/IntegralPreamp.pdf",
  "page": "https://www.pedalpcb.com/product/integralpreamp/",
  "file_name": "IntegralPreamp.pdf",

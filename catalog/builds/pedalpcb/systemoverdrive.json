@@ -2,7 +2,6 @@
  "id": "systemoverdrive",
  "publisher": "pedalpcb",
  "title": "System Overdrive",
- "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/SystemOverdrive.pdf",
  "page": "https://www.pedalpcb.com/product/systemoverdrive/",
  "file_name": "SystemOverdrive.pdf",

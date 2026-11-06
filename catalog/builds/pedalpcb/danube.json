@@ -2,7 +2,6 @@
  "id": "danube",
  "publisher": "pedalpcb",
  "title": "Danube Fuzz",
- "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/Danube.pdf",
  "page": "https://www.pedalpcb.com/product/danube/",
  "file_name": "Danube.pdf",

@@ -2,7 +2,6 @@
  "id": "goldenfalk-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Golden Falk Overdrive",
- "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/GoldenFalk-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb455/",
  "file_name": "GoldenFalk-PedalPCB.pdf",

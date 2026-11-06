@@ -2,7 +2,6 @@
  "id": "curdsandwhey-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Curds and Whey Distortion",
- "effects": ["distortion"],
  "document": "https://docs.pedalpcb.com/project/CurdsAndWhey-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb564/",
  "file_name": "CurdsAndWhey-PedalPCB.pdf",

@@ -2,7 +2,6 @@
  "id": "plaidpreamp-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Plaid Preamp",
- "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/PlaidPreamp-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb461/",
  "file_name": "PlaidPreamp-PedalPCB.pdf",

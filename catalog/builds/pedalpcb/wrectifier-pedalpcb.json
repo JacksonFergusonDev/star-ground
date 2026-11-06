@@ -2,7 +2,6 @@
  "id": "wrectifier-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Wrectifier Distortion",
- "effects": ["distortion"],
  "document": "https://docs.pedalpcb.com/project/Wrectifier-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb040/",
  "file_name": "Wrectifier-PedalPCB.pdf",

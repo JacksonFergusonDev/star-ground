@@ -2,7 +2,6 @@
  "id": "microaddition-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Micro-Addition Boost",
- "effects": ["boost"],
  "document": "https://docs.pedalpcb.com/project/MicroAddition-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb556/",
  "file_name": "MicroAddition-PedalPCB.pdf",

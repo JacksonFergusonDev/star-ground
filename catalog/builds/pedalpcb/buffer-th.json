@@ -2,7 +2,6 @@
  "id": "buffer-th",
  "publisher": "pedalpcb",
  "title": "Simple JFET Buffer",
- "effects": ["utility"],
  "document": "https://docs.pedalpcb.com/project/Buffer-TH.pdf",
  "page": "https://www.pedalpcb.com/product/jfetbuffer/",
  "file_name": "Buffer-TH.pdf",

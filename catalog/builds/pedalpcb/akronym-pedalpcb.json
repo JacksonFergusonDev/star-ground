@@ -2,7 +2,6 @@
  "id": "akronym-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Akronym Bass Overdrive",
- "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/Akronym-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb590/",
  "file_name": "Akronym-PedalPCB.pdf",

@@ -2,7 +2,6 @@
  "id": "vanquisher-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Vanquisher Fuzz",
- "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/Vanquisher-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb232/",
  "file_name": "Vanquisher-PedalPCB.pdf",

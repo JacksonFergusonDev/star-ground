@@ -2,7 +2,6 @@
  "id": "regularfuzz-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Regular Fuzz",
- "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/RegularFuzz-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb587/",
  "file_name": "RegularFuzz-PedalPCB.pdf",

@@ -2,7 +2,6 @@
  "id": "tonevendormkii",
  "publisher": "pedalpcb",
  "title": "Tone Vendor MKII",
- "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/ToneVendorMKII.pdf",
  "page": "https://www.pedalpcb.com/product/tonevendormkii/",
  "file_name": "ToneVendorMKII.pdf",

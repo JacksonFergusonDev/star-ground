@@ -2,7 +2,6 @@
  "id": "nugget",
  "publisher": "pedalpcb",
  "title": "Nugget Fuzz",
- "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/Nugget.pdf",
  "page": "https://www.pedalpcb.com/product/nugget/",
  "file_name": "Nugget.pdf",

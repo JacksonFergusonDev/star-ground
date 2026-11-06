@@ -2,7 +2,6 @@
  "id": "crunchcaptain",
  "publisher": "pedalpcb",
  "title": "Crunch Captain",
- "effects": ["overdrive", "distortion"],
  "document": "https://docs.pedalpcb.com/project/CrunchCaptain.pdf",
  "page": "https://www.pedalpcb.com/product/crunchcaptain/",
  "file_name": "CrunchCaptain.pdf",

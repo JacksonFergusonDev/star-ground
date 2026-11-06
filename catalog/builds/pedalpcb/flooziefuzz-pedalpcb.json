@@ -2,7 +2,6 @@
  "id": "flooziefuzz-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Floozie Fuzz",
- "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/FloozieFuzz-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb691/",
  "file_name": "FloozieFuzz-PedalPCB.pdf",

@@ -2,7 +2,6 @@
  "id": "zorkmid-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Zorkmid Overdrive",
- "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/Zorkmid-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb674/",
  "file_name": "Zorkmid-PedalPCB.pdf",

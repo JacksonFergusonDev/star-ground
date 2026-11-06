@@ -2,7 +2,6 @@
  "id": "buffer-smd",
  "publisher": "pedalpcb",
  "title": "Simple JFET Buffer",
- "effects": ["utility"],
  "document": "https://docs.pedalpcb.com/project/Buffer-SMD.pdf",
  "page": "https://www.pedalpcb.com/product/jfetbuffer-smd/",
  "file_name": "Buffer-SMD.pdf",

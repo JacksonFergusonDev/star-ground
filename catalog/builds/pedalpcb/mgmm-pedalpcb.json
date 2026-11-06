@@ -2,7 +2,6 @@
  "id": "mgmm-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Mean Green Metal Machine",
- "effects": ["overdrive", "boost"],
  "document": "https://docs.pedalpcb.com/project/MGMM-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb510/",
  "file_name": "MGMM-PedalPCB.pdf",

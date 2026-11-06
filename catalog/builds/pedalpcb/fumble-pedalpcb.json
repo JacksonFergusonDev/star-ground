@@ -2,7 +2,6 @@
  "id": "fumble-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Fumble Boost",
- "effects": ["boost"],
  "document": "https://docs.pedalpcb.com/project/Fumble-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb708/",
  "file_name": "Fumble-PedalPCB.pdf",

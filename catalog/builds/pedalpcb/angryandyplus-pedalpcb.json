@@ -2,7 +2,6 @@
  "id": "angryandyplus-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Angry Andy Plus Overdrive",
- "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/AngryAndyPlus-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb163/",
  "file_name": "AngryAndyPlus-PedalPCB.pdf",

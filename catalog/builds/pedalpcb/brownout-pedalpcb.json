@@ -2,7 +2,6 @@
  "id": "brownout-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Brownout Overdrive",
- "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/Brownout-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb418/",
  "file_name": "Brownout-PedalPCB.pdf",

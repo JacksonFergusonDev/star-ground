@@ -2,7 +2,6 @@
  "id": "crystaldrive-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Crystal Drive",
- "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/CrystalDrive-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb006/",
  "file_name": "CrystalDrive-PedalPCB.pdf",

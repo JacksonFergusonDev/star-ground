@@ -1,8 +1,7 @@
 {
  "id": "tonepad-scrambler",
  "publisher": "tonepad",
- "title": "Ampeg Scrambler",
- "effects": ["fuzz"],
+ "title": "tonepad-scrambler",
  "document": "https://tonepad.com/getFile.asp?id=31",
  "page": "https://tonepad.com/project.asp?id=16",
  "file_name": "tonepad_scrambler.pdf",

@@ -2,7 +2,6 @@
  "id": "motorizer-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Motorizer Bass Distortion",
- "effects": ["distortion"],
  "document": "https://docs.pedalpcb.com/project/Motorizer-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb717/",
  "file_name": "Motorizer-PedalPCB.pdf",

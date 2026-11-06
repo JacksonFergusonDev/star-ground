@@ -2,7 +2,6 @@
  "id": "trojanhorse",
  "publisher": "pedalpcb",
  "title": "Trojan Horse Overdrive",
- "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/TrojanHorse.pdf",
  "page": "https://www.pedalpcb.com/product/trojanhorse/",
  "file_name": "TrojanHorse.pdf",

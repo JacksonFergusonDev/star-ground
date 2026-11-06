@@ -2,7 +2,6 @@
  "id": "freakzeq-pedalpcb",
  "publisher": "pedalpcb",
  "title": "FreakZEQ",
- "effects": ["overdrive", "filter"],
  "document": "https://docs.pedalpcb.com/project/FreakZEQ-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb427/",
  "file_name": "FreakZEQ-PedalPCB.pdf",

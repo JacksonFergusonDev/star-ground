@@ -2,7 +2,6 @@
  "id": "admiralcrunch-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Admiral Crunch",
- "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/AdmiralCrunch-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb575/",
  "file_name": "AdmiralCrunch-PedalPCB.pdf",

@@ -2,7 +2,6 @@
  "id": "carcass-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Carcass Fuzz",
- "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/Carcass-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/carcass/",
  "file_name": "Carcass-PedalPCB.pdf",

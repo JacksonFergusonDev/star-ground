@@ -2,7 +2,6 @@
  "id": "precursorod-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Precursor Overdrive",
- "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/PrecursorOD-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb607/",
  "file_name": "PrecursorOD-PedalPCB.pdf",

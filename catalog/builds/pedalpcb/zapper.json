@@ -2,7 +2,6 @@
  "id": "zapper",
  "publisher": "pedalpcb",
  "title": "Zapper",
- "effects": ["overdrive", "boost", "filter"],
  "document": "https://docs.pedalpcb.com/project/Zapper.pdf",
  "page": "https://www.pedalpcb.com/product/zapper/",
  "file_name": "Zapper.pdf",

@@ -2,7 +2,6 @@
  "id": "eqanyone-pedalpcb",
  "publisher": "pedalpcb",
  "title": "EQ, Anyone?",
- "effects": ["filter"],
  "document": "https://docs.pedalpcb.com/project/EQAnyone-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb571/",
  "file_name": "EQAnyone-PedalPCB.pdf",

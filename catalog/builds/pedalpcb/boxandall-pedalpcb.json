@@ -2,7 +2,6 @@
  "id": "boxandall-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Box and All EQ",
- "effects": ["filter"],
  "document": "https://docs.pedalpcb.com/project/BoxAndAll-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb384/",
  "file_name": "BoxAndAll-PedalPCB.pdf",

@@ -2,7 +2,6 @@
  "id": "pyrocumulus-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Pyrocumulus Fuzz",
- "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/Pyrocumulus-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pyrocumulus/",
  "file_name": "Pyrocumulus-PedalPCB.pdf",

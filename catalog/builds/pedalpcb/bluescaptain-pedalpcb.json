@@ -2,7 +2,6 @@
  "id": "bluescaptain-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Blues Captain Overdrive",
- "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/BluesCaptain-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb438/",
  "file_name": "BluesCaptain-PedalPCB.pdf",

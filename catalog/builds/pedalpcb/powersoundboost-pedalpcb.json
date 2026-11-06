@@ -2,7 +2,6 @@
  "id": "powersoundboost-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Powersound Boost",
- "effects": ["boost"],
  "document": "https://docs.pedalpcb.com/project/PowersoundBoost-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb530/",
  "file_name": "PowersoundBoost-PedalPCB.pdf",

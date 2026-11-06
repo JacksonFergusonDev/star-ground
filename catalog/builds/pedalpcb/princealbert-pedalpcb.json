@@ -2,7 +2,6 @@
  "id": "princealbert-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Prince Albert Overdrive",
- "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/PrinceAlbert-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb333/",
  "file_name": "PrinceAlbert-PedalPCB.pdf",

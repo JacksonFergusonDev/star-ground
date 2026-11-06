@@ -2,7 +2,6 @@
  "id": "tonepad-phase90",
  "publisher": "tonepad",
  "title": "Pez 90",
- "effects": ["modulation"],
  "document": "https://tonepad.com/getFile.asp?id=42",
  "page": "https://tonepad.com/project.asp?id=7",
  "file_name": "tonepad_phase90.pdf",

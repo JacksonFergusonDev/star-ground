@@ -2,7 +2,6 @@
  "id": "cujo-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Cujo Fuzz",
- "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/Cujo-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb388/",
  "file_name": "Cujo-PedalPCB.pdf",

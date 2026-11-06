@@ -2,7 +2,6 @@
  "id": "leadsolderoverdrive-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Lead Solder Overdrive",
- "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/LeadSolderOverdrive-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb596/",
  "file_name": "LeadSolderOverdrive-PedalPCB.pdf",

@@ -2,7 +2,6 @@
  "id": "blacktiger",
  "publisher": "pedalpcb",
  "title": "Black Tiger Boost",
- "effects": ["boost"],
  "document": "https://docs.pedalpcb.com/project/BlackTiger.pdf",
  "page": "https://www.pedalpcb.com/product/pcb216/",
  "file_name": "BlackTiger.pdf",

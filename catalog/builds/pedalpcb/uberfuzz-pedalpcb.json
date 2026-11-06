@@ -2,7 +2,6 @@
  "id": "uberfuzz-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Uberfuzz",
- "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/Uberfuzz-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/uberfuzz/",
  "file_name": "Uberfuzz-PedalPCB.pdf",

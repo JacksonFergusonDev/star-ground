@@ -2,7 +2,6 @@
  "id": "klichebuffer-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Kliche Buffer",
- "effects": ["utility"],
  "document": "https://docs.pedalpcb.com/project/KlicheBuffer-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb156/",
  "file_name": "KlicheBuffer-PedalPCB.pdf",

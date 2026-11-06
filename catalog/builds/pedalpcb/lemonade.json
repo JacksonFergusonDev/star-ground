@@ -2,7 +2,6 @@
  "id": "lemonade",
  "publisher": "pedalpcb",
  "title": "Lemonade Overdrive",
- "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/Lemonade.pdf",
  "page": "https://www.pedalpcb.com/product/pcb035/",
  "file_name": "Lemonade.pdf",

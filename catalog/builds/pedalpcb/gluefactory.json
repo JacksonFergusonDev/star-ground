@@ -2,7 +2,6 @@
  "id": "gluefactory",
  "publisher": "pedalpcb",
  "title": "Glue Factory Overdrive",
- "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/GlueFactory.pdf",
  "page": "https://www.pedalpcb.com/product/gluefactory/",
  "file_name": "GlueFactory.pdf",

@@ -2,7 +2,6 @@
  "id": "doxie-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Doxie Preamp",
- "effects": ["overdrive", "distortion"],
  "document": "https://docs.pedalpcb.com/project/Doxie-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb539/",
  "file_name": "Doxie-PedalPCB.pdf",

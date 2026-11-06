@@ -2,7 +2,6 @@
  "id": "pedalpcb-thermionicdeluxe",
  "publisher": "pedalpcb",
  "title": "Thermionic Deluxe",
- "effects": ["overdrive", "distortion"],
  "document": "https://docs.pedalpcb.com/project/PedalPCB-ThermionicDeluxe.pdf",
  "page": "https://www.pedalpcb.com/product/thermionic-deluxe/",
  "file_name": "PedalPCB-ThermionicDeluxe.pdf",

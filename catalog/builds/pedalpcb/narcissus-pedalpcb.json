@@ -2,7 +2,6 @@
  "id": "narcissus-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Narcissus Overdrive",
- "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/Narcissus-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb424/",
  "file_name": "Narcissus-PedalPCB.pdf",

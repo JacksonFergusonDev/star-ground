@@ -2,7 +2,6 @@
  "id": "pitchwitch",
  "publisher": "pedalpcb",
  "title": "Pitch Witch",
- "effects": ["modulation"],
  "document": "https://docs.pedalpcb.com/project/PitchWitch.pdf",
  "page": "https://www.pedalpcb.com/product/pitchwitch/",
  "file_name": "PitchWitch.pdf",

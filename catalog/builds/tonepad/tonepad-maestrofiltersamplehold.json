@@ -2,7 +2,6 @@
  "id": "tonepad-maestrofiltersamplehold",
  "publisher": "tonepad",
  "title": "Filter/sample/hold",
- "effects": ["filter"],
  "document": "https://tonepad.com/getFile.asp?id=96",
  "page": "https://tonepad.com/project.asp?id=50",
  "file_name": "tonepad_maestrofiltersamplehold.pdf",

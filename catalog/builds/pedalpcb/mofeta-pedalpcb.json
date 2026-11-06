@@ -2,7 +2,6 @@
  "id": "mofeta-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Mofeta Preamp",
- "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/Mofeta-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb107/",
  "file_name": "Mofeta-PedalPCB.pdf",

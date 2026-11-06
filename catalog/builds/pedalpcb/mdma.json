@@ -2,7 +2,6 @@
  "id": "mdma",
  "publisher": "pedalpcb",
  "title": "MDMA OD",
- "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/MDMA.pdf",
  "page": "https://www.pedalpcb.com/product/mdma/",
  "file_name": "MDMA.pdf",

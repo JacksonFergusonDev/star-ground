@@ -2,7 +2,6 @@
  "id": "buffalohump-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Buffalo Hump Distortion",
- "effects": ["distortion"],
  "document": "https://docs.pedalpcb.com/project/BuffaloHump-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb737/",
  "file_name": "BuffaloHump-PedalPCB.pdf",

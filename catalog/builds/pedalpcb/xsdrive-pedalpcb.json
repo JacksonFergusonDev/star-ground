@@ -2,7 +2,6 @@
  "id": "xsdrive-pedalpcb",
  "publisher": "pedalpcb",
  "title": "XS Drive",
- "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/XSDrive-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb480/",
  "file_name": "XSDrive-PedalPCB.pdf",

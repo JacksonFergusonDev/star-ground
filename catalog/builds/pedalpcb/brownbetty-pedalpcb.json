@@ -2,7 +2,6 @@
  "id": "brownbetty-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Brown Betty Overdrive",
- "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/BrownBetty-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/brownbetty/",
  "file_name": "BrownBetty-PedalPCB.pdf",

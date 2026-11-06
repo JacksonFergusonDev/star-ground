@@ -2,7 +2,6 @@
  "id": "carbonblack",
  "publisher": "pedalpcb",
  "title": "Carbon Black Fuzz",
- "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/CarbonBlack.pdf",
  "page": "https://www.pedalpcb.com/product/pcb341/",
  "file_name": "CarbonBlack.pdf",

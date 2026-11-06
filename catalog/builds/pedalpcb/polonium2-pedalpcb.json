@@ -2,7 +2,6 @@
  "id": "polonium2-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Polonium\u00b2 Distortion",
- "effects": ["distortion"],
  "document": "https://docs.pedalpcb.com/project/Polonium2-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb562/",
  "file_name": "Polonium2-PedalPCB.pdf",

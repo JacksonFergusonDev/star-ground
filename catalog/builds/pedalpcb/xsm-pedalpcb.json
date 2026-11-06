@@ -2,7 +2,6 @@
  "id": "xsm-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Extreme Scream Machine",
- "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/XSM-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb602/",
  "file_name": "XSM-PedalPCB.pdf",

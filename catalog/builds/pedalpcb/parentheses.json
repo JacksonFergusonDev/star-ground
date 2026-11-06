@@ -2,7 +2,6 @@
  "id": "parentheses",
  "publisher": "pedalpcb",
  "title": "Parentheses Fuzz",
- "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/Parentheses.pdf",
  "page": "https://www.pedalpcb.com/product/pcb237/",
  "file_name": "Parentheses.pdf",

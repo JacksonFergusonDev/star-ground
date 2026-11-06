@@ -2,7 +2,6 @@
  "id": "nobleman",
  "publisher": "pedalpcb",
  "title": "Nobleman Overdrive",
- "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/Nobleman.pdf",
  "page": "https://www.pedalpcb.com/product/nobleman/",
  "file_name": "Nobleman.pdf",

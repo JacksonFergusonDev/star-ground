@@ -2,7 +2,6 @@
  "id": "electrovibe-pedalpcb",
  "publisher": "pedalpcb",
  "title": "ElectroVibe",
- "effects": ["modulation"],
  "document": "https://docs.pedalpcb.com/project/ElectroVibe-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb422/",
  "file_name": "ElectroVibe-PedalPCB.pdf",

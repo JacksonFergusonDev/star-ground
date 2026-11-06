@@ -2,7 +2,6 @@
  "id": "closesecond-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Close Second Distortion",
- "effects": ["distortion"],
  "document": "https://docs.pedalpcb.com/project/CloseSecond-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb745/",
  "file_name": "CloseSecond-PedalPCB.pdf",

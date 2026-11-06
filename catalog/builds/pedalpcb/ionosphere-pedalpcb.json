@@ -2,7 +2,6 @@
  "id": "ionosphere-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Ionosphere Fuzz",
- "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/Ionosphere-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb062/",
  "file_name": "Ionosphere-PedalPCB.pdf",

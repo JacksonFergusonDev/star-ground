@@ -2,7 +2,6 @@
  "id": "seabeddelay-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Seabed Delay",
- "effects": ["delay"],
  "document": "https://docs.pedalpcb.com/project/SeabedDelay-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb026/",
  "file_name": "SeabedDelay-PedalPCB.pdf",

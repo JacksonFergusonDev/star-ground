@@ -2,7 +2,6 @@
  "id": "bd-silent-tuning-buffer",
  "publisher": "guitarpcb",
  "title": "Silent Tuner",
- "effects": ["utility"],
  "document": "https://guitarpcb.com/wp-content/uploads/2018/06/BD_Silent-Tuning-Buffer.pdf",
  "page": "https://guitarpcb.com/community/topic/direct-build-document-link-list/",
  "file_name": "BD_Silent-Tuning-Buffer.pdf",

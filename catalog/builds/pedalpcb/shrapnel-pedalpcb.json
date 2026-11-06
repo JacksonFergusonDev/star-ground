@@ -2,7 +2,6 @@
  "id": "shrapnel-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Shrapnel Overdrive",
- "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/Shrapnel-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb379/",
  "file_name": "Shrapnel-PedalPCB.pdf",

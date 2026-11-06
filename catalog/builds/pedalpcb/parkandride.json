@@ -2,7 +2,6 @@
  "id": "parkandride",
  "publisher": "pedalpcb",
  "title": "Park and Ride",
- "effects": ["filter"],
  "document": "https://docs.pedalpcb.com/project/ParkAndRide.pdf",
  "page": "https://www.pedalpcb.com/product/parkandride/",
  "file_name": "ParkAndRide.pdf",

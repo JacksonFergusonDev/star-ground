@@ -2,7 +2,6 @@
  "id": "paradise",
  "publisher": "pedalpcb",
  "title": "Paradise Overdrive",
- "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/Paradise.pdf",
  "page": "https://www.pedalpcb.com/product/paradiseoverdrive/",
  "file_name": "Paradise.pdf",

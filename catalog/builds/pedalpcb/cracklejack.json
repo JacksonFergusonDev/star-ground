@@ -2,7 +2,6 @@
  "id": "cracklejack",
  "publisher": "pedalpcb",
  "title": "CrackleJack",
- "effects": ["overdrive", "boost"],
  "document": "https://docs.pedalpcb.com/project/CrackleJack.pdf",
  "page": "https://www.pedalpcb.com/product/cracklejack/",
  "file_name": "CrackleJack.pdf",

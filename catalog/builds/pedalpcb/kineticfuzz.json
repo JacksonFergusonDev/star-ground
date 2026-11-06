@@ -2,7 +2,6 @@
  "id": "kineticfuzz",
  "publisher": "pedalpcb",
  "title": "Kinetic Fuzz",
- "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/KineticFuzz.pdf",
  "page": "https://www.pedalpcb.com/product/kineticfuzz/",
  "file_name": "KineticFuzz.pdf",

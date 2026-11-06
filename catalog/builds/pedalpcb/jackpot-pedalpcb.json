@@ -2,7 +2,6 @@
  "id": "jackpot-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Jackpot Overdrive",
- "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/Jackpot-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb694/",
  "file_name": "Jackpot-PedalPCB.pdf",

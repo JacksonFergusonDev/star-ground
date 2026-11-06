@@ -2,7 +2,6 @@
  "id": "cobaltdrive",
  "publisher": "pedalpcb",
  "title": "Cobalt Drive",
- "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/CobaltDrive.pdf",
  "page": "https://www.pedalpcb.com/product/pcb078/",
  "file_name": "CobaltDrive.pdf",

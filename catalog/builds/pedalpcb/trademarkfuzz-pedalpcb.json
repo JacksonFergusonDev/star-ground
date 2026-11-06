@@ -2,7 +2,6 @@
  "id": "trademarkfuzz-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Trademark Fuzz",
- "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/TrademarkFuzz-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb463/",
  "file_name": "TrademarkFuzz-PedalPCB.pdf",

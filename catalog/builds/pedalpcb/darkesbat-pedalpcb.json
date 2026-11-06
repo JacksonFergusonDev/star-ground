@@ -2,7 +2,6 @@
  "id": "darkesbat-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Dark Esbat Boost",
- "effects": ["boost"],
  "document": "https://docs.pedalpcb.com/project/DarkEsbat-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb357/",
  "file_name": "DarkEsbat-PedalPCB.pdf",

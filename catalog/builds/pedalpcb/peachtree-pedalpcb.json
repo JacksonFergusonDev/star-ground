@@ -2,7 +2,6 @@
  "id": "peachtree-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Peachtree Overdrive",
- "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/Peachtree-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb499/",
  "file_name": "Peachtree-PedalPCB.pdf",

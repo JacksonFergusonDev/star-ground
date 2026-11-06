@@ -2,7 +2,6 @@
  "id": "chopshopv2-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Chop Shop Overdrive V2",
- "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/ChopShopV2-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb051/",
  "file_name": "ChopShopV2-PedalPCB.pdf",

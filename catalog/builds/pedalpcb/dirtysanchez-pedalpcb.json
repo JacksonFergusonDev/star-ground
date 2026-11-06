@@ -2,7 +2,6 @@
  "id": "dirtysanchez-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Dirty Sanchez Overdrive",
- "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/DirtySanchez-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/dirtysanchez/",
  "file_name": "DirtySanchez-PedalPCB.pdf",

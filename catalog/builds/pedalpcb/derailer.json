@@ -2,7 +2,6 @@
  "id": "derailer",
  "publisher": "pedalpcb",
  "title": "Derailer Overdrive V2",
- "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/Derailer.pdf",
  "page": "https://www.pedalpcb.com/product/derailer/",
  "file_name": "Derailer.pdf",

@@ -2,7 +2,6 @@
  "id": "sandblasterfuzz-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Sandblaster Fuzz",
- "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/SandblasterFuzz-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb667/",
  "file_name": "SandblasterFuzz-PedalPCB.pdf",

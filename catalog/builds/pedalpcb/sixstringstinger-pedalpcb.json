@@ -2,7 +2,6 @@
  "id": "sixstringstinger-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Six String Stinger",
- "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/SixStringStinger-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/sixstringstinger/",
  "file_name": "SixStringStinger-PedalPCB.pdf",

@@ -2,7 +2,6 @@
  "id": "pedalpcb-isosceles",
  "publisher": "pedalpcb",
  "title": "Isosceles Boost",
- "effects": ["boost"],
  "document": "https://docs.pedalpcb.com/project/PedalPCB-Isosceles.pdf",
  "page": "https://www.pedalpcb.com/product/isosceles/",
  "file_name": "PedalPCB-Isosceles.pdf",

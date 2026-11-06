@@ -2,7 +2,6 @@
  "id": "granger-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Granger Boost",
- "effects": ["boost"],
  "document": "https://docs.pedalpcb.com/project/Granger-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb672/",
  "file_name": "Granger-PedalPCB.pdf",

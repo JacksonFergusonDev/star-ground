@@ -2,7 +2,6 @@
  "id": "notakliche-pedalpcb",
  "publisher": "pedalpcb",
  "title": "NOTAKLICHE",
- "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/NotAKliche-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb681/",
  "file_name": "NotAKliche-PedalPCB.pdf",

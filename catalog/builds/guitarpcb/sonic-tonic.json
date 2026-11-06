@@ -2,7 +2,6 @@
  "id": "sonic-tonic",
  "publisher": "guitarpcb",
  "title": "Sonic Tonic v2",
- "effects": ["boost", "filter"],
  "document": "https://guitarpcb.com/wp-content/uploads/2023/02/Sonic-Tonic.pdf",
  "page": "https://guitarpcb.com/legacy-pcb-document-list/",
  "file_name": "Sonic-Tonic.pdf",

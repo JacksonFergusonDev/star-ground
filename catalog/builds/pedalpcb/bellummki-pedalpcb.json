@@ -2,7 +2,6 @@
  "id": "bellummki-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Bellum Fuzz MKI",
- "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/BellumMKI-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb363/",
  "file_name": "BellumMKI-PedalPCB.pdf",

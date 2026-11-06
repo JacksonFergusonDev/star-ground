@@ -2,7 +2,6 @@
  "id": "malachite",
  "publisher": "pedalpcb",
  "title": "Malachite Overdrive",
- "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/Malachite.pdf",
  "page": "https://www.pedalpcb.com/product/pcb250/",
  "file_name": "Malachite.pdf",

@@ -2,7 +2,6 @@
  "id": "danae-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Danae Overdrive",
- "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/Danae-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb505/",
  "file_name": "Danae-PedalPCB.pdf",

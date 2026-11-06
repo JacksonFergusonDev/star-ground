@@ -2,7 +2,6 @@
  "id": "xenolith-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Xenolith Overdrive",
- "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/Xenolith-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb451/",
  "file_name": "Xenolith-PedalPCB.pdf",

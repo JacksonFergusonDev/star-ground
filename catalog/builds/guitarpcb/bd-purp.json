@@ -1,8 +1,7 @@
 {
  "id": "bd-purp",
  "publisher": "guitarpcb",
- "title": "PURP",
- "effects": ["fuzz", "boost"],
+ "title": "bd-purp",
  "document": "https://guitarpcb.com/wp-content/uploads/2018/06/BD_PURP.pdf",
  "page": "https://guitarpcb.com/community/topic/direct-build-document-link-list/",
  "file_name": "BD_PURP.pdf",

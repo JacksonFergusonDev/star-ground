@@ -2,7 +2,6 @@
  "id": "c-buffer",
  "publisher": "pedalpcb",
  "title": "C-Buffer Module",
- "effects": ["utility"],
  "document": "https://docs.pedalpcb.com/project/C-Buffer.pdf",
  "page": "https://www.pedalpcb.com/product/pcb096/",
  "file_name": "C-Buffer.pdf",

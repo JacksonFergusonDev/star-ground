@@ -2,7 +2,6 @@
  "id": "mesmerizer",
  "publisher": "pedalpcb",
  "title": "Mesmerizer",
- "effects": ["modulation"],
  "document": "https://docs.pedalpcb.com/project/Mesmerizer.pdf",
  "page": "https://www.pedalpcb.com/product/mesmerizer/",
  "file_name": "Mesmerizer.pdf",

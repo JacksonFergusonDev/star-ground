@@ -2,7 +2,6 @@
  "id": "fornicusod-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Fornicus Overdrive",
- "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/FornicusOD-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb629/",
  "file_name": "FornicusOD-PedalPCB.pdf",

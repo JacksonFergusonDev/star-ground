@@ -2,7 +2,6 @@
  "id": "kudzuoverdrive-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Kudzu Overdrive",
- "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/KudzuOverdrive-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb608/",
  "file_name": "KudzuOverdrive-PedalPCB.pdf",

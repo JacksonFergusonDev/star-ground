@@ -2,7 +2,6 @@
  "id": "evmini-partslist",
  "publisher": "pedalpcb",
  "title": "ElectroVibe Mini",
- "effects": ["modulation"],
  "document": "https://docs.pedalpcb.com/project/EVMini-PartsList.pdf",
  "page": "https://www.pedalpcb.com/product/pcb448/",
  "file_name": "EVMini-PartsList.pdf",

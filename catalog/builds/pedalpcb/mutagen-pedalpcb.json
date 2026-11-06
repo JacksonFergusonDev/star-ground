@@ -2,7 +2,6 @@
  "id": "mutagen-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Mutagen Fuzz",
- "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/Mutagen-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb468/",
  "file_name": "Mutagen-PedalPCB.pdf",

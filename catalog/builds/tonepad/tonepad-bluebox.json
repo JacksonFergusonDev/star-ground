@@ -2,7 +2,6 @@
  "id": "tonepad-bluebox",
  "publisher": "tonepad",
  "title": "Caja Azul",
- "effects": ["fuzz"],
  "document": "https://tonepad.com/getFile.asp?id=73",
  "page": "https://tonepad.com/project.asp?id=33",
  "file_name": "tonepad_bluebox.pdf",

@@ -2,7 +2,6 @@
  "id": "minimuffin-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Mini-Muffin Fuzz",
- "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/MiniMuffin-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb287/",
  "file_name": "MiniMuffin-PedalPCB.pdf",

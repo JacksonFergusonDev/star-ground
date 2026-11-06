@@ -2,7 +2,6 @@
  "id": "semisweet3-pedalpcb",
  "publisher": "pedalpcb",
  "title": "SemiSweet Distortion 3",
- "effects": ["distortion"],
  "document": "https://docs.pedalpcb.com/project/SemiSweet3-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb294/",
  "file_name": "SemiSweet3-PedalPCB.pdf",

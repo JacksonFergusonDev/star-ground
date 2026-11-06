@@ -2,7 +2,6 @@
  "id": "fuzzfoundry",
  "publisher": "pedalpcb",
  "title": "Fuzz Foundry",
- "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/FuzzFoundry.pdf",
  "page": "https://www.pedalpcb.com/product/fuzzfoundry/",
  "file_name": "FuzzFoundry.pdf",

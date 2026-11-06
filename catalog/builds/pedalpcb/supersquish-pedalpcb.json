@@ -2,7 +2,6 @@
  "id": "supersquish-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Supersquish Compressor",
- "effects": ["dynamics"],
  "document": "https://docs.pedalpcb.com/project/Supersquish-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb714/",
  "file_name": "Supersquish-PedalPCB.pdf",

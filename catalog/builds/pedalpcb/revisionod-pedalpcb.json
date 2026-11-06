@@ -2,7 +2,6 @@
  "id": "revisionod-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Revision Overdrive",
- "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/RevisionOD-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb730/",
  "file_name": "RevisionOD-PedalPCB.pdf",

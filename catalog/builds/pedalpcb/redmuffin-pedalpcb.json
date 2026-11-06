@@ -2,7 +2,6 @@
  "id": "redmuffin-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Red Muffin Fuzz",
- "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/RedMuffin-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb434/",
  "file_name": "RedMuffin-PedalPCB.pdf",

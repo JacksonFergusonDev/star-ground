@@ -2,7 +2,6 @@
  "id": "arcana-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Arcana Distortion",
- "effects": ["distortion"],
  "document": "https://docs.pedalpcb.com/project/Arcana-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb041/",
  "file_name": "Arcana-PedalPCB.pdf",

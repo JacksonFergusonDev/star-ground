@@ -2,7 +2,6 @@
  "id": "pedalpcb-muffler",
  "publisher": "pedalpcb",
  "title": "Muffler Noise Gate",
- "effects": ["dynamics"],
  "document": "https://docs.pedalpcb.com/project/PedalPCB-Muffler.pdf",
  "page": "https://www.pedalpcb.com/product/muffler/",
  "file_name": "PedalPCB-Muffler.pdf",

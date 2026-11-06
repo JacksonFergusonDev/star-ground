@@ -2,7 +2,6 @@
  "id": "duckbox-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Duck Box Filter",
- "effects": ["filter"],
  "document": "https://docs.pedalpcb.com/project/DuckBox-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb400/",
  "file_name": "DuckBox-PedalPCB.pdf",

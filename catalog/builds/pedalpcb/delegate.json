@@ -2,7 +2,6 @@
  "id": "delegate",
  "publisher": "pedalpcb",
  "title": "Delegate Compressor",
- "effects": ["dynamics"],
  "document": "https://docs.pedalpcb.com/project/Delegate.pdf",
  "page": "https://www.pedalpcb.com/product/delegate/",
  "file_name": "Delegate.pdf",

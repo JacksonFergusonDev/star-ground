@@ -2,7 +2,6 @@
  "id": "frajeelay-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Frajeelay Distortion",
- "effects": ["distortion"],
  "document": "https://docs.pedalpcb.com/project/Frajeelay-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb650/",
  "file_name": "Frajeelay-PedalPCB.pdf",

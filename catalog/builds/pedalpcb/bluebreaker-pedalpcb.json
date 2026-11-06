@@ -2,7 +2,6 @@
  "id": "bluebreaker-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Blue Breaker Overdrive",
- "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/BlueBreaker-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb007/",
  "file_name": "BlueBreaker-PedalPCB.pdf",

@@ -2,7 +2,6 @@
  "id": "pedalpcb-triadfuzz",
  "publisher": "pedalpcb",
  "title": "Triad Fuzz",
- "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/PedalPCB-TriadFuzz.pdf",
  "page": "https://www.pedalpcb.com/product/pcb355/",
  "file_name": "PedalPCB-TriadFuzz.pdf",

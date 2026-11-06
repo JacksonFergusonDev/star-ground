@@ -2,7 +2,6 @@
  "id": "icevendor-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Ice Vendor Distortion",
- "effects": ["distortion"],
  "document": "https://docs.pedalpcb.com/project/IceVendor-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb651/",
  "file_name": "IceVendor-PedalPCB.pdf",

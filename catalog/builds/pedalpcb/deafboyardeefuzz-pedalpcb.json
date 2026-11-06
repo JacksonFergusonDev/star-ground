@@ -2,7 +2,6 @@
  "id": "deafboyardeefuzz-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Deaf Boyardee Fuzz",
- "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/DeafBoyardeeFuzz-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb687/",
  "file_name": "DeafBoyardeeFuzz-PedalPCB.pdf",

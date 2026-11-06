@@ -2,7 +2,6 @@
  "id": "cleric-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Cleric Fuzz",
- "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/Cleric-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb547/",
  "file_name": "Cleric-PedalPCB.pdf",

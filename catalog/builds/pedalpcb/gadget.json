@@ -2,7 +2,6 @@
  "id": "gadget",
  "publisher": "pedalpcb",
  "title": "The Gadget",
- "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/Gadget.pdf",
  "page": "https://www.pedalpcb.com/product/pcb325/",
  "file_name": "Gadget.pdf",

@@ -2,7 +2,6 @@
  "id": "mantle",
  "publisher": "pedalpcb",
  "title": "Mantle Fuzz",
- "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/Mantle.pdf",
  "page": "https://www.pedalpcb.com/product/mantlefuzz/",
  "file_name": "Mantle.pdf",

@@ -2,7 +2,6 @@
  "id": "phaseii",
  "publisher": "pedalpcb",
  "title": "Phase II",
- "effects": ["modulation"],
  "document": "https://docs.pedalpcb.com/project/PhaseII.pdf",
  "page": "https://www.pedalpcb.com/product/pcb033/",
  "file_name": "PhaseII.pdf",

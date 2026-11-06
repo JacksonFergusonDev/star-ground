@@ -1,8 +1,7 @@
 {
  "id": "bd-easy-order-switching-board-4pdt-footswitch",
  "publisher": "guitarpcb",
- "title": "Easy Order Switcher 4PDT Foot Switch",
- "effects": ["utility"],
+ "title": "bd-easy-order-switching-board-4pdt-footswitch",
  "document": "https://guitarpcb.com/wp-content/uploads/2018/06/BD_Easy-Order-Switching-Board-4PDT-Footswitch.pdf",
  "page": "https://guitarpcb.com/community/topic/direct-build-document-link-list/",
  "file_name": "BD_Easy-Order-Switching-Board-4PDT-Footswitch.pdf",

@@ -2,7 +2,6 @@
  "id": "starcrunch-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Star Crunch",
- "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/StarCrunch-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb550/",
  "file_name": "StarCrunch-PedalPCB.pdf",

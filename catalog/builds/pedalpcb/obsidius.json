@@ -2,7 +2,6 @@
  "id": "obsidius",
  "publisher": "pedalpcb",
  "title": "Obsidius Preamp",
- "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/Obsidius.pdf",
  "page": "https://www.pedalpcb.com/product/obsidius/",
  "file_name": "Obsidius.pdf",

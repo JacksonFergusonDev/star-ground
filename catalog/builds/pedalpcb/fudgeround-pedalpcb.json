@@ -2,7 +2,6 @@
  "id": "fudgeround-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Fudge Round Fuzz",
- "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/FudgeRound-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb713/",
  "file_name": "FudgeRound-PedalPCB.pdf",

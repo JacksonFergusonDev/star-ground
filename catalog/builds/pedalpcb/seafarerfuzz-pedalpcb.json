@@ -2,7 +2,6 @@
  "id": "seafarerfuzz-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Seafarer Fuzz",
- "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/SeafarerFuzz-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb566/",
  "file_name": "SeafarerFuzz-PedalPCB.pdf",

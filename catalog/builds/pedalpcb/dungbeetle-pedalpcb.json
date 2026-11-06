@@ -2,7 +2,6 @@
  "id": "dungbeetle-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Dung Beetle Fuzz",
- "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/DungBeetle-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/dungbeetle/",
  "file_name": "DungBeetle-PedalPCB.pdf",

@@ -2,7 +2,6 @@
  "id": "soldat",
  "publisher": "pedalpcb",
  "title": "Soldat Distortion",
- "effects": ["distortion"],
  "document": "https://docs.pedalpcb.com/project/Soldat.pdf",
  "page": "https://www.pedalpcb.com/product/soldat/",
  "file_name": "Soldat.pdf",

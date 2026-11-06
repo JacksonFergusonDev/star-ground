@@ -2,7 +2,6 @@
  "id": "bedrockod",
  "publisher": "pedalpcb",
  "title": "Bedrock Overdrive",
- "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/BedrockOD.pdf",
  "page": "https://www.pedalpcb.com/product/pcb289/",
  "file_name": "BedrockOD.pdf",

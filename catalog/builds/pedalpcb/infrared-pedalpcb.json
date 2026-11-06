@@ -2,7 +2,6 @@
  "id": "infrared-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Infrared Overdrive",
- "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/Infrared-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb599/",
  "file_name": "Infrared-PedalPCB.pdf",

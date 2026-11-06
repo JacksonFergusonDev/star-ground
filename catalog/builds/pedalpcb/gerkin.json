@@ -2,7 +2,6 @@
  "id": "gerkin",
  "publisher": "pedalpcb",
  "title": "Gerkin Fuzz",
- "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/Gerkin.pdf",
  "page": "https://www.pedalpcb.com/product/gerkin/",
  "file_name": "Gerkin.pdf",

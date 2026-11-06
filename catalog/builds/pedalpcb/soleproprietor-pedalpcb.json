@@ -2,7 +2,6 @@
  "id": "soleproprietor-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Sole Proprietor Overdrive",
- "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/SoleProprietor-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb561/",
  "file_name": "SoleProprietor-PedalPCB.pdf",

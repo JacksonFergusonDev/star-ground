@@ -2,7 +2,6 @@
  "id": "thermionicdistortion",
  "publisher": "pedalpcb",
  "title": "Thermionic Distortion",
- "effects": ["distortion"],
  "document": "https://docs.pedalpcb.com/project/ThermionicDistortion.pdf",
  "page": "https://www.pedalpcb.com/product/pcb001/",
  "file_name": "ThermionicDistortion.pdf",

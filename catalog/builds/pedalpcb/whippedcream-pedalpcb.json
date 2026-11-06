@@ -2,7 +2,6 @@
  "id": "whippedcream-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Whipped Cream Overdrive",
- "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/WhippedCream-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb503/",
  "file_name": "WhippedCream-PedalPCB.pdf",

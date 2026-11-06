@@ -2,7 +2,6 @@
  "id": "vanpelt",
  "publisher": "pedalpcb",
  "title": "Van Pelt Drive",
- "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/VanPelt.pdf",
  "page": "https://www.pedalpcb.com/product/vanpelt/",
  "file_name": "VanPelt.pdf",

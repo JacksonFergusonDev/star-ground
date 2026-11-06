@@ -2,7 +2,6 @@
  "id": "depotfuzz",
  "publisher": "pedalpcb",
  "title": "Depot Fuzz",
- "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/DepotFuzz.pdf",
  "page": "https://www.pedalpcb.com/product/depotfuzz/",
  "file_name": "DepotFuzz.pdf",

@@ -2,7 +2,6 @@
  "id": "generaltso",
  "publisher": "pedalpcb",
  "title": "General Tso's Compressor",
- "effects": ["dynamics"],
  "document": "https://docs.pedalpcb.com/project/GeneralTso.pdf",
  "page": "https://www.pedalpcb.com/product/generaltso/",
  "file_name": "GeneralTso.pdf",

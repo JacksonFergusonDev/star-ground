@@ -2,7 +2,6 @@
  "id": "spelunker-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Spelunker EQ",
- "effects": ["filter"],
  "document": "https://docs.pedalpcb.com/project/Spelunker-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb736/",
  "file_name": "Spelunker-PedalPCB.pdf",

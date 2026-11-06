@@ -2,7 +2,6 @@
  "id": "coldturkey",
  "publisher": "pedalpcb",
  "title": "Cold Turkey EQ",
- "effects": ["filter"],
  "document": "https://docs.pedalpcb.com/project/ColdTurkey.pdf",
  "page": "https://www.pedalpcb.com/product/coldturkey/",
  "file_name": "ColdTurkey.pdf",

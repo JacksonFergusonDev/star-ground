@@ -2,7 +2,6 @@
  "id": "apb-pedalpcb",
  "publisher": "pedalpcb",
  "title": "All-Points Booster",
- "effects": ["boost"],
  "document": "https://docs.pedalpcb.com/project/APB-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb654/",
  "file_name": "APB-PedalPCB.pdf",

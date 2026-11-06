@@ -2,7 +2,6 @@
  "id": "uberdrive",
  "publisher": "pedalpcb",
  "title": "UberDrive",
- "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/UberDrive.pdf",
  "page": "https://www.pedalpcb.com/product/uberdrive/",
  "file_name": "UberDrive.pdf",

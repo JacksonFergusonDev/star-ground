@@ -2,7 +2,6 @@
  "id": "pedalpcb-intelligentrelaybypass",
  "publisher": "pedalpcb",
  "title": "Intelligent Relay Bypass",
- "effects": ["utility"],
  "document": "https://docs.pedalpcb.com/project/PedalPCB-IntelligentRelayBypass.pdf",
  "page": "https://www.pedalpcb.com/product/pcb395/",
  "file_name": "PedalPCB-IntelligentRelayBypass.pdf",

@@ -2,7 +2,6 @@
  "id": "plecostomusfuzz",
  "publisher": "pedalpcb",
  "title": "Plecostomus Fuzz",
- "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/PlecostomusFuzz.pdf",
  "page": "https://www.pedalpcb.com/product/plecostomus/",
  "file_name": "PlecostomusFuzz.pdf",

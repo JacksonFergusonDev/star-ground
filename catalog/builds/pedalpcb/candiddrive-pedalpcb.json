@@ -2,7 +2,6 @@
  "id": "candiddrive-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Candid Drive",
- "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/CandidDrive-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb616/",
  "file_name": "CandidDrive-PedalPCB.pdf",

@@ -2,7 +2,6 @@
  "id": "pedalpcb-incrediblemachine",
  "publisher": "pedalpcb",
  "title": "Incredible Machine",
- "effects": ["distortion"],
  "document": "https://docs.pedalpcb.com/project/PedalPCB-IncredibleMachine.pdf",
  "page": "https://www.pedalpcb.com/product/pcb350/",
  "file_name": "PedalPCB-IncredibleMachine.pdf",

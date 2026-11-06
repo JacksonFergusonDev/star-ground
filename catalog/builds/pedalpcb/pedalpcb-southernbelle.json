@@ -2,7 +2,6 @@
  "id": "pedalpcb-southernbelle",
  "publisher": "pedalpcb",
  "title": "Southern Belle Overdrive",
- "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/PedalPCB-SouthernBelle.pdf",
  "page": "https://www.pedalpcb.com/product/pcb352/",
  "file_name": "PedalPCB-SouthernBelle.pdf",

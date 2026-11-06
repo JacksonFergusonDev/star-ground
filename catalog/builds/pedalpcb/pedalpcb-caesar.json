@@ -2,7 +2,6 @@
  "id": "pedalpcb-caesar",
  "publisher": "pedalpcb",
  "title": "Caesar Chorus",
- "effects": ["modulation"],
  "document": "https://docs.pedalpcb.com/project/PedalPCB-Caesar.pdf",
  "page": "https://www.pedalpcb.com/product/pcb359/",
  "file_name": "PedalPCB-Caesar.pdf",

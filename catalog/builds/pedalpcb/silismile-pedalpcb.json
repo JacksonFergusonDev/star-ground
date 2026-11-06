@@ -2,7 +2,6 @@
  "id": "silismile-pedalpcb",
  "publisher": "pedalpcb",
  "title": "SiliSmile Fuzz",
- "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/SiliSmile-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb582/",
  "file_name": "SiliSmile-PedalPCB.pdf",

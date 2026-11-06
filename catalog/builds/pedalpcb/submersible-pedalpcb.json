@@ -2,7 +2,6 @@
  "id": "submersible-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Submersible Preamp",
- "effects": ["boost", "filter"],
  "document": "https://docs.pedalpcb.com/project/Submersible-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb270/",
  "file_name": "Submersible-PedalPCB.pdf",

@@ -2,7 +2,6 @@
  "id": "pariah-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Pariah Mid-Boost",
- "effects": ["boost"],
  "document": "https://docs.pedalpcb.com/project/Pariah-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb446/",
  "file_name": "Pariah-PedalPCB.pdf",

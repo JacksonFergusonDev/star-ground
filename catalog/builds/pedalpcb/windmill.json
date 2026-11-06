@@ -2,7 +2,6 @@
  "id": "windmill",
  "publisher": "pedalpcb",
  "title": "Windmill Overdrive",
- "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/Windmill.pdf",
  "page": "https://www.pedalpcb.com/product/windmill/",
  "file_name": "Windmill.pdf",

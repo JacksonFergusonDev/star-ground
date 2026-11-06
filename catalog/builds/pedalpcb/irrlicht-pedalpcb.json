@@ -2,7 +2,6 @@
  "id": "irrlicht-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Irrlicht Overdrive",
- "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/Irrlicht-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb407/",
  "file_name": "Irrlicht-PedalPCB.pdf",

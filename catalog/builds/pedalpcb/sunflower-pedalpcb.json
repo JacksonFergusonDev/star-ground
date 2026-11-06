@@ -2,7 +2,6 @@
  "id": "sunflower-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Sunflower Fuzz",
- "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/Sunflower-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/sunflower/",
  "file_name": "Sunflower-PedalPCB.pdf",

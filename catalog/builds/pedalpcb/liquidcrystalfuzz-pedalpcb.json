@@ -2,7 +2,6 @@
  "id": "liquidcrystalfuzz-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Liquid Crystal Fuzz",
- "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/LiquidCrystalFuzz-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb705/",
  "file_name": "LiquidCrystalFuzz-PedalPCB.pdf",

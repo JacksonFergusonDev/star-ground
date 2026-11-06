@@ -1,8 +1,7 @@
 {
  "id": "fcp-f-type-fuzz-insert",
  "publisher": "fivecats",
- "title": "K Type Fuzz",
- "effects": ["fuzz"],
+ "title": "fcp-f-type-fuzz-insert",
  "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2025/04/FCP-F-Type-Fuzz-Insert.pdf",
  "page": "https://www.five-cats-pedals.co.uk/product/k-type-fuzz-keeley-fuzz-bender-clone/",
  "file_name": "FCP-F-Type-Fuzz-Insert.pdf",

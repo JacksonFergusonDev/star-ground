@@ -2,7 +2,6 @@
  "id": "decadence-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Decadence Preamp",
- "effects": ["overdrive", "distortion", "boost"],
  "document": "https://docs.pedalpcb.com/project/Decadence-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb511/",
  "file_name": "Decadence-PedalPCB.pdf",

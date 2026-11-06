@@ -2,7 +2,6 @@
  "id": "theclap",
  "publisher": "pedalpcb",
  "title": "The Clap",
- "effects": ["boost", "filter"],
  "document": "https://docs.pedalpcb.com/project/TheClap.pdf",
  "page": "https://www.pedalpcb.com/product/pcb157/",
  "file_name": "TheClap.pdf",

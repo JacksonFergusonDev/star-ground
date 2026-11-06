@@ -2,7 +2,6 @@
  "id": "facemelter-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Face Melter Distortion",
- "effects": ["distortion"],
  "document": "https://docs.pedalpcb.com/project/FaceMelter-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/facemelter/",
  "file_name": "FaceMelter-PedalPCB.pdf",

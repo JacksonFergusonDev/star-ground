@@ -2,7 +2,6 @@
  "id": "seashoreod-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Seashore Overdrive",
- "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/SeashoreOD-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb464/",
  "file_name": "SeashoreOD-PedalPCB.pdf",

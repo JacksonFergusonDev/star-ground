@@ -2,7 +2,6 @@
  "id": "symbolic",
  "publisher": "pedalpcb",
  "title": "Symbolic Overdrive",
- "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/Symbolic.pdf",
  "page": "https://www.pedalpcb.com/product/symbolicod/",
  "file_name": "Symbolic.pdf",

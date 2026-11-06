@@ -2,7 +2,6 @@
  "id": "snuffy-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Snuffy Fuzz",
- "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/Snuffy-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb470/",
  "file_name": "Snuffy-PedalPCB.pdf",

@@ -2,7 +2,6 @@
  "id": "john-pedalpcb",
  "publisher": "pedalpcb",
  "title": "The John Preamp",
- "effects": ["overdrive", "distortion"],
  "document": "https://docs.pedalpcb.com/project/John-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb536/",
  "file_name": "John-PedalPCB.pdf",

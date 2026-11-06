@@ -2,7 +2,6 @@
  "id": "flugelhorn",
  "publisher": "pedalpcb",
  "title": "Flugelhorn Fuzz",
- "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/Flugelhorn.pdf",
  "page": "https://www.pedalpcb.com/product/flugelhorn/",
  "file_name": "Flugelhorn.pdf",

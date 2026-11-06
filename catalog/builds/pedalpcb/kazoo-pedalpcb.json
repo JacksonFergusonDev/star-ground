@@ -2,7 +2,6 @@
  "id": "kazoo-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Kazoo Fuzz",
- "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/Kazoo-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb011/",
  "file_name": "Kazoo-PedalPCB.pdf",

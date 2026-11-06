@@ -2,7 +2,6 @@
  "id": "vibrobot-pedalpcb",
  "publisher": "pedalpcb",
  "title": "VibroBot Tremolo",
- "effects": ["modulation"],
  "document": "https://docs.pedalpcb.com/project/VibroBot-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb626/",
  "file_name": "VibroBot-PedalPCB.pdf",

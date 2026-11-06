@@ -2,7 +2,6 @@
  "id": "lowtide-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Low Tide Modulator",
- "effects": ["modulation"],
  "document": "https://docs.pedalpcb.com/project/LowTide-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb406/",
  "file_name": "LowTide-PedalPCB.pdf",

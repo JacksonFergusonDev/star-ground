@@ -2,7 +2,6 @@
  "id": "mojitodeluxe-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Mojito Deluxe",
- "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/MojitoDeluxe-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb431/",
  "file_name": "MojitoDeluxe-PedalPCB.pdf",

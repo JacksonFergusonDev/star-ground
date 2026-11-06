@@ -2,7 +2,6 @@
  "id": "blender",
  "publisher": "pedalpcb",
  "title": "Blender",
- "effects": ["utility"],
  "document": "https://docs.pedalpcb.com/project/Blender.pdf",
  "page": "https://www.pedalpcb.com/product/blender/",
  "file_name": "Blender.pdf",

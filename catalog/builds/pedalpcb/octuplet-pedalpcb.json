@@ -2,7 +2,6 @@
  "id": "octuplet-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Octuplet Octave",
- "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/Octuplet-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb552/",
  "file_name": "Octuplet-PedalPCB.pdf",

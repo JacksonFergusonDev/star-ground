@@ -2,7 +2,6 @@
  "id": "equilux-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Equilux Equalizer",
- "effects": ["filter"],
  "document": "https://docs.pedalpcb.com/project/Equilux-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb527/",
  "file_name": "Equilux-PedalPCB.pdf",

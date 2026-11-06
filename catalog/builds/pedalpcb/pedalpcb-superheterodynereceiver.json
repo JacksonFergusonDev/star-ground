@@ -2,7 +2,6 @@
  "id": "pedalpcb-superheterodynereceiver",
  "publisher": "pedalpcb",
  "title": "Super Heterodyne Receiver",
- "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/PedalPCB-SuperHeterodyneReceiver.pdf",
  "page": "https://www.pedalpcb.com/product/superheterodynereceiver/",
  "file_name": "PedalPCB-SuperHeterodyneReceiver.pdf",

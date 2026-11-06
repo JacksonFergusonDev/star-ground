@@ -2,7 +2,6 @@
  "id": "monarch",
  "publisher": "pedalpcb",
  "title": "Monarch Distortion",
- "effects": ["distortion"],
  "document": "https://docs.pedalpcb.com/project/Monarch.pdf",
  "page": "https://www.pedalpcb.com/product/monarch/",
  "file_name": "Monarch.pdf",

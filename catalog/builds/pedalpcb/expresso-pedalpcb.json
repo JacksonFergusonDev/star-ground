@@ -2,7 +2,6 @@
  "id": "expresso-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Expresso Expression Multiplexer",
- "effects": ["utility"],
  "document": "https://docs.pedalpcb.com/project/Expresso-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb683/",
  "file_name": "Expresso-PedalPCB.pdf",

@@ -2,7 +2,6 @@
  "id": "nucleus-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Nucleus Overdrive",
- "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/Nucleus-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb372/",
  "file_name": "Nucleus-PedalPCB.pdf",

@@ -2,7 +2,6 @@
  "id": "potandkettlepro-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Pot and Kettle Pro",
- "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/PotAndKettlePro-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb489/",
  "file_name": "PotAndKettlePro-PedalPCB.pdf",

@@ -2,7 +2,6 @@
  "id": "aberrationfuzz-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Aberration Fuzz",
- "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/AberrationFuzz-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb572/",
  "file_name": "AberrationFuzz-PedalPCB.pdf",
