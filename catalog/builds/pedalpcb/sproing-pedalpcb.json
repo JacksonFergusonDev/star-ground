@@ -2,6 +2,7 @@
  "id": "sproing-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Sproing Reverb",
+ "effects": ["reverb"],
  "document": "https://docs.pedalpcb.com/project/Sproing-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb459/",
  "file_name": "Sproing-PedalPCB.pdf",

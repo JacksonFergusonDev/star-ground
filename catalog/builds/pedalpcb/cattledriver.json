@@ -2,6 +2,7 @@
  "id": "cattledriver",
  "publisher": "pedalpcb",
  "title": "Cattle Driver",
+ "effects": ["overdrive", "distortion"],
  "document": "https://docs.pedalpcb.com/project/CattleDriver.pdf",
  "page": "https://www.pedalpcb.com/product/cattledriver/",
  "file_name": "CattleDriver.pdf",

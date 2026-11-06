@@ -2,6 +2,7 @@
  "id": "jollyfuzz-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Jolly Fuzz",
+ "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/JollyFuzz-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb620/",
  "file_name": "JollyFuzz-PedalPCB.pdf",

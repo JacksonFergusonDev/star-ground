@@ -2,6 +2,7 @@
  "id": "miniheterodynereceiver",
  "publisher": "pedalpcb",
  "title": "Mini Heterodyne Receiver",
+ "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/MiniHeterodyneReceiver.pdf",
  "page": "https://www.pedalpcb.com/product/miniheterodynereceiver/",
  "file_name": "MiniHeterodyneReceiver.pdf",

@@ -2,6 +2,7 @@
  "id": "tone-tweq-v1-2020",
  "publisher": "guitarpcb",
  "title": "TONE TWEQ v1 2020",
+ "effects": ["filter"],
  "document": "https://guitarpcb.com/wp-content/uploads/2022/02/Tone-TwEQ-v1-2020.pdf",
  "page": "https://guitarpcb.com/community/topic/direct-build-document-link-list/",
  "file_name": "Tone-TwEQ-v1-2020.pdf",

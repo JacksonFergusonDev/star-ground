@@ -2,6 +2,7 @@
  "id": "pedalpcb-fuzzxiii",
  "publisher": "pedalpcb",
  "title": "Fuzz XIII",
+ "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/PedalPCB-FuzzXIII.pdf",
  "page": "https://www.pedalpcb.com/product/pcb348/",
  "file_name": "PedalPCB-FuzzXIII.pdf",

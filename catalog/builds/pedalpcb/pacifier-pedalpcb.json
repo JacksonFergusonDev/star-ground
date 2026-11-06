@@ -2,6 +2,7 @@
  "id": "pacifier-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Pacifier",
+ "effects": ["overdrive", "distortion"],
  "document": "https://docs.pedalpcb.com/project/Pacifier-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb184/",
  "file_name": "Pacifier-PedalPCB.pdf",

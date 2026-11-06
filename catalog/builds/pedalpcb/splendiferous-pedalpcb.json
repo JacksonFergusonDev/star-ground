@@ -2,6 +2,7 @@
  "id": "splendiferous-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Splendiferous Overdrive",
+ "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/Splendiferous-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb517/",
  "file_name": "Splendiferous-PedalPCB.pdf",

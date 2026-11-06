@@ -2,6 +2,7 @@
  "id": "sergeantfuzz-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Sergeant Fuzz",
+ "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/SergeantFuzz-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb551/",
  "file_name": "SergeantFuzz-PedalPCB.pdf",

@@ -2,6 +2,7 @@
  "id": "blueshoegaipan",
  "publisher": "pedalpcb",
  "title": "Blue Shoe Gai Pan Distortion",
+ "effects": ["distortion"],
  "document": "https://docs.pedalpcb.com/project/BlueShoeGaiPan.pdf",
  "page": "https://www.pedalpcb.com/product/blueshoegaipan/",
  "file_name": "BlueShoeGaiPan.pdf",

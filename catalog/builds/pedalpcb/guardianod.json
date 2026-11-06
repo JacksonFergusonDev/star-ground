@@ -2,6 +2,7 @@
  "id": "guardianod",
  "publisher": "pedalpcb",
  "title": "Guardian Overdrive",
+ "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/GuardianOD.pdf",
  "page": "https://www.pedalpcb.com/product/guardianod/",
  "file_name": "GuardianOD.pdf",

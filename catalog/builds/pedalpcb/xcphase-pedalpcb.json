@@ -2,6 +2,7 @@
  "id": "xcphase-pedalpcb",
  "publisher": "pedalpcb",
  "title": "XC Phase",
+ "effects": ["modulation"],
  "document": "https://docs.pedalpcb.com/project/XCPhase-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb425/",
  "file_name": "XCPhase-PedalPCB.pdf",

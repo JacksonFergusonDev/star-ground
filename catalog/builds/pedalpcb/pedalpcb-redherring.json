@@ -2,6 +2,7 @@
  "id": "pedalpcb-redherring",
  "publisher": "pedalpcb",
  "title": "Red Herring Overdrive",
+ "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/PedalPCB-RedHerring.pdf",
  "page": "https://www.pedalpcb.com/product/pcb373/",
  "file_name": "PedalPCB-RedHerring.pdf",

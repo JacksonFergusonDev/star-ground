@@ -2,6 +2,7 @@
  "id": "bd-zenith-mini",
  "publisher": "guitarpcb",
  "title": "Zenith Mini New v4 2020 Version",
+ "effects": ["overdrive"],
  "document": "https://guitarpcb.com/wp-content/uploads/2018/07/BD_Zenith-Mini.pdf",
  "page": "https://guitarpcb.com/community/topic/direct-build-document-link-list/",
  "file_name": "BD_Zenith-Mini.pdf",

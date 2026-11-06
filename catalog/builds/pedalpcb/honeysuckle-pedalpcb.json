@@ -2,6 +2,7 @@
  "id": "honeysuckle-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Honeysuckle Overdrive",
+ "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/Honeysuckle-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb484/",
  "file_name": "Honeysuckle-PedalPCB.pdf",

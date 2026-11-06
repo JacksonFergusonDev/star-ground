@@ -2,6 +2,7 @@
  "id": "mahayana",
  "publisher": "pedalpcb",
  "title": "Mahayana Drive",
+ "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/Mahayana.pdf",
  "page": "https://www.pedalpcb.com/product/mahayanadrive/",
  "file_name": "Mahayana.pdf",

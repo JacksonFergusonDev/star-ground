@@ -2,6 +2,7 @@
  "id": "fuzzcadet-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Fuzz Cadet",
+ "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/FuzzCadet-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb588/",
  "file_name": "FuzzCadet-PedalPCB.pdf",

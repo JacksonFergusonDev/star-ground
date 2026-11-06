@@ -2,6 +2,7 @@
  "id": "super-tone-tweq",
  "publisher": "guitarpcb",
  "title": "Super Tone TwEQ",
+ "effects": ["filter"],
  "document": "https://guitarpcb.com/wp-content/uploads/2021/10/Super-Tone-TwEQ.pdf",
  "page": "https://guitarpcb.com/legacy-pcb-document-list/",
  "file_name": "Super-Tone-TwEQ.pdf",

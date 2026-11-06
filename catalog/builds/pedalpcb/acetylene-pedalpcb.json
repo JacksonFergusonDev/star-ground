@@ -2,6 +2,7 @@
  "id": "acetylene-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Acetylene Overdrive",
+ "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/Acetylene-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb430/",
  "file_name": "Acetylene-PedalPCB.pdf",

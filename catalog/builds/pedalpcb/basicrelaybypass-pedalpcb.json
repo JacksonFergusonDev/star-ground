@@ -2,6 +2,7 @@
  "id": "basicrelaybypass-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Basic Relay Bypass",
+ "effects": ["utility"],
  "document": "https://docs.pedalpcb.com/project/BasicRelayBypass-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb393/",
  "file_name": "BasicRelayBypass-PedalPCB.pdf",

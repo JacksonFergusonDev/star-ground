@@ -2,6 +2,7 @@
  "id": "badmammajamma-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Bad Mamma Jamma Distortion",
+ "effects": ["distortion"],
  "document": "https://docs.pedalpcb.com/project/BadMammaJamma-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb495/",
  "file_name": "BadMammaJamma-PedalPCB.pdf",

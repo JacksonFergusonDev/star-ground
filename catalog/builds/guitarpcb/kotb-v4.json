@@ -2,6 +2,7 @@
  "id": "kotb-v4",
  "publisher": "guitarpcb",
  "title": "K.O.T.B. - King of the Brits v4",
+ "effects": ["overdrive", "distortion"],
  "document": "https://guitarpcb.com/wp-content/uploads/2023/05/KOTB-v4.pdf",
  "page": "https://guitarpcb.com/product/king-of-the-brits-plexi-amp-tone/",
  "file_name": "KOTB-v4.pdf",

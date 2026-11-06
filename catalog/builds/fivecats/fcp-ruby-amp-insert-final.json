@@ -1,7 +1,8 @@
 {
  "id": "fcp-ruby-amp-insert-final",
  "publisher": "fivecats",
- "title": "fcp-ruby-amp-insert-final",
+ "title": "Ruby Amp PCB",
+ "effects": ["amp"],
  "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/08/FCP-RUBY-Amp-Insert-FINAL.pdf",
  "page": "https://www.five-cats-pedals.co.uk/product/ruby-amp-pcb-build-your-own-guitar-amplifier/",
  "file_name": "FCP-RUBY-Amp-Insert-FINAL.pdf",

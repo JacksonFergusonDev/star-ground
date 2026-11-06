@@ -2,6 +2,7 @@
  "id": "samarium-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Samarium Distortion",
+ "effects": ["distortion"],
  "document": "https://docs.pedalpcb.com/project/Samarium-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb698/",
  "file_name": "Samarium-PedalPCB.pdf",

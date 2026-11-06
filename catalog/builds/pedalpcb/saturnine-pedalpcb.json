@@ -2,6 +2,7 @@
  "id": "saturnine-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Saturnine Distortion",
+ "effects": ["distortion"],
  "document": "https://docs.pedalpcb.com/project/Saturnine-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb421/",
  "file_name": "Saturnine-PedalPCB.pdf",

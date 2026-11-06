@@ -2,6 +2,7 @@
  "id": "antithesis-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Antithesis Fuzz",
+ "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/Antithesis-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb392/",
  "file_name": "Antithesis-PedalPCB.pdf",

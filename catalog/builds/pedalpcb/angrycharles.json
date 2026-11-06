@@ -2,6 +2,7 @@
  "id": "angrycharles",
  "publisher": "pedalpcb",
  "title": "Angry Charles",
+ "effects": ["distortion"],
  "document": "https://docs.pedalpcb.com/project/AngryCharles.pdf",
  "page": "https://www.pedalpcb.com/product/angrycharles/",
  "file_name": "AngryCharles.pdf",

@@ -2,6 +2,7 @@
  "id": "valhalla-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Valhalla Overdrive",
+ "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/Valhalla-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/valhalla/",
  "file_name": "Valhalla-PedalPCB.pdf",

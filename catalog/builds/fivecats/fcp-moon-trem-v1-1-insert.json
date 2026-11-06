@@ -1,7 +1,8 @@
 {
  "id": "fcp-moon-trem-v1-1-insert",
  "publisher": "fivecats",
- "title": "fcp-moon-trem-v1-1-insert",
+ "title": "Moon Trem",
+ "effects": ["modulation"],
  "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2024/10/FCP-Moon-Trem-V1-1-Insert.pdf",
  "page": "https://www.five-cats-pedals.co.uk/product/moon-trem-culturejam-shoot-the-moon-tremolo/",
  "file_name": "FCP-Moon-Trem-V1-1-Insert.pdf",

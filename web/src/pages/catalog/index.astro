@@ -1,20 +1,26 @@
 ---
 // The circuit catalog: every build document the catalog job read cleanly,
-// searchable by name and filtered by publisher and by whether it was checked
-// by hand. The list is plain HTML; the filters hide rows, so without
+// searchable by name and filtered by kind of effect, by publisher and by
+// whether it was checked by hand. The list is plain HTML; the filters hide rows, so without
 // JavaScript the whole list still shows.
 import { getCollection } from 'astro:content';
 import Icon from 'house-style/astro/Icon.astro';
 import App from '../../layouts/App.astro';
-import type { Publisher } from '../../lib/catalog';
-import { buildPath, byTitle, partCount, publishers } from '../../lib/catalog';
+import type { Effect, Publisher } from '../../lib/catalog';
+import { buildPath, byTitle, effects, partCount, publishers } from '../../lib/catalog';
 import { links } from '../../lib/site';
 
 const entries = (await getCollection('catalog')).sort(byTitle);
 const present = (Object.keys(publishers) as Publisher[]).filter((p) =>
   entries.some((e) => e.data.publisher === p),
 );
+const kinds = (Object.keys(effects) as Effect[]).filter((k) =>
+  entries.some((e) => e.data.effects.includes(k)),
+);
+const unplaced = entries.some((e) => !e.data.effects.length);
 const verified = entries.filter((e) => e.data.verified).length;
+const named = (entry: (typeof entries)[number]): string[] =>
+  entry.data.effects.map((k) => effects[k]);
 ---
 
 <App
@@ -43,6 +49,16 @@ const verified = entries.filter((e) => e.data.verified).length;
             <input type="search" name="q" placeholder="Big Muff, Klon, fuzz…" autocomplete="off" />
           </label>
           <label>
+            <span>Effect</span>
+            <select name="effect">
+              <option value="">All effects</option>
+              {kinds.map((k) => (
+                <option value={k}>{effects[k]}</option>
+              ))}
+              {unplaced && <option value="other">Other</option>}
+            </select>
+          </label>
+          <label>
             <span>Publisher</span>
             <select name="publisher">
               <option value="">All publishers</option>
@@ -65,10 +81,12 @@ const verified = entries.filter((e) => e.data.verified).length;
           {entries.map((entry) => (
             <li
               data-publisher={entry.data.publisher}
+              data-effects={entry.data.effects.join(' ') || 'other'}
               data-verified={entry.data.verified ? 'yes' : 'no'}
               data-search={[
                 entry.data.title,
                 entry.data.file_name,
+                ...named(entry),
                 ...entry.data.builds.map((b) => b.name ?? ''),
               ]
                 .join(' ')
@@ -77,7 +95,8 @@ const verified = entries.filter((e) => e.data.verified).length;
               <a href={buildPath(entry)}>
                 <span class="title">{entry.data.title}</span>
                 <span class="meta">
-                  {publishers[entry.data.publisher]} · {partCount(entry)} parts
+                  {[publishers[entry.data.publisher], ...named(entry)].join(' · ')} ·{' '}
+                  {partCount(entry)} parts
                   {entry.data.builds.length > 1 && ` · ${entry.data.builds.length} builds`}
                 </span>
                 <span class:list={['mark', { verified: entry.data.verified }]}>
@@ -120,12 +139,14 @@ const verified = entries.filter((e) => e.data.verified).length;
       .toLowerCase()
       .split(/\s+/)
       .filter(Boolean);
+    const effect = String(fields.get('effect') ?? '');
     const publisher = String(fields.get('publisher') ?? '');
     const verifiedOnly = fields.has('verified');
     let shown = 0;
     for (const row of rows) {
       const match =
         words.every((w) => row.dataset.search?.includes(w)) &&
+        (!effect || (row.dataset.effects ?? '').split(' ').includes(effect)) &&
         (!publisher || row.dataset.publisher === publisher) &&
         (!verifiedOnly || row.dataset.verified === 'yes');
       row.hidden = !match;

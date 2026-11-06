@@ -2,6 +2,7 @@
  "id": "dreamfuzz",
  "publisher": "pedalpcb",
  "title": "Dream Fuzz",
+ "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/DreamFuzz.pdf",
  "page": "https://www.pedalpcb.com/product/dreamfuzz/",
  "file_name": "DreamFuzz.pdf",

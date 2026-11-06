@@ -2,6 +2,7 @@
  "id": "5lbbag-pedalpcb",
  "publisher": "pedalpcb",
  "title": "5lb Bag Fuzz",
+ "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/5lbBag-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb488/",
  "file_name": "5lbBag-PedalPCB.pdf",

@@ -2,6 +2,7 @@
  "id": "guitar-bass-driver-v3-2021build-document",
  "publisher": "guitarpcb",
  "title": "Guitar/Bass Driver v3",
+ "effects": ["overdrive", "boost"],
  "document": "https://guitarpcb.com/wp-content/uploads/2018/06/Guitar-Bass-Driver-v3-2021Build-Document.pdf",
  "page": "https://guitarpcb.com/community/topic/direct-build-document-link-list/",
  "file_name": "Guitar-Bass-Driver-v3-2021Build-Document.pdf",

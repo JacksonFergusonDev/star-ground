@@ -2,6 +2,7 @@
  "id": "glyphfuzz-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Glyph Fuzz",
+ "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/GlyphFuzz-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb114/",
  "file_name": "GlyphFuzz-PedalPCB.pdf",

@@ -7,7 +7,6 @@ import pytest
 from src.bom_lib import constants
 from src.bom_lib.enums import ComponentCategory, ComponentOrigin, ComponentSpec
 from src.bom_lib.parser import parse_csv_bom, parse_with_verification
-from src.bom_lib.presets import PresetCatalog, PresetLookupEntry, get_preset_metadata
 from src.bom_lib.sourcing import _format_alts, get_spec_type
 from src.bom_lib.stages import BuildStage, build_stage, stage_order
 from src.bom_lib.types import (
@@ -42,23 +41,6 @@ def test_alternative_spec_formatting() -> None:
     formatted = _format_alts(alts)
     assert "OPA2134 (Hi-Fi / Studio Clean: Low distortion)" in formatted
     assert "TLC2272 (High Headroom Clean)" in formatted
-
-
-def test_preset_catalog_structure() -> None:
-    """Verifies get_preset_metadata returns a typed PresetCatalog with PresetLookupEntry items."""
-    catalog = get_preset_metadata()
-
-    assert isinstance(catalog, PresetCatalog)
-    assert isinstance(catalog.sources, list)
-    assert isinstance(catalog.categories, dict)
-    assert isinstance(catalog.lookup, list)
-
-    if catalog.lookup:
-        entry: PresetLookupEntry = catalog.lookup[0]
-        assert "full_key" in entry
-        assert "source" in entry
-        assert "category" in entry
-        assert "name" in entry
 
 
 def test_checklist_part_z_height_sorting() -> None:

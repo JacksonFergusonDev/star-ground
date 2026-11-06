@@ -2,6 +2,7 @@
  "id": "2023-nostalgitone-singles-dumbletone",
  "publisher": "guitarpcb",
  "title": "NostalgiTone Dumbletone Single",
+ "effects": ["overdrive", "distortion"],
  "document": "https://guitarpcb.com/wp-content/uploads/2024/10/2023-NostalgiTone-Singles-Dumbletone.pdf",
  "page": "https://guitarpcb.com/community/topic/pedal-building-guides-mandatory-reading/",
  "file_name": "2023-NostalgiTone-Singles-Dumbletone.pdf",

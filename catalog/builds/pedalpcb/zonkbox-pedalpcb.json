@@ -2,6 +2,7 @@
  "id": "zonkbox-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Zonkbox Fuzz",
+ "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/Zonkbox-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/zonkbox/",
  "file_name": "Zonkbox-PedalPCB.pdf",

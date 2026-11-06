@@ -2,6 +2,7 @@
  "id": "latchingrelaybypass-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Basic Relay Bypass",
+ "effects": ["utility"],
  "document": "https://docs.pedalpcb.com/project/LatchingRelayBypass-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb394/",
  "file_name": "LatchingRelayBypass-PedalPCB.pdf",

@@ -2,6 +2,7 @@
  "id": "ungula",
  "publisher": "pedalpcb",
  "title": "Ungula",
+ "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/Ungula.pdf",
  "page": "https://www.pedalpcb.com/product/ungula/",
  "file_name": "Ungula.pdf",

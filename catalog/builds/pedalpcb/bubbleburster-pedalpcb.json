@@ -2,6 +2,7 @@
  "id": "bubbleburster-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Bubble Burster Overdrive",
+ "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/BubbleBurster-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb738/",
  "file_name": "BubbleBurster-PedalPCB.pdf",

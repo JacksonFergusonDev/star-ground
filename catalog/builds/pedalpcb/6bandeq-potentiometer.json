@@ -2,6 +2,7 @@
  "id": "6bandeq-potentiometer",
  "publisher": "pedalpcb",
  "title": "6-Band EQ",
+ "effects": ["filter"],
  "document": "https://docs.pedalpcb.com/project/6BandEQ-Potentiometer.pdf",
  "page": "https://www.pedalpcb.com/product/pcb369/",
  "file_name": "6BandEQ-Potentiometer.pdf",

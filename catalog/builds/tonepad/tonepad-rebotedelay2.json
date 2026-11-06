@@ -2,6 +2,7 @@
  "id": "tonepad-rebotedelay2",
  "publisher": "tonepad",
  "title": "Rebote 2 Delay",
+ "effects": ["delay"],
  "document": "https://tonepad.com/getFile.asp?id=50",
  "page": "https://tonepad.com/project.asp?id=27",
  "file_name": "tonepad_rebotedelay2.pdf",

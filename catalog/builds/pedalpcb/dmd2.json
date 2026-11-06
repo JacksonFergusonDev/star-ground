@@ -2,6 +2,7 @@
  "id": "dmd2",
  "publisher": "pedalpcb",
  "title": "DMD-2",
+ "effects": ["delay"],
  "document": "https://docs.pedalpcb.com/project/DMD2.pdf",
  "page": "https://www.pedalpcb.com/product/pcb052/",
  "file_name": "DMD2.pdf",

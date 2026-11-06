@@ -2,6 +2,7 @@
  "id": "marsh",
  "publisher": "pedalpcb",
  "title": "Marsh Fuzz",
+ "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/Marsh.pdf",
  "page": "https://www.pedalpcb.com/product/marsh/",
  "file_name": "Marsh.pdf",

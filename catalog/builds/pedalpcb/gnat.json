@@ -2,6 +2,7 @@
  "id": "gnat",
  "publisher": "pedalpcb",
  "title": "Gnat Fuzz",
+ "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/Gnat.pdf",
  "page": "https://www.pedalpcb.com/product/gnat/",
  "file_name": "Gnat.pdf",

@@ -61,13 +61,6 @@ class PasteProject(_ProjectBase):
     text: str = Field(max_length=MAX_TEXT_CHARS)
 
 
-class PresetProject(_ProjectBase):
-    """A preset from the library, by its key (see `GET /api/presets`)."""
-
-    method: Literal["preset"]
-    preset: str
-
-
 class UrlProject(_ProjectBase):
     """A build document at a public link."""
 
@@ -99,7 +92,7 @@ class UploadProject(_ProjectBase):
 
 
 ProjectIn = Annotated[
-    PasteProject | PresetProject | UrlProject | UploadProject,
+    PasteProject | UrlProject | UploadProject,
     Field(discriminator="method"),
 ]
 
@@ -344,23 +337,6 @@ class DocumentsMissing(Problem):
     """Uploads named by `document` that this server no longer holds."""
 
     documents: list[str] = Field(description="Send these as files instead.")
-
-
-class Preset(_Model):
-    """A circuit in the preset library."""
-
-    key: str
-    source: str
-    category: str
-    name: str
-
-
-class PresetCatalog(_Model):
-    """The preset library."""
-
-    sources: list[str]
-    categories: dict[str, list[str]]
-    presets: list[Preset]
 
 
 class FeedbackIn(_Model):

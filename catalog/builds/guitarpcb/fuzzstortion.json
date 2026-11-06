@@ -2,6 +2,7 @@
  "id": "fuzzstortion",
  "publisher": "guitarpcb",
  "title": "Fuzzstortion",
+ "effects": ["fuzz", "overdrive"],
  "document": "https://guitarpcb.com/wp-content/uploads/2023/03/Fuzzstortion.pdf",
  "page": "https://guitarpcb.com/legacy-pcb-document-list/",
  "file_name": "Fuzzstortion.pdf",

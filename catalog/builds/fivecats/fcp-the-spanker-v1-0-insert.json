@@ -1,7 +1,8 @@
 {
  "id": "fcp-the-spanker-v1-0-insert",
  "publisher": "fivecats",
- "title": "fcp-the-spanker-v1-0-insert",
+ "title": "Spanker",
+ "effects": ["overdrive"],
  "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2021/12/FCP-The-Spanker-V1-0-insert.pdf",
  "page": "https://www.five-cats-pedals.co.uk/product/eqd-mega-pack/",
  "file_name": "FCP-The-Spanker-V1-0-insert.pdf",

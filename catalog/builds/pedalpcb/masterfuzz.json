@@ -2,6 +2,7 @@
  "id": "masterfuzz",
  "publisher": "pedalpcb",
  "title": "Master Fuzz",
+ "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/MasterFuzz.pdf",
  "page": "https://www.pedalpcb.com/product/masterfuzz/",
  "file_name": "MasterFuzz.pdf",

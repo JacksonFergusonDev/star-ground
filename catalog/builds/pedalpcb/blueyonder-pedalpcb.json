@@ -2,6 +2,7 @@
  "id": "blueyonder-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Blue Yonder Overdrive",
+ "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/BlueYonder-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb718/",
  "file_name": "BlueYonder-PedalPCB.pdf",

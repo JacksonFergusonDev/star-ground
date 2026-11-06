@@ -1,4 +1,4 @@
-"""Strategy for parsing manual text inputs and presets."""
+"""Strategy for parsing pasted parts lists."""
 
 from src.bom_lib.enums import InputMethod
 from src.bom_lib.parser import parse_with_verification
@@ -13,13 +13,13 @@ def _is_text_upload(data: RawBOMData) -> bool:
 
 
 class ManualInputStrategy(BOMParserStrategy):
-    """Parses raw text BOM lines from manual copy-paste or pre-configured presets."""
+    """Parses raw text BOM lines pasted in."""
 
     def can_handle(self, method: InputMethod, data: RawBOMData) -> bool:
         """Determine if this strategy can handle manual text input."""
         if method == InputMethod.UPLOAD_FILE:
             return _is_text_upload(data)
-        if method in (InputMethod.PASTE_TEXT, InputMethod.PRESET, InputMethod.FROM_URL):
+        if method in (InputMethod.PASTE_TEXT, InputMethod.FROM_URL):
             return isinstance(data, (str, list))
         return False
 

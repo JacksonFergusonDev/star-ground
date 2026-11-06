@@ -1,7 +1,8 @@
 {
  "id": "fcp-blend-me-up-insert-v1-0",
  "publisher": "fivecats",
- "title": "fcp-blend-me-up-insert-v1-0",
+ "title": "Blend me up",
+ "effects": ["utility"],
  "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/11/FCP-Blend-Me-Up-Insert-V1-0.pdf",
  "page": "https://www.five-cats-pedals.co.uk/product/blend-me-up-wet-dry-signal-blender/",
  "file_name": "FCP-Blend-Me-Up-Insert-V1-0.pdf",

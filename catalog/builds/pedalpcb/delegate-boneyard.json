@@ -2,6 +2,7 @@
  "id": "delegate-boneyard",
  "publisher": "pedalpcb",
  "title": "Delegate Compressor",
+ "effects": ["dynamics"],
  "document": "https://docs.pedalpcb.com/project/Delegate-Boneyard.pdf",
  "page": "https://www.pedalpcb.com/product/pcb339/",
  "file_name": "Delegate-Boneyard.pdf",

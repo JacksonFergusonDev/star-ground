@@ -2,6 +2,7 @@
  "id": "provocateur",
  "publisher": "pedalpcb",
  "title": "Provocateur Fuzz",
+ "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/Provocateur.pdf",
  "page": "https://www.pedalpcb.com/product/pcb293/",
  "file_name": "Provocateur.pdf",

@@ -2,6 +2,7 @@
  "id": "informant-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Informant Overdrive",
+ "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/Informant-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb224/",
  "file_name": "Informant-PedalPCB.pdf",

@@ -1,7 +1,8 @@
 {
  "id": "tonepad-pulsar",
  "publisher": "tonepad",
- "title": "tonepad-pulsar",
+ "title": "Pulsar",
+ "effects": ["modulation"],
  "document": "https://tonepad.com/getFile.asp?id=29",
  "page": "https://tonepad.com/project.asp?id=14",
  "file_name": "tonepad_pulsar.pdf",

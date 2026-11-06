@@ -2,6 +2,7 @@
  "id": "tonepad-compressor99",
  "publisher": "tonepad",
  "title": "Comp 99",
+ "effects": ["dynamics"],
  "document": "https://tonepad.com/getFile.asp?id=121",
  "page": "https://tonepad.com/project.asp?id=67",
  "file_name": "tonepad_compressor99.pdf",

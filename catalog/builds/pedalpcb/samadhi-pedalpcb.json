@@ -2,6 +2,7 @@
  "id": "samadhi-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Samadhi Overdrive",
+ "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/Samadhi-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb414/",
  "file_name": "Samadhi-PedalPCB.pdf",

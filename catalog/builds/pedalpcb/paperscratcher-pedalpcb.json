@@ -2,6 +2,7 @@
  "id": "paperscratcher-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Paper Scratcher Fuzz",
+ "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/PaperScratcher-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb374/",
  "file_name": "PaperScratcher-PedalPCB.pdf",

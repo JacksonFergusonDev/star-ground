@@ -2,6 +2,7 @@
  "id": "amplealpaca-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Ample Alpaca Overdrive",
+ "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/AmpleAlpaca-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb494/",
  "file_name": "AmpleAlpaca-PedalPCB.pdf",

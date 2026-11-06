@@ -2,6 +2,7 @@
  "id": "pathogen-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Pathogen Distortion",
+ "effects": ["distortion"],
  "document": "https://docs.pedalpcb.com/project/Pathogen-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb412/",
  "file_name": "Pathogen-PedalPCB.pdf",

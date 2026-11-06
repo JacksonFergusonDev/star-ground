@@ -2,6 +2,7 @@
  "id": "cto-v3-2021",
  "publisher": "guitarpcb",
  "title": "COLORTONE OVERDRIVE v3 2021",
+ "effects": ["overdrive"],
  "document": "https://guitarpcb.com/wp-content/uploads/2022/01/CTO-v3-2021.pdf",
  "page": "https://guitarpcb.com/legacy-pcb-document-list/",
  "file_name": "CTO-v3-2021.pdf",

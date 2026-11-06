@@ -2,6 +2,7 @@
  "id": "canofworms-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Can of Worms Distortion",
+ "effects": ["distortion"],
  "document": "https://docs.pedalpcb.com/project/CanOfWorms-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb686/",
  "file_name": "CanOfWorms-PedalPCB.pdf",

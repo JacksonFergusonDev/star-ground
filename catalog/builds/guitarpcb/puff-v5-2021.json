@@ -2,6 +2,7 @@
  "id": "puff-v5-2021",
  "publisher": "guitarpcb",
  "title": "Pump\u2019d Up Fuzz Face v5 2021",
+ "effects": ["fuzz"],
  "document": "https://guitarpcb.com/wp-content/uploads/2022/01/PUFF_v5-2021.pdf",
  "page": "https://guitarpcb.com/legacy-pcb-document-list/",
  "file_name": "PUFF_v5-2021.pdf",

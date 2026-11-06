@@ -1,7 +1,8 @@
 {
  "id": "fcp-duck-duck-v1-0-insert",
  "publisher": "fivecats",
- "title": "fcp-duck-duck-v1-0-insert",
+ "title": "DuckDuck",
+ "effects": ["filter"],
  "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/10/FCP-Duck-Duck-V1-0-insert.pdf",
  "page": "https://www.five-cats-pedals.co.uk/product/duckduck-nurse-quacky-clone/",
  "file_name": "FCP-Duck-Duck-V1-0-insert.pdf",

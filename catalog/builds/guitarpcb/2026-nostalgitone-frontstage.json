@@ -2,6 +2,7 @@
  "id": "2026-nostalgitone-frontstage",
  "publisher": "guitarpcb",
  "title": "NostalgiTone \u201cFrontStage\u201d Single",
+ "effects": ["boost", "dynamics"],
  "document": "https://guitarpcb.com/wp-content/uploads/2026/07/2026-NostalgiTone-FrontStage.pdf",
  "page": "https://guitarpcb.com/community/topic/pedal-building-guides-mandatory-reading/",
  "file_name": "2026-NostalgiTone-FrontStage.pdf",

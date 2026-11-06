@@ -5,7 +5,9 @@ reads it as an upload would be read, with OCR for image parts lists, and
 keeps the result only when it reads cleanly (`clean`). The catalog holds:
 
 - `builds/<publisher>/<id>.json`: an `Entry` per listed document, with
-  where its board and schematic draw each part (`boards`, step 7).
+  where its board and schematic draw each part (`boards`, step 7) and what
+  kind of effect it is (`effects`).
+- `effects.json`, kept by hand: effects for builds whose pages say nothing.
 - `state/<publisher>.json`: what the last runs saw (each page's
   `<lastmod>`, each document's hash, `ETag` and outcome), so the next run asks
   only about what may have changed, and what a run ran out of time for goes
@@ -44,6 +46,7 @@ from src.catalog.client import (
     PoliteClient,
 )
 from src.catalog.discover import Discovery, Listing, PageState, discover
+from src.catalog.effects import Overrides, effects
 from src.catalog.report import Event, Outcome, Reporter
 from src.catalog.sources import Source
 from src.catalog.verified import (
@@ -93,6 +96,8 @@ class DocumentState:
         verification: Whether that reading was checked by hand, then.
         boards: The `BOARDS_VERSION` its entry's board positions came from;
             0 for none.
+        title: The title its reading found, when it was read; the entry's
+            title is this, or what its page calls it (`entry_title`).
         postponed: Whether the last run ran out of time before asking about
             it, so the next one asks first.
     """
@@ -106,6 +111,7 @@ class DocumentState:
     parts: str | None = None
     verification: str = ""
     boards: int = 0
+    title: str | None = None
     postponed: bool = False
 
 
@@ -126,8 +132,14 @@ class State:
             pages={
                 url: PageState(
                     page["lastmod"],
-                    tuple(Listing(**listing) for listing in page["listings"]),
+                    tuple(
+                        Listing(
+                            **{**listing, "categories": tuple(listing["categories"])}
+                        )
+                        for listing in page["listings"]
+                    ),
                     page["postponed"],
+                    page["version"],
                 )
                 for url, page in raw["pages"].items()
             },
@@ -230,19 +242,80 @@ def entry_id(listing: Listing) -> str:
     return re.sub(r"[^a-z0-9]+", "-", stem.lower()).strip("-") or "document"
 
 
+# Words in a file name that aren't the build's name: publishers' prefixes
+# ('FCP-', 'BD_', 'tonepad_') and what kind of file it is.
+_FILE_NOISE = re.compile(
+    r"fcp|bd|tonepad|guitarpcb(?:\.com)?|pedalpcb|i?insert|build|document|doc|pdf",
+    re.IGNORECASE,
+)
+# Five Cats' 'V1-0': a version, once its parts are apart.
+_VERSION = re.compile(r"\b[vV](\d+) (\d)\b")
+
+
+def entry_title(read: str | None, listing: Listing) -> str:
+    """A build's title: the document's own, else its page's, else its file's.
+
+    Args:
+        read: The title the reading found on the document, if any.
+        listing: The document as its page links it.
+
+    Returns:
+        The title: 'Albus' from Five Cats' product page for a document that
+        prints its title as an image, 'Fuzzy Bee' from GuitarPCB's list, or
+        'MUFFN v4 2022' from its file name.
+    """
+    if read:
+        # GuitarPCB's PUFF v4 title ends in zero-width spaces: they're spaces.
+        return " ".join(read.replace("\u200b", " ").split())
+    if listing.title:
+        # 'Albus - Mad Professor Simble Overdrive Clone', with any dash: the
+        # name, then what it's a clone of.
+        return re.split(r"\s*[\u2013\u2014-]\s+|\s+[\u2013\u2014-]\s*", listing.title)[
+            0
+        ]
+    stem = re.sub(r"\.pdf$", "", listing.name, flags=re.IGNORECASE)
+    words = [
+        w for w in re.split(r"[\s_-]+", stem) if w and not _FILE_NOISE.fullmatch(w)
+    ]
+    return _VERSION.sub(r"v\1.\2", " ".join(words)) or entry_id(listing)
+
+
 def entry(
     source: Source,
     listing: Listing,
+    entry_key: str,
     digest: str,
     result: ParseResult,
     checked: str,
     verified: bool,
+    overrides: Overrides,
 ) -> dict[str, Any]:
-    """A listed document's catalog entry: only what was derived from it."""
+    """A listed document's catalog entry: only what was derived from it.
+
+    Args:
+        source: The publisher.
+        listing: The document as its page links it.
+        entry_key: Its id (`entry_id`, made unique among the publisher's).
+        digest: Its `document_hash`.
+        result: Its reading.
+        checked: When it was fetched.
+        verified: Whether its reading was checked by hand.
+        overrides: The effects set by hand.
+
+    Returns:
+        The entry, without its board positions.
+    """
+    title = entry_title(result.title, listing)
     return {
-        "id": entry_id(listing),
+        "id": entry_key,
         "publisher": source.publisher.value,
-        "title": result.title or entry_id(listing),
+        "title": title,
+        "effects": effects(
+            f"{source.publisher.value}/{entry_key}",
+            title,
+            listing.categories,
+            overrides,
+        ),
         "document": listing.document,
         "page": listing.page,
         "file_name": listing.name,
@@ -411,6 +484,7 @@ def build(
     builds_dir = out / "builds" / publisher
     state = State.load(state_path)
     verified = VerifiedList.load(out / "verified.json")
+    overrides = Overrides.load(out / "effects.json")
 
     def still(previous: DocumentState) -> Verification:
         """A reading kept from an earlier run, checked against today's list."""
@@ -418,14 +492,33 @@ def build(
             return Verification.UNVERIFIED
         return verified.check(previous.sha256, previous.parts)
 
-    def mark(previous: DocumentState, verification: Verification) -> None:
-        """Updates a listed build's mark when the list changed under it."""
-        if previous.entry and previous.verification != verification:
-            path = builds_dir / f"{previous.entry}.json"
-            if path.exists():
-                data = json.loads(path.read_text())
-                data["verified"] = verification == Verification.VERIFIED
-                _write_entry(path, data)
+    def refresh(
+        previous: DocumentState, listing: Listing, verification: Verification
+    ) -> None:
+        """Brings an unread build's entry up to date with its page and the lists.
+
+        Its mark follows the verified list, and its title and effects follow
+        its page and `effects.json`, which may have changed since it was read.
+        """
+        if not previous.entry:
+            return
+        path = builds_dir / f"{previous.entry}.json"
+        if not path.exists():
+            return
+        data = json.loads(path.read_text())
+        title = entry_title(previous.title, listing)
+        update = {
+            "title": title,
+            "effects": effects(
+                f"{publisher}/{previous.entry}",
+                title,
+                listing.categories,
+                overrides,
+            ),
+            "verified": verification == Verification.VERIFIED,
+        }
+        if any(data.get(key) != value for key, value in update.items()):
+            _write_entry(path, {**data, **update})
 
     def add_boards(entry_id: str, content: bytes) -> None:
         """Adds where the document draws each of its entry's parts."""
@@ -545,7 +638,7 @@ def build(
             return
         if fetched.status == 304:
             kept = still(previous)
-            mark(previous, kept)
+            refresh(previous, listing, kept)
             record(
                 url,
                 replace(previous, verification=kept),
@@ -571,7 +664,7 @@ def build(
             )
         ):
             kept = still(previous)
-            mark(previous, kept)
+            refresh(previous, listing, kept)
             how = "same hash as last time"
             added = previous.boards
             if needs_boards and previous.entry:
@@ -607,7 +700,12 @@ def build(
             )
             return
         verification = verified.check(digest, parts)
-        fetched_state = replace(fetched_state, parts=parts, verification=verification)
+        fetched_state = replace(
+            fetched_state,
+            parts=parts,
+            verification=verification,
+            title=accepted.title,
+        )
         if verification == Verification.CHANGED:
             reporter.warning(
                 f"{url} was checked by hand, but today's reading of the same file "
@@ -631,11 +729,21 @@ def build(
                 Event(publisher, url, Outcome.NOT_CLEAN, why),
             )
             return
-        listed = entry(source, listing, digest, accepted, checked, is_verified)
-        taken = builds_dir / f"{listed['id']}.json"
+        listed_id = entry_id(listing)
+        taken = builds_dir / f"{listed_id}.json"
         if taken.exists() and json.loads(taken.read_text())["document"] != url:
             # Two documents published under one file name.
-            listed["id"] += "-" + sha256(url.encode()).hexdigest()[:6]
+            listed_id += "-" + sha256(url.encode()).hexdigest()[:6]
+        listed = entry(
+            source,
+            listing,
+            listed_id,
+            digest,
+            accepted,
+            checked,
+            is_verified,
+            overrides,
+        )
         builds_dir.mkdir(parents=True, exist_ok=True)
         _write_entry(builds_dir / f"{listed['id']}.json", listed)
         add_boards(listed["id"], fetched.content)

@@ -2,6 +2,7 @@
  "id": "unicab-pedalpcb",
  "publisher": "pedalpcb",
  "title": "UniCab",
+ "effects": ["amp"],
  "document": "https://docs.pedalpcb.com/project/UniCab-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb172/",
  "file_name": "UniCab-PedalPCB.pdf",

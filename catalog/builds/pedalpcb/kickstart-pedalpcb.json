@@ -2,6 +2,7 @@
  "id": "kickstart-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Kickstart Distortion",
+ "effects": ["distortion"],
  "document": "https://docs.pedalpcb.com/project/Kickstart-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb441/",
  "file_name": "Kickstart-PedalPCB.pdf",

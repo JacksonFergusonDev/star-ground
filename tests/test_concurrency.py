@@ -19,7 +19,6 @@ from typing import Any
 import pytest
 from fastapi.testclient import TestClient
 
-from src.bom_lib import BOM_PRESETS
 from src.bom_lib.grammar import value_parser
 from src.server import Settings, create_app
 
@@ -84,15 +83,15 @@ def test_documents_read_at_once_all_read_cleanly(fresh_server: TestClient) -> No
 
 
 def test_master_lists_built_at_once_all_succeed(fresh_server: TestClient) -> None:
-    presets = list(BOM_PRESETS)[:8]
+    lists = [f"R1 {k}k\nC1 100n\nIC1 TL072" for k in range(1, 9)]
 
-    def build(key: str) -> Any:
-        request = json.dumps({"projects": [{"method": "preset", "preset": key}]})
+    def build(text: str) -> Any:
+        request = json.dumps({"projects": [{"method": "paste", "text": text}]})
         return fresh_server.post("/api/master-list", data={"request": request})
 
-    results = _all_at_once([partial(build, k) for k in presets])
+    results = _all_at_once([partial(build, text) for text in lists])
 
-    for key, response in zip(presets, results, strict=True):
-        assert response.status_code == 200, (key, response)
+    for text, response in zip(lists, results, strict=True):
+        assert response.status_code == 200, (text, response)
         projects = response.json()["projects"]
-        assert all(p["errors"] == [] for p in projects), (key, response.json())
+        assert all(p["errors"] == [] for p in projects), (text, response.json())

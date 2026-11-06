@@ -1,7 +1,8 @@
 {
  "id": "fpc-breaking-blues-v1-0-inesrt",
  "publisher": "fivecats",
- "title": "fpc-breaking-blues-v1-0-inesrt",
+ "title": "Breaking Blues",
+ "effects": ["overdrive", "distortion"],
  "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/07/FPC-Breaking-Blues-V1-0-Inesrt.pdf",
  "page": "https://www.five-cats-pedals.co.uk/product/breaking-blues-marshall-bluesbreaker-clone/",
  "file_name": "FPC-Breaking-Blues-V1-0-Inesrt.pdf",

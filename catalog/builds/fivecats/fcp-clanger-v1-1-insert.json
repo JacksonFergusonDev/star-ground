@@ -1,7 +1,8 @@
 {
  "id": "fcp-clanger-v1-1-insert",
  "publisher": "fivecats",
- "title": "fcp-clanger-v1-1-insert",
+ "title": "Clanger",
+ "effects": ["fuzz"],
  "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2026/01/FCP-Clanger-V1-1-Insert.pdf",
  "page": "https://www.five-cats-pedals.co.uk/product/clanger-dba-octave-clang-clone/",
  "file_name": "FCP-Clanger-V1-1-Insert.pdf",

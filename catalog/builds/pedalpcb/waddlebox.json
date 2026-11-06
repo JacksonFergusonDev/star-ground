@@ -2,6 +2,7 @@
  "id": "waddlebox",
  "publisher": "pedalpcb",
  "title": "Waddle Box",
+ "effects": ["filter"],
  "document": "https://docs.pedalpcb.com/project/WaddleBox.pdf",
  "page": "https://www.pedalpcb.com/product/waddlebox/",
  "file_name": "WaddleBox.pdf",

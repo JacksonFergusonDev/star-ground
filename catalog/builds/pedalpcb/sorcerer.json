@@ -2,6 +2,7 @@
  "id": "sorcerer",
  "publisher": "pedalpcb",
  "title": "Sorcerer Distortion",
+ "effects": ["distortion"],
  "document": "https://docs.pedalpcb.com/project/Sorcerer.pdf",
  "page": "https://www.pedalpcb.com/product/sorcerer/",
  "file_name": "Sorcerer.pdf",

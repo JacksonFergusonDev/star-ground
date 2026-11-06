@@ -2,6 +2,7 @@
  "id": "acrylicoverdrive-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Acrylic Overdrive",
+ "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/AcrylicOverdrive-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb442/",
  "file_name": "AcrylicOverdrive-PedalPCB.pdf",

@@ -2,6 +2,7 @@
  "id": "tonepad-sansampgt2-2007",
  "publisher": "tonepad",
  "title": "Sin Amp",
+ "effects": ["distortion"],
  "document": "https://tonepad.com/getFile.asp?id=112",
  "page": "https://tonepad.com/project.asp?id=22",
  "file_name": "tonepad_sansampgt2-2007.pdf",

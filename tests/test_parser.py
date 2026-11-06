@@ -18,7 +18,6 @@ from hypothesis import given
 from hypothesis import strategies as st
 
 from src.bom_lib import (
-    BOM_PRESETS,
     BuildHardware,
     calculate_net_needs,
     deduplicate_refs,
@@ -716,36 +715,6 @@ def test_net_needs_calculation():
 
     # 5. Verify Surplus (5 - 10 = -5 -> Floor at 0)
     assert net_inv[key_c]["qty"] == 0
-
-
-def test_preset_integrity():
-    """
-    Verifies the integrity of the static `BOM_PRESETS` library.
-
-    Iterates through every preset to ensure:
-    1. The data structure is valid.
-    2. The text content is not empty.
-    3. The parser can successfully find parts in it.
-    """
-    for name, data in BOM_PRESETS.items():
-        val = data["bom_text"]
-        raw_text = str(val)
-
-        # Sanity check: Text should exist
-        assert raw_text.strip(), f"Preset '{name}' is empty!"
-
-        # Parse check
-        stats = parse_with_verification([raw_text], source_name=name).stats
-
-        # Must find parts
-        assert stats["parts_found"] > 0, f"Preset '{name}' yielded 0 parts!"
-        assert stats["lines_read"] > 0
-
-
-def test_presets_store_no_injected_parts() -> None:
-    """Presets hold only the document's parts; parsing injects sockets again."""
-    for name, data in BOM_PRESETS.items():
-        assert "(Inj)" not in data["bom_text"], name
 
 
 def test_serialize_inventory_leaves_out_injected_parts() -> None:
@@ -1555,6 +1524,19 @@ def test_a_section_heading_is_no_title() -> None:
 
     assert _PRESENTS.fullmatch("PARTS LIST Build Notes:")
     assert _PRESENTS.fullmatch("Build Notes:")
+
+
+def test_scraps_of_a_drawing_are_no_title() -> None:
+    # GuitarPCB SWAH v3's largest words are a dimension's: '” x ” ca.'.
+    from src.bom_lib.parser import _is_title
+
+    assert not _is_title("\u201d x \u201d ca.")
+    assert _is_title("\u201c2112\u201d - Dual Combo")
+    assert _is_title("Rat")
+    assert not _is_title("NostalgiTone 70s Bri(cid:21)sh Single")
+    # PedalPCB Proposition's 'FEATURES AND ...' heading, broken over two lines.
+    assert not _is_title("AND FEATURES")
+    assert _is_title("Orange Squeezer")
 
 
 def test_a_switch_pad_label_is_a_letter_or_two() -> None:

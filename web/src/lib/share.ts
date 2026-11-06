@@ -17,10 +17,7 @@ type SharedCorrection = { ref: string } & Extract<Check, { state: 'corrected' }>
 export interface SharedProject {
   name: string;
   count: number;
-  source:
-    | { kind: 'paste'; text: string }
-    | { kind: 'preset'; key: string }
-    | { kind: 'url'; url: string; catalog?: string };
+  source: { kind: 'paste'; text: string } | { kind: 'url'; url: string; catalog?: string };
   variant: string | null;
   useOcr: boolean;
   corrections: SharedCorrection[];
@@ -93,7 +90,6 @@ function valid(project: SharedProject): boolean {
     typeof project.count === 'number' &&
     Array.isArray(project.corrections) &&
     ((source.kind === 'paste' && typeof source.text === 'string') ||
-      (source.kind === 'preset' && typeof source.key === 'string') ||
       (source.kind === 'url' && /^https?:\/\//.test(source.url)))
   );
 }

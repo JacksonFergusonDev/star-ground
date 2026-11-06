@@ -1,7 +1,8 @@
 {
  "id": "fcp-morningstar-distortion-insert-v1-0",
  "publisher": "fivecats",
- "title": "fcp-morningstar-distortion-insert-v1-0",
+ "title": "Morningstar Distortion",
+ "effects": ["distortion"],
  "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/10/FCP-Morningstar-Distortion-Insert-V1-0.pdf",
  "page": "https://www.five-cats-pedals.co.uk/product/morningstar-distortion-revv-g4-clone/",
  "file_name": "FCP-Morningstar-Distortion-Insert-V1-0.pdf",

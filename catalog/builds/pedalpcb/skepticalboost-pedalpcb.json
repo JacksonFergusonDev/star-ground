@@ -2,6 +2,7 @@
  "id": "skepticalboost-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Skeptical Boost",
+ "effects": ["boost"],
  "document": "https://docs.pedalpcb.com/project/SkepticalBoost-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb625/",
  "file_name": "SkepticalBoost-PedalPCB.pdf",

@@ -2,6 +2,7 @@
  "id": "sandspur-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Sandspur Fuzz",
+ "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/Sandspur-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb378/",
  "file_name": "Sandspur-PedalPCB.pdf",

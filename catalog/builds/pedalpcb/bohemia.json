@@ -2,6 +2,7 @@
  "id": "bohemia",
  "publisher": "pedalpcb",
  "title": "Bohemia",
+ "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/Bohemia.pdf",
  "page": "https://www.pedalpcb.com/product/bohemia/",
  "file_name": "Bohemia.pdf",

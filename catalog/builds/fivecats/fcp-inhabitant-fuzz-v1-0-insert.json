@@ -1,7 +1,8 @@
 {
  "id": "fcp-inhabitant-fuzz-v1-0-insert",
  "publisher": "fivecats",
- "title": "fcp-inhabitant-fuzz-v1-0-insert",
+ "title": "Inhabitant Fuzz",
+ "effects": ["fuzz"],
  "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2024/10/FCP-Inhabitant-Fuzz-V1-0-Insert.pdf",
  "page": "https://www.five-cats-pedals.co.uk/product/inhabitant-fuzz-dod-carcosa-fuzz-clone/",
  "file_name": "FCP-Inhabitant-Fuzz-V1-0-Insert.pdf",

@@ -2,6 +2,7 @@
  "id": "loftred-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Loft Fuzz (Red)",
+ "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/LoftRed-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb560/",
  "file_name": "LoftRed-PedalPCB.pdf",

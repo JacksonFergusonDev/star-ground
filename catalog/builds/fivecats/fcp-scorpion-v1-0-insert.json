@@ -1,7 +1,8 @@
 {
  "id": "fcp-scorpion-v1-0-insert",
  "publisher": "fivecats",
- "title": "fcp-scorpion-v1-0-insert",
+ "title": "Scorpion Boost",
+ "effects": ["boost"],
  "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2021/12/FCP-Scorpion-V1-0-insert.pdf",
  "page": "https://www.five-cats-pedals.co.uk/product/scorpion-boost/",
  "file_name": "FCP-Scorpion-V1-0-insert.pdf",

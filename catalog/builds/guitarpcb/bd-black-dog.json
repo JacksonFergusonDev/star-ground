@@ -2,6 +2,7 @@
  "id": "bd-black-dog",
  "publisher": "guitarpcb",
  "title": "Black Dog",
+ "effects": ["overdrive", "distortion"],
  "document": "https://guitarpcb.com/wp-content/uploads/2018/06/BD_Black-Dog.pdf",
  "page": "https://guitarpcb.com/community/topic/direct-build-document-link-list/",
  "file_name": "BD_Black-Dog.pdf",

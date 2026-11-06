@@ -2,6 +2,7 @@
  "id": "actualodjr",
  "publisher": "pedalpcb",
  "title": "Actual Overdrive Jr",
+ "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/ActualODJr.pdf",
  "page": "https://www.pedalpcb.com/product/pcb312/",
  "file_name": "ActualODJr.pdf",

@@ -2,6 +2,7 @@
  "id": "buzztone",
  "publisher": "pedalpcb",
  "title": "Buzz Tone",
+ "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/BuzzTone.pdf",
  "page": "https://www.pedalpcb.com/product/buzztone/",
  "file_name": "BuzzTone.pdf",

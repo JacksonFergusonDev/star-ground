@@ -2,6 +2,7 @@
  "id": "stoneagedistortion-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Stone Age Distortion",
+ "effects": ["distortion"],
  "document": "https://docs.pedalpcb.com/project/StoneAgeDistortion-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb638/",
  "file_name": "StoneAgeDistortion-PedalPCB.pdf",

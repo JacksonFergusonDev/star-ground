@@ -2,6 +2,7 @@
  "id": "snozzberry-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Snozzberry Overdrive",
+ "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/Snozzberry-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb514/",
  "file_name": "Snozzberry-PedalPCB.pdf",

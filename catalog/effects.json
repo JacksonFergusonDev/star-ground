@@ -1,0 +1,133 @@
+{
+ "fivecats/fcp-muzz-fuff-v1-0-insert": [
+  "fuzz"
+ ],
+ "fivecats/fcp-ztrem-v1-1-insert": [
+  "modulation"
+ ],
+ "guitarpcb/angry-llama-build-document": [
+  "fuzz",
+  "overdrive",
+  "distortion"
+ ],
+ "guitarpcb/bd-3-time-champ-v1": [
+  "overdrive"
+ ],
+ "guitarpcb/bd-ancestral-apparition": [
+  "reverb"
+ ],
+ "guitarpcb/bd-bass-overdriver-v1": [
+  "overdrive"
+ ],
+ "guitarpcb/bd-black-dog": [
+  "overdrive",
+  "distortion"
+ ],
+ "guitarpcb/bd-blues-buster": [
+  "overdrive"
+ ],
+ "guitarpcb/bd-bmp-op-amp-v2": [
+  "fuzz"
+ ],
+ "guitarpcb/bd-dr-phybes": [
+  "modulation"
+ ],
+ "guitarpcb/bd-ea-tremelo-v3": [
+  "modulation"
+ ],
+ "guitarpcb/bd-killer-bee": [
+  "overdrive",
+  "boost"
+ ],
+ "guitarpcb/bd-shonuff": [
+  "boost"
+ ],
+ "guitarpcb/bd-sunnt": [
+  "overdrive",
+  "distortion"
+ ],
+ "guitarpcb/bd-super-sonic-02": [
+  "overdrive",
+  "distortion"
+ ],
+ "guitarpcb/bd-swah": [
+  "filter"
+ ],
+ "guitarpcb/bd-tube-screaming-preamp": [
+  "overdrive"
+ ],
+ "guitarpcb/bd-zenith-mini": [
+  "overdrive"
+ ],
+ "guitarpcb/best-ever-od-build-doc": [
+  "overdrive"
+ ],
+ "guitarpcb/bi-fuzzstortion": [
+  "fuzz",
+  "overdrive"
+ ],
+ "guitarpcb/bi-sonic-tonic": [
+  "boost",
+  "filter"
+ ],
+ "guitarpcb/cranky-charles-build-document": [
+  "overdrive",
+  "distortion"
+ ],
+ "guitarpcb/marsha-tone-build-document": [
+  "overdrive"
+ ],
+ "guitarpcb/paramix-v4": [
+  "utility"
+ ],
+ "guitarpcb/sonic-tonic": [
+  "boost",
+  "filter"
+ ],
+ "guitarpcb/super-tone-tweq": [
+  "filter"
+ ],
+ "guitarpcb/swah-v3-guitarpcb-com": [
+  "filter"
+ ],
+ "guitarpcb/swah-v5-2021": [
+  "filter"
+ ],
+ "guitarpcb/tight-box-build-document": [
+  "overdrive",
+  "distortion"
+ ],
+ "pedalpcb/pedalpcb-superheterodynereceiver": [
+  "fuzz"
+ ],
+ "pedalpcb/unicab-pedalpcb": [
+  "amp"
+ ],
+ "tonepad/tonepad-bigmuff": [
+  "fuzz"
+ ],
+ "tonepad/tonepad-bluebox": [
+  "fuzz"
+ ],
+ "tonepad/tonepad-folkurbanoctup": [
+  "fuzz"
+ ],
+ "tonepad/tonepad-fuzzface": [
+  "fuzz"
+ ],
+ "tonepad/tonepad-greenringer": [
+  "fuzz"
+ ],
+ "tonepad/tonepad-neoctavia": [
+  "fuzz"
+ ],
+ "tonepad/tonepad-octavia": [
+  "fuzz"
+ ],
+ "tonepad/tonepad-octaviarm": [
+  "fuzz"
+ ],
+ "tonepad/tonepad-scrambler": [
+  "fuzz"
+ ]
+}

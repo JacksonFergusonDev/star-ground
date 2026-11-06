@@ -2,6 +2,7 @@
  "id": "bd-xx-double-shot",
  "publisher": "guitarpcb",
  "title": "XX Double Shot \u2013 Dual Boost",
+ "effects": ["boost"],
  "document": "https://guitarpcb.com/wp-content/uploads/2018/07/BD_XX-Double-Shot.pdf",
  "page": "https://guitarpcb.com/community/topic/direct-build-document-link-list/",
  "file_name": "BD_XX-Double-Shot.pdf",

@@ -2,6 +2,7 @@
  "id": "temper-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Temper Fuzz",
+ "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/Temper-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb695/",
  "file_name": "Temper-PedalPCB.pdf",

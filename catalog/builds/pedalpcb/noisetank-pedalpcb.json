@@ -2,6 +2,7 @@
  "id": "noisetank-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Noise Tank Distortion",
+ "effects": ["distortion"],
  "document": "https://docs.pedalpcb.com/project/NoiseTank-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb496/",
  "file_name": "NoiseTank-PedalPCB.pdf",

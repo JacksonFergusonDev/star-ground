@@ -48,7 +48,6 @@ from src.api import (
     read_stock,
 )
 from src.bom_lib import (
-    BOM_PRESETS,
     CountedPart,
     FeedbackRating,
     FileUpload,
@@ -57,13 +56,10 @@ from src.bom_lib import (
     ParseResult,
     ParseWarning,
     ParseWarningKind,
-    PcbShop,
     ReadPart,
     ShoppingListRow,
-    get_preset_metadata,
     get_residual_report,
     make_component_key,
-    parse_preset_key,
 )
 from src.bom_lib.errors import (
     BuildNotChosenError,
@@ -108,9 +104,6 @@ from src.server.models import (
     PartReview,
     PartWarning,
     PasteProject,
-    Preset,
-    PresetCatalog,
-    PresetProject,
     Problem,
     ProjectIn,
     ProjectResult,
@@ -492,24 +485,6 @@ def _project(
     match project:
         case PasteProject():
             return replace(base, method=InputMethod.PASTE_TEXT, data=project.text)
-        case PresetProject():
-            preset = BOM_PRESETS.get(project.preset)
-            parsed = parse_preset_key(project.preset)
-            if preset is None or parsed is None:
-                raise RefusedError(
-                    422, Problem(message=f"There's no preset '{project.preset}'.")
-                )
-            shop = PcbShop(parsed[0]) if parsed[0] in PcbShop else None
-            return replace(
-                base,
-                # A blank name takes the preset's, as the library lists it.
-                name=project.name or parsed[2],
-                method=InputMethod.PRESET,
-                data=preset["bom_text"],
-                source_path=preset.get("source_path"),
-                source_url=preset.get("source_url"),
-                pcb_shop=shop,
-            )
         case UrlProject():
             reading = _read(
                 services, client, InputMethod.FROM_URL, project.url, project.use_ocr
@@ -814,24 +789,6 @@ def create_app(
     def health() -> Health:
         """Answers once the server is up; the frontend calls it to wake it."""
         return Health()
-
-    @app.get("/api/presets", tags=["presets"])
-    def presets() -> PresetCatalog:
-        """The preset library, for browsing by source and category."""
-        catalog = get_preset_metadata()
-        return PresetCatalog(
-            sources=catalog.sources,
-            categories=catalog.categories,
-            presets=[
-                Preset(
-                    key=e["full_key"],
-                    source=e["source"],
-                    category=e["category"],
-                    name=e["name"],
-                )
-                for e in catalog.lookup
-            ],
-        )
 
     @app.post(
         "/api/documents/read",

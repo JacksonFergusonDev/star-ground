@@ -2,6 +2,7 @@
  "id": "jetdrive-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Jet Drive",
+ "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/JetDrive-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb059/",
  "file_name": "JetDrive-PedalPCB.pdf",

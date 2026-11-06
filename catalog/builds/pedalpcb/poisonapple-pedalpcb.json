@@ -2,6 +2,7 @@
  "id": "poisonapple-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Poison Apple Auto-Wah",
+ "effects": ["filter"],
  "document": "https://docs.pedalpcb.com/project/PoisonApple-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb597/",
  "file_name": "PoisonApple-PedalPCB.pdf",

@@ -2,6 +2,7 @@
  "id": "hypedboost",
  "publisher": "pedalpcb",
  "title": "Hyped Boost",
+ "effects": ["boost"],
  "document": "https://docs.pedalpcb.com/project/HypedBoost.pdf",
  "page": "https://www.pedalpcb.com/product/pcb178/",
  "file_name": "HypedBoost.pdf",

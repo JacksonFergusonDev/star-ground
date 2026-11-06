@@ -2,6 +2,7 @@
  "id": "eternalburst",
  "publisher": "pedalpcb",
  "title": "Eternal Burst",
+ "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/EternalBurst.pdf",
  "page": "https://www.pedalpcb.com/product/eternalburst/",
  "file_name": "EternalBurst.pdf",

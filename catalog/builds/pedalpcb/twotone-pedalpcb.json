@@ -2,6 +2,7 @@
  "id": "twotone-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Two Tone Fuzz",
+ "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/TwoTone-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb622/",
  "file_name": "TwoTone-PedalPCB.pdf",

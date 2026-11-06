@@ -2,6 +2,7 @@
  "id": "tweed-king-bd",
  "publisher": "guitarpcb",
  "title": "Tweed King",
+ "effects": ["overdrive"],
  "document": "https://guitarpcb.com/wp-content/uploads/2022/11/Tweed-King-BD.pdf",
  "page": "https://guitarpcb.com/legacy-pcb-document-list/",
  "file_name": "Tweed-King-BD.pdf",

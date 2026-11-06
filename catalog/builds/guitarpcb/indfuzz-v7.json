@@ -2,6 +2,7 @@
  "id": "indfuzz-v7",
  "publisher": "guitarpcb",
  "title": "Industrial Fuzz v7",
+ "effects": ["fuzz"],
  "document": "https://guitarpcb.com/wp-content/uploads/2023/03/IndFuzz_v7.pdf",
  "page": "https://guitarpcb.com/legacy-pcb-document-list/",
  "file_name": "IndFuzz_v7.pdf",

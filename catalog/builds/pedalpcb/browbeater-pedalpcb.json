@@ -2,6 +2,7 @@
  "id": "browbeater-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Browbeater Overdrive",
+ "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/Browbeater-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb693/",
  "file_name": "Browbeater-PedalPCB.pdf",

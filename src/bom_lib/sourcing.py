@@ -9,7 +9,7 @@ This module contains the "Nerd Economics" logic, which includes:
 
 import math
 import re
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 from decimal import Decimal
 from typing import Any
 from urllib.parse import quote_plus
@@ -24,7 +24,6 @@ from src.bom_lib.enums import (
     ComponentOrigin,
     ComponentSpec,
     HardwareRole,
-    PcbShop,
 )
 from src.bom_lib.manager import calculate_net_needs, sort_inventory
 from src.bom_lib.types import (
@@ -218,15 +217,6 @@ def generate_tayda_url(search_term: str) -> str:
         return ""
     encoded = quote_plus(search_term)
     return f"https://www.taydaelectronics.com/catalogsearch/result/?q={encoded}"
-
-
-def generate_pedalpcb_url(search_term: str) -> str:
-    """Generates a clickable search URL for PedalPCB."""
-    if not search_term:
-        return ""
-    clean_term = search_term.replace(" PCB", "").strip()
-    encoded = quote_plus(clean_term)
-    return f"https://www.pedalpcb.com/?product_cat=&s={encoded}&post_type=product"
 
 
 def get_buy_details(
@@ -582,12 +572,11 @@ def resolve_part_sourcing(
     net_qty: int,
     sources: dict[str, list[str]],
     val_qty: pint.Quantity[Any] | Decimal | None = None,
-    pcb_shop: PcbShop | None = None,
 ) -> ResolvedPartSourcing:
     """Resolves the complete purchasing and supplier specification for a component.
 
     Unifies origin assignment, buffer calculation, auto-inject notes,
-    dielectric spec resolution, and supplier routing (PedalPCB vs Tayda).
+    dielectric spec resolution, and the supplier search.
 
     Args:
         category: Component category enum.
@@ -595,8 +584,6 @@ def resolve_part_sourcing(
         net_qty: Quantity required after deducting stock (deficit).
         sources: Project sources mapping.
         val_qty: Cached physical unit quantity or Decimal.
-        pcb_shop: The shop that sells the board, for a PCB; Tayda's search
-            otherwise.
 
     Returns:
         ResolvedPartSourcing with origin, buy_qty, notes, spec_type, search_term, supplier_url.
@@ -615,10 +602,7 @@ def resolve_part_sourcing(
     spec_type = get_spec_type(category, val, val_qty=val_qty)
     search_term = generate_search_term(category, val, spec_type)
 
-    if category == ComponentCategory.PCB and pcb_shop == PcbShop.PEDALPCB:
-        url = generate_pedalpcb_url(search_term)
-    else:
-        url = generate_tayda_url(search_term)
+    url = generate_tayda_url(search_term)
 
     return ResolvedPartSourcing(
         origin=origin,
@@ -635,7 +619,6 @@ def build_shopping_list(
     stock: Inventory | None = None,
     show_hardware: bool = True,
     show_extras: bool = True,
-    pcb_shops: Mapping[str, PcbShop] | None = None,
 ) -> list[ShoppingListRow]:
     """Assembles the master shopping list across all projects.
 
@@ -647,13 +630,11 @@ def build_shopping_list(
         stock: Optional user stock inventory to calculate net needs.
         show_hardware: Whether to include pure auto-injected hardware kit parts.
         show_extras: Whether to include sockets and SMD adapters.
-        pcb_shops: The shop selling each project's board, by label.
 
     Returns:
         List of structured ShoppingListRow dictionaries for display and export.
     """
     net_inventory = calculate_net_needs(inventory, stock or Inventory())
-    shops = pcb_shops or {}
 
     sorted_parts = sort_inventory(inventory)
     shopping_list: list[ShoppingListRow] = []
@@ -684,7 +665,6 @@ def build_shopping_list(
             net_qty=net_qty,
             sources=sources,
             val_qty=val_qty,
-            pcb_shop=next((shops[s] for s in sources if s in shops), None),
         )
         notes = resolved.notes
         if item["included"]:

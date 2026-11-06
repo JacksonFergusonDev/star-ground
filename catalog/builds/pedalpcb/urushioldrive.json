@@ -2,6 +2,7 @@
  "id": "urushioldrive",
  "publisher": "pedalpcb",
  "title": "Urushiol Drive",
+ "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/UrushiolDrive.pdf",
  "page": "https://www.pedalpcb.com/product/urushioldrive/",
  "file_name": "UrushiolDrive.pdf",

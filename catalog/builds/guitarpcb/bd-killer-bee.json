@@ -2,6 +2,7 @@
  "id": "bd-killer-bee",
  "publisher": "guitarpcb",
  "title": "Killer Bee",
+ "effects": ["overdrive", "boost"],
  "document": "https://guitarpcb.com/wp-content/uploads/2018/06/BD_Killer-Bee.pdf",
  "page": "https://guitarpcb.com/community/topic/direct-build-document-link-list/",
  "file_name": "BD_Killer-Bee.pdf",

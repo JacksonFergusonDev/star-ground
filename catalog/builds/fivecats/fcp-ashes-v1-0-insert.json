@@ -1,7 +1,8 @@
 {
  "id": "fcp-ashes-v1-0-insert",
  "publisher": "fivecats",
- "title": "fcp-ashes-v1-0-insert",
+ "title": "Ashes",
+ "effects": ["fuzz"],
  "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2021/12/FCP-Ashes-V1-0-insert.pdf",
  "page": "https://www.five-cats-pedals.co.uk/product/ashes-eqd-black-ash-clone/",
  "file_name": "FCP-Ashes-V1-0-insert.pdf",

@@ -2,6 +2,7 @@
  "id": "desolatefuzz",
  "publisher": "pedalpcb",
  "title": "Desolate Fuzz",
+ "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/DesolateFuzz.pdf",
  "page": "https://www.pedalpcb.com/product/pcb304/",
  "file_name": "DesolateFuzz.pdf",

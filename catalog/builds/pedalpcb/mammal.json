@@ -2,6 +2,7 @@
  "id": "mammal",
  "publisher": "pedalpcb",
  "title": "Mammal",
+ "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/Mammal.pdf",
  "page": "https://www.pedalpcb.com/product/mammal/",
  "file_name": "Mammal.pdf",

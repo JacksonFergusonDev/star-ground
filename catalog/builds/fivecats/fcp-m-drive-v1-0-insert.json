@@ -1,7 +1,8 @@
 {
  "id": "fcp-m-drive-v1-0-insert",
  "publisher": "fivecats",
- "title": "fcp-m-drive-v1-0-insert",
+ "title": "The M Drive",
+ "effects": ["overdrive"],
  "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/02/FCP-M-Drive-V1-0-insert.pdf",
  "page": "https://www.five-cats-pedals.co.uk/product/the-m-drive-emerson-custom-em-drive-transparent-overdrive-clone/",
  "file_name": "FCP-M-Drive-V1-0-insert.pdf",

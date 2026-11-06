@@ -2,6 +2,7 @@
  "id": "tonepad-tonebender3knob",
  "publisher": "tonepad",
  "title": "Tone Bender 3 Knob",
+ "effects": ["fuzz"],
  "document": "https://tonepad.com/getFile.asp?id=117",
  "page": "https://tonepad.com/project.asp?id=63",
  "file_name": "tonepad_tonebender3knob.pdf",

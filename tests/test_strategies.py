@@ -28,9 +28,8 @@ class TestManualInputStrategy:
         strategy = ManualInputStrategy()
 
         assert strategy.can_handle(InputMethod.PASTE_TEXT, "R1 10k") is True
-        assert strategy.can_handle(InputMethod.PRESET, "R1 10k") is True
         assert strategy.can_handle(InputMethod.FROM_URL, "R1 10k") is True
-        assert strategy.can_handle(InputMethod.PRESET, ["R1 10k"]) is True
+        assert strategy.can_handle(InputMethod.PASTE_TEXT, ["R1 10k"]) is True
         assert strategy.can_handle(InputMethod.UPLOAD_FILE, b"%PDF-1.4") is False
         txt = FileUpload("bom.txt", b"R1 10k")
         assert strategy.can_handle(InputMethod.UPLOAD_FILE, txt) is True
@@ -272,14 +271,6 @@ class TestBOMParserContext:
         assert ComponentKey(ComponentCategory.RESISTORS, "10k") in result.inventory
         assert ComponentKey(ComponentCategory.CAPACITORS, "100n") in result.inventory
 
-    def test_process_preset(self) -> None:
-        context = BOMParserContext()
-        result = context.process(InputMethod.PRESET, "R1 10k", "PresetPedal")
-
-        assert isinstance(result, ParseResult)
-        assert result.stats["parts_found"] == 1
-        assert ComponentKey(ComponentCategory.RESISTORS, "10k") in result.inventory
-
     def test_process_upload_file_csv(self) -> None:
         context = BOMParserContext()
         mock_file = FileUpload(name="build.csv", content=b"Designator,Value\nR1,10k\n")
@@ -310,10 +301,11 @@ class TestBOMParserContext:
             sample_pdf_bytes if name.endswith(".pdf") else b"Ref,Value\nR1,10k\n"
         )
 
-        for method in (InputMethod.PASTE_TEXT, InputMethod.PRESET):
-            result = BOMParserContext().process(method, str(secret), "Pasted")
-            assert result.raw_content is None
-            assert result.stats["parts_found"] == 0
+        result = BOMParserContext().process(
+            InputMethod.PASTE_TEXT, str(secret), "Pasted"
+        )
+        assert result.raw_content is None
+        assert result.stats["parts_found"] == 0
 
     def test_a_downloaded_path_is_never_read_as_a_server_path(
         self, tmp_path: Path, sample_pdf_bytes: bytes

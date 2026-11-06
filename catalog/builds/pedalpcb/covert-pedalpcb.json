@@ -2,6 +2,7 @@
  "id": "covert-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Covert Overdrive",
+ "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/Covert-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/covert/",
  "file_name": "Covert-PedalPCB.pdf",

@@ -2,6 +2,7 @@
  "id": "2026-nostalgitone-tower-power",
  "publisher": "guitarpcb",
  "title": "NostalgiTone Tower Power Single",
+ "effects": ["overdrive", "boost"],
  "document": "https://guitarpcb.com/wp-content/uploads/2026/10/2026-NostalgiTone-Tower-Power.pdf",
  "page": "https://guitarpcb.com/product/nostalgitone-tower-power-classic-signal-boost-preamp/",
  "file_name": "2026-NostalgiTone-Tower-Power.pdf",

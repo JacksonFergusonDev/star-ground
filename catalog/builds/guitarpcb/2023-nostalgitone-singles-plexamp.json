@@ -2,6 +2,7 @@
  "id": "2023-nostalgitone-singles-plexamp",
  "publisher": "guitarpcb",
  "title": "NostalgiTone PlexAmp Single",
+ "effects": ["overdrive", "distortion"],
  "document": "https://guitarpcb.com/wp-content/uploads/2024/05/2023-NostalgiTone-Singles-PlexAmp.pdf",
  "page": "https://guitarpcb.com/community/topic/pedal-building-guides-mandatory-reading/",
  "file_name": "2023-NostalgiTone-Singles-PlexAmp.pdf",

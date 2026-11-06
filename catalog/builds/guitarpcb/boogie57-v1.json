@@ -2,6 +2,7 @@
  "id": "boogie57-v1",
  "publisher": "guitarpcb",
  "title": "BOOGIE 57",
+ "effects": ["overdrive", "distortion"],
  "document": "https://guitarpcb.com/wp-content/uploads/2020/03/Boogie57_v1.pdf",
  "page": "https://guitarpcb.com/community/topic/direct-build-document-link-list/",
  "file_name": "Boogie57_v1.pdf",

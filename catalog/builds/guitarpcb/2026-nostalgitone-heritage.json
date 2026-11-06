@@ -2,6 +2,7 @@
  "id": "2026-nostalgitone-heritage",
  "publisher": "guitarpcb",
  "title": "NostalgiTone Heritage+ Single",
+ "effects": ["overdrive", "distortion"],
  "document": "https://guitarpcb.com/wp-content/uploads/2026/09/2026-NostalgiTone-Heritage-.pdf",
  "page": "https://guitarpcb.com/community/topic/pedal-building-guides-mandatory-reading/",
  "file_name": "2026-NostalgiTone-Heritage-.pdf",

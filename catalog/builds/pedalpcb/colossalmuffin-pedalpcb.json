@@ -2,6 +2,7 @@
  "id": "colossalmuffin-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Colossal Muffin",
+ "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/ColossalMuffin-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb618/",
  "file_name": "ColossalMuffin-PedalPCB.pdf",

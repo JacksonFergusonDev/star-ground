@@ -2,6 +2,7 @@
  "id": "2023-nostalgitone-singles-preamp-boost",
  "publisher": "guitarpcb",
  "title": "NostalgiTone PreAmp Boost Single",
+ "effects": ["boost"],
  "document": "https://guitarpcb.com/wp-content/uploads/2026/06/2023-NostalgiTone-Singles-PreAmp-Boost.pdf",
  "page": "https://guitarpcb.com/community/topic/pedal-building-guides-mandatory-reading/",
  "file_name": "2023-NostalgiTone-Singles-PreAmp-Boost.pdf",

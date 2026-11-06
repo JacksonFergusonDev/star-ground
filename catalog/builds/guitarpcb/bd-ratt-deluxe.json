@@ -2,6 +2,7 @@
  "id": "bd-ratt-deluxe",
  "publisher": "guitarpcb",
  "title": "The Best Mod Friendly Ratt Style Circuit",
+ "effects": ["distortion"],
  "document": "https://guitarpcb.com/wp-content/uploads/2018/06/BD_RATT-DELUXE.pdf",
  "page": "https://guitarpcb.com/community/topic/direct-build-document-link-list/",
  "file_name": "BD_RATT-DELUXE.pdf",

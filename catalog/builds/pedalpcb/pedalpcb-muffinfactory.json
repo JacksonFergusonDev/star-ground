@@ -2,6 +2,7 @@
  "id": "pedalpcb-muffinfactory",
  "publisher": "pedalpcb",
  "title": "Muffin Factory",
+ "effects": ["fuzz", "distortion"],
  "document": "https://docs.pedalpcb.com/project/PedalPCB-MuffinFactory.pdf",
  "page": "https://www.pedalpcb.com/product/muffin-factory/",
  "file_name": "PedalPCB-MuffinFactory.pdf",

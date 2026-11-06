@@ -2,6 +2,7 @@
  "id": "beatlejuicefuzz-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Beatle Juice Fuzz",
+ "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/BeatleJuiceFuzz-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb655/",
  "file_name": "BeatleJuiceFuzz-PedalPCB.pdf",

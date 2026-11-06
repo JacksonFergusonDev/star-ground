@@ -2,6 +2,7 @@
  "id": "hydra",
  "publisher": "pedalpcb",
  "title": "Hydra Delay",
+ "effects": ["delay"],
  "document": "https://docs.pedalpcb.com/project/Hydra.pdf",
  "page": "https://www.pedalpcb.com/product/pcb238/",
  "file_name": "Hydra.pdf",

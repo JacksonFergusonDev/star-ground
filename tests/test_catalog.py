@@ -22,7 +22,15 @@ from src.bom_lib import (
     create_empty_stats,
 )
 from src.bom_lib.types import Location, make_component_key
-from src.catalog.build import BOARDS_VERSION, Budget, State, build, clean, entry_id
+from src.catalog.build import (
+    BOARDS_VERSION,
+    Budget,
+    State,
+    build,
+    clean,
+    entry_id,
+    entry_title,
+)
 from src.catalog.client import (
     BACKOFF_S,
     MIN_DELAY_S,
@@ -32,7 +40,22 @@ from src.catalog.client import (
     GoneError,
     PoliteClient,
 )
-from src.catalog.discover import Listing, PageState, discover, pdf_links
+from src.catalog.discover import (
+    PAGE_VERSION,
+    Listing,
+    PageDetails,
+    PageState,
+    discover,
+    page_details,
+    pdf_links,
+)
+from src.catalog.effects import (
+    Effect,
+    Overrides,
+    effects,
+    from_categories,
+    from_title,
+)
 from src.catalog.report import Event, Outcome, Reporter
 from src.catalog.sources import SOURCES, Publisher
 from src.catalog.verified import (
@@ -1155,3 +1178,195 @@ def test_pedalpcb_documents_are_read_while_discovery_goes_on() -> None:
     assert not any(
         s.documents_apart for p, s in SOURCES.items() if p != Publisher.PEDALPCB
     )
+
+
+# --- What each build is: its name and kind of effect ---
+
+
+_WOOCOMMERCE = """<body class="product-template postid-5">
+<nav class="woocommerce-breadcrumb"><a href="https://x.test/">Home</a> /
+<a href="https://x.test/product-category/pcbs/fuzz/">Fuzz</a> / Acid Rain Fuzz</nav>
+<div id="product-5" class="product type-product post-5 product_cat-od-distortion-fuzz product_cat-fuzz">
+<h1 class="product_title">Acid Rain Fuzz</h1></div>
+<li class="product type-product post-9 product_cat-delay">A related delay</li>
+</body>"""
+
+
+def test_a_product_page_names_its_product_and_its_categories() -> None:
+    assert page_details(_WOOCOMMERCE) == PageDetails(
+        "Acid Rain Fuzz", ("fuzz", "od-distortion-fuzz")
+    )
+
+
+def test_a_page_without_product_classes_gives_its_breadcrumb_s_category() -> None:
+    page = """<body class="postid-7"><h1>Albus &#8211; Mad Professor Simble
+    Overdrive Clone</h1><nav class="woocommerce-breadcrumb">
+    <a href="https://x.test/product-category/diy-guitar-effects-pedal-pcbs/amp-in-a-box/">Amp</a>
+    </nav></body>"""
+
+    assert page_details(page) == PageDetails(
+        "Albus \u2013 Mad Professor Simble Overdrive Clone", ("amp-in-a-box",)
+    )
+
+
+def test_tonepad_names_a_project_and_its_kind_of_effect() -> None:
+    page = """<p><span class="projectLabel">Pulsar</span> -- INTERMEDIATE</p>
+    <p>More tremolo projects:</p><p>More INTERMEDIATE level projects:</p>"""
+
+    assert page_details(page) == PageDetails("Pulsar", ("tremolo",))
+
+
+def test_a_dedicated_list_names_each_document_by_its_link() -> None:
+    source = SOURCES[Publisher.GUITARPCB]
+    listed = pdf_links(
+        "https://guitarpcb.com/legacy-pcb-document-list/",
+        '<h1>Legacy</h1><a href="https://guitarpcb.com/a/BD_PURP.pdf">'
+        "*PURP \u2013 Pump\u2019d Up Rangemaster Plus</a>",
+        source,
+    )
+    labelled = pdf_links(
+        "https://guitarpcb.com/community/topic/pedal-building-guides-mandatory-reading/",
+        '<h1>New GuitarPCB Guide:</h1><a href="https://guitarpcb.com/a/Kicker.pdf">'
+        "Build Document (PDF)</a>",
+        source,
+    )
+
+    assert [li.title for li in listed] == [
+        "PURP \u2013 Pump\u2019d Up Rangemaster Plus"
+    ]
+    assert [li.title for li in labelled] == [None]
+
+
+def test_publishers_categories_name_one_list_of_effects() -> None:
+    # A parent category over three kinds names none of them.
+    assert from_categories(("pcbs", "od-distortion-fuzz", "fuzz")) == [Effect.FUZZ]
+    assert from_categories(("od-distortion-fuzz",)) == []
+    assert from_categories(("amp-in-a-box",)) == [Effect.OVERDRIVE]
+    assert from_categories(("tremolo",)) == [Effect.MODULATION]
+    assert from_categories(("boosts", "dynamics")) == [Effect.BOOST, Effect.DYNAMICS]
+
+
+def test_a_title_s_words_name_its_effects() -> None:
+    assert from_title("Acid Rain Fuzz") == [Effect.FUZZ]
+    assert from_title("Bass Overdriver") == []
+    assert from_title("Rattlesnake") == []
+    assert from_title("Dr. Phybes Phaser") == [Effect.MODULATION]
+    # 'Power' and 'amp' place a build only as a publisher's category.
+    assert from_title("NostalgiTone Tower Power") == []
+    assert from_title("BMP Op Amp") == []
+
+
+def test_effects_set_by_hand_come_first_then_the_title_s_then_the_page_s() -> None:
+    overrides = Overrides({"pedalpcb/fuzz": [Effect.BOOST]})
+
+    assert effects("pedalpcb/fuzz", "Fuzz", ("delay",), overrides) == [Effect.BOOST]
+    assert effects("pedalpcb/x", "Fuzz", ("delay",), overrides) == [Effect.FUZZ]
+    assert effects("pedalpcb/x", "Thing", ("delay",), overrides) == [Effect.DELAY]
+    assert effects("pedalpcb/x", "Thing", (), overrides) == []
+
+
+def test_a_build_s_title_is_the_document_s_then_the_page_s_then_the_file_s() -> None:
+    plain = Listing(
+        "https://x.test/BD_FuzzyBee.pdf", "https://x.test/", "MUFFN-v4-2022.pdf"
+    )
+    named = replace(plain, title="Albus \u2013 Mad Professor Simble Overdrive Clone")
+    five_cats = replace(plain, name="FCP-Albus-V1-0-Insert.pdf")
+
+    assert entry_title("Muff'n", named) == "Muff'n"
+    assert entry_title(None, named) == "Albus"
+    assert entry_title(None, plain) == "MUFFN v4 2022"
+    assert entry_title(None, five_cats) == "Albus v1.0"
+    champ = replace(plain, title="Micro Champ- Lovepedal Champ Clone")
+    assert entry_title(None, champ) == "Micro Champ"
+    assert entry_title(None, replace(plain, title="BE-My-OD")) == "BE-My-OD"
+
+
+def test_a_page_read_by_an_older_version_is_read_again() -> None:
+    web = _pedalpcb_web()
+    fuzz = Listing(
+        "https://docs.pedalpcb.com/project/Fuzz.pdf",
+        "https://www.pedalpcb.com/product/fuzz/",
+        "Fuzz.pdf",
+    )
+    page = "https://www.pedalpcb.com/product/fuzz/"
+    known = {page: PageState("2026-01-01", (fuzz,), version=PAGE_VERSION - 1)}
+
+    found = discover(_client(web), SOURCES[Publisher.PEDALPCB], known)
+
+    assert page in web.urls()
+    assert found.pages[page].version == PAGE_VERSION
+
+
+def test_a_build_takes_its_name_and_effects_from_its_page(
+    tmp_path: Path, run: Any
+) -> None:
+    web = _docs(_pedalpcb_web())
+    web._pages["https://www.pedalpcb.com/product/fuzz/"] = [
+        _Response(
+            body=b'<body class="postid-3"><div class="post-3 product_cat-delay">'
+            b"<h1>Chamber</h1></div>"
+            b'<a href="https://docs.pedalpcb.com/project/Fuzz.pdf">Build Docs</a></body>'
+        )
+    ]
+
+    run(web, lambda upload: replace(_reading(), title=None))
+
+    fuzz = json.loads((tmp_path / "builds" / "pedalpcb" / "fuzz.json").read_text())
+    assert fuzz["title"] == "Chamber"
+    assert fuzz["effects"] == ["delay"]
+
+
+def test_effects_set_by_hand_reach_a_build_that_is_not_read_again(
+    tmp_path: Path, run: Any
+) -> None:
+    run(_docs(_pedalpcb_web()), lambda upload: _reading())
+    fuzz_path = tmp_path / "builds" / "pedalpcb" / "fuzz.json"
+    assert json.loads(fuzz_path.read_text())["effects"] == ["fuzz"]
+    (tmp_path / "effects.json").write_text('{"pedalpcb/fuzz": ["boost"]}')
+
+    reporter = run(_docs(_pedalpcb_web()), lambda upload: _reading())
+
+    assert json.loads(fuzz_path.read_text())["effects"] == ["boost"]
+    assert {e.outcome for e in reporter.tally.events} == {Outcome.UNCHANGED}
+
+
+def test_a_document_listed_and_sold_takes_its_product_page_s_categories() -> None:
+    document = "https://guitarpcb.com/wp-content/uploads/BD_Swah.pdf"
+    product = "https://guitarpcb.com/product/swah/"
+    listed = "https://guitarpcb.com/legacy-pcb-document-list/"
+    web = _Web(
+        {
+            "https://guitarpcb.com/wp-sitemap.xml": _Response(
+                body=b"""<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <sitemap><loc>https://guitarpcb.com/wp-sitemap-posts-product-1.xml</loc></sitemap>
+</sitemapindex>"""
+            ),
+            "https://guitarpcb.com/wp-sitemap-posts-product-1.xml": _Response(
+                body=f"""<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>{product}</loc></url></urlset>""".encode()
+            ),
+            listed: _Response(body=f'<a href="{document}">SWAH v4</a>'.encode()),
+            product: _Response(
+                body=f"""<body class="postid-2"><div class="post-2 product_cat-modulation">
+                <a href="{document}">Build Document</a></div></body>""".encode()
+            ),
+        }
+    )
+
+    found = discover(_client(web), SOURCES[Publisher.GUITARPCB])
+
+    assert found.listings[document].title == "SWAH v4"
+    assert found.listings[document].categories == ("modulation",)
+
+
+def test_a_bundle_s_page_does_not_name_each_document_in_it() -> None:
+    page = "https://www.five-cats-pedals.co.uk/product/eqd-mega-pack/"
+    links = pdf_links(
+        page,
+        """<h1>EQD Mega Pack</h1>
+        <a href="https://www.five-cats-pedals.co.uk/u/FCP-Shouter.pdf">Shouter build doc</a>
+        <a href="https://www.five-cats-pedals.co.uk/u/FCP-Spanker.pdf">Spanker build doc</a>""",
+        SOURCES[Publisher.FIVECATS],
+    )
+
+    assert [li.title for li in links] == [None, None]

@@ -2,6 +2,7 @@
  "id": "ionizer2",
  "publisher": "pedalpcb",
  "title": "Ionizer 2",
+ "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/Ionizer2.pdf",
  "page": "https://www.pedalpcb.com/product/ionizer2/",
  "file_name": "Ionizer2.pdf",

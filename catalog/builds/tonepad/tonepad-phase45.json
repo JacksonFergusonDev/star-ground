@@ -2,6 +2,7 @@
  "id": "tonepad-phase45",
  "publisher": "tonepad",
  "title": "Pez 45",
+ "effects": ["modulation"],
  "document": "https://tonepad.com/getFile.asp?id=70",
  "page": "https://tonepad.com/project.asp?id=13",
  "file_name": "tonepad_phase45.pdf",

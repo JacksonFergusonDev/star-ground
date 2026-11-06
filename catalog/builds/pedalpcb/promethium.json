@@ -2,6 +2,7 @@
  "id": "promethium",
  "publisher": "pedalpcb",
  "title": "Promethium Distortion",
+ "effects": ["distortion"],
  "document": "https://docs.pedalpcb.com/project/Promethium.pdf",
  "page": "https://www.pedalpcb.com/product/promethium/",
  "file_name": "Promethium.pdf",

@@ -2,6 +2,7 @@
  "id": "neinfuzz-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Nein Fuzz",
+ "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/NeinFuzz-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb706/",
  "file_name": "NeinFuzz-PedalPCB.pdf",

@@ -2,6 +2,7 @@
  "id": "fuzzstain-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Fuzz Stain",
+ "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/FuzzStain-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/fuzzstain/",
  "file_name": "FuzzStain-PedalPCB.pdf",

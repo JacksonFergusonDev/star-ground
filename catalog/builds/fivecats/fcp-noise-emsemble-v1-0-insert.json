@@ -1,7 +1,8 @@
 {
  "id": "fcp-noise-emsemble-v1-0-insert",
  "publisher": "fivecats",
- "title": "fcp-noise-emsemble-v1-0-insert",
+ "title": "Noise Ensemble Fuzz",
+ "effects": ["fuzz"],
  "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2023/08/FCP-Noise-Emsemble-V1-0-Insert.pdf",
  "page": "https://www.five-cats-pedals.co.uk/product/noise-ensemble-fuzz/",
  "file_name": "FCP-Noise-Emsemble-V1-0-Insert.pdf",

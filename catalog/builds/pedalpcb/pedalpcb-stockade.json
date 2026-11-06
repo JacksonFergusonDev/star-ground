@@ -2,6 +2,7 @@
  "id": "pedalpcb-stockade",
  "publisher": "pedalpcb",
  "title": "Stockade Overdrive",
+ "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/PedalPCB-Stockade.pdf",
  "page": "https://www.pedalpcb.com/product/stockade/",
  "file_name": "PedalPCB-Stockade.pdf",

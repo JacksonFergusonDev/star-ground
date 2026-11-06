@@ -2,6 +2,7 @@
  "id": "aurumdrive",
  "publisher": "pedalpcb",
  "title": "Aurum Drive",
+ "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/AurumDrive.pdf",
  "page": "https://www.pedalpcb.com/product/aurumdrive/",
  "file_name": "AurumDrive.pdf",

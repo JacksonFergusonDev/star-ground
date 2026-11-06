@@ -1,4 +1,4 @@
-"""Verify release readiness and review refreshed presets before a version bump."""
+"""Verify release readiness before a version bump."""
 
 from __future__ import annotations
 
@@ -15,7 +15,6 @@ from typing import NoReturn, TextIO
 
 REPO_ROOT: Path = Path(__file__).resolve().parent.parent
 VENV_BIN: Path = REPO_ROOT / ".venv" / ("Scripts" if sys.platform == "win32" else "bin")
-RELEASE_INPUTS: tuple[str, ...] = ("src/bom_lib/_presets_data.py",)
 CI_WORKFLOW = "ci.yml"
 RUN_DISCOVERY_ATTEMPTS = 24
 RUN_DISCOVERY_INTERVAL = 5
@@ -190,98 +189,6 @@ def confirm(question: str) -> bool:
             report("Please answer y or n.")
     except EOFError:
         return False
-
-
-def prepare_inputs() -> bool:
-    """Regenerate presets and offer to commit and push any changes.
-
-    Returns:
-        True if updated release inputs were committed and pushed, False otherwise.
-    """
-    report()
-    report("Preparing release", style=OutputStyle.TITLE)
-    report()
-    result = run_repo_cmd([sys.executable, "-m", "tools.generate_presets"])
-    report()
-    if result.returncode:
-        report(
-            "Version bump stopped: preset generation failed.",
-            style=OutputStyle.ERROR,
-            stderr=True,
-        )
-        sys.exit(result.returncode)
-
-    status = run_repo_cmd(
-        ["git", "status", "--porcelain", "--", *RELEASE_INPUTS],
-        capture_output=True,
-    )
-    if status.returncode:
-        report(status.stderr.rstrip(), style=OutputStyle.ERROR, stderr=True)
-        sys.exit(status.returncode)
-    if status.stdout.strip():
-        report("Review release inputs", style=OutputStyle.WARNING)
-        diff = run_repo_cmd(
-            [
-                "git",
-                "diff",
-                "--no-ext-diff",
-                "--no-color",
-                "HEAD",
-                "--",
-                *RELEASE_INPUTS,
-            ],
-            capture_output=True,
-        )
-        if diff.returncode:
-            report(diff.stderr.rstrip(), style=OutputStyle.ERROR, stderr=True)
-            sys.exit(diff.returncode)
-        if not diff.stdout.strip():
-            stop("Git reports changes but no reviewable diff.")
-        report(diff.stdout.rstrip())
-        report()
-        if not sys.stdin.isatty():
-            stop("release inputs need an interactive review.")
-        try:
-            accepted = confirm(
-                "Accept these changes, commit and push them, then continue?"
-            )
-        except KeyboardInterrupt:
-            report()
-            stop("release input review was cancelled.")
-        if not accepted:
-            stop("release inputs were not accepted.")
-
-        for command in (
-            ["git", "add", "--", *RELEASE_INPUTS],
-            [
-                "git",
-                "commit",
-                "--only",
-                "-m",
-                "chore(release): refresh generated presets",
-                "--",
-                *RELEASE_INPUTS,
-            ],
-            ["git", "push"],
-        ):
-            step = run_repo_cmd(command)
-            if step.returncode:
-                report(
-                    "Version bump stopped: release input commit or push failed.",
-                    style=OutputStyle.ERROR,
-                    stderr=True,
-                )
-                sys.exit(step.returncode)
-        report(
-            "Release inputs committed and pushed. Verify this new commit before releasing.",
-            style=OutputStyle.SUCCESS,
-        )
-        report()
-        return True
-
-    report("Release inputs are current and committed.", style=OutputStyle.SUCCESS)
-    report()
-    return False
 
 
 def _parse_workflow_run(raw: object) -> WorkflowRun:
@@ -490,11 +397,9 @@ def check_local_state() -> None:
 
 
 def main() -> None:
-    """Gate the version bump on verified source, presets, CI, and lockfile state."""
+    """Gate the version bump on verified source, CI, and lockfile state."""
     try:
         checkout = check_checkout()
-        if prepare_inputs():
-            checkout = check_checkout()
         check_ci(checkout)
         require_source(checkout)
         check_local_state()

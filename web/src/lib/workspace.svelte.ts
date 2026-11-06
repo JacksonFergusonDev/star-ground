@@ -17,7 +17,6 @@ import type { Failure, Stock } from './server';
 /** Where a project's parts list comes from. */
 type Source =
   | { kind: 'paste'; text: string }
-  | { kind: 'preset'; key: string }
   | { kind: 'upload'; fileName: string }
   /** A link; `catalog` names the catalog build it was added from ('<publisher>/<name>'). */
   | { kind: 'url'; url: string; catalog?: string };
@@ -25,7 +24,6 @@ type Source =
 /** A project as the builder adds it, before it becomes a card. */
 export type Added =
   | { kind: 'paste'; name: string; text: string }
-  | { kind: 'preset'; key: string }
   | { kind: 'upload'; file: File }
   | { kind: 'url'; url: string; name?: string; catalog?: string };
 
@@ -51,7 +49,7 @@ export interface Card {
   variant: string | null;
   /** Whether the builder accepted OCR's parts. */
   useOcr: boolean;
-  /** The upload or link as the API read it; none for text and presets. */
+  /** The upload or link as the API read it; none for pasted text. */
   reading: DocumentReading | null;
   read: ReadState;
   /** The parts checked, by build ('' for a document with one), then designator. */
@@ -140,8 +138,6 @@ export function request(cards: Card[], options: Options): MasterListRequest | nu
       switch (c.source.kind) {
         case 'paste':
           return { ...base, method: 'paste', text: c.source.text };
-        case 'preset':
-          return { ...base, method: 'preset', preset: c.source.key };
         case 'url':
           return { ...base, method: 'url', url: c.source.url };
         case 'upload':

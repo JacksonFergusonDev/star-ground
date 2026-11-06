@@ -2,6 +2,7 @@
  "id": "ultraviolet-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Ultraviolet Distortion",
+ "effects": ["distortion"],
  "document": "https://docs.pedalpcb.com/project/Ultraviolet-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb600/",
  "file_name": "Ultraviolet-PedalPCB.pdf",

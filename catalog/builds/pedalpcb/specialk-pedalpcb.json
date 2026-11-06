@@ -2,6 +2,7 @@
  "id": "specialk-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Special K Distortion",
+ "effects": ["distortion"],
  "document": "https://docs.pedalpcb.com/project/SpecialK-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb479/",
  "file_name": "SpecialK-PedalPCB.pdf",

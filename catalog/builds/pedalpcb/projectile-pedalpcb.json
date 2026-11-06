@@ -2,6 +2,7 @@
  "id": "projectile-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Projectile Overdrive",
+ "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/Projectile-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb549/",
  "file_name": "Projectile-PedalPCB.pdf",

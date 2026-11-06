@@ -2,6 +2,7 @@
  "id": "contactod",
  "publisher": "pedalpcb",
  "title": "Contact Overdrive",
+ "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/ContactOD.pdf",
  "page": "https://www.pedalpcb.com/product/contactod/",
  "file_name": "ContactOD.pdf",

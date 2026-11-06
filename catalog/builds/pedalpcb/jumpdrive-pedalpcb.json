@@ -2,6 +2,7 @@
  "id": "jumpdrive-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Jump Drive",
+ "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/JumpDrive-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb508/",
  "file_name": "JumpDrive-PedalPCB.pdf",

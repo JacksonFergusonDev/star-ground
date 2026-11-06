@@ -5,14 +5,13 @@ import io
 import os
 import zipfile
 from concurrent.futures import ThreadPoolExecutor
-from pathlib import Path
 
 import pdfplumber
 from fpdf import FPDF
 from PIL import Image, ImageDraw, ImageFont
 
 from src.api import Project, generate_master_list, read_document, read_stock
-from src.bom_lib import BOM_PRESETS, FileUpload, InputMethod
+from src.bom_lib import FileUpload, InputMethod
 from src.bom_lib.ocr import recognize
 from src.exporters import generate_shopping_list_csv, generate_stock_update_csv
 
@@ -89,17 +88,6 @@ def check_concurrent_reads() -> None:
         assert reading.stats["parts_found"] == 2, reading.stats
 
 
-def check_presets() -> None:
-    """Require the catalog, and every typed parts list it names, to be packaged."""
-    assert BOM_PRESETS, "Preset catalog is empty"
-    for preset in BOM_PRESETS.values():
-        assert preset["bom_text"].strip(), preset
-        if source := preset.get("source_path"):
-            assert Path(source).is_file(), source
-        if url := preset.get("source_url"):
-            assert url.startswith("https://"), url
-
-
 def check_ocr() -> None:
     """Run the production detector and recognizer on a deterministic text image."""
     image = Image.new("RGB", (1000, 240), "white")
@@ -115,7 +103,7 @@ def check_ocr() -> None:
 def main() -> None:
     """Fail on any missing production capability, without network access."""
     assert os.getuid() != 0, "The production image must run as a non-root user"
-    for check in (check_concurrent_reads, check_presets, check_backend, check_ocr):
+    for check in (check_concurrent_reads, check_backend, check_ocr):
         print(f"Running {check.__name__}", flush=True)
         check()
     print("All offline container checks passed", flush=True)

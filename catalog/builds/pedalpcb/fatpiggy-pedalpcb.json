@@ -2,6 +2,7 @@
  "id": "fatpiggy-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Fat Piggy Overdrive",
+ "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/FatPiggy-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb117/",
  "file_name": "FatPiggy-PedalPCB.pdf",

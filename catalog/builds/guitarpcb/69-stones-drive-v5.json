@@ -2,6 +2,7 @@
  "id": "69-stones-drive-v5",
  "publisher": "guitarpcb",
  "title": "69 Stones Drive v5 2022",
+ "effects": ["overdrive"],
  "document": "https://guitarpcb.com/wp-content/uploads/2022/08/69-Stones-Drive-v5.pdf",
  "page": "https://guitarpcb.com/legacy-pcb-document-list/",
  "file_name": "69-Stones-Drive-v5.pdf",

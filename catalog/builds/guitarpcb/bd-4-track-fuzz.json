@@ -2,6 +2,7 @@
  "id": "bd-4-track-fuzz",
  "publisher": "guitarpcb",
  "title": "4 Track Fuzz",
+ "effects": ["fuzz"],
  "document": "https://guitarpcb.com/wp-content/uploads/2018/05/BD_4-Track-Fuzz.pdf",
  "page": "https://guitarpcb.com/community/topic/direct-build-document-link-list/",
  "file_name": "BD_4-Track-Fuzz.pdf",

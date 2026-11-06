@@ -2,6 +2,7 @@
  "id": "xb-mb",
  "publisher": "pedalpcb",
  "title": "XB-MB Boost",
+ "effects": ["boost"],
  "document": "https://docs.pedalpcb.com/project/XB-MB.pdf",
  "page": "https://www.pedalpcb.com/product/xbmb-preamp/",
  "file_name": "XB-MB.pdf",

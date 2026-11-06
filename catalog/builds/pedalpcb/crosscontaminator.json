@@ -2,6 +2,7 @@
  "id": "crosscontaminator",
  "publisher": "pedalpcb",
  "title": "Cross Contaminator",
+ "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/CrossContaminator.pdf",
  "page": "https://www.pedalpcb.com/product/cross-contaminator/",
  "file_name": "CrossContaminator.pdf",

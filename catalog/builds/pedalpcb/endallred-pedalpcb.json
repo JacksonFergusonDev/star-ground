@@ -2,6 +2,7 @@
  "id": "endallred-pedalpcb",
  "publisher": "pedalpcb",
  "title": "End All Red Overdrive",
+ "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/EndAllRed-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb408/",
  "file_name": "EndAllRed-PedalPCB.pdf",

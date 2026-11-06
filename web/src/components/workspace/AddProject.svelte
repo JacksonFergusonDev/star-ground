@@ -1,38 +1,22 @@
 <script lang="ts">
-  // Adds a project from a pasted list, a preset, an uploaded document or a link.
-  import type { PresetCatalog } from '../../lib/api';
+  // Adds a project from a pasted list, an uploaded document or a link.
   import type { Added } from '../../lib/workspace.svelte';
 
-  let { catalog, onAdd }: { catalog: PresetCatalog | null; onAdd: (added: Added) => void } =
-    $props();
+  let { onAdd }: { onAdd: (added: Added) => void } = $props();
 
   const ways = [
     { id: 'upload', label: 'Upload' },
     { id: 'url', label: 'Link' },
-    { id: 'preset', label: 'Preset' },
     { id: 'paste', label: 'Paste' },
   ] as const;
   let way = $state<(typeof ways)[number]['id']>('upload');
 
   let text = $state('');
   let name = $state('');
-  let preset = $state('');
   let url = $state('');
   let fileInput = $state<HTMLInputElement>();
 
   const example = 'R1 10k\nC1 100n\nU1 TL072';
-
-  // Presets grouped by source, then category, as the library lists them.
-  const groups = $derived(
-    catalog
-      ? catalog.sources.flatMap((source) =>
-          (catalog.categories[source] ?? []).map((category) => ({
-            label: `${source} · ${category}`,
-            presets: catalog.presets.filter((p) => p.source === source && p.category === category),
-          })),
-        )
-      : [],
-  );
 
   function submit(event: SubmitEvent): void {
     event.preventDefault();
@@ -40,10 +24,6 @@
       case 'paste':
         onAdd({ kind: 'paste', name: name.trim() || 'Pasted list', text });
         text = name = '';
-        break;
-      case 'preset':
-        if (preset) onAdd({ kind: 'preset', key: preset });
-        preset = '';
         break;
       case 'url':
         onAdd({ kind: 'url', url: url.trim() });
@@ -87,18 +67,6 @@
         placeholder="https://docs.pedalpcb.com/…"
         required
       />
-    {:else if way === 'preset'}
-      <label for="add-preset">Preset</label>
-      <select id="add-preset" bind:value={preset} required disabled={!catalog}>
-        <option value="" disabled>{catalog ? 'Choose a circuit' : 'Loading presets…'}</option>
-        {#each groups as group (group.label)}
-          <optgroup label={group.label}>
-            {#each group.presets as p (p.key)}
-              <option value={p.key}>{p.name}</option>
-            {/each}
-          </optgroup>
-        {/each}
-      </select>
     {:else}
       <label for="add-name">Name</label>
       <input id="add-name" bind:value={name} placeholder="Pasted list" />

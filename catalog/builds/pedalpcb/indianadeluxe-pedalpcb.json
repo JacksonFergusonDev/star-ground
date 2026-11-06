@@ -2,6 +2,7 @@
  "id": "indianadeluxe-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Indiana Deluxe Overdrive",
+ "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/IndianaDeluxe-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb612/",
  "file_name": "IndianaDeluxe-PedalPCB.pdf",

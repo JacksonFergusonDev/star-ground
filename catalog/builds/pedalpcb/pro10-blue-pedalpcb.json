@@ -2,6 +2,7 @@
  "id": "pro10-blue-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Pro-10 Blue Overdrive",
+ "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/Pro10-Blue-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb382/",
  "file_name": "Pro10-Blue-PedalPCB.pdf",

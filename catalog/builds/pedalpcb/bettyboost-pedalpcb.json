@@ -2,6 +2,7 @@
  "id": "bettyboost-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Betty Boost",
+ "effects": ["boost"],
  "document": "https://docs.pedalpcb.com/project/BettyBoost-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb063/",
  "file_name": "BettyBoost-PedalPCB.pdf",

@@ -2,6 +2,7 @@
  "id": "referee-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Referee EQ",
+ "effects": ["filter"],
  "document": "https://docs.pedalpcb.com/project/Referee-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb725/",
  "file_name": "Referee-PedalPCB.pdf",

@@ -2,6 +2,7 @@
  "id": "equiluxmini-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Equilux Mini Equalizer",
+ "effects": ["filter"],
  "document": "https://docs.pedalpcb.com/project/EquiluxMini-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb356/",
  "file_name": "EquiluxMini-PedalPCB.pdf",

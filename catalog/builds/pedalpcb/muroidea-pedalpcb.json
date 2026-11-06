@@ -2,6 +2,7 @@
  "id": "muroidea-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Muroidea Distortion",
+ "effects": ["distortion"],
  "document": "https://docs.pedalpcb.com/project/Muroidea-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb038/",
  "file_name": "Muroidea-PedalPCB.pdf",

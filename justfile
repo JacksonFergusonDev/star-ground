@@ -119,7 +119,7 @@ serve-web:
     fi
     exec pnpm --dir web run dev
 
-# Refresh presets, offer to wait for CI, and verify local state before bumping
+# Offer to wait for CI and verify local state before bumping
 bump part:
     uv run python -m tools.prepare_release
     uv run --refresh https://raw.githubusercontent.com/JacksonFergusonDev/ci-cd-release-infrastructure/refs/heads/main/scripts/release.py {{ part }}

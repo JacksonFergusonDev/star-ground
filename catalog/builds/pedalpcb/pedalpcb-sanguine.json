@@ -2,6 +2,7 @@
  "id": "pedalpcb-sanguine",
  "publisher": "pedalpcb",
  "title": "Sanguine Distortion",
+ "effects": ["distortion"],
  "document": "https://docs.pedalpcb.com/project/PedalPCB-Sanguine.pdf",
  "page": "https://www.pedalpcb.com/product/pcb209/",
  "file_name": "PedalPCB-Sanguine.pdf",

@@ -2,6 +2,7 @@
  "id": "specialporpoise-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Special Porpoise Fuzz Tremolo",
+ "effects": ["fuzz", "modulation"],
  "document": "https://docs.pedalpcb.com/project/SpecialPorpoise-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb641/",
  "file_name": "SpecialPorpoise-PedalPCB.pdf",

@@ -1,7 +1,8 @@
 {
  "id": "fcp-carolina-reaper-v1-1-insert",
  "publisher": "fivecats",
- "title": "fcp-carolina-reaper-v1-1-insert",
+ "title": "Carolina Reaper",
+ "effects": ["fuzz"],
  "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2021/09/FCP-Carolina-Reaper-V1-1-insert.pdf",
  "page": "https://www.five-cats-pedals.co.uk/product/carolina-reaper-hot-sustain-fuzz/",
  "file_name": "FCP-Carolina-Reaper-V1-1-insert.pdf",

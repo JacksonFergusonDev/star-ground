@@ -2,6 +2,7 @@
  "id": "luxury763-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Luxury763 Overdrive",
+ "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/Luxury763-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb364/",
  "file_name": "Luxury763-PedalPCB.pdf",

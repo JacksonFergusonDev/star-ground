@@ -2,6 +2,7 @@
  "id": "angry-llama-build-document",
  "publisher": "guitarpcb",
  "title": "Angry Llama",
+ "effects": ["fuzz", "overdrive", "distortion"],
  "document": "https://guitarpcb.com/wp-content/uploads/2020/12/Angry-Llama-Build-Document.pdf",
  "page": "https://guitarpcb.com/community/topic/direct-build-document-link-list/",
  "file_name": "Angry-Llama-Build-Document.pdf",

@@ -34,7 +34,6 @@ RUN uv sync --locked --no-dev --no-install-project --no-cache
 RUN .venv/bin/python -c 'from rapidocr import RapidOCR; RapidOCR()'
 
 COPY src/ src/
-COPY raw_boms/tayda/ raw_boms/tayda/
 COPY --from=site /src/web/dist/ site/
 
 RUN groupadd --gid 10001 app && useradd --uid 10001 --gid app --create-home app

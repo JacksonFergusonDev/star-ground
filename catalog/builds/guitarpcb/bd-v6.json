@@ -2,6 +2,7 @@
  "id": "bd-v6",
  "publisher": "guitarpcb",
  "title": "V6 Drive by Tonmann",
+ "effects": ["overdrive"],
  "document": "https://guitarpcb.com/wp-content/uploads/2018/07/BD_V6.pdf",
  "page": "https://guitarpcb.com/community/topic/direct-build-document-link-list/",
  "file_name": "BD_V6.pdf",

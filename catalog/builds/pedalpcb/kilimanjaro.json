@@ -2,6 +2,7 @@
  "id": "kilimanjaro",
  "publisher": "pedalpcb",
  "title": "Kilimanjaro Fuzz",
+ "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/Kilimanjaro.pdf",
  "page": "https://www.pedalpcb.com/product/pcb158/",
  "file_name": "Kilimanjaro.pdf",

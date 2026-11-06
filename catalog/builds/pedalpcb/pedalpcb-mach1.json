@@ -2,6 +2,7 @@
  "id": "pedalpcb-mach1",
  "publisher": "pedalpcb",
  "title": "Mach 1 Overdrive",
+ "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/PedalPCB-Mach1.pdf",
  "page": "https://www.pedalpcb.com/product/mach1od/",
  "file_name": "PedalPCB-Mach1.pdf",

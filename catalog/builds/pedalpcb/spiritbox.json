@@ -2,6 +2,7 @@
  "id": "spiritbox",
  "publisher": "pedalpcb",
  "title": "Spirit Box",
+ "effects": ["delay", "reverb"],
  "document": "https://docs.pedalpcb.com/project/SpiritBox.pdf",
  "page": "https://www.pedalpcb.com/product/pcb141/",
  "file_name": "SpiritBox.pdf",

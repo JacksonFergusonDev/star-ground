@@ -2,6 +2,7 @@
  "id": "super-drive-70s",
  "publisher": "guitarpcb",
  "title": "SuperDrive 70\u2019s",
+ "effects": ["overdrive"],
  "document": "https://guitarpcb.com/wp-content/uploads/2019/02/Super-Drive-70s.pdf",
  "page": "https://guitarpcb.com/community/topic/direct-build-document-link-list/",
  "file_name": "Super-Drive-70s.pdf",

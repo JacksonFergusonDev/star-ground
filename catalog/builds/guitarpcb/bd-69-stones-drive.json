@@ -2,6 +2,7 @@
  "id": "bd-69-stones-drive",
  "publisher": "guitarpcb",
  "title": "69 Stones Drive",
+ "effects": ["overdrive"],
  "document": "https://guitarpcb.com/wp-content/uploads/2018/10/BD_69-Stones-Drive.pdf",
  "page": "https://guitarpcb.com/community/topic/direct-build-document-link-list/",
  "file_name": "BD_69-Stones-Drive.pdf",

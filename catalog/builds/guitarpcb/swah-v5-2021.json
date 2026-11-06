@@ -2,6 +2,7 @@
  "id": "swah-v5-2021",
  "publisher": "guitarpcb",
  "title": "SWAH V5 2021",
+ "effects": ["filter"],
  "document": "https://guitarpcb.com/wp-content/uploads/2021/09/SWAH-v5-2021.pdf",
  "page": "https://guitarpcb.com/legacy-pcb-document-list/",
  "file_name": "SWAH-v5-2021.pdf",

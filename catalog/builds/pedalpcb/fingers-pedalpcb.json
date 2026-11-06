@@ -2,6 +2,7 @@
  "id": "fingers-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Fingers Overdrive",
+ "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/Fingers-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb478/",
  "file_name": "Fingers-PedalPCB.pdf",

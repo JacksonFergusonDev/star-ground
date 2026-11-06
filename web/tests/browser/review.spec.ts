@@ -123,9 +123,6 @@ async function stubMasterList(page: Page): Promise<MasterListRequest[]> {
 
 test.beforeEach(async ({ page }) => {
   await page.route('**/api/health', (route) => route.fulfill({ json: { status: 'ok' } }));
-  await page.route('**/api/presets', (route) =>
-    route.fulfill({ json: { sources: [], categories: {}, presets: [] } }),
-  );
   await page.route('**/api/documents/read', (route) =>
     route.fulfill({
       contentType: 'text/event-stream',

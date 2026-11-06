@@ -2,6 +2,7 @@
  "id": "softii-pedalpcb",
  "publisher": "pedalpcb",
  "title": "SOFTii Overdrive",
+ "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/SOFTii-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/softii/",
  "file_name": "SOFTii-PedalPCB.pdf",

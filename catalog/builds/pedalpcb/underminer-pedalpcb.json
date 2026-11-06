@@ -2,6 +2,7 @@
  "id": "underminer-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Underminer Sub-Octave",
+ "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/Underminer-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb360/",
  "file_name": "Underminer-PedalPCB.pdf",

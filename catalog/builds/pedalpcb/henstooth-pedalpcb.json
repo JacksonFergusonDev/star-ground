@@ -2,6 +2,7 @@
  "id": "henstooth-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Hen's Tooth Distortion",
+ "effects": ["distortion"],
  "document": "https://docs.pedalpcb.com/project/HensTooth-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb500/",
  "file_name": "HensTooth-PedalPCB.pdf",

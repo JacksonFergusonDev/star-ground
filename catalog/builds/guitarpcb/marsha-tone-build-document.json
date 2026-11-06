@@ -2,6 +2,7 @@
  "id": "marsha-tone-build-document",
  "publisher": "guitarpcb",
  "title": "MARSHA TONE",
+ "effects": ["overdrive"],
  "document": "https://guitarpcb.com/wp-content/uploads/2020/11/Marsha-Tone-Build-Document.pdf",
  "page": "https://guitarpcb.com/community/topic/direct-build-document-link-list/",
  "file_name": "Marsha-Tone-Build-Document.pdf",

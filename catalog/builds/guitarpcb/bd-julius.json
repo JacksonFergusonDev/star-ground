@@ -2,6 +2,7 @@
  "id": "bd-julius",
  "publisher": "guitarpcb",
  "title": "JULIUS",
+ "effects": ["boost", "filter"],
  "document": "https://guitarpcb.com/wp-content/uploads/2018/06/BD_Julius.pdf",
  "page": "https://guitarpcb.com/legacy-pcb-document-list/",
  "file_name": "BD_Julius.pdf",

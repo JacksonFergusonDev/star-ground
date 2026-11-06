@@ -2,6 +2,7 @@
  "id": "friendlyfire",
  "publisher": "pedalpcb",
  "title": "Friendly Fire Fuzz",
+ "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/FriendlyFire.pdf",
  "page": "https://www.pedalpcb.com/product/pcb246/",
  "file_name": "FriendlyFire.pdf",

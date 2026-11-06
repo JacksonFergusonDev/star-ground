@@ -2,6 +2,7 @@
  "id": "groverdrive-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Grover Drive",
+ "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/GroverDrive-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb004/",
  "file_name": "GroverDrive-PedalPCB.pdf",

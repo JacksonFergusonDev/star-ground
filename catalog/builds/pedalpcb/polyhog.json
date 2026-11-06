@@ -2,6 +2,7 @@
  "id": "polyhog",
  "publisher": "pedalpcb",
  "title": "Polyhog",
+ "effects": ["distortion"],
  "document": "https://docs.pedalpcb.com/project/Polyhog.pdf",
  "page": "https://www.pedalpcb.com/product/polyhog/",
  "file_name": "Polyhog.pdf",

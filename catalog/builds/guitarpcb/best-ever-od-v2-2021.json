@@ -2,6 +2,7 @@
  "id": "best-ever-od-v2-2021",
  "publisher": "guitarpcb",
  "title": "Best Ever - O.D. v2 2021",
+ "effects": ["overdrive", "distortion"],
  "document": "https://guitarpcb.com/wp-content/uploads/2020/04/Best-Ever-OD-v2-2021.pdf",
  "page": "https://guitarpcb.com/legacy-pcb-document-list/",
  "file_name": "Best-Ever-OD-v2-2021.pdf",

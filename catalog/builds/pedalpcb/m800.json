@@ -2,6 +2,7 @@
  "id": "m800",
  "publisher": "pedalpcb",
  "title": "M800 Overdrive",
+ "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/M800.pdf",
  "page": "https://www.pedalpcb.com/product/m800/",
  "file_name": "M800.pdf",

@@ -1,7 +1,8 @@
 {
  "id": "fcp-buddha-drive-insert-v1-0",
  "publisher": "fivecats",
- "title": "fcp-buddha-drive-insert-v1-0",
+ "title": "Buddha Drive",
+ "effects": ["overdrive"],
  "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2022/03/FCP-Buddha-Drive-Insert-V1-0.pdf",
  "page": "https://www.five-cats-pedals.co.uk/product/buddha-drive-lovepedal-hermida-audio-zendrive-clone/",
  "file_name": "FCP-Buddha-Drive-Insert-V1-0.pdf",

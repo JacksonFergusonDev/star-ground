@@ -2,6 +2,7 @@
  "id": "okf-v2-2021-build-document",
  "publisher": "guitarpcb",
  "title": "One-Knob Fuzz v2 2021",
+ "effects": ["fuzz"],
  "document": "https://guitarpcb.com/wp-content/uploads/2021/10/OKF-v2-2021-Build-Document.pdf",
  "page": "https://guitarpcb.com/legacy-pcb-document-list/",
  "file_name": "OKF-v2-2021-Build-Document.pdf",

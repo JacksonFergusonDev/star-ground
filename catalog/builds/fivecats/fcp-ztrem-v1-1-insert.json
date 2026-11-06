@@ -1,7 +1,8 @@
 {
  "id": "fcp-ztrem-v1-1-insert",
  "publisher": "fivecats",
- "title": "fcp-ztrem-v1-1-insert",
+ "title": "zTrem",
+ "effects": ["modulation"],
  "document": "https://www.five-cats-pedals.co.uk/wp-content/uploads/2026/03/FCP-ZTrem-V1-1-Insert.pdf",
  "page": "https://www.five-cats-pedals.co.uk/product/ztrem-zvex-trem-seeker-clone/",
  "file_name": "FCP-ZTrem-V1-1-Insert.pdf",

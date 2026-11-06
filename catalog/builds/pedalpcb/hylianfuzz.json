@@ -2,6 +2,7 @@
  "id": "hylianfuzz",
  "publisher": "pedalpcb",
  "title": "Hylian Fuzz",
+ "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/HylianFuzz.pdf",
  "page": "https://www.pedalpcb.com/product/hylianfuzz/",
  "file_name": "HylianFuzz.pdf",

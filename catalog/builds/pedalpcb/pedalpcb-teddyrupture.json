@@ -2,6 +2,7 @@
  "id": "pedalpcb-teddyrupture",
  "publisher": "pedalpcb",
  "title": "Teddy Rupture",
+ "effects": ["fuzz"],
  "document": "https://docs.pedalpcb.com/project/PedalPCB-TeddyRupture.pdf",
  "page": "https://www.pedalpcb.com/product/teddyrupture/",
  "file_name": "PedalPCB-TeddyRupture.pdf",

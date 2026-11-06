@@ -2,6 +2,7 @@
  "id": "2023-nostalgitone-singles-luna-fuzz",
  "publisher": "guitarpcb",
  "title": "NostalgiTone Luna Fuzz Single",
+ "effects": ["fuzz"],
  "document": "https://guitarpcb.com/wp-content/uploads/2024/06/2023-NostalgiTone-Singles-Luna-Fuzz.pdf",
  "page": "https://guitarpcb.com/community/topic/pedal-building-guides-mandatory-reading/",
  "file_name": "2023-NostalgiTone-Singles-Luna-Fuzz.pdf",

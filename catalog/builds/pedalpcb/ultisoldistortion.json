@@ -2,6 +2,7 @@
  "id": "ultisoldistortion",
  "publisher": "pedalpcb",
  "title": "Ultisol Distortion",
+ "effects": ["distortion"],
  "document": "https://docs.pedalpcb.com/project/UltisolDistortion.pdf",
  "page": "https://www.pedalpcb.com/product/pcb337/",
  "file_name": "UltisolDistortion.pdf",

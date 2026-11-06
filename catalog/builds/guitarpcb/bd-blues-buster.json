@@ -2,6 +2,7 @@
  "id": "bd-blues-buster",
  "publisher": "guitarpcb",
  "title": "Blues Buster",
+ "effects": ["overdrive"],
  "document": "https://guitarpcb.com/wp-content/uploads/2018/06/BD_Blues-Buster.pdf",
  "page": "https://guitarpcb.com/community/topic/direct-build-document-link-list/",
  "file_name": "BD_Blues-Buster.pdf",

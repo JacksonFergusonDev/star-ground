@@ -2,6 +2,7 @@
  "id": "lenora",
  "publisher": "pedalpcb",
  "title": "Lenora Boost",
+ "effects": ["boost"],
  "document": "https://docs.pedalpcb.com/project/Lenora.pdf",
  "page": "https://www.pedalpcb.com/product/lenora/",
  "file_name": "Lenora.pdf",

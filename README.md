@@ -52,7 +52,7 @@ In software, dependency resolution is **deterministic**: `uv sync` gives the sam
 
 - **Build documents (PDF):** upload a file or paste a link. The parser reads the build documents of five PCB publishers: **PedalPCB, GuitarPCB, Aion FX, Five Cats and Tonepad**. Links must be public `http(s)` addresses; GitHub, Google Drive and Dropbox share links work too. Tonepad's file links open a download page, so download those PDFs and upload them.
 - **Pasted text, text files and spreadsheets:** any `REF VALUE` list (`R1 10k`, `C1-C3 100n`), pasted or uploaded as a `.txt` file, or a `.csv` or `.tsv` export with reference and value columns.
-- **Presets:** a library of PedalPCB and Tayda circuits, browsable by source and category.
+- **The circuit catalog:** hundreds of build documents from PedalPCB, GuitarPCB, Five Cats and Tonepad whose parts lists are already read, to search and filter by kind of effect.
 - **Your stock:** upload an inventory CSV, and only what you're missing is bought.
 
 ### Reading build documents
@@ -177,7 +177,6 @@ See [tests/README.md](tests/README.md) for how to run each layer.
 .
 ├── assets/                <-- Images and demo
 ├── examples/              <-- Sample generated build pack
-├── raw_boms/              <-- Preset sources: PedalPCB document links, Tayda parts lists
 ├── src/
 │   ├── bom_lib/           <-- Domain logic (see src/README.md)
 │   │   ├── strategies/    <-- Input dispatch: PDF, CSV, pasted text, URL
@@ -199,7 +198,7 @@ See [tests/README.md](tests/README.md) for how to run each layer.
 │   └── pdf_generator.py   <-- Field manuals and sticker sheets
 ├── tests/                 <-- Test suite, golden parts lists and samples
 ├── web/                   <-- The website: Astro, with Svelte for the app
-├── tools/                 <-- Preset generator
+├── tools/                 <-- Release, OpenAPI and corpus tools
 ├── AGENTS.md              <-- Guidelines for AI coding agents
 ├── CONTRIBUTING.md        <-- Development guide
 ├── Dockerfile

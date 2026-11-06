@@ -2,6 +2,7 @@
  "id": "modusoperandi-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Modus Operandi Boost",
+ "effects": ["boost"],
  "document": "https://docs.pedalpcb.com/project/ModusOperandi-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb454/",
  "file_name": "ModusOperandi-PedalPCB.pdf",

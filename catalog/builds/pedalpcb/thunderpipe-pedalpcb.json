@@ -2,6 +2,7 @@
  "id": "thunderpipe-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Thunder Pipe Overdrive",
+ "effects": ["overdrive"],
  "document": "https://docs.pedalpcb.com/project/ThunderPipe-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb349/",
  "file_name": "ThunderPipe-PedalPCB.pdf",

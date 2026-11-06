@@ -2,6 +2,7 @@
  "id": "maleficentmids-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Maleficent Mids",
+ "effects": ["filter"],
  "document": "https://docs.pedalpcb.com/project/MaleficentMids-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb054/",
  "file_name": "MaleficentMids-PedalPCB.pdf",

@@ -2,6 +2,7 @@
  "id": "ocelot-pedalpcb",
  "publisher": "pedalpcb",
  "title": "Ocelot Octaver",
+ "effects": [],
  "document": "https://docs.pedalpcb.com/project/Ocelot-PedalPCB.pdf",
  "page": "https://www.pedalpcb.com/product/pcb362/",
  "file_name": "Ocelot-PedalPCB.pdf",

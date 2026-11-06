@@ -2,6 +2,7 @@
  "id": "bd-aeon-overdrive-v2",
  "publisher": "guitarpcb",
  "title": "AEON OVERDRIVE v2",
+ "effects": ["overdrive"],
  "document": "https://guitarpcb.com/wp-content/uploads/2018/05/BD_AEON-OVERDRIVE-v2.pdf",
  "page": "https://guitarpcb.com/community/topic/direct-build-document-link-list/",
  "file_name": "BD_AEON-OVERDRIVE-v2.pdf",
