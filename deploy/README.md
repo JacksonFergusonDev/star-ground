@@ -218,7 +218,7 @@ gcloud run services update star-ground --project "$PROJECT" --region "$REGION" \
 rm feedback-key.json
 ```
 
-The sheet must be shared with the service account's email as an editor. The Reports tab is created on the first report. Deploys keep the secret, as they keep other settings made by hand.
+The sheet must be shared with the service account's email as an editor, and the key's Google Cloud project needs the Google Sheets and Google Drive APIs enabled: Star Ground finds the sheet by its name through Drive (read-only, names only), then appends rows through Sheets. The Reports and Parts tabs are created on their first report. Deploys keep the secret, as they keep other settings made by hand.
 
 Each bug is also written to Cloud Run's log as `Bug <code>: …` with its traceback, so a report can be matched to its log entry:
 

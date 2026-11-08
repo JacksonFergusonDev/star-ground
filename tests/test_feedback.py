@@ -1,5 +1,6 @@
 """Unit tests for feedback submission and Google Sheets integration."""
 
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -9,7 +10,10 @@ from star_ground.bom_lib.types import Location
 from star_ground.feedback import (
     FEEDBACK_SHEET,
     PartReport,
+    SheetNotFoundError,
     connect_feedback_sheet,
+    connect_part_sheet,
+    connect_report_sheet,
     save_feedback,
     save_part_report,
     save_report,
@@ -64,19 +68,90 @@ class TestFeedbackSubmission:
             save_feedback(sheet, FeedbackRating.BAD, "Bug report")
 
 
-def test_connect_opens_the_feedback_sheet_with_the_given_credentials() -> None:
-    credentials = {"client_email": "bot@example.test"}
-    with (
-        patch(
-            "google.oauth2.service_account.Credentials.from_service_account_info"
-        ) as from_info,
-        patch("gspread.authorize") as authorize,
-    ):
-        sheet = connect_feedback_sheet(credentials)
+class _Google:
+    """A stand-in for the Sheets and Drive APIs, recording each call."""
 
-    assert from_info.call_args[0][0] == credentials
-    authorize.return_value.open.assert_called_once_with(FEEDBACK_SHEET)
-    assert sheet is authorize.return_value.open.return_value.sheet1
+    def __init__(self, tabs: list[str]) -> None:
+        self.tabs = tabs
+        self.calls: list[tuple[str, str, dict[str, Any]]] = []
+
+    def _answer(self, body: dict[str, Any]) -> MagicMock:
+        response = MagicMock()
+        response.json.return_value = body
+        return response
+
+    def get(self, url: str, **kwargs: Any) -> MagicMock:
+        self.calls.append(("GET", url, kwargs))
+        if "drive" in url:
+            return self._answer({"files": [{"id": "SHEET"}]})
+        return self._answer(
+            {"sheets": [{"properties": {"title": t}} for t in self.tabs]}
+        )
+
+    def post(self, url: str, **kwargs: Any) -> MagicMock:
+        self.calls.append(("POST", url, kwargs))
+        return self._answer({})
+
+
+def _connected(google: _Google) -> Any:
+    return patch("star_ground.feedback._session", return_value=google)
+
+
+def test_the_feedback_sheet_is_found_by_name_and_its_first_tab_used() -> None:
+    google = _Google(["Ratings", "Reports"])
+    with _connected(google):
+        tab = connect_feedback_sheet({"client_email": "bot@example.test"})
+
+    _, url, kwargs = google.calls[0]
+    assert "drive/v3/files" in url
+    assert f"name = '{FEEDBACK_SHEET}'" in kwargs["params"]["q"]
+    assert (tab.spreadsheet, tab.title) == ("SHEET", "Ratings")
+
+
+def test_a_row_is_appended_as_written() -> None:
+    google = _Google(["Ratings"])
+    with _connected(google):
+        tab = connect_feedback_sheet({})
+    save_feedback(tab, FeedbackRating.GOOD, "=1+1")
+
+    method, url, kwargs = google.calls[-1]
+    assert method == "POST"
+    assert url.endswith("/SHEET/values/%27Ratings%27%21A1:append")
+    # RAW: a comment is never read as a formula.
+    assert kwargs["params"]["valueInputOption"] == "RAW"
+    assert kwargs["json"]["values"][0][1:] == [FeedbackRating.GOOD.value, "=1+1"]
+
+
+def test_a_missing_tab_is_added_with_its_headers() -> None:
+    google = _Google(["Ratings"])
+    with _connected(google):
+        tab = connect_report_sheet({})
+
+    posts = [(url, kwargs) for method, url, kwargs in google.calls if method == "POST"]
+    (add, _), (append, headers) = posts
+    assert add.endswith(":batchUpdate")
+    assert append.endswith("/values/%27Reports%27%21A1:append")
+    assert headers["json"]["values"] == [
+        ["Time", "Code", "Document", "Comment", "Detail"]
+    ]
+    assert tab.title == "Reports"
+
+
+def test_an_existing_tab_is_left_alone() -> None:
+    google = _Google(["Ratings", "Parts"])
+    with _connected(google):
+        connect_part_sheet({})
+
+    assert not [c for c in google.calls if c[0] == "POST"]
+
+
+def test_a_sheet_the_account_cannot_see_says_so() -> None:
+    google = _Google([])
+    google.get = MagicMock(  # type: ignore[method-assign]
+        return_value=MagicMock(json=MagicMock(return_value={"files": []}))
+    )
+    with _connected(google), pytest.raises(SheetNotFoundError):
+        connect_feedback_sheet({})
 
 
 def test_a_report_keeps_the_end_of_a_long_traceback() -> None:
