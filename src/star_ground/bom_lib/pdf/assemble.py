@@ -3,6 +3,7 @@
 import re
 
 from star_ground.bom_lib.builds import BuildPlan, Entry
+from star_ground.bom_lib.choices import choose_value
 from star_ground.bom_lib.classifier import (
     categorize_part,
 )
@@ -18,7 +19,6 @@ from star_ground.bom_lib.types import (
 )
 from star_ground.bom_lib.verification import (
     check_second_board,
-    resolve_value_choice,
 )
 
 
@@ -30,7 +30,7 @@ def _ingest_counted(
     Returns:
         The number of parts recorded.
     """
-    value = resolve_value_choice(None, entry.ref, entry.value)
+    value = choose_value(entry.ref, entry.value).value
     result = categorize_part("", value, entry.hint)
     if result is None:
         return 0
@@ -70,7 +70,7 @@ def _ingest_entries(
         if entry.table is not None:
             first = table_of.setdefault(entry.ref, entry.table)
             seen = stats.seen_refs.get(entry.ref)
-            value = resolve_value_choice(None, entry.ref, entry.value)
+            value = choose_value(entry.ref, entry.value).value
             if first != entry.table and any(
                 same_value(seen, v) for v in (entry.value, value)
             ):
@@ -88,8 +88,8 @@ def _ingest_entries(
             ref,
             entry.value,
             stats,
-            entry.hint,
-            entry.qty,
+            category_hint=entry.hint,
+            qty=entry.qty,
             inject=not lists_sockets,
         )
     return inventory, stats

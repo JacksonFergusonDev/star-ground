@@ -8,6 +8,7 @@ from star_ground.bom_lib import (
     make_component_key,
     parse_with_verification,
 )
+from star_ground.bom_lib.choices import ValueChoice, choose_value
 from star_ground.bom_lib.types import Inventory, ReadingStats
 from star_ground.bom_lib.verification import (
     check_alternate_value,
@@ -34,7 +35,6 @@ from star_ground.bom_lib.verification import (
     check_version_note,
     find_bom_entries,
     find_listed_refs,
-    resolve_value_choice,
 )
 
 
@@ -404,20 +404,16 @@ class TestAionChecks:
         ],
     )
     def test_builder_choices_use_the_first_value(self, value: str, chosen: str) -> None:
-        stats = ReadingStats()
-        assert resolve_value_choice(stats, "RPD", value) == chosen
-        assert _kinds(stats) == [ParseWarningKind.VALUE_CHOICE]
+        choice = choose_value("RPD", value)
+        assert choice.value == chosen
+        assert choice.note is not None
 
     def test_a_restated_value_is_no_choice(self) -> None:
-        stats = ReadingStats()
-        assert resolve_value_choice(stats, "C3", "100n/0.1uF") == "100n"
-        assert stats.warnings == []
+        assert choose_value("C3", "100n/0.1uF") == ValueChoice("100n")
 
     @pytest.mark.parametrize("value", ["2N5088", "B100K", "1-2", "1/4", "220u/35V"])
     def test_values_that_are_not_choices(self, value: str) -> None:
-        stats = ReadingStats()
-        assert resolve_value_choice(stats, "R1", value) == value
-        assert stats.warnings == []
+        assert choose_value("R1", value) == ValueChoice(value)
 
     @pytest.mark.parametrize(
         "note",
@@ -758,11 +754,11 @@ def test_alternative_part_number_is_no_missing_designator() -> None:
 
 
 def test_comma_listed_part_numbers_are_a_choice() -> None:
-    stats = ReadingStats()
-    assert resolve_value_choice(stats, "IC1", "7660S, 1044") == "7660S"
-    assert [w.kind for w in stats.warnings] == [ParseWarningKind.VALUE_CHOICE]
+    choice = choose_value("IC1", "7660S, 1044")
+    assert choice.value == "7660S"
+    assert choice.note is not None
     # A slash between bare numbers stays as printed.
-    assert resolve_value_choice(ReadingStats(), "R1", "100/220") == "100/220"
+    assert choose_value("R1", "100/220") == ValueChoice("100/220")
 
 
 def test_build_note_on_a_row_whose_builds_differ() -> None:

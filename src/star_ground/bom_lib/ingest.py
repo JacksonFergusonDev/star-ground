@@ -3,13 +3,15 @@
 import re
 
 from star_ground.bom_lib import constants
+from star_ground.bom_lib.choices import choose_value
 from star_ground.bom_lib.classifier import (
     categorize_part,
 )
 from star_ground.bom_lib.designators import is_designator
-from star_ground.bom_lib.enums import ComponentCategory
+from star_ground.bom_lib.enums import ComponentCategory, ParseWarningKind
 from star_ground.bom_lib.types import (
     Inventory,
+    ParseWarning,
     ReadingStats,
     make_component_key,
 )
@@ -18,7 +20,6 @@ from star_ground.bom_lib.verification import (
     check_classification,
     check_duplicate,
     check_pointer_value,
-    resolve_value_choice,
 )
 
 
@@ -27,26 +28,25 @@ def ingest_bom_line(
     source: str,
     ref_raw: str,
     val_raw: str,
-    stats: ReadingStats | None = None,
+    stats: ReadingStats,
+    *,
     category_hint: ComponentCategory | None = None,
     qty: int = 1,
     inject: bool = True,
 ) -> int:
-    """Core ingestion kernel: Expands refs, classifies, and updates inventory.
+    """Reads one parts-list row into inventory parts.
 
-    This function bridges the gap between raw text (R1-R4, 10k) and the
-    structured inventory. It handles:
-    1. Reference expansion (R1-R4 -> R1, R2, R3, R4).
-    2. De-duplication (checking if R1 was already seen in this session).
-    3. Categorization (identifying parts).
-    4. Auto-injection (adding sockets for ICs).
+    Turns raw text ('R1-R4', '10k') into parts: expands the designator range,
+    picks one value where the document offers a choice, classifies each part,
+    skips a designator already read, and adds implied parts (IC sockets). What
+    the builder should check is recorded on `stats` as it is found.
 
     Args:
-        inventory: The master inventory dictionary to update.
-        source: The name of the file/project being ingested.
+        inventory: The inventory to add the parts to.
+        source: The name of the file or project being read.
         ref_raw: Raw reference string (e.g., "R1-R4").
         val_raw: Raw value string (e.g., "10k").
-        stats: Optional stats object to track duplicate refs and counts.
+        stats: The reading's statistics: designators seen so far, and warnings.
         category_hint: Category from a TYPE column, for named parts the
             designator and value cannot classify.
         qty: How many of each designator to buy ('TERMINAL BLOCK (Qty 3)').
@@ -54,66 +54,81 @@ def ingest_bom_line(
             document lists its own sockets (Aion FX: 'IC1-S | DIP-8 socket').
 
     Returns:
-        The number of valid parts successfully found and recorded.
+        The number of parts recorded.
     """
-    parts_found = 0
-    expanded_refs = expand_refs(ref_raw)
-    val_raw = resolve_value_choice(stats, ref_raw, val_raw)
+    choice = choose_value(ref_raw, val_raw)
+    if choice.note is not None:
+        stats.warnings.append(
+            ParseWarning(
+                kind=ParseWarningKind.VALUE_CHOICE, ref=ref_raw, message=choice.note
+            )
+        )
+    refs = expand_refs(ref_raw)
+    value = _without_pointer(stats, refs, choice.value)
 
-    pointer = _POINTER_TAIL.search(val_raw)
-    if pointer and val_raw[: pointer.start()].strip():
-        # 'PNP—See Text' (GuitarPCB PUFF v4): a kind of part, chosen in the notes.
-        if stats is not None:
-            for r in expanded_refs:
-                check_pointer_value(stats, r, val_raw)
-        val_raw = val_raw[: pointer.start()].strip()
-    for r in expanded_refs:
-        if POINTER_VALUE.fullmatch(val_raw.strip()):
+    parts_found = 0
+    for ref in refs:
+        if POINTER_VALUE.fullmatch(value.strip()):
             # 'Q1-Q6  See Text' (GuitarPCB G-02 Animal): the value is in the
             # build notes, so there is nothing to buy until the builder reads it.
-            if stats is not None:
-                check_pointer_value(stats, r, val_raw)
+            check_pointer_value(stats, ref, value)
             continue
-        result = categorize_part(r, val_raw, category_hint)
+        result = categorize_part(ref, value, category_hint)
         if result is None:
             # Not a part (e.g. a jumper pad setting), so it cannot conflict
             # with anything either.
             continue
-
-        # De-dupe Check
-        if stats is not None:
-            if not is_designator(r) and r not in stats.seen_refs:
-                # A named label used twice is two parts, bought under 'COMP (2)'
-                # as in typed tables (Aion FX legacy L5 Preamp: 'COMP  5MM LED'
-                # and 'Comp  SPDT').
-                taken = {ref.upper() for ref in stats.seen_refs}
-                if r.upper() in taken:
-                    n = 2
-                    while f"{r.upper()} ({n})" in taken:
-                        n += 1
-                    r = f"{r} ({n})"
-            if r in stats.seen_refs:
-                check_duplicate(stats, r, stats.seen_refs[r], val_raw)
-                continue
-            stats.seen_refs[r] = val_raw
-
-        if stats is not None:
-            check_classification(stats, r, val_raw, result.category, result.clean_value)
-
+        claimed = _claim(stats, ref, value)
+        if claimed is None:
+            continue
+        check_classification(stats, claimed, value, result.category, result.clean_value)
         parts_found += 1
-        main_key = make_component_key(result.category, result.clean_value)
-
-        # 1. Record Main Part
-        inventory.add_part(source, main_key, r, qty)
-
-        # 2. Handle Auto-Injection (e.g., Sockets)
+        key = make_component_key(result.category, result.clean_value)
+        inventory.add_part(source, key, claimed, qty)
         if result.injected_key and inject:
-            # Record auto-injected component key (e.g. IC socket)
+            # An implied part, such as an IC's socket.
             inventory.add_part(
-                source, result.injected_key, f"{r}{constants.INJECTED_SUFFIX}"
+                source, result.injected_key, f"{claimed}{constants.INJECTED_SUFFIX}"
             )
-
     return parts_found
+
+
+def _without_pointer(stats: ReadingStats, refs: list[str], value: str) -> str:
+    """A value without its pointer to the notes: 'PNP—See Text' is a PNP.
+
+    The kind of part is read (GuitarPCB PUFF v4); which one is chosen in the
+    notes, so the builder is told to read them.
+    """
+    pointer = _POINTER_TAIL.search(value)
+    if pointer is None or not value[: pointer.start()].strip():
+        return value
+    for ref in refs:
+        check_pointer_value(stats, ref, value)
+    return value[: pointer.start()].strip()
+
+
+def _claim(stats: ReadingStats, ref: str, value: str) -> str | None:
+    """Records a designator as read, under the label it is bought by.
+
+    A named label used twice is two parts, bought under 'COMP (2)' as in typed
+    tables (Aion FX legacy L5 Preamp: 'COMP  5MM LED' and 'Comp  SPDT'). A
+    designator read before is no new part: the duplicate is checked instead.
+
+    Returns:
+        The label to buy the part under, or None for a designator read before.
+    """
+    if not is_designator(ref) and ref not in stats.seen_refs:
+        taken = {seen.upper() for seen in stats.seen_refs}
+        if ref.upper() in taken:
+            n = 2
+            while f"{ref.upper()} ({n})" in taken:
+                n += 1
+            ref = f"{ref} ({n})"
+    if ref in stats.seen_refs:
+        check_duplicate(stats, ref, stats.seen_refs[ref], value)
+        return None
+    stats.seen_refs[ref] = value
+    return ref
 
 
 def record_pcb(
