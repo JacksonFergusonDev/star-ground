@@ -10,14 +10,13 @@ This module acts as the "Controller" for the BOM library. It handles:
 from dataclasses import replace
 from decimal import Decimal
 
-import pint
-
 from star_ground.bom_lib.enums import ComponentCategory
 from star_ground.bom_lib.types import (
     ComponentKey,
     Inventory,
     PartData,
 )
+from star_ground.bom_lib.units import Value
 
 
 def calculate_net_needs(bom: Inventory, stock: Inventory) -> Inventory:
@@ -91,8 +90,8 @@ def sort_inventory(inventory: Inventory) -> list[tuple[ComponentKey, PartData]]:
         rank = pmap.get(key.category, 100)
 
         val_qty = data.val_qty
-        if isinstance(val_qty, pint.Quantity):
-            mag = Decimal(str(val_qty.to_base_units().magnitude))
+        if isinstance(val_qty, Value):
+            mag = val_qty.magnitude
         elif isinstance(val_qty, Decimal):
             mag = val_qty
         else:

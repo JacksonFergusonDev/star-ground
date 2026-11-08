@@ -126,7 +126,7 @@ A standard hardware kit (enclosure, jacks, DC jack, footswitch, status LED and i
 
 ### 5. Exact Units
 
-Component values are written many ways (`4k7`, `4.7k`, `4700`, `4,700R`). A `pyparsing` grammar (`src/star_ground/bom_lib/grammar/`) parses them into exact `Decimal` values, and `Pint` carries their units, so `4k7` and `4700` merge into one line and a voltage is never compared with a resistance.
+Component values are written many ways (`4k7`, `4.7k`, `4700`, `4,700R`). A `pyparsing` grammar (`src/star_ground/bom_lib/grammar/`) parses them into exact `Decimal` values, each carried with its unit, so `4k7` and `4700` merge into one line and a capacitance is never compared with a resistance.
 
 ### 6. Transparent Failure States
 
@@ -164,7 +164,7 @@ See [tests/README.md](tests/README.md) for how to run each layer.
 - **Astro, Svelte 5**: the website and the app
 - **pdfplumber**: PDF words, lines and tables
 - **RapidOCR**: OCR for image-only parts lists (ONNX runtime)
-- **pyparsing, Pint**: value grammar and units
+- **pyparsing**: the value grammar
 - **fpdf2**: field manuals and sticker sheets
 - **Docker**: container image, published to GHCR on release
 - **GitHub Actions**: Ruff, Mypy, pytest (accuracy ratchet, snapshots, Hypothesis) and the website's linters and browser tests on every PR

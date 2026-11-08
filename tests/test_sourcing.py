@@ -1,7 +1,5 @@
 """Unit tests for sourcing resolution, origin assignment, and master shopping list assembly."""
 
-from decimal import Decimal
-
 from star_ground.bom_lib.constants import AUTO_INJECT_SOURCE
 from star_ground.bom_lib.enums import ComponentCategory, ComponentOrigin
 from star_ground.bom_lib.sourcing import (
@@ -13,7 +11,7 @@ from star_ground.bom_lib.sourcing import (
     resolve_part_sourcing,
 )
 from star_ground.bom_lib.types import ComponentKey, Inventory, ResolvedPartSourcing
-from star_ground.bom_lib.units import ureg
+from star_ground.bom_lib.units import ohms
 
 
 def test_is_pure_hardware() -> None:
@@ -53,7 +51,7 @@ def test_determine_origin() -> None:
 
 def test_resolve_part_sourcing_circuit_part() -> None:
     """Resolves standard circuit board component."""
-    val_qty = Decimal("10000") * ureg.ohm
+    val_qty = ohms("10000")
     resolved = resolve_part_sourcing(
         category=ComponentCategory.RESISTORS,
         val="10k",
