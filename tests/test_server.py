@@ -13,7 +13,6 @@ from typing import Any
 
 import pytest
 from fastapi.testclient import TestClient
-from fpdf import FPDF
 from pytest_mock import MockerFixture
 
 from star_ground.api import read_document
@@ -34,6 +33,7 @@ from star_ground.feedback import PartReport
 from star_ground.server import Settings, create_app
 from star_ground.server.limits import OcrQueue, RateLimiter, ReadingCache
 from star_ground.server.models import BUG_CODE, ReportIn
+from tests.pdfs import text_pdf
 from tools.export_openapi import OPENAPI_FILE, schema_text
 
 ROOT = Path(__file__).parent.parent
@@ -344,17 +344,18 @@ def test_invalid_requests_are_refused(client: TestClient, request_body: str) -> 
 
 
 @pytest.mark.parametrize(
-    ("kind", "media_type"),
+    ("kind", "media_type", "filename"),
     [
-        ("shopping-list", "text/csv"),
-        ("supplier-cart", "text/csv"),
-        ("stock-update", "text/csv"),
-        ("field-manuals", "application/zip"),
-        ("build-pack", "application/zip"),
+        ("shopping-list", "text/csv", "shopping-list.csv"),
+        ("supplier-cart", "text/csv", "supplier-cart.csv"),
+        ("stock-update", "text/csv", "stock-after-these-builds.csv"),
+        ("build-book", "application/pdf", "build-book.pdf"),
+        ("labels", "application/pdf", "labels-avery-5160.pdf"),
+        ("build-pack", "application/zip", "build-pack.zip"),
     ],
 )
 def test_each_export_is_an_attachment(
-    client: TestClient, kind: str, media_type: str
+    client: TestClient, kind: str, media_type: str, filename: str
 ) -> None:
     response = _post(
         client, f"/api/exports/{kind}", [{"method": "paste", "text": "R1 10k"}]
@@ -362,9 +363,8 @@ def test_each_export_is_an_attachment(
 
     assert response.status_code == 200
     assert response.headers["content-type"].startswith(media_type)
-    extension = "csv" if media_type == "text/csv" else "zip"
     assert response.headers["content-disposition"] == (
-        f'attachment; filename="{kind}.{extension}"'
+        f'attachment; filename="{filename}"'
     )
 
 
@@ -377,7 +377,9 @@ def test_the_build_pack_keeps_an_uploaded_document(client: TestClient) -> None:
     )
 
     with zipfile.ZipFile(io.BytesIO(response.content)) as zf:
-        source = zf.read("Source Documents/Kliche Overdrive Source.pdf")
+        (name,) = [n for n in zf.namelist() if "/Source documents/" in n]
+        source = zf.read(name)
+    assert name.endswith("/Source documents/Kliche Overdrive.pdf")
     assert source == KLICHE.read_bytes()
 
 
@@ -650,9 +652,7 @@ def _read_events(
 
 def _image_reading() -> ParseResult:
     """A reading whose parts list is an image (blank to the text layer)."""
-    pdf = FPDF()
-    pdf.add_page()
-    upload = FileUpload("image.pdf", bytes(pdf.output()))
+    upload = FileUpload("image.pdf", text_pdf())
     reading = read_document(InputMethod.UPLOAD_FILE, upload, ocr=False)
     assert reading is not None
     return reading

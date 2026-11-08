@@ -441,9 +441,12 @@ def get_standard_hardware(
             qty_override if qty_override is not None else (qty_per_pedal * pedals)
         )
 
-        inventory[key].qty += total_qty
-        inventory[key].refs.append("HW")
-        inventory[key].sources[AUTO_INJECT_SOURCE].append(f"Auto-Inject ({note})")
+        part = inventory[key]
+        if part.val_qty is None:
+            part.val_qty = normalize_value_to_quantity(category, val)
+        part.qty += total_qty
+        part.refs.append("HW")
+        part.sources[AUTO_INJECT_SOURCE].append(f"Auto-Inject ({note})")
 
     # 1. Smart Merges (Add to existing categories)
     # One resistor per status LED: a document may list several LEDs.

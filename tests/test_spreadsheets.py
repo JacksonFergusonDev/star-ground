@@ -1,4 +1,4 @@
-"""Tests for CSV exporters using typed ShoppingLine."""
+"""The master list's CSV files."""
 
 import csv
 import io
@@ -10,33 +10,13 @@ import pytest
 from star_ground.bom_lib.enums import ComponentCategory, ComponentOrigin
 from star_ground.bom_lib.parser import parse_user_inventory
 from star_ground.bom_lib.types import FORMULA_PREFIXES, ShoppingLine
-from star_ground.exporters import (
-    BASE_SHOPPING_LIST_COLS,
-    generate_shopping_list_csv,
-    generate_stock_update_csv,
-    generate_supplier_cart_csv,
-    get_shopping_list_columns,
+from star_ground.exports.spreadsheets import (
+    SHOPPING_LIST_COLUMNS,
     manufacturer_part_number,
+    shopping_list_csv,
+    stock_after_csv,
+    supplier_cart_csv,
 )
-
-
-def test_get_shopping_list_columns() -> None:
-    """Verifies column ordering for base, with stock, and with search term."""
-    # Base layout
-    base_cols = get_shopping_list_columns(has_stock=False, include_search_term=False)
-    assert base_cols == BASE_SHOPPING_LIST_COLS
-    assert "In Stock" not in base_cols
-    assert "Search Term" not in base_cols
-
-    # With stock
-    stock_cols = get_shopping_list_columns(has_stock=True, include_search_term=False)
-    assert stock_cols[3:5] == ["In Stock", "Net Need"]
-    assert "Search Term" not in stock_cols
-
-    # With search term and stock
-    full_cols = get_shopping_list_columns(has_stock=True, include_search_term=True)
-    assert full_cols[3:5] == ["In Stock", "Net Need"]
-    assert "Search Term" in full_cols
 
 
 def _line(part: str = "10k", **overrides: object) -> ShoppingLine:
@@ -70,11 +50,11 @@ def test_generate_shopping_list_csv_standard() -> None:
         )
     ]
 
-    decoded = generate_shopping_list_csv(rows).decode("utf-8-sig")
+    decoded = shopping_list_csv(rows).decode("utf-8-sig")
 
     assert decoded.splitlines() == [
-        "Category,Part,BOM Qty,In Stock,Net Need,Buy Qty,Notes,Search Term,Tayda_Link,Origin",
-        "Resistors,10k,4,0,4,10,1/4W Metal Film,10k ohm 1/4w metal film,https://www.taydaelectronics.com/catalogsearch/result/?q=10k,Circuit Board",
+        ",".join(SHOPPING_LIST_COLUMNS),
+        "Resistors,10k,4,0,0,4,10,1/4W Metal Film,10k ohm 1/4w metal film,https://www.taydaelectronics.com/catalogsearch/result/?q=10k,Circuit Board",
     ]
 
 
@@ -92,20 +72,18 @@ def test_generate_shopping_list_csv_with_stock_and_formula() -> None:
         )
     ]
 
-    decoded = generate_shopping_list_csv(rows, use_excel_formulas=True).decode(
-        "utf-8-sig"
-    )
+    decoded = shopping_list_csv(rows, excel_links=True).decode("utf-8-sig")
 
     headers, row_data = list(csv.reader(io.StringIO(decoded)))
-    assert row_data[headers.index("In Stock")] == "2"
-    assert row_data[headers.index("Net Need")] == "3"
+    assert row_data[headers.index("In stock")] == "2"
+    assert row_data[headers.index("Still needed")] == "3"
     assert (
-        row_data[headers.index("Tayda_Link")]
+        row_data[headers.index("Tayda link")]
         == '=HYPERLINK("https://www.taydaelectronics.com/catalogsearch/result/?q=100n", "Buy")'
     )
 
 
-def test_generate_stock_update_csv() -> None:
+def test_stock_after_csv() -> None:
     """Calculates remaining stock and excludes non-positive remainder rows."""
     rows = [
         _line("10k", bom_qty=4, in_stock=2, net_need=2, buy_qty=10),
@@ -121,7 +99,7 @@ def test_generate_stock_update_csv() -> None:
 
     # For 10k: (2 + 10) - 4 = 8 remaining -> should be included
     # For TL072: (2 + 0) - 2 = 0 remaining -> omitted
-    decoded = generate_stock_update_csv(rows).decode("utf-8-sig")
+    decoded = stock_after_csv(rows).decode("utf-8-sig")
 
     assert "Category,Part,Qty" in decoded
     assert "Resistors,10k,8" in decoded
@@ -141,7 +119,7 @@ def test_stock_update_does_not_spend_stock_on_included_parts() -> None:
             buy_qty=0,
         )
     ]
-    assert "ICs,24LC32A,2" in generate_stock_update_csv(rows).decode("utf-8-sig")
+    assert "ICs,24LC32A,2" in stock_after_csv(rows).decode("utf-8-sig")
 
 
 def _row(
@@ -184,7 +162,7 @@ def test_the_supplier_cart_lists_what_to_buy() -> None:
         _row(ComponentCategory.RESISTORS, "10k", 10, "10k ohm 1/4w metal film"),
         _row(ComponentCategory.CAPACITORS, "100n", 0),  # in stock: nothing to buy
     ]
-    text = generate_supplier_cart_csv(rows).decode("utf-8")
+    text = supplier_cart_csv(rows).decode("utf-8")
     assert text.splitlines() == [
         "Quantity,Manufacturer Part Number,Description",
         "2,TL072,ICs: TL072",
@@ -205,9 +183,9 @@ def _shopping_row(part: str, **overrides: object) -> ShoppingLine:
 def test_document_text_never_becomes_a_spreadsheet_formula(part: str) -> None:
     rows = [_shopping_row(part)]
 
-    shopping = generate_shopping_list_csv(rows, use_excel_formulas=True)
-    stock = generate_stock_update_csv([_shopping_row(part, buy_qty=2)])
-    cart = generate_supplier_cart_csv(rows)
+    shopping = shopping_list_csv(rows, excel_links=True)
+    stock = stock_after_csv([_shopping_row(part, buy_qty=2)])
+    cart = supplier_cart_csv(rows)
 
     for csv_bytes in (shopping, stock, cart):
         cells = [
@@ -223,7 +201,7 @@ def test_document_text_never_becomes_a_spreadsheet_formula(part: str) -> None:
 
 
 def test_the_stock_file_reads_back_a_guarded_part(tmp_path: Path) -> None:
-    stock_csv = generate_stock_update_csv(
+    stock_csv = stock_after_csv(
         [_shopping_row("-2+3", category=ComponentCategory.TRANSISTORS, buy_qty=3)]
     )
     path = tmp_path / "stock.csv"

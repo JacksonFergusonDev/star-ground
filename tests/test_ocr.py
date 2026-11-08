@@ -8,7 +8,6 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from fpdf import FPDF
 
 from star_ground.api import read_document
 from star_ground.bom_lib import (
@@ -43,6 +42,7 @@ from star_ground.bom_lib.types import (
     ParseWarning,
     ReadingStats,
 )
+from tests.pdfs import text_pdf
 
 # A parts table as RapidOCR reads it: one box per cell, 20pt rows, two
 # designator columns.
@@ -70,9 +70,7 @@ def _stats(*warnings: ParseWarning) -> ReadingStats:
 
 
 def _blank_pdf(path: Path) -> str:
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.output(str(path))
+    path.write_bytes(text_pdf())
     return str(path)
 
 

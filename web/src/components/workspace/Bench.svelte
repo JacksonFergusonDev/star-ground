@@ -1,6 +1,6 @@
 <script lang="ts">
   // Bench mode: building one project, part by part, lowest parts first (the
-  // field manual's order), with the document beside the checklist when there
+  // build book's order), with the document beside the checklist when there
   // is one, lit up where a catalog document's board draws the part at hand.
   // Made for a laptop at the bench: Space places the current part and moves
   // to the next, the arrow keys move between parts. Progress is kept on the

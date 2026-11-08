@@ -13,6 +13,7 @@ from star_ground.bom_lib.errors import (
     TooManyPagesError,
     UnreadablePdfError,
 )
+from tests.pdfs import text_pdf
 
 try:
     import pdfplumber
@@ -39,15 +40,10 @@ def test_a_file_that_isnt_a_pdf_is_explained_not_reported_as_a_bug():
 
 def test_a_pdf_longer_than_any_build_document_is_not_read(tmp_path):
     """Every page costs seconds of shared CPU, so a huge PDF is refused unread."""
-    from fpdf import FPDF
-
     from star_ground.bom_lib.parser import MAX_PDF_PAGES
 
-    pdf = FPDF()
-    for _ in range(MAX_PDF_PAGES + 1):
-        pdf.add_page()
     path = tmp_path / "long.pdf"
-    pdf.output(str(path))
+    path.write_bytes(text_pdf(pages=MAX_PDF_PAGES + 1))
 
     with (
         patch("star_ground.bom_lib.parser.read_pages") as read_pages,
@@ -60,13 +56,7 @@ def test_a_pdf_longer_than_any_build_document_is_not_read(tmp_path):
 
 def test_a_bug_while_parsing_a_pdf_is_reported_not_shown(tmp_path, caplog):
     """The builder sees a plain message; the traceback goes to the log and report."""
-    from fpdf import FPDF
-
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.set_font("Helvetica", size=12)
-    pdf.cell(0, 10, "R1 10k")
-    upload = FileUpload("Fuzz.pdf", bytes(pdf.output()))
+    upload = FileUpload("Fuzz.pdf", text_pdf("R1 10k"))
 
     with patch(
         "star_ground.bom_lib.parser.read_pages",

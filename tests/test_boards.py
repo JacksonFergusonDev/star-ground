@@ -2,32 +2,41 @@
 
 import io
 
-from fpdf import FPDF
 from PIL import Image
 
 from star_ground.bom_lib.boards import base_ref, board_marks, marks_by_ref
 from star_ground.bom_lib.ocr import OcrBox
 from star_ground.bom_lib.types import Location
+from tests.pdfs import typeset
 
 
 def _pdf(draw_image: bool = False) -> bytes:
     """A page with a parts list at the top and board labels below it."""
-    pdf = FPDF(unit="pt", format=(400, 400))
-    pdf.add_page()
-    pdf.set_font("Helvetica", size=10)
-    pdf.text(20, 30, "R1 10k")
-    pdf.text(20, 45, "C1 100n")
-    # The board's labels, apart from each other.
-    pdf.text(200, 250, "R1")
-    pdf.text(300, 300, "C1")
-    # Prose naming a part isn't where it's drawn.
-    pdf.text(20, 380, "Tune R1 to set the bias of the first stage to taste.")
+
+    def text(x: int, baseline: int, words: str) -> str:
+        # A 10pt line's top sits about its cap height (7pt) above its baseline.
+        return f"#place(dx: {x}pt, dy: {baseline - 7}pt)[{words}]"
+
+    lines = [
+        "#set page(width: 400pt, height: 400pt, margin: 0pt)",
+        '#set text(font: "DM Sans 14pt", size: 10pt)',
+        text(20, 30, "R1 10k"),
+        text(20, 45, "C1 100n"),
+        # The board's labels, apart from each other.
+        text(200, 250, "R1"),
+        text(300, 300, "C1"),
+        # Prose naming a part isn't where it's drawn.
+        text(20, 380, "Tune R1 to set the bias of the first stage to taste."),
+    ]
     if draw_image:
         image = io.BytesIO()
         Image.new("RGB", (400, 200), "white").save(image, format="PNG")
-        pdf.add_page()
-        pdf.image(image, x=0, y=100, w=400, h=200)
-    return bytes(pdf.output())
+        png = ", ".join(str(b) for b in image.getvalue())
+        lines += [
+            "#pagebreak()",
+            f"#place(dy: 100pt, image(bytes(({png},)), width: 400pt, height: 200pt))",
+        ]
+    return typeset("\n".join(lines))
 
 
 def _listing() -> list[Location]:

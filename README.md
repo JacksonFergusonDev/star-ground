@@ -79,8 +79,8 @@ The parser's priority is **no silent errors**. Self-checks re-read each document
 - **Master shopping list**, merged across projects and quantities, with supplier search links and buying notes. It downloads as a CSV, with clickable Excel/Google Sheets links if you like.
 - **Supplier cart file**: the parts to buy as a CSV for Mouser's or Digi-Key's BOM upload page. Parts named by a part number (`TL072`, `2N5088`) match directly; generic parts (resistors, capacitors, pots) come with a description to pick a match from.
 - **Updated inventory CSV**: your stock after this build.
-- **Field manuals:** printable checklists per project, sorted by component height (see below).
-- **Sticker sheets:** Avery 5160 labels with condensed references (`R1-R4`) for binning parts.
+- **Build book:** a printable PDF with the shopping list, then each project's checklist in build order (see below), with values written out (`4.7 kΩ`, `100 nF`), resistor colour bands, capacitor codes and which way round each part goes.
+- **Labels:** one per part, for Avery 5160 sheets, in the same order.
 - **Build pack:** one ZIP with all of the above and the source documents.
 
 ---
@@ -107,7 +107,7 @@ Accuracy is graded against hand-labeled parts lists, not against the parser's ow
 Most BOM tools sort lists alphabetically. **Star Ground** sorts by **physical height**.
 
 - **The Insight:** PCB assembly goes best when low-profile parts (resistors, diodes) are soldered before tall ones (electrolytic capacitors, switches), so the board sits flat on the bench.
-- **The Implementation:** The field manuals (`src/star_ground/pdf_generator.py`) list parts in that order, optimizing the *human operator's* runtime.
+- **The Implementation:** The build book and bench mode list parts in that order (`src/star_ground/bom_lib/stages.py`), one stage at a time.
 
 ### 4. Yield Management ("Nerd Economics")
 
@@ -165,7 +165,7 @@ See [tests/README.md](tests/README.md) for how to run each layer.
 - **pdfplumber**: PDF words, lines and tables
 - **RapidOCR**: OCR for image-only parts lists (ONNX runtime)
 - **pyparsing**: the value grammar
-- **fpdf2**: field manuals and sticker sheets
+- **Typst**: the build book and labels, set in DM Sans and JetBrains Mono
 - **Docker**: container image, published to GHCR on release
 - **GitHub Actions**: Ruff, Mypy, pytest (accuracy ratchet, snapshots, Hypothesis) and the website's linters and browser tests on every PR
 
@@ -193,9 +193,8 @@ See [tests/README.md](tests/README.md) for how to run each layer.
 │   │   └── sourcing.py    <-- Buffers, buying notes, hardware kit
 │   ├── server/            <-- HTTP API over api.py, for the web frontend
 │   ├── api.py             <-- The backend API every frontend calls
-│   ├── exporters.py       <-- CSV exports
-│   ├── feedback.py        <-- In-app feedback form (Google Sheets)
-│   └── pdf_generator.py   <-- Field manuals and sticker sheets
+│   ├── exports/           <-- Build book, labels (Typst), CSVs and the build pack
+│   └── feedback.py        <-- In-app feedback form (Google Sheets)
 ├── tests/                 <-- Test suite, golden parts lists and samples
 ├── web/                   <-- The website: Astro, with Svelte for the app
 ├── tools/                 <-- Release, OpenAPI and corpus tools

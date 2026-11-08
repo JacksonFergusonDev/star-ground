@@ -185,7 +185,7 @@
           "master list"
         ],
         "summary": "Export",
-        "description": "Exports the master list as a CSV or ZIP, from the same request body.\n\n`links` sets how the shopping list (alone or in the build pack)\nwrites supplier links: as plain URLs, or as Excel `HYPERLINK`s.",
+        "description": "Exports the master list as a CSV, PDF or ZIP, from the same request body.\n\n`links` sets how the shopping list (alone or in the build pack)\nwrites supplier links: as plain URLs, or as Excel `HYPERLINK`s.",
         "operationId": "export_api_exports__kind__post",
         "parameters": [
           {
@@ -224,6 +224,7 @@
                 "schema": {}
               },
               "text/csv": {},
+              "application/pdf": {},
               "application/zip": {}
             }
           },
@@ -801,7 +802,8 @@
           "shopping-list",
           "supplier-cart",
           "stock-update",
-          "field-manuals",
+          "build-book",
+          "labels",
           "build-pack"
         ],
         "title": "ExportKind",
@@ -1200,7 +1202,7 @@
             },
             "type": "array",
             "title": "Build Order",
-            "description": "Its parts by the stage they're soldered in, lowest parts first, as the field manual orders them."
+            "description": "Its parts by the stage they're soldered in, lowest parts first, as the build book orders them."
           }
         },
         "additionalProperties": false,

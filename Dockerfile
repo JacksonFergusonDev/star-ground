@@ -24,8 +24,7 @@ COPY --from=ghcr.io/astral-sh/uv:latest@sha256:e85be844203885286c60ffad8a858d48a
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     UV_LINK_MODE=copy \
-    PATH="/app/.venv/bin:$PATH" \
-    PYTHONPATH=/app/src
+    PATH="/app/.venv/bin:$PATH"
 
 WORKDIR /app
 COPY pyproject.toml uv.lock ./
@@ -34,7 +33,11 @@ RUN uv sync --locked --no-dev --no-install-project --no-cache
 # Models belong to the image, not a first user's network connection or cache.
 RUN .venv/bin/python -c 'from rapidocr import RapidOCR; RapidOCR()'
 
+# Installed as a package, not run from the source tree, so it knows its
+# version and ships its templates and fonts.
+COPY README.md LICENSE ./
 COPY src/ src/
+RUN uv sync --locked --no-dev --no-editable --no-cache
 COPY --from=site /src/web/dist/ site/
 
 RUN groupadd --gid 10001 app && useradd --uid 10001 --gid app --create-home app

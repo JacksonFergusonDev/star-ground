@@ -13,8 +13,9 @@ import secrets
 import traceback
 from dataclasses import dataclass
 from enum import StrEnum
-from importlib.metadata import PackageNotFoundError, version
 from typing import ClassVar
+
+from star_ground import version
 
 logger = logging.getLogger(__name__)
 
@@ -189,13 +190,6 @@ BUG_HINT = "It isn't a problem with your document. Sending a report helps get it
 """What the builder can do about a bug: report it."""
 
 
-def _version() -> str:
-    try:
-        return version("star-ground")
-    except PackageNotFoundError:
-        return "unknown"
-
-
 def record_bug(doing: str) -> Bug:
     """Records the exception being handled as a bug, and logs it.
 
@@ -208,7 +202,7 @@ def record_bug(doing: str) -> Bug:
         The bug, with its code and detail.
     """
     code = secrets.token_hex(3).upper()
-    detail = f"Star Ground {_version()}, {doing}\n\n{traceback.format_exc()}"
+    detail = f"Star Ground {version()}, {doing}\n\n{traceback.format_exc()}"
     logger.error("Bug %s: %s", code, detail)
     return Bug(code, detail)
 

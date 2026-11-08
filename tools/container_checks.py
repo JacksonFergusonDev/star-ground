@@ -1,29 +1,45 @@
 """Offline checks injected into the production image without installing test tools."""
 
 import csv
+import datetime
 import io
+import json
 import os
 import zipfile
 from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
 
 import pdfplumber
-from fpdf import FPDF
+import typst
 from PIL import Image, ImageDraw, ImageFont
 
+import star_ground.exports
+from star_ground import version
 from star_ground.api import Project, generate_master_list, read_document, read_stock
 from star_ground.bom_lib import FileUpload, InputMethod
 from star_ground.bom_lib.ocr import recognize
-from star_ground.exporters import generate_shopping_list_csv, generate_stock_update_csv
+from star_ground.exports.pack import PackContents, build_pack
+from star_ground.exports.spreadsheets import shopping_list_csv
+
+FONTS = Path(star_ground.exports.__file__).parent / "fonts"
+
+
+def text_pdf(*lines: str) -> bytes:
+    """A PDF of the given lines, typeset with the image's own Typst and fonts."""
+    body = "\n\n".join(f"#{json.dumps(line)}" for line in lines)
+    source = f'#set text(font: "DM Sans 14pt", size: 16pt)\n{body}'
+    pdf: bytes = typst.compile(  # type: ignore[misc]
+        source.encode(), font_paths=[str(FONTS)], ignore_system_fonts=True
+    )
+    return pdf
 
 
 def check_backend() -> None:
     """Parse a PDF, subtract stock, and validate CSV, PDF and ZIP exports."""
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.set_font("Helvetica", size=16)
-    for line in ("Container Smoke", "Resistors", "R1 10k", "Capacitors", "C1 100n"):
-        pdf.cell(0, 10, line, new_x="LMARGIN", new_y="NEXT")
-    upload = FileUpload("smoke.pdf", bytes(pdf.output()))
+    upload = FileUpload(
+        "smoke.pdf",
+        text_pdf("Container Smoke", "Resistors", "R1 10k", "Capacitors", "C1 100n"),
+    )
     reading = read_document(InputMethod.UPLOAD_FILE, upload)
     assert reading is not None
     assert reading.stats.parts_found == 2, reading
@@ -40,21 +56,22 @@ def check_backend() -> None:
         1,
         2,
     )
-    shopping = generate_shopping_list_csv(rows)
+    shopping = shopping_list_csv(rows)
     exported = list(csv.DictReader(io.StringIO(shopping.decode("utf-8-sig"))))
-    assert next(row for row in exported if row["Part"] == "10k")["Net Need"] == "2"
-    stock_csv = generate_stock_update_csv(rows)
-    with zipfile.ZipFile(io.BytesIO(master.build_pack(shopping, stock_csv))) as pack:
+    assert next(row for row in exported if row["Part"] == "10k")["Still needed"] == "2"
+    made = datetime.date(2026, 1, 1)
+    contents = PackContents(master.kit, master.projects, rows, False, made, version())
+    folder = "Star Ground build pack 2026-01-01"
+    with zipfile.ZipFile(io.BytesIO(build_pack(contents))) as pack:
         assert pack.testzip() is None
-        assert pack.read("Shopping List.csv") == shopping
-        assert pack.read("Source Documents/Smoke Source.pdf") == upload.content
-        for name in (
-            "Field Manuals/Smoke Field Manual.pdf",
-            "Sticker Sheets/Smoke Sticker Sheet.pdf",
-        ):
-            with pdfplumber.open(io.BytesIO(pack.read(name))) as document:
+        assert pack.read(f"{folder}/Shopping list.csv") == shopping
+        assert pack.read(f"{folder}/Source documents/Smoke.pdf") == upload.content
+        for name in ("Build book.pdf", "Labels (Avery 5160).pdf"):
+            with pdfplumber.open(io.BytesIO(pack.read(f"{folder}/{name}"))) as document:
                 assert document.pages, name
                 assert document.pages[0].extract_text(), name
+    # The image is installed as a package, so it knows its own version.
+    assert version() != "dev", version()
 
 
 def check_concurrent_reads() -> None:
@@ -66,18 +83,10 @@ def check_concurrent_reads() -> None:
     """
     uploads = []
     for i in range(8):
-        pdf = FPDF()
-        pdf.add_page()
-        pdf.set_font("Helvetica", size=16)
-        for line in (
-            f"Concurrent {i}",
-            "Resistors",
-            f"R1 {i + 1}k",
-            "Capacitors",
-            "C1 4n7",
-        ):
-            pdf.cell(0, 10, line, new_x="LMARGIN", new_y="NEXT")
-        uploads.append(FileUpload(f"concurrent-{i}.pdf", bytes(pdf.output())))
+        pdf = text_pdf(
+            f"Concurrent {i}", "Resistors", f"R1 {i + 1}k", "Capacitors", "C1 4n7"
+        )
+        uploads.append(FileUpload(f"concurrent-{i}.pdf", pdf))
     with ThreadPoolExecutor(max_workers=len(uploads)) as pool:
         readings = list(
             pool.map(lambda u: read_document(InputMethod.UPLOAD_FILE, u), uploads)

@@ -27,10 +27,11 @@ import time
 import urllib.robotparser
 from collections.abc import Callable
 from dataclasses import dataclass
-from importlib.metadata import PackageNotFoundError, version
 from urllib.parse import urlsplit
 
 import requests
+
+from star_ground import version
 
 SITE = "https://star-ground.jacksonferguson.me"
 # The least wait between two requests to one host, in seconds, and up to how
@@ -50,11 +51,7 @@ logger = logging.getLogger(__name__)
 
 def user_agent() -> str:
     """How every request introduces itself."""
-    try:
-        release = version("star-ground")
-    except PackageNotFoundError:
-        release = "dev"
-    return f"StarGround/{release} (+{SITE}; circuit catalog)"
+    return f"StarGround/{version()} (+{SITE}; circuit catalog)"
 
 
 class BlockedError(Exception):

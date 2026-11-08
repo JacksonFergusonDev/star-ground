@@ -123,7 +123,8 @@ class ExportKind(StrEnum):
     SHOPPING_LIST = "shopping-list"
     SUPPLIER_CART = "supplier-cart"
     STOCK_UPDATE = "stock-update"
-    FIELD_MANUALS = "field-manuals"
+    BUILD_BOOK = "build-book"
+    LABELS = "labels"
     BUILD_PACK = "build-pack"
 
 
@@ -293,7 +294,7 @@ class ProjectResult(_Model):
     )
     build_order: list[BuildStep] = Field(
         description="Its parts by the stage they're soldered in, lowest "
-        "parts first, as the field manual orders them."
+        "parts first, as the build book orders them."
     )
 
 
