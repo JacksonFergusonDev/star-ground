@@ -28,11 +28,11 @@ from star_ground.bom_lib import (
     generate_tayda_url,
     get_buy_details,
     get_spec_type,
-    get_standard_hardware,
     parse_user_inventory,
     parse_value_to_decimal,
     parse_with_verification,
     serialize_inventory,
+    with_standard_hardware,
 )
 from star_ground.bom_lib.classifier import normalize_value_to_quantity
 from star_ground.bom_lib.enums import ComponentCategory, ComponentSpec
@@ -373,7 +373,7 @@ def test_capacitor_material_recommendations():
 
 def test_hardware_injection_and_smart_merge():
     """
-    Verifies that `get_standard_hardware` correctly injects standard parts
+    Verifies that `with_standard_hardware` correctly injects standard parts
     and merges them into existing inventory.
 
     Scenario:
@@ -390,8 +390,8 @@ def test_hardware_injection_and_smart_merge():
     inventory[key_3k3].qty = 2
     inventory[key_pot].qty = 3
 
-    # Run injection for 1 pedal (Mutates in-place)
-    get_standard_hardware(inventory, [BuildHardware(1)])
+    # Run injection for 1 pedal
+    inventory = with_standard_hardware(inventory, [BuildHardware(1)])
 
     # CHECK 1: Smart Merge
     # The function should have found "Resistors | 3.3k" and incremented it by 1 (for the LED).
@@ -502,7 +502,7 @@ def test_fuzz_germanium_trigger():
     pcb_key = ComponentKey(ComponentCategory.PCB, "Fuzz Face")
     inventory[pcb_key].qty = 1
 
-    get_standard_hardware(inventory, [BuildHardware(1)])
+    inventory = with_standard_hardware(inventory, [BuildHardware(1)])
 
     # Check for Ge Transistors in the dictionary
     ge_key = ComponentKey(ComponentCategory.TRANSISTORS, "Germanium PNP")
@@ -558,7 +558,7 @@ def test_hardware_search_term_validity():
     """
     inventory = Inventory()
 
-    get_standard_hardware(inventory, [BuildHardware(1)])
+    inventory = with_standard_hardware(inventory, [BuildHardware(1)])
 
     # Grab the Enclosure Key
     target_key = ComponentKey(ComponentCategory.HARDWARE_MISC, "1590B Enclosure")

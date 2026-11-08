@@ -21,7 +21,7 @@ from .enums import (
 )
 from .manager import (
     calculate_net_needs,
-    rename_source_in_inventory,
+    rename_source,
     serialize_inventory,
     sort_inventory,
 )
@@ -39,12 +39,12 @@ from .sourcing import (
     get_buy_details,
     get_residual_report,
     get_spec_type,
-    get_standard_hardware,
     is_extra_part,
     is_pure_hardware,
     provided_hardware,
     resolve_part_sourcing,
     status_leds,
+    with_standard_hardware,
 )
 from .strategies import (
     BOMParserContext,
@@ -148,7 +148,6 @@ __all__ = [
     "get_buy_details",
     "get_residual_report",
     "get_spec_type",
-    "get_standard_hardware",
     "is_extra_part",
     "is_pure_hardware",
     "make_component_key",
@@ -160,9 +159,10 @@ __all__ = [
     "parse_value_to_decimal",
     "parse_with_verification",
     "provided_hardware",
-    "rename_source_in_inventory",
+    "rename_source",
     "resolve_part_sourcing",
     "serialize_inventory",
     "sort_inventory",
     "status_leds",
+    "with_standard_hardware",
 ]

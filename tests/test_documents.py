@@ -9,7 +9,7 @@ import pytest
 
 from star_ground.api import Project, generate_master_list
 from star_ground.bom_lib.enums import ComponentCategory
-from star_ground.bom_lib.manager import rename_source_in_inventory
+from star_ground.bom_lib.manager import rename_source
 from star_ground.bom_lib.types import (
     BuildHardware,
     BuiltProject,
@@ -131,7 +131,7 @@ def test_parts_counted_by_value_reach_their_project_s_checklist() -> None:
     inventory.add_counted("Rat", key, 4)
     inventory.add_part("Rat", key, "R9")
     inventory.add_counted("Muff", key, 2)
-    rename_source_in_inventory(inventory, "Rat", "La Rata")
+    inventory = rename_source(inventory, "Rat", "La Rata")
     totals = Inventory()
     totals.merge(inventory, multiplier=2)
     project = BuiltProject("La Rata", "La Rata", BuildHardware(2))
