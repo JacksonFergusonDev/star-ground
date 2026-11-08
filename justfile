@@ -94,6 +94,10 @@ clean:
 serve-api: sync
     uv run uvicorn star_ground.server:app --reload --reload-dir src --host 127.0.0.1 --port 4501
 
+# Regenerate examples/build-pack/ from the Big Muff π netlist
+example-pack: sync
+    uv run python -m tools.example_pack
+
 # Regenerate openapi.json and the website's API types after changing src/star_ground/server/
 openapi: sync
     uv run python -m tools.export_openapi

@@ -282,4 +282,4 @@ Carries out [Backend and printed documents](#backend-and-printed-documents), one
 | 9. Bench mode | Done 2026-10-31: the checklist in build order, keyboard-driven, saved, with the document and board beside it | #233, #234 |
 | 10. Share links | Done 2026-10-31: every project but uploads, in the link's fragment | this PR |
 | 11. Cutover and launch | In progress: Streamlit is removed, the home page opens the new app, and the app has its own shell with the catalog in its sidebar | #249, this PR |
-| 12. Backend cleanup and printed documents | Planned 2026-11-07 | This plan's update |
+| 12. Backend cleanup and printed documents | Done 2026-11-07: the `star_ground` package, dataclasses, `Value`, the Typst build book and labels, the example pack, and feedback without gspread | #269, #270, #271, #272, #273, this PR |
