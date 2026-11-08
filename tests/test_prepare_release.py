@@ -73,6 +73,7 @@ def test_check_checkout_rejects_invalid_git_state(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
+    monkeypatch.delenv("GITHUB_ACTIONS", raising=False)
     responses = iter([branch, status, sha, remote])
     monkeypatch.setattr(prepare_release, "read_command", lambda _cmd: next(responses))
 
@@ -141,6 +142,7 @@ def test_check_ci_stops_on_failed_run(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
+    monkeypatch.delenv("GITHUB_ACTIONS", raising=False)
     checkout = CheckoutState(repo="example/star-ground", sha="abc123456789")
     monkeypatch.setattr(
         prepare_release,
@@ -174,17 +176,25 @@ def test_check_local_state_runs_uv_lock_check(
     assert commands == [["uv", "lock", "--check"]]
 
 
+@pytest.mark.parametrize("github_actions", ["false", "true"], ids=["local", "actions"])
 def test_read_json_rejects_invalid_json(
+    github_actions: str,
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
+    monkeypatch.setenv("GITHUB_ACTIONS", github_actions)
     monkeypatch.setattr(prepare_release, "read_command", lambda _cmd: "{not-json")
 
     with pytest.raises(SystemExit) as exc_info:
         prepare_release.read_json(["gh", "run", "list"])
 
     assert exc_info.value.code == 1
-    assert "invalid JSON" in capsys.readouterr().err
+    output = capsys.readouterr()
+    if github_actions == "true":
+        assert output.out.startswith("::error::")
+        assert "invalid JSON" in output.out
+    else:
+        assert "invalid JSON" in output.err
 
 
 def test_confirm_handles_interactive_and_non_tty_input(
