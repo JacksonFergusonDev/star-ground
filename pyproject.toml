@@ -193,14 +193,6 @@ style = "one"          # all list items numbered 1. – reduces diff noise
 paths = ["src", "tools"]
 min_confidence = 60
 ignore_names = [
-    # TypedDict keys, read as stats["..."].
-    "errors",
-    "extracted_title",
-    "included",
-    "lines_read",
-    "polarized",
-    "residuals",
-    "unread_counted",
     # Called or read by a library: fpdf's page hook, requests' session flag,
     # logging's handler list.
     "footer",

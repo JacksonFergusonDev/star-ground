@@ -25,12 +25,11 @@ from star_ground.bom_lib import (
     InputMethod,
     Location,
     ParseResult,
-    create_empty_inventory,
-    create_empty_stats,
     make_component_key,
 )
 from star_ground.bom_lib.errors import BUG_MESSAGE, ErrorKind, OcrRefusedError
 from star_ground.bom_lib.ocr import ocr_guard
+from star_ground.bom_lib.types import Inventory, ReadingStats
 from star_ground.feedback import PartReport
 from star_ground.server import Settings, create_app
 from star_ground.server.limits import OcrQueue, RateLimiter, ReadingCache
@@ -224,7 +223,7 @@ def test_parts_counted_by_value_are_listed_and_ordered(
     client: TestClient, mocker: MockerFixture
 ) -> None:
     # Tonepad's Rat: 'IC1 LM308', then counted rows such as '2 - 47'.
-    inventory = create_empty_inventory()
+    inventory = Inventory()
     inventory.add_part("doc", make_component_key(ComponentCategory.ICS, "LM308"), "IC1")
     inventory.add_counted(
         "doc", make_component_key(ComponentCategory.RESISTORS, "47"), 2
@@ -232,7 +231,7 @@ def test_parts_counted_by_value_are_listed_and_ordered(
     inventory.add_counted(
         "doc", make_component_key(ComponentCategory.CAPACITORS, "100n"), 3
     )
-    reading = ParseResult(inventory=inventory, stats=create_empty_stats())
+    reading = ParseResult(inventory=inventory, stats=ReadingStats())
     mocker.patch.object(BOMParserContext, "process", return_value=reading)
 
     response = _post(

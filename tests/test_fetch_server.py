@@ -356,14 +356,14 @@ class TestParsing:
 
     def test_a_linked_pdf_is_parsed(self, site: Site) -> None:
         result = self._process(site.url("/bom.pdf"))
-        assert result.stats["errors"] == []
-        assert result.stats["parts_found"] > 0
+        assert result.stats.errors == []
+        assert result.stats.parts_found > 0
         assert result.raw_content == SAMPLE_PDF.read_bytes()
 
     def test_a_linked_csv_is_read_as_columns(self, site: Site) -> None:
         """A CSV read as pasted text gave a '10k,1' resistor."""
         result = self._process(site.url("/bom.csv"))
-        assert result.stats["errors"] == []
+        assert result.stats.errors == []
         assert set(result.inventory) == {
             ComponentKey(ComponentCategory.RESISTORS, "10k"),
             ComponentKey(ComponentCategory.CAPACITORS, "100n"),
@@ -371,7 +371,7 @@ class TestParsing:
 
     def test_linked_text_is_read_as_pasted_text(self, site: Site) -> None:
         result = self._process(site.url("/bom.txt"))
-        assert result.stats["parts_found"] == 2
+        assert result.stats.parts_found == 2
 
     @pytest.mark.parametrize(
         ("path", "message"),
@@ -385,7 +385,7 @@ class TestParsing:
         self, site: Site, path: str, message: str
     ) -> None:
         result = self._process(site.url(path))
-        assert result.stats["parts_found"] == 0
-        (error,) = result.stats["errors"]
+        assert result.stats.parts_found == 0
+        (error,) = result.stats.errors
         assert error.kind == ErrorKind.FETCH
         assert message in error.message

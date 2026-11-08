@@ -32,9 +32,9 @@ from star_ground.bom_lib.types import (
     ComponentKey,
     Inventory,
     PurchaseRecommendation,
+    ReadingStats,
     ResolvedPartSourcing,
-    ShoppingListRow,
-    StatsDict,
+    ShoppingLine,
 )
 from star_ground.bom_lib.units import ureg
 from star_ground.bom_lib.utils import (
@@ -52,7 +52,7 @@ def _format_alts(alts: list[AlternativeSpec]) -> str:
     return f"💡 TRY: {', '.join(txt_parts)}"
 
 
-def get_residual_report(stats: StatsDict) -> list[str]:
+def get_residual_report(stats: ReadingStats) -> list[str]:
     """Identifies potential parts hidden in the parser's rejected lines.
 
     Scans the 'residuals' (unparsed lines) for text that looks like a part
@@ -76,7 +76,7 @@ def get_residual_report(stats: StatsDict) -> list[str]:
     ]
     suspicious: list[str] = []
 
-    for line in stats["residuals"]:
+    for line in stats.residuals:
         # Pass explicit errors/exceptions through
         if "ERROR" in line.upper() or "EXCEPTION" in line.upper():
             suspicious.append(line)
@@ -354,7 +354,7 @@ def provided_hardware(inventory: Inventory) -> frozenset[HardwareRole]:
     """
     roles: set[HardwareRole] = set()
     for key, data in inventory.items():
-        text = " ".join([key.value, *data["refs"]]).upper()
+        text = " ".join([key.value, *data.refs]).upper()
         if "ENCLOSURE" in text:
             roles.add(HardwareRole.ENCLOSURE)
         if "JACK" in text:
@@ -364,10 +364,10 @@ def provided_hardware(inventory: Inventory) -> frozenset[HardwareRole]:
         if (
             key.category == ComponentCategory.SWITCHES
             and "3PDT" in text
-            and ("FOOTSWITCH" in text or any(r.startswith("FS") for r in data["refs"]))
+            and ("FOOTSWITCH" in text or any(r.startswith("FS") for r in data.refs))
         ):
             roles.add(HardwareRole.FOOTSWITCH)
-        refs = [r.upper() for r in data["refs"]]
+        refs = [r.upper() for r in data.refs]
         if key.category == ComponentCategory.DIODES and any(
             r.startswith(("LED", "EFL")) for r in refs
         ):
@@ -398,7 +398,7 @@ def status_leds(inventory: Inventory) -> int:
             r.upper().startswith(("LED", "EFL"))
             for key, data in inventory.items()
             if key.category == ComponentCategory.DIODES
-            for r in data["refs"]
+            for r in data.refs
         ),
     )
 
@@ -442,9 +442,9 @@ def get_standard_hardware(
             qty_override if qty_override is not None else (qty_per_pedal * pedals)
         )
 
-        inventory[key]["qty"] += total_qty
-        inventory[key]["refs"].append("HW")
-        inventory[key]["sources"][AUTO_INJECT_SOURCE].append(f"Auto-Inject ({note})")
+        inventory[key].qty += total_qty
+        inventory[key].refs.append("HW")
+        inventory[key].sources[AUTO_INJECT_SOURCE].append(f"Auto-Inject ({note})")
 
     # 1. Smart Merges (Add to existing categories)
     # One resistor per status LED: a document may list several LEDs.
@@ -525,7 +525,7 @@ def get_standard_hardware(
 
     # 4. Potentiometer Hardware (Knobs/Seals)
     total_pots = sum(
-        d["qty"]
+        d.qty
         for k, d in inventory.items()
         if k.category == ComponentCategory.POTENTIOMETERS
     )
@@ -619,7 +619,7 @@ def build_shopping_list(
     stock: Inventory | None = None,
     show_hardware: bool = True,
     show_extras: bool = True,
-) -> list[ShoppingListRow]:
+) -> list[ShoppingLine]:
     """Assembles the master shopping list across all projects.
 
     Applies inventory stock deductions, sorts parts according to display hierarchy,
@@ -632,33 +632,33 @@ def build_shopping_list(
         show_extras: Whether to include sockets and SMD adapters.
 
     Returns:
-        List of structured ShoppingListRow dictionaries for display and export.
+        One line per part, in display order.
     """
     net_inventory = calculate_net_needs(inventory, stock or Inventory())
 
     sorted_parts = sort_inventory(inventory)
-    shopping_list: list[ShoppingListRow] = []
+    shopping_list: list[ShoppingLine] = []
 
     for part_key, item in sorted_parts:
         category, value = part_key.category, part_key.value
-        sources = item["sources"]
+        sources = item.sources
 
         if is_pure_hardware(sources) and not show_hardware:
             continue
         if is_extra_part(value) and not show_extras:
             continue
 
-        gross_qty = item["qty"]
+        gross_qty = item.qty
 
         net_item = net_inventory.get(part_key)
-        net_qty = net_item["qty"] if net_item else 0
+        net_qty = net_item.qty if net_item else 0
 
         in_stock = 0
         if stock:
             s_item = stock.get(part_key)
-            in_stock = s_item["qty"] if s_item else 0
+            in_stock = s_item.qty if s_item else 0
 
-        val_qty = item.get("val_qty")
+        val_qty = item.val_qty
         resolved = resolve_part_sourcing(
             category=category,
             val=value,
@@ -667,22 +667,23 @@ def build_shopping_list(
             val_qty=val_qty,
         )
         notes = resolved.notes
-        if item["included"]:
-            notes = f"📦 {item['included']} included with the PCB | {notes}"
+        if item.included:
+            notes = f"📦 {item.included} included with the PCB | {notes}"
 
-        row: ShoppingListRow = {
-            "Origin": resolved.origin,
-            "Category": category.value,
-            "Part": value,
-            "BOM Qty": gross_qty,
-            "Included": item["included"],
-            "In Stock": in_stock,
-            "Net Need": net_qty,
-            "Buy Qty": resolved.buy_qty,
-            "Notes": notes,
-            "Search Term": resolved.search_term,
-            "Tayda_Link": resolved.supplier_url,
-        }
-        shopping_list.append(row)
+        shopping_list.append(
+            ShoppingLine(
+                origin=resolved.origin,
+                category=category,
+                part=value,
+                bom_qty=gross_qty,
+                included=item.included,
+                in_stock=in_stock,
+                net_need=net_qty,
+                buy_qty=resolved.buy_qty,
+                notes=notes,
+                search_term=resolved.search_term,
+                supplier_url=resolved.supplier_url,
+            )
+        )
 
     return shopping_list

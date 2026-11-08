@@ -40,7 +40,7 @@ class TestManualInputStrategy:
 
         result = BOMParserContext().process(InputMethod.UPLOAD_FILE, upload, "Txt")
 
-        assert result.stats["parts_found"] == 3
+        assert result.stats.parts_found == 3
 
     def test_parse_string(self) -> None:
         strategy = ManualInputStrategy()
@@ -49,12 +49,12 @@ class TestManualInputStrategy:
         result = strategy.parse(raw_text, source_name="TestPedal")
 
         assert isinstance(result, ParseResult)
-        assert result.stats["parts_found"] == 3
-        assert result.stats["lines_read"] == 3
+        assert result.stats.parts_found == 3
+        assert result.stats.lines_read == 3
         k_10k = ComponentKey(ComponentCategory.RESISTORS, "10k")
         assert k_10k in result.inventory
-        assert result.inventory[k_10k]["qty"] == 1
-        assert "R1" in result.inventory[k_10k]["refs"]
+        assert result.inventory[k_10k].qty == 1
+        assert "R1" in result.inventory[k_10k].refs
         assert result.title is None
         assert result.raw_content is None
 
@@ -65,7 +65,7 @@ class TestManualInputStrategy:
         result = strategy.parse(lines, source_name="TestPedal")
 
         assert isinstance(result, ParseResult)
-        assert result.stats["parts_found"] == 2
+        assert result.stats.parts_found == 2
         assert ComponentKey(ComponentCategory.RESISTORS, "10k") in result.inventory
         assert ComponentKey(ComponentCategory.RESISTORS, "100k") in result.inventory
 
@@ -104,11 +104,11 @@ class TestCSVParserStrategy:
         result = strategy.parse(mock_file, source_name="CSVPedal")
 
         assert isinstance(result, ParseResult)
-        assert result.stats["parts_found"] == 3
+        assert result.stats.parts_found == 3
         k_10k = ComponentKey(ComponentCategory.RESISTORS, "10k")
         assert k_10k in result.inventory
-        assert result.inventory[k_10k]["qty"] == 1
-        assert "R1" in result.inventory[k_10k]["refs"]
+        assert result.inventory[k_10k].qty == 1
+        assert "R1" in result.inventory[k_10k].refs
 
     def test_parse_raw_bytes(self) -> None:
         strategy = CSVParserStrategy()
@@ -117,7 +117,7 @@ class TestCSVParserStrategy:
         result = strategy.parse(csv_bytes, source_name="BytesPedal")
 
         assert isinstance(result, ParseResult)
-        assert result.stats["parts_found"] == 1
+        assert result.stats.parts_found == 1
         assert ComponentKey(ComponentCategory.RESISTORS, "10k") in result.inventory
 
     @pytest.mark.parametrize(
@@ -134,8 +134,8 @@ class TestCSVParserStrategy:
     def test_spreadsheet_exports_are_read(self, name: str, content: bytes) -> None:
         result = CSVParserStrategy().parse(FileUpload(name, content), "Sheet")
 
-        assert result.stats["parts_found"] == 2
-        assert result.stats["residuals"] == []
+        assert result.stats.parts_found == 2
+        assert result.stats.residuals == []
 
     def test_parse_temp_file_cleanup(self) -> None:
         strategy = CSVParserStrategy()
@@ -152,7 +152,7 @@ class TestCSVParserStrategy:
         with patch("tempfile.NamedTemporaryFile", side_effect=track_temp_file):
             result = strategy.parse(csv_bytes, source_name="CleanupTest")
 
-        assert result.stats["parts_found"] == 1
+        assert result.stats.parts_found == 1
         assert len(created_temp_files) == 1
         assert not os.path.exists(created_temp_files[0])
 
@@ -200,7 +200,7 @@ class TestPDFParserStrategy:
         result = strategy.parse(mock_file, source_name="Cataclysm")
 
         assert isinstance(result, ParseResult)
-        assert result.stats["parts_found"] > 0
+        assert result.stats.parts_found > 0
         assert result.title is not None
         assert result.raw_content == pdf_bytes
 
@@ -220,7 +220,7 @@ class TestPDFParserStrategy:
         with patch("tempfile.NamedTemporaryFile", side_effect=track_temp_file):
             result = strategy.parse(pdf_bytes, source_name="Cataclysm")
 
-        assert result.stats["parts_found"] > 0
+        assert result.stats.parts_found > 0
         assert len(created_temp_files) == 1
         assert not os.path.exists(created_temp_files[0])
 
@@ -256,8 +256,8 @@ class TestBOMParserContext:
         result = context.process(InputMethod.PASTE_TEXT, "", "Empty")
 
         assert isinstance(result, ParseResult)
-        assert result.stats["parts_found"] == 0
-        assert result.stats["lines_read"] == 0
+        assert result.stats.parts_found == 0
+        assert result.stats.lines_read == 0
         assert len(result.inventory) == 0
 
     def test_process_paste_text(self) -> None:
@@ -267,7 +267,7 @@ class TestBOMParserContext:
         )
 
         assert isinstance(result, ParseResult)
-        assert result.stats["parts_found"] == 2
+        assert result.stats.parts_found == 2
         assert ComponentKey(ComponentCategory.RESISTORS, "10k") in result.inventory
         assert ComponentKey(ComponentCategory.CAPACITORS, "100n") in result.inventory
 
@@ -277,7 +277,7 @@ class TestBOMParserContext:
         result = context.process(InputMethod.UPLOAD_FILE, mock_file, "CSVPedal")
 
         assert isinstance(result, ParseResult)
-        assert result.stats["parts_found"] == 1
+        assert result.stats.parts_found == 1
         assert ComponentKey(ComponentCategory.RESISTORS, "10k") in result.inventory
 
     def test_process_upload_file_pdf(self, sample_pdf_bytes: bytes) -> None:
@@ -286,7 +286,7 @@ class TestBOMParserContext:
         result = context.process(InputMethod.UPLOAD_FILE, mock_file, "PDFPedal")
 
         assert isinstance(result, ParseResult)
-        assert result.stats["parts_found"] > 0
+        assert result.stats.parts_found > 0
         assert result.title is not None
         assert result.raw_content == sample_pdf_bytes
 
@@ -305,7 +305,7 @@ class TestBOMParserContext:
             InputMethod.PASTE_TEXT, str(secret), "Pasted"
         )
         assert result.raw_content is None
-        assert result.stats["parts_found"] == 0
+        assert result.stats.parts_found == 0
 
     def test_a_downloaded_path_is_never_read_as_a_server_path(
         self, tmp_path: Path, sample_pdf_bytes: bytes
@@ -322,7 +322,7 @@ class TestBOMParserContext:
             )
 
         assert result.raw_content is None
-        assert result.stats["parts_found"] == 0
+        assert result.stats.parts_found == 0
 
     def test_process_from_url_network_error(self) -> None:
         context = BOMParserContext()
@@ -336,8 +336,8 @@ class TestBOMParserContext:
             )
 
         assert isinstance(result, ParseResult)
-        assert result.stats["parts_found"] == 0
-        (error,) = result.stats["errors"]
+        assert result.stats.parts_found == 0
+        (error,) = result.stats.errors
         assert error.kind == ErrorKind.FETCH
         assert error.message == "example.com took too long to answer."
         assert error.bug is None
@@ -351,7 +351,7 @@ class TestBOMParserContext:
                 InputMethod.PASTE_TEXT, "R1 10k", "Buggy"
             )
 
-        (error,) = result.stats["errors"]
+        (error,) = result.stats.errors
         assert error.message == BUG_MESSAGE
         bug = error.bug
         assert bug is not None
@@ -364,6 +364,6 @@ class TestBOMParserContext:
         context = BOMParserContext([])
         result = context.process(InputMethod.PASTE_TEXT, "12345", "Unknown")
 
-        assert result.stats["parts_found"] == 0
-        (error,) = result.stats["errors"]
+        assert result.stats.parts_found == 0
+        (error,) = result.stats.errors
         assert error.kind == ErrorKind.BUG

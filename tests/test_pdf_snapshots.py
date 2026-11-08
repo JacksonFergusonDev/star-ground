@@ -51,9 +51,9 @@ def stabilize_inventory(inventory):
     for key in sorted(inventory.keys()):
         data = inventory[key]
         stable[str(key)] = {
-            "qty": data["qty"],
-            "refs": sorted(data["refs"]),
-            "sources": {k: sorted(v) for k, v in data["sources"].items()},
+            "qty": data.qty,
+            "refs": sorted(data.refs),
+            "sources": {k: sorted(v) for k, v in data.sources.items()},
         }
     return stable
 
@@ -134,8 +134,8 @@ def test_pdf_parsing_regression(pdf_rel_path, snapshot_update):
     # 2. Stabilize Data for Comparison
     current_result = {
         "metadata": {
-            "parts_found": stats["parts_found"],
-            "extracted_title": stats["extracted_title"],
+            "parts_found": stats.parts_found,
+            "extracted_title": stats.extracted_title,
         },
         "inventory": stabilize_inventory(inventory),
     }

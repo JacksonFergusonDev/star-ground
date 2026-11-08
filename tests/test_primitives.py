@@ -339,16 +339,16 @@ def test_inventory_add_part_val_qty() -> None:
     k_unk = ComponentKey(ComponentCategory.UNKNOWN, "RawPart")
 
     inv.add_part("Test", k_res, "R1")
-    assert inv[k_res]["val_qty"] == Decimal("10000") * ureg.ohm
+    assert inv[k_res].val_qty == Decimal("10000") * ureg.ohm
 
     inv.add_part("Test", k_cap, "C1")
-    assert inv[k_cap]["val_qty"] == Decimal("1e-7") * ureg.farad
+    assert inv[k_cap].val_qty == Decimal("1e-7") * ureg.farad
 
     inv.add_part("Test", k_ic, "U1")
-    assert inv[k_ic]["val_qty"] is None
+    assert inv[k_ic].val_qty is None
 
     inv.add_part("Test", k_unk, "")
-    assert inv[k_unk]["val_qty"] is None
+    assert inv[k_unk].val_qty is None
 
 
 # --- sort_inventory Tests ---

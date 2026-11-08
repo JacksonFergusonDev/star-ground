@@ -28,10 +28,10 @@ DOCUMENTS = {
 @pytest.mark.parametrize("url", DOCUMENTS.values(), ids=DOCUMENTS.keys())
 def test_each_publishers_documents_download_and_parse(url: str) -> None:
     result = BOMParserContext().process(InputMethod.FROM_URL, url, "Live")
-    assert result.stats["errors"] == []
+    assert result.stats.errors == []
     assert (result.raw_content or b"").startswith(b"%PDF")
     # Five Cats prints its parts list as an image: OCR's reading is offered.
-    assert result.stats["parts_found"] > 0 or result.ocr is not None
+    assert result.stats.parts_found > 0 or result.ocr is not None
 
 
 def test_tonepad_links_are_explained() -> None:
@@ -39,7 +39,7 @@ def test_tonepad_links_are_explained() -> None:
     result = BOMParserContext().process(
         InputMethod.FROM_URL, "https://tonepad.com/getFile.asp?id=102", "Live"
     )
-    assert "Download the PDF" in result.stats["errors"][0].hint
+    assert "Download the PDF" in result.stats.errors[0].hint
 
 
 def test_a_github_file_page_fetches_the_file() -> None:
@@ -48,8 +48,8 @@ def test_a_github_file_page_fetches_the_file() -> None:
         "raw_boms/tayda/fuzz/big_muff.txt"
     )
     result = BOMParserContext().process(InputMethod.FROM_URL, url, "Live")
-    assert result.stats["errors"] == []
-    assert result.stats["parts_found"] > 10
+    assert result.stats.errors == []
+    assert result.stats.parts_found > 10
 
 
 def test_a_private_address_behind_a_public_name_is_refused() -> None:

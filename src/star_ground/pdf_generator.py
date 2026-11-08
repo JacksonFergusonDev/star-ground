@@ -298,8 +298,8 @@ class FieldManual(FPDF):
 
         for part in parts:
             # Prepare notes
-            notes = part.get("notes", "")
-            if part.get("polarized"):
+            notes = part.notes
+            if part.polarized:
                 notes = f"[!] {notes}" if notes else "[!] Polarized"
 
             # Page Overflow Check:
@@ -315,14 +315,14 @@ class FieldManual(FPDF):
             self.cell(10, 8, "", 1)  # [Chk] column is empty (just the box)
 
             # [Qty]
-            self.cell(15, 8, str(part["qty"]), 1, align="C")
+            self.cell(15, 8, str(part.qty), 1, align="C")
 
             # [Value] & Notes logic
-            raw_val = str(part["value"])
+            raw_val = str(part.value)
             val_str = clean_val_for_display(raw_val)
 
             # Highlight logic: Red text for warnings/polarity
-            if part.get("polarized") or part.get("notes"):
+            if part.polarized or part.notes:
                 self.set_text_color(220, 50, 50)  # Red
                 if notes:
                     clean_note = notes.replace("[!] ", "")
@@ -339,7 +339,7 @@ class FieldManual(FPDF):
             self.set_text_color(0, 0, 0)
 
             # [Refs]
-            refs = ", ".join(part["refs"])
+            refs = ", ".join(part.refs)
             if len(refs) > 50:
                 refs = refs[:47] + "..."  # Truncate if extremely long
             self.cell(0, 8, refs, 1, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
@@ -360,7 +360,7 @@ def sort_by_z_height(part_list: list[ChecklistPart]) -> list[ChecklistPart]:
     return sorted(
         part_list,
         key=lambda item: stage_order(
-            build_stage(item["category"], str(item["value"]), item.get("spec_type"))
+            build_stage(item.category, str(item.value), item.spec_type)
         ),
     )
 
@@ -418,10 +418,10 @@ def _get_project_parts(
     """Extracts ProjectPartItems for a project from inventory."""
     results: list[ProjectPartItem] = []
     for key, data in inventory.items():
-        sources = data["sources"]
+        sources = data.sources
         if project_name in sources:
             unique_refs = deduplicate_refs(sources[project_name])
-            counted = data["counted"].get(project_name, 0)
+            counted = data.counted.get(project_name, 0)
             if unique_refs or counted:
                 results.append(
                     ProjectPartItem(
@@ -429,7 +429,7 @@ def _get_project_parts(
                         category=key.category,
                         value=key.value,
                         unique_refs=unique_refs,
-                        val_qty=data.get("val_qty"),
+                        val_qty=data.val_qty,
                         counted=counted,
                     )
                 )
@@ -458,15 +458,15 @@ def _write_field_manuals(
             )
 
             project_parts.append(
-                {
-                    "category": item.category,
-                    "value": item.value,
-                    "qty": item.qty,
-                    "refs": item.unique_refs,
-                    "notes": row_notes,
-                    "polarized": is_polarized,
-                    "spec_type": spec,
-                }
+                ChecklistPart(
+                    category=item.category,
+                    value=item.value,
+                    qty=item.qty,
+                    refs=item.unique_refs,
+                    notes=row_notes,
+                    polarized=is_polarized,
+                    spec_type=spec,
+                )
             )
 
         if project_parts:

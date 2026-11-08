@@ -5,12 +5,10 @@ import pytest
 from star_ground.bom_lib import (
     BuildVariant,
     ParseResult,
-    create_empty_inventory,
-    create_empty_stats,
 )
 from star_ground.bom_lib.builds import Entry, PageContext, plan_builds
 from star_ground.bom_lib.layout import Cell
-from star_ground.bom_lib.types import PDFWord
+from star_ground.bom_lib.types import Inventory, PDFWord, ReadingStats
 
 
 def _cell(text: str, x0: float) -> Cell:
@@ -333,10 +331,10 @@ class TestParseResultSelect:
     """A multi-circuit result has no default build."""
 
     def _result(self) -> ParseResult:
-        stock, mod = create_empty_inventory(), create_empty_inventory()
+        stock, mod = Inventory(), Inventory()
         return ParseResult(
-            inventory=create_empty_inventory(),
-            stats=create_empty_stats(),
+            inventory=Inventory(),
+            stats=ReadingStats(),
             variants=(
                 BuildVariant("Stock", stock, 52),
                 BuildVariant("Cleft Mod", mod, 51),
@@ -349,7 +347,7 @@ class TestParseResultSelect:
         assert result.variant_names == ("Stock", "Cleft Mod")
         chosen = result.select("Cleft Mod")
         assert not chosen.requires_choice
-        assert chosen.stats["parts_found"] == 51
+        assert chosen.stats.parts_found == 51
 
     def test_unknown_build_raises(self) -> None:
         with pytest.raises(KeyError):

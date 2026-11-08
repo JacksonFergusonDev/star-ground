@@ -5,11 +5,10 @@ import pytest
 from star_ground.bom_lib import (
     ComponentCategory,
     ParseWarningKind,
-    create_empty_inventory,
-    create_empty_stats,
     make_component_key,
     parse_with_verification,
 )
+from star_ground.bom_lib.types import Inventory, ReadingStats
 from star_ground.bom_lib.verification import (
     check_alternate_value,
     check_bom_reconciliation,
@@ -40,7 +39,7 @@ from star_ground.bom_lib.verification import (
 
 
 def _kinds(stats) -> list[ParseWarningKind]:
-    return [w.kind for w in stats["warnings"]]
+    return [w.kind for w in stats.warnings]
 
 
 class TestFindListedRefs:
@@ -82,94 +81,94 @@ class TestUnextractedRefs:
     """Tests for the designator conservation check."""
 
     def test_warns_for_listed_but_missing_ref(self) -> None:
-        inventory = create_empty_inventory()
+        inventory = Inventory()
         inventory.add_part(
             "T", make_component_key(ComponentCategory.RESISTORS, "1M"), "R1"
         )
-        stats = create_empty_stats()
+        stats = ReadingStats()
 
         check_unextracted_refs(["R1 1M\nR13 330"], inventory, stats)
 
-        assert [(w.kind, w.ref) for w in stats["warnings"]] == [
+        assert [(w.kind, w.ref) for w in stats.warnings] == [
             (ParseWarningKind.UNEXTRACTED_REF, "R13")
         ]
 
     def test_schematic_pages_are_not_parts_lists(self) -> None:
-        stats = create_empty_stats()
+        stats = ReadingStats()
         page = "CLR 2\nIC2A TL072\nSheet: /\nFile: HotTeacher.kicad_sch\nKiCad E.D.A. 9.0.7"
-        check_unextracted_refs([page], create_empty_inventory(), stats)
-        assert stats["warnings"] == []
+        check_unextracted_refs([page], Inventory(), stats)
+        assert stats.warnings == []
 
     def test_bare_label_is_the_notes_only_numbered_one(self) -> None:
         # NostalgiTone Compressor: the table's 'SW - SPDT' is the notes' 'SW1'.
-        inventory = create_empty_inventory()
+        inventory = Inventory()
         inventory.add_part(
             "T", make_component_key(ComponentCategory.SWITCHES, "SPDT"), "SW"
         )
-        stats = create_empty_stats()
+        stats = ReadingStats()
         check_unextracted_refs(["SW SPDT\nSW1 UP: fastest"], inventory, stats)
-        assert stats["warnings"] == []
+        assert stats.warnings == []
 
     def test_a_bare_name_in_the_notes_is_the_numbered_parts(self) -> None:
         # GuitarPCB Singles Tremolo: 'LED mounting: There are two LEDs.'
-        inventory = create_empty_inventory()
+        inventory = Inventory()
         for ref in ("LED1", "LED2"):
             inventory.add_part(
                 "T", make_component_key(ComponentCategory.DIODES, "5mm LED"), ref
             )
-        stats = create_empty_stats()
+        stats = ReadingStats()
         check_unextracted_refs(["LED mounting: There are two LEDs."], inventory, stats)
-        assert stats["warnings"] == []
+        assert stats.warnings == []
 
     def test_part_number_shaped_like_a_designator(self) -> None:
         # Golden Falk: 'Q1-Q5  J201  JFET transistor' lists J201 as a value.
-        inventory = create_empty_inventory()
+        inventory = Inventory()
         inventory.add_part(
             "T", make_component_key(ComponentCategory.TRANSISTORS, "J201"), "Q1"
         )
-        stats = create_empty_stats()
+        stats = ReadingStats()
         check_unextracted_refs(["Q1-Q5 J201 JFET transistor"], inventory, stats)
-        assert stats["warnings"] == []
+        assert stats.warnings == []
 
     def test_op_amp_sections_of_an_extracted_chip(self) -> None:
-        inventory = create_empty_inventory()
+        inventory = Inventory()
         inventory.add_part(
             "T", make_component_key(ComponentCategory.ICS, "TL072"), "IC2"
         )
-        stats = create_empty_stats()
+        stats = ReadingStats()
         check_unextracted_refs(["IC2A TL072\nIC3B TL072"], inventory, stats)
-        assert [w.ref for w in stats["warnings"]] == ["IC3B"]
+        assert [w.ref for w in stats.warnings] == ["IC3B"]
 
     def test_lowercase_suffix_matches_extracted_ref(self) -> None:
         # Shindig lists 'D10a'; the inventory may hold it in either case.
-        inventory = create_empty_inventory()
+        inventory = Inventory()
         inventory.add_part(
             "T", make_component_key(ComponentCategory.DIODES, "1N4007"), "D10A"
         )
-        stats = create_empty_stats()
+        stats = ReadingStats()
 
         check_unextracted_refs(
             ["D10a 1N4007 Standard recovery diode"], inventory, stats
         )
 
-        assert stats["warnings"] == []
+        assert stats.warnings == []
 
     def test_injected_refs_do_not_count_as_extracted(self) -> None:
-        inventory = create_empty_inventory()
+        inventory = Inventory()
         key = make_component_key(ComponentCategory.HARDWARE_MISC, "DIP SOCKET")
         inventory.add_part("T", key, "IC1 (Inj)")
-        stats = create_empty_stats()
+        stats = ReadingStats()
 
         check_unextracted_refs(["IC1 TL072"], inventory, stats)
 
-        assert [w.ref for w in stats["warnings"]] == ["IC1"]
+        assert [w.ref for w in stats.warnings] == ["IC1"]
 
 
 class TestCheckDuplicate:
     """Tests for conflicting duplicate detection."""
 
     def test_conflicting_values_warn(self) -> None:
-        stats = create_empty_stats()
+        stats = ReadingStats()
         check_duplicate(stats, "SW1", "2P4T", "SPDT")
         assert _kinds(stats) == [ParseWarningKind.CONFLICTING_DUPLICATE]
 
@@ -179,30 +178,30 @@ class TestCheckDuplicate:
     def test_equivalent_values_prose_and_dates_do_not_warn(
         self, new_value: str
     ) -> None:
-        stats = create_empty_stats()
+        stats = ReadingStats()
         check_duplicate(stats, "MIX", "B5K", new_value)
-        assert stats["warnings"] == []
+        assert stats.warnings == []
 
     def test_same_value_with_a_remark_does_not_warn(self) -> None:
         # GuitarPCB G-02 Animal's suggestion table: 'R43 | 3k3 | LED CLR'.
-        stats = create_empty_stats()
+        stats = ReadingStats()
         check_duplicate(stats, "R43", "3k3", "3k3 LED CLR")
         check_duplicate(stats, "R4", "200k", "200k 180k /220k")
-        assert [w.ref for w in stats["warnings"]] == ["R4"]
+        assert [w.ref for w in stats.warnings] == ["R4"]
 
 
 class TestCheckClassification:
     """Tests for classifier contradiction detection."""
 
     def test_designator_category_contradiction(self) -> None:
-        stats = create_empty_stats()
+        stats = ReadingStats()
         check_classification(
             stats, "D1", "1N34A", ComponentCategory.POTENTIOMETERS, "1N34A"
         )
         assert _kinds(stats) == [ParseWarningKind.CATEGORY_CONFLICT]
 
     def test_switch_value_in_wrong_category(self) -> None:
-        stats = create_empty_stats()
+        stats = ReadingStats()
         check_classification(
             stats, "GAIN", "SPDT (On - On)", ComponentCategory.POTENTIOMETERS, "x"
         )
@@ -210,30 +209,30 @@ class TestCheckClassification:
 
     def test_led_named_resistor_does_not_warn(self) -> None:
         # Aion FX Heliosphere: 'LED1  10k  Metal film resistor' is the LED's resistor.
-        stats = create_empty_stats()
+        stats = ReadingStats()
         check_classification(stats, "LED1", "10k", ComponentCategory.RESISTORS, "10k")
-        assert stats["warnings"] == []
+        assert stats.warnings == []
 
     def test_unparseable_passive_value(self) -> None:
-        stats = create_empty_stats()
+        stats = ReadingStats()
         check_classification(stats, "R9", "22K*", ComponentCategory.RESISTORS, "22K*")
         assert _kinds(stats) == [ParseWarningKind.UNPARSED_VALUE]
 
     def test_placeholder_value_warns(self) -> None:
         # Son of Ben: 'BASS | *** | *** | * Refer to Page 3'.
-        stats = create_empty_stats()
+        stats = ReadingStats()
         check_classification(
             stats, "BASS", "***", ComponentCategory.POTENTIOMETERS, "***"
         )
         assert _kinds(stats) == [ParseWarningKind.UNPARSED_VALUE]
 
     def test_consistent_part_does_not_warn(self) -> None:
-        stats = create_empty_stats()
+        stats = ReadingStats()
         check_classification(stats, "R1", "4K7", ComponentCategory.RESISTORS, "4.7k")
         check_classification(
             stats, "LDR1", "5mm", ComponentCategory.OPTOELECTRONICS, "5mm"
         )
-        assert stats["warnings"] == []
+        assert stats.warnings == []
 
 
 class TestBomReconciliation:
@@ -248,16 +247,16 @@ class TestBomReconciliation:
     )
 
     def _inventory(self, parts: list[tuple[ComponentCategory, str, str]]):
-        inventory = create_empty_inventory()
+        inventory = Inventory()
         for category, value, ref in parts:
             inventory.add_part("T", make_component_key(category, value), ref)
         return inventory
 
     def test_value_missing_from_bom_warns(self) -> None:
         inventory = self._inventory([(ComponentCategory.DIODES, "9v1 Zener", "D1")])
-        stats = create_empty_stats()
+        stats = ReadingStats()
         check_bom_reconciliation([self.BOM_PAGE], inventory, stats)
-        assert [(w.kind, w.ref) for w in stats["warnings"]] == [
+        assert [(w.kind, w.ref) for w in stats.warnings] == [
             (ParseWarningKind.BOM_MISMATCH, "D1")
         ]
 
@@ -272,16 +271,16 @@ class TestBomReconciliation:
                 (ComponentCategory.DIODES, "3mm Red LED", "D3"),
             ]
         )
-        stats = create_empty_stats()
+        stats = ReadingStats()
         check_bom_reconciliation([self.BOM_PAGE], inventory, stats)
-        assert stats["warnings"] == []
+        assert stats.warnings == []
 
     def test_bare_led_warns_when_the_bom_names_the_led(self) -> None:
         # Distortr: 'D3  LED' beside a BOM entry '1 x 3mm Red LED'.
         inventory = self._inventory([(ComponentCategory.DIODES, "LED", "D3")])
-        stats = create_empty_stats()
+        stats = ReadingStats()
         check_bom_reconciliation([self.BOM_PAGE], inventory, stats)
-        assert [(w.kind, w.ref) for w in stats["warnings"]] == [
+        assert [(w.kind, w.ref) for w in stats.warnings] == [
             (ParseWarningKind.BOM_MISMATCH, "D3")
         ]
 
@@ -293,7 +292,7 @@ class TestBomReconciliation:
 def test_ingestion_records_conflicting_duplicates() -> None:
     """Duplicate designators flow through ingestion into warnings."""
     res = parse_with_verification(["SW1 2P4T", "SW1 SPDT"], source_name="Test")
-    assert [(w.kind, w.ref) for w in res.stats["warnings"]] == [
+    assert [(w.kind, w.ref) for w in res.stats.warnings] == [
         (ParseWarningKind.CONFLICTING_DUPLICATE, "SW1")
     ]
 
@@ -321,26 +320,26 @@ class TestFootnotes:
             "GLIDE SPDT On/On\nOSC-ROOT *DPDT On/On/On\n1P8T Rotary\n"
             "*DPDT On/On/On\nThis switch MUST be a Type-2 DPDT On/On/On toggle switch."
         )
-        stats = create_empty_stats()
+        stats = ReadingStats()
         check_footnotes([text], stats)
-        (warning,) = stats["warnings"]
+        (warning,) = stats.warnings
         assert warning.kind == ParseWarningKind.FOOTNOTE
         assert warning.ref == "OSC-ROOT"
         assert "Type-2" in warning.message
 
     def test_asterisk_without_a_matching_value_is_ignored(self) -> None:
-        stats = create_empty_stats()
+        stats = ReadingStats()
         check_footnotes(["R24 27K\n* Omitted in some units\nmore text"], stats)
-        assert stats["warnings"] == []
+        assert stats.warnings == []
 
 
 def test_row_quantity_must_match_its_designators() -> None:
-    stats = create_empty_stats()
+    stats = ReadingStats()
     check_row_quantity(stats, "R10-R12,R18", 4, 4)
     check_row_quantity(stats, "C4,C5", 2, None)
-    assert stats["warnings"] == []
+    assert stats.warnings == []
     check_row_quantity(stats, "C9,C12", 2, 3)
-    assert [(w.kind, w.ref) for w in stats["warnings"]] == [
+    assert [(w.kind, w.ref) for w in stats.warnings] == [
         (ParseWarningKind.BOM_MISMATCH, "C9,C12")
     ]
 
@@ -358,34 +357,34 @@ def test_row_quantity_must_match_its_designators() -> None:
 def test_marking_code_must_match_the_value(
     value: str, marking: str, warns: bool
 ) -> None:
-    stats = create_empty_stats()
+    stats = ReadingStats()
     check_marking_code(stats, "C3", value, marking)
     assert (_kinds(stats) == [ParseWarningKind.BOM_MISMATCH]) is warns
 
 
 def test_vactrol_on_an_ic_designator_is_not_a_conflict() -> None:
     # Constrictor: 'U1  VTL5C10' under OPTOISOLATORS.
-    stats = create_empty_stats()
+    stats = ReadingStats()
     check_classification(
         stats, "U1", "VTL5C10", ComponentCategory.OPTOELECTRONICS, "VTL5C10"
     )
-    assert stats["warnings"] == []
+    assert stats.warnings == []
 
 
 class TestAionChecks:
     """Self-checks added for Aion FX parts tables."""
 
     def test_two_word_labels_and_bare_led_account_for_their_words(self) -> None:
-        inventory = create_empty_inventory()
+        inventory = Inventory()
         inventory.add_part(
             "doc", make_component_key(ComponentCategory.SWITCHES, "DPDT"), "HI CUT"
         )
         inventory.add_part(
             "doc", make_component_key(ComponentCategory.DIODES, "5mm LED"), "LED"
         )
-        stats = create_empty_stats()
+        stats = ReadingStats()
         check_unextracted_refs(["HI CUT DPDT slide\nLED1 5mm\nCUT 1"], inventory, stats)
-        assert stats["warnings"] == []
+        assert stats.warnings == []
 
     @pytest.mark.parametrize(
         ("value", "chosen"),
@@ -405,20 +404,20 @@ class TestAionChecks:
         ],
     )
     def test_builder_choices_use_the_first_value(self, value: str, chosen: str) -> None:
-        stats = create_empty_stats()
+        stats = ReadingStats()
         assert resolve_value_choice(stats, "RPD", value) == chosen
         assert _kinds(stats) == [ParseWarningKind.VALUE_CHOICE]
 
     def test_a_restated_value_is_no_choice(self) -> None:
-        stats = create_empty_stats()
+        stats = ReadingStats()
         assert resolve_value_choice(stats, "C3", "100n/0.1uF") == "100n"
-        assert stats["warnings"] == []
+        assert stats.warnings == []
 
     @pytest.mark.parametrize("value", ["2N5088", "B100K", "1-2", "1/4", "220u/35V"])
     def test_values_that_are_not_choices(self, value: str) -> None:
-        stats = create_empty_stats()
+        stats = ReadingStats()
         assert resolve_value_choice(stats, "R1", value) == value
-        assert stats["warnings"] == []
+        assert stats.warnings == []
 
     @pytest.mark.parametrize(
         "note",
@@ -456,7 +455,7 @@ class TestAionChecks:
         ],
     )
     def test_notes_that_name_another_build(self, note: str) -> None:
-        stats = create_empty_stats()
+        stats = ReadingStats()
         check_version_note(stats, "R1", note)
         assert _kinds(stats) == [ParseWarningKind.FOOTNOTE]
 
@@ -485,9 +484,9 @@ class TestAionChecks:
         ],
     )
     def test_notes_that_name_no_build(self, note: str) -> None:
-        stats = create_empty_stats()
+        stats = ReadingStats()
         check_version_note(stats, "R1", note)
-        assert stats["warnings"] == []
+        assert stats.warnings == []
 
 
 @pytest.mark.parametrize(
@@ -505,18 +504,18 @@ def test_prose_is_not_a_listing(text: str) -> None:
 
 
 def test_an_unreadable_document_says_so() -> None:
-    stats = create_empty_stats()
+    stats = ReadingStats()
     check_parts_found(stats, 0)
     assert _kinds(stats) == [ParseWarningKind.NO_PARTS_LIST]
-    stats = create_empty_stats()
+    stats = ReadingStats()
     check_parts_found(stats, 12)
-    assert stats["warnings"] == []
+    assert stats.warnings == []
 
 
 def _inventory(*parts: tuple[ComponentCategory, str, str]):
-    inv = create_empty_inventory()
+    inv = Inventory()
     for category, value, ref in parts:
-        inv[make_component_key(category, value)]["refs"].append(ref)
+        inv[make_component_key(category, value)].refs.append(ref)
     return inv
 
 
@@ -527,59 +526,59 @@ def test_value_assignments_for_another_version() -> None:
         (ComponentCategory.RESISTORS, "3k3", "R9"),
         (ComponentCategory.CAPACITORS, "1n", "C2"),
     )
-    stats = create_empty_stats()
+    stats = ReadingStats()
     text = "Shin-Ei FY-2: a few small value changes:\nR1 = 100k\nC2 = 1n\nR9 = jumper"
     check_value_assignments([text], inv, stats)
-    assert [w.ref for w in stats["warnings"]] == ["R1", "R9"]
+    assert [w.ref for w in stats.warnings] == ["R1", "R9"]
 
 
 def test_valueless_refs_are_named_unless_read() -> None:
     inv = _inventory((ComponentCategory.DIODES, "1N914", "D6"))
-    stats = create_empty_stats()
+    stats = ReadingStats()
     check_valueless_refs(["D6", "D7"], inv, stats)
-    assert [w.ref for w in stats["warnings"]] == ["D7"]
+    assert [w.ref for w in stats.warnings] == ["D7"]
 
 
 def test_pots_given_only_in_prose() -> None:
     # Aion FX legacy Halo's variant tables list no pots.
     text = "For all variants, the Sustain and Tone pots are 100kB and Volume is 100kA."
-    stats = create_empty_stats()
+    stats = ReadingStats()
     check_prose_pots(
         [text], _inventory((ComponentCategory.RESISTORS, "1k", "R1")), stats
     )
-    assert [w.ref for w in stats["warnings"]] == ["SUSTAIN", "TONE", "VOLUME"]
-    stats = create_empty_stats()
+    assert [w.ref for w in stats.warnings] == ["SUSTAIN", "TONE", "VOLUME"]
+    stats = ReadingStats()
     with_pot = _inventory((ComponentCategory.POTENTIOMETERS, "100kB", "TONE"))
     check_prose_pots([text], with_pot, stats)
-    assert stats["warnings"] == []
+    assert stats.warnings == []
 
 
 def test_a_sparse_series_names_its_gaps() -> None:
     # GuitarPCB G2 Animal's text layer lists only a table of substitutes.
     parts = [(ComponentCategory.RESISTORS, "10M", f"R{n}") for n in (1, 4, 8, 12)]
-    stats = create_empty_stats()
+    stats = ReadingStats()
     check_numbering_gaps(_inventory(*parts), stats)
-    assert {w.ref for w in stats["warnings"]} == {
+    assert {w.ref for w in stats.warnings} == {
         "",
         *(f"R{n}" for n in (2, 3, 5, 6, 7, 9, 10, 11)),
     }
     # The parts the reading never named are missed too, so the whole
     # document is warned.
-    whole = [w for w in stats["warnings"] if not w.ref]
+    whole = [w for w in stats.warnings if not w.ref]
     assert [w.kind for w in whole] == [ParseWarningKind.IMAGE_PARTS_LIST]
     # A list with a few gaps is complete enough.
-    stats = create_empty_stats()
+    stats = ReadingStats()
     dense = [
         (ComponentCategory.RESISTORS, "1k", f"R{n}") for n in range(1, 12) if n != 7
     ]
     check_numbering_gaps(_inventory(*dense), stats)
-    assert stats["warnings"] == []
+    assert stats.warnings == []
     # With capacitors listed, sparse numbering is the design's own
     # (PedalPCB Thermionic Deluxe: R32-R37).
-    stats = create_empty_stats()
+    stats = ReadingStats()
     cap = (ComponentCategory.CAPACITORS, "100n", "C1")
     check_numbering_gaps(_inventory(*parts, cap), stats)
-    assert stats["warnings"] == []
+    assert stats.warnings == []
 
 
 def test_counted_rows_that_were_not_read_warn_the_document() -> None:
@@ -591,33 +590,33 @@ def test_counted_rows_that_were_not_read_warn_the_document() -> None:
         "1 - 5M1       1 - 100 µF     IC1 - PT2399\n"
         "4 - 10k       2 - 0.082 µF   Q1 - 2N5457\n"
     )
-    stats = create_empty_stats()
+    stats = ReadingStats()
     check_quantity_list([text], ["1 - 5M1 (5.1M)", "1 - 100 µF"], [], stats)
-    assert [(w.kind, w.ref) for w in stats["warnings"]] == [
+    assert [(w.kind, w.ref) for w in stats.warnings] == [
         (ParseWarningKind.QUANTITY_LIST, "")
     ]
-    assert "'4 - 10k', '2 - 0.082 µF'" in stats["warnings"][0].message
+    assert "'4 - 10k', '2 - 0.082 µF'" in stats.warnings[0].message
     # Every row read, with its count: nothing to warn.
-    stats = create_empty_stats()
+    stats = ReadingStats()
     read = ["1 - 5M1", "1 - 100µF", "4 - 10k", "2 - 0.082µF"]
     check_quantity_list([text], read, [], stats)
-    assert stats["warnings"] == []
+    assert stats.warnings == []
     # A row read with another count is not the printed row.
-    stats = create_empty_stats()
+    stats = ReadingStats()
     check_quantity_list(
         [text], ["1 - 5M1", "1 - 100µF", "3 - 10k", "2 - 0.082µF"], [], stats
     )
-    assert "'4 - 10k'" in stats["warnings"][0].message
+    assert "'4 - 10k'" in stats.warnings[0].message
     # A row the parser saw but could not classify is reported once.
-    stats = create_empty_stats()
+    stats = ReadingStats()
     check_quantity_list([text], read[:3], ["2 - 0.082 µF", "3 - jumpers"], stats)
-    assert stats["warnings"][0].message.startswith("2 row(s)")
+    assert stats.warnings[0].message.startswith("2 row(s)")
     # Ranges are not counts: 'pages 3-4', 'R 10-30k', 'steps 1 - 4'.
-    stats = create_empty_stats()
+    stats = ReadingStats()
     check_quantity_list(
         ["see 3-4 and 10-30k, steps 1 - 4, 6 - 7, 8 - 9"], [], [], stats
     )
-    assert stats["warnings"] == []
+    assert stats.warnings == []
 
 
 def test_two_values_side_by_side() -> None:
@@ -626,21 +625,21 @@ def test_two_values_side_by_side() -> None:
         (ComponentCategory.CAPACITORS, "22n 63V", "C1"),
         (ComponentCategory.RESISTORS, "620 Lower Value", "R36"),
     )
-    stats = create_empty_stats()
+    stats = ReadingStats()
     check_two_values(inv, stats)
-    assert [w.ref for w in stats["warnings"]] == ["R6"]
+    assert [w.ref for w in stats.warnings] == ["R6"]
 
 
 def test_a_wattage_is_no_second_value() -> None:
     # Tonepad Real McTube: 'R2 - 12 ohm 2W'.
-    stats = create_empty_stats()
+    stats = ReadingStats()
     check_two_values(_inventory((ComponentCategory.RESISTORS, "12 2W", "R2")), stats)
-    assert stats["warnings"] == []
+    assert stats.warnings == []
 
 
 def test_a_value_running_into_a_label_warns() -> None:
     # Tonepad Small Clone: 'C1 - 330pF' beside 'Pos1 - 33pF'.
-    stats = create_empty_stats()
+    stats = ReadingStats()
     check_two_values(
         _inventory((ComponentCategory.CAPACITORS, "330p Pos1 33pF", "C1")), stats
     )
@@ -656,9 +655,9 @@ def test_a_table_of_substitutes_warns_every_row() -> None:
         (ComponentCategory.RESISTORS, "620 Lower Value", "R36"),
         (ComponentCategory.DIODES, "CLR", "LED"),
     )
-    stats = create_empty_stats()
+    stats = ReadingStats()
     check_two_values(inv, stats)
-    assert {w.ref for w in stats["warnings"]} == {"R1", "R6", "R7", "R8", "R36", "LED"}
+    assert {w.ref for w in stats.warnings} == {"R1", "R6", "R7", "R8", "R36", "LED"}
 
 
 def test_pictured_list_warns_document_and_shared_designators() -> None:
@@ -666,11 +665,11 @@ def test_pictured_list_warns_document_and_shared_designators() -> None:
     # AmpEQ text list on page 3.
     from star_ground.bom_lib.verification import check_pictured_lists
 
-    stats = create_empty_stats()
+    stats = ReadingStats()
     check_pictured_lists(
         {2: ["Bill of Materials Sonic Bloom"]}, {2: {"R1", "C3", "BASS"}}, stats
     )
-    assert [(w.kind, w.ref) for w in stats["warnings"]] == [
+    assert [(w.kind, w.ref) for w in stats.warnings] == [
         (ParseWarningKind.IMAGE_PARTS_LIST, ""),
         (ParseWarningKind.IMAGE_PARTS_LIST, "C3"),
         (ParseWarningKind.IMAGE_PARTS_LIST, "R1"),
@@ -683,13 +682,13 @@ def test_other_list_warns_changed_and_absent_parts() -> None:
 
     read = {f"R{n}": "1k" for n in range(1, 7)} | {"C2": "10n", "D2": "1n4001"}
     listed = [(f"R{n}", "1k") for n in range(1, 6)] + [("C2", "22n")]
-    stats = create_empty_stats()
+    stats = ReadingStats()
     check_other_list(4, listed, read, stats)
-    assert [w.ref for w in stats["warnings"]] == ["", "C2", "D2", "R6"]
+    assert [w.ref for w in stats.warnings] == ["", "C2", "D2", "R6"]
     # The same value in other units is the same part.
-    stats = create_empty_stats()
+    stats = ReadingStats()
     check_other_list(4, [("C1", "22µ")], {"C1": "22u"}, stats)
-    assert [w.ref for w in stats["warnings"]] == [""]
+    assert [w.ref for w in stats.warnings] == [""]
 
 
 def test_either_part_note() -> None:
@@ -699,12 +698,12 @@ def test_either_part_note() -> None:
         (ComponentCategory.POTENTIOMETERS, "3k", "TR1"),
         (ComponentCategory.RESISTORS, "1k", "R18"),
     )
-    stats = create_empty_stats()
+    stats = ReadingStats()
     text = (
         "TR1 / R18 \u2013 either the trim pot or fixed resistor is used but not both."
     )
     check_either_part([text], inv, stats)
-    assert {(w.kind, w.ref) for w in stats["warnings"]} == {
+    assert {(w.kind, w.ref) for w in stats.warnings} == {
         (ParseWarningKind.VALUE_CHOICE, "TR1"),
         (ParseWarningKind.VALUE_CHOICE, "R18"),
     }
@@ -720,31 +719,31 @@ def test_either_part_install_notes() -> None:
         (ComponentCategory.POTENTIOMETERS, "100k", "T2"),
         (ComponentCategory.POTENTIOMETERS, "A100k", "BOOST"),
     )
-    stats = create_empty_stats()
+    stats = ReadingStats()
     text = (
         "* Install R9 or TR1 but do not install both.\n"
         "If you want a simple pedal, only install T2 and not the Boost potentiometer. "
         "Otherwise only install the Boost potentiometer and do not install T2."
     )
     check_either_part([text], inv, stats)
-    assert sorted(w.ref for w in stats["warnings"]) == ["BOOST", "R9", "T2", "TR1"]
+    assert sorted(w.ref for w in stats.warnings) == ["BOOST", "R9", "T2", "TR1"]
 
 
 def test_wrapped_value_read_in_part_is_no_conflict() -> None:
     # GuitarPCB Dr Phybes: one reader keeps 'CA Bi-colour LED', another its last line.
-    stats = create_empty_stats()
+    stats = ReadingStats()
     check_duplicate(stats, "D2", "CA Bi-colour LED", "LED")
-    assert stats["warnings"] == []
+    assert stats.warnings == []
 
 
 def test_pointer_value_warns() -> None:
     from star_ground.bom_lib.verification import check_pointer_value
 
-    stats = create_empty_stats()
+    stats = ReadingStats()
     check_pointer_value(stats, "Q1", "See Text")
     check_pointer_value(stats, "Q2", "PNP\u2014See Text")  # PUFF v4
     check_pointer_value(stats, "R1", "10k")
-    assert [(w.kind, w.ref) for w in stats["warnings"]] == [
+    assert [(w.kind, w.ref) for w in stats.warnings] == [
         (ParseWarningKind.UNPARSED_VALUE, "Q1"),
         (ParseWarningKind.UNPARSED_VALUE, "Q2"),
     ]
@@ -753,36 +752,36 @@ def test_pointer_value_warns() -> None:
 def test_alternative_part_number_is_no_missing_designator() -> None:
     # GuitarPCB FrontStage: 'Q1 | J309 or J113' names a JFET, not jack J113.
     inv = _inventory((ComponentCategory.TRANSISTORS, "J309", "Q1"))
-    stats = create_empty_stats()
+    stats = ReadingStats()
     check_unextracted_refs(["Q1 J309 or J113"], inv, stats)
-    assert stats["warnings"] == []
+    assert stats.warnings == []
 
 
 def test_comma_listed_part_numbers_are_a_choice() -> None:
-    stats = create_empty_stats()
+    stats = ReadingStats()
     assert resolve_value_choice(stats, "IC1", "7660S, 1044") == "7660S"
-    assert [w.kind for w in stats["warnings"]] == [ParseWarningKind.VALUE_CHOICE]
+    assert [w.kind for w in stats.warnings] == [ParseWarningKind.VALUE_CHOICE]
     # A slash between bare numbers stays as printed.
-    assert resolve_value_choice(create_empty_stats(), "R1", "100/220") == "100/220"
+    assert resolve_value_choice(ReadingStats(), "R1", "100/220") == "100/220"
 
 
 def test_build_note_on_a_row_whose_builds_differ() -> None:
     # Aion FX Elite: C13 '1n | 1n | 820pF', 'Mod value is MLCC, not film.'
-    stats = create_empty_stats()
+    stats = ReadingStats()
     check_build_note(
         stats, "C13", ["1n", "1n", "820pF"], "Mod value is MLCC, not film."
     )
     assert _kinds(stats) == [ParseWarningKind.FOOTNOTE]
-    quiet = create_empty_stats()
+    quiet = ReadingStats()
     check_build_note(quiet, "C11", ["10pF", "10pF", "10pF"], "Mod value is MLCC.")
     check_build_note(quiet, "R1", ["1k", "2k"], "")
-    assert quiet["warnings"] == []
+    assert quiet.warnings == []
 
 
 def test_alternate_value_is_warned() -> None:
-    stats = create_empty_stats()
+    stats = ReadingStats()
     check_alternate_value(stats, "R10", "2k", "47R")
-    assert [(w.kind, w.ref) for w in stats["warnings"]] == [
+    assert [(w.kind, w.ref) for w in stats.warnings] == [
         (ParseWarningKind.FOOTNOTE, "R10")
     ]
 
@@ -800,7 +799,7 @@ def test_footnotes_on_building_without_a_part() -> None:
         ]
     )
     marked = [("R15", "1"), ("Midrange", "1"), ("C4", "2"), ("CX1", "2"), ("C10", "4")]
-    inventory = create_empty_inventory()
+    inventory = Inventory()
     for ref, value, cat in (
         ("R15", "15k", ComponentCategory.RESISTORS),
         ("MIDRANGE", "50kB", ComponentCategory.POTENTIOMETERS),
@@ -808,16 +807,16 @@ def test_footnotes_on_building_without_a_part() -> None:
         ("CX1", "1n5", ComponentCategory.CAPACITORS),
         ("C10", "100n", ComponentCategory.CAPACITORS),
     ):
-        inventory[make_component_key(cat, value)]["refs"].append(ref)
-    stats = create_empty_stats()
+        inventory[make_component_key(cat, value)].refs.append(ref)
+    stats = ReadingStats()
     check_numbered_footnotes([marked], [text], inventory, stats)
-    assert sorted(w.ref for w in stats["warnings"]) == ["CX1", "MIDRANGE", "R15"]
+    assert sorted(w.ref for w in stats.warnings) == ["CX1", "MIDRANGE", "R15"]
 
 
 def _listed(*parts: tuple[str, str, ComponentCategory]):
-    inventory = create_empty_inventory()
+    inventory = Inventory()
     for ref, value, cat in parts:
-        inventory[make_component_key(cat, value)]["refs"].append(ref)
+        inventory[make_component_key(cat, value)].refs.append(ref)
     return inventory
 
 
@@ -844,9 +843,9 @@ def test_build_notes_change_list_for_another_version() -> None:
         ("R8", "4k7", ComponentCategory.RESISTORS),
         ("R23", "3k3", ComponentCategory.RESISTORS),
     )
-    stats = create_empty_stats()
+    stats = ReadingStats()
     check_build_changes([text], inventory, stats)
-    assert sorted(w.ref for w in stats["warnings"]) == ["C12", "D3", "R34", "R8"]
+    assert sorted(w.ref for w in stats.warnings) == ["C12", "D3", "R34", "R8"]
 
 
 def test_style_builds_change_values_inline() -> None:
@@ -863,9 +862,9 @@ def test_style_builds_change_values_inline() -> None:
     )
     refs = ("R1", "R2", "R3", "R4", "R5", "R6", "C1", "C2", "C4", "D2", "Q1", "R9")
     inventory = _listed(*((r, "1k", ComponentCategory.RESISTORS) for r in refs))
-    stats = create_empty_stats()
+    stats = ReadingStats()
     check_build_changes([text], inventory, stats)
-    assert sorted({w.ref for w in stats["warnings"]}) == sorted(set(refs) - {"R9"})
+    assert sorted({w.ref for w in stats.warnings}) == sorted(set(refs) - {"R9"})
 
 
 def test_parts_that_differ_between_covered_versions() -> None:
@@ -876,9 +875,9 @@ def test_parts_that_differ_between_covered_versions() -> None:
         ("D4", "1N4001", ComponentCategory.DIODES),
         ("D1", "1N914", ComponentCategory.DIODES),
     )
-    stats = create_empty_stats()
+    stats = ReadingStats()
     check_build_changes([text], inventory, stats)
-    assert sorted(w.ref for w in stats["warnings"]) == ["D4", "IC1"]
+    assert sorted(w.ref for w in stats.warnings) == ["D4", "IC1"]
 
 
 def test_part_numbered_version_swaps_its_part() -> None:
@@ -888,22 +887,22 @@ def test_part_numbered_version_swaps_its_part() -> None:
         ("IC2", "MN3007", ""),
         ("IC3", "TL072", ""),
     ]
-    stats = create_empty_stats()
+    stats = ReadingStats()
     check_part_versions(stats, rows)
-    assert [w.ref for w in stats["warnings"]] == ["IC2"]
+    assert [w.ref for w in stats.warnings] == ["IC2"]
 
 
 def test_capacitance_under_a_resistor_designator() -> None:
     # Aion FX legacy Stratus's SD-1 table: 'R8  18n capacitor'.
-    stats = create_empty_stats()
+    stats = ReadingStats()
     check_classification(
         stats, "R8", "18n capacitor", ComponentCategory.RESISTORS, "18n capacitor"
     )
     assert _kinds(stats) == [ParseWarningKind.CATEGORY_CONFLICT]
-    quiet = create_empty_stats()
+    quiet = ReadingStats()
     # A diode number is no capacitance (GuitarPCB Emexar v4: 'R10  1N4001').
     check_classification(quiet, "R10", "1N4001", ComponentCategory.RESISTORS, "1N4001")
-    assert not any("capacitor's" in w.message for w in quiet["warnings"])
+    assert not any("capacitor's" in w.message for w in quiet.warnings)
 
 
 def test_omitted_and_running_title_refs_are_accounted_for() -> None:
@@ -911,21 +910,21 @@ def test_omitted_and_running_title_refs_are_accounted_for() -> None:
     # legacy L5 Preamp's running footer 'L5 PREAMP 5' is no listing of L5.
     pages = [f"R1 10k\nC1 120pF\nL5 PREAMP {n}" for n in range(1, 5)]
     inventory = _listed(("R1", "10k", ComponentCategory.RESISTORS))
-    stats = create_empty_stats()
+    stats = ReadingStats()
     check_unextracted_refs(pages, inventory, stats, frozenset({"C1"}))
-    assert stats["warnings"] == []
+    assert stats.warnings == []
 
 
 def test_value_keyed_parts_list_cannot_be_read() -> None:
     # Aion FX 3PDT Bypass: 'PART QTY TYPE NOTES' with values in PART.
-    stats = create_empty_stats()
+    stats = ReadingStats()
     check_value_keyed_list(
         ["PARTS LIST\nPART QTY TYPE NOTES\n1N5817 (D1) 1 Schottky"], stats
     )
     assert _kinds(stats) == [ParseWarningKind.NO_PARTS_LIST]
-    quiet = create_empty_stats()
+    quiet = ReadingStats()
     check_value_keyed_list(["PART VALUE TYPE NOTES\nR1 10k Metal film"], quiet)
-    assert quiet["warnings"] == []
+    assert quiet.warnings == []
 
 
 def test_version_footnote_and_change_instructions() -> None:
@@ -943,9 +942,9 @@ def test_version_footnote_and_change_instructions() -> None:
         *[(r, "1M", ComponentCategory.RESISTORS) for r in ("R1", "R4", "R6", "R15")],
         *[(c, "47n", ComponentCategory.CAPACITORS) for c in ("C1", "C4")],
     )
-    stats = create_empty_stats()
+    stats = ReadingStats()
     check_build_changes([text], inventory, stats)
-    assert sorted({w.ref for w in stats["warnings"]}) == [
+    assert sorted({w.ref for w in stats.warnings}) == [
         "C1",
         "C4",
         "R1",
@@ -962,16 +961,16 @@ def test_footnote_use_only_one_of_these() -> None:
         ("IC1", "LM741", ComponentCategory.ICS),
         ("IC2", "JRC4558", ComponentCategory.ICS),
     )
-    stats = create_empty_stats()
+    stats = ReadingStats()
     check_numbered_footnotes([[("IC1", "1"), ("IC2", "1")]], [text], inventory, stats)
-    assert sorted(w.ref for w in stats["warnings"]) == ["IC1", "IC2"]
+    assert sorted(w.ref for w in stats.warnings) == ["IC1", "IC2"]
 
 
 def test_schematic_net_labels_are_not_listings() -> None:
     # Aion FX legacy Astra's schematic: 'IN 1M 2N3565' beside R1.
-    stats = create_empty_stats()
+    stats = ReadingStats()
     check_unextracted_refs(["Schematic\nIN 1M 2N3565\nR1 1M"], _listed(), stats)
-    assert [w.ref for w in stats["warnings"]] == ["R1"]
+    assert [w.ref for w in stats.warnings] == ["R1"]
 
 
 def test_build_notes_that_leave_out_a_control() -> None:
@@ -989,9 +988,9 @@ def test_build_notes_that_leave_out_a_control() -> None:
         ("TONE", "10kB", ComponentCategory.POTENTIOMETERS),
         ("R25", "10k", ComponentCategory.RESISTORS),
     )
-    stats = create_empty_stats()
+    stats = ReadingStats()
     check_build_changes([text], inventory, stats)
-    assert sorted(w.ref for w in stats["warnings"]) == ["R24", "TONE"]
+    assert sorted(w.ref for w in stats.warnings) == ["R24", "TONE"]
 
 
 def test_build_notes_fill_a_part_the_list_omits() -> None:
@@ -1004,9 +1003,9 @@ def test_build_notes_fill_a_part_the_list_omits() -> None:
     )
     refs = ("R22", "R23", "R24", "Q6", "R1")
     inventory = _listed(*((r, "10k", ComponentCategory.RESISTORS) for r in refs))
-    stats = create_empty_stats()
+    stats = ReadingStats()
     check_build_changes([text], inventory, stats, frozenset({"CX1"}))
-    assert sorted(w.ref for w in stats["warnings"]) == [
+    assert sorted(w.ref for w in stats.warnings) == [
         "CX1",
         "Q6",
         "R22",
@@ -1023,18 +1022,18 @@ def test_a_listed_chip_another_chip_set_replaces() -> None:
         ("IC4", "MN3101", ComponentCategory.ICS),
         ("IC1", "TL072", ComponentCategory.ICS),
     )
-    stats = create_empty_stats()
+    stats = ReadingStats()
     check_chip_sets([text], inventory, stats)
-    assert sorted(w.ref for w in stats["warnings"]) == ["IC3", "IC4"]
+    assert sorted(w.ref for w in stats.warnings) == ["IC3", "IC4"]
 
 
 def test_unreadable_rows_warn_the_document() -> None:
-    stats = create_empty_stats()
+    stats = ReadingStats()
     check_unreadable_rows(["60  MPF102"], stats)
     assert _kinds(stats) == [ParseWarningKind.UNREADABLE_ROW]
-    stats = create_empty_stats()
+    stats = ReadingStats()
     check_unreadable_rows([], stats)
-    assert stats["warnings"] == []
+    assert stats.warnings == []
 
 
 def test_build_notes_for_several_builds_under_headings() -> None:
@@ -1056,9 +1055,9 @@ def test_build_notes_for_several_builds_under_headings() -> None:
     )
     refs = ("R1", "C6", "R10", "FUZZ", "R5")
     inventory = _listed(*((r, "10k", ComponentCategory.RESISTORS) for r in refs))
-    stats = create_empty_stats()
+    stats = ReadingStats()
     check_build_changes([text], inventory, stats)
-    assert sorted(w.ref for w in stats["warnings"]) == ["C6", "FUZZ", "R1", "R10"]
+    assert sorted(w.ref for w in stats.warnings) == ["C6", "FUZZ", "R1", "R10"]
 
 
 @pytest.mark.parametrize(
@@ -1083,9 +1082,9 @@ def test_build_notes_for_several_builds_under_headings() -> None:
 def test_footnotes_that_build_another_version(text: str, refs: list[str]) -> None:
     listed = ("C1", "C5", "C9", "CX2", "CX3", "RX1", "RX2", "SUSTAIN", "R1")
     inventory = _listed(*((r, "1k", ComponentCategory.RESISTORS) for r in listed))
-    stats = create_empty_stats()
+    stats = ReadingStats()
     check_build_changes([text], inventory, stats)
-    assert sorted(w.ref for w in stats["warnings"]) == refs
+    assert sorted(w.ref for w in stats.warnings) == refs
 
 
 def test_a_heading_for_building_without_a_stage() -> None:
@@ -1099,11 +1098,9 @@ def test_a_heading_for_building_without_a_stage() -> None:
     )
     refs = ("R20", "R21", "R22", "R23", "Q4", "C13", "R1")
     inventory = _listed(*((r, "10k", ComponentCategory.RESISTORS) for r in refs))
-    stats = create_empty_stats()
+    stats = ReadingStats()
     check_build_changes([text], inventory, stats, frozenset({"CX3"}))
-    assert sorted(w.ref for w in stats["warnings"]) == sorted(
-        set(refs) - {"R1"} | {"CX3"}
-    )
+    assert sorted(w.ref for w in stats.warnings) == sorted(set(refs) - {"R1"} | {"CX3"})
 
 
 def test_install_one_not_the_other() -> None:
@@ -1115,14 +1112,14 @@ def test_install_one_not_the_other() -> None:
         ("T2", "100k", ComponentCategory.POTENTIOMETERS),
         ("BOOST", "100kA", ComponentCategory.POTENTIOMETERS),
     )
-    stats = create_empty_stats()
+    stats = ReadingStats()
     check_either_part([text], inventory, stats)
-    assert sorted(w.ref for w in stats["warnings"]) == ["BOOST", "T2"]
+    assert sorted(w.ref for w in stats.warnings) == ["BOOST", "T2"]
 
 
 def test_a_wire_link_in_one_build() -> None:
     # GuitarPCB Mini-Me: 'D4  Jumper with MN3007' is a 1N4148 with the V3207.
-    stats = create_empty_stats()
+    stats = ReadingStats()
     check_classification(
         stats,
         "D4",

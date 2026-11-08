@@ -166,8 +166,8 @@ def clean(result: ParseResult) -> str | None:
     warnings beyond informational ones. An image parts list counts only when
     OCR judged its reading complete.
     """
-    if result.stats["errors"]:
-        return result.stats["errors"][0].message
+    if result.stats.errors:
+        return result.stats.errors[0].message
     if (
         result.ocr is not None
         and result.ocr.has_parts
@@ -177,7 +177,7 @@ def clean(result: ParseResult) -> str | None:
     for _, build in builds(result):
         if not build.inventory:
             return "no parts were read"
-        doubts = [w for w in build.stats["warnings"] if w.kind not in _INFORMATIONAL]
+        doubts = [w for w in build.stats.warnings if w.kind not in _INFORMATIONAL]
         if doubts:
             return f"{len(doubts)} self-check warning(s), first: {doubts[0].kind}: {doubts[0].message}"
     return None

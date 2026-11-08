@@ -26,16 +26,16 @@ def check_backend() -> None:
     upload = FileUpload("smoke.pdf", bytes(pdf.output()))
     reading = read_document(InputMethod.UPLOAD_FILE, upload)
     assert reading is not None
-    assert reading.stats["parts_found"] == 2, reading
+    assert reading.stats.parts_found == 2, reading
     stock = read_stock(FileUpload("stock.csv", b"Category,Part,Qty\nResistors,10k,1\n"))
     master = generate_master_list(
         [Project(name="Smoke", count=3, method=InputMethod.UPLOAD_FILE, data=upload)],
         stock=stock,
     )
-    assert not master.stats["errors"], master.stats
+    assert not master.stats.errors, master.stats
     rows = master.shopping_list()
-    resistor = next(row for row in rows if row["Part"] == "10k")
-    assert (resistor["BOM Qty"], resistor["In Stock"], resistor["Net Need"]) == (
+    resistor = next(row for row in rows if row.part == "10k")
+    assert (resistor.bom_qty, resistor.in_stock, resistor.net_need) == (
         3,
         1,
         2,
@@ -84,8 +84,8 @@ def check_concurrent_reads() -> None:
         )
     for reading in readings:
         assert reading is not None
-        assert not reading.stats["errors"], reading.stats["errors"]
-        assert reading.stats["parts_found"] == 2, reading.stats
+        assert not reading.stats.errors, reading.stats.errors
+        assert reading.stats.parts_found == 2, reading.stats
 
 
 def check_ocr() -> None:

@@ -50,23 +50,23 @@ def test_pasted_projects_merge_into_one_master_list() -> None:
     )
 
     assert [p.name for p in master.projects] == ["Fuzz", "Project #2"]
-    assert master.parts[R10K]["sources"] == {
+    assert master.parts[R10K].sources == {
         "Fuzz": ["R1", "R1"],
         "Project #2": ["R1"],
     }
-    assert master.stats["parts_found"] == 3
+    assert master.stats.parts_found == 3
     # The hardware kit is added for all three pedals, not to the documents' parts.
     assert len(master.kit) > len(master.parts)
-    row = next(r for r in master.shopping_list() if r["Part"] == "10k")
-    assert row["BOM Qty"] == 3
+    row = next(r for r in master.shopping_list() if r.part == "10k")
+    assert row.bom_qty == 3
 
 
 def test_a_parts_list_s_chips_get_sockets() -> None:
     master = generate_master_list([Project(data="IC1 TL071\nIC100 TC1044SCPA")])
 
     socket = ComponentKey(ComponentCategory.HARDWARE_MISC, "DIP SOCKET (Check Size)")
-    assert master.parts[socket]["qty"] == 2
-    assert any(r["Part"] == "DIP SOCKET (Check Size)" for r in master.shopping_list())
+    assert master.parts[socket].qty == 2
+    assert any(r.part == "DIP SOCKET (Check Size)" for r in master.shopping_list())
 
 
 def test_a_multi_circuit_document_has_no_default_build() -> None:
@@ -84,14 +84,14 @@ def test_a_multi_circuit_document_has_no_default_build() -> None:
     (built,) = cleft.projects
     assert built.label == "Ungula (Cleft Mod)"
     q1 = ComponentKey(ComponentCategory.TRANSISTORS, "2N5089")
-    assert "Q1" in cleft.parts[q1]["sources"]["Ungula (Cleft Mod)"]
+    assert "Q1" in cleft.parts[q1].sources["Ungula (Cleft Mod)"]
     assert built.document == upload.content
 
     # The reading is reused untouched: another build can still be generated.
     stock = generate_master_list([replace(project, variant="Stock")])
     assert stock.projects[0].label == "Ungula (Stock)"
     assert all(
-        set(d["sources"]) == {PENDING_SOURCE}
+        set(d.sources) == {PENDING_SOURCE}
         for v in reading.variants
         for d in v.inventory.values()
     )
@@ -109,11 +109,11 @@ def test_input_errors_reach_the_master_list(monkeypatch: pytest.MonkeyPatch) -> 
         ]
     )
 
-    assert [e.message for e in master.stats["errors"]] == [
+    assert [e.message for e in master.stats.errors] == [
         "The link opened a web page, not a parts list."
     ]
-    assert master.projects[1].errors == tuple(master.stats["errors"])
-    assert master.stats["parts_found"] == 1
+    assert master.projects[1].errors == tuple(master.stats.errors)
+    assert master.stats.parts_found == 1
 
 
 def test_stock_is_subtracted_from_what_to_buy() -> None:
@@ -122,8 +122,8 @@ def test_stock_is_subtracted_from_what_to_buy() -> None:
         [Project(name="Fuzz", count=5, data="R1 10k")], stock=stock
     )
 
-    row = next(r for r in master.shopping_list() if r["Part"] == "10k")
-    assert (row["BOM Qty"], row["In Stock"], row["Net Need"]) == (5, 2, 3)
+    row = next(r for r in master.shopping_list() if r.part == "10k")
+    assert (row.bom_qty, row.in_stock, row.net_need) == (5, 2, 3)
 
 
 def test_documents_are_named_by_label_and_keep_the_source() -> None:
@@ -198,7 +198,7 @@ def test_a_short_stock_row_is_skipped() -> None:
         FileUpload("stock.csv", b"Category,Part,Qty\nResistors,10k\nResistors,22k,4\n")
     )
 
-    assert {k.value: d["qty"] for k, d in stock.items()} == {"22k": 4}
+    assert {k.value: d.qty for k, d in stock.items()} == {"22k": 4}
 
 
 @pytest.mark.parametrize("count", [0, -2])
@@ -216,7 +216,7 @@ def test_different_projects_with_one_name_are_kept_apart() -> None:
     )
 
     assert [p.label for p in master.projects] == ["Fuzz", "Fuzz (2)"]
-    assert master.parts[R10K]["sources"] == {"Fuzz": ["R1"]}
+    assert master.parts[R10K].sources == {"Fuzz": ["R1"]}
     with zipfile.ZipFile(io.BytesIO(master.pdf_bundle())) as zf:
         manuals = [n for n in zf.namelist() if n.startswith("Field Manuals/")]
     assert manuals == [
@@ -231,7 +231,7 @@ def test_the_same_project_entered_twice_shares_its_label() -> None:
     )
 
     assert [p.label for p in master.projects] == ["Fuzz", "Fuzz"]
-    assert master.parts[R10K]["qty"] == 2
+    assert master.parts[R10K].qty == 2
 
 
 def test_a_correction_buys_the_part_the_document_prints() -> None:
@@ -245,8 +245,8 @@ def test_a_correction_buys_the_part_the_document_prints() -> None:
     master = generate_master_list([project])
 
     one_k = ComponentKey(ComponentCategory.RESISTORS, "1k")
-    assert master.parts[R10K]["qty"] == 2
-    assert master.parts[one_k]["qty"] == 2
+    assert master.parts[R10K].qty == 2
+    assert master.parts[one_k].qty == 2
     assert {p.ref: p.value for p in master.projects[0].parts} == {
         "R1": "10k",
         "R2": "1k",

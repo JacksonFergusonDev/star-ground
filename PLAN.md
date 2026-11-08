@@ -50,7 +50,7 @@ Decided 2026-10-22 to 2026-10-24. A decision here changes only by editing this f
 Decided 2026-11-07, after a review of the build pack and the Python code. The build pack's PDFs looked like a prototype (Courier, a heavy black grid, red text for polarity, values as the parser holds them), and most of the remaining debt is in the domain layer the Streamlit app grew up around. With no users, it is rebuilt now rather than carried (step 12).
 
 - **Package:** the Python code is the `star_ground` package in a `src/` layout (`src/star_ground/`), not a top-level package named `src`.
-- **Domain model:** frozen dataclasses, not mutable `TypedDict`s. A shopping list line has typed fields; column headers such as "Buy Qty" exist only in the CSV writer. The API's Pydantic models are built from these dataclasses.
+- **Domain model:** dataclasses, not `TypedDict`s. What is filled in as documents are read and merged (a part's quantities, a reading's stats) is a mutable dataclass; what is handed onward is frozen. A shopping list line has typed fields; column headers such as "Buy Qty" exist only in the CSV writer. The API's Pydantic models are built from these dataclasses.
 - **Component values:** Star Ground's own `Value` (a `Decimal` with a unit) replaces pint. pint was used only to tag resistances and capacitances, cost about 0.2 s of the API's 0.5 s import on every cold start, and doesn't format values the way builders write them (`100 nF`, `4.7 kΩ`).
 - **Printed documents are typeset with Typst** (the `typst` Python package), replacing fpdf2. Python builds a typed payload for each document; a `.typ` template lays it out. Typst repeats table headers, counts pages, keeps sections together and embeds real fonts, and its wheel holds the compiler, so the Docker image needs no system libraries. Rejected: fpdf2 (every layout by hand, in millimetre offsets), ReportLab (styling still in Python) and WeasyPrint (would reuse the site's CSS, but needs Pango installed on every machine and in the image).
 - **The build pack:** one folder in the ZIP, holding a **build book** PDF (a cover with the contents and version, the shopping summary, and each project's checklist grouped by build stage, with values as builders write them, resistor colour bands and orientation marks), a **labels** PDF for Avery 5160 sheets (laid out at the sheet's real gaps, sorted by category then value), the shopping list, supplier cart and stock CSVs, and the source documents. The build book replaces `info.txt`, the per-project field manuals and the sticker sheets. The stock CSV stays until the stock ledger (after launch) replaces it.
@@ -251,7 +251,7 @@ Probed on 2026-10-24: board renders in PedalPCB, GuitarPCB and Tonepad documents
 Carries out [Backend and printed documents](#backend-and-printed-documents), one pull request each, before step 11's forum post:
 
 1. Rename the package to `star_ground` in a `src/` layout.
-1. Rebuild the domain model as frozen dataclasses.
+1. Rebuild the domain model as dataclasses.
 1. Replace pint with `Value`.
 1. Typeset the build book and labels with Typst, and remove fpdf2.
 1. Regenerate the example pack, and drop gspread.

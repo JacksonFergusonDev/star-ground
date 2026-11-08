@@ -7,6 +7,7 @@ This module acts as the "Controller" for the BOM library. It handles:
 - Renaming sources/projects.
 """
 
+from dataclasses import replace
 from decimal import Decimal
 
 import pint
@@ -35,18 +36,17 @@ def calculate_net_needs(bom: Inventory, stock: Inventory) -> Inventory:
     net_inv = Inventory()
 
     for key, data in bom.items():
-        gross_needed = data["qty"] - data["included"]
+        gross_needed = data.qty - data.included
 
         # Check stock
         stock_data = stock.get(key)
-        in_stock = stock_data["qty"] if stock_data else 0
+        in_stock = stock_data.qty if stock_data else 0
 
         # The Math: (Need - Have), floored at 0
         net_needed = max(0, gross_needed - in_stock)
 
         # Preserve metadata, but update Qty to the Net Need
-        net_inv[key] = data.copy()
-        net_inv[key]["qty"] = net_needed
+        net_inv[key] = replace(data, qty=net_needed)
 
     return net_inv
 
@@ -90,7 +90,7 @@ def sort_inventory(inventory: Inventory) -> list[tuple[ComponentKey, PartData]]:
         key, data = item
         rank = pmap.get(key.category, 100)
 
-        val_qty = data.get("val_qty")
+        val_qty = data.val_qty
         if isinstance(val_qty, pint.Quantity):
             mag = Decimal(str(val_qty.to_base_units().magnitude))
         elif isinstance(val_qty, Decimal):
@@ -117,10 +117,10 @@ def rename_source_in_inventory(
         return
 
     for part in inventory.values():
-        if old_name in part["sources"]:
-            part["sources"][new_name] = part["sources"].pop(old_name)
-        if old_name in part["counted"]:
-            part["counted"][new_name] = part["counted"].pop(old_name)
+        if old_name in part.sources:
+            part.sources[new_name] = part.sources.pop(old_name)
+        if old_name in part.counted:
+            part.counted[new_name] = part.counted.pop(old_name)
 
 
 def serialize_inventory(inventory: Inventory) -> str:
@@ -146,13 +146,13 @@ def serialize_inventory(inventory: Inventory) -> str:
         clean_val = key.value
 
         # If we have specific refs (R1, C1), list them individually
-        if data["refs"]:
-            for ref in data["refs"]:
+        if data.refs:
+            for ref in data.refs:
                 # Ignore generic hardware refs and injected parts
                 if ref != "HW" and not ref.endswith("(Inj)"):
                     lines.append(f"{ref} {clean_val}")
         else:
             # Fallback for parts without refs
-            lines.append(f"{clean_val} (Qty: {data['qty']})")
+            lines.append(f"{clean_val} (Qty: {data.qty})")
 
     return "\n".join(lines)

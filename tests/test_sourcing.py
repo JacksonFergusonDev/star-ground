@@ -106,16 +106,16 @@ def test_build_shopping_list_gross_and_net() -> None:
     shopping_list = build_shopping_list(inventory, stock=stock)
     assert len(shopping_list) == 2
 
-    res_row = next(r for r in shopping_list if r["Part"] == "10k")
-    assert res_row["BOM Qty"] == 5
-    assert res_row["In Stock"] == 3
-    assert res_row["Net Need"] == 2
-    assert res_row["Buy Qty"] >= 2
+    res_row = next(r for r in shopping_list if r.part == "10k")
+    assert res_row.bom_qty == 5
+    assert res_row.in_stock == 3
+    assert res_row.net_need == 2
+    assert res_row.buy_qty >= 2
 
-    cap_row = next(r for r in shopping_list if r["Part"] == "100n")
-    assert cap_row["BOM Qty"] == 2
-    assert cap_row["In Stock"] == 0
-    assert cap_row["Net Need"] == 2
+    cap_row = next(r for r in shopping_list if r.part == "100n")
+    assert cap_row.bom_qty == 2
+    assert cap_row.in_stock == 0
+    assert cap_row.net_need == 2
 
 
 def test_build_shopping_list_filtering() -> None:
@@ -136,21 +136,21 @@ def test_build_shopping_list_filtering() -> None:
     # Hide hardware
     no_hw_rows = build_shopping_list(inventory, show_hardware=False, show_extras=True)
     assert len(no_hw_rows) == 2
-    assert not any(r["Origin"] == ComponentOrigin.HARDWARE_KIT for r in no_hw_rows)
+    assert not any(r.origin == ComponentOrigin.HARDWARE_KIT for r in no_hw_rows)
 
     # Hide extras
     no_extras_rows = build_shopping_list(
         inventory, show_hardware=True, show_extras=False
     )
     assert len(no_extras_rows) == 2
-    assert not any(r["Origin"] == ComponentOrigin.EXTRAS for r in no_extras_rows)
+    assert not any(r.origin == ComponentOrigin.EXTRAS for r in no_extras_rows)
 
     # Hide both
     circuit_only = build_shopping_list(
         inventory, show_hardware=False, show_extras=False
     )
     assert len(circuit_only) == 1
-    assert circuit_only[0]["Part"] == "10k"
+    assert circuit_only[0].part == "10k"
 
 
 def test_build_shopping_list_part_included_with_the_pcb() -> None:
@@ -158,17 +158,17 @@ def test_build_shopping_list_part_included_with_the_pcb() -> None:
     key = ComponentKey(ComponentCategory.ICS, "24LC32A")
     inventory = Inventory()
     inventory.add_part("Deflector", key, "IC3")
-    inventory[key]["included"] = 1
+    inventory[key].included = 1
     other = Inventory()
     other.add_part("Organ Donor", key, "IC2")
     inventory.merge(other)  # a second project whose chip is bought
 
-    row = next(r for r in build_shopping_list(inventory) if r["Part"] == "24LC32A")
-    assert row["BOM Qty"] == 2
-    assert row["Included"] == 1
-    assert row["Net Need"] == 1
-    assert row["Buy Qty"] == 1
-    assert row["Notes"].startswith("📦 1 included with the PCB")
+    row = next(r for r in build_shopping_list(inventory) if r.part == "24LC32A")
+    assert row.bom_qty == 2
+    assert row.included == 1
+    assert row.net_need == 1
+    assert row.buy_qty == 1
+    assert row.notes.startswith("📦 1 included with the PCB")
 
 
 def test_an_inductor_is_searched_for_by_its_part_type() -> None:

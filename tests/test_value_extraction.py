@@ -18,7 +18,7 @@ def test_switch_state_modifiers_are_kept() -> None:
     inventory, stats = res.inventory, res.stats
 
     assert ComponentKey(ComponentCategory.SWITCHES, "SPDT (On/Off/On)") in inventory
-    assert stats["parts_found"] == 1
+    assert stats.parts_found == 1
 
 
 def test_bs1852_notation_on_bare_designator() -> None:
@@ -28,7 +28,7 @@ def test_bs1852_notation_on_bare_designator() -> None:
     inventory, stats = res.inventory, res.stats
 
     assert ComponentKey(ComponentCategory.RESISTORS, "4.7k") in inventory
-    assert stats["parts_found"] == 1
+    assert stats.parts_found == 1
 
 
 def test_switch_value_outranks_control_name() -> None:

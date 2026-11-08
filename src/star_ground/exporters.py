@@ -3,7 +3,7 @@ import io
 import re
 
 from star_ground.bom_lib.enums import ComponentCategory
-from star_ground.bom_lib.types import FORMULA_PREFIXES, ShoppingListRow
+from star_ground.bom_lib.types import FORMULA_PREFIXES, ShoppingLine
 
 BASE_SHOPPING_LIST_COLS = [
     "Category",
@@ -34,8 +34,20 @@ def _cell[T](value: T) -> T | str:
     return value
 
 
-def _safe_row(row: ShoppingListRow) -> dict[str, object]:
-    """A shopping list row with every cell made safe by `_cell`."""
+def _csv_row(line: ShoppingLine) -> dict[str, object]:
+    """A shopping list line as CSV cells, each made safe by `_cell`."""
+    row: dict[str, object] = {
+        "Category": line.category.value,
+        "Part": line.part,
+        "BOM Qty": line.bom_qty,
+        "In Stock": line.in_stock,
+        "Net Need": line.net_need,
+        "Buy Qty": line.buy_qty,
+        "Notes": line.notes,
+        "Search Term": line.search_term,
+        "Tayda_Link": line.supplier_url,
+        "Origin": line.origin,
+    }
     return {column: _cell(value) for column, value in row.items()}
 
 
@@ -60,7 +72,7 @@ def get_shopping_list_columns(
 
 
 def generate_shopping_list_csv(
-    data: list[ShoppingListRow], use_excel_formulas: bool = False
+    data: list[ShoppingLine], use_excel_formulas: bool = False
 ) -> bytes:
     """Generates a CSV file for the shopping list.
 
@@ -69,7 +81,7 @@ def generate_shopping_list_csv(
     data is available (i.e., if stock was checked).
 
     Args:
-        data (list[ShoppingListRow]): The list of row dictionaries to write.
+        data (list[ShoppingLine]): The list of row dictionaries to write.
         use_excel_formulas (bool):  If True, formats URLs as Excel `=HYPERLINK()` formulas.
                                     If False, writes raw URL strings.
 
@@ -80,7 +92,7 @@ def generate_shopping_list_csv(
 
     # Define columns based on data presence
     fields = get_shopping_list_columns(
-        has_stock=bool(data and "Net Need" in data[0]),
+        has_stock=True,
         include_search_term=True,
     )
 
@@ -89,10 +101,10 @@ def generate_shopping_list_csv(
 
     rows_to_write = []
     for row in data:
-        safe = _safe_row(row)
-        if use_excel_formulas and row.get("Tayda_Link"):
+        safe = _csv_row(row)
+        if use_excel_formulas and row.supplier_url:
             # The one formula written on purpose: the app builds the link.
-            safe["Tayda_Link"] = f'=HYPERLINK("{row["Tayda_Link"]}", "Buy")'
+            safe["Tayda_Link"] = f'=HYPERLINK("{row.supplier_url}", "Buy")'
         rows_to_write.append(safe)
 
     writer.writerows(rows_to_write)
@@ -101,7 +113,7 @@ def generate_shopping_list_csv(
     return csv_buf.getvalue().encode("utf-8-sig")
 
 
-def generate_stock_update_csv(data: list[ShoppingListRow]) -> bytes:
+def generate_stock_update_csv(data: list[ShoppingLine]) -> bytes:
     """Calculates updated stock levels and generates a CSV import file.
 
     Logic:
@@ -113,7 +125,7 @@ def generate_stock_update_csv(data: list[ShoppingListRow]) -> bytes:
     the app, closing the logistics loop.
 
     Args:
-        data (list[ShoppingListRow]): The processed master list data.
+        data (list[ShoppingLine]): The processed master list data.
 
     Returns:
         bytes: The CSV content encoded as utf-8-sig.
@@ -124,20 +136,14 @@ def generate_stock_update_csv(data: list[ShoppingListRow]) -> bytes:
     stock_writer.writeheader()
 
     for row in data:
-        # Robustly handle potential string/int types from the UI
-        current_stock = int(row.get("In Stock", 0))
-        buy_qty = int(row.get("Buy Qty", 0))
-        used_qty = int(row.get("BOM Qty", 0)) - int(row.get("Included", 0))
-
-        # Calculate the resulting inventory state
-        new_qty = (current_stock + buy_qty) - used_qty
+        new_qty = row.in_stock + row.buy_qty - (row.bom_qty - row.included)
 
         # Only write rows where stock remains; omit zero-qty items to keep the CSV clean
         if new_qty > 0:
             stock_writer.writerow(
                 {
-                    "Category": row["Category"],
-                    "Part": _cell(row["Part"]),
+                    "Category": row.category.value,
+                    "Part": _cell(row.part),
                     "Qty": new_qty,
                 }
             )
@@ -180,7 +186,7 @@ def manufacturer_part_number(category: ComponentCategory, part: str) -> str:
     return ""
 
 
-def generate_supplier_cart_csv(data: list[ShoppingListRow]) -> bytes:
+def generate_supplier_cart_csv(data: list[ShoppingLine]) -> bytes:
     """Generates a cart file for a supplier's BOM upload page (Mouser, Digi-Key).
 
     One line per part to buy. Parts named by a part number carry it, so the
@@ -198,14 +204,14 @@ def generate_supplier_cart_csv(data: list[ShoppingListRow]) -> bytes:
     writer = csv.writer(buf)
     writer.writerow(SUPPLIER_CART_COLS)
     for row in data:
-        if int(row.get("Buy Qty", 0)) <= 0:
+        if row.buy_qty <= 0:
             continue
-        category = ComponentCategory(row["Category"])
-        part_number = manufacturer_part_number(category, row["Part"])
-        description = row.get("Search Term") or row["Part"]
+        category = row.category
+        part_number = manufacturer_part_number(category, row.part)
+        description = row.search_term or row.part
         writer.writerow(
             [
-                row["Buy Qty"],
+                row.buy_qty,
                 _cell(part_number),
                 _cell(f"{category.value}: {description}"),
             ]

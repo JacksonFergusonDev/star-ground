@@ -50,8 +50,7 @@ from star_ground.bom_lib.types import (
     ParseWarning,
     PDFPageExtraction,
     PDFWord,
-    StatsDict,
-    create_empty_stats,
+    ReadingStats,
 )
 from star_ground.bom_lib.utils import expand_refs, parse_value_to_decimal
 
@@ -306,7 +305,7 @@ def needs_ocr(result: ParseResult) -> bool:
             ParseWarningKind.MISREAD_TEXT,
             ParseWarningKind.IMAGE_PARTS_LIST,
         )
-        for w in result.stats["warnings"]
+        for w in result.stats.warnings
     )
 
 
@@ -921,18 +920,18 @@ def _base_ref(ref: str) -> str:
 
 
 def _refs(inventory: Inventory) -> set[str]:
-    return {_base_ref(r) for data in inventory.values() for r in data["refs"]}
+    return {_base_ref(r) for data in inventory.values() for r in data.refs}
 
 
 def _only_refs(inventory: Inventory, keep: set[str]) -> Inventory:
     """The inventory restricted to some designators (and parts injected for them)."""
     kept = Inventory()
     for key, data in inventory.items():
-        refs = [r for r in data["refs"] if _base_ref(r) in keep]
+        refs = [r for r in data.refs if _base_ref(r) in keep]
         if not refs:
             continue
-        per_ref = data["qty"] // len(data["refs"]) or 1
-        for source, source_refs in data["sources"].items():
+        per_ref = data.qty // len(data.refs) or 1
+        for source, source_refs in data.sources.items():
             for ref in source_refs:
                 if _base_ref(ref) in keep:
                     kept.add_part(source, key, ref, per_ref)
@@ -944,9 +943,9 @@ def _union(variants: tuple[BuildVariant, ...]) -> Inventory:
     union = Inventory()
     for variant in variants:
         for key, data in variant.inventory.items():
-            for source, refs in data["sources"].items():
+            for source, refs in data.sources.items():
                 for ref in refs:
-                    if key not in union or ref not in union[key]["refs"]:
+                    if key not in union or ref not in union[key].refs:
                         union.add_part(source, key, ref, 1)
     return union
 
@@ -955,7 +954,7 @@ def _listed(inventory: Inventory) -> dict[str, ComponentKey]:
     return {
         ref: key
         for key, data in inventory.items()
-        for ref in data["refs"]
+        for ref in data.refs
         if not ref.endswith(INJECTED_SUFFIX)
     }
 
@@ -1221,7 +1220,7 @@ def attempt_ocr(
             read.append(number)
             page.close()
 
-    stats: StatsDict = create_empty_stats()
+    stats: ReadingStats = ReadingStats()
     inventory = Inventory()
     variants: tuple[BuildVariant, ...] = ()
     if pages_data:
@@ -1251,7 +1250,7 @@ def attempt_ocr(
         BuildVariant(
             v.name,
             kept,
-            sum(d["qty"] for d in kept.values()),
+            sum(d.qty for d in kept.values()),
             locate(whole, kept, read),
         )
         for v in variants
@@ -1260,7 +1259,7 @@ def attempt_ocr(
 
     missing = {
         w.ref
-        for w in result.stats["warnings"]
+        for w in result.stats.warnings
         if w.kind == ParseWarningKind.UNEXTRACTED_REF
     }
     coverage = len(missing & found) / len(missing) if missing else None
@@ -1268,7 +1267,7 @@ def attempt_ocr(
     suspect = 0
     for key, data in parts.items():
         plausible = _plausible(key)
-        for ref in data["refs"]:
+        for ref in data.refs:
             if ref.endswith(INJECTED_SUFFIX):
                 continue
             suspect += not plausible
@@ -1297,7 +1296,7 @@ def attempt_ocr(
     # or a misread, and either way the reading cannot be trusted as one list.
     own = [
         w
-        for w in stats["warnings"]
+        for w in stats.warnings
         if w.kind != ParseWarningKind.NO_PARTS_LIST and w.ref not in known
     ]
     seen = {(w.kind, w.ref) for w in warnings}
@@ -1307,7 +1306,7 @@ def attempt_ocr(
         ref
         for key, data in parts.items()
         if _several_values(key.value)
-        for ref in data["refs"]
+        for ref in data.refs
     )
     if len(side_by_side) >= _SIDE_BY_SIDE:
         # Build columns the reading did not recognize ('R11 | 68K | 43K |

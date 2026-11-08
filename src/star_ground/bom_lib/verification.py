@@ -15,7 +15,7 @@ from decimal import Decimal
 from star_ground.bom_lib import constants
 from star_ground.bom_lib.designators import is_designator
 from star_ground.bom_lib.enums import ComponentCategory, ParseWarningKind
-from star_ground.bom_lib.types import Inventory, ParseWarning, StatsDict
+from star_ground.bom_lib.types import Inventory, ParseWarning, ReadingStats
 from star_ground.bom_lib.utils import parse_value_to_decimal
 
 # Numbered designators (R1, IC10, LED2) and the bare ones PedalPCB uses (LED, CLR).
@@ -87,8 +87,8 @@ def _comparable(value: str) -> str:
     return re.sub(r"[^A-Z0-9]", "", folded)
 
 
-def _warn(stats: StatsDict, kind: ParseWarningKind, ref: str, message: str) -> None:
-    stats["warnings"].append(ParseWarning(kind=kind, ref=ref, message=message))
+def _warn(stats: ReadingStats, kind: ParseWarningKind, ref: str, message: str) -> None:
+    stats.warnings.append(ParseWarning(kind=kind, ref=ref, message=message))
 
 
 def _is_ref(token: str) -> bool:
@@ -244,7 +244,7 @@ def _running_lines(page_texts: list[str]) -> set[str]:
 def check_unextracted_refs(
     page_texts: list[str],
     inventory: Inventory,
-    stats: StatsDict,
+    stats: ReadingStats,
     omitted: frozenset[str] = frozenset(),
 ) -> None:
     """Warns about designators listed in the document but absent from the output.
@@ -259,7 +259,7 @@ def check_unextracted_refs(
     extracted = {
         ref.upper()
         for data in inventory.values()
-        for ref in data["refs"]
+        for ref in data.refs
         if "(Inj)" not in ref
     } | {ref.upper() for ref in omitted}
     # The words of a two-word label are accounted for ('HI CUT' covers 'CUT').
@@ -334,7 +334,7 @@ def check_unextracted_refs(
 
 
 def check_valueless_refs(
-    refs: list[str], inventory: Inventory, stats: StatsDict
+    refs: list[str], inventory: Inventory, stats: ReadingStats
 ) -> None:
     """Warns about designators a parts table lists with no value.
 
@@ -344,7 +344,7 @@ def check_valueless_refs(
         inventory: The finished inventory for this document.
         stats: Stats object that receives the warnings.
     """
-    extracted = {ref.upper() for data in inventory.values() for ref in data["refs"]}
+    extracted = {ref.upper() for data in inventory.values() for ref in data.refs}
     for ref in dict.fromkeys(refs):
         if ref.upper() not in extracted:
             _warn(
@@ -367,7 +367,7 @@ _SPARSE_MIN = 8
 _SERIES = 100
 
 
-def check_numbering_gaps(inventory: Inventory, stats: StatsDict) -> None:
+def check_numbering_gaps(inventory: Inventory, stats: ReadingStats) -> None:
     """Warns about the numbers missing from a designator series listed sparsely.
 
     Only a reading with no capacitors is checked: every circuit has some, so
@@ -385,7 +385,7 @@ def check_numbering_gaps(inventory: Inventory, stats: StatsDict) -> None:
     sparse = False
     numbers: dict[tuple[str, int], set[int]] = {}
     for data in inventory.values():
-        for ref in data["refs"]:
+        for ref in data.refs:
             m = _SERIES_REF.fullmatch(ref)
             if m:
                 n = int(m.group(2))
@@ -465,7 +465,7 @@ _PAIRED_MIN = 4
 _PAIRED_SHARE = 0.5
 
 
-def check_two_values(inventory: Inventory, stats: StatsDict) -> None:
+def check_two_values(inventory: Inventory, stats: ReadingStats) -> None:
     """Warns about a resistor or capacitor whose value is two values side by side.
 
     'R6  7k5  8k2' is a part and its substitute (GuitarPCB G2 Animal's table of
@@ -500,7 +500,7 @@ def check_two_values(inventory: Inventory, stats: StatsDict) -> None:
         ):
             # 'R12  1k  P3 LEVEL 100k Log', 'R14  10k  Buffer' (older GuitarPCB Tube
             # Screaming Ultra): the value ran into the next cell.
-            for ref in data["refs"]:
+            for ref in data.refs:
                 _warn(
                     stats,
                     ParseWarningKind.UNPARSED_VALUE,
@@ -511,7 +511,7 @@ def check_two_values(inventory: Inventory, stats: StatsDict) -> None:
         first, second = (parse_value_to_decimal(t) for t in tokens[:2])
         if first is None or second is None or first == second:
             continue
-        for ref in data["refs"]:
+        for ref in data.refs:
             paired.add(ref)
             _warn(
                 stats,
@@ -519,13 +519,13 @@ def check_two_values(inventory: Inventory, stats: StatsDict) -> None:
                 ref,
                 f"{ref} lists two values ('{key.value}'): check which one to use.",
             )
-    refs = [ref for data in inventory.values() for ref in data["refs"]]
+    refs = [ref for data in inventory.values() for ref in data.refs]
     if len(paired) < _PAIRED_MIN or len(paired) < _PAIRED_SHARE * len(refs):
         return
     # Most rows pair a value with a substitute: the list read is that table,
     # and its other rows are no plainer ('R36  620R  Lower Value -Higher
     # Gain', 'R43  3k3  LED CLR' in G2 Animal v3).
-    warned = {w.ref for w in stats["warnings"]}
+    warned = {w.ref for w in stats.warnings}
     for ref in refs:
         if ref not in warned:
             _warn(
@@ -538,7 +538,7 @@ def check_two_values(inventory: Inventory, stats: StatsDict) -> None:
 
 
 def check_row_quantity(
-    stats: StatsDict, refs: str, ref_count: int, quantity: int | None
+    stats: ReadingStats, refs: str, ref_count: int, quantity: int | None
 ) -> None:
     """Warns when a grouped row's quantity disagrees with its designators.
 
@@ -560,7 +560,7 @@ def check_row_quantity(
 _CAPACITOR_CODE = re.compile(r"(\d{2})(\d)")
 
 
-def check_marking_code(stats: StatsDict, ref: str, value: str, marking: str) -> None:
+def check_marking_code(stats: ReadingStats, ref: str, value: str, marking: str) -> None:
     """Warns when a capacitor's printed value disagrees with its marking code.
 
     Q-Tune lists C3 as '330 (334)': a bare 330 is 330pF, but code 334 is
@@ -590,7 +590,7 @@ def check_marking_code(stats: StatsDict, ref: str, value: str, marking: str) -> 
         )
 
 
-def check_footnotes(page_texts: list[str], stats: StatsDict) -> None:
+def check_footnotes(page_texts: list[str], stats: ReadingStats) -> None:
     """Surfaces a footnote attached to a listed value with an asterisk.
 
     Super Heterodyne lists 'OSC-ROOT *DPDT On/On/On' and repeats '*DPDT On/On/On'
@@ -646,7 +646,7 @@ def check_numbered_footnotes(
     marked: list[list[tuple[str, str]]],
     page_texts: list[str],
     inventory: Inventory,
-    stats: StatsDict,
+    stats: ReadingStats,
 ) -> None:
     """Warns about listed parts whose footnote says how to build without them.
 
@@ -656,7 +656,7 @@ def check_numbered_footnotes(
         inventory: The finished inventory for this document.
         stats: Stats object that receives the warnings.
     """
-    listed = {ref.upper(): ref for data in inventory.values() for ref in data["refs"]}
+    listed = {ref.upper(): ref for data in inventory.values() for ref in data.refs}
     for rows, text in zip(marked, page_texts, strict=True):
         if not rows:
             continue
@@ -824,7 +824,7 @@ def _designators(label: str) -> list[str]:
 def check_build_changes(
     page_texts: list[str],
     inventory: Inventory,
-    stats: StatsDict,
+    stats: ReadingStats,
     omitted: frozenset[str] = frozenset(),
 ) -> None:
     """Warns about listed parts a build-notes passage changes for another version.
@@ -841,7 +841,7 @@ def check_build_changes(
         omitted: Designators the list leaves empty, which another version may
             fill ('CX1 | OMIT', Aion FX Aurora: 47n for the Ross/Dyna output).
     """
-    listed = {ref.upper(): ref for data in inventory.values() for ref in data["refs"]}
+    listed = {ref.upper(): ref for data in inventory.values() for ref in data.refs}
     listed |= {ref.upper(): ref for ref in omitted}
     warned: set[str] = set()
     for text in page_texts:
@@ -914,7 +914,7 @@ def check_build_changes(
 
 
 def check_second_board(
-    stats: StatsDict, ref: str, second: str, first_value: str, second_value: str
+    stats: ReadingStats, ref: str, second: str, first_value: str, second_value: str
 ) -> None:
     """Tells the builder a designator is listed in two tables with two values.
 
@@ -939,7 +939,7 @@ def check_second_board(
 
 
 def check_duplicate(
-    stats: StatsDict, ref: str, first_value: str, new_value: str
+    stats: ReadingStats, ref: str, first_value: str, new_value: str
 ) -> None:
     """Warns when a designator is listed again with a different value.
 
@@ -1045,7 +1045,7 @@ _VERSION_NOTE = re.compile(
 )
 
 
-def check_version_note(stats: StatsDict, ref: str, notes: str) -> None:
+def check_version_note(stats: ReadingStats, ref: str, notes: str) -> None:
     """Surfaces a parts-table note that ties a part to one version of the circuit.
 
     Lot Lizard's NOTES say '* Omitted in Nano version' and '* C1K in Big Box
@@ -1076,7 +1076,7 @@ _PART_VERSION = re.compile(
 )
 
 
-def check_part_versions(stats: StatsDict, rows: list[tuple[str, str, str]]) -> None:
+def check_part_versions(stats: ReadingStats, rows: list[tuple[str, str, str]]) -> None:
     """Warns about the listed part a part-numbered version swaps out.
 
     Aion FX Lithium lists IC2 as MN3007, and its NOTES give values 'for MN3207
@@ -1101,7 +1101,9 @@ def check_part_versions(stats: StatsDict, rows: list[tuple[str, str, str]]) -> N
                 )
 
 
-def check_alternate_value(stats: StatsDict, ref: str, listed: str, other: str) -> None:
+def check_alternate_value(
+    stats: ReadingStats, ref: str, listed: str, other: str
+) -> None:
     """Warns about a listed part another version of the circuit gives another value.
 
     Aion FX legacy Refractor's 'Silver Pony specs' table: 'R10 | 2k | 47R'.
@@ -1130,7 +1132,9 @@ _PART_DETAIL = re.compile(
 )
 
 
-def check_build_note(stats: StatsDict, ref: str, builds: list[str], notes: str) -> None:
+def check_build_note(
+    stats: ReadingStats, ref: str, builds: list[str], notes: str
+) -> None:
     """Warns about a note on a row whose builds take different values.
 
     Aion FX Elite's C13 is '1n | 1n | 820pF' with the note 'Mod value is MLCC,
@@ -1164,7 +1168,7 @@ _ASSIGNMENTS_MIN = 2
 
 
 def check_value_assignments(
-    page_texts: list[str], inventory: Inventory, stats: StatsDict
+    page_texts: list[str], inventory: Inventory, stats: ReadingStats
 ) -> None:
     """Warns about listed parts a list of 'REF = value' changes gives another value.
 
@@ -1174,9 +1178,7 @@ def check_value_assignments(
         stats: Stats object that receives the warnings.
     """
     listed = {
-        ref.upper(): key.value
-        for key, data in inventory.items()
-        for ref in data["refs"]
+        ref.upper(): key.value for key, data in inventory.items() for ref in data.refs
     }
     for text in page_texts:
         found = [m for line in text.splitlines() if (m := _ASSIGNMENT.fullmatch(line))]
@@ -1210,7 +1212,7 @@ _PROSE_POTS = re.compile(
 
 
 def check_prose_pots(
-    page_texts: list[str], inventory: Inventory, stats: StatsDict
+    page_texts: list[str], inventory: Inventory, stats: ReadingStats
 ) -> None:
     """Warns about pots a document names only in its prose.
 
@@ -1246,7 +1248,7 @@ _CHIP_SETS = re.compile(
 
 
 def check_chip_sets(
-    page_texts: list[str], inventory: Inventory, stats: StatsDict
+    page_texts: list[str], inventory: Inventory, stats: ReadingStats
 ) -> None:
     """Warns about a listed chip the document offers a whole other set for.
 
@@ -1268,7 +1270,7 @@ def check_chip_sets(
             other.setdefault(b, a)
     for key, data in inventory.items():
         swap = other.get(key.value.upper())
-        for ref in data["refs"] if swap else []:
+        for ref in data.refs if swap else []:
             _warn(
                 stats,
                 ParseWarningKind.FOOTNOTE,
@@ -1278,7 +1280,7 @@ def check_chip_sets(
             )
 
 
-def check_unreadable_rows(rows: list[str], stats: StatsDict) -> None:
+def check_unreadable_rows(rows: list[str], stats: ReadingStats) -> None:
     """Warns that a row of an OCR'd parts list names no part it could read.
 
     Args:
@@ -1296,7 +1298,7 @@ def check_unreadable_rows(rows: list[str], stats: StatsDict) -> None:
         )
 
 
-def check_unclassified_row(stats: StatsDict, ref: str, value: str) -> None:
+def check_unclassified_row(stats: ReadingStats, ref: str, value: str) -> None:
     """Warns about a listed part that no category fits.
 
     A parts table lists only parts, so a row the classifier cannot place
@@ -1329,7 +1331,7 @@ _SEE_TEXT_VALUE = re.compile(
 )
 
 
-def check_pointer_value(stats: StatsDict, ref: str, raw_value: str) -> None:
+def check_pointer_value(stats: ReadingStats, ref: str, raw_value: str) -> None:
     """Warns when a part's value only points to the build notes.
 
     'Q1-Q6  See Text' (GuitarPCB G-02 Animal) names no part the classifier can
@@ -1357,7 +1359,11 @@ _CONDITIONAL_LINK = re.compile(
 
 
 def check_classification(
-    stats: StatsDict, ref: str, raw_value: str, category: ComponentCategory, value: str
+    stats: ReadingStats,
+    ref: str,
+    raw_value: str,
+    category: ComponentCategory,
+    value: str,
 ) -> None:
     """Warns when a classified part contradicts its own designator or value.
 
@@ -1495,7 +1501,7 @@ def find_bom_entries(page_texts: list[str]) -> list[str]:
 
 
 def check_bom_reconciliation(
-    page_texts: list[str], inventory: Inventory, stats: StatsDict
+    page_texts: list[str], inventory: Inventory, stats: ReadingStats
 ) -> None:
     """Warns about parts whose value is absent from the document's quantity BOM.
 
@@ -1525,7 +1531,7 @@ def check_bom_reconciliation(
             # Distortr lists 'D3  LED'; its bill of materials says '3mm Red LED'.
             named = [e for e in entries if "LED" in e.upper() and e.upper() != "LED"]
             if named:
-                for ref in data["refs"]:
+                for ref in data.refs:
                     _warn(
                         stats,
                         ParseWarningKind.BOM_MISMATCH,
@@ -1536,7 +1542,7 @@ def check_bom_reconciliation(
                 continue
         if any(_values_agree(key.value, entry) for entry in entries):
             continue
-        for ref in data["refs"]:
+        for ref in data.refs:
             _warn(
                 stats,
                 ParseWarningKind.BOM_MISMATCH,
@@ -1578,7 +1584,7 @@ _OR_ALTERNATIVE = re.compile(
 )
 
 
-def resolve_value_choice(stats: StatsDict | None, ref: str, value: str) -> str:
+def resolve_value_choice(stats: ReadingStats | None, ref: str, value: str) -> str:
     """Picks the first value when the document leaves the choice to the builder.
 
     Aion FX lists 'RPD  1M to 2M2' and '51pF (or 47pF) MLCC'; GuitarPCB lists
@@ -1687,7 +1693,7 @@ def resolve_value_choice(stats: StatsDict | None, ref: str, value: str) -> str:
     return value
 
 
-def check_misread_text(stats: StatsDict, page: int) -> None:
+def check_misread_text(stats: ReadingStats, page: int) -> None:
     """Tells the builder a page's text was set aside as misread OCR text.
 
     Args:
@@ -1704,7 +1710,7 @@ def check_misread_text(stats: StatsDict, page: int) -> None:
     )
 
 
-def check_parts_found(stats: StatsDict, parts_found: int) -> None:
+def check_parts_found(stats: ReadingStats, parts_found: int) -> None:
     """Tells the builder when no parts list could be read at all.
 
     Some GuitarPCB documents print their parts table as an image (SWAH v3,
@@ -1733,7 +1739,7 @@ _VALUE_KEYED_HEADER = re.compile(
 )
 
 
-def check_value_keyed_list(page_texts: list[str], stats: StatsDict) -> None:
+def check_value_keyed_list(page_texts: list[str], stats: ReadingStats) -> None:
     """Tells the builder when the parts list names parts by value, not designator.
 
     Whatever was read elsewhere in the document (a schematic's labels) is not
@@ -1775,7 +1781,7 @@ def _quantity_rows(text: str) -> list[tuple[int, Decimal]]:
 
 
 def check_quantity_list(
-    page_texts: list[str], counted: list[str], unread: list[str], stats: StatsDict
+    page_texts: list[str], counted: list[str], unread: list[str], stats: ReadingStats
 ) -> None:
     """Tells the builder about rows counting parts by value that were not read.
 
@@ -1820,7 +1826,9 @@ def check_quantity_list(
 
 
 def check_pictured_lists(
-    pictured: dict[int, list[str]], refs_by_page: dict[int, set[str]], stats: StatsDict
+    pictured: dict[int, list[str]],
+    refs_by_page: dict[int, set[str]],
+    stats: ReadingStats,
 ) -> None:
     """Warns about parts lists printed as pictures, which the text layer never reads.
 
@@ -1881,7 +1889,7 @@ _GRID_SHARE = 0.25
 
 
 def check_other_list(
-    page: int, listed: list[tuple[str, str]], read: dict[str, str], stats: StatsDict
+    page: int, listed: list[tuple[str, str]], read: dict[str, str], stats: ReadingStats
 ) -> None:
     """Warns about a second parts list on a page the readers left alone.
 
@@ -1954,7 +1962,7 @@ _ONLY_INSTALL = re.compile(
 
 
 def check_either_part(
-    page_texts: list[str], inventory: Inventory, stats: StatsDict
+    page_texts: list[str], inventory: Inventory, stats: ReadingStats
 ) -> None:
     """Warns about two listed parts the document says are alternatives.
 
@@ -1963,7 +1971,7 @@ def check_either_part(
         inventory: The finished inventory for this document.
         stats: Stats object that receives the warnings.
     """
-    listed = {ref.upper() for data in inventory.values() for ref in data["refs"]}
+    listed = {ref.upper() for data in inventory.values() for ref in data.refs}
     warned: set[frozenset[str]] = set()
     for text in page_texts:
         # GuitarPCB pads its prose with zero-width spaces.
