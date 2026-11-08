@@ -28,7 +28,12 @@ const props = Astro.props;
       name="Star Ground"
       logo="/favicon.svg"
       github={links.github}
-      nav={[{ label: 'Circuit catalog', href: links.catalog }]}
+      nav={[
+        { label: 'How it works', href: '/#how-it-works', wide: true },
+        { label: 'Catalog', href: links.catalog },
+        { label: 'Accuracy', href: '/#accuracy', wide: true },
+        { label: 'Build pack', href: '/#build-pack', wide: true },
+      ]}
     >
       <a slot="end" class="hs-bar-link hs-bar-link--accent" href={links.app}>
         Open the app <Icon name="arrow-right" size={14} />

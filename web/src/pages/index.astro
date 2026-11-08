@@ -1,15 +1,31 @@
 ---
+import { getCollection } from 'astro:content';
 import CircuitField from '../components/CircuitField.astro';
 import Icon from 'house-style/astro/Icon.astro';
 import JumpLinks from 'house-style/astro/JumpLinks.astro';
 import SectionMarker from 'house-style/astro/SectionMarker.astro';
 import Base from '../layouts/Base.astro';
+import type { Effect, Publisher } from '../lib/catalog';
+import { effects, publishers } from '../lib/catalog';
 import { links } from '../lib/site';
 
-const publishers = ['PedalPCB', 'GuitarPCB', 'Aion FX', 'Five Cats', 'Tonepad'];
+// The catalog's figures come from its entries at build time, so they follow
+// the nightly job instead of going stale in the prose.
+const entries = await getCollection('catalog');
+const verified = entries.filter((e) => e.data.verified).length;
+const byPublisher = (Object.keys(publishers) as Publisher[])
+  .map((p) => ({
+    name: publishers[p],
+    count: entries.filter((e) => e.data.publisher === p).length,
+  }))
+  .filter((p) => p.count > 0);
+const kinds = (Object.keys(effects) as Effect[]).filter((k) =>
+  entries.some((e) => e.data.effects.includes(k)),
+);
+const thousands = new Intl.NumberFormat('en-US');
 ---
 
-<Base description="Star Ground turns guitar pedal build documents into one shopping list: it merges their parts lists, subtracts what you own, and flags anything it may have misread.">
+<Base description="Star Ground turns guitar pedal build documents into one shopping list: it merges their parts lists, subtracts what you own, shows each part on the document it came from, and walks you through the build.">
   <section class="hs-hero" aria-labelledby="hero-title">
     <CircuitField />
     <h1 id="hero-title">One shopping list for every pedal you're building.</h1>
@@ -29,63 +45,94 @@ const publishers = ['PedalPCB', 'GuitarPCB', 'Aion FX', 'Five Cats', 'Tonepad'];
     <JumpLinks
       jumps={[
         { label: 'How it works', href: '#how-it-works' },
-        { label: 'Documents', href: '#documents' },
+        { label: 'Catalog', href: '#catalog' },
         { label: 'Accuracy', href: '#accuracy' },
+        { label: 'Build pack', href: '#build-pack' },
       ]}
     />
   </section>
 
   <section id="how-it-works" class="hs-grid section" aria-labelledby="how-title">
     <SectionMarker number={1} label="How it works" />
-    <h2 id="how-title">From a stack of build documents to one parts order.</h2>
+    <h2 id="how-title">From a stack of build documents to a finished board.</h2>
     <p class="section-lede">
       Each pedal's build document lists its parts. Copying those lists by hand is slow, and one
-      missed resistor stalls a build for weeks. Star Ground does the copying and shows its work.
+      missed resistor stalls a build for weeks. Star Ground does the copying, shows you where every
+      part came from, and stays with you at the bench.
     </p>
     <ol class="steps">
       <li>
-        <h3>Add your builds</h3>
+        <h3>Add your projects</h3>
         <p>
-          Upload a build document, paste a link to one, find your pedal in the circuit catalog, or
-          paste a parts list as lines like <code>R1 10k</code>.
+          Pick a pedal from the circuit catalog, upload its build document, paste a link to one, or
+          paste a parts list as lines like <code>R1 10k</code>. Set how many of each you're
+          building.
         </p>
       </li>
       <li>
         <h3>Check what it read</h3>
         <p>
-          Self-checks read each document again independently. Wherever the parts list could disagree
-          with the document, you get a warning that names the part to check.
+          The document opens beside its parts list, with each part outlined where it was read. A
+          warning takes you to the spot it's about, and you can correct a part right there.
         </p>
       </li>
       <li>
-        <h3>Buy and build</h3>
+        <h3>Buy what you're missing</h3>
         <p>
-          Get one shopping list across every project, net of your stock and with spares where
-          running out would stall you, plus supplier cart files, build checklists, and bin labels.
+          One shopping list across every project updates as you go. It subtracts your stock, adds
+          spares where running out would stall you, and exports a cart file for Mouser or Digi-Key.
+        </p>
+      </li>
+      <li>
+        <h3>Build it part by part</h3>
+        <p>
+          Bench mode lists each board's parts from the lowest to the tallest, so the board sits flat
+          as you solder. Press <kbd>Space</kbd> to place the next part, and the document shows where
+          it goes.
         </p>
       </li>
     </ol>
   </section>
 
-  <section id="documents" class="hs-grid section" aria-labelledby="documents-title">
-    <SectionMarker number={2} label="Documents" />
-    <h2 id="documents-title">Reads the build documents of five PCB publishers.</h2>
-    <ul class="publishers" aria-label="Supported publishers">
-      {publishers.map((name) => (
-        <li>{name}</li>
+  <section id="catalog" class="hs-grid section" aria-labelledby="catalog-title">
+    <SectionMarker number={2} label="Catalog" />
+    <h2 id="catalog-title">
+      {thousands.format(entries.length)} pedals with their parts lists already read.
+    </h2>
+    <p class="section-lede">
+      The circuit catalog lists build documents from PCB publishers, read ahead of time and checked
+      again every night. Only documents that read cleanly are listed, and{' '}
+      {thousands.format(verified)} of them were also checked by hand against the exact file. Search
+      by name or filter by effect, then add a pedal to your projects in one click.
+    </p>
+    <dl class="facts">
+      {byPublisher.map((p) => (
+        <div>
+          <dt>{thousands.format(p.count)}</dt>
+          <dd>{p.name}</dd>
+        </div>
+      ))}
+    </dl>
+    <ul class="chips" aria-label="Effects in the catalog">
+      {kinds.map((k) => (
+        <li>{effects[k]}</li>
       ))}
     </ul>
     <p class="section-lede">
-      It handles ruled tables, side-by-side lists, and documents that describe several circuits,
-      where you choose the one you're building. Parts lists printed as images are read by OCR only
-      if you ask, and every part OCR read is listed for you to check. Other publishers' documents
-      aren't tested, so expect more warnings there, or parts it can't read.
+      Building something that isn't listed? Upload its document. Star Ground also reads Aion FX's
+      documents, which the catalog leaves out because Aion's terms rule out crawling its site. Other
+      publishers' documents aren't tested, so expect more warnings there.
+    </p>
+    <p class="note">
+      <a class="text-link" href={links.catalog}>
+        Browse the catalog <Icon name="arrow-right" size={16} />
+      </a>
     </p>
   </section>
 
   <section id="accuracy" class="hs-grid section" aria-labelledby="accuracy-title">
     <SectionMarker number={3} label="Accuracy" />
-    <h2 id="accuracy-title">Graded against parts lists checked by hand.</h2>
+    <h2 id="accuracy-title">Sometimes wrong, never silently.</h2>
     <dl class="facts">
       <div>
         <dt>1,240</dt>
@@ -102,14 +149,73 @@ const publishers = ['PedalPCB', 'GuitarPCB', 'Aion FX', 'Five Cats', 'Tonepad'];
     </dl>
     <p class="section-lede">
       The parser reads each page's word positions and table lines, with no language model, so a
-      document always gives the same list. It can still be wrong, but not silently: on every labeled
-      document, each wrong or missing part carries a warning. New documents can differ from the
-      labeled ones, so check the warnings it shows you.
+      document always gives the same list. Self-checks then read the document again on their own,
+      and wherever the two could disagree you get a warning naming the part to check. On every
+      labeled document, each wrong or missing part carried one.
+    </p>
+    <p class="section-lede">
+      New documents can differ from the labeled ones, which is why each part links back to the page
+      it came from. When you correct one, the correction can be sent along (no account, never the
+      document itself) to help the parser get it right next time.
     </p>
     <p class="note">
       <a class="text-link" href={`${links.github}#readme`}>
         How it's measured <Icon name="arrow-up-right" size={16} />
       </a>
     </p>
+  </section>
+
+  <section id="build-pack" class="hs-grid section" aria-labelledby="pack-title">
+    <SectionMarker number={4} label="Build pack" />
+    <h2 id="pack-title">Everything you take to the bench, in one download.</h2>
+    <p class="section-lede">
+      When the list looks right, download the build pack: one ZIP with every file below and the
+      documents you uploaded.
+    </p>
+    <ul class="outputs">
+      <li>
+        <h3>Build book</h3>
+        <p>
+          A printable PDF: the shopping list, then each project's checklist in build order, with
+          values written out (<code>4.7 kΩ</code>, <code>100 nF</code>), resistor colour bands, and
+          which way round each part goes.
+        </p>
+      </li>
+      <li>
+        <h3>Labels</h3>
+        <p>
+          One label per part for Avery 5160 sheets, sorted by kind and value, so every bag and bin
+          says what's in it.
+        </p>
+      </li>
+      <li>
+        <h3>Supplier cart</h3>
+        <p>
+          The parts to buy as a CSV for Mouser's or Digi-Key's BOM upload. Part numbers like
+          <code>TL072</code> match directly; resistors and capacitors come with a description to
+          pick from.
+        </p>
+      </li>
+      <li>
+        <h3>Shopping list and stock</h3>
+        <p>
+          The merged list with supplier search links and buying notes, and your stock as it will be
+          once these pedals are built, ready to upload next time.
+        </p>
+      </li>
+    </ul>
+    <p class="section-lede">
+      There's no account. Your projects, stock, and bench progress stay in this browser, and a share
+      link carries your list (all but uploaded files) to another device or a friend, in the part of
+      the address that's never sent to a server.
+    </p>
+    <div class="actions">
+      <a class="hs-button hs-button--primary" href={links.app}>
+        Open the app <Icon name="arrow-right" size={16} />
+      </a>
+      <a class="text-link" href={links.exampleBook}>
+        See an example build book <Icon name="arrow-up-right" size={16} />
+      </a>
+    </div>
   </section>
 </Base>
