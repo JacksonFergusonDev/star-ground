@@ -6,4 +6,6 @@ export const links = {
   email: 'mailto:jackson.ferguson0@gmail.com',
   app: '/app/',
   catalog: '/catalog/',
+  exampleBook:
+    'https://github.com/JacksonFergusonDev/star-ground/blob/main/examples/build-pack/Build%20book.pdf',
 } as const;

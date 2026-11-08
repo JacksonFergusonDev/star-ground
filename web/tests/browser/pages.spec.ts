@@ -101,7 +101,7 @@ test('uses the house fonts', async ({ page }) => {
 
 test('jump links reach their sections', async ({ page }) => {
   await page.goto('/');
-  for (const name of ['How it works', 'Documents', 'Accuracy']) {
+  for (const name of ['How it works', 'Catalog', 'Accuracy', 'Build pack']) {
     await page
       .getByRole('navigation', { name: 'On this page' })
       .getByRole('link', { name: new RegExp(name, 'i') })
