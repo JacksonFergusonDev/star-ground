@@ -45,13 +45,13 @@ ci = [
     "pytest-github-actions-annotate-failures==0.4.2",
     "pytest-mock>=3.17.0",
     "pytest-xdist==3.8.0",
+    "rich>=15.0.0",
     "ruff==0.17.1",
     "rumdl>=0.2.62",
     "rust-just>=1.58.0",
     "trustme==1.2.1",
     "zizmor==1.31.1",
     { include-group = "type-stubs" },
-    { include-group = "catalog" },
 ]
 
 type-stubs = [
@@ -70,10 +70,6 @@ type-stubs = [
     "types-requests",
     "types-toml",
 ]
-catalog = [
-    "rich>=14",
-]
-
 # ==================================================
 # Tool Configuration
 # ==================================================

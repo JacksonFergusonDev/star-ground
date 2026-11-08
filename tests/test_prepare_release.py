@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
-import json
 import subprocess
 from collections.abc import Sequence
 
 import pytest
 
 from scripts import prepare_release
-from scripts.prepare_release import CheckoutState, OutputStyle, WorkflowRun
+from scripts.prepare_release import CheckoutState
 
 
 def _completed(
@@ -74,6 +73,7 @@ def test_check_checkout_rejects_invalid_git_state(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
+    monkeypatch.delenv("GITHUB_ACTIONS", raising=False)
     responses = iter([branch, status, sha, remote])
     monkeypatch.setattr(prepare_release, "read_command", lambda _cmd: next(responses))
 
@@ -142,6 +142,7 @@ def test_check_ci_stops_on_failed_run(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
+    monkeypatch.delenv("GITHUB_ACTIONS", raising=False)
     checkout = CheckoutState(repo="example/star-ground", sha="abc123456789")
     monkeypatch.setattr(
         prepare_release,
@@ -175,17 +176,25 @@ def test_check_local_state_runs_uv_lock_check(
     assert commands == [["uv", "lock", "--check"]]
 
 
+@pytest.mark.parametrize("github_actions", ["false", "true"], ids=["local", "actions"])
 def test_read_json_rejects_invalid_json(
+    github_actions: str,
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
+    monkeypatch.setenv("GITHUB_ACTIONS", github_actions)
     monkeypatch.setattr(prepare_release, "read_command", lambda _cmd: "{not-json")
 
     with pytest.raises(SystemExit) as exc_info:
         prepare_release.read_json(["gh", "run", "list"])
 
     assert exc_info.value.code == 1
-    assert "invalid JSON" in capsys.readouterr().err
+    output = capsys.readouterr()
+    if github_actions == "true":
+        assert output.out.startswith("::error::")
+        assert "invalid JSON" in output.out
+    else:
+        assert "invalid JSON" in output.err
 
 
 def test_confirm_handles_interactive_and_non_tty_input(
@@ -198,27 +207,3 @@ def test_confirm_handles_interactive_and_non_tty_input(
     answers = iter(["maybe", "y"])
     monkeypatch.setattr("builtins.input", lambda: next(answers))
     assert prepare_release.confirm("Continue?") is True
-
-
-def test_report_applies_ansi_when_forced(
-    monkeypatch: pytest.MonkeyPatch,
-    capsys: pytest.CaptureFixture[str],
-) -> None:
-    monkeypatch.delenv("CI", raising=False)
-    monkeypatch.delenv("NO_COLOR", raising=False)
-    monkeypatch.setenv("FORCE_COLOR", "1")
-
-    prepare_release.report("Ready", style=OutputStyle.SUCCESS)
-
-    out = capsys.readouterr().out
-    assert "\033[1;32mReady\033[0m" in out
-    assert isinstance(
-        WorkflowRun(
-            database_id=1,
-            head_sha="abc",
-            status="completed",
-            conclusion="success",
-            url=json.dumps("https://example.com"),
-        ),
-        WorkflowRun,
-    )

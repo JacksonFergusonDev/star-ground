@@ -10,6 +10,8 @@ import urllib.request
 import uuid
 from pathlib import Path
 
+from star_ground.cli_output import CliOutput
+
 
 def docker(*args: str, timeout: int = 30) -> str:
     """Run a bounded Docker command and include its output in any failure."""
@@ -75,6 +77,7 @@ def check_browser(url: str, artifacts: Path) -> None:
 
 def smoke(image: str, artifacts: Path) -> None:
     """Check HTTP readiness, offline functionality and graceful termination."""
+    output = CliOutput()
     name = f"star-ground-smoke-{uuid.uuid4().hex}"
     checks = Path(__file__).with_name("container_checks.py").resolve()
     restrictions = (
@@ -86,62 +89,67 @@ def smoke(image: str, artifacts: Path) -> None:
     )
     offline = f"{name}-offline"
     try:
-        docker(
-            "run",
-            "--detach",
-            "--name",
-            name,
-            *restrictions,
-            "--publish",
-            "127.0.0.1::8000",
-            image,
-        )
-        wait_healthy(name)
-        port = docker("port", name, "8000/tcp")
-        for path in ("/api/health", "/", "/app/"):
-            with urllib.request.urlopen(f"http://{port}{path}", timeout=5) as response:
-                body = response.read()
-                assert response.status == 200, (path, response.status)
-                assert body, path
-                if path.endswith("health"):
-                    assert json.loads(body) == {"status": "ok"}, body
-        print(
+        with output.section("Start the container and check HTTP"):
             docker(
                 "run",
+                "--detach",
                 "--name",
-                offline,
+                name,
                 *restrictions,
-                "--network=none",
-                "--mount",
-                f"type=bind,src={checks},dst=/smoke/checks.py,readonly",
+                "--publish",
+                "127.0.0.1::8000",
                 image,
-                "python",
-                "/smoke/checks.py",
-                timeout=240,
-            ),
-            flush=True,
-        )
-        check_browser(f"http://{port}", artifacts)
-        wait_healthy(name, timeout=10)
-        # SIGTERM must stop the server cleanly; Docker's forced SIGKILL exits 137.
-        docker("stop", "--time=10", name)
-        exit_code = docker("inspect", "--format", "{{.State.ExitCode}}", name)
-        assert exit_code == "0", f"Unclean shutdown: {exit_code}"
-        print(
-            "Container startup, HTTP, offline functionality and shutdown passed",
-            flush=True,
-        )
+            )
+            wait_healthy(name)
+            port = docker("port", name, "8000/tcp")
+            for path in ("/api/health", "/", "/app/"):
+                with urllib.request.urlopen(
+                    f"http://{port}{path}", timeout=5
+                ) as response:
+                    body = response.read()
+                    assert response.status == 200, (path, response.status)
+                    assert body, path
+                    if path.endswith("health"):
+                        assert json.loads(body) == {"status": "ok"}, body
+        with output.section("Run the offline checks"):
+            output.info(
+                docker(
+                    "run",
+                    "--name",
+                    offline,
+                    *restrictions,
+                    "--network=none",
+                    "--mount",
+                    f"type=bind,src={checks},dst=/smoke/checks.py,readonly",
+                    image,
+                    "python",
+                    "/smoke/checks.py",
+                    timeout=240,
+                )
+            )
+            output.success("All offline container checks passed.")
+        with output.section("Check the site in Chromium"):
+            check_browser(f"http://{port}", artifacts)
+        with output.section("Check graceful shutdown"):
+            wait_healthy(name, timeout=10)
+            # SIGTERM must stop the server cleanly; Docker's forced SIGKILL exits 137.
+            docker("stop", "--time=10", name)
+            exit_code = docker("inspect", "--format", "{{.State.ExitCode}}", name)
+            assert exit_code == "0", f"Unclean shutdown: {exit_code}"
     finally:
-        for container in (name, offline):
-            for command in (
-                ("logs", container),
-                ("inspect", container),
-                ("rm", "--force", container),
-            ):
-                try:
-                    print(docker(*command), flush=True)
-                except (RuntimeError, subprocess.TimeoutExpired) as error:
-                    print(f"Diagnostics/cleanup: {error}", flush=True)
+        with output.section("Collect container diagnostics and clean up"):
+            for container in (name, offline):
+                for command in (
+                    ("logs", container),
+                    ("inspect", container),
+                    ("rm", "--force", container),
+                ):
+                    try:
+                        output.info(docker(*command))
+                    except (RuntimeError, subprocess.TimeoutExpired) as error:
+                        output.warning(
+                            str(error), title="Container diagnostics and cleanup"
+                        )
 
 
 def main() -> None:
@@ -154,8 +162,15 @@ def main() -> None:
         help="Keep browser traces, screenshots and downloads here",
     )
     args = parser.parse_args()
-    with tempfile.TemporaryDirectory(prefix="star-ground-smoke-") as temporary:
+    output = CliOutput()
+    with (
+        output.report_failures("Container checks"),
+        tempfile.TemporaryDirectory(prefix="star-ground-smoke-") as temporary,
+    ):
         smoke(args.image, args.artifacts or Path(temporary))
+    result = "Container startup, HTTP, offline functionality and shutdown passed."
+    output.success(result)
+    output.step_summary(f"## Container checks\n\n{result}\n")
 
 
 if __name__ == "__main__":

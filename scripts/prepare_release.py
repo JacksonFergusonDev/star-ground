@@ -9,25 +9,18 @@ import sys
 import time
 from collections.abc import Sequence
 from dataclasses import dataclass
-from enum import StrEnum
 from pathlib import Path
-from typing import NoReturn, TextIO
+from typing import NoReturn
+
+from rich.console import Console
+
+from star_ground.cli_output import CliOutput
 
 REPO_ROOT: Path = Path(__file__).resolve().parent.parent
 VENV_BIN: Path = REPO_ROOT / ".venv" / ("Scripts" if sys.platform == "win32" else "bin")
 CI_WORKFLOW = "ci.yml"
 RUN_DISCOVERY_ATTEMPTS = 24
 RUN_DISCOVERY_INTERVAL = 5
-
-
-class OutputStyle(StrEnum):
-    """ANSI escape sequences for human-facing script output."""
-
-    PLAIN = ""
-    TITLE = "1;34"
-    SUCCESS = "1;32"
-    WARNING = "1;33"
-    ERROR = "1;31"
 
 
 @dataclass(frozen=True)
@@ -47,36 +40,6 @@ class WorkflowRun:
     status: str
     conclusion: str
     url: str
-
-
-def _styled_output(stream: TextIO) -> bool:
-    """Return True when ANSI styling should be emitted on stream."""
-    if os.environ.get("CI") or "NO_COLOR" in os.environ:
-        return False
-    return stream.isatty() or os.environ.get("FORCE_COLOR", "") not in {"", "0"}
-
-
-def report(
-    message: str = "",
-    *,
-    style: OutputStyle = OutputStyle.PLAIN,
-    stderr: bool = False,
-    end: str = "\n",
-) -> None:
-    """Print literal text, styled on terminals and plain when redirected.
-
-    Args:
-        message: The text to print.
-        style: Optional ANSI style to apply on a terminal.
-        stderr: If True, write to stderr instead of stdout.
-        end: String appended after the message.
-    """
-    stream = sys.stderr if stderr else sys.stdout
-    encoding = stream.encoding or "utf-8"
-    safe = message.encode(encoding, errors="replace").decode(encoding)
-    if style is not OutputStyle.PLAIN and _styled_output(stream):
-        safe = f"\033[{style.value}m{safe}\033[0m"
-    print(safe, file=stream, end=end, flush=True)
 
 
 def get_repo_env() -> dict[str, str]:
@@ -127,7 +90,7 @@ def stop(message: str) -> NoReturn:
     Args:
         message: Reason the release preflight stopped.
     """
-    report(f"Version bump stopped: {message}", style=OutputStyle.ERROR, stderr=True)
+    CliOutput(console=Console(stderr=True)).error(f"Version bump stopped: {message}")
     sys.exit(1)
 
 
@@ -145,7 +108,9 @@ def read_command(command: list[str]) -> str:
     except OSError as error:
         stop(f"could not run {command[0]}: {error}")
     if result.returncode:
-        report(result.stderr.rstrip(), style=OutputStyle.ERROR, stderr=True)
+        CliOutput(console=Console(stderr=True, highlight=False)).info(
+            result.stderr.rstrip()
+        )
         stop(f"{' '.join(command)} failed. Check tool installation and authentication.")
     return result.stdout.strip()
 
@@ -178,15 +143,16 @@ def confirm(question: str) -> bool:
     """
     if not sys.stdin.isatty():
         return False
+    output = CliOutput()
     try:
         while True:
-            report(f"{question} [y/N] ", end="")
+            output.info(f"{question} [y/N] ", end="")
             answer = input().strip().lower()
             if answer in {"y", "yes"}:
                 return True
             if answer in {"", "n", "no"}:
                 return False
-            report("Please answer y or n.")
+            output.info("Please answer y or n.")
     except EOFError:
         return False
 
@@ -308,8 +274,9 @@ def wait_for_ci(checkout: CheckoutState, run: WorkflowRun | None) -> WorkflowRun
             "Wait for it, then rerun your just bump command."
         )
     require_source(checkout)
+    output = CliOutput()
     if run is None:
-        report(f"Waiting for GitHub to register CI on {checkout.sha[:8]}...")
+        output.info(f"Waiting for GitHub to register CI on {checkout.sha[:8]}...")
         for attempt in range(RUN_DISCOVERY_ATTEMPTS):
             run = latest_run(checkout)
             if run is not None:
@@ -322,7 +289,7 @@ def wait_for_ci(checkout: CheckoutState, run: WorkflowRun | None) -> WorkflowRun
                 f"Inspect gh run list --repo {checkout.repo} --workflow {CI_WORKFLOW} "
                 f"--commit {checkout.sha}, then rerun your just bump command."
             )
-    report(f"CI: {run.url}")
+    output.info(f"CI: {run.url}")
     if run.status != "completed":
         command = [
             "gh",
@@ -365,13 +332,16 @@ def check_ci(checkout: CheckoutState) -> None:
     Args:
         checkout: Verified repository and commit SHA.
     """
+    output = CliOutput()
     run = latest_run(checkout)
     if run is None:
-        report(f"No {CI_WORKFLOW} run exists for {checkout.sha[:8]}.", stderr=True)
-        report("CI starts automatically after a push to main.")
+        CliOutput(console=Console(stderr=True)).warning(
+            f"No {CI_WORKFLOW} run exists for {checkout.sha[:8]}."
+        )
+        output.info("CI starts automatically after a push to main.")
         run = wait_for_ci(checkout, None)
     elif run.status != "completed":
-        report(f"{CI_WORKFLOW}: {run.status}. {run.url}")
+        output.info(f"{CI_WORKFLOW}: {run.status}. {run.url}")
         run = wait_for_ci(checkout, run)
     if (
         run.head_sha != checkout.sha
@@ -379,10 +349,7 @@ def check_ci(checkout: CheckoutState) -> None:
         or run.conclusion != "success"
     ):
         stop(f"{CI_WORKFLOW}: {run.status} / {run.conclusion or 'pending'}. {run.url}")
-    report(
-        f"{CI_WORKFLOW} passed on {checkout.sha[:8]}: {run.url}",
-        style=OutputStyle.SUCCESS,
-    )
+    output.success(f"{CI_WORKFLOW} passed on {checkout.sha[:8]}: {run.url}")
 
 
 def check_local_state() -> None:
@@ -406,7 +373,7 @@ def main() -> None:
         require_source(checkout)
     except KeyboardInterrupt:
         stop("preparation cancelled. Any workflows already started continue on GitHub.")
-    report("Release preflight passed.", style=OutputStyle.SUCCESS)
+    CliOutput().success("Release preflight passed.")
 
 
 if __name__ == "__main__":

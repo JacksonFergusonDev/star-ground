@@ -202,6 +202,8 @@ jobs:
           uv run playwright install --with-deps chromium
 
       - name: Check the live site
+        env:
+          PYTHONPATH: src
         run: |
           uv run python -m scripts.smoke_live https://star-ground.jacksonferguson.me "$GITHUB_SHA" \
             --artifacts "${RUNNER_TEMP}/browser"

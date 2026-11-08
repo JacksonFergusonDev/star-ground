@@ -14,16 +14,16 @@ a reason, and the summary lists every one that wasn't added.
 import logging
 import os
 from collections import Counter
-from collections.abc import Iterator, Mapping
-from contextlib import contextmanager
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from enum import StrEnum
 from pathlib import Path
-from typing import TextIO
+from typing import TYPE_CHECKING, TextIO
 
-from rich.console import Console
-from rich.logging import RichHandler
-from rich.table import Table
+from star_ground.cli_output import CliOutput, in_github_actions
+
+if TYPE_CHECKING:
+    from rich.console import Console
 
 
 class Outcome(StrEnum):
@@ -97,25 +97,11 @@ class Tally:
         )
 
 
-def in_github_actions(env: Mapping[str, str] = os.environ) -> bool:
-    """Whether the job runs in GitHub Actions."""
-    return env.get("GITHUB_ACTIONS") == "true"
+class Reporter(CliOutput):
+    """Reports catalog progress and keeps the tally used in its summaries."""
 
-
-def _escape(text: str) -> str:
-    """A workflow command's message: GitHub reads %, CR and LF specially."""
-    return text.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
-
-
-class Reporter:
-    """Reports the job's progress, in GitHub Actions' form or Rich's.
-
-    Args:
-        github: Write GitHub Actions workflow commands, not Rich output.
-        stream: Where GitHub Actions output goes (tests pass a buffer).
-        console: Rich's console, outside GitHub Actions.
-        summary_path: GitHub's step summary file, if any.
-    """
+    _annotation_title = "Catalog"
+    _stderr = True
 
     def __init__(
         self,
@@ -125,11 +111,8 @@ class Reporter:
         summary_path: str | None = None,
         summary_file: Path | None = None,
     ) -> None:
-        self.github = github
+        super().__init__(github, stream, console, summary_path=summary_path)
         self._summary_file = summary_file
-        self._stream = stream
-        self._console = console or Console(stderr=True, highlight=False)
-        self._summary_path = summary_path
         self.tally = Tally()
 
     @classmethod
@@ -151,13 +134,6 @@ class Reporter:
             summary_file=summary_file,
         )
 
-    def _print(self, line: str) -> None:
-        if self._stream is not None:
-            self._stream.write(line + "\n")
-            self._stream.flush()
-        else:
-            print(line, flush=True)
-
     def install_logging(self, verbose: bool = False) -> None:
         """Routes the job's log records (retries, waits) through this reporter."""
         level = logging.DEBUG if verbose else logging.INFO
@@ -165,48 +141,14 @@ class Reporter:
         if self.github:
             handler = _GitHubHandler(self)
         else:
+            from rich.logging import RichHandler
+
             handler = RichHandler(console=self._console, show_path=False, markup=False)
         handler.setLevel(level)
         root = logging.getLogger("star_ground.catalog")
         root.handlers = [handler]
         root.setLevel(level)
         root.propagate = False
-
-    @contextmanager
-    def section(self, title: str) -> Iterator[None]:
-        """A stretch of the run: one publisher's discovery or reading."""
-        if self.github:
-            self._print(f"::group::{_escape(title)}")
-            try:
-                yield
-            finally:
-                self._print("::endgroup::")
-        else:
-            self._console.rule(f"[bold]{title}")
-            yield
-
-    def info(self, message: str) -> None:
-        """A step the job took."""
-        if self.github:
-            self._print(message)
-        else:
-            self._console.print(message, markup=False)
-
-    def warning(self, message: str, title: str = "Catalog") -> None:
-        """Something that needs a look but didn't stop the run."""
-        if self.github:
-            self._print(f"::warning title={_escape(title)}::{_escape(message)}")
-        else:
-            self._console.print(f"[yellow]warning[/] {title}: ", end="")
-            self._console.print(message, markup=False)
-
-    def error(self, message: str, title: str = "Catalog") -> None:
-        """Something that failed."""
-        if self.github:
-            self._print(f"::error title={_escape(title)}::{_escape(message)}")
-        else:
-            self._console.print(f"[bold red]error[/] {title}: ", end="")
-            self._console.print(message, markup=False)
 
     def page_failed(self, publisher: str, page: str, reason: str) -> None:
         """A listing page discovery couldn't read (logged as it happened)."""
@@ -224,7 +166,7 @@ class Reporter:
                     title=f"{event.publisher}: {event.outcome}",
                 )
             else:
-                self._print(line)
+                self.info(line)
         else:
             style = _STYLE[event.outcome]
             self._console.print(f"[{style}]{event.outcome:>10}[/] ", end="")
@@ -242,11 +184,12 @@ class Reporter:
         if self._summary_file is not None:
             self._summary_file.write_text(text, encoding="utf-8")
         if self.github:
-            if self._summary_path:
-                with open(self._summary_path, "a", encoding="utf-8") as summary:
-                    summary.write(text)
-            self._print(text)
+            self.step_summary(text)
+            self.info(text)
             return
+
+        from rich.table import Table
+
         table = Table(title="Circuit catalog", title_justify="left")
         table.add_column("Publisher")
         for o in outcomes:
@@ -369,6 +312,6 @@ class _GitHubHandler(logging.Handler):
         elif record.levelno >= logging.WARNING:
             self._reporter.warning(message)
         elif record.levelno <= logging.DEBUG:
-            self._reporter._print(f"::debug::{_escape(message)}")
+            self._reporter.debug(message)
         else:
             self._reporter.info(message)

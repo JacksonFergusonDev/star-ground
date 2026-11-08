@@ -8,6 +8,7 @@ changing a route or model in `src/star_ground/server/`.
 import json
 from pathlib import Path
 
+from star_ground.cli_output import CliOutput
 from star_ground.server import Settings, create_app
 
 OPENAPI_FILE = Path(__file__).resolve().parent.parent / "openapi.json"
@@ -26,7 +27,7 @@ def schema_text() -> str:
 def main() -> None:
     """Writes the schema to `openapi.json`."""
     OPENAPI_FILE.write_text(schema_text(), encoding="utf-8")
-    print(f"Wrote {OPENAPI_FILE.name}")
+    CliOutput().success(f"Wrote {OPENAPI_FILE.name}")
 
 
 if __name__ == "__main__":

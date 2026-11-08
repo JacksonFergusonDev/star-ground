@@ -29,7 +29,6 @@ import json
 import random
 import re
 import statistics
-import sys
 import time
 from collections.abc import Iterable
 from dataclasses import asdict, dataclass, field
@@ -38,6 +37,9 @@ from typing import Any
 
 import pdfplumber
 from PIL import Image
+from rich.console import Console
+from rich.markdown import Markdown
+from rich.text import Text
 
 from star_ground.bom_lib.ocr import recognize
 
@@ -235,6 +237,8 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--min-share", type=float, default=0.08)
     args = parser.parse_args(argv)
 
+    console = Console(highlight=False)
+    progress = Console(stderr=True, highlight=False)
     results: list[DocumentResult] = []
     for spec in args.corpus:
         publisher, dirs = spec.split("=", 1)
@@ -247,9 +251,13 @@ def main(argv: list[str] | None = None) -> None:
             if not pdf.exists():
                 continue
             results.append(measure(publisher, pdf, golden, args.min_share))
-            print(f"{publisher} {pdf.name}", file=sys.stderr)
+            progress.print(Text.assemble((publisher, "bold cyan"), f" {pdf.name}"))
             args.out.write_text(json.dumps([asdict(r) for r in results], indent=1))
-    print(_summary(results))
+    summary = _summary(results)
+    if console.is_terminal:
+        console.print(Markdown(summary))
+    else:
+        console.print(summary, markup=False, soft_wrap=True)
 
 
 if __name__ == "__main__":
