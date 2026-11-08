@@ -18,11 +18,7 @@ from star_ground.bom_lib.utils import expand_refs
 # A footnote marker is a short number set at most this fraction of the size of
 # the word it follows (Aion FX legacy: '68k' at 11pt, marker '1' at 6.4pt).
 _SUPERSCRIPT_RATIO = 0.75
-
-
 _MARKS = re.compile(r"\d{1,2}(?:,\d{1,2})*,?")
-
-
 # ... within this many ems after it: after the designator when it stands alone.
 _ALONE_EM = 6.0
 
@@ -86,12 +82,8 @@ def marked_labels(words: list[PDFWord]) -> list[tuple[str, str]]:
 
 # A designator column holds at least this many listings.
 _VALUELESS_COLUMN = 3
-
-
 # A footnote number is set at most this fraction of its row's type size.
 _MARKER_SIZE = 0.8
-
-
 _VALUELESS_ALIGN_PT = 2.0
 
 
@@ -156,12 +148,8 @@ def valueless_refs(words: list[PDFWord]) -> list[str]:
 
 # OCR's boxes start this far apart within one column.
 _OCR_ALIGN_PT = 6.0
-
-
 # A misread designator is short: 'Q9' read as '60'.
 _UNREADABLE_CHARS = 4
-
-
 # A part number ('MPF102', '2N5457', 'TL072') or a value ('4k7', '100n').
 _PART_LIKE = re.compile(
     r"[A-Z]{1,4}-?\d{2,}[A-Z0-9-]*|\d+[A-Z]\d+[A-Z]*|\d+(?:\.\d+)?[pnuµkKMR]\w*"
@@ -223,8 +211,6 @@ def _middle(word: PDFWord) -> float:
 
 # 'Bill of Materials Sonic Bloom:', 'PARTS LIST', 'BOM'.
 _LIST_HEADING = re.compile(r"(?:bill of materials|parts list|bom)\b", re.IGNORECASE)
-
-
 # The picture starts right under its heading, within this many line heights.
 _PICTURE_GAP_EM = 3.0
 

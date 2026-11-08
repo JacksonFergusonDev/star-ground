@@ -7,8 +7,6 @@ from star_ground.bom_lib.types import PDFWord
 # Gaps wider than this fraction of the font size separate cells. Measured on
 # PedalPCB documents: spaces inside a value are ~0.3em, column gaps >= 0.6em.
 _CELL_GAP_EM = 0.45
-
-
 # Words whose tops differ by less than this fraction of the font size share a
 # line. Words on a real line differ by <= 0.05em; an adjacent footnote line in
 # The Abyss sits only 0.19em away.

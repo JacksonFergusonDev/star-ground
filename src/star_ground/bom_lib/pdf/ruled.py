@@ -277,17 +277,9 @@ def table_entries(
 
 
 _VARIANT_SHARE = 0.8
-
-
 _CONTINUED_ROWS = 3
-
-
 _TITLE_HEADERS = frozenset({"PART", "VALUE", "LOCATION", "REF"})
-
-
 _MAX_TITLE_WORDS_CELL = 4
-
-
 # Side-by-side titled tables are builds when there are this many, listing the
 # same designators: two boards side by side (GuitarPCB Tweed Fuzztone) are as
 # common as two builds, three identical lists are not.
@@ -428,23 +420,15 @@ def _titled_builds(
 # 'Parts (vintage / modern values)' (Aion FX legacy Comet): the page's 'A / B'
 # values are two builds'.
 _SLASH_VERSIONS = re.compile(r"\((\w+) / (\w+) values\)", re.IGNORECASE)
-
-
 # Another version's value beside the first: '1M', '470k', 'jumper', 'omit'.
 _SECOND_VALUE = re.compile(r"\d[\w.]*|omit|jumper", re.IGNORECASE)
-
-
 # 'IC1 (vintage)': a part in one build only; '1N914 (modern only)' likewise.
 _VERSION_REF = re.compile(r"(\S+) \((\w+)\)")
 
 
 _VERSION_ONLY = re.compile(r"(.+?) \((\w+) only\)", re.IGNORECASE)
-
-
 # A 'Mod 1 | Mod 2' heading over tables of value changes (Aion FX legacy Comet).
 _MOD_HEADING = re.compile(r"^\s*Mod 1\b", re.MULTILINE)
-
-
 _CHANGE_LIST_MIN = 3
 
 
@@ -476,16 +460,10 @@ def _version_split(
 
 # Lower case only: PedalPCB's 'TOGGLE SWITCH' is the part's whole name.
 _RULED_LABEL_NOUN = re.compile(r"(?<=[A-Za-z]{3}) (?:switch|pot|trimmer)$")
-
-
 # 'IC1 & IC2'; 'LED + *CLR' (GuitarPCB The Mule: a status LED and its CLR).
 _REF_PAIR = re.compile(r"(\w+)\s*(?:&|\+|\band\b)\s*\*?(\w+)", re.IGNORECASE)
-
-
 # 'RX2 (by IC1)': where on the board a position is.
 _POSITION_ASIDE = re.compile(r"([A-Za-z]{1,4}\d{1,3})\s*\(by [^()]+\)")
-
-
 # 'TR1 (see text)', 'TR2 (Volume)'; not 'RX2 (by IC1)' (`_POSITION_ASIDE`) or
 # 'IC1 (vintage)' (Comet legacy names a build).
 _REF_ASIDE = re.compile(r"([A-Za-z]{1,4}\d{1,3})\s*\(([^\d()]*)\)", re.DOTALL)
@@ -552,8 +530,6 @@ def _is_change_list(table: list[Entry], seen: set[str], page_text: str) -> bool:
 # The designator column of a value-column grid: 'Part', 'Part #', "MUFF'N Part #",
 # 'Component' (Five Cats OKS Fuzz).
 _GRID_REF_HEADER = re.compile(r"(?:^|\s)(?:PART\s*#?|COMPONENT)$", re.IGNORECASE)
-
-
 # Headers that name a column's role, not a circuit version.
 _ROLE_HEADERS = frozenset(
     {
@@ -569,12 +545,8 @@ _ROLE_HEADERS = frozenset(
         "FOOTPRINT",
     }
 )
-
-
 # 'P1-Sus/Fuzz': the designator, then the control's name.
 _NAMED_REF = re.compile(r"([A-Z]{1,3}\d{1,3})[-=](?![A-Z]{1,3}\d)[A-Za-z]")
-
-
 # A note in a value column naming the row's role ('R12 | 1k8 | CLR', RATT).
 _ROLE_CELLS = frozenset({"CLR"})
 
@@ -605,17 +577,11 @@ def names_builds(header: list[str]) -> bool:
 
 # A wide, headerless grid of 'Part | Value' pairs.
 _SHADED_MIN_COLUMNS = 6
-
-
 _JFET_PART = re.compile(r"J\d{3}")
-
-
 _BUY_COUNT = re.compile(r"^([A-Z]{2,4}) x ?\d+\b")
 
 
 _SPACED_RANGE = re.compile(r"\b([A-Z]{1,3}\d{1,3}) ?[-\u2013] ?([A-Z]{1,3}\d{1,3})\b")
-
-
 _SHADED_MIN_PAIRS = 8
 
 

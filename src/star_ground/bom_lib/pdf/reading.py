@@ -65,8 +65,6 @@ from star_ground.bom_lib.verification import (
 # A page outside the parts list with this many listings, this many starting
 # at one x position, holds another parts list (GuitarPCB Stage 3's page 5).
 _OTHER_LIST_MIN = 8
-
-
 _OTHER_LIST_ALIGNED = 4
 
 

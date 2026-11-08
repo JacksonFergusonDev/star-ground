@@ -12,8 +12,6 @@ from star_ground.bom_lib.enums import ComponentCategory
 from star_ground.bom_lib.utils import parse_value_to_decimal
 
 _PART_NUMBER = re.compile(r"\b\d?[A-Z]{1,4}\d{2,5}[A-Z]{0,2}\b")
-
-
 POLE_THROW = re.compile(r"\b(?:[SD34]P[DS]T|\dP\dT)\b")
 
 
@@ -61,51 +59,29 @@ _TYPE_HINTS: tuple[tuple[str, ComponentCategory], ...] = (
 
 
 _LED_DESCRIPTION = re.compile(r"[^,]*\bLED\b", re.IGNORECASE)
-
-
 _LED_SPECS = re.compile(r"LED\s*,\s*(.+)$", re.IGNORECASE)
-
-
 _LED_COLOR = re.compile(
     r"\b(?:red|green|blue|yellow|white|orange|amber|purple|pink|uv)\b", re.IGNORECASE
 )
-
-
 # A VALUE cell that only abbreviates an LED: 'RED', 'Red 3mm', '3mm Red', 'LED'.
 _LED_SHORTHAND = re.compile(
     r"(?i)(?:\d+(?:\.\d+)?mm\s*)?(?:(?:red|green|blue|yellow|white|orange|amber|purple|pink|uv)"
     r"\s*)?(?:LED\s*)?(?:\d+(?:\.\d+)?mm)?"
 )
-
-
 # Not preceded by "non-": a "Non-latching relay" is not latching.
 _ACTUATION = re.compile(r"(?<!non-)(?<!non )\b(momentary|latching)\b", re.IGNORECASE)
-
-
 _DUAL_GANG = re.compile(r"\bDUAL[- ]?GANG")
-
-
 # 'ON/OFF/ON', or Aion FX's 'on-off-on' (normalized to slashes).
 _POSITIONS = re.compile(r"\b(?:ON|OFF)(?:[/-](?:ON|OFF)){1,2}\b")
-
-
 _CENTER_OFF = re.compile(r"\b(?:CENTER|CENTRE|CNTR\.?)[ -]OFF\b")
-
-
 _TWO_POSITION = re.compile(r"\b2[- ]POSITION\b")
-
-
 # Capacitor constructions a TYPE cell may name that the VALUE cell omits.
 _DIELECTRICS = (("TANTALUM", "Tantalum"), ("MLCC", "MLCC"))
 
 
 # '25V', '25 VDC', '16+V' (GuitarPCB Fuzzy Bee: '16 volts or more').
 _VOLTAGE = re.compile(r"\b(\d+(?:\.\d+)?)\s*\+?\s*V(?:DC)?\b", re.IGNORECASE)
-
-
 _NON_POLAR = re.compile(r"\bnon[- ]?polar(?:i[sz]ed)?\b|\bbi-?polar\b", re.IGNORECASE)
-
-
 _NP_MARK = re.compile(r"\b(?:NP|BP)\b|\bnon[- ]?polar|\bbi-?polar", re.IGNORECASE)
 
 
@@ -264,6 +240,4 @@ def enrich_value_from_type(value: str, type_text: str, notes: str = "") -> str:
 
 # A designator named in a NOTES cell: 'use 4.7uF tantalum for C6'.
 _OTHER_PART = re.compile(r"\b(?:for|in|with) [A-Z]{1,3}\d{1,3}\b")
-
-
 _ORIGINAL_PART = re.compile(r"\boriginal\b", re.IGNORECASE)

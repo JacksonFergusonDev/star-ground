@@ -32,13 +32,9 @@ _DASHED_LISTING = re.compile(r"(\S+)\s+[-\u2013\u2014]\s+(\S+)")
 _REF_HEADERS = frozenset(
     {"REFERENCE", "REFERENCES", "REF", "REFS", "DESIGNATOR", "PART", "LOCATION"}
 )
-
-
 # 'Name' heads the designator column only beside a 'Value' column (Q-Tune's
 # 'Value | Name | Qty' packing list).
 _NAME_HEADER = "NAME"
-
-
 # One VALUE column per build: 'VALUE (D+) | VALUE (250)' (Aion FX Aphelion).
 # 'MXR Value | DOD Value' (GuitarPCB Emexar v4) names the build before the word;
 # 'Old Value | New Value' (Aion FX Comet), 'Stock Value | Parallel Value' (Aion FX
@@ -47,8 +43,6 @@ _BUILD_VALUE_HEADER = re.compile(
     r"VALUE \((?P<build>[^()]+)\)|(?P<before>(?!(?:PART|REF|OLD|NEW|STOCK|MOD|PARALLEL|COMBINED|NEAREST|ORIGINAL|ALT|ALTERNATE|SUGGESTED|DEFAULT|KIT)\b)[A-Z0-9+]{2,8}) VALUE",
     re.IGNORECASE,
 )
-
-
 _BOM_COLUMNS = {
     "VALUE": "value",
     "QUANTITY": "qty",
@@ -59,25 +53,15 @@ _BOM_COLUMNS = {
     "TYPE": "type",
     "FOOTPRINT": "type",
 }
-
-
 # A cell starting this many ems right of the last header is outside the table.
 _BEYOND_TABLE_EM = 4.0
-
-
 # A wrapped value loses its closing parenthesis: '1N5226 (1N5' / '226)'.
 _UNCLOSED_ASIDE = re.compile(r"\s*\([^)]*$")
-
-
 # A part's printed marking is not its value: '100n (104)', '1N4148 (41 48)',
 # '100n (.100J63)'. Words in parentheses ('(low ESR)', '(KY5050)') stay.
 _MARKING = re.compile(r"\s*\(\s*(\.?\d[\d .]*(?:[JKM]\d+)?)\s*\)$")
-
-
 # Separators inside a printed designator list: 'R11, R13', 'D21 - D28'.
 _DESIGNATOR_SHAPE = re.compile(r"[A-Za-z]{1,6}\d*[A-Za-z]{0,3}")
-
-
 _LIST_SPACING = re.compile(r"\s*([,\-\u2013])\s*")
 
 
@@ -502,16 +486,10 @@ def _build_values(
 # 'CLR x1', 'CLR x 2': how many of the part to buy.
 # A build cell that repeats the first build's value.
 _SAME_AS_FIRST = frozenset({"_", "-", "\u2013", '"', "\u201d"})
-
-
 # 'CLR - 1' (GuitarPCB Cock-It-Wah) reads 'CLR-1' once its spacing is closed up.
 _REF_COUNT = re.compile(r"(?:\s+x\s*|(?<=\bCLR)-)(\d+)$")
-
-
 # 'ORDER switch', 'DEEP switch': the noun restates the category.
 _LABEL_NOUN = re.compile(r"(?<=[A-Za-z0-9]) (?:switch|pot|trimmer)$")
-
-
 # 'TR1-BIAS' names TR1's control; 'IC1-SOCKET' (Aion Amethyst) is a part of its own.
 _POLES_LABEL = re.compile(r"([A-Z]{1,4}\d{0,3}) ?- ?([SD34]P[SDT]T)")
 
@@ -521,8 +499,6 @@ _POLES_LABEL = re.compile(r"([A-Z]{1,4}\d{0,3}) ?- ?([SD34]P[SDT]T)")
 _DESIGNATOR_ROLE = re.compile(
     r"([A-Z]{1,3}\d{1,3}) (?:[A-Z][a-z]+|[A-Z]{2,4}(?= [A-Z][a-z]))(?: [A-Z][a-z]+)*"
 )
-
-
 # A part label in a typed table: 'VOL.', 'HI-MID FREQ', 'IC1-S', 'PRE-V. SEND',
 # '100HZ' (Aion FX Karkadann's 100 Hz EQ pot).
 _PART_LABEL = re.compile(

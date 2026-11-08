@@ -34,12 +34,9 @@ from star_ground.bom_lib.verification import (
 # merges words in tightly kerned documents (Muffin Fuzz draws word spaces of
 # 1.3pt between overlapping glyphs: 'TONEBYPASSSWITCH').
 _WORD_GAP_PT = 1.0
-
-
 # The most pages a PDF may have. The longest corpus document has 34; a longer
 # one isn't a build document, and every page costs seconds of shared CPU.
 MAX_PDF_PAGES = 60
-
 
 # Initialize Logger
 logger = logging.getLogger(__name__)
@@ -179,13 +176,9 @@ def _pictures(page: Any) -> list[Picture]:
 # 'RS', 'Ql' and values 'lOK', 'SOnF', 'lOuF'. Such text looks right on the
 # page, so it is read wrong without a trace.
 _MISREAD_REF = re.compile(r"(?:R|C|Q|U|D|IC)[lIOSG]{1,2}")
-
-
 _MISREAD_VALUE = re.compile(
     r"(?=[\dlIOS.]*[lIOS])(?=[\dlIOS.]*\d|[lIOS]{2})[\dlIOS.]+(?:[kKMR]|[pnuµ]F?)"
 )
-
-
 _MISREAD_MIN = 3
 
 
@@ -208,22 +201,16 @@ def _misread(words: list[PDFWord]) -> bool:
 # pedal building guide at: www.five-cats-pedals.co.uk/...' (Five Cats, whose
 # only text is the footer).
 _MAX_TITLE_WORDS = 8
-
-
 _URL = re.compile(r"www\.|https?:", re.IGNORECASE)
 
 
 _DISCLAIMER = re.compile(r"\s*(?:WARNING|DISCLAIMER)\b")
-
-
 # 'GuitarPCB Presents' above a NostalgiTone title, a bare 'GuitarPCB.com' above V6's,
 # and section headings set larger than the title ('PARTS LIST Build Notes:',
 # GuitarPCB AfterBlaster).
 _PRESENTS = re.compile(
     r"GuitarPCB(?: Presents?|\.com)|(?:PARTS LIST )?Build Notes:?", re.IGNORECASE
 )
-
-
 # 'TIGHT BOX by GuitarPCB', 'GuitarPCB.com - MoRC v4 2020 & v3': the publisher's
 # byline is no part of the name.
 _BYLINE = re.compile(
@@ -236,12 +223,8 @@ _BYLINE = re.compile(
 
 # A title has a word to it: '” x ” ca.' is a dimension's scraps (GuitarPCB SWAH v3).
 _TITLE_WORD = re.compile(r"[^\W\d_]{3}")
-
-
 # A glyph the font doesn't map to text: 'NostalgiTone 70s Bri(cid:21)sh Single'.
 _UNMAPPED_GLYPH = re.compile(r"\(cid:\d+\)")
-
-
 # 'AND FEATURES', the tail of a heading split across lines: no name starts so.
 _FRAGMENT = re.compile(r"(?:and|or)\b|&", re.IGNORECASE)
 

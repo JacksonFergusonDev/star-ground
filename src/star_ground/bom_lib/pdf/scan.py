@@ -44,8 +44,6 @@ from star_ground.bom_lib.pdf.geometry import (
 from star_ground.bom_lib.types import PDFWord
 
 _NUMBERED_NAME_HEAD = re.compile(r"[A-Z]{3,}")
-
-
 # A whole-cell parenthetical on the next line, aligned with a value above it,
 # continues that value ('SPDT Toggle' / '(On/On)').
 _CONTINUATION = re.compile(r"\(.*\)")
@@ -54,12 +52,8 @@ _CONTINUATION = re.compile(r"\(.*\)")
 # A merged 'NAME value' cell is split only when the value is short
 # ('DPDT (On / Off / On)' is six words).
 _MAX_MERGED_VALUE_WORDS = 6
-
-
 # A designator column is an x-position where at least this many listings start.
 _MIN_COLUMN_REFS = 3
-
-
 _COLUMN_TOLERANCE_EM = 0.5
 
 
@@ -67,17 +61,9 @@ _TYPE_SHARE = 0.6
 
 
 _TRIM_HEADING = re.compile(r"TRIM(?:MER)?S?(?:\s+POTS?)?\b", re.IGNORECASE)
-
-
 _TRIM_MARK = re.compile(r"\bTRIM|\b3362P?\b", re.IGNORECASE)
-
-
 _PAREN_LABEL = re.compile(r"\((\w+)\)")
-
-
 _DASHES = frozenset({"-", "\u2013", "\u2014"})
-
-
 # A designator set with a space ('SW 1', EA Tremolo) ends the value before it.
 _SPACED_REF = re.compile(r"(?:SW|IC|LED|Q|D|C|R) \d{1,3}")
 
@@ -321,15 +307,9 @@ def _split_merged(cell: Cell) -> list[Cell]:
 
 # Dashed listings that make a page's parts list dashed, as a count and a share.
 _DASHED_MIN = 4
-
-
 _DASHED_SHARE = 0.5
-
-
 # How far below its value's line a continuation may start, in ems.
 _WRAP_GAP_EM = 1.6
-
-
 # How far right of its designator a wrapped value may start, in ems.
 _WRAP_REACH_EM = 8
 

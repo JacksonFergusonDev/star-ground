@@ -191,25 +191,15 @@ def layout_entries(
 
 # Rows this close (points) at their left edge share a column.
 _COUNTED_COLUMN_PT = 12.0
-
-
 # A counted value naming its designator: '150k (Ra)'.
 _NAMED_COUNT = re.compile(r"(?P<value>.+?)\s*\((?P<ref>[A-Za-z]{1,3}\d*[a-z]?)\)")
-
-
 # The part's kind restated after its value: '2.2k resistor', '4k7 (4.7k resistor)'.
 _RESTATED_KIND = re.compile(r"\s*\bresistors?\b", re.I)
-
-
 # A decimal comma: '0,01µF' (Tonepad Wah). Only after a zero: '1,000µF' is
 # a thousand.
 _DECIMAL_COMMA = re.compile(r"(?<![\d,.])0,(?=\d)")
-
-
 # 'Meg' for mega: '1Meg' (Tonepad Wah).
 _MEG = re.compile(r"(?<=\d)Meg\b", re.I)
-
-
 # A trimmer's taper means nothing to buy: '10k lin. trim' is a 10k trimmer.
 _TRIM_TAPER = re.compile(r"\s*\b(?:lin|log)\b\.?(?=.*\btrim)", re.I)
 

@@ -136,8 +136,6 @@ def record_pcb(
 
 # A value that only points to the build notes.
 POINTER_VALUE = re.compile(r"see (?:build )?(?:notes?|text)", re.IGNORECASE)
-
-
 _POINTER_TAIL = re.compile(
     r"\s*[-\u2013\u2014]\s*see (?:build )?(?:notes?|text)\s*$", re.IGNORECASE
 )

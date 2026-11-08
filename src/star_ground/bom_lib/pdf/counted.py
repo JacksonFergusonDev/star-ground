@@ -45,16 +45,10 @@ class CountedRow:
 
 # A whole cell that counts parts: '4 - 10k', '1 - 0.022 µF' (Tonepad).
 _COUNTED_CELL = re.compile(r"(\d{1,2})\s*[-\u2013]\s+(\S.*)")
-
-
 # A dashed listing above a counted row in its column: 'IC1 - LM308'.
 _DASHED_CELL = re.compile(r"\S+\s*[-\u2013]\s")
-
-
 # A word qualifying the value before it: a taper or a capacitor type.
 _QUALIFIER_CELL = re.compile(r"(?i)(?:lin|log|rev\.? ?log|tant|trim|np)\.?")
-
-
 # How far a heading's left edge may sit from its column's, in points.
 _HEADING_ALIGN_PT = 12.0
 

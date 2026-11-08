@@ -11,42 +11,28 @@ from star_ground.bom_lib.enums import ComponentCategory
 
 # Unfamiliar numbered labels (CTRL1, FUZZ2) that are not standard designators.
 NUMBERED_LABEL = re.compile(r"[A-Z]{1,5}\d{1,3}")
-
-
 # A designator range in a listing grid: 'D1-D2  1N4148' (GuitarPCB SWAH). A bare
 # upper end is short ('POT1 - 6'): 'R7 - 220' is a resistor's value, and
 # 'IC1 - TL072' a part number (Tonepad); both ends share a prefix.
 REF_RANGE = re.compile(
     r"((?P<prefix>[A-Z]{1,4})\d{1,3}) ?[-\u2013] ?(?:(?P=prefix)\d{1,3}|\d{1,2})"
 )
-
-
 # Single letters (Blue Waffle's 'V  B500K') and slashes ('BASS/MIDS') occur.
 # 'GAIN.BRT' (GuitarPCB Sunn-T: the bright channel's gain) names one control.
 CONTROL_NAME = re.compile(r"[A-Z](?:[A-Z0-9_/-]{1,11})?(?:\.[A-Z]{2,5})?")
-
-
 # A control name in title case, recognized only beside a tapered pot value:
 # 'Volume  A100k', 'Mid  B100k' (GuitarPCB Tone TwEQ).
 TITLE_NAME = re.compile(r"[A-Z][a-z]{2,11}")
-
-
 # 'A100k', or a taper in words: 'Volume  100k Log', 'Fuzz  10k Anti-Log **'
 # (GuitarPCB Funk 49).
 TAPERED_POT = re.compile(
     r"[ABCWG]\d+(?:\.\d+)?[KkM]"
     r"|\d+(?:\.\d+)?[KkM] (?i:anti-?log|rev(?:erse)? log|log|lin(?:ear)?|audio)(?: ?\*+)?"
 )
-
-
 # Designators side by side in one cell, 'D1 D2' (Funk 49), and a range
 # spaced from its prefix, 'LDR 1 - 4' (Band of Gypsys).
 _SPACED_REFS = re.compile(r"([A-Z]{1,3})\d{1,3}(?: \1\d{1,3}){1,3}")
-
-
 _SPACED_RANGE = re.compile(r"([A-Z]{2,4}) (\d{1,3}) ?[-\u2013] ?(\d{1,3})")
-
-
 _MULTIWORD_NAME = re.compile(r"[A-Z]{2,}(?: [A-Z]{2,}){1,2}|[A-Z]{3,} \d{1,2}")
 
 
@@ -61,7 +47,6 @@ CONTROL_VALUE = re.compile(
     # Toggle positions alone: 'SLA  ON/OFF/ON' (Trojan Horse).
     r"|(?i:\(?on(?:\s*[/-]\s*(?:on|off))+\)?)$)"
 )
-
 
 # Column headers and connective words in multi-column parts lists.
 _LAYOUT_WORDS = frozenset(
@@ -83,8 +68,6 @@ _LAYOUT_WORDS = frozenset(
         "OR",
     }
 )
-
-
 # Section headers that also appear beside values. Used only to stop a value
 # from absorbing them; 'TRIM' alone is still a designator.
 HEADER_WORDS = _LAYOUT_WORDS | {
@@ -141,30 +124,18 @@ _LED_WORD = re.compile(r"\bLED\b", re.IGNORECASE)
 
 # Two or more lowercase words mark a sentence ('Choose between ... or SMD').
 _LOWERCASE_WORD = re.compile(r"[a-z][a-z'-]*[.,;:]?")
-
-
 ASIDE = re.compile(r"\((?:see (?:notes?|text)|or equivalent)\)", re.IGNORECASE)
-
-
 # A trailing remark naming the part this one replaces.
 _OPTION_TO = re.compile(
     r"\s+(?:an? )?option (?:to|for) [A-Z]{1,4}\d{1,3}$", re.IGNORECASE
 )
-
-
 # A trailing unbracketed pointer to the build notes.
 _SEE_TEXT = re.compile(r"\s+see (?:build )?(?:notes?|text)$", re.IGNORECASE)
-
-
 # '1N5817 v4.5 only' (GuitarPCB Sriracha Fuzz): the board revision that has it.
 _VERSION_ONLY = re.compile(r"\s+v\d+(?:\.\d+)? only$", re.IGNORECASE)
-
-
 # Trailing words that only restate the component type.
 # A part supplied with the PCB is still a part: '24LC32A *Included' (Deflector).
 _INCLUDED = re.compile(r"\s*\*\s*Included(?: with (?:the )?PCB)?\s*$", re.IGNORECASE)
-
-
 # 'Dip Switch' stays: a bare 'DIP2' would read as an IC package size.
 _REDUNDANT_SUFFIX = re.compile(r"(?<!\bDIP)\s+(?:Crystal|Switch)$", re.IGNORECASE)
 
