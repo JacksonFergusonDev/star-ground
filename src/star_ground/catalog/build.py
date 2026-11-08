@@ -4,7 +4,7 @@ For each document the job fetches it (conditionally, after the first time),
 reads it as an upload would be read, with OCR for image parts lists, and
 keeps the result only when it reads cleanly (`clean`). The catalog holds:
 
-- `builds/<publisher>/<id>.json`: an `Entry` per listed document, with
+- `builds/<publisher>/<id>.json`: a `CatalogEntry` per listed document, with
   where its board and schematic draw each part (`boards`, step 7) and what
   kind of effect it is (`effects`).
 - `effects.json`, kept by hand: effects for builds whose pages say nothing.
@@ -27,9 +27,8 @@ from dataclasses import asdict, dataclass, field, replace
 from datetime import UTC, datetime
 from hashlib import sha256
 from pathlib import Path
-from typing import Any
 
-from star_ground.api import counted_parts, offered, read_document, read_parts
+from star_ground.api import offered, read_document
 from star_ground.bom_lib import (
     FileUpload,
     InputMethod,
@@ -42,11 +41,13 @@ from star_ground.bom_lib.types import Location
 from star_ground.catalog.client import (
     BlockedError,
     DisallowedError,
+    Fetched,
     GoneError,
     PoliteClient,
 )
 from star_ground.catalog.discover import Discovery, Listing, PageState, discover
 from star_ground.catalog.effects import Overrides, effects
+from star_ground.catalog.entries import CatalogEntry, rounded, to_json
 from star_ground.catalog.report import Event, Outcome, Reporter
 from star_ground.catalog.sources import Source
 from star_ground.catalog.verified import (
@@ -156,7 +157,7 @@ class State:
             "pages": {url: asdict(page) for url, page in sorted(self.pages.items())},
             "documents": {url: asdict(d) for url, d in sorted(self.documents.items())},
         }
-        path.write_text(_json(data, expand=2) + "\n")
+        path.write_text(to_json(data, expand=2) + "\n")
 
 
 def clean(result: ParseResult) -> str | None:
@@ -191,49 +192,6 @@ def catalog_reading(reading: ParseResult) -> ParseResult:
     ocr = reading.ocr
     complete = ocr is not None and ocr.verdict == OcrVerdict.COMPLETE
     return replace(offered(reading, use_ocr=complete), ocr=ocr)
-
-
-def _json(value: Any, expand: int, indent: str = "") -> str:
-    """`value` as JSON, its outer `expand` levels laid out a member per line."""
-    if expand == 0 or not isinstance(value, dict | list) or not value:
-        return json.dumps(value)
-    inner = indent + " "
-    if isinstance(value, dict):
-        members = [
-            f"{inner}{json.dumps(key)}: {_json(member, expand - 1, inner)}"
-            for key, member in value.items()
-        ]
-        return "{\n" + ",\n".join(members) + f"\n{indent}}}"
-    items = [f"{inner}{_json(item, expand - 1, inner)}" for item in value]
-    return "[\n" + ",\n".join(items) + f"\n{indent}]"
-
-
-def _rounded(value: Any) -> Any:
-    """`value` with its coordinates kept to a hundredth of a point."""
-    if isinstance(value, float):
-        return round(value, 2)
-    if isinstance(value, dict):
-        return {key: _rounded(member) for key, member in value.items()}
-    if isinstance(value, list):
-        return [_rounded(item) for item in value]
-    return value
-
-
-# How far each part of an entry is laid out a member per line: a build down
-# to its parts, the boards down to each designator's positions.
-_ENTRY_LAYOUT = {"builds": 3, "boards": 1}
-
-
-def _write_entry(path: Path, data: dict[str, Any]) -> None:
-    """Writes an entry with one part, and one designator's positions, per line.
-
-    So a change to one part diffs as one line, rather than a field per line.
-    """
-    members = [
-        f" {json.dumps(key)}: {_json(_rounded(value), _ENTRY_LAYOUT.get(key, 0), ' ')}"
-        for key, value in data.items()
-    ]
-    path.write_text("{\n" + ",\n".join(members) + "\n}\n")
 
 
 def entry_id(listing: Listing) -> str:
@@ -278,85 +236,6 @@ def entry_title(read: str | None, listing: Listing) -> str:
         w for w in re.split(r"[\s_-]+", stem) if w and not _FILE_NOISE.fullmatch(w)
     ]
     return _VERSION.sub(r"v\1.\2", " ".join(words)) or entry_id(listing)
-
-
-def entry(
-    source: Source,
-    listing: Listing,
-    entry_key: str,
-    digest: str,
-    result: ParseResult,
-    checked: str,
-    verified: bool,
-    overrides: Overrides,
-) -> dict[str, Any]:
-    """A listed document's catalog entry: only what was derived from it.
-
-    Args:
-        source: The publisher.
-        listing: The document as its page links it.
-        entry_key: Its id (`entry_id`, made unique among the publisher's).
-        digest: Its `document_hash`.
-        result: Its reading.
-        checked: When it was fetched.
-        verified: Whether its reading was checked by hand.
-        overrides: The effects set by hand.
-
-    Returns:
-        The entry, without its board positions.
-    """
-    title = entry_title(result.title, listing)
-    return {
-        "id": entry_key,
-        "publisher": source.publisher.value,
-        "title": title,
-        "effects": effects(
-            f"{source.publisher.value}/{entry_key}",
-            title,
-            listing.categories,
-            overrides,
-        ),
-        "document": listing.document,
-        "page": listing.page,
-        "file_name": listing.name,
-        "sha256": digest,
-        "checked": checked,
-        "read_by_ocr": result.ocr is not None and result.ocr.has_parts,
-        "verified": verified,
-        "builds": [
-            {"name": name, "parts": _entry_parts(build)}
-            for name, build in builds(result)
-        ],
-    }
-
-
-def _entry_parts(build: ParseResult) -> list[dict[str, Any]]:
-    """A build's parts: each designator, then each part counted by value.
-
-    A counted part ('2 - 47', as Tonepad lists most of a build) has no
-    designator, so its `ref` is None and its `count` says how many.
-    """
-    designated = [
-        {
-            "ref": part.ref,
-            "count": 1,
-            "category": part.category.value,
-            "value": part.value,
-            "location": asdict(part.location) if part.location else None,
-        }
-        for part in read_parts(build)
-    ]
-    counted = [
-        {
-            "ref": None,
-            "count": part.count,
-            "category": part.category.value,
-            "value": part.value,
-            "location": None,
-        }
-        for part in counted_parts(build)
-    ]
-    return designated + counted
 
 
 @dataclass(frozen=True, slots=True)
@@ -451,198 +330,141 @@ def _now() -> str:
     return datetime.now(UTC).isoformat(timespec="seconds")
 
 
-def build(
-    client: PoliteClient,
-    source: Source,
-    out: Path,
-    reporter: Reporter,
-    budget: Budget,
-    page_limit: int | None = None,
-    document_limit: int | None = None,
-    read: Callable[[FileUpload], ParseResult | None] | None = None,
-    boards: FindBoards = find_boards,
-) -> None:
-    """Brings a publisher's part of the catalog up to date.
+@dataclass(frozen=True, slots=True)
+class Sample:
+    """A run's limits, to try the job on a few pages and documents.
 
-    Args:
+    Attributes:
+        pages: Read at most this many listing pages.
+        documents: Read at most this many documents.
+    """
+
+    pages: int | None = None
+    documents: int | None = None
+
+
+def _read_as_upload(upload: FileUpload) -> ParseResult | None:
+    return read_document(InputMethod.UPLOAD_FILE, upload, ocr=True)
+
+
+@dataclass
+class CatalogRun:
+    """One run bringing a publisher's part of the catalog up to date.
+
+    Attributes:
         client: The polite client.
         source: The publisher.
         out: The catalog's directory.
         reporter: Where progress goes.
         budget: When to stop starting new documents.
-        page_limit: Read at most this many listing pages (a sample run).
-        document_limit: Read at most this many documents (a sample run).
+        sample: Limits for a sample run; none for a whole one.
         read: Reads a document (tests pass a fake); by default, as an upload
             with OCR.
-        boards: Finds where a document draws each part (tests pass a fake).
+        locate_boards: Finds where a document draws each part (tests pass a
+            fake).
     """
-    read = read or (
-        lambda upload: read_document(InputMethod.UPLOAD_FILE, upload, ocr=True)
-    )
-    publisher = source.publisher.value
-    state_path = out / "state" / f"{publisher}.json"
-    builds_dir = out / "builds" / publisher
-    state = State.load(state_path)
-    verified = VerifiedList.load(out / "verified.json")
-    overrides = Overrides.load(out / "effects.json")
 
-    def still(previous: DocumentState) -> Verification:
-        """A reading kept from an earlier run, checked against today's list."""
-        if previous.sha256 is None or previous.parts is None:
-            return Verification.UNVERIFIED
-        return verified.check(previous.sha256, previous.parts)
+    client: PoliteClient
+    source: Source
+    out: Path
+    reporter: Reporter
+    budget: Budget
+    sample: Sample = field(default_factory=Sample)
+    read: Callable[[FileUpload], ParseResult | None] = _read_as_upload
+    locate_boards: FindBoards = find_boards
 
-    def refresh(
-        previous: DocumentState, listing: Listing, verification: Verification
-    ) -> None:
-        """Brings an unread build's entry up to date with its page and the lists.
+    def __post_init__(self) -> None:
+        """Loads the publisher's state and the hand-kept lists."""
+        self.publisher = self.source.publisher.value
+        self.state_path = self.out / "state" / f"{self.publisher}.json"
+        self.builds_dir = self.out / "builds" / self.publisher
+        self.state = State.load(self.state_path)
+        self.verified = VerifiedList.load(self.out / "verified.json")
+        self.overrides = Overrides.load(self.out / "effects.json")
 
-        Its mark follows the verified list, and its title and effects follow
-        its page and `effects.json`, which may have changed since it was read.
-        """
-        if not previous.entry:
-            return
-        path = builds_dir / f"{previous.entry}.json"
-        if not path.exists():
-            return
-        data = json.loads(path.read_text())
-        title = entry_title(previous.title, listing)
-        update = {
-            "title": title,
-            "effects": effects(
-                f"{publisher}/{previous.entry}",
-                title,
-                listing.categories,
-                overrides,
-            ),
-            "verified": verification == Verification.VERIFIED,
-        }
-        if any(data.get(key) != value for key, value in update.items()):
-            _write_entry(path, {**data, **update})
+    def run(self) -> None:
+        """Finds the publisher's documents, reads each, and removes the gone."""
+        publisher, reporter = self.publisher, self.reporter
+        if self.source.documents_apart:
+            # The documents are on another host than the pages, so each is read
+            # as soon as discovery finds it, both hosts at full spacing.
+            with reporter.section(f"{publisher}: finding and reading build documents"):
+                found = _found_while_reading(
+                    self.source,
+                    self.client,
+                    self.state.pages,
+                    self.sample.pages,
+                    self.sample.documents,
+                    self.budget,
+                    self.read_one,
+                )
+                self._report_discovery(found)
+        else:
+            with reporter.section(f"{publisher}: finding build documents"):
+                found = discover(
+                    self.client,
+                    self.source,
+                    self.state.pages,
+                    self.sample.pages,
+                    self.budget.spent,
+                )
+                self._report_discovery(found)
+            listings = sorted(
+                found.listings.values(),
+                key=lambda li: (
+                    _asked_before(self.state.documents.get(li.document)),
+                    li.document,
+                ),
+            )[: self.sample.documents]
+            with reporter.section(f"{publisher}: reading {len(listings)} documents"):
+                for number, listing in enumerate(listings, 1):
+                    self.read_one(listing, f"[{number}/{len(listings)}]")
 
-    def add_boards(entry_id: str, content: bytes) -> None:
-        """Adds where the document draws each of its entry's parts."""
-        path = builds_dir / f"{entry_id}.json"
-        data = json.loads(path.read_text())
-        parts = [p for build in data["builds"] for p in build["parts"]]
-        listing = [Location(**p["location"]) for p in parts if p["location"]]
-        try:
-            found = boards(content, [p["ref"] for p in parts if p["ref"]], listing)
-        except Exception as error:  # The build is still listed, without them.
-            reporter.warning(
-                f"couldn't find where {entry_id} draws its parts: "
-                f"{type(error).__name__}: {error}",
-                title=f"{publisher}: board positions",
-            )
-            found = {}
-        data["boards"] = {
-            ref: [asdict(loc) for loc in places] for ref, places in found.items()
-        }
-        _write_entry(path, data)
+        # A sample, or a run out of time, doesn't see every page, so it can't
+        # tell what's gone: it removes nothing.
+        if self.sample.pages is None and found.complete:
+            with reporter.section(f"{publisher}: documents no longer linked"):
+                self._remove_unlinked(found)
+                self.state.save(self.state_path)
+        self.state.save(self.state_path)
 
-    def record(listing_url: str, document: DocumentState, event: Event) -> None:
-        state.documents[listing_url] = replace(document, postponed=False)
-        state.save(state_path)
-        reporter.outcome(event)
-
-    def read_one(listing: Listing, label: str) -> None:
+    def read_one(self, listing: Listing, label: str) -> None:
         """Fetches one document, reads it if it changed, and records the outcome."""
         url = listing.document
-        previous = state.documents.get(url, DocumentState())
-        if budget.spent():
-            if url in state.documents:
-                state.documents[url] = replace(previous, postponed=True)
-            reporter.outcome(
+        previous = self.state.documents.get(url, DocumentState())
+        if self.budget.spent():
+            if url in self.state.documents:
+                self.state.documents[url] = replace(previous, postponed=True)
+            self.reporter.outcome(
                 Event(
-                    publisher,
+                    self.publisher,
                     url,
                     Outcome.POSTPONED,
                     "the run's time budget is spent",
                 )
             )
             return
-        reporter.info(f"{label} {listing.name}")
+        self.reporter.info(f"{label} {listing.name}")
         checked = _now()
-        try:
-            if source.visit_page_first:
-                client.get(listing.page)
-            # A document left out but since checked by hand is fetched in
-            # full, so it can be read and listed.
-            newly_checked = (
-                previous.outcome == Outcome.NOT_CLEAN
-                and previous.sha256 in verified.checked
-            )
-            # A listed build without current board positions is fetched in
-            # full too, so they can be found.
-            needs_boards = (
-                previous.entry is not None and previous.boards < BOARDS_VERSION
-            )
-            fetched = (
-                client.get(url)
-                if newly_checked or needs_boards
-                else client.get(url, previous.etag, previous.last_modified)
-            )
-        except BlockedError as error:
-            record(
-                url,
-                replace(
-                    previous,
-                    outcome=Outcome.BLOCKED,
-                    reason=str(error),
-                ),
-                Event(publisher, url, Outcome.BLOCKED, str(error)),
-            )
-            return
-        except GoneError as error:
-            # A dead link hides the build.
-            if previous.entry:
-                (builds_dir / f"{previous.entry}.json").unlink(missing_ok=True)
-            record(
-                url,
-                replace(
-                    previous,
-                    outcome=Outcome.GONE,
-                    reason=str(error),
-                    entry=None,
-                ),
-                Event(publisher, url, Outcome.GONE, str(error)),
-            )
-            return
-        except DisallowedError as error:
-            record(
-                url,
-                replace(
-                    previous,
-                    outcome=Outcome.DISALLOWED,
-                    reason=str(error),
-                ),
-                Event(publisher, url, Outcome.DISALLOWED, str(error)),
-            )
-            return
-        except Exception as error:  # A failed fetch is reported; the rest go on.
-            reason = f"couldn't fetch it: {error}"
-            # A file broken on the publisher's side fails every night; it
-            # fails the job the first time, then is only listed.
-            again = previous.outcome == Outcome.FAILED
-            record(
-                url,
-                replace(previous, outcome=Outcome.FAILED, reason=reason),
-                Event(
-                    publisher,
-                    url,
-                    Outcome.FAILED,
-                    f"{reason} (it failed last run too)" if again else reason,
-                    again=again,
-                ),
-            )
+        # A document left out but since checked by hand is fetched in full,
+        # so it can be read and listed.
+        newly_checked = (
+            previous.outcome == Outcome.NOT_CLEAN
+            and previous.sha256 in self.verified.checked
+        )
+        # A listed build without current board positions is fetched in full
+        # too, so they can be found.
+        needs_boards = previous.entry is not None and previous.boards < BOARDS_VERSION
+        fetched = self._fetch(listing, previous, full=newly_checked or needs_boards)
+        if fetched is None:
             return
         if fetched.status == 304:
-            kept = still(previous)
-            refresh(previous, listing, kept)
-            record(
+            kept = self._still(previous)
+            self._refresh(previous, listing, kept)
+            self._record(
                 url,
                 replace(previous, verification=kept),
-                _unchanged(publisher, url, previous, "304 Not Modified", kept),
+                _unchanged(self.publisher, url, previous, "304 Not Modified", kept),
             )
             return
         digest = document_hash(fetched.content)
@@ -663,27 +485,116 @@ def build(
                 Outcome.NOT_CLEAN,
             )
         ):
-            kept = still(previous)
-            refresh(previous, listing, kept)
-            how = "same hash as last time"
-            added = previous.boards
-            if needs_boards and previous.entry:
-                add_boards(previous.entry, fetched.content)
-                how += "; board positions added"
-                added = BOARDS_VERSION
-            record(
-                url,
-                replace(
-                    fetched_state,
-                    outcome=previous.outcome,
-                    verification=kept,
-                    boards=added,
-                ),
-                _unchanged(publisher, url, previous, how, kept),
+            self._same_document(
+                listing, previous, fetched_state, fetched.content, needs_boards
             )
             return
+        self._read_and_list(
+            listing, previous, fetched_state, fetched.content, digest, checked
+        )
+
+    def _fetch(
+        self, listing: Listing, previous: DocumentState, *, full: bool
+    ) -> Fetched | None:
+        """Fetches a document, or records why it couldn't be.
+
+        Args:
+            listing: The document as its page links it.
+            previous: What the last run saw of it.
+            full: Fetch it whole, not only if it changed since last time.
+
+        Returns:
+            The response, or None when the outcome is already recorded.
+        """
+        url, publisher = listing.document, self.publisher
         try:
-            reading = read(FileUpload(listing.name, fetched.content))
+            if self.source.visit_page_first:
+                self.client.get(listing.page)
+            if full:
+                return self.client.get(url)
+            return self.client.get(url, previous.etag, previous.last_modified)
+        except BlockedError as error:
+            self._record(
+                url,
+                replace(previous, outcome=Outcome.BLOCKED, reason=str(error)),
+                Event(publisher, url, Outcome.BLOCKED, str(error)),
+            )
+        except GoneError as error:
+            # A dead link hides the build.
+            self._unlist(previous)
+            self._record(
+                url,
+                replace(previous, outcome=Outcome.GONE, reason=str(error), entry=None),
+                Event(publisher, url, Outcome.GONE, str(error)),
+            )
+        except DisallowedError as error:
+            self._record(
+                url,
+                replace(previous, outcome=Outcome.DISALLOWED, reason=str(error)),
+                Event(publisher, url, Outcome.DISALLOWED, str(error)),
+            )
+        except Exception as error:  # A failed fetch is reported; the rest go on.
+            reason = f"couldn't fetch it: {error}"
+            # A file broken on the publisher's side fails every night; it
+            # fails the job the first time, then is only listed.
+            again = previous.outcome == Outcome.FAILED
+            self._record(
+                url,
+                replace(previous, outcome=Outcome.FAILED, reason=reason),
+                Event(
+                    publisher,
+                    url,
+                    Outcome.FAILED,
+                    f"{reason} (it failed last run too)" if again else reason,
+                    again=again,
+                ),
+            )
+        return None
+
+    def _same_document(
+        self,
+        listing: Listing,
+        previous: DocumentState,
+        fetched_state: DocumentState,
+        content: bytes,
+        needs_boards: bool,
+    ) -> None:
+        """Records a document whose bytes haven't changed, without reading it."""
+        url = listing.document
+        kept = self._still(previous)
+        self._refresh(previous, listing, kept)
+        how = "same hash as last time"
+        added = previous.boards
+        if needs_boards and previous.entry:
+            path = self._entry_path(previous.entry)
+            listed = CatalogEntry.load(path)
+            listed.with_boards(self._boards(listed, content)).write(path)
+            how += "; board positions added"
+            added = BOARDS_VERSION
+        self._record(
+            url,
+            replace(
+                fetched_state,
+                outcome=previous.outcome,
+                verification=kept,
+                boards=added,
+            ),
+            _unchanged(self.publisher, url, previous, how, kept),
+        )
+
+    def _read_and_list(
+        self,
+        listing: Listing,
+        previous: DocumentState,
+        fetched_state: DocumentState,
+        content: bytes,
+        digest: str,
+        checked: str,
+    ) -> None:
+        """Reads a new or changed document and lists it, if it reads cleanly."""
+        url, publisher = listing.document, self.publisher
+        try:
+            reading = self.read(FileUpload(listing.name, content))
             if reading is None:
                 raise ValueError("not a document Star Ground reads")
             accepted = catalog_reading(reading)
@@ -691,7 +602,7 @@ def build(
             parts = fingerprint(accepted)
         except Exception as error:  # A reading bug is reported; the rest go on.
             reason = f"couldn't read it: {type(error).__name__}: {error}"
-            record(
+            self._record(
                 url,
                 replace(
                     fetched_state, outcome=Outcome.FAILED, reason=reason, entry=None
@@ -699,7 +610,7 @@ def build(
                 Event(publisher, url, Outcome.FAILED, reason),
             )
             return
-        verification = verified.check(digest, parts)
+        verification = self.verified.check(digest, parts)
         fetched_state = replace(
             fetched_state,
             parts=parts,
@@ -707,7 +618,7 @@ def build(
             title=accepted.title,
         )
         if verification == Verification.CHANGED:
-            reporter.warning(
+            self.reporter.warning(
                 f"{url} was checked by hand, but today's reading of the same file "
                 "differs from the one checked: likely a parser regression",
                 title=f"{publisher}: verified reading changed",
@@ -717,11 +628,12 @@ def build(
         empty = any(not build.inventory for _, build in builds(accepted))
         if why is not None and is_verified and not empty:
             # Checked by hand, so its warnings were looked into.
-            reporter.info(f"listed though not clean, as it was checked by hand ({why})")
+            self.reporter.info(
+                f"listed though not clean, as it was checked by hand ({why})"
+            )
         elif why is not None:
-            if previous.entry:
-                (builds_dir / f"{previous.entry}.json").unlink(missing_ok=True)
-            record(
+            self._unlist(previous)
+            self._record(
                 url,
                 replace(
                     fetched_state, outcome=Outcome.NOT_CLEAN, reason=why, entry=None
@@ -729,99 +641,150 @@ def build(
                 Event(publisher, url, Outcome.NOT_CLEAN, why),
             )
             return
-        listed_id = entry_id(listing)
-        taken = builds_dir / f"{listed_id}.json"
-        if taken.exists() and json.loads(taken.read_text())["document"] != url:
-            # Two documents published under one file name.
-            listed_id += "-" + sha256(url.encode()).hexdigest()[:6]
-        listed = entry(
-            source,
-            listing,
-            listed_id,
-            digest,
-            accepted,
-            checked,
-            is_verified,
-            overrides,
-        )
-        builds_dir.mkdir(parents=True, exist_ok=True)
-        _write_entry(builds_dir / f"{listed['id']}.json", listed)
-        add_boards(listed["id"], fetched.content)
+        listed = self._entry(listing, digest, accepted, checked, is_verified)
+        listed = listed.with_boards(self._boards(listed, content))
+        listed.write(self._entry_path(listed.id))
         outcome = Outcome.UPDATED if previous.entry else Outcome.LISTED
         reason = (
             "the document changed since it was listed; check it"
             if previous.entry
             else ""
         )
-        record(
+        self._record(
             url,
             replace(
                 fetched_state,
                 outcome=outcome,
                 reason=reason,
-                entry=listed["id"],
+                entry=listed.id,
                 boards=BOARDS_VERSION,
             ),
             Event(publisher, url, outcome, reason, verified=is_verified),
         )
 
-    def report_discovery(found: Discovery) -> None:
+    def _entry(
+        self,
+        listing: Listing,
+        digest: str,
+        reading: ParseResult,
+        checked: str,
+        verified: bool,
+    ) -> CatalogEntry:
+        """A listed document's entry: only what was derived from it."""
+        entry_key = entry_id(listing)
+        taken = self._entry_path(entry_key)
+        if taken.exists() and CatalogEntry.load(taken).document != listing.document:
+            # Two documents published under one file name.
+            entry_key += "-" + sha256(listing.document.encode()).hexdigest()[:6]
+        title = entry_title(reading.title, listing)
+        return CatalogEntry(
+            id=entry_key,
+            publisher=self.publisher,
+            title=title,
+            effects=self._effects(entry_key, title, listing),
+            document=listing.document,
+            page=listing.page,
+            file_name=listing.name,
+            sha256=digest,
+            checked=checked,
+            read_by_ocr=reading.ocr is not None and reading.ocr.has_parts,
+            verified=verified,
+            builds=CatalogEntry.builds_of(reading),
+        )
+
+    def _effects(self, entry_key: str, title: str, listing: Listing) -> tuple[str, ...]:
+        return tuple(
+            effects(
+                f"{self.publisher}/{entry_key}",
+                title,
+                listing.categories,
+                self.overrides,
+            )
+        )
+
+    def _entry_path(self, entry_key: str) -> Path:
+        return self.builds_dir / f"{entry_key}.json"
+
+    def _boards(
+        self, listed: CatalogEntry, content: bytes
+    ) -> dict[str, list[Location]]:
+        """Where the document draws each of its entry's parts; none if that fails."""
+        parts = listed.parts
+        # As the entry keeps them, which is what the finder was always given.
+        listing = [rounded(p.location) for p in parts if p.location]
+        try:
+            refs = [p.ref for p in parts if p.ref]
+            return self.locate_boards(content, refs, listing)
+        except Exception as error:  # The build is still listed, without them.
+            self.reporter.warning(
+                f"couldn't find where {listed.id} draws its parts: "
+                f"{type(error).__name__}: {error}",
+                title=f"{self.publisher}: board positions",
+            )
+            return {}
+
+    def _still(self, previous: DocumentState) -> Verification:
+        """A reading kept from an earlier run, checked against today's list."""
+        if previous.sha256 is None or previous.parts is None:
+            return Verification.UNVERIFIED
+        return self.verified.check(previous.sha256, previous.parts)
+
+    def _refresh(
+        self, previous: DocumentState, listing: Listing, verification: Verification
+    ) -> None:
+        """Brings an unread build's entry up to date with its page and the lists.
+
+        Its mark follows the verified list, and its title and effects follow
+        its page and `effects.json`, which may have changed since it was read.
+        """
+        if not previous.entry:
+            return
+        path = self._entry_path(previous.entry)
+        if not path.exists():
+            return
+        listed = CatalogEntry.load(path)
+        title = entry_title(previous.title, listing)
+        updated = replace(
+            listed,
+            title=title,
+            effects=self._effects(previous.entry, title, listing),
+            verified=verification == Verification.VERIFIED,
+        )
+        if updated != listed:
+            updated.write(path)
+
+    def _unlist(self, previous: DocumentState) -> None:
+        """Removes a document's entry, if it has one."""
+        if previous.entry:
+            self._entry_path(previous.entry).unlink(missing_ok=True)
+
+    def _record(self, url: str, document: DocumentState, event: Event) -> None:
+        self.state.documents[url] = replace(document, postponed=False)
+        self.state.save(self.state_path)
+        self.reporter.outcome(event)
+
+    def _report_discovery(self, found: Discovery) -> None:
         for page, reason in sorted(found.failures.items()):
-            reporter.page_failed(publisher, page, reason)
-        reporter.info(
+            self.reporter.page_failed(self.publisher, page, reason)
+        self.reporter.info(
             f"{len(found.listings)} build documents linked from {len(found.pages)} "
             f"pages ({len(found.failures)} pages not read)"
         )
-        whole = page_limit is None and found.complete
-        state.pages = found.pages if whole else {**state.pages, **found.pages}
+        whole = self.sample.pages is None and found.complete
+        self.state.pages = found.pages if whole else {**self.state.pages, **found.pages}
 
-    if source.documents_apart:
-        # The documents are on another host than the pages, so each is read
-        # as soon as discovery finds it, both hosts at full spacing.
-        with reporter.section(f"{publisher}: finding and reading build documents"):
-            found = _found_while_reading(
-                source,
-                client,
-                state.pages,
-                page_limit,
-                document_limit,
-                budget,
-                read_one,
-            )
-            report_discovery(found)
-    else:
-        with reporter.section(f"{publisher}: finding build documents"):
-            found = discover(client, source, state.pages, page_limit, budget.spent)
-            report_discovery(found)
-        listings = sorted(
-            found.listings.values(),
-            key=lambda li: (
-                _asked_before(state.documents.get(li.document)),
-                li.document,
-            ),
-        )[:document_limit]
-        with reporter.section(f"{publisher}: reading {len(listings)} documents"):
-            for number, listing in enumerate(listings, 1):
-                read_one(listing, f"[{number}/{len(listings)}]")
-
-    # A sample, or a run out of time, doesn't see every page, so it can't
-    # tell what's gone: it removes nothing.
-    if page_limit is None and found.complete:
-        with reporter.section(f"{publisher}: documents no longer linked"):
-            gone = [url for url in state.documents if url not in found.listings]
-            for url in gone:
-                previous = state.documents.pop(url)
-                if previous.entry:
-                    (builds_dir / f"{previous.entry}.json").unlink(missing_ok=True)
-                reporter.outcome(
-                    Event(
-                        publisher,
-                        url,
-                        Outcome.REMOVED,
-                        "no longer linked from the site",
-                    )
+    def _remove_unlinked(self, found: Discovery) -> None:
+        """Forgets the documents no page links any more, and their entries."""
+        gone = [url for url in self.state.documents if url not in found.listings]
+        for url in gone:
+            self._unlist(self.state.documents.pop(url))
+            self.reporter.outcome(
+                Event(
+                    self.publisher,
+                    url,
+                    Outcome.REMOVED,
+                    "no longer linked from the site",
                 )
-            if not gone:
-                reporter.info("none")
-            state.save(state_path)
-    state.save(state_path)
+            )
+        if not gone:
+            self.reporter.info("none")
