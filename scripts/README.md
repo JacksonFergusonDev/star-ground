@@ -22,7 +22,7 @@ To run the gate locally with Docker running:
 uv sync
 uv run playwright install chromium
 docker build -t star-ground:smoke .
-uv run python scripts/smoke_container.py star-ground:smoke --artifacts /tmp/star-ground-smoke
+uv run python -m scripts.smoke_container star-ground:smoke --artifacts /tmp/star-ground-smoke
 ```
 
 The runner checks the image's default command, Docker health status, HTTP health response, web entry point and graceful SIGTERM shutdown. A separate container executes `container_checks.py` with networking disabled. It checks PDF parsing, inventory subtraction, CSV exports, generated PDF and ZIP contents, and real OCR inference. Both containers use a read-only root filesystem, temporary writable directories, dropped capabilities and the image's non-root user. No checkout, development dependencies or test suite is installed over the app. Chromium also drives the real server: it opens the landing page, adds a pasted parts list in the workspace, and requires each part in the master list the API returns. Browser traces and a screenshot are retained with diagnostics. Container logs and inspection data are printed on success and failure; CI retains diagnostics for seven days.

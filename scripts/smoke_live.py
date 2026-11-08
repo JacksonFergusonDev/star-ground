@@ -8,7 +8,7 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-from scripts.smoke_container import check_browser
+from scripts._browser_smoke import check_browser
 from star_ground.cli_output import CliOutput
 
 

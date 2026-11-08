@@ -2,7 +2,6 @@
 
 import argparse
 import json
-import re
 import subprocess
 import tempfile
 import time
@@ -10,6 +9,7 @@ import urllib.request
 import uuid
 from pathlib import Path
 
+from scripts._browser_smoke import check_browser
 from star_ground.cli_output import CliOutput
 
 
@@ -37,42 +37,6 @@ def wait_healthy(container: str, timeout: float = 90) -> None:
             raise RuntimeError(f"Container failed its health check: {state}")
         time.sleep(1)
     raise TimeoutError(f"Container did not become healthy within {timeout}s")
-
-
-def check_browser(url: str, artifacts: Path) -> None:
-    """Drive Chromium through the served site: add a pasted list, get its shopping list."""
-    from playwright.sync_api import expect, sync_playwright
-
-    artifacts.mkdir(parents=True, exist_ok=True)
-    with sync_playwright() as playwright:
-        browser = playwright.chromium.launch()
-        context = browser.new_context()
-        context.tracing.start(screenshots=True, snapshots=True, sources=True)
-        page = context.new_page()
-        errors: list[str] = []
-        page.on("pageerror", lambda error: errors.append(str(error)))
-        page.set_default_timeout(60_000)
-        try:
-            page.goto(f"{url}/", wait_until="domcontentloaded")
-            expect(page.get_by_role("heading", level=1)).to_be_visible()
-            page.goto(f"{url}/app/", wait_until="domcontentloaded")
-            page.get_by_role("button", name="Paste", exact=True).click()
-            page.get_by_role("textbox", name="Parts list", exact=True).fill(
-                "R1 10k\nC1 100n\nU1 TL072"
-            )
-            page.get_by_role("button", name="Add", exact=True).click()
-            # The shopping list has its own page, reached without a reload.
-            page.get_by_role("link", name=re.compile(r"^To buy")).click()
-            table = page.get_by_role("table")
-            for part in ("10k", "100n", "TL072"):
-                expect(table.get_by_role("cell", name=part, exact=True)).to_be_visible()
-            assert not errors, errors
-        finally:
-            try:
-                page.screenshot(path=str(artifacts / "browser.png"), full_page=True)
-            finally:
-                context.tracing.stop(path=str(artifacts / "trace.zip"))
-                browser.close()
 
 
 def smoke(image: str, artifacts: Path) -> None:

@@ -42,6 +42,7 @@ from rich.markdown import Markdown
 from rich.text import Text
 
 from star_ground.bom_lib.ocr import recognize
+from tests.accuracy import GoldenDoc, load_golden
 
 # The parts-list OCR's resolution: it reads 'R27' reliably at this size.
 _DPI = 200
@@ -93,17 +94,6 @@ class DocumentResult:
     render_cpu: float = 0.0
 
 
-def _listed(golden: Path) -> set[str]:
-    """The designators a labeled document lists, across every build."""
-    labeled = json.loads(golden.read_text())
-    builds = labeled.get("variants") or {"": {"parts": labeled["parts"]}}
-    return {
-        _REPEAT.sub("", ref).upper()
-        for build in builds.values()
-        for ref in build["parts"]
-    }
-
-
 def _named(texts: Iterable[str], listed: set[str]) -> set[str]:
     return {t for text in texts for t in _TOKEN.findall(text.upper())} & listed
 
@@ -120,22 +110,21 @@ def _read(image: Image.Image, scale: float, listed: set[str]) -> tuple[set[str],
     return _named((b.text for b in boxes), listed), time.process_time() - start
 
 
-def measure(
-    publisher: str, pdf: Path, golden: Path, min_share: float
-) -> DocumentResult:
+def measure(publisher: str, golden: GoldenDoc, min_share: float) -> DocumentResult:
     """Measures one document.
 
     Args:
         publisher: Its publisher, for the report.
-        pdf: The document.
-        golden: Its labeled parts.
+        golden: The PDF and its labeled parts.
         min_share: The smallest share of a page an image must cover.
 
     Returns:
         The measurements.
     """
-    listed = _listed(golden)
-    with pdfplumber.open(pdf) as doc:
+    listed = {
+        _REPEAT.sub("", ref) for variant in golden.variants for ref in variant.parts
+    }
+    with pdfplumber.open(golden.pdf) as doc:
         counts: dict[str, int] = {}
         for page in doc.pages:
             for word in page.extract_words():
@@ -143,7 +132,7 @@ def measure(
                     counts[ref] = counts.get(ref, 0) + 1
         result = DocumentResult(
             publisher,
-            pdf.name,
+            golden.pdf.name,
             len(listed),
             sorted(ref for ref, n in counts.items() if n > 1),
         )
@@ -243,15 +232,17 @@ def main(argv: list[str] | None = None) -> None:
     for spec in args.corpus:
         publisher, dirs = spec.split("=", 1)
         pdf_dir, golden_dir = (Path(d) for d in dirs.split(":", 1))
-        goldens = sorted(Path(golden_dir).glob("*.json"))
-        for golden in random.Random(args.seed).sample(
+        goldens = sorted(golden_dir.glob("*.json"))
+        for path in random.Random(args.seed).sample(
             goldens, min(args.sample, len(goldens))
         ):
-            pdf = pdf_dir / json.loads(golden.read_text())["pdf"]
-            if not pdf.exists():
+            golden = load_golden(path, pdf_dir)
+            if not golden.pdf.exists():
                 continue
-            results.append(measure(publisher, pdf, golden, args.min_share))
-            progress.print(Text.assemble((publisher, "bold cyan"), f" {pdf.name}"))
+            results.append(measure(publisher, golden, args.min_share))
+            progress.print(
+                Text.assemble((publisher, "bold cyan"), f" {golden.pdf.name}")
+            )
             args.out.write_text(json.dumps([asdict(r) for r in results], indent=1))
     summary = _summary(results)
     if console.is_terminal:
