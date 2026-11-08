@@ -259,41 +259,6 @@
         }
       }
     },
-    "/api/reports": {
-      "post": {
-        "tags": [
-          "feedback"
-        ],
-        "summary": "Send Report",
-        "description": "Records a builder's report of a bug, with what was being read.\n\nNever the document itself: an upload's name, or a link. The report is\nlogged under the bug's code, beside the bug's own entry and traceback,\nwhich Error Reporting groups.",
-        "operationId": "send_report_api_reports_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ReportIn"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "204": {
-            "description": "Successful Response"
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/parts/read": {
       "post": {
         "tags": [
@@ -329,6 +294,41 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/reports": {
+      "post": {
+        "tags": [
+          "feedback"
+        ],
+        "summary": "Send Report",
+        "description": "Records a builder's report of a bug, with what was being read.\n\nNever the document itself: an upload's name, or a link. The report is\nlogged under the bug's code, beside the bug's own entry and traceback,\nwhich Error Reporting groups.",
+        "operationId": "send_report_api_reports_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReportIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }

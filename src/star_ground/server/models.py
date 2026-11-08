@@ -117,17 +117,6 @@ class LinkFormat(StrEnum):
     EXCEL = "excel"
 
 
-class ExportKind(StrEnum):
-    """The files a master list exports."""
-
-    SHOPPING_LIST = "shopping-list"
-    SUPPLIER_CART = "supplier-cart"
-    STOCK_UPDATE = "stock-update"
-    BUILD_BOOK = "build-book"
-    LABELS = "labels"
-    BUILD_PACK = "build-pack"
-
-
 class PartWarning(_Model):
     """A place where the parts list may disagree with its document."""
 

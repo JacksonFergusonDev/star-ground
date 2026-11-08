@@ -1,0 +1,165 @@
+"""What every route shares: the instance's settings, limits and cache.
+
+`create_app` builds one `Services` per application and keeps it on
+`app.state`; routes ask for it, and for the rate-limited client, as FastAPI
+dependencies (`ServicesDep`, `Client`).
+"""
+
+import os
+from collections.abc import Mapping
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Annotated
+
+from fastapi import Depends, Request
+
+from star_ground.server.limits import OcrQueue, RateLimiter, ReadingCache
+from star_ground.server.models import Problem
+
+
+@dataclass(frozen=True, slots=True)
+class Settings:
+    """How a server instance is configured.
+
+    Attributes:
+        cors_origins: Browser origins allowed to call the API (the GitHub
+            Pages site); none when the site is served from the same origin.
+        max_body_bytes: The largest request body accepted.
+        requests_per_minute: Each client's limit on the API's working routes.
+        ocr: Whether OCR runs at all; off, image parts lists are reported
+            and never offered.
+        ocr_per_hour: Each client's limit on documents read by OCR, which
+            take an instance's cores for tens of seconds each.
+        trust_proxy: Take the client's address from `X-Forwarded-For`, as
+            set by the platform's proxy (Cloud Run).
+        cache_bytes: The reading cache's budget (see `ReadingCache`).
+        site_dir: The built website (`web/dist`), served at `/` beside the
+            API; none when the site is hosted elsewhere (GitHub Pages).
+    """
+
+    cors_origins: tuple[str, ...] = ()
+    max_body_bytes: int = 50_000_000
+    requests_per_minute: int = 30
+    ocr: bool = True
+    ocr_per_hour: int = 10
+    trust_proxy: bool = False
+    cache_bytes: int = 200_000_000
+    site_dir: Path | None = None
+
+    @classmethod
+    def from_env(cls, env: Mapping[str, str] = os.environ) -> Settings:
+        """Reads the settings from `STAR_GROUND_*` environment variables.
+
+        Args:
+            env: The environment.
+
+        Returns:
+            The settings, with defaults for anything unset.
+        """
+        defaults = cls()
+        origins = env.get("STAR_GROUND_CORS_ORIGINS", "")
+        site = env.get("STAR_GROUND_SITE_DIR")
+        return cls(
+            cors_origins=tuple(o.strip() for o in origins.split(",") if o.strip()),
+            requests_per_minute=int(
+                env.get("STAR_GROUND_REQUESTS_PER_MINUTE", defaults.requests_per_minute)
+            ),
+            ocr=env.get("STAR_GROUND_OCR", "1") != "0",
+            ocr_per_hour=int(
+                env.get("STAR_GROUND_OCR_PER_HOUR", defaults.ocr_per_hour)
+            ),
+            trust_proxy=env.get("STAR_GROUND_TRUST_PROXY", "") == "1",
+            site_dir=Path(site) if site else None,
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class Services:
+    """One application's settings, limits, OCR queue and reading cache.
+
+    Attributes:
+        settings: The instance's configuration.
+        limiter: Each client's limit on the working routes.
+        ocr_limiter: Each client's hourly limit on documents read by OCR.
+        ocr_queue: The one OCR slot, and who waits for it.
+        cache: Readings of uploads and links, by document.
+    """
+
+    settings: Settings
+    limiter: RateLimiter
+    ocr_limiter: RateLimiter
+    ocr_queue: OcrQueue
+    cache: ReadingCache
+
+    @classmethod
+    def for_settings(cls, settings: Settings) -> Services:
+        """Fresh limits, queue and cache for an instance.
+
+        Args:
+            settings: The instance's configuration.
+
+        Returns:
+            The services.
+        """
+        return cls(
+            settings=settings,
+            limiter=RateLimiter(settings.requests_per_minute),
+            ocr_limiter=RateLimiter(settings.ocr_per_hour, window=3600),
+            ocr_queue=OcrQueue(1),
+            cache=ReadingCache(settings.cache_bytes),
+        )
+
+    @property
+    def ocr(self) -> bool:
+        """Whether this instance runs OCR at all."""
+        return self.settings.ocr
+
+
+class RefusedError(Exception):
+    """A request the API refuses, with the body to answer it with.
+
+    Args:
+        status: The HTTP status.
+        body: The response body.
+    """
+
+    def __init__(self, status: int, body: Problem) -> None:
+        super().__init__(body.message)
+        self.status = status
+        self.body = body
+
+
+def services(request: Request) -> Services:
+    """The application's services, for a route that depends on them."""
+    found: Services = request.app.state.services
+    return found
+
+
+ServicesDep = Annotated[Services, Depends(services)]
+"""A route parameter receiving the application's `Services`."""
+
+
+def client_address(request: Request, trust_proxy: bool) -> str:
+    """The client's address; behind a proxy, the last hop it appended."""
+    forwarded = request.headers.get("x-forwarded-for")
+    if trust_proxy and forwarded:
+        return forwarded.split(",")[-1].strip()
+    return request.client.host if request.client else "unknown"
+
+
+def limited_client(request: Request, services: ServicesDep) -> str:
+    """Counts the request against its client's limit; returns the client.
+
+    Raises:
+        RefusedError: The client has used its requests for this minute.
+    """
+    client = client_address(request, services.settings.trust_proxy)
+    if not services.limiter.allow(client):
+        raise RefusedError(
+            429, Problem(message="Too many requests. Try again in a minute.")
+        )
+    return client
+
+
+Client = Annotated[str, Depends(limited_client)]
+"""A route parameter receiving the rate-limited client's address."""

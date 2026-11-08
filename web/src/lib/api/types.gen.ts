@@ -1161,31 +1161,6 @@ export type ExportApiExportsKindPostResponses = {
     200: unknown;
 };
 
-export type SendReportApiReportsPostData = {
-    body: ReportIn;
-    path?: never;
-    query?: never;
-    url: '/api/reports';
-};
-
-export type SendReportApiReportsPostErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type SendReportApiReportsPostError = SendReportApiReportsPostErrors[keyof SendReportApiReportsPostErrors];
-
-export type SendReportApiReportsPostResponses = {
-    /**
-     * Successful Response
-     */
-    204: void;
-};
-
-export type SendReportApiReportsPostResponse = SendReportApiReportsPostResponses[keyof SendReportApiReportsPostResponses];
-
 export type ReadPartApiPartsReadPostData = {
     body: PartIn;
     path?: never;
@@ -1210,6 +1185,31 @@ export type ReadPartApiPartsReadPostResponses = {
 };
 
 export type ReadPartApiPartsReadPostResponse = ReadPartApiPartsReadPostResponses[keyof ReadPartApiPartsReadPostResponses];
+
+export type SendReportApiReportsPostData = {
+    body: ReportIn;
+    path?: never;
+    query?: never;
+    url: '/api/reports';
+};
+
+export type SendReportApiReportsPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type SendReportApiReportsPostError = SendReportApiReportsPostErrors[keyof SendReportApiReportsPostErrors];
+
+export type SendReportApiReportsPostResponses = {
+    /**
+     * Successful Response
+     */
+    204: void;
+};
+
+export type SendReportApiReportsPostResponse = SendReportApiReportsPostResponses[keyof SendReportApiReportsPostResponses];
 
 export type SendPartReportApiPartReportsPostData = {
     body: PartReportIn;
