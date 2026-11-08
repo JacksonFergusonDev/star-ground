@@ -16,6 +16,7 @@ import pytest
 from fastapi.testclient import TestClient
 from pytest_mock import MockerFixture
 
+from scripts.export_openapi import OPENAPI_FILE, schema_text
 from star_ground.api import read_document
 from star_ground.bom_lib import (
     BOMParserContext,
@@ -33,7 +34,6 @@ from star_ground.server import Settings, create_app
 from star_ground.server.limits import OcrQueue, RateLimiter, ReadingCache
 from star_ground.server.models import BUG_CODE
 from tests.pdfs import text_pdf
-from tools.export_openapi import OPENAPI_FILE, schema_text
 
 ROOT = Path(__file__).parent.parent
 SAMPLES = Path(__file__).parent / "samples"

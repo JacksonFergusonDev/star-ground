@@ -203,7 +203,7 @@ jobs:
 
       - name: Check the live site
         run: |
-          uv run python -m tools.smoke_live https://star-ground.jacksonferguson.me "$GITHUB_SHA" \
+          uv run python -m scripts.smoke_live https://star-ground.jacksonferguson.me "$GITHUB_SHA" \
             --artifacts "${RUNNER_TEMP}/browser"
 
       - name: Retain the browser trace

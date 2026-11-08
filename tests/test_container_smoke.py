@@ -6,7 +6,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from tools import smoke_container
+from scripts import smoke_container
 
 
 @pytest.mark.parametrize(
@@ -35,14 +35,14 @@ def test_readiness_waits_for_health(monkeypatch):
         ]
     )
     monkeypatch.setattr(smoke_container, "docker", command)
-    monkeypatch.setattr("tools.smoke_container.time.sleep", Mock())
+    monkeypatch.setattr("scripts.smoke_container.time.sleep", Mock())
     smoke_container.wait_healthy("test")
     assert command.call_count == 2
 
 
 def test_readiness_has_a_deadline(monkeypatch):
     monkeypatch.setattr(
-        "tools.smoke_container.time.monotonic", Mock(side_effect=[0, 91])
+        "scripts.smoke_container.time.monotonic", Mock(side_effect=[0, 91])
     )
     with pytest.raises(TimeoutError, match="did not become healthy"):
         smoke_container.wait_healthy("test")
@@ -50,7 +50,7 @@ def test_readiness_has_a_deadline(monkeypatch):
 
 def test_docker_failure_preserves_output(mocker):
     run = mocker.patch(
-        "tools.smoke_container.subprocess.run",
+        "scripts.smoke_container.subprocess.run",
         return_value=subprocess.CompletedProcess([], 1, "stdout", "stderr"),
     )
     with pytest.raises(RuntimeError, match="stdout\nstderr"):
@@ -99,7 +99,7 @@ def test_offline_failure_cleans_up_and_propagates(monkeypatch, failure, tmp_path
     context.__enter__ = Mock(return_value=response)
     context.__exit__ = Mock(return_value=False)
     monkeypatch.setattr(
-        "tools.smoke_container.urllib.request.urlopen", Mock(return_value=context)
+        "scripts.smoke_container.urllib.request.urlopen", Mock(return_value=context)
     )
     with pytest.raises(type(failure)):
         smoke_container.smoke("image", tmp_path)
@@ -132,7 +132,7 @@ def test_late_failure_blocks_success_and_cleans_up(monkeypatch, tmp_path, failur
     context.__enter__ = Mock(return_value=response)
     context.__exit__ = Mock(return_value=False)
     monkeypatch.setattr(
-        "tools.smoke_container.urllib.request.urlopen", Mock(return_value=context)
+        "scripts.smoke_container.urllib.request.urlopen", Mock(return_value=context)
     )
     with pytest.raises((AssertionError, RuntimeError)):
         smoke_container.smoke("image", tmp_path)

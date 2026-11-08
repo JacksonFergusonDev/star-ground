@@ -76,7 +76,7 @@ jobs:
           key: samples-${{ hashFiles('tests/samples/manifest.json') }}
 
       - name: Fetch test samples
-        run: uv run python -m tools.fetch_samples
+        run: uv run python -m scripts.fetch_samples
 
       - name: Test with pytest
         run: uv run pytest -n auto

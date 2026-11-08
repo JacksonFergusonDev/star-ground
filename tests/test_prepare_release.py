@@ -8,8 +8,8 @@ from collections.abc import Sequence
 
 import pytest
 
-from tools import prepare_release
-from tools.prepare_release import CheckoutState, OutputStyle, WorkflowRun
+from scripts import prepare_release
+from scripts.prepare_release import CheckoutState, OutputStyle, WorkflowRun
 
 
 def _completed(

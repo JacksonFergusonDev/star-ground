@@ -88,7 +88,7 @@ jobs:
           test "$actual_config" = "$config"
           rm "${RUNNER_TEMP}/loaded.tar"
           test "$(docker image inspect --format '{{.Architecture}}' star-ground:smoke)" = "$ARCH"
-          uv run --no-sync python tools/smoke_container.py star-ground:smoke \
+          uv run --no-sync python scripts/smoke_container.py star-ground:smoke \
             --artifacts "${RUNNER_TEMP}/browser" 2>&1 | tee "${RUNNER_TEMP}/smoke.log"
           printf '%s\n' "$EXPECTED_DIGEST" > "${RUNNER_TEMP}/digest.txt"
 

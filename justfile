@@ -42,7 +42,7 @@ typecheck: sync
 
 # Download the test corpus's build documents from their publishers
 fetch-samples: sync
-    uv run python -m tools.fetch_samples
+    uv run python -m scripts.fetch_samples
 
 # Run the full automated testing matrix
 test: sync fetch-samples
@@ -96,11 +96,11 @@ serve-api: sync
 
 # Regenerate examples/build-pack/ from the Big Muff π netlist
 example-pack: sync
-    uv run python -m tools.example_pack
+    uv run python -m scripts.example_pack
 
 # Regenerate openapi.json and the website's API types after changing src/star_ground/server/
 openapi: sync
-    uv run python -m tools.export_openapi
+    uv run python -m scripts.export_openapi
     pnpm --dir web run types
 
 # Install locked dependencies and start the website's dev server
@@ -125,5 +125,5 @@ serve-web:
 
 # Offer to wait for CI and verify local state before bumping
 bump part:
-    uv run python -m tools.prepare_release
+    uv run python -m scripts.prepare_release
     uv run --refresh https://raw.githubusercontent.com/JacksonFergusonDev/ci-cd-release-infrastructure/refs/heads/main/scripts/release.py {{ part }}

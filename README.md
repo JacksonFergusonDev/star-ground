@@ -196,7 +196,7 @@ See [tests/README.md](tests/README.md) for how to run each layer.
 │   └── exports/           <-- Build book, labels (Typst), CSVs and the build pack
 ├── tests/                 <-- Test suite, golden parts lists and samples
 ├── web/                   <-- The website: Astro, with Svelte for the app
-├── tools/                 <-- Release, OpenAPI and corpus tools
+├── scripts/               <-- Release, OpenAPI and corpus scripts
 ├── AGENTS.md              <-- Guidelines for AI coding agents
 ├── CONTRIBUTING.md        <-- Development guide
 ├── Dockerfile

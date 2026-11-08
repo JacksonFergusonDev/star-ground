@@ -102,7 +102,7 @@ ignore = ["D100", "D104", "D107", "E501"]
 convention = "google"
 
 [tool.ruff.lint.isort]
-known-first-party = ["star_ground", "tests", "tools"]
+known-first-party = ["scripts", "star_ground", "tests"]
 section-order = [
     "future",
     "standard-library",
@@ -117,7 +117,7 @@ section-order = [
 # ---- mypy ---- #
 
 [tool.mypy]
-files = ["src", "tests", "tools"]
+files = ["src", "tests", "scripts"]
 mypy_path = "src:."
 python_version = "3.14"
 strict=true
@@ -187,7 +187,7 @@ style = "one"          # all list items numbered 1. – reduces diff noise
 # On demand only (`just deadcode`), never a gate: findings are for review.
 # Tests are left out on purpose: code that only tests reach is dead.
 [tool.vulture]
-paths = ["src", "tools"]
+paths = ["src", "scripts"]
 min_confidence = 60
 ignore_names = [
     # Called or read by a library: requests' session flag, logging's handler

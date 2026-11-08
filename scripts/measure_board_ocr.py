@@ -19,7 +19,7 @@ thread. It's measured on this machine; Cloud Run's vCPUs are slower, so compare
 with the parts-list OCR's figures in `PLAN.md` measured on both.
 
 Usage:
-    uv run python -m tools.measure_board_ocr OUT.json \\
+    uv run python -m scripts.measure_board_ocr OUT.json \\
         --corpus pedalpcb=PDFS:GOLDEN [--corpus ...] [--sample 10]
 """
 

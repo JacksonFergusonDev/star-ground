@@ -1,6 +1,6 @@
 import pytest
 
-from tools.fetch_samples import load_manifest, missing
+from scripts.fetch_samples import load_manifest, missing
 
 
 def pytest_sessionstart(session):

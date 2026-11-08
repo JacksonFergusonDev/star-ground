@@ -191,7 +191,7 @@ While traffic is pinned to a revision, deploys create new revisions but don't se
 gcloud run services update-traffic star-ground --project "$PROJECT" --region "$REGION" --to-latest
 ```
 
-To publish a self-hosted image, tag a release as before (`tools/prepare_release.py`, then push the `v*` tag).
+To publish a self-hosted image, tag a release as before (`scripts/prepare_release.py`, then push the `v*` tag).
 
 The image serves the site itself when `STAR_GROUND_SITE_DIR` names it, which the Dockerfile sets for self-hosting. The deploy clears it, so the Cloud Run URL serves only the API, and allows only the Pages origin (`STAR_GROUND_CORS_ORIGINS`). It also sets:
 

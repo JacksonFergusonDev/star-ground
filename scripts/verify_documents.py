@@ -14,7 +14,7 @@ A document that doesn't match is reported with its first wrong part and
 left off. Entries for documents not in this run are kept.
 
 Usage:
-    uv run python -m tools.verify_documents \\
+    uv run python -m scripts.verify_documents \\
         --corpus PDF_DIR:GOLDEN_DIR [--corpus ...] [--out catalog/verified.json]
 """
 

@@ -2,7 +2,7 @@
 
 Step 7 of `PLAN.md` lights a part up on the board render or schematic when a
 builder points at its row. Finding those labels can take OCR, which costs as
-much as reading a parts list (measured by `tools/measure_board_ocr.py`), so
+much as reading a parts list (measured by `scripts/measure_board_ocr.py`), so
 it runs only in the catalog job (`src/star_ground/catalog/`), never on the API.
 
 A designator is found in two ways:

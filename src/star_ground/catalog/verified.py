@@ -10,7 +10,7 @@ Keeping the reading's fingerprint, not just the file's hash, means a parser
 change that alters a checked document's parts can't keep its mark: the build
 goes back to unverified and the run flags it (`Verification.CHANGED`).
 
-The list is grown with `tools/verify_documents.py`, which grades the job's
+The list is grown with `scripts/verify_documents.py`, which grades the job's
 own reading of a labelled document and adds it only when every part is right.
 """
 

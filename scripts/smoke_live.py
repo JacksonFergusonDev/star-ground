@@ -8,7 +8,7 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-from tools.smoke_container import check_browser
+from scripts.smoke_container import check_browser
 
 
 def served_commit(site: str, commit: str) -> str:
