@@ -88,7 +88,6 @@ from star_ground.server.limits import (
     OcrQueue,
     RateLimiter,
     ReadingCache,
-    RecentBugs,
 )
 from star_ground.server.models import (
     BuildNotChosen,
@@ -130,10 +129,6 @@ logger = logging.getLogger(__name__)
 
 type FeedbackSink = Callable[[FeedbackRating, str], None]
 """Records a rating and comment (the Google Sheet, in production)."""
-
-type ReportSink = Callable[[ReportIn, str], None]
-"""Records a builder's bug report and the bug's traceback, if this server still
-holds it (the sheet's Reports tab, in production)."""
 
 type PartReportSink = Callable[[PartReport], None]
 """Records a builder's report of a part read wrong (the sheet's Parts tab, in
@@ -221,8 +216,6 @@ class FeedbackSheet:
         self._credentials = credentials
         self._sheet: Any = None
         self._connected = 0.0
-        self._reports: Any = None
-        self._reports_at = 0.0
         self._parts: Any = None
         self._parts_at = 0.0
         self._lock = threading.Lock()
@@ -236,22 +229,6 @@ class FeedbackSheet:
                 self._sheet = connect_feedback_sheet(self._credentials)
                 self._connected = time.monotonic()
             save_feedback(self._sheet, rating, comment)
-
-    def report(self, report: ReportIn, detail: str) -> None:
-        """Appends one bug report, with the bug's traceback, to the Reports tab."""
-        from star_ground.feedback import connect_report_sheet, save_report
-
-        with self._lock:
-            if self._reports is None or time.monotonic() - self._reports_at > 3600:
-                self._reports = connect_report_sheet(self._credentials)
-                self._reports_at = time.monotonic()
-            save_report(
-                self._reports,
-                report.code,
-                report.document,
-                report.comment,
-                detail,
-            )
 
     def part_report(self, report: PartReport) -> None:
         """Appends one part report to the Parts tab."""
@@ -306,9 +283,7 @@ class _Services:
     ocr_queue: OcrQueue
     cache: ReadingCache
     feedback: FeedbackSink | None
-    reports: ReportSink | None
     part_reports: PartReportSink | None
-    bugs: RecentBugs
 
 
 def _client(request: Request, trust_proxy: bool) -> str:
@@ -426,9 +401,7 @@ def _upload_for(
 
 
 def _problem(services: _Services, error: ReadError) -> Problem:
-    """A reading's error for the builder; its bug's traceback stays here."""
-    if error.bug is not None:
-        services.bugs.add(error.bug)
+    """A reading's error for the builder; its bug's traceback stays in the log."""
     return Problem(
         kind=error.kind,
         message=error.message,
@@ -653,12 +626,10 @@ class _BugBoundary:
 
     Args:
         app: The application to wrap.
-        bugs: Where the bug is kept for the builder's report.
     """
 
-    def __init__(self, app: ASGIApp, bugs: RecentBugs) -> None:
+    def __init__(self, app: ASGIApp) -> None:
         self.app = app
-        self.bugs = bugs
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         """Serves the request, answering a bug before the response starts."""
@@ -678,7 +649,6 @@ class _BugBoundary:
             if started:
                 raise
             bug = record_bug(f"answering {scope['method']} {scope['path']}")
-            self.bugs.add(bug)
             body = _REQUEST_BUG.model_copy(update={"bug_code": bug.code})
             await JSONResponse(body.model_dump(), status_code=500)(scope, receive, send)
 
@@ -686,7 +656,6 @@ class _BugBoundary:
 def create_app(
     settings: Settings | None = None,
     feedback: FeedbackSink | None = None,
-    reports: ReportSink | None = None,
     part_reports: PartReportSink | None = None,
 ) -> FastAPI:
     """Builds the API.
@@ -694,8 +663,6 @@ def create_app(
     Args:
         settings: The instance's configuration; defaults if omitted.
         feedback: Where feedback goes; the feedback route answers 503
-            without one.
-        reports: Where bug reports go; the reports route answers 503
             without one.
         part_reports: Where reports of parts read wrong go; their route
             answers 503 without one.
@@ -711,9 +678,7 @@ def create_app(
         ocr_queue=OcrQueue(1),
         cache=ReadingCache(settings.cache_bytes),
         feedback=feedback,
-        reports=reports,
         part_reports=part_reports,
-        bugs=RecentBugs(),
     )
     app = FastAPI(
         title="Star Ground API",
@@ -726,7 +691,7 @@ def create_app(
     app.add_middleware(BodySizeLimit, max_bytes=settings.max_body_bytes)
     # Inside CORS, so a bug's answer carries the headers a browser needs to
     # read it; outside the body limit, whose refusal isn't a bug.
-    app.add_middleware(_BugBoundary, bugs=services.bugs)
+    app.add_middleware(_BugBoundary)
     if settings.cors_origins:
         app.add_middleware(
             CORSMiddleware,
@@ -1013,26 +978,23 @@ def create_app(
             )
         services.feedback(list(FeedbackRating)[body.rating - 1], body.comment)
 
-    @app.post(
-        "/api/reports",
-        tags=["feedback"],
-        status_code=204,
-        responses={503: {"model": Problem}},
-    )
+    @app.post("/api/reports", tags=["feedback"], status_code=204)
     def send_report(http: Request, body: ReportIn) -> None:
         """Records a builder's report of a bug, with what was being read.
 
-        Never the document itself: an upload's name, or a link. The report
-        carries the bug's code; its traceback is added here when this server
-        still holds it, and is in the log under the code either way.
+        Never the document itself: an upload's name, or a link. The report is
+        logged under the bug's code, beside the bug's own entry and traceback,
+        which Error Reporting groups.
         """
         limited(http)
-        if services.reports is None:
-            raise RefusedError(
-                503, Problem(message="Reports aren't set up on this server.")
-            )
-        bug = services.bugs.get(body.code)
-        services.reports(body, bug.detail if bug else "")
+        logger.warning(
+            "Report of bug %s",
+            body.code,
+            extra={
+                "bug_code": body.code,
+                "report": {"document": body.document, "comment": body.comment},
+            },
+        )
 
     @app.post(
         "/api/parts/read", tags=["master list"], responses={422: {"model": Problem}}

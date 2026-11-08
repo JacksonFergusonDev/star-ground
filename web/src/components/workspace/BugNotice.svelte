@@ -3,14 +3,14 @@
   // report in one click (no account needed), or open a GitHub issue. Both
   // carry the bug's code, which finds its traceback in the server's log; the
   // traceback itself never reaches the page.
-  import { reportsUnavailable, sendReport } from '../../lib/server';
+  import { sendReport } from '../../lib/server';
   import { links } from '../../lib/site';
   import Icon from './Icon.svelte';
 
   let { code, document }: { code: string; document: string } = $props();
 
   let comment = $state('');
-  let status = $state<'idle' | 'sending' | 'sent' | 'unavailable' | 'failed'>('idle');
+  let status = $state<'idle' | 'sending' | 'sent' | 'failed'>('idle');
   let problem = $state('');
 
   // A GitHub issue is public, and a shared link (a Drive file's) opens the
@@ -41,12 +41,8 @@
       await sendReport({ code, document, comment: comment.trim() });
       status = 'sent';
     } catch (e) {
-      if (reportsUnavailable(e)) {
-        status = 'unavailable';
-      } else {
-        status = 'failed';
-        problem = (e as Error).message;
-      }
+      status = 'failed';
+      problem = (e as Error).message;
     }
   }
 </script>
@@ -62,25 +58,19 @@
       rows="2"
       placeholder="For example: added three documents at once"></textarea>
     <div class="actions">
-      {#if status !== 'unavailable'}
-        <button
-          class="hs-button hs-button--primary"
-          type="button"
-          disabled={status === 'sending'}
-          onclick={send}
-        >
-          {status === 'sending' ? 'Sending…' : 'Send report'}
-        </button>
-      {/if}
+      <button
+        class="hs-button hs-button--primary"
+        type="button"
+        disabled={status === 'sending'}
+        onclick={send}
+      >
+        {status === 'sending' ? 'Sending…' : 'Send report'}
+      </button>
       <a class="issue" href={issue} target="_blank" rel="noopener noreferrer">
         Open a GitHub issue instead <Icon name="arrow-up-right" size={14} />
       </a>
     </div>
-    {#if status === 'unavailable'}
-      <p role="status">
-        This server can't take reports. A GitHub issue with the bug's code works as well.
-      </p>
-    {:else if status === 'failed'}
+    {#if status === 'failed'}
       <p role="alert">The report didn't send: {problem}</p>
     {/if}
     <p class="small">

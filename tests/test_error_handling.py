@@ -70,6 +70,6 @@ def test_a_bug_while_parsing_a_pdf_is_reported_not_shown(tmp_path, caplog):
     assert error.message == BUG_MESSAGE
     bug = error.bug
     assert bug is not None
-    assert "reading the upload Fuzz.pdf" in bug.detail
-    assert "_eval_standard" in bug.detail
     assert f"Bug {bug.code}" in caplog.text
+    assert "reading the upload Fuzz.pdf" in caplog.text
+    assert "_eval_standard" in caplog.text

@@ -32,7 +32,7 @@ from star_ground.bom_lib.types import Inventory, ReadingStats
 from star_ground.feedback import PartReport
 from star_ground.server import Settings, create_app
 from star_ground.server.limits import OcrQueue, RateLimiter, ReadingCache
-from star_ground.server.models import BUG_CODE, ReportIn
+from star_ground.server.models import BUG_CODE
 from tests.pdfs import text_pdf
 from tools.export_openapi import OPENAPI_FILE, schema_text
 
@@ -976,13 +976,10 @@ _REPORT = {
 }
 
 
-def test_a_report_gets_the_traceback_this_server_holds(
-    mocker: MockerFixture,
+def test_a_report_is_logged_beside_its_bug(
+    mocker: MockerFixture, caplog: pytest.LogCaptureFixture
 ) -> None:
-    received: list[tuple[Any, str]] = []
-    client = TestClient(
-        create_app(Settings(), reports=lambda r, d: received.append((r, d)))
-    )
+    client = TestClient(create_app(Settings()))
     mocker.patch(
         "star_ground.server.app.generate_master_list", side_effect=ZeroDivisionError
     )
@@ -993,21 +990,12 @@ def test_a_report_gets_the_traceback_this_server_holds(
     response = client.post("/api/reports", json={**_REPORT, "code": code})
 
     assert response.status_code == 204
-    report, detail = received[0]
-    assert report.code == code
-    assert "ZeroDivisionError" in detail
-
-
-def test_a_report_of_a_bug_this_server_doesnt_hold_still_goes_in() -> None:
-    received: list[tuple[Any, str]] = []
-    client = TestClient(
-        create_app(Settings(), reports=lambda r, d: received.append((r, d)))
-    )
-
-    response = client.post("/api/reports", json=_REPORT)
-
-    assert response.status_code == 204
-    assert received == [(ReportIn.model_validate(_REPORT), "")]
+    bug, report = [r for r in caplog.records if getattr(r, "bug_code", None) == code]
+    assert bug.exc_info is not None  # the bug, with its traceback
+    assert report.report == {  # type: ignore[attr-defined]
+        "document": _REPORT["document"],
+        "comment": _REPORT["comment"],
+    }
 
 
 @pytest.mark.parametrize("code", ["a1b2c3", "A1B2C3D", "<script>"])
@@ -1015,13 +1003,6 @@ def test_a_report_needs_a_bug_code(client: TestClient, code: str) -> None:
     response = client.post("/api/reports", json={**_REPORT, "code": code})
 
     assert response.status_code == 422
-
-
-def test_reports_answer_503_when_not_set_up(client: TestClient) -> None:
-    response = client.post("/api/reports", json=_REPORT)
-
-    assert response.status_code == 503
-    assert "aren't set up" in response.json()["message"]
 
 
 # --- Document review ---

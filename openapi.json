@@ -310,7 +310,7 @@
           "feedback"
         ],
         "summary": "Send Report",
-        "description": "Records a builder's report of a bug, with what was being read.\n\nNever the document itself: an upload's name, or a link. The report\ncarries the bug's code; its traceback is added here when this server\nstill holds it, and is in the log under the code either way.",
+        "description": "Records a builder's report of a bug, with what was being read.\n\nNever the document itself: an upload's name, or a link. The report is\nlogged under the bug's code, beside the bug's own entry and traceback,\nwhich Error Reporting groups.",
         "operationId": "send_report_api_reports_post",
         "requestBody": {
           "content": {
@@ -325,16 +325,6 @@
         "responses": {
           "204": {
             "description": "Successful Response"
-          },
-          "503": {
-            "description": "Service Unavailable",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
           },
           "422": {
             "description": "Validation Error",

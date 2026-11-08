@@ -13,10 +13,8 @@ from star_ground.feedback import (
     SheetNotFoundError,
     connect_feedback_sheet,
     connect_part_sheet,
-    connect_report_sheet,
     save_feedback,
     save_part_report,
-    save_report,
 )
 
 
@@ -125,16 +123,14 @@ def test_a_row_is_appended_as_written() -> None:
 def test_a_missing_tab_is_added_with_its_headers() -> None:
     google = _Google(["Ratings"])
     with _connected(google):
-        tab = connect_report_sheet({})
+        tab = connect_part_sheet({})
 
     posts = [(url, kwargs) for method, url, kwargs in google.calls if method == "POST"]
     (add, _), (append, headers) = posts
     assert add.endswith(":batchUpdate")
-    assert append.endswith("/values/%27Reports%27%21A1:append")
-    assert headers["json"]["values"] == [
-        ["Time", "Code", "Document", "Comment", "Detail"]
-    ]
-    assert tab.title == "Reports"
+    assert append.endswith("/values/%27Parts%27%21A1:append")
+    assert headers["json"]["values"][0][:3] == ["Time", "Document", "Ref"]
+    assert tab.title == "Parts"
 
 
 def test_an_existing_tab_is_left_alone() -> None:
@@ -152,26 +148,6 @@ def test_a_sheet_the_account_cannot_see_says_so() -> None:
     )
     with _connected(google), pytest.raises(SheetNotFoundError):
         connect_feedback_sheet({})
-
-
-def test_a_report_keeps_the_end_of_a_long_traceback() -> None:
-    """A traceback ends with the exception: that's what a trim must keep."""
-    sheet = MagicMock()
-    detail = "frame\n" * 20_000 + "KeyError: 'toks'"
-
-    save_report(sheet, "A1B2C3", "Fuzz.pdf", "", detail)
-
-    kept = sheet.append_row.call_args.args[0][4]
-    assert kept.endswith("KeyError: 'toks'")
-    assert len(kept) < 50_000
-
-
-def test_a_report_without_its_traceback_points_to_the_log() -> None:
-    sheet = MagicMock()
-
-    save_report(sheet, "A1B2C3", "Fuzz.pdf", "", "")
-
-    assert "Bug A1B2C3" in sheet.append_row.call_args.args[0][4]
 
 
 def test_a_part_report_numbers_pages_as_a_viewer_does() -> None:
