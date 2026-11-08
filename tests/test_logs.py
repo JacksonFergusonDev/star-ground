@@ -50,16 +50,16 @@ def test_a_bug_becomes_an_error_reporting_event() -> None:
 
 
 def test_a_builder_s_report_is_kept_but_isn_t_an_error() -> None:
-    report = {"document": "Fuzz.pdf", "comment": "Added three at once."}
+    report = {"kind": "bug", "document": "Fuzz.pdf", "comment": "Three at once."}
     entry = _entry(
         _record(
-            logging.WARNING, "Report of bug A1B2C3", bug_code="A1B2C3", report=report
+            logging.WARNING, "Report of bug A1B2C3", bug_code="A1B2C3", feedback=report
         )
     )
 
     assert entry["severity"] == "WARNING"
     assert "@type" not in entry
-    assert entry["report"] == report
+    assert entry["feedback"] == report
     assert entry["logging.googleapis.com/labels"] == {"bug_code": "A1B2C3"}
 
 

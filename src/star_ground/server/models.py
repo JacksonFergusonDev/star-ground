@@ -345,13 +345,6 @@ class DocumentsMissing(Problem):
     documents: list[str] = Field(description="Send these as files instead.")
 
 
-class FeedbackIn(_Model):
-    """A rating and comment from the app."""
-
-    rating: int = Field(ge=1, le=5, description="1 (terrible) to 5 (excellent).")
-    comment: str = Field("", max_length=5000)
-
-
 class ReportIn(_Model):
     """A builder's report of a bug, sent from where it appeared."""
 

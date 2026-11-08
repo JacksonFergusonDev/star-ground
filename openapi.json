@@ -259,51 +259,6 @@
         }
       }
     },
-    "/api/feedback": {
-      "post": {
-        "tags": [
-          "feedback"
-        ],
-        "summary": "Send Feedback",
-        "description": "Records a rating and comment from the app.",
-        "operationId": "send_feedback_api_feedback_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/FeedbackIn"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "204": {
-            "description": "Successful Response"
-          },
-          "503": {
-            "description": "Service Unavailable",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/reports": {
       "post": {
         "tags": [
@@ -387,7 +342,7 @@
           "feedback"
         ],
         "summary": "Send Part Report",
-        "description": "Records a builder's report that a part was read wrong.\n\nIt names the document by its link (or an upload's name and hash) and\nsays where the part was read, so the document can join the parser's\nregression corpus. Never the document itself.",
+        "description": "Records a builder's report that a part was read wrong.\n\nIt names the document by its link (or an upload's name and hash) and\nsays where the part was read, so the document can join the parser's\nregression corpus. Never the document itself. It's logged, and the log\nexport keeps it in BigQuery (see `deploy/README.md`).",
         "operationId": "send_part_report_api_part_reports_post",
         "requestBody": {
           "content": {
@@ -402,16 +357,6 @@
         "responses": {
           "204": {
             "description": "Successful Response"
-          },
-          "503": {
-            "description": "Service Unavailable",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
           },
           "422": {
             "description": "Validation Error",
@@ -798,30 +743,6 @@
         ],
         "title": "ExportKind",
         "description": "The files a master list exports."
-      },
-      "FeedbackIn": {
-        "properties": {
-          "rating": {
-            "type": "integer",
-            "maximum": 5.0,
-            "minimum": 1.0,
-            "title": "Rating",
-            "description": "1 (terrible) to 5 (excellent)."
-          },
-          "comment": {
-            "type": "string",
-            "maxLength": 5000,
-            "title": "Comment",
-            "default": ""
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "rating"
-        ],
-        "title": "FeedbackIn",
-        "description": "A rating and comment from the app."
       },
       "HTTPValidationError": {
         "properties": {

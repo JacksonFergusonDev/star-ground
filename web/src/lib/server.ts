@@ -232,11 +232,6 @@ export async function sendPartReport(report: PartReportIn): Promise<void> {
   });
 }
 
-/** Whether a refusal means this server can't take reports at all. */
-export function reportsUnavailable(error: unknown): boolean {
-  return error instanceof ApiError && error.status === 503;
-}
-
 /** A request that failed: what to tell the builder, and the bug's code if it was one. */
 export interface Failure {
   message: string;

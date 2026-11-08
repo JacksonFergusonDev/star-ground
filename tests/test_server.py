@@ -5,6 +5,7 @@ import csv
 import dataclasses
 import io
 import json
+import logging
 import re
 import threading
 import zipfile
@@ -19,17 +20,15 @@ from star_ground.api import read_document
 from star_ground.bom_lib import (
     BOMParserContext,
     ComponentCategory,
-    FeedbackRating,
+    FeedbackKind,
     FileUpload,
     InputMethod,
-    Location,
     ParseResult,
     make_component_key,
 )
 from star_ground.bom_lib.errors import BUG_MESSAGE, ErrorKind, OcrRefusedError
 from star_ground.bom_lib.ocr import ocr_guard
 from star_ground.bom_lib.types import Inventory, ReadingStats
-from star_ground.feedback import PartReport
 from star_ground.server import Settings, create_app
 from star_ground.server.limits import OcrQueue, RateLimiter, ReadingCache
 from star_ground.server.models import BUG_CODE
@@ -401,43 +400,15 @@ def test_excel_links_are_hyperlink_formulas(client: TestClient) -> None:
     assert all(v.startswith("https://") for v in plain)
 
 
-# --- Feedback ---
-
-
-def test_feedback_reaches_the_sink() -> None:
-    received: list[tuple[FeedbackRating, str]] = []
-    client = TestClient(
-        create_app(Settings(), feedback=lambda r, c: received.append((r, c)))
-    )
-
-    response = client.post("/api/feedback", json={"rating": 5, "comment": "Great"})
-
-    assert response.status_code == 204
-    assert received == [(FeedbackRating.EXCELLENT, "Great")]
-
-
-def test_feedback_without_a_sink_is_unavailable(client: TestClient) -> None:
-    response = client.post("/api/feedback", json={"rating": 3})
-
-    assert response.status_code == 503
-
-
-@pytest.mark.parametrize("rating", [0, 6])
-def test_a_rating_is_one_to_five(client: TestClient, rating: int) -> None:
-    assert client.post("/api/feedback", json={"rating": rating}).status_code == 422
-
-
 # --- Limits ---
 
 
 def test_clients_are_rate_limited() -> None:
     client = TestClient(create_app(Settings(requests_per_minute=2)))
 
-    statuses = [
-        client.post("/api/feedback", json={"rating": 3}).status_code for _ in range(3)
-    ]
+    statuses = [client.post("/api/reports", json=_REPORT).status_code for _ in range(3)]
 
-    assert statuses == [503, 503, 429]
+    assert statuses == [204, 204, 429]
 
 
 def test_behind_a_proxy_each_forwarded_client_is_limited_separately() -> None:
@@ -445,14 +416,12 @@ def test_behind_a_proxy_each_forwarded_client_is_limited_separately() -> None:
 
     def post(forwarded: str) -> int:
         return client.post(
-            "/api/feedback",
-            json={"rating": 3},
-            headers={"x-forwarded-for": forwarded},
+            "/api/reports", json=_REPORT, headers={"x-forwarded-for": forwarded}
         ).status_code
 
-    assert post("spoofed, 1.1.1.1") == 503
+    assert post("spoofed, 1.1.1.1") == 204
     assert post("other, 1.1.1.1") == 429
-    assert post("2.2.2.2") == 503
+    assert post("2.2.2.2") == 204
 
 
 def test_a_body_over_the_limit_is_refused() -> None:
@@ -992,7 +961,8 @@ def test_a_report_is_logged_beside_its_bug(
     assert response.status_code == 204
     bug, report = [r for r in caplog.records if getattr(r, "bug_code", None) == code]
     assert bug.exc_info is not None  # the bug, with its traceback
-    assert report.report == {  # type: ignore[attr-defined]
+    assert report.feedback == {  # type: ignore[attr-defined]
+        "kind": FeedbackKind.BUG,
         "document": _REPORT["document"],
         "comment": _REPORT["comment"],
     }
@@ -1099,24 +1069,22 @@ _PART_REPORT = {
 }
 
 
-def test_a_part_report_reaches_the_sink() -> None:
-    received: list[PartReport] = []
-    client = TestClient(create_app(Settings(), part_reports=received.append))
+def test_a_part_report_is_logged_for_the_corpus(
+    client: TestClient, caplog: pytest.LogCaptureFixture
+) -> None:
+    caplog.set_level(logging.INFO, logger="star_ground")
 
     response = client.post("/api/part-reports", json=_PART_REPORT)
 
     assert response.status_code == 204
-    assert received == [
-        PartReport(
-            document=_PART_REPORT["document"],  # type: ignore[arg-type]
-            ref="R1",
-            read="1k",
-            correction="10k",
-            location=Location(page=1, x0=40, top=100, x1=98, bottom=110),
-            comment="",
-        )
-    ]
-
-
-def test_part_reports_answer_503_when_not_set_up(client: TestClient) -> None:
-    assert client.post("/api/part-reports", json=_PART_REPORT).status_code == 503
+    (record,) = [r for r in caplog.records if hasattr(r, "feedback")]
+    assert record.feedback == {
+        "kind": FeedbackKind.PART,
+        "document": _PART_REPORT["document"],
+        "ref": "R1",
+        "read": "1k",
+        "correction": "10k",
+        "page": 2,  # as a PDF viewer numbers it
+        "box": [40, 100, 98, 110],
+        "comment": "",
+    }

@@ -12,12 +12,9 @@ whole Star Ground: the Docker image runs it that way.
 
 import contextvars
 import datetime
-import json
 import logging
 import os
 import queue
-import threading
-import time
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
@@ -51,7 +48,7 @@ from star_ground.api import (
 )
 from star_ground.bom_lib import (
     CountedPart,
-    FeedbackRating,
+    FeedbackKind,
     FileUpload,
     InputMethod,
     Location,
@@ -82,7 +79,6 @@ from star_ground.exports.spreadsheets import (
     supplier_cart_csv,
 )
 from star_ground.exports.typeset import build_book_pdf, label_sheet_pdf
-from star_ground.feedback import PartReport
 from star_ground.server.limits import (
     BodySizeLimit,
     OcrQueue,
@@ -96,7 +92,6 @@ from star_ground.server.models import (
     DocumentReading,
     DocumentsMissing,
     ExportKind,
-    FeedbackIn,
     Health,
     LinkFormat,
     MasterListRequest,
@@ -126,13 +121,6 @@ from star_ground.server.models import (
 )
 
 logger = logging.getLogger(__name__)
-
-type FeedbackSink = Callable[[FeedbackRating, str], None]
-"""Records a rating and comment (the Google Sheet, in production)."""
-
-type PartReportSink = Callable[[PartReport], None]
-"""Records a builder's report of a part read wrong (the sheet's Parts tab, in
-production)."""
 
 _STATUS: dict[ErrorKind, int] = {
     ErrorKind.OCR_REFUSED: 429,
@@ -205,55 +193,6 @@ class Settings:
         )
 
 
-class FeedbackSheet:
-    """Appends feedback to the Google Sheet, reconnecting hourly.
-
-    Args:
-        credentials: A Google service account's key, as its JSON fields.
-    """
-
-    def __init__(self, credentials: Mapping[str, Any]) -> None:
-        self._credentials = credentials
-        self._sheet: Any = None
-        self._connected = 0.0
-        self._parts: Any = None
-        self._parts_at = 0.0
-        self._lock = threading.Lock()
-
-    def __call__(self, rating: FeedbackRating, comment: str) -> None:
-        """Appends one rating and comment."""
-        from star_ground.feedback import connect_feedback_sheet, save_feedback
-
-        with self._lock:
-            if self._sheet is None or time.monotonic() - self._connected > 3600:
-                self._sheet = connect_feedback_sheet(self._credentials)
-                self._connected = time.monotonic()
-            save_feedback(self._sheet, rating, comment)
-
-    def part_report(self, report: PartReport) -> None:
-        """Appends one part report to the Parts tab."""
-        from star_ground.feedback import connect_part_sheet, save_part_report
-
-        with self._lock:
-            if self._parts is None or time.monotonic() - self._parts_at > 3600:
-                self._parts = connect_part_sheet(self._credentials)
-                self._parts_at = time.monotonic()
-            save_part_report(self._parts, report)
-
-
-def feedback_from_env(env: Mapping[str, str] = os.environ) -> FeedbackSheet | None:
-    """The feedback sheet, if `STAR_GROUND_FEEDBACK_CREDENTIALS` holds a key.
-
-    Args:
-        env: The environment.
-
-    Returns:
-        The sink, or None when feedback isn't configured.
-    """
-    raw = env.get("STAR_GROUND_FEEDBACK_CREDENTIALS")
-    return FeedbackSheet(json.loads(raw)) if raw else None
-
-
 class RefusedError(Exception):
     """A request the API refuses, with the body to answer it with.
 
@@ -282,8 +221,6 @@ class _Services:
     ocr_limiter: RateLimiter
     ocr_queue: OcrQueue
     cache: ReadingCache
-    feedback: FeedbackSink | None
-    part_reports: PartReportSink | None
 
 
 def _client(request: Request, trust_proxy: bool) -> str:
@@ -653,19 +590,11 @@ class _BugBoundary:
             await JSONResponse(body.model_dump(), status_code=500)(scope, receive, send)
 
 
-def create_app(
-    settings: Settings | None = None,
-    feedback: FeedbackSink | None = None,
-    part_reports: PartReportSink | None = None,
-) -> FastAPI:
+def create_app(settings: Settings | None = None) -> FastAPI:
     """Builds the API.
 
     Args:
         settings: The instance's configuration; defaults if omitted.
-        feedback: Where feedback goes; the feedback route answers 503
-            without one.
-        part_reports: Where reports of parts read wrong go; their route
-            answers 503 without one.
 
     Returns:
         The FastAPI application.
@@ -677,8 +606,6 @@ def create_app(
         ocr_limiter=RateLimiter(settings.ocr_per_hour, window=3600),
         ocr_queue=OcrQueue(1),
         cache=ReadingCache(settings.cache_bytes),
-        feedback=feedback,
-        part_reports=part_reports,
     )
     app = FastAPI(
         title="Star Ground API",
@@ -963,21 +890,6 @@ def create_app(
             headers={"content-disposition": f'attachment; filename="{out.filename}"'},
         )
 
-    @app.post(
-        "/api/feedback",
-        tags=["feedback"],
-        status_code=204,
-        responses={503: {"model": Problem}},
-    )
-    def send_feedback(http: Request, body: FeedbackIn) -> None:
-        """Records a rating and comment from the app."""
-        limited(http)
-        if services.feedback is None:
-            raise RefusedError(
-                503, Problem(message="Feedback isn't set up on this server.")
-            )
-        services.feedback(list(FeedbackRating)[body.rating - 1], body.comment)
-
     @app.post("/api/reports", tags=["feedback"], status_code=204)
     def send_report(http: Request, body: ReportIn) -> None:
         """Records a builder's report of a bug, with what was being read.
@@ -992,7 +904,11 @@ def create_app(
             body.code,
             extra={
                 "bug_code": body.code,
-                "report": {"document": body.document, "comment": body.comment},
+                "feedback": {
+                    "kind": FeedbackKind.BUG,
+                    "document": body.document,
+                    "comment": body.comment,
+                },
             },
         )
 
@@ -1009,36 +925,35 @@ def create_app(
         part = read_correction(body.ref, body.value, body.category)
         return PartOut(category=part.category, value=part.value)
 
-    @app.post(
-        "/api/part-reports",
-        tags=["feedback"],
-        status_code=204,
-        responses={503: {"model": Problem}},
-    )
+    @app.post("/api/part-reports", tags=["feedback"], status_code=204)
     def send_part_report(http: Request, body: PartReportIn) -> None:
         """Records a builder's report that a part was read wrong.
 
         It names the document by its link (or an upload's name and hash) and
         says where the part was read, so the document can join the parser's
-        regression corpus. Never the document itself.
+        regression corpus. Never the document itself. It's logged, and the log
+        export keeps it in BigQuery (see `deploy/README.md`).
         """
         limited(http)
-        if services.part_reports is None:
-            raise RefusedError(
-                503, Problem(message="Reports aren't set up on this server.")
-            )
         at = body.location
-        services.part_reports(
-            PartReport(
-                document=body.document,
-                ref=body.ref,
-                read=body.read,
-                correction=body.correction,
-                location=Location(at.page, at.x0, at.top, at.x1, at.bottom)
-                if at
-                else None,
-                comment=body.comment,
-            )
+        logger.info(
+            "Report of %s read as %s",
+            body.ref,
+            body.read,
+            extra={
+                "feedback": {
+                    "kind": FeedbackKind.PART,
+                    "document": body.document,
+                    "ref": body.ref,
+                    "read": body.read,
+                    "correction": body.correction,
+                    # Pages from 1, as a PDF viewer numbers them; the box in
+                    # points from the page's top-left.
+                    "page": at.page + 1 if at else None,
+                    "box": [at.x0, at.top, at.x1, at.bottom] if at else None,
+                    "comment": body.comment,
+                }
+            },
         )
 
     def openapi() -> dict[str, Any]:

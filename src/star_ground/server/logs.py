@@ -9,7 +9,9 @@ Records carry Star Ground's own fields as `extra`:
 
 - `bug_code`: the code the builder saw, as a label to search by
   (`labels.bug_code="A1B2C3"`).
-- `report`: what a builder sent with a report, kept in the entry.
+- `feedback`: what a builder sent (a bug report or a part report), kept in
+  the entry with its `kind`. The log export copies these entries, and every
+  bug, into BigQuery (see `deploy/README.md`).
 """
 
 import json
@@ -60,9 +62,9 @@ class CloudFormatter(logging.Formatter):
         bug_code = getattr(record, "bug_code", None)
         if bug_code:
             entry["logging.googleapis.com/labels"] = {"bug_code": bug_code}
-        report = getattr(record, "report", None)
-        if report:
-            entry["report"] = report
+        feedback = getattr(record, "feedback", None)
+        if feedback:
+            entry["feedback"] = feedback
         return json.dumps(entry, ensure_ascii=False)
 
 
