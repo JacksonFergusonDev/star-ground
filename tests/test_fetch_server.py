@@ -20,10 +20,10 @@ from pathlib import Path
 import pytest
 import trustme
 
-from src.bom_lib import ComponentCategory, ComponentKey, InputMethod, fetch
-from src.bom_lib.errors import ErrorKind, FetchError
-from src.bom_lib.fetch import FetchPolicy, fetch_url
-from src.bom_lib.strategies.context import BOMParserContext
+from star_ground.bom_lib import ComponentCategory, ComponentKey, InputMethod, fetch
+from star_ground.bom_lib.errors import ErrorKind, FetchError
+from star_ground.bom_lib.fetch import FetchPolicy, fetch_url
+from star_ground.bom_lib.strategies.context import BOMParserContext
 
 SAMPLE_PDF = Path(__file__).parent / "samples" / "clean" / "Cataclysm-PedalPCB.pdf"
 LIMIT = 256 * 1024  # for the size tests; documents get the default cap

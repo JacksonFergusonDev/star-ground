@@ -2,9 +2,9 @@
 
 import pytest
 
-from src.bom_lib.classifier import categorize_part
-from src.bom_lib.enums import ComponentCategory
-from src.bom_lib.parser import category_from_type
+from star_ground.bom_lib.classifier import categorize_part
+from star_ground.bom_lib.enums import ComponentCategory
+from star_ground.bom_lib.parser import category_from_type
 
 
 def test_trimmer_value_leaves_no_dash() -> None:

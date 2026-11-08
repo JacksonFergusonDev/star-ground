@@ -4,7 +4,7 @@ These cases come from real PedalPCB documents where the original regex parser
 truncated or misclassified values. They now pass and must keep passing.
 """
 
-from src.bom_lib import (
+from star_ground.bom_lib import (
     ComponentCategory,
     ComponentKey,
     parse_with_verification,

@@ -1,0 +1,444 @@
+"""Static Knowledge Base for the Star Ground Engine.
+
+This module serves as the central repository for:
+1.  **Standards:** Potentiometer taper codes.
+2.  **Parsing Heuristics:** Keyword lists for identifying components, knobs, and switches
+    in unstructured PDF text.
+3.  **Expert System Data:** "Silicon Sommelier" dictionaries that map generic parts
+    (like TL072) to audiophile alternatives with sonic descriptions and technical justifications.
+4.  **Exclusion Lists:** Terms used to identify and discard manufacturing artifacts (fiduciaries, test points).
+5.  **Purchasing Rules:** Configuration for safe buy quantities (buffers) and round-up logic.
+"""
+
+import re
+from dataclasses import dataclass
+from decimal import Decimal
+from typing import Any
+
+import pint
+
+from star_ground.bom_lib.enums import ComponentCategory
+from star_ground.bom_lib.types import AlternativeSpec
+from star_ground.bom_lib.units import ureg
+
+# --- Standards ---
+
+# Potentiometer Taper Codes
+# Maps the suffix character to the taper curve description.
+POT_TAPER_MAP = {
+    "A": "Logarithmic",
+    "B": "Linear",
+    "C": "Reverse Log",
+    "W": "W Taper",
+    "G": "Graphic",
+}
+
+
+@dataclass(frozen=True, slots=True)
+class ResistorPurchasingRule:
+    """Purchasing rules and buffers for resistor components.
+
+    Attributes:
+        buffer_add: Raw quantity to add before rounding.
+        round_to: Lot size to round up to (e.g., 10 for decade packs).
+        note: Default component recommendation note.
+        suspicious_threshold_low: Lower bound threshold for suspicious resistor values.
+    """
+
+    buffer_add: int
+    round_to: int
+    note: str
+    suspicious_threshold_low: pint.Quantity[Any]
+
+
+@dataclass(frozen=True, slots=True)
+class CapacitorPurchasingRule:
+    """Purchasing rules and buffers for capacitor components.
+
+    Attributes:
+        bulk_threshold: Physical capacitance value for high-volume power bypass caps.
+        bulk_buffer: Buffer quantity added for bulk caps.
+        standard_buffer: Default buffer quantity added for small signal caps.
+        large_threshold: Physical capacitance value above which capacitors are bulk/large.
+        large_buffer: Buffer quantity added for expensive/large caps.
+        suspicious_threshold_high: Upper bound threshold for suspicious capacitor values.
+    """
+
+    bulk_threshold: pint.Quantity[Any]
+    bulk_buffer: int
+    standard_buffer: int
+    large_threshold: pint.Quantity[Any]
+    large_buffer: int
+    suspicious_threshold_high: pint.Quantity[Any]
+
+
+@dataclass(frozen=True, slots=True)
+class DiodePurchasingRule:
+    """Purchasing rules and buffers for diode components.
+
+    Attributes:
+        min_buy: Minimum quantity to purchase.
+        buffer_add: Buffer quantity added to net demand.
+    """
+
+    min_buy: int
+    buffer_add: int
+
+
+PurchasingRule = ResistorPurchasingRule | CapacitorPurchasingRule | DiodePurchasingRule
+
+PURCHASING_CONFIG: dict[ComponentCategory, PurchasingRule] = {
+    ComponentCategory.RESISTORS: ResistorPurchasingRule(
+        buffer_add=5,
+        round_to=10,
+        note="Use 1/4W Metal Film (1%)",
+        suspicious_threshold_low=Decimal("1.0") * ureg.ohm,  # Ohms
+    ),
+    ComponentCategory.CAPACITORS: CapacitorPurchasingRule(
+        bulk_threshold=Decimal("1.0e-7") * ureg.farad,  # 100nF
+        bulk_buffer=10,
+        standard_buffer=5,
+        large_threshold=Decimal("1.0e-6") * ureg.farad,  # 1uF
+        large_buffer=1,
+        suspicious_threshold_high=Decimal("0.01") * ureg.farad,  # 10mF
+    ),
+    ComponentCategory.DIODES: DiodePurchasingRule(
+        min_buy=10,
+        buffer_add=5,
+    ),
+}
+
+# --- Expert System Data (The "Silicon Sommelier") ---
+
+# Operational Amplifier Substitution Table
+# Maps generic BOM parts to a list of "flavor" alternatives.
+# Schema: { Generic_Name: [ (Alt_Name, Sonic_Profile, Technical_Justification), ... ] }
+IC_ALTS: dict[str, list[AlternativeSpec]] = {
+    # Dual Op-Amps
+    "TL072": [
+        AlternativeSpec(
+            "OPA2134",
+            "Hi-Fi / Studio Clean",
+            "Low distortion (0.00008%), High Slew Rate (20V/us)",
+        ),
+        AlternativeSpec(
+            "TLC2272",
+            "High Headroom Clean",
+            "Rail-to-Rail output (+6Vpp headroom on 9V)",
+        ),
+    ],
+    "JRC4558": [
+        AlternativeSpec(
+            "NJM4558D",
+            "Vintage Correct",
+            "Authentic 1980s BJT bandwidth limiting",
+        ),
+        AlternativeSpec(
+            "OPA2134",
+            "Modern/Clinical",
+            "High impedance input, removes 'warm' blur",
+        ),
+    ],
+    # Single Op-Amps (RAT style)
+    "LM308": [
+        AlternativeSpec(
+            "LM308N",
+            "Vintage RAT",
+            "Required for 0.3V/us slew-induced distortion",
+        ),
+        AlternativeSpec(
+            "OP07",
+            "Modern Tight",
+            "Faster slew rate, sounds harsher/tighter than vintage",
+        ),
+    ],
+    "NE5532": [
+        AlternativeSpec(
+            "OPA2134",
+            "Lower Noise",
+            "JFET input reduces current noise with high-Z guitars",
+        ),
+    ],
+}
+
+# Diode Clipping Profiles
+# Maps standard switching diodes to alternatives with distinct clipping characteristics.
+# Schema: { Generic_Name: [ AlternativeSpec(name, profile, justification), ... ] }
+DIODE_ALTS: dict[str, list[AlternativeSpec]] = {
+    "1N4148": [
+        AlternativeSpec(
+            "1N4001",
+            "Smooth / Tube-like",
+            "Slow reverse recovery (30µs) smears highs",
+        ),
+        AlternativeSpec(
+            "IR LED",
+            "The 'Goldilocks' Drive",
+            "1.2V drop: More crunch than LED, more headroom than Si",
+        ),
+        AlternativeSpec(
+            "Red LED",
+            "Amp-like / Open",
+            "1.8V drop: Huge headroom, loud output",
+        ),
+    ],
+    "1N914": [
+        AlternativeSpec(
+            "1N4001",
+            "Smooth / Tube-like",
+            "Slow reverse recovery (30µs) smears highs",
+        ),
+    ],
+    "1N34A": [
+        AlternativeSpec(
+            "BAT41",
+            "Modern Schottky",
+            "Stable alternative, slightly harder knee",
+        ),
+        AlternativeSpec(
+            "1N60",
+            "Alt Germanium",
+            "Different Vf variance",
+        ),
+    ],
+}
+
+# --- Parsing Heuristics & Keywords ---
+
+# Known Switch Function Labels
+# Used to detect switches in BOM descriptions.
+SWITCH_LABELS = {
+    "LENGTH",
+    "MODE",
+    "CLIP",
+    "VOICE",
+    "BRIGHT",
+    "FAT",
+    "PV",
+    "RANGE",
+    "LO",
+    "HI",
+    "MID",
+}
+
+# Known Potentiometer Labels
+# Prefixes that indicate a potentiometer regardless of the suffix.
+POT_PREFIXES = {"POT", "TRIM", "VR", "VOL"}
+
+# Functional names usually associated with Potentiometers.
+# These help identify knobs even if the ref designator is missing or obscured.
+POT_NAMES = {
+    "VOLUME",
+    "TONE",
+    "GAIN",
+    "DRIVE",
+    "DIST",
+    "FUZZ",
+    "DIRT",
+    "LEVEL",
+    "MIX",
+    "BLEND",
+    "BALANCE",
+    "DRY",
+    "WET",
+    "SPEED",
+    "RATE",
+    "DEPTH",
+    "INTENSITY",
+    "WIDTH",
+    "DECAY",
+    "ATTACK",
+    "RELEASE",
+    "SUSTAIN",
+    "COMP",
+    "THRESH",
+    "TREBLE",
+    "BASS",
+    "MID",
+    "MIDS",
+    "PRESENCE",
+    "CONTOUR",
+    "EQ",
+    "BODY",
+    "BIAS",
+    "BOOST",
+    "MASTER",
+    "PRE",
+    "POST",
+    "FILTER",
+    "SENS",
+    "SWEEP",
+    "RES",
+    "RESONANCE",
+    "AMT",
+    "AMOUNT",
+    "DISTORTION",
+    "OCTAVE",
+    "AMPLITUDE",
+    "CLEAN",
+}
+
+# Union of all Potentiometer identifiers
+POT_LABELS = POT_PREFIXES | POT_NAMES
+
+# Contextual Keywords
+# Terms found in PDF descriptions that imply controls but don't fit strict categories.
+KEYWORD_EXTRAS = {
+    "COLOR",
+    "TEXTURE",
+    "NATURE",
+    "THROB",
+    "SWELL",
+    "PULSE",
+    "REPEATS",
+    "TIME",
+    "FEEDBACK",
+    "CUT",
+}
+
+# Master Keyword List
+# Combines all functional names and extra descriptive terms.
+# Sorted list used for deterministic Regex generation in the PDF parser.
+KEYWORDS = sorted(POT_NAMES | SWITCH_LABELS | KEYWORD_EXTRAS)
+
+# Designators printed without a number (e.g. Ungula's 'LED' and 'RLED').
+BARE_DESIGNATORS = frozenset({"LED", "RLED", "CLR", "TRIM"})
+
+# Values that mark a listed designator as intentionally not populated.
+NOT_POPULATED_VALUES = frozenset(
+    {
+        "N/A",
+        "NA",
+        "OMIT",
+        "DNP",
+        "DNI",
+        "NC",
+        "NO POP",
+        "DO NOT POPULATE",
+        "NOT POPULATED",
+        "(OMIT)",
+        # A wire link is not a part to buy (Aion FX: 'R31  JUMPER', '(jumper)').
+        "JUMPER",
+        "(JUMPER)",
+        # A control left out and wired around (Aion FX legacy Phobos: '(bypass)').
+        "BYPASS",
+        "(BYPASS)",
+        # Pads left open, no part (GuitarPCB The Vibe: 'SW1 | *Open').
+        "OPEN",
+        # A build that leaves the spot empty (Five Cats OKS Fuzz: 'C3 | empty').
+        "EMPTY",
+        # GuitarPCB EMEXAR's MicroAmp build: 'C1 | Nothing'; Blues Kicker 'D3 - D4 | NONE'.
+        "NOTHING",
+        "NONE",
+    }
+)
+# 'Omit - jumper pads 2+3' (Five Cats Octavia): unpopulated, with how. 'Jumper to
+# VR' (Aion FX legacy Cerulean): a wire link, with where it goes.
+NOT_POPULATED_REMARK = re.compile(
+    r"(?:OMIT|DNP|JUMPER)\s*[-\u2013(:]|JUMPER TO \w+$", re.IGNORECASE
+)
+
+# Switch specifications: pole/throw codes (SPDT, 1P8T) and positions (ON/OFF/ON),
+# also in a KiCad symbol name ('SW_SPDT', Five Cats).
+SWITCH_VALUE_PATTERN = re.compile(
+    r"(?:\b|(?<=_))(?:[SD34]P[DS]T|\dP\dT|ON\s*[/-]\s*(?:OFF\s*[/-]\s*)?ON)\b"
+)
+
+# Manufacturing Artifact Exclusion List
+# These tokens indicate lines in a BOM that describe non-purchasable items
+# (e.g., Test Points, Fiduciaries, PCB layers) or explicitly excluded parts.
+IGNORE_VALUES = [
+    # --- Manufacturing Artifacts (Ghost Data) ---
+    "TP",
+    "TPOINT",
+    "TEST POINT",
+    "TEST",
+    "PROBE",
+    "FID",
+    "FIDUCIAL",
+    "MARK",
+    "ALIGN",
+    "MARKER",
+    "MH",
+    "HOLE",
+    "MOUNTING HOLE",
+    "MTG",
+    "DRILL",
+    "SCREW HOLE",
+    "JP",
+    "JUMPER",
+    "SJ",
+    "SOLDER JUMPER",
+    "LINK",
+    "WIRE",
+    "BRIDGE",
+    "IO",
+    "PAD",
+    "VIA",
+    # --- Logic Flags & Exclusion ---
+    "DNP",
+    "DNI",
+    "NM",
+    "NC",
+    "NO POP",
+    "DO NOT POPULATE",
+    "NOT MOUNTED",
+    "OPT",
+    "OPTIONAL",
+    "OMIT",
+    "UNUSED",
+    # --- Non-Component Layers & Nets ---
+    "PCB",
+    "BOARD",
+    "PANEL",
+    "FACEPLATE",
+    "LOGO",
+    "GRAPHIC",
+    "ART",
+    "SILKSCREEN",
+    "TEXT",
+    "LABEL",
+    "ROHS",
+    "LEAD FREE",
+    "PB-FREE",
+    "UL",
+    "FCC",
+    "CE",
+    "TRASH BIN",
+    "GND",
+    "AGND",
+    "DGND",
+    "PGND",
+    "EARTH",
+    "VCC",
+    "VDD",
+    "VSS",
+    "VEE",
+    "VREF",
+    "VB",
+    "VA",
+    "+9V",
+    "+18V",
+    "-9V",
+    "+5V",
+    "+3V3",
+    "BIAS",
+    "NOTE",
+    "INFO",
+    "COMMENT",
+    "DESC",
+    "DESCRIPTION",
+    "DIP",
+    "DIP8",
+    "DIP14",
+    "DIP16",
+    "SOIC",
+    "SOIC8",
+    "PACKAGE",
+    "PKG",
+]
+
+AUTO_INJECT_SOURCE = "Auto-Inject"
+# Marks the designator of a part Star Ground adds for one the document lists
+# (an IC's socket: 'IC1 (Inj)'), so it's never printed in the document.
+INJECTED_SUFFIX = " (Inj)"

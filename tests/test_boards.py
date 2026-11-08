@@ -5,9 +5,9 @@ import io
 from fpdf import FPDF
 from PIL import Image
 
-from src.bom_lib.boards import base_ref, board_marks, marks_by_ref
-from src.bom_lib.ocr import OcrBox
-from src.bom_lib.types import Location
+from star_ground.bom_lib.boards import base_ref, board_marks, marks_by_ref
+from star_ground.bom_lib.ocr import OcrBox
+from star_ground.bom_lib.types import Location
 
 
 def _pdf(draw_image: bool = False) -> bytes:

@@ -39,7 +39,7 @@ from typing import Any
 import pdfplumber
 from PIL import Image
 
-from src.bom_lib.ocr import recognize
+from star_ground.bom_lib.ocr import recognize
 
 # The parts-list OCR's resolution: it reads 'R27' reliably at this size.
 _DPI = 200

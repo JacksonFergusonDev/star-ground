@@ -4,12 +4,12 @@ from pathlib import Path
 
 import pytest
 
-from src.bom_lib import constants
-from src.bom_lib.enums import ComponentCategory, ComponentOrigin, ComponentSpec
-from src.bom_lib.parser import parse_csv_bom, parse_with_verification
-from src.bom_lib.sourcing import _format_alts, get_spec_type
-from src.bom_lib.stages import BuildStage, build_stage, stage_order
-from src.bom_lib.types import (
+from star_ground.bom_lib import constants
+from star_ground.bom_lib.enums import ComponentCategory, ComponentOrigin, ComponentSpec
+from star_ground.bom_lib.parser import parse_csv_bom, parse_with_verification
+from star_ground.bom_lib.sourcing import _format_alts, get_spec_type
+from star_ground.bom_lib.stages import BuildStage, build_stage, stage_order
+from star_ground.bom_lib.types import (
     AlternativeSpec,
     CategorizationResult,
     ChecklistPart,
@@ -20,8 +20,8 @@ from src.bom_lib.types import (
     RefDesignator,
     SupportsName,
 )
-from src.bom_lib.utils import natural_sort_key
-from src.pdf_generator import condense_refs, sort_by_z_height
+from star_ground.bom_lib.utils import natural_sort_key
+from star_ground.pdf_generator import condense_refs, sort_by_z_height
 
 
 def test_alternative_spec_formatting() -> None:
@@ -376,8 +376,8 @@ def test_supports_name_protocol() -> None:
 def test_counted_parts_reach_each_projects_field_manual() -> None:
     """Parts counted by value ('4 - 10k', Tonepad) have no designator, but the
     project still needs them: its checklist counts them per project."""
-    from src.bom_lib.manager import rename_source_in_inventory
-    from src.pdf_generator import _get_project_parts
+    from star_ground.bom_lib.manager import rename_source_in_inventory
+    from star_ground.pdf_generator import _get_project_parts
 
     inventory = Inventory()
     key = ComponentKey(ComponentCategory.RESISTORS, "10k")

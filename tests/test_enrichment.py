@@ -2,19 +2,19 @@
 
 import pytest
 
-from src.bom_lib import (
+from star_ground.bom_lib import (
     ComponentCategory,
     ParseWarningKind,
     categorize_part,
     create_empty_stats,
 )
-from src.bom_lib.parser import (
+from star_ground.bom_lib.parser import (
     _table_entries,
     capacitor_notes,
     category_from_type,
     enrich_value_from_type,
 )
-from src.bom_lib.utils import float_to_search_string
+from star_ground.bom_lib.utils import float_to_search_string
 
 
 @pytest.mark.parametrize(

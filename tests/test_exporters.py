@@ -6,10 +6,10 @@ from pathlib import Path
 
 import pytest
 
-from src.bom_lib.enums import ComponentCategory, ComponentOrigin
-from src.bom_lib.parser import parse_user_inventory
-from src.bom_lib.types import FORMULA_PREFIXES, ShoppingListRow
-from src.exporters import (
+from star_ground.bom_lib.enums import ComponentCategory, ComponentOrigin
+from star_ground.bom_lib.parser import parse_user_inventory
+from star_ground.bom_lib.types import FORMULA_PREFIXES, ShoppingListRow
+from star_ground.exporters import (
     BASE_SHOPPING_LIST_COLS,
     generate_shopping_list_csv,
     generate_stock_update_csv,

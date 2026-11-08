@@ -1,6 +1,6 @@
 """Standard hardware is supplied only for pedals whose document doesn't list its own."""
 
-from src.bom_lib import (
+from star_ground.bom_lib import (
     BuildHardware,
     ComponentCategory,
     ComponentKey,

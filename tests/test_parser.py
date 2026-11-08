@@ -17,7 +17,7 @@ import pytest
 from hypothesis import given
 from hypothesis import strategies as st
 
-from src.bom_lib import (
+from star_ground.bom_lib import (
     BuildHardware,
     calculate_net_needs,
     deduplicate_refs,
@@ -34,9 +34,9 @@ from src.bom_lib import (
     parse_with_verification,
     serialize_inventory,
 )
-from src.bom_lib.classifier import normalize_value_to_quantity
-from src.bom_lib.enums import ComponentCategory, ComponentSpec
-from src.bom_lib.types import ComponentKey, Inventory, PDFPageExtraction
+from star_ground.bom_lib.classifier import normalize_value_to_quantity
+from star_ground.bom_lib.enums import ComponentCategory, ComponentSpec
+from star_ground.bom_lib.types import ComponentKey, Inventory, PDFPageExtraction
 
 # --- Standard Unit Tests ---
 
@@ -752,8 +752,8 @@ def test_ref_deduplication_and_sorting():
 def test_a_designator_repeated_in_another_table_is_another_board() -> None:
     # EV Mini: the LFO and Audio PCBs both list Q1 2N5088; a repeat in the same
     # table (Genmaicha's doubled R102 row) is one part.
-    from src.bom_lib.builds import Entry
-    from src.bom_lib.parser import _ingest_entries
+    from star_ground.bom_lib.builds import Entry
+    from star_ground.bom_lib.parser import _ingest_entries
 
     entries = [
         Entry("Q1", "2N5088", 1, table=0),
@@ -771,7 +771,7 @@ def _typed_page(
     rows: list[tuple[str, str, str]], cols: tuple[float, float, float] = (50, 110, 200)
 ) -> PDFPageExtraction:
     """One page holding an Aion FX style 'PART | VALUE | TYPE' table."""
-    from src.bom_lib import PDFWord
+    from star_ground.bom_lib import PDFWord
 
     words = []
     for k, cells in enumerate([("PART", "VALUE", "TYPE"), *rows]):
@@ -792,8 +792,8 @@ def _typed_page(
 
 def test_typed_table_repeated_labels_are_separate_parts() -> None:
     # Aion FX Asteria: 'GAIN | 1MA | ...pot' and 'GAIN | SPDT on-on | Toggle switch'.
-    from src.bom_lib import create_empty_stats
-    from src.bom_lib.parser import _text_table_entries
+    from star_ground.bom_lib import create_empty_stats
+    from star_ground.bom_lib.parser import _text_table_entries
 
     page = _typed_page(
         [
@@ -815,8 +815,8 @@ def test_typed_table_repeated_labels_are_separate_parts() -> None:
 def test_typed_table_socket_row_keeps_its_label() -> None:
     # Aion FX Amethyst: 'IC1-SOCKET' is the socket, not IC1 named by its role
     # the way GuitarPCB's 'TR1-BIAS' is.
-    from src.bom_lib import create_empty_stats
-    from src.bom_lib.parser import _text_table_entries
+    from star_ground.bom_lib import create_empty_stats
+    from star_ground.bom_lib.parser import _text_table_entries
 
     page = _typed_page(
         [
@@ -831,8 +831,8 @@ def test_typed_table_socket_row_keeps_its_label() -> None:
 
 def test_listed_sockets_are_not_injected_again() -> None:
     # Aion FX lists 'IC1-S | DIP-8 socket'; the IC must not bring a second one.
-    from src.bom_lib.builds import Entry
-    from src.bom_lib.parser import _ingest_entries
+    from star_ground.bom_lib.builds import Entry
+    from star_ground.bom_lib.parser import _ingest_entries
 
     inventory, _ = _ingest_entries(
         [
@@ -863,15 +863,15 @@ def test_listed_sockets_are_not_injected_again() -> None:
     ],
 )
 def test_reversed_text_is_not_read(matrix: tuple[float, ...], kept: bool) -> None:
-    from src.bom_lib.parser import _readable
+    from star_ground.bom_lib.parser import _readable
 
     assert _readable({"object_type": "char", "matrix": matrix}) is kept
     assert _readable({"object_type": "line"}) is True
 
 
 def test_untyped_grid_reads_named_controls_but_not_hardware() -> None:
-    from src.bom_lib import create_empty_stats
-    from src.bom_lib.parser import _untyped_refs
+    from star_ground.bom_lib import create_empty_stats
+    from star_ground.bom_lib.parser import _untyped_refs
 
     stats = create_empty_stats()
     assert _untyped_refs(stats, ["VOL"], "A500K") == ["VOL"]
@@ -883,8 +883,8 @@ def test_untyped_grid_reads_named_controls_but_not_hardware() -> None:
 def test_a_second_board_with_other_values_is_bought_too() -> None:
     # Tweed Fuzztone: the Tweed and Fuzz boards both list R1, with other values;
     # both list D1 1N5817 (bought twice under one designator).
-    from src.bom_lib.builds import Entry
-    from src.bom_lib.parser import _ingest_entries
+    from star_ground.bom_lib.builds import Entry
+    from star_ground.bom_lib.parser import _ingest_entries
 
     inventory, stats = _ingest_entries(
         [
@@ -901,7 +901,7 @@ def test_a_second_board_with_other_values_is_bought_too() -> None:
 
 
 def test_value_column_grid_is_one_variant_per_column() -> None:
-    from src.bom_lib.parser import _value_column_grid
+    from star_ground.bom_lib.parser import _value_column_grid
 
     table: list[list[str | None]] = [
         ["", "MUFF Variant", None],
@@ -936,7 +936,7 @@ def test_value_column_grid_is_one_variant_per_column() -> None:
 def test_near_upright_characters_are_straightened() -> None:
     from types import SimpleNamespace
 
-    from src.bom_lib.parser import _straighten
+    from star_ground.bom_lib.parser import _straighten
 
     char: dict[str, Any] = {
         "upright": False,
@@ -953,7 +953,7 @@ def _ruled_page(
     table: list[list[str | None]], lines: list[tuple[str, ...]]
 ) -> PDFPageExtraction:
     """One page with a ruled table and the words of its rows."""
-    from src.bom_lib import PDFWord
+    from star_ground.bom_lib import PDFWord
 
     words = []
     for k, cells in enumerate(lines):
@@ -977,8 +977,8 @@ def _ruled_page(
 def test_listings_beside_a_ruled_row_are_read() -> None:
     # NostalgiTone: the table reads 'R2 | 1M' but merges the shaded row into
     # 'R1 1M', so C1, C2 and R1 are left to the layout reader.
-    from src.bom_lib import create_empty_stats
-    from src.bom_lib.parser import read_pages
+    from star_ground.bom_lib import create_empty_stats
+    from star_ground.bom_lib.parser import read_pages
 
     page = _ruled_page(
         [["R1 1M", None, "C1 47n", None], ["R2", "1M", "C2", "220n"]],
@@ -991,8 +991,8 @@ def test_listings_beside_a_ruled_row_are_read() -> None:
 
 def test_a_ruled_rows_value_is_not_read_as_a_listing() -> None:
     # Bad Mamma Jamma: 'D1 | LED | 3mm Red LED' is not a bare 'LED' listing.
-    from src.bom_lib import create_empty_stats
-    from src.bom_lib.parser import read_pages
+    from star_ground.bom_lib import create_empty_stats
+    from star_ground.bom_lib.parser import read_pages
 
     page = _ruled_page([["D1", "LED", "3mm Red LED"]], [("D1", "LED", "3mm Red LED")])
     inventory, _, _ = read_pages([page], "Ruled", create_empty_stats())
@@ -1003,8 +1003,8 @@ def test_a_ruled_rows_value_is_not_read_as_a_listing() -> None:
 def test_pages_of_tables_are_all_read() -> None:
     # Five Cats Tone Monarch (OCR): the main table has its header, the
     # daughterboard's on the next page does not.
-    from src.bom_lib import PDFWord, create_empty_stats
-    from src.bom_lib.parser import read_pages
+    from star_ground.bom_lib import PDFWord, create_empty_stats
+    from star_ground.bom_lib.parser import read_pages
 
     main = _typed_page(
         [
@@ -1041,8 +1041,8 @@ def test_pages_of_tables_are_all_read() -> None:
     ],
 )
 def test_misread_text_layer(texts: list[str], misread: bool) -> None:
-    from src.bom_lib import PDFWord
-    from src.bom_lib.parser import _misread
+    from star_ground.bom_lib import PDFWord
+    from star_ground.bom_lib.parser import _misread
 
     words = [
         PDFWord(text=t, x0=10.0 * k, x1=10.0 * k + 8, top=100.0, size=10.0)
@@ -1054,7 +1054,7 @@ def test_misread_text_layer(texts: list[str], misread: bool) -> None:
 def test_control_label_is_no_designator_and_value() -> None:
     # GuitarPCB DumbleTone labels 'Bias Trim'; ShoNuff's 'C1 100n' is a
     # designator and its value run together.
-    from src.bom_lib.parser import _CONTROL_LABEL
+    from star_ground.bom_lib.parser import _CONTROL_LABEL
 
     assert _CONTROL_LABEL.fullmatch("Bias Trim")
     assert _CONTROL_LABEL.fullmatch("GAIN 2")
@@ -1065,7 +1065,7 @@ def test_control_label_is_no_designator_and_value() -> None:
 def test_same_value_ignores_zero_width_spaces() -> None:
     # GuitarPCB The Vibe: a ruled cell '​ ​ 2N4125 - PNP' and the
     # text reading of the same row.
-    from src.bom_lib.parser import _same_value
+    from star_ground.bom_lib.parser import _same_value
 
     assert _same_value("​ ​ 2N4125 - PNP", "2N4125 - PNP")
     assert not _same_value("2N4125 - PNP", "2N3906")
@@ -1074,7 +1074,7 @@ def test_same_value_ignores_zero_width_spaces() -> None:
 def test_wrapped_ruled_value_matches_its_first_line() -> None:
     # GuitarPCB EMEXAR: the ruled cell 'Bi-color CA LED' reads 'Bi-color CA'
     # as text; another value is another row.
-    from src.bom_lib.parser import _wrapped
+    from star_ground.bom_lib.parser import _wrapped
 
     assert _wrapped("Bi-color CA LED", "Bi-color CA")
     assert _wrapped("Bi-Color CA LED", "LED")
@@ -1085,7 +1085,7 @@ def test_wrapped_ruled_value_matches_its_first_line() -> None:
 
 def test_comments_rating_and_pin_voltages() -> None:
     # GuitarPCB Fuzzy Bee: 'C1 | 100n | Box Capacitor, 16+V'.
-    from src.bom_lib.parser import _is_ignored, capacitor_notes
+    from star_ground.bom_lib.parser import _is_ignored, capacitor_notes
 
     assert capacitor_notes("C1", "100n", "Box Capacitor, 16+V") == "100n (16V minimum)"
     # ColorTone Overdrive's voltage table: 'Q1 | E-.39, B- .94, c- 1.62'.
@@ -1097,7 +1097,7 @@ def _words_page(
     rows: list[tuple[tuple[str, float], ...]], text: str = ""
 ) -> PDFPageExtraction:
     """A page of positioned cells: each row is (text, x) pairs, one line each."""
-    from src.bom_lib import PDFWord
+    from star_ground.bom_lib import PDFWord
 
     words = []
     for k, cells in enumerate(rows):
@@ -1118,9 +1118,9 @@ def _words_page(
 
 def test_value_column_per_build_makes_builds() -> None:
     # Aion FX Aphelion: 'PART | VALUE (D+) | VALUE (250) | TYPE'.
-    from src.bom_lib import create_empty_stats
-    from src.bom_lib.builds import plan_builds
-    from src.bom_lib.parser import _text_table_entries
+    from star_ground.bom_lib import create_empty_stats
+    from star_ground.bom_lib.builds import plan_builds
+    from star_ground.bom_lib.parser import _text_table_entries
 
     cols = (50.0, 110.0, 190.0, 270.0)
 
@@ -1167,7 +1167,7 @@ def test_two_build_list_rows_split_by_build(
     ref: str, value: str, expected: list[tuple[str, str, str | None]]
 ) -> None:
     # Aion FX legacy Comet: 'Parts (vintage / modern values)'.
-    from src.bom_lib.parser import _version_split
+    from star_ground.bom_lib.parser import _version_split
 
     assert _version_split(ref, value, ("vintage", "modern")) == expected
     assert _version_split(ref, value, None) == [(ref, value, None)]
@@ -1175,9 +1175,9 @@ def test_two_build_list_rows_split_by_build(
 
 def test_alternate_spec_table_adds_no_parts() -> None:
     # Aion FX legacy Refractor: 'Silver Pony specs' restate listed values.
-    from src.bom_lib import create_empty_stats
-    from src.bom_lib.builds import Entry
-    from src.bom_lib.parser import _alternate_spec_table
+    from star_ground.bom_lib import create_empty_stats
+    from star_ground.bom_lib.builds import Entry
+    from star_ground.bom_lib.parser import _alternate_spec_table
 
     listed = [
         Entry("R10", "2k", 0, table=0),
@@ -1207,7 +1207,7 @@ def test_shaded_grid_is_read_pair_by_pair() -> None:
     # GuitarPCB SWAH V4: a headerless grid whose shaded rows merge 'R8 6k8';
     # NostalgiTone 70s: '** Q2-Q6 | J201 (see notes)', 'D1 - D2', '* CLR x3';
     # DVF v3: a rating in its own cell.
-    from src.bom_lib.parser import _shaded_pairs
+    from star_ground.bom_lib.parser import _shaded_pairs
 
     table: list[list[str | None]] = [
         ["R8 6k8", None, "R20", "22k", "C12", "100n", "D6 CA Bi-colour", None],
@@ -1254,8 +1254,8 @@ def test_shaded_grid_is_read_pair_by_pair() -> None:
 def test_shaded_rows_fill_in_what_other_readers_lost() -> None:
     # The re-read grid adds lost parts, replaces a value that ran into the next
     # cell or lost its second value, and leaves per-build and complete values be.
-    from src.bom_lib.builds import Entry
-    from src.bom_lib.parser import _fill_in
+    from star_ground.bom_lib.builds import Entry
+    from star_ground.bom_lib.parser import _fill_in
 
     entries = [
         Entry("R1", "10k", 0, line=3),
@@ -1284,8 +1284,8 @@ def test_shaded_rows_fill_in_what_other_readers_lost() -> None:
 
 def test_mod_change_list_is_not_parts() -> None:
     # Aion FX legacy Comet's 'Mod 1 | Mod 2' tables re-list IC1, C1, C2...
-    from src.bom_lib.builds import Entry
-    from src.bom_lib.parser import _is_change_list
+    from star_ground.bom_lib.builds import Entry
+    from star_ground.bom_lib.parser import _is_change_list
 
     mods = [Entry("IC1", "OPA2134", 2), Entry("C1", "100n", 2), Entry("C2", "100n", 2)]
     seen = {"IC1", "C1", "C2", "R1"}
@@ -1296,7 +1296,7 @@ def test_mod_change_list_is_not_parts() -> None:
 
 def test_tantalum_note_about_another_part_is_not_this_part() -> None:
     # Aion FX Dryad: C5 '1uF | Film capacitor | Can omit and use 4.7uF tantalum for C6'.
-    from src.bom_lib.parser import enrich_value_from_type
+    from star_ground.bom_lib.parser import enrich_value_from_type
 
     assert (
         enrich_value_from_type(
@@ -1313,8 +1313,8 @@ def test_tantalum_note_about_another_part_is_not_this_part() -> None:
 
 def test_socket_value_outranks_a_wrong_type() -> None:
     # Aion FX Nysiad Silicon: 'IC1-S | DIP-8 socket | BJT transistor, NPN, TO-92'.
-    from src.bom_lib import create_empty_stats
-    from src.bom_lib.parser import _typed_row
+    from star_ground.bom_lib import create_empty_stats
+    from star_ground.bom_lib.parser import _typed_row
 
     _, hint = _typed_row(
         create_empty_stats(), "IC1-S", "DIP-8 socket", "BJT transistor, NPN, TO-92", ""
@@ -1324,8 +1324,8 @@ def test_socket_value_outranks_a_wrong_type() -> None:
 
 def test_a_named_label_used_twice_is_two_parts() -> None:
     # Aion FX legacy L5 Preamp lists 'COMP  5MM LED' and 'Comp  SPDT'.
-    from src.bom_lib.builds import Entry
-    from src.bom_lib.parser import _ingest_entries
+    from star_ground.bom_lib.builds import Entry
+    from star_ground.bom_lib.parser import _ingest_entries
 
     inventory, stats = _ingest_entries(
         [Entry("COMP", "5MM LED", 0), Entry("Comp", "SPDT", 0)], "T"
@@ -1338,8 +1338,8 @@ def test_a_named_label_used_twice_is_two_parts() -> None:
 def test_a_dashed_parts_list_drops_the_drawings_labels() -> None:
     # Tonepad: 'R1 - 10k' listings, and the schematic's 'AC  ADAPTOR' and
     # 'D1  47uF' labels on another page.
-    from src.bom_lib import create_empty_stats
-    from src.bom_lib.parser import read_pages
+    from star_ground.bom_lib import create_empty_stats
+    from star_ground.bom_lib.parser import read_pages
 
     drawing = _words_page(
         [(("D1", 50.0), ("47uF", 90.0)), (("AC", 50.0), ("100k", 90.0))]
@@ -1359,8 +1359,8 @@ def test_a_dashed_parts_list_drops_the_drawings_labels() -> None:
 
 def test_a_counted_list_is_read_without_designators() -> None:
     # Tonepad Rat: '2 - 1N914' counts the diodes the text calls D1 and D2.
-    from src.bom_lib import ParseWarningKind, create_empty_stats
-    from src.bom_lib.parser import read_pages
+    from star_ground.bom_lib import ParseWarningKind, create_empty_stats
+    from star_ground.bom_lib.parser import read_pages
 
     page = _words_page(
         [
@@ -1393,8 +1393,8 @@ def test_a_counted_list_is_read_without_designators() -> None:
 
 def test_a_counted_row_of_unknown_kind_is_warned_not_guessed() -> None:
     # Tonepad LPB-1: '1 - 4k7' under 'Millbypass' could be a resistor or a trim.
-    from src.bom_lib import ParseWarningKind, create_empty_stats
-    from src.bom_lib.parser import read_pages
+    from star_ground.bom_lib import ParseWarningKind, create_empty_stats
+    from star_ground.bom_lib.parser import read_pages
 
     page = _words_page(
         [
@@ -1426,15 +1426,15 @@ def test_a_counted_row_of_unknown_kind_is_warned_not_guessed() -> None:
     ],
 )
 def test_included_refs(text: str, refs: set[str]) -> None:
-    from src.bom_lib.parser import included_refs
+    from star_ground.bom_lib.parser import included_refs
 
     assert included_refs([text]) == refs
 
 
 def test_a_part_included_with_the_pcb_is_listed_and_counted() -> None:
     # PedalPCB Deflector: the EEPROM comes programmed with the board.
-    from src.bom_lib import create_empty_stats
-    from src.bom_lib.parser import read_pages
+    from star_ground.bom_lib import create_empty_stats
+    from star_ground.bom_lib.parser import read_pages
 
     page = _words_page(
         [
@@ -1451,8 +1451,8 @@ def test_a_part_included_with_the_pcb_is_listed_and_counted() -> None:
 
 def test_a_box_around_board_artwork_is_no_parts_table() -> None:
     # Tonepad FraVerb: the artwork's labels read as a headerless one-row 'table'.
-    from src.bom_lib import create_empty_stats
-    from src.bom_lib.parser import read_pages
+    from star_ground.bom_lib import create_empty_stats
+    from star_ground.bom_lib.parser import read_pages
 
     page: PDFPageExtraction = {
         "tables": [[["50k 50k trim p2 trim p1 int-ext 32768", "50k trim p2"]]],
@@ -1466,15 +1466,15 @@ def test_a_box_around_board_artwork_is_no_parts_table() -> None:
 @pytest.mark.parametrize("value", ["Jumper to VR", "Jumper to GND", "JUMPER"])
 def test_a_jumper_wire_is_not_populated(value: str) -> None:
     # Aion FX legacy Cerulean: 'J1  Jumper to VR' says where the wire goes.
-    from src.bom_lib.builds import Entry
+    from star_ground.bom_lib.builds import Entry
 
     assert Entry("J1", value, 0).not_populated
 
 
 def test_a_second_versions_value_in_its_own_column() -> None:
     # Aion FX legacy Aurora: 'Parts (Ross / Dyna values)' over 'R2 | 470k | jumper'.
-    from src.bom_lib import create_empty_stats
-    from src.bom_lib.parser import read_pages
+    from star_ground.bom_lib import create_empty_stats
+    from star_ground.bom_lib.parser import read_pages
 
     page: PDFPageExtraction = {
         "tables": [
@@ -1513,14 +1513,14 @@ def test_a_second_versions_value_in_its_own_column() -> None:
     ],
 )
 def test_a_title_drops_the_publishers_wording(printed: str, title: str) -> None:
-    from src.bom_lib.parser import _BYLINE
+    from star_ground.bom_lib.parser import _BYLINE
 
     assert _BYLINE.sub("", printed) == title
 
 
 def test_a_section_heading_is_no_title() -> None:
     # GuitarPCB AfterBlaster sets 'PARTS LIST' / 'Build Notes:' above its title's size.
-    from src.bom_lib.parser import _PRESENTS
+    from star_ground.bom_lib.parser import _PRESENTS
 
     assert _PRESENTS.fullmatch("PARTS LIST Build Notes:")
     assert _PRESENTS.fullmatch("Build Notes:")
@@ -1528,7 +1528,7 @@ def test_a_section_heading_is_no_title() -> None:
 
 def test_scraps_of_a_drawing_are_no_title() -> None:
     # GuitarPCB SWAH v3's largest words are a dimension's: '” x ” ca.'.
-    from src.bom_lib.parser import _is_title
+    from star_ground.bom_lib.parser import _is_title
 
     assert not _is_title("\u201d x \u201d ca.")
     assert _is_title("\u201c2112\u201d - Dual Combo")
@@ -1542,7 +1542,7 @@ def test_scraps_of_a_drawing_are_no_title() -> None:
 def test_a_switch_pad_label_is_a_letter_or_two() -> None:
     # GuitarPCB DVF's 'A, B C | SPDT On/Off/On' reads as 'C'; PedalPCB Fornicus's
     # 'MOMENTARY | SPST Footswitch' line is prose, not a pad label.
-    from src.bom_lib.parser import _PAD_LETTERS
+    from star_ground.bom_lib.parser import _PAD_LETTERS
 
     assert _PAD_LETTERS.fullmatch("C")
     assert _PAD_LETTERS.fullmatch("EF")

@@ -44,7 +44,7 @@ This project uses [uv](https://github.com/astral-sh/uv) for dependency managemen
 
 ## Running the API
 
-The web frontend talks to the HTTP API in `src/server/`, a FastAPI app over the backend's own API (`src/api.py`). Start it with `just serve-api`, then open `http://127.0.0.1:4501/api/docs` to try each route. These environment variables configure it:
+The web frontend talks to the HTTP API in `src/star_ground/server/`, a FastAPI app over the backend's own API (`src/star_ground/api.py`). Start it with `just serve-api`, then open `http://127.0.0.1:4501/api/docs` to try each route. These environment variables configure it:
 
 | Variable | What it sets |
 | --- | --- |

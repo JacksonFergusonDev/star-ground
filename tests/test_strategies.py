@@ -8,17 +8,17 @@ from unittest.mock import patch
 
 import pytest
 
-from src.bom_lib.enums import ComponentCategory, InputMethod
-from src.bom_lib.errors import BUG_MESSAGE, ErrorKind, FetchError
-from src.bom_lib.fetch import FetchedDocument
-from src.bom_lib.strategies import (
+from star_ground.bom_lib.enums import ComponentCategory, InputMethod
+from star_ground.bom_lib.errors import BUG_MESSAGE, ErrorKind, FetchError
+from star_ground.bom_lib.fetch import FetchedDocument
+from star_ground.bom_lib.strategies import (
     BOMParserContext,
     CSVParserStrategy,
     ManualInputStrategy,
     ParseResult,
     PDFParserStrategy,
 )
-from src.bom_lib.types import ComponentKey, FileUpload
+from star_ground.bom_lib.types import ComponentKey, FileUpload
 
 
 class TestManualInputStrategy:
@@ -314,7 +314,9 @@ class TestBOMParserContext:
         secret.write_bytes(sample_pdf_bytes)
         doc = FetchedDocument(str(secret).encode(), "text/plain", "https://x.test/a")
 
-        with patch("src.bom_lib.strategies.context.fetch_url", return_value=doc):
+        with patch(
+            "star_ground.bom_lib.strategies.context.fetch_url", return_value=doc
+        ):
             result = BOMParserContext().process(
                 InputMethod.FROM_URL, "https://x.test/a", "Linked"
             )
@@ -326,7 +328,7 @@ class TestBOMParserContext:
         context = BOMParserContext()
 
         with patch(
-            "src.bom_lib.strategies.context.fetch_url",
+            "star_ground.bom_lib.strategies.context.fetch_url",
             side_effect=FetchError("example.com took too long to answer."),
         ):
             result = context.process(

@@ -107,7 +107,7 @@ Accuracy is graded against hand-labeled parts lists, not against the parser's ow
 Most BOM tools sort lists alphabetically. **Star Ground** sorts by **physical height**.
 
 - **The Insight:** PCB assembly goes best when low-profile parts (resistors, diodes) are soldered before tall ones (electrolytic capacitors, switches), so the board sits flat on the bench.
-- **The Implementation:** The field manuals (`src/pdf_generator.py`) list parts in that order, optimizing the *human operator's* runtime.
+- **The Implementation:** The field manuals (`src/star_ground/pdf_generator.py`) list parts in that order, optimizing the *human operator's* runtime.
 
 ### 4. Yield Management ("Nerd Economics")
 
@@ -126,7 +126,7 @@ A standard hardware kit (enclosure, jacks, DC jack, footswitch, status LED and i
 
 ### 5. Exact Units
 
-Component values are written many ways (`4k7`, `4.7k`, `4700`, `4,700R`). A `pyparsing` grammar (`src/bom_lib/grammar/`) parses them into exact `Decimal` values, and `Pint` carries their units, so `4k7` and `4700` merge into one line and a voltage is never compared with a resistance.
+Component values are written many ways (`4k7`, `4.7k`, `4700`, `4,700R`). A `pyparsing` grammar (`src/star_ground/bom_lib/grammar/`) parses them into exact `Decimal` values, and `Pint` carries their units, so `4k7` and `4700` merge into one line and a voltage is never compared with a resistance.
 
 ### 6. Transparent Failure States
 
@@ -177,8 +177,8 @@ See [tests/README.md](tests/README.md) for how to run each layer.
 .
 ├── assets/                <-- Images and demo
 ├── examples/              <-- Sample generated build pack
-├── src/
-│   ├── bom_lib/           <-- Domain logic (see src/README.md)
+├── src/star_ground/       <-- The Python package (see its README.md)
+│   ├── bom_lib/           <-- Domain logic
 │   │   ├── strategies/    <-- Input dispatch: PDF, CSV, pasted text, URL
 │   │   ├── fetch.py       <-- Safe URL fetching
 │   │   ├── parser.py      <-- Build document reader
@@ -257,7 +257,7 @@ just serve-web
 
 ### Now: rebuild the frontend, then launch
 
-1. **Replace Streamlit** with a FastAPI service over the backend API (`src/api.py`) and an Astro site with Svelte for the app, in the shared house style of my other sites. This is a redesign, not a port: a build workspace instead of a one-shot form, review warnings shown on the document itself, a catalog of supported circuits, and a bench mode for building. The new app is built and Streamlit is gone; what's left before launch is in [PLAN.md](PLAN.md).
+1. **Replace Streamlit** with a FastAPI service over the backend API (`src/star_ground/api.py`) and an Astro site with Svelte for the app, in the shared house style of my other sites. This is a redesign, not a port: a build workspace instead of a one-shot form, review warnings shown on the document itself, a catalog of supported circuits, and a bench mode for building. The new app is built and Streamlit is gone; what's left before launch is in [PLAN.md](PLAN.md).
 1. **Launch on builder forums**, once the new frontend is up, so feedback is about the app people will keep using. Collect failures, with the document attached, so each can be labeled and added to the regression suite.
 1. **Measure again on unseen documents.** Every held-out test set has now been used for tuning. An honest accuracy figure needs a fresh set: documents users submit, or ones published after this release, set aside before anyone looks at them.
 

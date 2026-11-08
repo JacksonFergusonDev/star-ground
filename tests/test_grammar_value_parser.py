@@ -7,7 +7,7 @@ from typing import cast
 import pyparsing as pp
 import pytest
 
-from src.bom_lib.grammar import (
+from star_ground.bom_lib.grammar import (
     DIGIT,
     MULTIPLIER,
     UNIT,
@@ -105,7 +105,7 @@ def test_greek_mu_is_micro() -> None:
     # Aion FX legacy fonts set '4μ7' with the Greek letter.
     from decimal import Decimal
 
-    from src.bom_lib.utils import parse_value_to_decimal
+    from star_ground.bom_lib.utils import parse_value_to_decimal
 
     assert parse_value_to_decimal("4\u03bc7") == Decimal("0.0000047")
     assert parse_value_to_decimal("10\u03bcF") == Decimal("0.000010")
@@ -114,8 +114,8 @@ def test_greek_mu_is_micro() -> None:
 def test_spelled_out_ohms() -> None:
     from decimal import Decimal
 
-    from src.bom_lib.classifier import categorize_part
-    from src.bom_lib.utils import parse_value_to_decimal
+    from star_ground.bom_lib.classifier import categorize_part
+    from star_ground.bom_lib.utils import parse_value_to_decimal
 
     assert parse_value_to_decimal("47 ohm") == Decimal("47")
     result = categorize_part("R31", "47 ohm")
@@ -124,8 +124,8 @@ def test_spelled_out_ohms() -> None:
 
 
 def test_a_numbered_t_with_a_resistance_is_a_trimmer() -> None:
-    from src.bom_lib.classifier import categorize_part
-    from src.bom_lib.enums import ComponentCategory
+    from star_ground.bom_lib.classifier import categorize_part
+    from star_ground.bom_lib.enums import ComponentCategory
 
     trimmer = categorize_part("T1", "5k")
     transformer = categorize_part("T1", "42TM002")

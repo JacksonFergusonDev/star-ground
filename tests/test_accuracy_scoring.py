@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from src.bom_lib import ComponentCategory
+from star_ground.bom_lib import ComponentCategory
 from tests.accuracy import (
     ActualPart,
     Outcome,

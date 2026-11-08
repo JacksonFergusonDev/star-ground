@@ -19,8 +19,8 @@ from typing import Any
 import pytest
 from fastapi.testclient import TestClient
 
-from src.bom_lib.grammar import value_parser
-from src.server import Settings, create_app
+from star_ground.bom_lib.grammar import value_parser
+from star_ground.server import Settings, create_app
 
 SAMPLES = Path(__file__).parent / "samples"
 DOCUMENTS = [

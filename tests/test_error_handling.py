@@ -2,8 +2,17 @@ from unittest.mock import patch
 
 import pytest
 
-from src.bom_lib import BOMParserContext, FileUpload, InputMethod, parse_pedalpcb_pdf
-from src.bom_lib.errors import BUG_MESSAGE, TooManyPagesError, UnreadablePdfError
+from star_ground.bom_lib import (
+    BOMParserContext,
+    FileUpload,
+    InputMethod,
+    parse_pedalpcb_pdf,
+)
+from star_ground.bom_lib.errors import (
+    BUG_MESSAGE,
+    TooManyPagesError,
+    UnreadablePdfError,
+)
 
 try:
     import pdfplumber
@@ -32,7 +41,7 @@ def test_a_pdf_longer_than_any_build_document_is_not_read(tmp_path):
     """Every page costs seconds of shared CPU, so a huge PDF is refused unread."""
     from fpdf import FPDF
 
-    from src.bom_lib.parser import MAX_PDF_PAGES
+    from star_ground.bom_lib.parser import MAX_PDF_PAGES
 
     pdf = FPDF()
     for _ in range(MAX_PDF_PAGES + 1):
@@ -41,7 +50,7 @@ def test_a_pdf_longer_than_any_build_document_is_not_read(tmp_path):
     pdf.output(str(path))
 
     with (
-        patch("src.bom_lib.parser.read_pages") as read_pages,
+        patch("star_ground.bom_lib.parser.read_pages") as read_pages,
         pytest.raises(TooManyPagesError, match=f"has {MAX_PDF_PAGES + 1} pages"),
     ):
         parse_pedalpcb_pdf(str(path), source_name="Long")
@@ -60,7 +69,7 @@ def test_a_bug_while_parsing_a_pdf_is_reported_not_shown(tmp_path, caplog):
     upload = FileUpload("Fuzz.pdf", bytes(pdf.output()))
 
     with patch(
-        "src.bom_lib.parser.read_pages",
+        "star_ground.bom_lib.parser.read_pages",
         side_effect=TypeError(
             "_eval_standard() missing 1 required positional argument"
         ),

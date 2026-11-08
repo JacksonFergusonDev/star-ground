@@ -2,7 +2,7 @@
 
 import io
 
-from src.bom_lib import (
+from star_ground.bom_lib import (
     ComponentCategory,
     ComponentKey,
     PDFPageExtraction,
@@ -10,8 +10,8 @@ from src.bom_lib import (
     SupportsRead,
     make_component_key,
 )
-from src.bom_lib.enums import InputMethod
-from src.bom_lib.strategies.context import BOMParserContext
+from star_ground.bom_lib.enums import InputMethod
+from star_ground.bom_lib.strategies.context import BOMParserContext
 
 
 def test_make_component_key() -> None:

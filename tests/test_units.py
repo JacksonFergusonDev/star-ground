@@ -2,7 +2,7 @@
 
 import pint
 
-from src.bom_lib.units import ureg
+from star_ground.bom_lib.units import ureg
 
 
 def test_ureg_instance() -> None:

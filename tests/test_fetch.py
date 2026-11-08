@@ -8,9 +8,9 @@ import socket
 
 import pytest
 
-from src.bom_lib import fetch
-from src.bom_lib.errors import FetchError
-from src.bom_lib.fetch import direct_link, fetch_url, is_public
+from star_ground.bom_lib import fetch
+from star_ground.bom_lib.errors import FetchError
+from star_ground.bom_lib.fetch import direct_link, fetch_url, is_public
 
 
 def _resolve(*addresses: str):
