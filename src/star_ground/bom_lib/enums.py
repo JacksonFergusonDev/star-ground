@@ -85,11 +85,8 @@ class InputMethod(Enum):
     FROM_URL = "From URL"
 
 
-class FeedbackRating(Enum):
-    """User feedback sentiment ratings."""
+class FeedbackKind(StrEnum):
+    """What a builder sent: the `feedback.kind` of its log entry."""
 
-    TERRIBLE = "😡"
-    BAD = "😕"
-    NEUTRAL = "😐"
-    GOOD = "🙂"
-    EXCELLENT = "🤩"
+    BUG = "bug"
+    PART = "part"

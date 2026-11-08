@@ -202,34 +202,40 @@ The deploy updates these variables and keeps any others, so settings made by han
 
 ## Feedback and bug reports
 
-When Star Ground hits a bug reading a document, the workspace offers a **Send report** button. It posts the bug's code, the document's name or link, and the builder's note, and the server logs it under the bug's code.
+Builders send two kinds of feedback from the workspace, with no account:
 
-On Cloud Run the API writes its logs as JSON (`src/star_ground/server/logs.py`). Each bug is logged with its traceback as an Error Reporting event, so **Error Reporting** in the Cloud console lists bugs grouped by cause, with counts and the release. To find what a builder reported, search the Logs Explorer for `labels.bug_code="A1B2C3"`: you get the bug's entry and the report's. To be emailed when a new bug appears, turn on notifications on Error Reporting's page once; nothing else needs setting up.
+- **Bug reports.** When Star Ground hits a bug, the workspace offers **Send report**. It posts the bug's code, the document's name or link, and the builder's note.
+- **Part reports.** In the document review, a builder who corrects a part can tell Star Ground: the document's link (or an upload's name and hash), the designator, what was read, what the document prints, and where on the page.
 
-Feedback ratings and part reports go to the "Star Ground Feedback" Google Sheet's first tab and its Parts tab. Both need the sheet's service-account key. Without it, those routes answer 503.
+Neither ever holds the document itself.
 
-Run these yourself, since they handle the key. Save the service account's JSON key as `feedback-key.json`, outside the repository, then:
+On Cloud Run the API writes its logs as JSON (`src/star_ground/server/logs.py`). Each bug is logged with its traceback as an Error Reporting event, and each report as an entry with a `feedback` field whose `kind` is `bug` or `part`. A bug report carries the bug's code as the label `bug_code`, like the bug's own entry.
 
-```bash
-gcloud services enable secretmanager.googleapis.com --project "$PROJECT"
-gcloud secrets create star-ground-feedback --project "$PROJECT" \
-  --replication-policy automatic --data-file feedback-key.json
-gcloud secrets add-iam-policy-binding star-ground-feedback --project "$PROJECT" \
-  --member "serviceAccount:star-ground-run@$PROJECT.iam.gserviceaccount.com" \
-  --role roles/secretmanager.secretAccessor
-gcloud run services update star-ground --project "$PROJECT" --region "$REGION" \
-  --update-secrets STAR_GROUND_FEEDBACK_CREDENTIALS=star-ground-feedback:latest
-rm feedback-key.json
-```
+- **Error Reporting** in the Cloud console lists bugs grouped by cause, with counts and the release. To be emailed when a new one appears, open Error Reporting, choose **Configure notifications** and pick an email channel (make one under **Manage notification channels** if the list is empty).
+- **The log sink `star-ground-feedback`** copies every report and every bug into the BigQuery dataset `feedback`, where they're kept for good. Logs themselves are kept 30 days. The sink writes to one table per day-partitioned log, `feedback.run_googleapis_com_stdout`.
+- **The service account `star-ground-reader`** can query that dataset, read logs and view Error Reporting, and nothing else. It holds no key: the owner's `gcloud` login impersonates it, which is how agents read feedback (see `AGENTS.md`, "Reading feedback and bugs").
 
-The sheet must be shared with the service account's email as an editor, and the key's Google Cloud project needs the Google Sheets and Google Drive APIs enabled: Star Ground finds the sheet by its name through Drive (read-only, names only), then appends rows through Sheets. The Parts tab is created on the first part report. Deploys keep the secret, as they keep other settings made by hand.
-
-Each bug is also written to Cloud Run's log as `Bug <code>: …` with its traceback, so a report can be matched to its log entry:
+They were made once, by hand:
 
 ```bash
-gcloud logging read 'resource.labels.service_name="star-ground" AND textPayload:"Bug A1B2C3"' \
-  --project "$PROJECT" --freshness 30d
+PROJECT=star-ground-api
+gcloud services enable bigquery.googleapis.com clouderrorreporting.googleapis.com --project "$PROJECT"
+bq --project_id="$PROJECT" mk --dataset --location=US "${PROJECT}:feedback"
+gcloud logging sinks create star-ground-feedback \
+  "bigquery.googleapis.com/projects/$PROJECT/datasets/feedback" \
+  --project "$PROJECT" --use-partitioned-tables \
+  --log-filter='resource.type="cloud_run_revision" AND resource.labels.service_name="star-ground" AND (jsonPayload.feedback.kind:* OR jsonPayload."@type"="type.googleapis.com/google.devtools.clouderrorreporting.v1beta1.ReportedErrorEvent")'
+gcloud iam service-accounts create star-ground-reader --project "$PROJECT"
+for role in roles/bigquery.jobUser roles/logging.viewer roles/errorreporting.viewer; do
+  gcloud projects add-iam-policy-binding "$PROJECT" --condition=None \
+    --member "serviceAccount:star-ground-reader@$PROJECT.iam.gserviceaccount.com" --role "$role"
+done
+gcloud iam service-accounts add-iam-policy-binding \
+  "star-ground-reader@$PROJECT.iam.gserviceaccount.com" --project "$PROJECT" \
+  --member "user:$(gcloud config get-value account)" --role roles/iam.serviceAccountTokenCreator
 ```
+
+The dataset's access list then gets two entries (BigQuery's IAM bindings on a dataset need allowlisting, so they're edited as JSON with `bq show --format=prettyjson` and `bq update --source`): `WRITER` for the sink's writer identity (`gcloud logging sinks describe star-ground-feedback --format='value(writerIdentity)'`), and `READER` for `star-ground-reader`.
 
 ## Turning OCR off
 

@@ -219,24 +219,6 @@ export type ErrorKind = 'fetch' | 'unreadable_pdf' | 'too_many_pages' | 'build_n
 export type ExportKind = 'shopping-list' | 'supplier-cart' | 'stock-update' | 'build-book' | 'labels' | 'build-pack';
 
 /**
- * FeedbackIn
- *
- * A rating and comment from the app.
- */
-export type FeedbackIn = {
-    /**
-     * Rating
-     *
-     * 1 (terrible) to 5 (excellent).
-     */
-    rating: number;
-    /**
-     * Comment
-     */
-    comment?: string;
-};
-
-/**
  * HTTPValidationError
  */
 export type HttpValidationError = {
@@ -1179,35 +1161,6 @@ export type ExportApiExportsKindPostResponses = {
     200: unknown;
 };
 
-export type SendFeedbackApiFeedbackPostData = {
-    body: FeedbackIn;
-    path?: never;
-    query?: never;
-    url: '/api/feedback';
-};
-
-export type SendFeedbackApiFeedbackPostErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-    /**
-     * Service Unavailable
-     */
-    503: Problem;
-};
-
-export type SendFeedbackApiFeedbackPostError = SendFeedbackApiFeedbackPostErrors[keyof SendFeedbackApiFeedbackPostErrors];
-
-export type SendFeedbackApiFeedbackPostResponses = {
-    /**
-     * Successful Response
-     */
-    204: void;
-};
-
-export type SendFeedbackApiFeedbackPostResponse = SendFeedbackApiFeedbackPostResponses[keyof SendFeedbackApiFeedbackPostResponses];
-
 export type SendReportApiReportsPostData = {
     body: ReportIn;
     path?: never;
@@ -1270,10 +1223,6 @@ export type SendPartReportApiPartReportsPostErrors = {
      * Validation Error
      */
     422: HttpValidationError;
-    /**
-     * Service Unavailable
-     */
-    503: Problem;
 };
 
 export type SendPartReportApiPartReportsPostError = SendPartReportApiPartReportsPostErrors[keyof SendPartReportApiPartReportsPostErrors];

@@ -5,7 +5,7 @@
   // document itself is never sent. A part counted by value has no designator
   // to correct, so it can only be confirmed.
   import type { CountedPartOut, ReadPartOut } from '../../lib/api';
-  import { readPart, reportsUnavailable, sendPartReport } from '../../lib/server';
+  import { readPart, sendPartReport } from '../../lib/server';
   import type { Check } from '../../lib/workspace.svelte';
 
   let {
@@ -43,7 +43,7 @@
   let tell = $state(true);
   let saving = $state(false);
   let problem = $state('');
-  let sent = $state<'sent' | 'unavailable' | null>(null);
+  let sent = $state<'sent' | null>(null);
 
   function edit(): void {
     typed = value;
@@ -70,20 +70,15 @@
         );
       }
       if (tell) {
-        try {
-          await sendPartReport({
-            document,
-            ref: at.ref,
-            read,
-            correction: changed ? typed.trim() : null,
-            location: at.location,
-            comment: note.trim(),
-          });
-          sent = 'sent';
-        } catch (e) {
-          if (!reportsUnavailable(e)) throw e;
-          sent = 'unavailable';
-        }
+        await sendPartReport({
+          document,
+          ref: at.ref,
+          read,
+          correction: changed ? typed.trim() : null,
+          location: at.location,
+          comment: note.trim(),
+        });
+        sent = 'sent';
       }
       editing = false;
     } catch (e) {
@@ -140,8 +135,6 @@
   {/each}
   {#if sent === 'sent'}
     <p class="note" role="status">Report sent. Thank you: it helps the parser get this right.</p>
-  {:else if sent === 'unavailable'}
-    <p class="note" role="status">This server can't take reports, so only your copy changed.</p>
   {/if}
 
   {#if editing && designated}
