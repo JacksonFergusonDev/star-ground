@@ -14,7 +14,11 @@ from typing import cast
 
 import pytest
 
-from star_ground.bom_lib.classifier import categorize_part, normalize_value_to_quantity
+from star_ground.bom_lib.classifier import (
+    categorize_part,
+    key_quantity,
+    normalize_value_to_quantity,
+)
 from star_ground.bom_lib.enums import ComponentCategory, ComponentSpec
 from star_ground.bom_lib.manager import sort_inventory
 from star_ground.bom_lib.sourcing import get_buy_details, get_spec_type
@@ -329,25 +333,16 @@ def test_normalize_value_to_quantity_invalid() -> None:
 # --- Inventory val_qty Tests ---
 
 
-def test_inventory_add_part_val_qty() -> None:
-    """Verifies that Inventory.add_part populates val_qty correctly."""
-    inv = Inventory()
-    k_res = ComponentKey(ComponentCategory.RESISTORS, "10k")
-    k_cap = ComponentKey(ComponentCategory.CAPACITORS, "100n")
-    k_ic = ComponentKey(ComponentCategory.ICS, "TL072")
-    k_unk = ComponentKey(ComponentCategory.UNKNOWN, "RawPart")
-
-    inv.add_part("Test", k_res, "R1")
-    assert inv[k_res].val_qty == ohms("10000")
-
-    inv.add_part("Test", k_cap, "C1")
-    assert inv[k_cap].val_qty == farads("1e-7")
-
-    inv.add_part("Test", k_ic, "U1")
-    assert inv[k_ic].val_qty is None
-
-    inv.add_part("Test", k_unk, "")
-    assert inv[k_unk].val_qty is None
+def test_key_quantity() -> None:
+    """A part's value with its unit, derived from its key."""
+    assert key_quantity(ComponentKey(ComponentCategory.RESISTORS, "10k")) == ohms(
+        "10000"
+    )
+    assert key_quantity(ComponentKey(ComponentCategory.CAPACITORS, "100n")) == farads(
+        "1e-7"
+    )
+    assert key_quantity(ComponentKey(ComponentCategory.ICS, "TL072")) is None
+    assert key_quantity(ComponentKey(ComponentCategory.UNKNOWN, "10k")) is None
 
 
 # --- sort_inventory Tests ---

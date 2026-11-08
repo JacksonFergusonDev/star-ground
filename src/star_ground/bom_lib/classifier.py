@@ -7,6 +7,7 @@ values to ensure consistent matching between BOMs and Inventory.
 
 import re
 from decimal import Decimal
+from functools import cache
 
 from star_ground.bom_lib import constants
 from star_ground.bom_lib.designators import parse_designator
@@ -105,6 +106,25 @@ def normalize_value_to_quantity(
     if category == ComponentCategory.CAPACITORS:
         return farads(dec)
     return dec
+
+
+@cache
+def key_quantity(key: ComponentKey) -> Value | Decimal | None:
+    """A part's value with its physical unit, for sorting and sourcing.
+
+    Args:
+        key: The part.
+
+    Returns:
+        The value as `normalize_value_to_quantity` reads it, or None for an
+        unknown part or a value with no number.
+    """
+    if key.category == ComponentCategory.UNKNOWN:
+        return None
+    try:
+        return normalize_value_to_quantity(key.category, key.value)
+    except ValueError:
+        return None
 
 
 _RESTATED = re.compile(r"\(\s*([^()\s]+)\s*\)\s*")

@@ -28,7 +28,7 @@ def _page(*lines: tuple[float, list[str]]) -> PDFPageExtraction:
         for top, texts in lines
         for k, text in enumerate(texts)
     ]
-    return {"tables": [], "text": None, "words": words}
+    return PDFPageExtraction(tables=[], text="", words=words)
 
 
 def _parts(*parts: tuple[str, str]) -> Inventory:

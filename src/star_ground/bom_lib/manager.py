@@ -10,6 +10,7 @@ This module acts as the "Controller" for the BOM library. It handles:
 from dataclasses import replace
 from decimal import Decimal
 
+from star_ground.bom_lib.classifier import key_quantity
 from star_ground.bom_lib.enums import ComponentCategory
 from star_ground.bom_lib.types import (
     ComponentKey,
@@ -86,10 +87,10 @@ def sort_inventory(inventory: Inventory) -> list[tuple[ComponentKey, PartData]]:
     def sort_key(
         item: tuple[ComponentKey, PartData],
     ) -> tuple[int, Decimal, str]:
-        key, data = item
+        key, _ = item
         rank = pmap.get(key.category, 100)
 
-        val_qty = data.val_qty
+        val_qty = key_quantity(key)
         if isinstance(val_qty, Value):
             mag = val_qty.magnitude
         elif isinstance(val_qty, Decimal):

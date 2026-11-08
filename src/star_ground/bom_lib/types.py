@@ -10,11 +10,9 @@ import re
 from collections import UserDict, defaultdict
 from collections.abc import Mapping
 from dataclasses import dataclass, field, replace
-from decimal import Decimal
 from typing import (
     Any,
     NamedTuple,
-    NotRequired,
     Protocol,
     TypedDict,
     runtime_checkable,
@@ -29,7 +27,6 @@ from star_ground.bom_lib.enums import (
     ParseWarningKind,
 )
 from star_ground.bom_lib.errors import ReadError
-from star_ground.bom_lib.units import Value
 
 
 @runtime_checkable
@@ -255,6 +252,18 @@ class ReadingStats:
     errors: list[ReadError] = field(default_factory=list)
     warnings: list[ParseWarning] = field(default_factory=list)
 
+    def absorb(self, other: ReadingStats) -> None:
+        """Adds another reading's counts, leftovers, errors and warnings to these.
+
+        Args:
+            other: The reading to add, left unchanged.
+        """
+        self.lines_read += other.lines_read
+        self.parts_found += other.parts_found
+        self.residuals.extend(other.residuals)
+        self.errors.extend(other.errors)
+        self.warnings.extend(other.warnings)
+
 
 @dataclass(slots=True)
 class PartData:
@@ -262,9 +271,6 @@ class PartData:
 
     Attributes:
         qty: Total quantity required across all projects.
-        val_qty: The cached physical quantity or Decimal value of the component
-                 (10 kΩ for a '10k' resistor).
-                 None if the value is non-numeric (e.g. 'TL072').
         refs: List of designators (e.g., ['R1', 'R2']).
         sources: Mapping of project names to the specific refs they contributed.
         included: How many of `qty` come with a PCB ('IC3  24LC32A *Included',
@@ -275,7 +281,6 @@ class PartData:
     """
 
     qty: int = 0
-    val_qty: Value | Decimal | None = None
     refs: list[str] = field(default_factory=list)
     sources: defaultdict[str, list[str]] = field(
         default_factory=lambda: defaultdict(list)
@@ -474,12 +479,13 @@ class Picture:
     bottom: float
 
 
-class PDFPageExtraction(TypedDict):
+@dataclass(frozen=True, slots=True)
+class PDFPageExtraction:
     """Extracted text and tabular layout from a single PDF page.
 
     Attributes:
         tables: List of extracted tables (each table is rows of string cells or None).
-        text: Raw extracted text string from the page.
+        text: The page's text, empty when it has none.
         words: Positioned words, used for column-aware layout analysis.
         labels: Words printed in the margin beside a table, which name parts
             of it ('Standard RAT' beside one build's rows); OCR keeps them
@@ -491,11 +497,11 @@ class PDFPageExtraction(TypedDict):
     """
 
     tables: list[list[list[str | None]]]
-    text: str | None
+    text: str
     words: list[PDFWord]
-    labels: NotRequired[list[PDFWord]]
-    pictures: NotRequired[list[Picture]]
-    marked: NotRequired[list[tuple[str, str]]]
+    labels: list[PDFWord] = field(default_factory=list)
+    pictures: list[Picture] = field(default_factory=list)
+    marked: list[tuple[str, str]] = field(default_factory=list)
 
 
 @dataclass(frozen=True, slots=True)
@@ -594,20 +600,6 @@ class Inventory(UserDict[ComponentKey, PartData]):
         """
         part = self[key]
 
-        # Initialize cached quantity if this is a new part entry
-        if part.qty == 0:
-            if key.category != ComponentCategory.UNKNOWN:
-                try:
-                    from star_ground.bom_lib.classifier import (
-                        normalize_value_to_quantity,
-                    )
-
-                    part.val_qty = normalize_value_to_quantity(key.category, key.value)
-                except ValueError:
-                    part.val_qty = None
-            else:
-                part.val_qty = None
-
         part.qty += qty
 
         if ref:
@@ -667,8 +659,6 @@ class Inventory(UserDict[ComponentKey, PartData]):
             multiplier: Multiplication factor for the incoming inventory quantities.
         """
         for key, data in other.items():
-            if self[key].val_qty is None:
-                self[key].val_qty = data.val_qty
             self[key].qty += data.qty * multiplier
             self[key].included += data.included * multiplier
             for src, n in data.counted.items():

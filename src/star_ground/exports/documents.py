@@ -12,6 +12,7 @@ from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from decimal import Decimal
 
+from star_ground.bom_lib.classifier import key_quantity
 from star_ground.bom_lib.constants import INJECTED_SUFFIX
 from star_ground.bom_lib.enums import ComponentCategory, ComponentSpec
 from star_ground.bom_lib.sourcing import get_spec_type
@@ -373,7 +374,7 @@ def _project_parts(kit: Inventory, label: str) -> list[_ProjectPart]:
         if refs or counted:
             refs = [r.removesuffix(INJECTED_SUFFIX) for r in refs]
             parts.append(
-                _ProjectPart(key, data.val_qty, tuple(refs), len(refs) + counted)
+                _ProjectPart(key, key_quantity(key), tuple(refs), len(refs) + counted)
             )
     return parts
 
@@ -418,22 +419,18 @@ def project_checklist(kit: Inventory, project: BuiltProject) -> ProjectChecklist
     )
 
 
-def shopping_groups(
-    lines: Sequence[ShoppingLine], kit: Inventory
-) -> tuple[ShoppingGroup, ...]:
+def shopping_groups(lines: Sequence[ShoppingLine]) -> tuple[ShoppingGroup, ...]:
     """The shopping list grouped by category, in its own order.
 
     Args:
         lines: The shopping list.
-        kit: The master list's parts, for each value's unit.
 
     Returns:
         One group per category.
     """
     groups: dict[str, list[ShoppingRow]] = {}
     for line in lines:
-        data = kit.get(ComponentKey(line.category, line.part))
-        quantity = data.val_qty if data else None
+        quantity = key_quantity(ComponentKey(line.category, line.part))
         groups.setdefault(line.category.value, []).append(
             ShoppingRow(
                 part=readable_part(line.category, line.part, quantity),
@@ -471,7 +468,7 @@ def build_book(
         generated=f"{generated.day} {generated:%B %Y}",
         version=version,
         projects=tuple(project_checklist(kit, p) for p in unique_projects(projects)),
-        shopping=shopping_groups(lines, kit),
+        shopping=shopping_groups(lines),
         lines_to_buy=sum(1 for line in lines if line.buy_qty > 0),
         pieces_to_buy=sum(line.buy_qty for line in lines),
         files=tuple(files),

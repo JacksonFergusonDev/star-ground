@@ -680,9 +680,9 @@ def _table_entries(
     for page_no, data in enumerate(pages_data):
         if only_pages is not None and page_no not in only_pages:
             continue
-        heading = _SLASH_VERSIONS.search(data["text"] or "")
+        heading = _SLASH_VERSIONS.search(data.text)
         versions = (heading.group(1), heading.group(2)) if heading else None
-        for table in data["tables"]:
+        for table in data.tables:
             if not table:
                 continue
             table_no += 1
@@ -875,7 +875,7 @@ def _table_entries(
                             )
                         )
                     follows_or = False
-            if _is_change_list(table_entries, seen_refs, data["text"] or ""):
+            if _is_change_list(table_entries, seen_refs, data.text):
                 continue
             seen_refs.update(e.ref for e in table_entries)
             entries += table_entries
@@ -896,7 +896,7 @@ def _continues_list(data: PDFPageExtraction) -> bool:
     """Whether a page opens with ruled tables of 'designator | value' rows."""
     rows = [
         [str(c).strip() for c in row if c and str(c).strip()]
-        for table in data["tables"]
+        for table in data.tables
         for row in table
     ]
     rows = [r for r in rows if r]
@@ -1480,7 +1480,7 @@ def _text_table_entries(
     seen: Counter[str] = Counter()
     noted: list[tuple[str, str, str]] = []
     for page_no, data in enumerate(pages_data):
-        for row in find_bom_rows(data["words"]):
+        for row in find_bom_rows(data.words):
             stats.lines_read += 1
             noted.append((row.refs, row.value, row.notes))
             value, hint = row.value, None
@@ -1571,7 +1571,7 @@ def _untyped_refs(stats: ReadingStats, refs: list[str], value: str) -> list[str]
 
 def _without_note_cells(data: PDFPageExtraction, text: str) -> str:
     """Page text with typed tables' NOTES cells removed (see `bom_note_cells`)."""
-    for cell in bom_note_cells(data["words"]):
+    for cell in bom_note_cells(data.words):
         text = text.replace(cell.text, " ", 1)
     return text
 
@@ -1658,7 +1658,7 @@ def _layout_entries(
     """
     entries: list[Entry] = []
     found = {
-        page_no: find_listings(data["words"])
+        page_no: find_listings(data.words)
         for page_no, data in enumerate(pages_data)
         if only_pages is None or page_no in only_pages
     }
@@ -1667,7 +1667,7 @@ def _layout_entries(
     # its layout or schematic drawing.
     dashed = sum(
         listing.dashed for listings in found.values() for listing in listings
-    ) + sum(counted_rows(page_lines(pages_data[k]["words"])) for k in found)
+    ) + sum(counted_rows(page_lines(pages_data[k].words)) for k in found)
     if dashed >= _DASHED_DOCUMENT:
         found = {
             page_no: [lst for lst in listings if lst.dashed]
@@ -1683,7 +1683,7 @@ def _layout_entries(
         # side on a line ('R2 | 1M | C2 | 220n' with its shaded rows merged
         # into 'R1 1M', NostalgiTone), so numbered designators other than the
         # row's own value are still read there.
-        lines = page_lines(data["words"])
+        lines = page_lines(data.words)
         # Labels compare in upper case: a grid reads 'Pot' as 'POT'.
         upper_values = {ref.upper(): value for ref, value in table_values.items()}
         table_lines = {
@@ -1768,7 +1768,7 @@ def _layout_entries(
                     check_unclassified_row(stats, ref, value)
                     continue
                 entries.append(entry)
-        entries += _counted_entries(page_no, data["words"], stats)
+        entries += _counted_entries(page_no, data.words, stats)
     return entries
 
 
@@ -2311,22 +2311,22 @@ def read_pages(
     # --- BUILDS: variants and options ---
     pages = [
         PageContext(
-            page_lines(data["words"]),
-            data["text"] or "",
-            tuple(data.get("labels", [])),
+            page_lines(data.words),
+            data.text,
+            tuple(data.labels),
         )
         for data in pages_data
     ]
     plan = plan_builds(entries, pages)
     inventory, variants, options, union = _assemble_builds(plan, source_name, stats)
-    supplied = included_refs([data["text"] or "" for data in pages_data])
+    supplied = included_refs([data.text for data in pages_data])
     for parts in (inventory, *(v.inventory for v in variants)):
         _mark_included(parts, supplied)
 
     # --- SELF-CHECK ---
     # Every designator listed in the document must be accounted for, in
     # some build or option.
-    page_texts = [data["text"] or "" for data in pages_data]
+    page_texts = [data.text for data in pages_data]
     # Like the readers, a text bill of materials bounds where parts are
     # listed: Q-Tune's build steps mention 'the X1 connector area'.
     listed_texts = [
@@ -2357,8 +2357,8 @@ def read_pages(
             for k, data in enumerate(pages_data)
             if bom_pages is None or k in bom_pages
             for ref in [
-                *valueless_refs(data["words"]),
-                *bom_valueless_refs(data["words"]),
+                *valueless_refs(data.words),
+                *bom_valueless_refs(data.words),
             ]
             if not variants or ref.upper() not in read_on.get(k, set())
         ],
@@ -2367,12 +2367,12 @@ def read_pages(
     )
     if tables_only:
         check_unreadable_rows(
-            [row for data in pages_data for row in unreadable_rows(data["words"])],
+            [row for data in pages_data for row in unreadable_rows(data.words)],
             stats,
         )
     check_footnotes(page_texts, stats)
     check_numbered_footnotes(
-        [data.get("marked", []) for data in pages_data], page_texts, union, stats
+        [data.marked for data in pages_data], page_texts, union, stats
     )
     # A document read as several builds may describe one more in its notes
     # (Aion FX legacy Aurora: Ross and Dyna Comp columns, then the JangleBox's
@@ -2387,7 +2387,7 @@ def read_pages(
     pictured = {
         k: found
         for k, data in enumerate(pages_data)
-        if (found := pictured_lists(data["words"], data.get("pictures", [])))
+        if (found := pictured_lists(data.words, data.pictures))
     }
     refs_by_page: dict[int, set[str]] = {}
     for e in entries:
@@ -2399,9 +2399,9 @@ def read_pages(
             read.setdefault(e.ref, e.value)
         for k, data in enumerate(pages_data):
             # A schematic's 'REF value' labels are a drawing (Aion FX Procyon).
-            if k in bom_pages or is_schematic_page(data["text"] or ""):
+            if k in bom_pages or is_schematic_page(data.text):
                 continue
-            listings = find_listings(data["words"])
+            listings = find_listings(data.words)
             columns = Counter(round(listing.x0) for listing in listings)
             # A table, not labels scattered over a schematic or board render.
             if len(listings) >= _OTHER_LIST_MIN and max(columns.values()) >= (
@@ -2509,9 +2509,7 @@ def _title(
     """
     # A cover page of warnings comes before the title page (Aion FX
     # legacy Blueshift: 'WARNING / DISCLAIMER').
-    first = int(
-        len(pdf.pages) > 1 and bool(_DISCLAIMER.match(pages_data[0]["text"] or ""))
-    )
+    first = int(len(pdf.pages) > 1 and bool(_DISCLAIMER.match(pages_data[0].text)))
     if first >= len(pdf.pages) or first in misread:
         return None
     words = _without_overprint(pdf.pages[first]).extract_words(extra_attrs=["size"])
@@ -2586,18 +2584,18 @@ def parse_pedalpcb_pdf(filepath: str, source_name: str) -> ParseResult:
                 # Read as an image page instead (see `ocr.py`).
                 check_misread_text(stats, number)
                 misread.add(number)
-                pages_data.append({"tables": [], "text": "", "words": []})
+                pages_data.append(PDFPageExtraction(tables=[], text="", words=[]))
                 continue
             pages_data.append(
-                {
+                PDFPageExtraction(
                     # Same word gap as the layout reader: kerned cells
                     # otherwise run together ('3mmRedLED,Diffused').
-                    "tables": page.extract_tables({"text_x_tolerance": _WORD_GAP_PT}),
-                    "text": page.extract_text(),
-                    "words": page_words,
-                    "pictures": _pictures(raw_page),
-                    "marked": marked,
-                }
+                    tables=page.extract_tables({"text_x_tolerance": _WORD_GAP_PT}),
+                    text=page.extract_text() or "",
+                    words=page_words,
+                    pictures=_pictures(raw_page),
+                    marked=marked,
+                )
             )
 
         # --- PHASE 2: TITLE EXTRACTION ---
