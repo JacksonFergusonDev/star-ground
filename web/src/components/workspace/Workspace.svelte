@@ -6,26 +6,28 @@
   // lib/workspace.svelte.ts).
   import { onMount, tick } from 'svelte';
   import type { ExportKind } from '../../lib/api';
-  import type { Download } from '../../lib/server';
-  import { bugOf, exportFile, linkedPdf, masterList, readDocument, warmUp } from '../../lib/server';
+  import type { Notice } from '../../lib/projects';
+  import {
+    addFromCatalog,
+    addFromShareLink,
+    addProject,
+    documentOf,
+    exportList as exportFile,
+    readProject,
+    refreshListing,
+  } from '../../lib/projects';
   import type { View } from '../../lib/router.svelte';
   import { buildHref, checkHref, followAppLinks, router, views } from '../../lib/router.svelte';
-  import type { SharedProject } from '../../lib/share';
-  import { sharedProjects } from '../../lib/share';
-  import type { Added, Card } from '../../lib/workspace.svelte';
+  import type { Download } from '../../lib/server';
+  import { warmUp } from '../../lib/server';
+  import type { Added } from '../../lib/workspace.svelte';
   import {
     blocker,
-    builds,
     count,
-    files,
     flagged,
-    keepListing,
     listing,
-    listingCurrent,
-    listingKey,
     projectOf,
     ready,
-    request,
     reviewable,
     workspace as pageWorkspace,
   } from '../../lib/workspace.svelte';
@@ -86,204 +88,27 @@
     });
   });
 
-  // The document's bytes: an upload from this browser, a link through the API.
-  async function load(card: Card): Promise<ArrayBuffer> {
-    if (card.source.kind === 'url') return linkedPdf(card.source.url);
-    const file = await files.get(card.id);
-    if (!file) throw new Error('The uploaded file is no longer stored here. Add it again.');
-    return file.arrayBuffer();
-  }
-
-  // A catalog build's "Add to build" opens `/app/?catalog=<publisher>/<name>`.
-  // It's added once: the address loses the parameter, so a reload doesn't add it again.
   // What arriving by a catalog or share link did, or why it couldn't.
-  let notice = $state<{ message: string; problem: boolean } | null>(null);
-  async function addFromCatalog(): Promise<void> {
-    const address = new URL(window.location.href);
-    const id = address.searchParams.get('catalog');
-    if (id === null) return;
-    address.searchParams.delete('catalog');
-    router.replace(address.pathname + address.search + address.hash);
-    try {
-      if (!/^[a-z]+\/[a-z0-9-]+$/.test(id)) throw new Error(id);
-      const response = await fetch(`/catalog/${id}.json`);
-      if (!response.ok) throw new Error(id);
-      const build = (await response.json()) as { title: string; document: string };
-      await add({ kind: 'url', url: build.document, name: build.title, catalog: id });
-    } catch {
-      notice = {
-        message: "That catalog build couldn't be found. It may have been taken out of the catalog.",
-        problem: true,
-      };
-    }
-  }
-
-  // A share link (`/app/#share=…`) adds its projects beside the ones already here.
-  async function addFromShareLink(): Promise<void> {
-    let projects: SharedProject[] | null;
-    try {
-      projects = await sharedProjects(window.location.hash);
-    } catch (e) {
-      notice = { message: (e as Error).message, problem: true };
-      projects = [];
-    }
-    if (projects === null) return;
-    router.replace(window.location.pathname + window.location.search);
-    for (const project of projects) addShared(project);
-    if (projects.length)
-      notice = {
-        message: `Added ${count(projects.length, 'project')} from a shared link.`,
-        problem: false,
-      };
-  }
-
-  function addShared(project: SharedProject): void {
-    const reading = project.source.kind === 'url';
-    const card = workspace.add(
-      { name: project.name, count: 1, source: project.source },
-      reading ? { state: 'reading' } : undefined,
-    );
-    workspace.setCount(card, project.count);
-    card.checks[project.variant ?? ''] = Object.fromEntries(
-      project.corrections.map(({ ref, ...check }) => [ref, check]),
-    );
-    if (!reading) return;
-    // The build is chosen once the document is read and its builds are known.
-    void read(card.id, project.useOcr).then(() => {
-      const current = workspace.find(card.id);
-      if (current && project.variant && builds(current).includes(project.variant))
-        current.variant = project.variant;
-    });
-  }
+  let notice = $state<Notice | null>(null);
+  const show = (arrived: Notice | null): void => {
+    if (arrived) notice = arrived;
+  };
 
   onMount(() => {
     warmUp();
-    void addFromCatalog();
-    void addFromShareLink();
+    void addFromCatalog(workspace).then(show);
+    void addFromShareLink(workspace).then(show);
     return followAppLinks();
   });
 
-  const stem = (name: string): string => name.replace(/\.[^.]+$/, '');
+  const add = (added: Added): Promise<void> => addProject(workspace, added);
+  const read = (id: string, ocr: boolean): Promise<void> => readProject(workspace, id, ocr);
+  const exportList = (kind: ExportKind, excel: boolean): Promise<Download> =>
+    exportFile(workspace, kind, excel);
 
-  async function read(id: string, ocr: boolean): Promise<void> {
-    const card = workspace.find(id);
-    if (!card || (card.source.kind !== 'upload' && card.source.kind !== 'url')) return;
-    card.read = { state: 'reading' };
-    try {
-      let source: { file: File } | { url: string };
-      if (card.source.kind === 'upload') {
-        const file = await files.get(id);
-        if (!file) throw new Error('The uploaded file is no longer stored here. Add it again.');
-        source = { file };
-      } else {
-        source = { url: card.source.url };
-      }
-      const reading = await readDocument(source, ocr, (event) => {
-        const current = workspace.find(id);
-        if (!current) return;
-        current.read =
-          event.event === 'queued'
-            ? { state: 'queued', position: event.position }
-            : { state: 'reading' };
-      });
-      const current = workspace.find(id);
-      if (!current) return;
-      // A name still as it was added takes the title the document prints.
-      const added = current.source.kind === 'upload' ? stem(current.source.fileName) : 'Link';
-      if (reading.title && current.name === added) current.name = reading.title;
-      current.reading = reading;
-      if (ocr && reading.ocr?.has_parts) current.useOcr = true;
-      current.read = { state: 'ready' };
-    } catch (e) {
-      const current = workspace.find(id);
-      if (current)
-        current.read = { state: 'failed', message: (e as Error).message, bugCode: bugOf(e) };
-    }
-  }
-
-  async function add(added: Added): Promise<void> {
-    switch (added.kind) {
-      case 'paste':
-        workspace.add({ name: added.name, count: 1, source: { kind: 'paste', text: added.text } });
-        break;
-      case 'url': {
-        const card = workspace.add(
-          {
-            name: added.name ?? 'Link',
-            count: 1,
-            source: { kind: 'url', url: added.url, catalog: added.catalog },
-          },
-          { state: 'reading' },
-        );
-        void read(card.id, false);
-        break;
-      }
-      case 'upload': {
-        const card = workspace.add(
-          {
-            name: stem(added.file.name),
-            count: 1,
-            source: { kind: 'upload', fileName: added.file.name },
-          },
-          { state: 'reading' },
-        );
-        await files.put(card.id, added.file);
-        void read(card.id, false);
-        break;
-      }
-    }
-  }
-
-  // The file a reading's `document` names, for a server that no longer has it.
-  async function fileFor(document: string): Promise<File | undefined> {
-    const card = workspace.cards.find((c: Card) => c.reading?.document === document);
-    return card ? files.get(card.id) : undefined;
-  }
-
-  // Exports the list as the cards stand now, with the same requests the list makes.
-  function exportList(kind: ExportKind, excel: boolean): Promise<Download> {
-    const next = request(workspace.cards, workspace.options);
-    if (!next) return Promise.reject(new Error('Add a project first.'));
-    return exportFile(kind, excel, next, fileFor, workspace.stock);
-  }
-
-  // Rebuild the shopping list whenever what it's built from changes, after a
-  // short pause so typing a name or a count sends one request, not one per
-  // keystroke. A newer request supersedes an older one still in flight. A
-  // change the list doesn't depend on (a paint, a part placed) sends nothing,
-  // and a reload reuses the list kept from the last visit (lib/workspace).
-  let sequence = 0;
-  $effect(() => {
-    // Saving reads every card deeply, so any change re-runs this.
-    workspace.save();
-    const next = request(workspace.cards, workspace.options);
-    const ids = ready(workspace.cards).map((c) => c.id);
-    const stock = workspace.stock;
-    const mine = ++sequence;
-    if (!next) {
-      Object.assign(listing, { result: null, error: null, updating: false, key: null });
-      return;
-    }
-    const key = listingKey(next, stock);
-    if (listingCurrent(key)) {
-      listing.updating = false;
-      return;
-    }
-    listing.updating = true;
-    const timer = setTimeout(() => {
-      masterList(next, fileFor, stock)
-        .then((r) => {
-          if (mine === sequence) keepListing(key, r, ids);
-        })
-        .catch((e: Error) => {
-          if (mine === sequence) listing.error = { message: e.message, bugCode: bugOf(e) };
-        })
-        .finally(() => {
-          if (mine === sequence) listing.updating = false;
-        });
-    }, 400);
-    return () => clearTimeout(timer);
-  });
+  // Rebuild the shopping list whenever what it's built from changes (see
+  // `refreshListing`); there's no Generate button.
+  $effect(() => refreshListing(workspace));
 </script>
 
 {#snippet arrow()}<Icon name="arrow-right" size={14} />{/snippet}
@@ -331,7 +156,7 @@
             {card}
             {project}
             focus={router.param('part')}
-            load={() => load(card)}
+            load={() => documentOf(card)}
             onCheck={(ref, check) => workspace.check(card, ref, check)}
           />
         {/key}
@@ -347,7 +172,7 @@
           {card}
           {project}
           display={workspace.display}
-          load={reviewable(card) ? () => load(card) : null}
+          load={reviewable(card) ? () => documentOf(card) : null}
           onPlace={(ref, placed) => workspace.place(card, ref, placed)}
           onStartOver={() => workspace.startOver(card)}
         />
