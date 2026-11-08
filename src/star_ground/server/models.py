@@ -3,7 +3,7 @@
 These are the API's contract with the frontend: the OpenAPI schema generated
 from them (`openapi.json`) is what the frontend's TypeScript types come from.
 They translate to and from the backend's own types (`star_ground.api`, `star_ground.bom_lib`)
-and never expose those types' internals, such as `pint` quantities or file
+and never expose those types' internals, such as component values or file
 bytes.
 """
 

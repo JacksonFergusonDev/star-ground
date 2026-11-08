@@ -20,8 +20,6 @@ from typing import (
     runtime_checkable,
 )
 
-import pint
-
 from star_ground.bom_lib.enums import (
     ComponentCategory,
     ComponentOrigin,
@@ -31,6 +29,7 @@ from star_ground.bom_lib.enums import (
     ParseWarningKind,
 )
 from star_ground.bom_lib.errors import ReadError
+from star_ground.bom_lib.units import Value
 
 
 @runtime_checkable
@@ -264,7 +263,7 @@ class PartData:
     Attributes:
         qty: Total quantity required across all projects.
         val_qty: The cached physical quantity or Decimal value of the component
-                 (e.g. 10000 * ureg.ohm for '10k' Resistors).
+                 (10 kΩ for a '10k' resistor).
                  None if the value is non-numeric (e.g. 'TL072').
         refs: List of designators (e.g., ['R1', 'R2']).
         sources: Mapping of project names to the specific refs they contributed.
@@ -276,7 +275,7 @@ class PartData:
     """
 
     qty: int = 0
-    val_qty: pint.Quantity[Any] | Decimal | None = None
+    val_qty: Value | Decimal | None = None
     refs: list[str] = field(default_factory=list)
     sources: defaultdict[str, list[str]] = field(
         default_factory=lambda: defaultdict(list)

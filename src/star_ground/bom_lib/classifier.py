@@ -7,15 +7,12 @@ values to ensure consistent matching between BOMs and Inventory.
 
 import re
 from decimal import Decimal
-from typing import Any
-
-import pint
 
 from star_ground.bom_lib import constants
 from star_ground.bom_lib.designators import parse_designator
 from star_ground.bom_lib.enums import ComponentCategory
 from star_ground.bom_lib.types import CategorizationResult, ComponentKey
-from star_ground.bom_lib.units import ureg
+from star_ground.bom_lib.units import Value, farads, ohms
 from star_ground.bom_lib.utils import (
     float_to_search_string,
     parse_value_to_decimal,
@@ -79,7 +76,7 @@ def _capacitor_head(value: str) -> str:
 
 def normalize_value_to_quantity(
     category: ComponentCategory, val_raw: str
-) -> pint.Quantity[Any] | Decimal | None:
+) -> Value | Decimal | None:
     """Attaches the correct physical unit to the parsed value based on category.
 
     Args:
@@ -87,7 +84,7 @@ def normalize_value_to_quantity(
         val_raw: The raw value string from the BOM (e.g., "10k", "100n").
 
     Returns:
-        A pint.Quantity with ureg.ohm for Resistors, ureg.farad for Capacitors,
+        A `Value` in ohms for resistors or farads for capacitors,
         a Decimal for other categories with numeric values, or None if parsing fails.
     """
     clean_val = val_raw.strip()
@@ -104,9 +101,9 @@ def normalize_value_to_quantity(
         return None
 
     if category == ComponentCategory.RESISTORS:
-        return ureg.Quantity(dec, ureg.ohm)
+        return ohms(dec)
     if category == ComponentCategory.CAPACITORS:
-        return ureg.Quantity(dec, ureg.farad)
+        return farads(dec)
     return dec
 
 

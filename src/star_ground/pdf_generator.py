@@ -17,9 +17,7 @@ from collections import defaultdict
 from collections.abc import Sequence
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Any
 
-import pint
 from fpdf import FPDF
 from fpdf.enums import XPos, YPos
 
@@ -35,6 +33,7 @@ from star_ground.bom_lib import (
     get_spec_type,
 )
 from star_ground.bom_lib.stages import build_stage, stage_order
+from star_ground.bom_lib.units import Value
 
 logger = logging.getLogger(__name__)
 
@@ -403,7 +402,7 @@ class ProjectPartItem:
     category: ComponentCategory
     value: str
     unique_refs: list[str]
-    val_qty: pint.Quantity[Any] | Decimal | None = None
+    val_qty: Value | Decimal | None = None
     counted: int = 0
 
     @property

@@ -12,7 +12,6 @@ Part of Phase 0 safety net ahead of Milestone 2 grammar refactoring.
 from decimal import Decimal
 from typing import cast
 
-import pint
 import pytest
 
 from star_ground.bom_lib.classifier import categorize_part, normalize_value_to_quantity
@@ -24,7 +23,7 @@ from star_ground.bom_lib.types import (
     ComponentKey,
     Inventory,
 )
-from star_ground.bom_lib.units import ureg
+from star_ground.bom_lib.units import Unit, Value, farads, ohms
 from star_ground.bom_lib.utils import (
     expand_refs,
     natural_sort_key,
@@ -298,18 +297,18 @@ def test_natural_sort_key_list_sorting() -> None:
 
 
 def test_normalize_value_to_quantity_resistors() -> None:
-    """Verifies that Resistors are parsed with ureg.ohm units."""
+    """Resistors are read as values in ohms."""
     qty = normalize_value_to_quantity(ComponentCategory.RESISTORS, "10k")
-    assert isinstance(qty, pint.Quantity)
-    assert qty.units == ureg.ohm
+    assert isinstance(qty, Value)
+    assert qty.unit == Unit.OHM
     assert qty.magnitude == Decimal("10000")
 
 
 def test_normalize_value_to_quantity_capacitors() -> None:
-    """Verifies that Capacitors are parsed with ureg.farad units."""
+    """Capacitors are read as values in farads."""
     qty = normalize_value_to_quantity(ComponentCategory.CAPACITORS, "100n")
-    assert isinstance(qty, pint.Quantity)
-    assert qty.units == ureg.farad
+    assert isinstance(qty, Value)
+    assert qty.unit == Unit.FARAD
     assert qty.magnitude == Decimal("1e-7")
 
 
@@ -339,10 +338,10 @@ def test_inventory_add_part_val_qty() -> None:
     k_unk = ComponentKey(ComponentCategory.UNKNOWN, "RawPart")
 
     inv.add_part("Test", k_res, "R1")
-    assert inv[k_res].val_qty == Decimal("10000") * ureg.ohm
+    assert inv[k_res].val_qty == ohms("10000")
 
     inv.add_part("Test", k_cap, "C1")
-    assert inv[k_cap].val_qty == Decimal("1e-7") * ureg.farad
+    assert inv[k_cap].val_qty == farads("1e-7")
 
     inv.add_part("Test", k_ic, "U1")
     assert inv[k_ic].val_qty is None

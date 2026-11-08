@@ -84,7 +84,7 @@ from .types import (
     SupportsRead,
     make_component_key,
 )
-from .units import ureg
+from .units import Unit, Value
 from .utils import (
     deduplicate_refs,
     expand_refs,
@@ -135,6 +135,8 @@ __all__ = [
     "SupportsGetValue",
     "SupportsName",
     "SupportsRead",
+    "Unit",
+    "Value",
     "build_shopping_list",
     "calculate_net_needs",
     "categorize_part",
@@ -165,5 +167,4 @@ __all__ = [
     "serialize_inventory",
     "sort_inventory",
     "status_leds",
-    "ureg",
 ]

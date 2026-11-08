@@ -34,7 +34,7 @@ Everything in `src/` except `server/` is the **backend**: it imports no web fram
   - **Heuristics:** Uses reference designators (`R1`, `U1`) and value signatures to categorize components. It determines if `C1` is a Ceramic Disc (low profile) or an Electrolytic (high profile) based on value thresholds.
 - **`bom_lib/grammar/value_parser.py`**: The value grammar.
   - **Role:** The "Unit Enforcer." A `pyparsing` grammar converts chaotic strings (`4k7`, `4.7k`, `4,700R`, `0R1`) into exact `Decimal` values ($4.7 \times 10^3$), so equal values merge into one line.
-- **`bom_lib/units.py`**: The shared `Pint` unit registry, so a value always carries its unit and a voltage is never compared with a resistance.
+- **`bom_lib/units.py`**: `Value`, a resistance or capacitance with its unit. It compares only with a value in the same unit and prints the way builders write it (`4.7 kΩ`, `100 nF`).
 - **`bom_lib/utils.py`**: Designator helpers: range expansion (`R1-R5`), natural sorting, display strings.
 - **`bom_lib/constants.py`**: The knowledge base.
   - **Content:** Stores the "Silicon Sommelier" dictionaries (audio-grade substitutions), Regex patterns, and SI multipliers. This separates *configuration* from *logic*.
@@ -97,7 +97,7 @@ The pipeline's types live in `bom_lib/types.py` as dataclasses. Accumulators, fi
 @dataclass(slots=True)
 class PartData:
     qty: int = 0
-    val_qty: pint.Quantity[Any] | Decimal | None = None  # 10000 ohm for '10k'
+    val_qty: Value | Decimal | None = None  # 10 kΩ for a "10k" resistor
     refs: list[str] = field(default_factory=list)  # ["R1", "R2"]
     sources: defaultdict[str, list[str]] = ...  # Traceability back to each project
     included: int = 0  # Of qty, how many come with the PCB

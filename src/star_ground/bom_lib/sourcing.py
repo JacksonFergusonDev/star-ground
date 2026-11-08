@@ -11,10 +11,7 @@ import math
 import re
 from collections.abc import Sequence
 from decimal import Decimal
-from typing import Any
 from urllib.parse import quote_plus
-
-import pint
 
 from star_ground.bom_lib import constants
 from star_ground.bom_lib.classifier import normalize_value_to_quantity
@@ -36,7 +33,7 @@ from star_ground.bom_lib.types import (
     ResolvedPartSourcing,
     ShoppingLine,
 )
-from star_ground.bom_lib.units import ureg
+from star_ground.bom_lib.units import Value, farads
 from star_ground.bom_lib.utils import (
     float_to_search_string,
     parse_value_to_decimal,
@@ -95,7 +92,7 @@ def get_residual_report(stats: ReadingStats) -> list[str]:
 def get_spec_type(
     category: ComponentCategory,
     val: str,
-    val_qty: pint.Quantity[Any] | Decimal | None = None,
+    val_qty: Value | Decimal | None = None,
 ) -> ComponentSpec:
     """Determines the specific capacitor dielectric or material type.
 
@@ -117,8 +114,8 @@ def get_spec_type(
         if val_qty is None:
             return ComponentSpec.NONE
 
-        threshold_1n = Decimal("1e-9") * ureg.farad
-        threshold_1u = Decimal("1e-6") * ureg.farad
+        threshold_1n = farads("1e-9")
+        threshold_1u = farads("1e-6")
 
         # < 1nF -> Ceramic/MLCC
         if val_qty < threshold_1n:
@@ -223,7 +220,7 @@ def get_buy_details(
     category: ComponentCategory,
     val: str,
     count: int,
-    val_qty: pint.Quantity[Any] | Decimal | None = None,
+    val_qty: Value | Decimal | None = None,
 ) -> PurchaseRecommendation:
     """Calculates the purchase quantity and notes based on 'Nerd Economics'.
 
@@ -571,7 +568,7 @@ def resolve_part_sourcing(
     val: str,
     net_qty: int,
     sources: dict[str, list[str]],
-    val_qty: pint.Quantity[Any] | Decimal | None = None,
+    val_qty: Value | Decimal | None = None,
 ) -> ResolvedPartSourcing:
     """Resolves the complete purchasing and supplier specification for a component.
 

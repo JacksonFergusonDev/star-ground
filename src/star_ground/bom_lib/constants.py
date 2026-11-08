@@ -12,14 +12,10 @@ This module serves as the central repository for:
 
 import re
 from dataclasses import dataclass
-from decimal import Decimal
-from typing import Any
-
-import pint
 
 from star_ground.bom_lib.enums import ComponentCategory
 from star_ground.bom_lib.types import AlternativeSpec
-from star_ground.bom_lib.units import ureg
+from star_ground.bom_lib.units import Value, farads, ohms
 
 # --- Standards ---
 
@@ -48,7 +44,7 @@ class ResistorPurchasingRule:
     buffer_add: int
     round_to: int
     note: str
-    suspicious_threshold_low: pint.Quantity[Any]
+    suspicious_threshold_low: Value
 
 
 @dataclass(frozen=True, slots=True)
@@ -64,12 +60,12 @@ class CapacitorPurchasingRule:
         suspicious_threshold_high: Upper bound threshold for suspicious capacitor values.
     """
 
-    bulk_threshold: pint.Quantity[Any]
+    bulk_threshold: Value
     bulk_buffer: int
     standard_buffer: int
-    large_threshold: pint.Quantity[Any]
+    large_threshold: Value
     large_buffer: int
-    suspicious_threshold_high: pint.Quantity[Any]
+    suspicious_threshold_high: Value
 
 
 @dataclass(frozen=True, slots=True)
@@ -92,15 +88,15 @@ PURCHASING_CONFIG: dict[ComponentCategory, PurchasingRule] = {
         buffer_add=5,
         round_to=10,
         note="Use 1/4W Metal Film (1%)",
-        suspicious_threshold_low=Decimal("1.0") * ureg.ohm,  # Ohms
+        suspicious_threshold_low=ohms("1"),
     ),
     ComponentCategory.CAPACITORS: CapacitorPurchasingRule(
-        bulk_threshold=Decimal("1.0e-7") * ureg.farad,  # 100nF
+        bulk_threshold=farads("100e-9"),
         bulk_buffer=10,
         standard_buffer=5,
-        large_threshold=Decimal("1.0e-6") * ureg.farad,  # 1uF
+        large_threshold=farads("1e-6"),
         large_buffer=1,
-        suspicious_threshold_high=Decimal("0.01") * ureg.farad,  # 10mF
+        suspicious_threshold_high=farads("10e-3"),
     ),
     ComponentCategory.DIODES: DiodePurchasingRule(
         min_buy=10,
