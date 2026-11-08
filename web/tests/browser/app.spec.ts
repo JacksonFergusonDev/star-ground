@@ -509,17 +509,17 @@ test('a bug says so plainly and sends a report in one click', async ({ page }) =
   });
 });
 
-test('without reports set up, the GitHub issue link carries the code', async ({ page }) => {
+test('when a report fails to send, the GitHub issue link carries the code', async ({ page }) => {
   await stubBuggyList(page);
   await page.route('**/api/reports', (route) =>
-    route.fulfill({ status: 503, json: { message: "Reports aren't set up on this server." } }),
+    route.fulfill({ status: 502, json: { message: 'The server is restarting.' } }),
   );
   await page.goto('/app/');
   await paste(page, 'R1 10k');
   await openList(page);
   await page.getByRole('button', { name: 'Send report' }).click();
 
-  await expect(page.getByText("This server can't take reports.")).toBeVisible();
+  await expect(page.getByText("The report didn't send")).toBeVisible();
   const href = await page.getByRole('link', { name: /Open a GitHub issue/ }).getAttribute('href');
   const url = new URL(href ?? '');
   expect(url.pathname).toBe('/JacksonFergusonDev/star-ground/issues/new');

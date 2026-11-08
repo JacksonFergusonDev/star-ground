@@ -10,7 +10,6 @@ report, and the traceback goes to the log under the bug's code.
 
 import logging
 import secrets
-import traceback
 from dataclasses import dataclass
 from enum import StrEnum
 from typing import ClassVar
@@ -36,16 +35,15 @@ class ErrorKind(StrEnum):
 class Bug:
     """A failure in Star Ground's own code, to report.
 
+    Its traceback stays on the server, in the log under its code; the builder
+    sees only the code.
+
     Attributes:
         code: A short code naming this occurrence, shown to the builder and
-            written to the log beside the traceback, so a report can be
-            matched to it.
-        detail: Star Ground's version, what it was doing, and the traceback.
-            It stays on the server: the builder sees only the code.
+            logged with the traceback, so a report can be matched to it.
     """
 
     code: str
-    detail: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -199,12 +197,18 @@ def record_bug(doing: str) -> Bug:
         doing: What Star Ground was doing, for the log ('reading Fuzz.pdf').
 
     Returns:
-        The bug, with its code and detail.
+        The bug, with its code.
     """
     code = secrets.token_hex(3).upper()
-    detail = f"Star Ground {version()}, {doing}\n\n{traceback.format_exc()}"
-    logger.error("Bug %s: %s", code, detail)
-    return Bug(code, detail)
+    logger.error(
+        "Bug %s in Star Ground %s, %s",
+        code,
+        version(),
+        doing,
+        exc_info=True,
+        extra={"bug_code": code},
+    )
+    return Bug(code)
 
 
 def bug_reading(doing: str) -> ReadError:

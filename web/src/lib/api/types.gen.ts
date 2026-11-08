@@ -1220,10 +1220,6 @@ export type SendReportApiReportsPostErrors = {
      * Validation Error
      */
     422: HttpValidationError;
-    /**
-     * Service Unavailable
-     */
-    503: Problem;
 };
 
 export type SendReportApiReportsPostError = SendReportApiReportsPostErrors[keyof SendReportApiReportsPostErrors];

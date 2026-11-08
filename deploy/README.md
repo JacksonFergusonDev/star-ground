@@ -202,7 +202,11 @@ The deploy updates these variables and keeps any others, so settings made by han
 
 ## Feedback and bug reports
 
-When Star Ground hits a bug reading a document, the workspace offers a **Send report** button. It posts the bug's code, the document's name or link, and the builder's note; the server adds the bug's traceback if it still holds it (the last 256 bugs per instance) and appends the report to the Reports tab of the "Star Ground Feedback" Google Sheet. Feedback ratings go to the same sheet's first tab. Both need the sheet's service-account key. Without it, the routes answer 503 and the workspace offers only the GitHub issue link.
+When Star Ground hits a bug reading a document, the workspace offers a **Send report** button. It posts the bug's code, the document's name or link, and the builder's note, and the server logs it under the bug's code.
+
+On Cloud Run the API writes its logs as JSON (`src/star_ground/server/logs.py`). Each bug is logged with its traceback as an Error Reporting event, so **Error Reporting** in the Cloud console lists bugs grouped by cause, with counts and the release. To find what a builder reported, search the Logs Explorer for `labels.bug_code="A1B2C3"`: you get the bug's entry and the report's. To be emailed when a new bug appears, turn on notifications on Error Reporting's page once; nothing else needs setting up.
+
+Feedback ratings and part reports go to the "Star Ground Feedback" Google Sheet's first tab and its Parts tab. Both need the sheet's service-account key. Without it, those routes answer 503.
 
 Run these yourself, since they handle the key. Save the service account's JSON key as `feedback-key.json`, outside the repository, then:
 
@@ -218,7 +222,7 @@ gcloud run services update star-ground --project "$PROJECT" --region "$REGION" \
 rm feedback-key.json
 ```
 
-The sheet must be shared with the service account's email as an editor, and the key's Google Cloud project needs the Google Sheets and Google Drive APIs enabled: Star Ground finds the sheet by its name through Drive (read-only, names only), then appends rows through Sheets. The Reports and Parts tabs are created on their first report. Deploys keep the secret, as they keep other settings made by hand.
+The sheet must be shared with the service account's email as an editor, and the key's Google Cloud project needs the Google Sheets and Google Drive APIs enabled: Star Ground finds the sheet by its name through Drive (read-only, names only), then appends rows through Sheets. The Parts tab is created on the first part report. Deploys keep the secret, as they keep other settings made by hand.
 
 Each bug is also written to Cloud Run's log as `Bug <code>: …` with its traceback, so a report can be matched to its log entry:
 

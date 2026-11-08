@@ -355,9 +355,9 @@ class TestBOMParserContext:
         assert error.message == BUG_MESSAGE
         bug = error.bug
         assert bug is not None
-        assert "reading Buggy" in bug.detail
-        assert "KeyError" in bug.detail  # with its traceback
         assert f"Bug {bug.code}" in caplog.text
+        assert "reading Buggy" in caplog.text
+        assert "KeyError" in caplog.text  # with its traceback
 
     def test_input_no_strategy_reads_is_a_bug(self) -> None:
         """Every input the app sends has a strategy, so a miss is Star Ground's."""
