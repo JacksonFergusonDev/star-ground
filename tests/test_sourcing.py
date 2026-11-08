@@ -86,7 +86,7 @@ def test_resolve_part_sourcing_auto_inject_notes() -> None:
         net_qty=3,
         sources={"Big Muff": ["R1", "R2"], AUTO_INJECT_SOURCE: ["LED Resistor"]},
     )
-    assert "🤖 Standard Part: LED Resistor" in resolved.notes
+    assert "Standard hardware: LED Resistor." in resolved.notes
 
 
 def test_build_shopping_list_gross_and_net() -> None:
@@ -166,7 +166,7 @@ def test_build_shopping_list_part_included_with_the_pcb() -> None:
     assert row.included == 1
     assert row.net_need == 1
     assert row.buy_qty == 1
-    assert row.notes.startswith("📦 1 included with the PCB")
+    assert row.notes.startswith("1 come with the PCB.")
 
 
 def test_an_inductor_is_searched_for_by_its_part_type() -> None:

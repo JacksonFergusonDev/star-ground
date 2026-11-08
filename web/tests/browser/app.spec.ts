@@ -38,7 +38,7 @@ const result: MasterListResult = {
       in_stock: null,
       net_need: null,
       buy_qty: 10,
-      notes: 'Use 1/4W Metal Film (1%)',
+      notes: '1/4 W metal film, 1%.',
       search_term: '10k resistor',
       supplier_url: 'https://www.taydaelectronics.com/',
     },
