@@ -193,8 +193,7 @@ See [tests/README.md](tests/README.md) for how to run each layer.
 │   │   └── sourcing.py    <-- Buffers, buying notes, hardware kit
 │   ├── server/            <-- HTTP API over api.py, for the web frontend
 │   ├── api.py             <-- The backend API every frontend calls
-│   ├── exports/           <-- Build book, labels (Typst), CSVs and the build pack
-│   └── feedback.py        <-- In-app feedback form (Google Sheets)
+│   └── exports/           <-- Build book, labels (Typst), CSVs and the build pack
 ├── tests/                 <-- Test suite, golden parts lists and samples
 ├── web/                   <-- The website: Astro, with Svelte for the app
 ├── tools/                 <-- Release, OpenAPI and corpus tools

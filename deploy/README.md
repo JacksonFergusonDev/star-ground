@@ -41,7 +41,7 @@ gcloud billing budgets create --billing-account "$BILLING" \
 
 ### 2. The image registry and the service's account
 
-Cloud Run can't pull from GHCR, so deploys copy the image into Artifact Registry. The service runs as its own account with no roles: the API calls no Google APIs. Feedback reports, which write to a Google Sheet, are left off until a later step adds their key as a secret.
+Cloud Run can't pull from GHCR, so deploys copy the image into Artifact Registry. The service runs as its own account with no roles: the API calls no Google APIs. Builders' reports and bugs reach BigQuery through the service's logs, which need no key (see "Feedback and bug reports").
 
 ```bash
 gcloud artifacts repositories create star-ground --project "$PROJECT" \

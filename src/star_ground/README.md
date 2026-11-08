@@ -66,8 +66,8 @@ Everything in `src/` except `server/` is the **backend**: it imports no web fram
 
 ### 5. Telemetry (The Nervous System)
 
-- **`feedback.py`**: User Loop.
-  - **Role:** Appends the in-app feedback form to a Google Sheet. The server supplies the service account's credentials and decides how long to reuse the connection.
+- **`server/logs.py`**: Logs as Google Cloud reads them.
+  - **Role:** On Cloud Run, writes each log record as one line of JSON. A bug becomes an Error Reporting event with its traceback and code; a builder's bug or part report is an entry with a `feedback` field. A log sink keeps both in BigQuery (`deploy/README.md`), and `AGENTS.md` says how to read them with `bq`.
 
 ### 6. The API (The Front Door)
 
