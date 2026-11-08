@@ -2,9 +2,9 @@
 
 from decimal import Decimal
 
-from src.bom_lib.constants import AUTO_INJECT_SOURCE
-from src.bom_lib.enums import ComponentCategory, ComponentOrigin
-from src.bom_lib.sourcing import (
+from star_ground.bom_lib.constants import AUTO_INJECT_SOURCE
+from star_ground.bom_lib.enums import ComponentCategory, ComponentOrigin
+from star_ground.bom_lib.sourcing import (
     build_shopping_list,
     determine_origin,
     generate_search_term,
@@ -12,8 +12,8 @@ from src.bom_lib.sourcing import (
     is_pure_hardware,
     resolve_part_sourcing,
 )
-from src.bom_lib.types import ComponentKey, Inventory, ResolvedPartSourcing
-from src.bom_lib.units import ureg
+from star_ground.bom_lib.types import ComponentKey, Inventory, ResolvedPartSourcing
+from star_ground.bom_lib.units import ureg
 
 
 def test_is_pure_hardware() -> None:

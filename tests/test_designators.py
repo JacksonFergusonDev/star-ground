@@ -1,9 +1,9 @@
-"""Unit tests for the reference designator grammar in `src/bom_lib/designators.py`."""
+"""Unit tests for the reference designator grammar in `src/star_ground/bom_lib/designators.py`."""
 
 import pytest
 
-from src.bom_lib.designators import BOARD_REF, is_designator, parse_designator
-from src.bom_lib.enums import ComponentCategory as Cat
+from star_ground.bom_lib.designators import BOARD_REF, is_designator, parse_designator
+from star_ground.bom_lib.enums import ComponentCategory as Cat
 
 
 @pytest.mark.parametrize(
@@ -87,15 +87,15 @@ def test_part_numbers_are_not_board_refs(token: str) -> None:
 
 def test_alternate_clipping_diodes() -> None:
     # Aion FX legacy Crescent: 'DX1-DX4  1N914'.
-    from src.bom_lib.designators import is_designator
+    from star_ground.bom_lib.designators import is_designator
 
     assert is_designator("DX1")
 
 
 def test_a_voltage_regulator() -> None:
     # GuitarPCB Delay: 'REG  L78L05'.
-    from src.bom_lib.designators import parse_designator
-    from src.bom_lib.enums import ComponentCategory
+    from star_ground.bom_lib.designators import parse_designator
+    from star_ground.bom_lib.enums import ComponentCategory
 
     designator = parse_designator("REG")
     assert designator is not None

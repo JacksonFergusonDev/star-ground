@@ -1,4 +1,4 @@
-"""Tests for the HTTP API (`src.server`), through FastAPI's test client."""
+"""Tests for the HTTP API (`star_ground.server`), through FastAPI's test client."""
 
 import ast
 import csv
@@ -16,8 +16,8 @@ from fastapi.testclient import TestClient
 from fpdf import FPDF
 from pytest_mock import MockerFixture
 
-from src.api import read_document
-from src.bom_lib import (
+from star_ground.api import read_document
+from star_ground.bom_lib import (
     BOMParserContext,
     ComponentCategory,
     FeedbackRating,
@@ -29,12 +29,12 @@ from src.bom_lib import (
     create_empty_stats,
     make_component_key,
 )
-from src.bom_lib.errors import BUG_MESSAGE, ErrorKind, OcrRefusedError
-from src.bom_lib.ocr import ocr_guard
-from src.feedback import PartReport
-from src.server import Settings, create_app
-from src.server.limits import OcrQueue, RateLimiter, ReadingCache
-from src.server.models import BUG_CODE, ReportIn
+from star_ground.bom_lib.errors import BUG_MESSAGE, ErrorKind, OcrRefusedError
+from star_ground.bom_lib.ocr import ocr_guard
+from star_ground.feedback import PartReport
+from star_ground.server import Settings, create_app
+from star_ground.server.limits import OcrQueue, RateLimiter, ReadingCache
+from star_ground.server.models import BUG_CODE, ReportIn
 from tools.export_openapi import OPENAPI_FILE, schema_text
 
 ROOT = Path(__file__).parent.parent
@@ -100,7 +100,7 @@ def test_reading_an_upload_streams_its_reading(client: TestClient) -> None:
 def test_a_document_read_again_comes_from_the_cache(
     client: TestClient, mocker: MockerFixture
 ) -> None:
-    read = mocker.patch("src.server.app.read_document", wraps=read_document)
+    read = mocker.patch("star_ground.server.app.read_document", wraps=read_document)
     client.post("/api/documents/read", files={"file": _pdf(KLICHE)})
 
     again = client.post("/api/documents/read", files={"file": _pdf(KLICHE)})
@@ -118,7 +118,7 @@ def test_a_multi_circuit_document_lists_its_builds(client: TestClient) -> None:
 def test_a_link_is_read_as_a_link(client: TestClient, mocker: MockerFixture) -> None:
     upload = FileUpload("Kliche-PedalPCB.pdf", KLICHE.read_bytes())
     real = read_document(InputMethod.UPLOAD_FILE, upload)
-    read = mocker.patch("src.server.app.read_document", return_value=real)
+    read = mocker.patch("star_ground.server.app.read_document", return_value=real)
     url = "https://docs.pedalpcb.com/project/Kliche-PedalPCB.pdf"
 
     response = client.post("/api/documents/read", data={"url": f" {url} "})
@@ -150,7 +150,9 @@ def test_a_read_takes_a_file_or_a_link(
 def test_a_failed_read_is_an_error_event(
     client: TestClient, mocker: MockerFixture
 ) -> None:
-    mocker.patch("src.server.app.read_document", side_effect=RuntimeError("boom"))
+    mocker.patch(
+        "star_ground.server.app.read_document", side_effect=RuntimeError("boom")
+    )
 
     response = client.post("/api/documents/read", files={"file": _pdf(KLICHE)})
 
@@ -604,7 +606,11 @@ def test_the_backend_does_not_depend_on_the_web_layer(path: Path) -> None:
     forbidden: set[str] = {"fastapi", "starlette", "pydantic", "uvicorn"}
     imports = _imports(path)
     assert not {m for m in imports if m.split(".")[0] in forbidden}
-    assert not {m for m in imports if m == "src.server" or m.startswith("src.server.")}
+    assert not {
+        m
+        for m in imports
+        if m == "star_ground.server" or m.startswith("star_ground.server.")
+    }
 
 
 # --- OCR ---
@@ -655,7 +661,9 @@ def _image_reading() -> ParseResult:
 
 def test_a_document_is_read_without_ocr_unless_asked(mocker: MockerFixture) -> None:
     client = TestClient(create_app(Settings(requests_per_minute=1000)))
-    read = mocker.patch("src.server.app.read_document", return_value=_image_reading())
+    read = mocker.patch(
+        "star_ground.server.app.read_document", return_value=_image_reading()
+    )
 
     reading = _read_events(client, "image.pdf")[-1]["reading"]
 
@@ -666,7 +674,9 @@ def test_a_document_is_read_without_ocr_unless_asked(mocker: MockerFixture) -> N
 
 def test_asking_for_ocr_reads_again_with_it(mocker: MockerFixture) -> None:
     client = TestClient(create_app(Settings(requests_per_minute=1000)))
-    read = mocker.patch("src.server.app.read_document", return_value=_image_reading())
+    read = mocker.patch(
+        "star_ground.server.app.read_document", return_value=_image_reading()
+    )
 
     _read_events(client, "image.pdf")
     accepted = _read_events(client, "image.pdf", ocr=True)[-1]["reading"]
@@ -685,7 +695,7 @@ def test_the_master_list_runs_ocr_only_for_accepted_projects(
     mocker: MockerFixture,
 ) -> None:
     client = TestClient(create_app(Settings(requests_per_minute=1000)))
-    read = mocker.patch("src.server.app.read_document", side_effect=_ocr_read())
+    read = mocker.patch("star_ground.server.app.read_document", side_effect=_ocr_read())
 
     for name, use_ocr in (("a.pdf", False), ("b.pdf", True)):
         project = {"method": "upload", "file": name, "use_ocr": use_ocr}
@@ -701,7 +711,9 @@ def test_the_master_list_runs_ocr_only_for_accepted_projects(
 
 def test_with_ocr_off_nothing_is_offered_or_read(mocker: MockerFixture) -> None:
     client = TestClient(create_app(Settings(requests_per_minute=1000, ocr=False)))
-    read = mocker.patch("src.server.app.read_document", return_value=_image_reading())
+    read = mocker.patch(
+        "star_ground.server.app.read_document", return_value=_image_reading()
+    )
 
     reading = _read_events(client, "image.pdf", ocr=True)[-1]["reading"]
 
@@ -716,7 +728,7 @@ def test_ocr_can_be_switched_off_from_the_environment() -> None:
 
 def test_each_client_has_an_hourly_ocr_allowance(mocker: MockerFixture) -> None:
     client = TestClient(create_app(Settings(ocr_per_hour=1)))
-    mocker.patch("src.server.app.read_document", side_effect=_ocr_read())
+    mocker.patch("star_ground.server.app.read_document", side_effect=_ocr_read())
 
     first = _read_events(client, "a.pdf", ocr=True)
     second = _read_events(client, "b.pdf", ocr=True)
@@ -728,7 +740,7 @@ def test_each_client_has_an_hourly_ocr_allowance(mocker: MockerFixture) -> None:
 
 def test_the_master_list_refuses_ocr_past_the_allowance(mocker: MockerFixture) -> None:
     client = TestClient(create_app(Settings(ocr_per_hour=0)))
-    mocker.patch("src.server.app.read_document", side_effect=_ocr_read())
+    mocker.patch("star_ground.server.app.read_document", side_effect=_ocr_read())
 
     project = {"method": "upload", "file": "a.pdf", "use_ocr": True}
     response = client.post(
@@ -745,7 +757,7 @@ def test_a_text_read_never_waits_behind_ocr(mocker: MockerFixture) -> None:
     app = create_app(Settings(requests_per_minute=1000))
     started, release = threading.Event(), threading.Event()
     mocker.patch(
-        "src.server.app.read_document", side_effect=_ocr_read(started, release)
+        "star_ground.server.app.read_document", side_effect=_ocr_read(started, release)
     )
     waiting = threading.Thread(
         target=lambda: _read_events(TestClient(app), "ocr.pdf", ocr=True)
@@ -767,7 +779,7 @@ def test_a_document_waiting_for_ocr_streams_its_place(mocker: MockerFixture) -> 
     def read(method: InputMethod, data: Any, ocr: bool = True) -> ParseResult | None:
         return (first if data.name == "first.pdf" else second)(method, data, ocr)
 
-    mocker.patch("src.server.app.read_document", side_effect=read)
+    mocker.patch("star_ground.server.app.read_document", side_effect=read)
     holder = threading.Thread(
         target=lambda: _read_events(TestClient(app), "first.pdf", ocr=True)
     )
@@ -811,7 +823,7 @@ def test_a_link_reading_has_no_document(
 ) -> None:
     upload = FileUpload(KLICHE.name, KLICHE.read_bytes())
     mocker.patch(
-        "src.server.app.read_document",
+        "star_ground.server.app.read_document",
         return_value=read_document(InputMethod.UPLOAD_FILE, upload),
     )
 
@@ -840,7 +852,7 @@ def test_a_document_this_server_lacks_asks_for_the_file(client: TestClient) -> N
 
 def test_a_named_document_can_still_accept_ocr(mocker: MockerFixture) -> None:
     client = TestClient(create_app(Settings(requests_per_minute=1000)))
-    read = mocker.patch("src.server.app.read_document", side_effect=_ocr_read())
+    read = mocker.patch("star_ground.server.app.read_document", side_effect=_ocr_read())
     document = _read_events(client, "a.pdf")[-1]["reading"]["document"]
 
     project = {"method": "upload", "document": document, "use_ocr": True}
@@ -866,7 +878,8 @@ def test_a_bug_in_a_reading_gives_the_builder_only_its_code(
     client: TestClient, mocker: MockerFixture, caplog: pytest.LogCaptureFixture
 ) -> None:
     mocker.patch(
-        "src.bom_lib.strategies.pdf.parse_pedalpcb_pdf", side_effect=KeyError("oops")
+        "star_ground.bom_lib.strategies.pdf.parse_pedalpcb_pdf",
+        side_effect=KeyError("oops"),
     )
 
     reading = _events(
@@ -885,7 +898,9 @@ def test_a_bug_in_a_reading_gives_the_builder_only_its_code(
 def test_a_failed_read_is_a_bug_with_a_report(
     client: TestClient, mocker: MockerFixture, caplog: pytest.LogCaptureFixture
 ) -> None:
-    mocker.patch("src.server.app.read_document", side_effect=RuntimeError("boom"))
+    mocker.patch(
+        "star_ground.server.app.read_document", side_effect=RuntimeError("boom")
+    )
 
     event = _events(
         client.post("/api/documents/read", files={"file": _pdf(KLICHE)}).text
@@ -901,7 +916,7 @@ def test_a_failed_read_is_a_bug_with_a_report(
 def test_a_refused_ocr_read_is_explained_not_a_bug(
     client: TestClient, mocker: MockerFixture
 ) -> None:
-    mocker.patch("src.server.app.read_document", side_effect=OcrRefusedError)
+    mocker.patch("star_ground.server.app.read_document", side_effect=OcrRefusedError)
 
     event = _events(
         client.post("/api/documents/read", files={"file": _pdf(KLICHE)}).text
@@ -916,7 +931,7 @@ def test_each_project_says_why_it_couldnt_be_read(
     client: TestClient, mocker: MockerFixture
 ) -> None:
     mocker.patch(
-        "src.bom_lib.strategies.manual.parse_with_verification",
+        "star_ground.bom_lib.strategies.manual.parse_with_verification",
         side_effect=TypeError("broken"),
     )
 
@@ -935,7 +950,9 @@ def test_each_project_says_why_it_couldnt_be_read(
 def test_a_bug_outside_a_reading_is_answered_with_a_code_not_a_bare_500(
     mocker: MockerFixture, caplog: pytest.LogCaptureFixture
 ) -> None:
-    mocker.patch("src.server.app.generate_master_list", side_effect=ZeroDivisionError)
+    mocker.patch(
+        "star_ground.server.app.generate_master_list", side_effect=ZeroDivisionError
+    )
     client = TestClient(create_app(Settings(cors_origins=("https://example.com",))))
 
     request = json.dumps({"projects": [{"method": "paste", "text": "R1 10k"}]})
@@ -967,7 +984,9 @@ def test_a_report_gets_the_traceback_this_server_holds(
     client = TestClient(
         create_app(Settings(), reports=lambda r, d: received.append((r, d)))
     )
-    mocker.patch("src.server.app.generate_master_list", side_effect=ZeroDivisionError)
+    mocker.patch(
+        "star_ground.server.app.generate_master_list", side_effect=ZeroDivisionError
+    )
     code = _post(
         client, "/api/master-list", [{"method": "paste", "text": "R1 10k"}]
     ).json()["bug_code"]
@@ -1062,7 +1081,7 @@ def test_a_linked_documents_pdf_comes_from_its_reading(
 ) -> None:
     upload = FileUpload("Kliche-PedalPCB.pdf", KLICHE.read_bytes())
     real = read_document(InputMethod.UPLOAD_FILE, upload)
-    read = mocker.patch("src.server.app.read_document", return_value=real)
+    read = mocker.patch("star_ground.server.app.read_document", return_value=real)
     url = "https://docs.pedalpcb.com/project/Kliche-PedalPCB.pdf"
     client.post("/api/documents/read", data={"url": url})
 
@@ -1082,7 +1101,7 @@ def test_a_link_that_isnt_a_pdf_has_nothing_to_show(
     )
     assert real is not None
     mocker.patch(
-        "src.server.app.read_document",
+        "star_ground.server.app.read_document",
         return_value=dataclasses.replace(real, raw_content=b"Ref,Value"),
     )
 

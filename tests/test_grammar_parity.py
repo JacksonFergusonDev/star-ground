@@ -9,7 +9,7 @@ from decimal import Decimal
 
 import pytest
 
-from src.bom_lib.grammar import parse_value_to_decimal as grammar_parse
+from star_ground.bom_lib.grammar import parse_value_to_decimal as grammar_parse
 
 # Every resistor, capacitor and inductor value printed in the parts lists the
 # app once shipped as presets (PedalPCB and Tayda kits), as written.

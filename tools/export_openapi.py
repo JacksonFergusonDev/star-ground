@@ -2,13 +2,13 @@
 
 The frontend generates its TypeScript types from this file, so it's committed
 and a test fails when it no longer matches the API. Run `just openapi` after
-changing a route or model in `src/server/`.
+changing a route or model in `src/star_ground/server/`.
 """
 
 import json
 from pathlib import Path
 
-from src.server import Settings, create_app
+from star_ground.server import Settings, create_app
 
 OPENAPI_FILE = Path(__file__).resolve().parent.parent / "openapi.json"
 

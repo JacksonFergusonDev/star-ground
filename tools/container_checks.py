@@ -10,10 +10,10 @@ import pdfplumber
 from fpdf import FPDF
 from PIL import Image, ImageDraw, ImageFont
 
-from src.api import Project, generate_master_list, read_document, read_stock
-from src.bom_lib import FileUpload, InputMethod
-from src.bom_lib.ocr import recognize
-from src.exporters import generate_shopping_list_csv, generate_stock_update_csv
+from star_ground.api import Project, generate_master_list, read_document, read_stock
+from star_ground.bom_lib import FileUpload, InputMethod
+from star_ground.bom_lib.ocr import recognize
+from star_ground.exporters import generate_shopping_list_csv, generate_stock_update_csv
 
 
 def check_backend() -> None:

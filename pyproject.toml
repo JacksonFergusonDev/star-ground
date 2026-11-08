@@ -29,7 +29,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src"]
+packages = ["src/star_ground"]
 
 [dependency-groups]
 dev = [
@@ -105,7 +105,7 @@ ignore = ["D100", "D104", "D107", "E501"]
 convention = "google"
 
 [tool.ruff.lint.isort]
-known-first-party = ["star-ground"]
+known-first-party = ["star_ground", "tests", "tools"]
 section-order = [
     "future",
     "standard-library",
@@ -121,7 +121,7 @@ section-order = [
 
 [tool.mypy]
 files = ["src", "tests", "tools"]
-mypy_path = "."
+mypy_path = "src:."
 python_version = "3.14"
 strict=true
 pretty = true

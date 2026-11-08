@@ -1,8 +1,8 @@
-"""Tests for finding where each part was read (`src.bom_lib.locations`)."""
+"""Tests for finding where each part was read (`star_ground.bom_lib.locations`)."""
 
 from pathlib import Path
 
-from src.bom_lib import (
+from star_ground.bom_lib import (
     ComponentCategory,
     Inventory,
     Location,
@@ -10,10 +10,10 @@ from src.bom_lib import (
     PDFWord,
     create_empty_inventory,
 )
-from src.bom_lib.locations import locate
-from src.bom_lib.ocr import without_ocr
-from src.bom_lib.parser import parse_pedalpcb_pdf
-from src.bom_lib.types import make_component_key
+from star_ground.bom_lib.locations import locate
+from star_ground.bom_lib.ocr import without_ocr
+from star_ground.bom_lib.parser import parse_pedalpcb_pdf
+from star_ground.bom_lib.types import make_component_key
 
 SAMPLES = Path(__file__).parent / "samples"
 

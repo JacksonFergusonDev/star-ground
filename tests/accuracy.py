@@ -13,7 +13,7 @@ Run ``uv run python -m tests.accuracy`` for a scorecard, or
 ``uv run python -m tests.accuracy --update-baseline`` to lock in improvements.
 ``--golden DIR --samples DIR`` scores an external corpus (e.g. a local,
 uncommitted one) with the same machinery. ``--ocr`` scores only the documents
-OCR reads (`src/bom_lib/ocr.py`), with its parts accepted as a builder would.
+OCR reads (`src/star_ground/bom_lib/ocr.py`), with its parts accepted as a builder would.
 """
 
 import argparse
@@ -29,7 +29,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Any, TypedDict
 
-from src.bom_lib import (
+from star_ground.bom_lib import (
     ComponentCategory,
     Inventory,
     OcrAttempt,
@@ -38,8 +38,8 @@ from src.bom_lib import (
     ParseWarningKind,
     parse_pedalpcb_pdf,
 )
-from src.bom_lib.ocr import attempt_ocr
-from src.bom_lib.utils import parse_value_to_decimal
+from star_ground.bom_lib.ocr import attempt_ocr
+from star_ground.bom_lib.utils import parse_value_to_decimal
 
 TESTS_DIR = Path(__file__).parent
 GOLDEN_DIR = TESTS_DIR / "golden"

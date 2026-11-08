@@ -1,8 +1,8 @@
-"""Unit tests for the parser self-checks in `src/bom_lib/verification.py`."""
+"""Unit tests for the parser self-checks in `src/star_ground/bom_lib/verification.py`."""
 
 import pytest
 
-from src.bom_lib import (
+from star_ground.bom_lib import (
     ComponentCategory,
     ParseWarningKind,
     create_empty_inventory,
@@ -10,7 +10,7 @@ from src.bom_lib import (
     make_component_key,
     parse_with_verification,
 )
-from src.bom_lib.verification import (
+from star_ground.bom_lib.verification import (
     check_alternate_value,
     check_bom_reconciliation,
     check_build_changes,
@@ -583,7 +583,7 @@ def test_a_sparse_series_names_its_gaps() -> None:
 
 
 def test_counted_rows_that_were_not_read_warn_the_document() -> None:
-    from src.bom_lib.verification import check_quantity_list
+    from star_ground.bom_lib.verification import check_quantity_list
 
     # Tonepad Rebote Delay: counts under each heading, a few named parts.
     text = (
@@ -664,7 +664,7 @@ def test_a_table_of_substitutes_warns_every_row() -> None:
 def test_pictured_list_warns_document_and_shared_designators() -> None:
     # GuitarPCB Sonic Architect: the Sonic Bloom list is an image beside the
     # AmpEQ text list on page 3.
-    from src.bom_lib.verification import check_pictured_lists
+    from star_ground.bom_lib.verification import check_pictured_lists
 
     stats = create_empty_stats()
     check_pictured_lists(
@@ -679,7 +679,7 @@ def test_pictured_list_warns_document_and_shared_designators() -> None:
 
 def test_other_list_warns_changed_and_absent_parts() -> None:
     # GuitarPCB Stage 3: page 5 lists the previous board, unread.
-    from src.bom_lib.verification import check_other_list
+    from star_ground.bom_lib.verification import check_other_list
 
     read = {f"R{n}": "1k" for n in range(1, 7)} | {"C2": "10n", "D2": "1n4001"}
     listed = [(f"R{n}", "1k") for n in range(1, 6)] + [("C2", "22n")]
@@ -693,7 +693,7 @@ def test_other_list_warns_changed_and_absent_parts() -> None:
 
 
 def test_either_part_note() -> None:
-    from src.bom_lib.verification import check_either_part
+    from star_ground.bom_lib.verification import check_either_part
 
     inv = _inventory(
         (ComponentCategory.POTENTIOMETERS, "3k", "TR1"),
@@ -712,7 +712,7 @@ def test_either_part_note() -> None:
 
 def test_either_part_install_notes() -> None:
     # GuitarPCB Sriracha Fuzz and ColorTone Bass Fuzz (said twice, warned once).
-    from src.bom_lib.verification import check_either_part
+    from star_ground.bom_lib.verification import check_either_part
 
     inv = _inventory(
         (ComponentCategory.RESISTORS, "1k", "R9"),
@@ -738,7 +738,7 @@ def test_wrapped_value_read_in_part_is_no_conflict() -> None:
 
 
 def test_pointer_value_warns() -> None:
-    from src.bom_lib.verification import check_pointer_value
+    from star_ground.bom_lib.verification import check_pointer_value
 
     stats = create_empty_stats()
     check_pointer_value(stats, "Q1", "See Text")
@@ -1108,7 +1108,7 @@ def test_a_heading_for_building_without_a_stage() -> None:
 
 def test_install_one_not_the_other() -> None:
     # GuitarPCB CT Bass Fuzz: a trimmer or a pot, with zero-width padding.
-    from src.bom_lib.verification import check_either_part
+    from star_ground.bom_lib.verification import check_either_part
 
     text = "Install the Trimpot​ T2 (not the Boost pot) if you want a 3-knob pedal."
     inventory = _listed(

@@ -1,4 +1,4 @@
-"""Tests for the catalog job (`src.catalog`), with a fake web and fake readers."""
+"""Tests for the catalog job (`star_ground.catalog`), with a fake web and fake readers."""
 
 import hashlib
 import io
@@ -12,7 +12,7 @@ import pytest
 import requests
 from rich.console import Console
 
-from src.bom_lib import (
+from star_ground.bom_lib import (
     ComponentCategory,
     FileUpload,
     ParseResult,
@@ -21,8 +21,8 @@ from src.bom_lib import (
     create_empty_inventory,
     create_empty_stats,
 )
-from src.bom_lib.types import Location, make_component_key
-from src.catalog.build import (
+from star_ground.bom_lib.types import Location, make_component_key
+from star_ground.catalog.build import (
     BOARDS_VERSION,
     Budget,
     State,
@@ -31,7 +31,7 @@ from src.catalog.build import (
     entry_id,
     entry_title,
 )
-from src.catalog.client import (
+from star_ground.catalog.client import (
     BACKOFF_S,
     MIN_DELAY_S,
     RETRIES,
@@ -40,7 +40,7 @@ from src.catalog.client import (
     GoneError,
     PoliteClient,
 )
-from src.catalog.discover import (
+from star_ground.catalog.discover import (
     PAGE_VERSION,
     Listing,
     PageDetails,
@@ -49,16 +49,16 @@ from src.catalog.discover import (
     page_details,
     pdf_links,
 )
-from src.catalog.effects import (
+from star_ground.catalog.effects import (
     Effect,
     Overrides,
     effects,
     from_categories,
     from_title,
 )
-from src.catalog.report import Event, Outcome, Reporter
-from src.catalog.sources import SOURCES, Publisher
-from src.catalog.verified import (
+from star_ground.catalog.report import Event, Outcome, Reporter
+from star_ground.catalog.sources import SOURCES, Publisher
+from star_ground.catalog.verified import (
     Checked,
     Verification,
     VerifiedList,
@@ -1166,7 +1166,7 @@ def test_a_failure_while_discovering_alongside_reading_is_raised(
     run: Any, mocker: Any
 ) -> None:
     mocker.patch(
-        "src.catalog.build.discover", side_effect=RuntimeError("sitemap broke")
+        "star_ground.catalog.build.discover", side_effect=RuntimeError("sitemap broke")
     )
 
     with pytest.raises(RuntimeError, match="sitemap broke"):

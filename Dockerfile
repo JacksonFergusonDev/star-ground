@@ -24,7 +24,8 @@ COPY --from=ghcr.io/astral-sh/uv:latest@sha256:e85be844203885286c60ffad8a858d48a
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     UV_LINK_MODE=copy \
-    PATH="/app/.venv/bin:$PATH"
+    PATH="/app/.venv/bin:$PATH" \
+    PYTHONPATH=/app/src
 
 WORKDIR /app
 COPY pyproject.toml uv.lock ./
@@ -45,4 +46,4 @@ HEALTHCHECK --interval=5s --timeout=3s --start-period=10s --retries=6 \
     CMD ["python", "-c", "import os, urllib.request; r = urllib.request.urlopen(f'http://127.0.0.1:{os.environ.get(\"PORT\", \"8000\")}/api/health', timeout=2); assert r.status == 200"]
 
 # Cloud Run sets PORT; it gives a stopping instance 10 s after SIGTERM.
-CMD ["sh", "-c", "exec uvicorn src.server:app --host 0.0.0.0 --port \"${PORT:-8000}\" --timeout-graceful-shutdown 8"]
+CMD ["sh", "-c", "exec uvicorn star_ground.server:app --host 0.0.0.0 --port \"${PORT:-8000}\" --timeout-graceful-shutdown 8"]

@@ -15,17 +15,17 @@ from typing import cast
 import pint
 import pytest
 
-from src.bom_lib.classifier import categorize_part, normalize_value_to_quantity
-from src.bom_lib.enums import ComponentCategory, ComponentSpec
-from src.bom_lib.manager import sort_inventory
-from src.bom_lib.sourcing import get_buy_details, get_spec_type
-from src.bom_lib.types import (
+from star_ground.bom_lib.classifier import categorize_part, normalize_value_to_quantity
+from star_ground.bom_lib.enums import ComponentCategory, ComponentSpec
+from star_ground.bom_lib.manager import sort_inventory
+from star_ground.bom_lib.sourcing import get_buy_details, get_spec_type
+from star_ground.bom_lib.types import (
     CategorizationResult,
     ComponentKey,
     Inventory,
 )
-from src.bom_lib.units import ureg
-from src.bom_lib.utils import (
+from star_ground.bom_lib.units import ureg
+from star_ground.bom_lib.utils import (
     expand_refs,
     natural_sort_key,
     parse_value_to_decimal,

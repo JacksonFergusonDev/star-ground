@@ -2,7 +2,7 @@
 
 ## OpenAPI Schema (`tools/export_openapi.py`)
 
-`openapi.json` at the repository root is the HTTP API's schema, which the web frontend generates its TypeScript types from. After changing a route or model in `src/server/`, regenerate it with `just openapi` and commit it with the change. `tests/test_server.py` fails when the committed file no longer matches the API.
+`openapi.json` at the repository root is the HTTP API's schema, which the web frontend generates its TypeScript types from. After changing a route or model in `src/star_ground/server/`, regenerate it with `just openapi` and commit it with the change. `tests/test_server.py` fails when the committed file no longer matches the API.
 
 ## Release Preflight (`tools/prepare_release.py`)
 

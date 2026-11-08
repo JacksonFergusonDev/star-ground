@@ -1,11 +1,11 @@
-"""Unit tests for column-aware listing extraction in `src/bom_lib/layout.py`."""
+"""Unit tests for column-aware listing extraction in `src/star_ground/bom_lib/layout.py`."""
 
 import math
 
 import pytest
 
-from src.bom_lib import PDFWord
-from src.bom_lib.layout import (
+from star_ground.bom_lib import PDFWord
+from star_ground.bom_lib.layout import (
     BomRow,
     Listing,
     bom_note_cells,
@@ -17,7 +17,7 @@ from src.bom_lib.layout import (
     split_cells,
     valueless_refs,
 )
-from src.bom_lib.parser import enrich_value_from_type
+from star_ground.bom_lib.parser import enrich_value_from_type
 
 SIZE = 12.0
 SPACE = 2.7  # ordinary word space at 12pt (~0.23em)
@@ -649,7 +649,7 @@ class TestTextBillOfMaterials:
 
     def test_designator_with_an_empty_value_cell_is_reported(self) -> None:
         # GuitarPCB The Burner prints 'D2' with nothing beside it.
-        from src.bom_lib.layout import bom_valueless_refs
+        from star_ground.bom_lib.layout import bom_valueless_refs
 
         words = (
             self._row(100, ("Part", 50), ("Value", 100), ("Part", 200), ("Value", 260))
@@ -840,7 +840,7 @@ def test_a_control_name_labels_a_board_designator() -> None:
 
 def test_trim_before_a_value_is_no_control_name() -> None:
     # GuitarPCB Doomstortion 'RUETZ | Trim 100R': 'Trim' says what the part is.
-    from src.bom_lib.layout import names_control
+    from star_ground.bom_lib.layout import names_control
 
     assert names_control("VOL 1")
     assert not names_control("Trim")
@@ -848,7 +848,7 @@ def test_trim_before_a_value_is_no_control_name() -> None:
 
 def test_side_by_side_boards_are_two_tables() -> None:
     # GuitarPCB DumbleTone: 'FrontStage' and 'DumbleTone' head one header line.
-    from src.bom_lib.layout import find_bom_rows
+    from star_ground.bom_lib.layout import find_bom_rows
 
     words = [
         *_line("FrontStage", top=80.0),
@@ -891,8 +891,8 @@ def test_title_case_pot_with_worded_taper_starts_a_listing() -> None:
 
 
 def test_pictured_list_under_heading() -> None:
-    from src.bom_lib.layout import pictured_lists
-    from src.bom_lib.types import Picture
+    from star_ground.bom_lib.layout import pictured_lists
+    from star_ground.bom_lib.types import Picture
 
     words = _line("Bill of Materials Sonic Bloom:", top=74.0)
     assert pictured_lists(words, [Picture(40, 94, 377, 220)]) == [
@@ -916,7 +916,7 @@ def test_pole_type_in_label_joins_the_value() -> None:
 
 def test_a_footnote_marker_is_no_value() -> None:
     # Aion FX legacy Cerulean: 'DX1-2  ²' leaves the diodes to the builder.
-    from src.bom_lib.layout import valueless_refs
+    from star_ground.bom_lib.layout import valueless_refs
 
     words = (
         _line("D1", "1N914", top=100)
@@ -940,14 +940,14 @@ def test_a_footnote_marker_is_no_value() -> None:
     ],
 )
 def test_control_designator(cell: str, ref: str | None) -> None:
-    from src.bom_lib.layout import control_designator
+    from star_ground.bom_lib.layout import control_designator
 
     assert control_designator(cell) == ref
 
 
 def test_an_unreadable_designator_beside_a_value() -> None:
     # OCR read GuitarPCB Guitar/Bass Driver's 'Q9  MPF102' as '60  MPF102'.
-    from src.bom_lib.layout import unreadable_rows
+    from star_ground.bom_lib.layout import unreadable_rows
 
     words = (
         _line("Q1", "2N5457", top=100)
@@ -960,7 +960,7 @@ def test_an_unreadable_designator_beside_a_value() -> None:
 
 def test_a_slash_pair_of_designators() -> None:
     # Aion FX legacy Solaris: 'Q1/Q2  germanium'.
-    from src.bom_lib.layout import ref_group
+    from star_ground.bom_lib.layout import ref_group
 
     assert ref_group("Q1/Q2") == "Q1,Q2"
     assert ref_group("1/4W") is None
@@ -973,7 +973,7 @@ def test_a_slash_pair_of_designators() -> None:
     ],
 )
 def test_a_designator_with_its_kind_or_role(cell: str, value: str) -> None:
-    from src.bom_lib.layout import find_listings
+    from star_ground.bom_lib.layout import find_listings
 
     words = _line("R1", "10k", top=100) + _line(cell, value, top=114)
     refs = [lst.ref for lst in find_listings(words)]
@@ -983,7 +983,7 @@ def test_a_designator_with_its_kind_or_role(cell: str, value: str) -> None:
 
 def test_a_designators_role_may_start_with_an_acronym() -> None:
     # GuitarPCB D'Lay: 'S2 PWM Speed Cycle | SPST' in a 'Part Value' table.
-    from src.bom_lib.layout import _DESIGNATOR_ROLE
+    from star_ground.bom_lib.layout import _DESIGNATOR_ROLE
 
     role = _DESIGNATOR_ROLE.fullmatch("S2 PWM Speed Cycle")
     assert role is not None

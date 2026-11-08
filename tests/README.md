@@ -47,8 +47,8 @@ Standard unit tests often suffer from "tester bias"—we only test the inputs we
 
 **File:** `tests/test_api.py`
 
-- **Mechanism:** Drives `src/api.py` as a frontend would, with no UI: merging projects, refusing an unchosen build and reusing a reading untouched, carrying input errors to the master list, subtracting stock, and the generated documents named by each project's label.
-- **The Boundary:** Scans the imports of every backend module and fails if one outside `src/server/` imports FastAPI.
+- **Mechanism:** Drives `src/star_ground/api.py` as a frontend would, with no UI: merging projects, refusing an unchosen build and reusing a reading untouched, carrying input errors to the master list, subtracting stock, and the generated documents named by each project's label.
+- **The Boundary:** Scans the imports of every backend module and fails if one outside `src/star_ground/server/` imports FastAPI.
 
 ### 5. URL Fetching over Real Sockets
 
@@ -68,7 +68,7 @@ uv run pytest -m network
 
 **File:** `tests/test_package.py`
 
-- **Mechanism:** Verifies that the `src.bom_lib` package exposes the correct public API and is free of circular import dependencies.
+- **Mechanism:** Verifies that the `star_ground.bom_lib` package exposes the correct public API and is free of circular import dependencies.
 
 ---
 

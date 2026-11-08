@@ -7,7 +7,7 @@
 # never split across jobs, which would. A last job gathers their results.
 #
 # Run it by hand (Actions > Catalog > Run workflow) for the first full run, or
-# for a sample of one publisher. See src/catalog/ for how the job behaves
+# for a sample of one publisher. See src/star_ground/catalog/ for how the job behaves
 # towards the publishers' sites.
 
 name: Catalog
@@ -105,7 +105,7 @@ jobs:
           [ -n "$PAGES" ] && args+=(--pages "$PAGES")
           [ -n "$DOCUMENTS" ] && args+=(--documents "$DOCUMENTS")
           set +e
-          uv run python -m src.catalog "${args[@]}"
+          uv run python -m star_ground.catalog "${args[@]}"
           echo "status=$?" >> "$GITHUB_OUTPUT"
 
       # Only this publisher's files, each named by the publisher: the jobs'

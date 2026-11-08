@@ -1,4 +1,4 @@
-"""Unit tests for reading image parts lists in `src/bom_lib/ocr.py`.
+"""Unit tests for reading image parts lists in `src/star_ground/bom_lib/ocr.py`.
 
 The OCR engine is replaced by a fake recognizer that returns fixed boxes, so
 these tests exercise everything after recognition without running the model.
@@ -10,8 +10,8 @@ from typing import Any
 import pytest
 from fpdf import FPDF
 
-from src.api import read_document
-from src.bom_lib import (
+from star_ground.api import read_document
+from star_ground.bom_lib import (
     ComponentCategory,
     FileUpload,
     InputMethod,
@@ -20,7 +20,7 @@ from src.bom_lib import (
     create_empty_inventory,
     make_component_key,
 )
-from src.bom_lib.ocr import (
+from star_ground.bom_lib.ocr import (
     OcrBox,
     _plausible,
     _reread_labels,
@@ -35,8 +35,8 @@ from src.bom_lib.ocr import (
     table_block,
     without_ocr,
 )
-from src.bom_lib.parser import parse_pedalpcb_pdf
-from src.bom_lib.types import (
+from star_ground.bom_lib.parser import parse_pedalpcb_pdf
+from star_ground.bom_lib.types import (
     BuildVariant,
     OcrAttempt,
     ParseResult,
@@ -134,7 +134,7 @@ class TestPageWords:
                 *boxes,
                 OcrBox("1N4148", 502, 542, 665, 674),
             ]
-            from src.bom_lib.layout import find_listings
+            from star_ground.bom_lib.layout import find_listings
 
             listings = find_listings(page_words(words)["words"])
             assert [(lst.ref, lst.value) for lst in listings] == [
@@ -144,7 +144,7 @@ class TestPageWords:
 
     def test_the_box_after_a_designator_starts_a_cell(self) -> None:
         # G2 Animal v3: '*D1 - D4' ends where '1N34A GE' starts.
-        from src.bom_lib.layout import find_listings
+        from star_ground.bom_lib.layout import find_listings
 
         words = page_words(
             [
@@ -163,7 +163,7 @@ class TestPageWords:
     def test_a_description_starts_a_cell(self) -> None:
         # Five Cats: 'TL072 Dual Op Amp' read as one box, and '1N914' 3pt
         # before 'Dual Op Amp'.
-        from src.bom_lib.layout import group_lines, split_cells
+        from star_ground.bom_lib.layout import group_lines, split_cells
 
         for boxes in (
             # Narrow glyphs: a word space is within a cell gap.
@@ -620,7 +620,7 @@ class TestAttemptOcr:
                 variants.append(BuildVariant(name, inventory, 6))
             return create_empty_inventory(), tuple(variants), ()
 
-        monkeypatch.setattr("src.bom_lib.ocr.read_pages", builds)
+        monkeypatch.setattr("star_ground.bom_lib.ocr.read_pages", builds)
         path = _blank_pdf(tmp_path / "image.pdf")
         result = parse_pedalpcb_pdf(path, "Image")
         attempt = attempt_ocr(path, result, "Image", lambda *_: _grid_boxes())

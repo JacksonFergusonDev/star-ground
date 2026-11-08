@@ -4,9 +4,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from src.bom_lib.enums import FeedbackRating
-from src.bom_lib.types import Location
-from src.feedback import (
+from star_ground.bom_lib.enums import FeedbackRating
+from star_ground.bom_lib.types import Location
+from star_ground.feedback import (
     FEEDBACK_SHEET,
     PartReport,
     connect_feedback_sheet,

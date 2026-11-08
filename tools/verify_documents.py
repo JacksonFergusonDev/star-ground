@@ -3,12 +3,12 @@ r"""Adds documents checked by hand to the catalog's verified list.
 A document's parts are checked by labelling them: a file in the corpus's
 `golden/` format, transcribed from the document (`tests/accuracy.py`
 describes it). This reads each labelled document exactly as the catalog job
-does (`src.catalog.build.catalog_reading`), grades that reading against the
+does (`star_ground.catalog.build.catalog_reading`), grades that reading against the
 labels with the accuracy suite's scorer, and adds the file to
 `catalog/verified.json` only when every part of every build is right. The
 entry holds the document's hash (up to its final `%%EOF`) and the reading's
 fingerprint, so the mark lasts only while both stay the same
-(`src.catalog.verified`).
+(`star_ground.catalog.verified`).
 
 A document that doesn't match is reported with its first wrong part and
 left off. Entries for documents not in this run are kept.
@@ -24,10 +24,15 @@ from datetime import date
 from multiprocessing import Pool
 from pathlib import Path
 
-from src.api import read_document
-from src.bom_lib import FileUpload, InputMethod, OcrVerdict
-from src.catalog.build import catalog_reading
-from src.catalog.verified import Checked, VerifiedList, document_hash, fingerprint
+from star_ground.api import read_document
+from star_ground.bom_lib import FileUpload, InputMethod, OcrVerdict
+from star_ground.catalog.build import catalog_reading
+from star_ground.catalog.verified import (
+    Checked,
+    VerifiedList,
+    document_hash,
+    fingerprint,
+)
 from tests.accuracy import GoldenDoc, load_golden, score_result
 
 

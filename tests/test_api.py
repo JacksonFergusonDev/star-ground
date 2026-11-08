@@ -1,4 +1,4 @@
-"""Tests for the backend API a frontend calls (`src.api`)."""
+"""Tests for the backend API a frontend calls (`star_ground.api`)."""
 
 import ast
 import io
@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from src.api import (
+from star_ground.api import (
     PENDING_SOURCE,
     Correction,
     Project,
@@ -19,16 +19,20 @@ from src.api import (
     read_document,
     read_stock,
 )
-from src.bom_lib import (
+from star_ground.bom_lib import (
     ComponentCategory,
     ComponentKey,
     FileUpload,
     InputMethod,
 )
-from src.bom_lib.errors import BuildNotChosenError, FetchError, UnreadablePartError
+from star_ground.bom_lib.errors import (
+    BuildNotChosenError,
+    FetchError,
+    UnreadablePartError,
+)
 
 SAMPLES = Path(__file__).parent / "samples"
-SRC = Path(__file__).parent.parent / "src"
+SRC = Path(__file__).parent.parent / "src" / "star_ground"
 
 R10K = ComponentKey(ComponentCategory.RESISTORS, "10k")
 
@@ -97,7 +101,7 @@ def test_input_errors_reach_the_master_list(monkeypatch: pytest.MonkeyPatch) -> 
     def refuse(url: str) -> None:
         raise FetchError("The link opened a web page, not a parts list.")
 
-    monkeypatch.setattr("src.bom_lib.strategies.context.fetch_url", refuse)
+    monkeypatch.setattr("star_ground.bom_lib.strategies.context.fetch_url", refuse)
     master = generate_master_list(
         [
             Project(data="R1 10k"),

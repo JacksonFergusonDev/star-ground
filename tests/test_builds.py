@@ -1,16 +1,16 @@
-"""Unit tests for build planning (variants and options) in `src/bom_lib/builds.py`."""
+"""Unit tests for build planning (variants and options) in `src/star_ground/bom_lib/builds.py`."""
 
 import pytest
 
-from src.bom_lib import (
+from star_ground.bom_lib import (
     BuildVariant,
     ParseResult,
     create_empty_inventory,
     create_empty_stats,
 )
-from src.bom_lib.builds import Entry, PageContext, plan_builds
-from src.bom_lib.layout import Cell
-from src.bom_lib.types import PDFWord
+from star_ground.bom_lib.builds import Entry, PageContext, plan_builds
+from star_ground.bom_lib.layout import Cell
+from star_ground.bom_lib.types import PDFWord
 
 
 def _cell(text: str, x0: float) -> Cell:
