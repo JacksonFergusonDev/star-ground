@@ -17,7 +17,6 @@ from typing import (
     NotRequired,
     Protocol,
     TypedDict,
-    cast,
     runtime_checkable,
 )
 
@@ -230,8 +229,9 @@ class ParseWarning:
         return f"{self.kind.value}: {self.message}"
 
 
-class StatsDict(TypedDict):
-    """Tracking metrics and errors for a single ingestion session.
+@dataclass(slots=True)
+class ReadingStats:
+    """What reading one document found, built up as it is read.
 
     Attributes:
         lines_read: Total lines processed from the source file.
@@ -247,18 +247,19 @@ class StatsDict(TypedDict):
         warnings: Self-check failures where the output may be incomplete.
     """
 
-    lines_read: int
-    parts_found: int
-    residuals: list[str]
-    extracted_title: str | None
-    seen_refs: dict[str, str]
-    unread_counted: list[str]
-    errors: list[ReadError]
-    warnings: list[ParseWarning]
+    lines_read: int = 0
+    parts_found: int = 0
+    residuals: list[str] = field(default_factory=list)
+    extracted_title: str | None = None
+    seen_refs: dict[str, str] = field(default_factory=dict)
+    unread_counted: list[str] = field(default_factory=list)
+    errors: list[ReadError] = field(default_factory=list)
+    warnings: list[ParseWarning] = field(default_factory=list)
 
 
-class PartData(TypedDict):
-    """Structure representing a specific component's aggregate data.
+@dataclass(slots=True)
+class PartData:
+    """One part's quantities and designators, built up as documents are read.
 
     Attributes:
         qty: Total quantity required across all projects.
@@ -274,12 +275,14 @@ class PartData(TypedDict):
             describes one pedal, whatever the number built.
     """
 
-    qty: int
-    val_qty: pint.Quantity[Any] | Decimal | None
-    refs: list[str]
-    sources: dict[str, list[str]]
-    included: int
-    counted: dict[str, int]
+    qty: int = 0
+    val_qty: pint.Quantity[Any] | Decimal | None = None
+    refs: list[str] = field(default_factory=list)
+    sources: defaultdict[str, list[str]] = field(
+        default_factory=lambda: defaultdict(list)
+    )
+    included: int = 0
+    counted: dict[str, int] = field(default_factory=dict)
 
 
 @dataclass(frozen=True, slots=True)
@@ -444,7 +447,8 @@ class ResolvedPartSourcing(NamedTuple):
     supplier_url: str
 
 
-class ChecklistPart(TypedDict):
+@dataclass(frozen=True, slots=True)
+class ChecklistPart:
     """Component checklist item for PDF Field Manual generation.
 
     Attributes:
@@ -463,7 +467,7 @@ class ChecklistPart(TypedDict):
     refs: list[str]
     notes: str
     polarized: bool
-    spec_type: NotRequired[ComponentSpec]
+    spec_type: ComponentSpec | None = None
 
 
 class PDFWord(TypedDict):
@@ -518,22 +522,35 @@ class PDFPageExtraction(TypedDict):
     marked: NotRequired[list[tuple[str, str]]]
 
 
-ShoppingListRow = TypedDict(
-    "ShoppingListRow",
-    {
-        "Origin": ComponentOrigin,
-        "Category": str,
-        "Part": str,
-        "BOM Qty": int,
-        "Included": int,
-        "In Stock": NotRequired[int],
-        "Net Need": NotRequired[int],
-        "Buy Qty": int,
-        "Notes": str,
-        "Search Term": str,
-        "Tayda_Link": str,
-    },
-)
+@dataclass(frozen=True, slots=True)
+class ShoppingLine:
+    """One part on the shopping list: what the builds use and what to buy.
+
+    Attributes:
+        origin: Whether the part is for the circuit board or the hardware kit.
+        category: The part's category.
+        part: The part's value as listed ('10k', 'TL072').
+        bom_qty: How many the builds use.
+        included: How many of `bom_qty` come with a PCB.
+        in_stock: How many the builder's stock holds.
+        net_need: How many are still needed after stock and included parts.
+        buy_qty: How many to buy, with spares.
+        notes: Buying notes for the builder.
+        search_term: What to search a supplier for.
+        supplier_url: A supplier search link.
+    """
+
+    origin: ComponentOrigin
+    category: ComponentCategory
+    part: str
+    bom_qty: int
+    included: int
+    in_stock: int
+    net_need: int
+    buy_qty: int
+    notes: str
+    search_term: str
+    supplier_url: str
 
 
 def make_component_key(category: ComponentCategory, val: str) -> ComponentKey:
@@ -586,14 +603,7 @@ class Inventory(UserDict[ComponentKey, PartData]):
 
     def __missing__(self, key: ComponentKey) -> PartData:
         """Default factory for new parts."""
-        value: PartData = {
-            "qty": 0,
-            "val_qty": None,
-            "refs": [],
-            "sources": defaultdict(list),
-            "included": 0,
-            "counted": {},
-        }
+        value = PartData()
         self.data[key] = value
         return value
 
@@ -609,26 +619,24 @@ class Inventory(UserDict[ComponentKey, PartData]):
         part = self[key]
 
         # Initialize cached quantity if this is a new part entry
-        if part["qty"] == 0:
+        if part.qty == 0:
             if key.category != ComponentCategory.UNKNOWN:
                 try:
                     from star_ground.bom_lib.classifier import (
                         normalize_value_to_quantity,
                     )
 
-                    part["val_qty"] = normalize_value_to_quantity(
-                        key.category, key.value
-                    )
+                    part.val_qty = normalize_value_to_quantity(key.category, key.value)
                 except ValueError:
-                    part["val_qty"] = None
+                    part.val_qty = None
             else:
-                part["val_qty"] = None
+                part.val_qty = None
 
-        part["qty"] += qty
+        part.qty += qty
 
         if ref:
-            part["refs"].append(ref)
-            part["sources"][source].append(ref)
+            part.refs.append(ref)
+            part.sources[source].append(ref)
 
     def add_counted(self, source: str, key: ComponentKey, qty: int) -> None:
         """Records parts the document counts by value, with no designator.
@@ -640,8 +648,8 @@ class Inventory(UserDict[ComponentKey, PartData]):
         """
         self.add_part(source, key, "", qty)
         part = self[key]
-        part["counted"][source] = part["counted"].get(source, 0) + qty
-        part["sources"].setdefault(source, [])
+        part.counted[source] = part.counted.get(source, 0) + qty
+        part.sources.setdefault(source, [])
 
     def move(self, source: str, ref: str, key: ComponentKey) -> bool:
         """Lists one of a source's designators as another part.
@@ -658,7 +666,7 @@ class Inventory(UserDict[ComponentKey, PartData]):
             Whether the source lists the designator.
         """
         found = next(
-            (k for k, data in self.items() if ref in data["sources"].get(source, [])),
+            (k for k, data in self.items() if ref in data.sources.get(source, [])),
             None,
         )
         if found is None:
@@ -666,11 +674,11 @@ class Inventory(UserDict[ComponentKey, PartData]):
         if found == key:
             return True
         old = self[found]
-        old["refs"].remove(ref)
-        old["sources"][source].remove(ref)
-        old["qty"] -= 1
-        old["included"] = min(old["included"], old["qty"])
-        if old["qty"] <= 0:
+        old.refs.remove(ref)
+        old.sources[source].remove(ref)
+        old.qty -= 1
+        old.included = min(old.included, old.qty)
+        if old.qty <= 0:
             del self[found]
         self.add_part(source, key, ref)
         return True
@@ -683,33 +691,14 @@ class Inventory(UserDict[ComponentKey, PartData]):
             multiplier: Multiplication factor for the incoming inventory quantities.
         """
         for key, data in other.items():
-            self[key]["qty"] += data["qty"] * multiplier
-            self[key]["included"] += data["included"] * multiplier
-            for src, n in data["counted"].items():
-                counted = self[key]["counted"]
+            self[key].qty += data.qty * multiplier
+            self[key].included += data.included * multiplier
+            for src, n in data.counted.items():
+                counted = self[key].counted
                 counted[src] = max(counted.get(src, 0), n)
-            self[key]["refs"].extend(data["refs"])
-            for src, refs in data["sources"].items():
-                self[key]["sources"][src].extend(refs * multiplier)
-
-
-def create_empty_stats() -> StatsDict:
-    """Factory function to return a zeroed StatsDict."""
-    return {
-        "lines_read": 0,
-        "parts_found": 0,
-        "residuals": [],
-        "extracted_title": None,
-        "seen_refs": {},
-        "unread_counted": [],
-        "errors": [],
-        "warnings": [],
-    }
-
-
-def create_empty_inventory() -> Inventory:
-    """Factory function to return new Inventory instance."""
-    return Inventory()
+            self[key].refs.extend(data.refs)
+            for src, refs in data.sources.items():
+                self[key].sources[src].extend(refs * multiplier)
 
 
 @dataclass(frozen=True, slots=True)
@@ -845,7 +834,7 @@ class ParseResult:
     """
 
     inventory: Inventory
-    stats: StatsDict
+    stats: ReadingStats
     title: str | None = None
     raw_content: bytes | None = None
     variants: tuple[BuildVariant, ...] = ()
@@ -880,7 +869,7 @@ class ParseResult:
             raise KeyError(
                 f"No build named {name!r}; choose one of {self.variant_names}"
             )
-        stats = cast(StatsDict, {**self.stats, "parts_found": variant.parts_found})
+        stats = replace(self.stats, parts_found=variant.parts_found)
         return replace(
             self,
             inventory=variant.inventory,
@@ -910,7 +899,7 @@ class ParseResult:
                 replace(
                     v,
                     inventory=self._with(v.inventory),
-                    parts_found=v.parts_found + self.stats["parts_found"],
+                    parts_found=v.parts_found + self.stats.parts_found,
                     locations={**self.locations, **v.locations},
                 )
                 for v in self.ocr.variants
@@ -925,7 +914,7 @@ class ParseResult:
             )
         inventory = self._with(self.ocr.inventory)
         stats = self._ocr_stats(self.ocr)
-        stats["parts_found"] += sum(d["qty"] for d in self.ocr.inventory.values())
+        stats.parts_found += sum(d.qty for d in self.ocr.inventory.values())
         return replace(
             self,
             inventory=inventory,
@@ -944,17 +933,14 @@ class ParseResult:
                 inventory[key] = copy.deepcopy(data)
         return inventory
 
-    def _ocr_stats(self, ocr: OcrAttempt) -> StatsDict:
+    def _ocr_stats(self, ocr: OcrAttempt) -> ReadingStats:
         """The stats with OCR's warnings, less those its reading answered."""
         inventories = [ocr.inventory, *(v.inventory for v in ocr.variants)]
-        read = {r for inv in inventories for data in inv.values() for r in data["refs"]}
+        read = {r for inv in inventories for data in inv.values() for r in data.refs}
         warnings = [
             w
-            for w in self.stats["warnings"]
+            for w in self.stats.warnings
             if w.kind != ParseWarningKind.NO_PARTS_LIST
             and not (w.kind == ParseWarningKind.UNEXTRACTED_REF and w.ref in read)
         ]
-        return cast(
-            StatsDict,
-            {**self.stats, "warnings": warnings + list(ocr.warnings)},
-        )
+        return replace(self.stats, warnings=warnings + list(ocr.warnings))

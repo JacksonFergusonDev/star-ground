@@ -458,12 +458,12 @@ def _actual_parts(inventory: Inventory) -> dict[str, ActualPart]:
     for key, data in inventory.items():
         if key.category == ComponentCategory.PCB:
             continue
-        counted = sum(data["counted"].values())
+        counted = sum(data.counted.values())
         if counted and key.value != _INJECTED_SOCKET:
             actual[f"{COUNTED_PREFIX}{key.category.value} {key.value}"] = ActualPart(
                 category=key.category, value=key.value, count=counted
             )
-        for ref in data["refs"]:
+        for ref in data.refs:
             if "(Inj)" in ref:
                 continue
             seen = actual.get(ref.upper())
@@ -626,9 +626,9 @@ def score_result(
     Returns:
         A DocScore covering every expected and every emitted designator.
     """
-    flagged = {w.ref.upper() for w in res.stats["warnings"] if w.ref}
-    if res.stats["errors"] or any(
-        w.kind == ParseWarningKind.NO_PARTS_LIST for w in res.stats["warnings"]
+    flagged = {w.ref.upper() for w in res.stats.warnings if w.ref}
+    if res.stats.errors or any(
+        w.kind == ParseWarningKind.NO_PARTS_LIST for w in res.stats.warnings
     ):
         # The builder was told nothing could be read (or the parse failed, which
         # the app reports): every part is flagged.
@@ -641,7 +641,7 @@ def score_result(
             ParseWarningKind.UNREADABLE_ROW,
         )
         and not w.ref
-        for w in res.stats["warnings"]
+        for w in res.stats.warnings
     ):
         flagged.add(_MISSING)
 

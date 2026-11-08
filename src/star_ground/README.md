@@ -39,7 +39,7 @@ Everything in `src/` except `server/` is the **backend**: it imports no web fram
 - **`bom_lib/constants.py`**: The knowledge base.
   - **Content:** Stores the "Silicon Sommelier" dictionaries (audio-grade substitutions), Regex patterns, and SI multipliers. This separates *configuration* from *logic*.
 - **`bom_lib/types.py`**: The schema definitions.
-  - **Role:** Defines the pipeline's types: `Inventory` and `PartData`, `StatsDict`, `ParseWarning`, and `ParseResult` with its builds and OCR attempt. Discrete choices are enums (`bom_lib/enums.py`), never magic strings.
+  - **Role:** Defines the pipeline's types: `Inventory` and `PartData`, `ReadingStats`, `ParseWarning`, and `ParseResult` with its builds and OCR attempt. Discrete choices are enums (`bom_lib/enums.py`), never magic strings.
 
 ### 3. Logic Kernel (The Brain)
 
@@ -91,13 +91,15 @@ Everything in `src/` except `server/` is the **backend**: it imports no web fram
 
 ## 🛠 Type Safety
 
-We utilize `TypedDict` structures defined in `bom_lib/types.py` to enforce schema integrity across the pipeline.
+The pipeline's types live in `bom_lib/types.py` as dataclasses. Accumulators, filled in as documents are read and merged, are mutable (`PartData`, `ReadingStats`); everything handed onward is frozen (`ShoppingLine`, `ParseResult`, `BuiltProject`). Column headers and display labels belong to the writers in `exporters.py`, never to these types.
 
 ```python
-class PartData(TypedDict):
-    qty: int
-    val_qty: pint.Quantity[Any] | Decimal | None  # 10000 ohm for '10k'
-    refs: list[str]  # ["R1", "R2"]
-    sources: dict[str, list[str]]  # Traceability back to origin PDF
-    included: int  # Of qty, how many come with the PCB
+@dataclass(slots=True)
+class PartData:
+    qty: int = 0
+    val_qty: pint.Quantity[Any] | Decimal | None = None  # 10000 ohm for '10k'
+    refs: list[str] = field(default_factory=list)  # ["R1", "R2"]
+    sources: defaultdict[str, list[str]] = ...  # Traceability back to each project
+    included: int = 0  # Of qty, how many come with the PCB
+    counted: dict[str, int] = field(default_factory=dict)
 ```

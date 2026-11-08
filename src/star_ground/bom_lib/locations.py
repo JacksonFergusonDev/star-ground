@@ -165,7 +165,7 @@ def _designators(inventory: Inventory) -> dict[str, str]:
     return {
         ref: key.value
         for key, data in inventory.items()
-        for ref in data["refs"]
+        for ref in data.refs
         if not ref.endswith(INJECTED_SUFFIX)
     }
 

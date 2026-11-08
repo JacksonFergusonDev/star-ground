@@ -46,42 +46,42 @@ def test_alternative_spec_formatting() -> None:
 def test_checklist_part_z_height_sorting() -> None:
     """Sorts ChecklistPart items according to hardware assembly sequence."""
     parts: list[ChecklistPart] = [
-        {
-            "category": ComponentCategory.ICS,
-            "value": "TL072",
-            "qty": 1,
-            "refs": ["U1"],
-            "notes": "",
-            "polarized": True,
-        },
-        {
-            "category": ComponentCategory.RESISTORS,
-            "value": "10k",
-            "qty": 2,
-            "refs": ["R1", "R2"],
-            "notes": "",
-            "polarized": False,
-        },
-        {
-            "category": ComponentCategory.PCB,
-            "value": "Triangulum",
-            "qty": 1,
-            "refs": ["PCB"],
-            "notes": "",
-            "polarized": False,
-        },
-        {
-            "category": ComponentCategory.HARDWARE_MISC,
-            "value": "8 PIN DIP SOCKET",
-            "qty": 1,
-            "refs": ["U1 (Inj)"],
-            "notes": "[!] Check Size",
-            "polarized": False,
-        },
+        ChecklistPart(
+            category=ComponentCategory.ICS,
+            value="TL072",
+            qty=1,
+            refs=["U1"],
+            notes="",
+            polarized=True,
+        ),
+        ChecklistPart(
+            category=ComponentCategory.RESISTORS,
+            value="10k",
+            qty=2,
+            refs=["R1", "R2"],
+            notes="",
+            polarized=False,
+        ),
+        ChecklistPart(
+            category=ComponentCategory.PCB,
+            value="Triangulum",
+            qty=1,
+            refs=["PCB"],
+            notes="",
+            polarized=False,
+        ),
+        ChecklistPart(
+            category=ComponentCategory.HARDWARE_MISC,
+            value="8 PIN DIP SOCKET",
+            qty=1,
+            refs=["U1 (Inj)"],
+            notes="[!] Check Size",
+            polarized=False,
+        ),
     ]
 
     sorted_parts = sort_by_z_height(parts)
-    categories_in_order = [p["category"] for p in sorted_parts]
+    categories_in_order = [p.category for p in sorted_parts]
 
     # PCB (0) -> Resistors (10) -> Sockets (18) -> ICs (90)
     assert categories_in_order == [
@@ -130,37 +130,37 @@ def test_natural_sort_key_types() -> None:
 def test_capacitor_z_height_sorting_by_spec() -> None:
     """Verifies that electrolytic caps rank after ceramic/film caps without string heuristics."""
     parts: list[ChecklistPart] = [
-        {
-            "category": ComponentCategory.CAPACITORS,
-            "value": "100uF",
-            "qty": 1,
-            "refs": ["C3"],
-            "notes": "",
-            "polarized": True,
-            "spec_type": ComponentSpec.ELECTROLYTIC,
-        },
-        {
-            "category": ComponentCategory.CAPACITORS,
-            "value": "100n",
-            "qty": 1,
-            "refs": ["C2"],
-            "notes": "",
-            "polarized": False,
-            "spec_type": ComponentSpec.BOX_FILM,
-        },
-        {
-            "category": ComponentCategory.RESISTORS,
-            "value": "10k",
-            "qty": 1,
-            "refs": ["R1"],
-            "notes": "",
-            "polarized": False,
-        },
+        ChecklistPart(
+            category=ComponentCategory.CAPACITORS,
+            value="100uF",
+            qty=1,
+            refs=["C3"],
+            notes="",
+            polarized=True,
+            spec_type=ComponentSpec.ELECTROLYTIC,
+        ),
+        ChecklistPart(
+            category=ComponentCategory.CAPACITORS,
+            value="100n",
+            qty=1,
+            refs=["C2"],
+            notes="",
+            polarized=False,
+            spec_type=ComponentSpec.BOX_FILM,
+        ),
+        ChecklistPart(
+            category=ComponentCategory.RESISTORS,
+            value="10k",
+            qty=1,
+            refs=["R1"],
+            notes="",
+            polarized=False,
+        ),
     ]
 
     sorted_parts = sort_by_z_height(parts)
     # Resistors (10) -> Film cap (40) -> Electro cap (60)
-    assert [p["value"] for p in sorted_parts] == ["10k", "100n", "100uF"]
+    assert [p.value for p in sorted_parts] == ["10k", "100n", "100uF"]
 
 
 def test_purchasing_config_typed_rules() -> None:
@@ -197,7 +197,7 @@ def test_parser_functions_return_parse_result(tmp_path: Path) -> None:
     # parse_with_verification
     res_text = parse_with_verification(["R1 10k"], source_name="Manual")
     assert isinstance(res_text, ParseResult)
-    assert res_text.stats["parts_found"] == 1
+    assert res_text.stats.parts_found == 1
     assert ComponentKey(ComponentCategory.RESISTORS, "10k") in res_text.inventory
 
     # parse_csv_bom
@@ -205,7 +205,7 @@ def test_parser_functions_return_parse_result(tmp_path: Path) -> None:
     csv_file.write_text("Designator,Value\nR1,10k\nC1,100n\n", encoding="utf-8")
     res_csv = parse_csv_bom(str(csv_file), source_name="CSV Test")
     assert isinstance(res_csv, ParseResult)
-    assert res_csv.stats["parts_found"] == 2
+    assert res_csv.stats.parts_found == 2
     assert ComponentKey(ComponentCategory.RESISTORS, "10k") in res_csv.inventory
 
 
@@ -246,7 +246,7 @@ def test_typed_inventory_operations() -> None:
     inv.add_part("ProjectB", key_c, "C1")
 
     # Quantities and metadata
-    assert inv[key_r]["qty"] == 2
+    assert inv[key_r].qty == 2
     assert key_r in inv
     # Non-ComponentKey objects return False for contains
     str_key: object = "Resistors | 10k"
@@ -271,8 +271,8 @@ def test_typed_inventory_operations() -> None:
     inv2 = Inventory()
     inv2.add_part("ProjectC", key_r, "R3")
     inv.merge(inv2, multiplier=2)
-    assert inv[key_r]["qty"] == 4  # 2 original + 2 * 1
-    assert inv[key_r]["sources"]["ProjectC"] == ["R3", "R3"]
+    assert inv[key_r].qty == 4  # 2 original + 2 * 1
+    assert inv[key_r].sources["ProjectC"] == ["R3", "R3"]
 
 
 def test_ref_designator_value_object() -> None:
@@ -391,7 +391,7 @@ def test_counted_parts_reach_each_projects_field_manual() -> None:
     rata = {item.value: item for item in _get_project_parts(totals, "La Rata")}
     assert rata["10k"].qty == 5  # one pedal's checklist: 4 counted + R9
     assert rata["10k"].unique_refs == ["R9"]
-    assert totals[key]["qty"] == 14
+    assert totals[key].qty == 14
 
 
 def test_a_socket_goes_in_before_small_capacitors_and_its_chip_last() -> None:

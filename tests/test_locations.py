@@ -8,7 +8,6 @@ from star_ground.bom_lib import (
     Location,
     PDFPageExtraction,
     PDFWord,
-    create_empty_inventory,
 )
 from star_ground.bom_lib.locations import locate
 from star_ground.bom_lib.ocr import without_ocr
@@ -33,7 +32,7 @@ def _page(*lines: tuple[float, list[str]]) -> PDFPageExtraction:
 
 
 def _parts(*parts: tuple[str, str]) -> Inventory:
-    inventory = create_empty_inventory()
+    inventory = Inventory()
     for ref, value in parts:
         inventory.add_part("Fuzz", make_component_key(_R, value), ref)
     return inventory
@@ -135,7 +134,7 @@ def test_every_part_of_a_document_is_located() -> None:
     with without_ocr():
         result = parse_pedalpcb_pdf(str(SAMPLES / "clean" / "Kliche-PedalPCB.pdf"), "K")
 
-    refs = {ref for data in result.inventory.values() for ref in data["refs"]}
+    refs = {ref for data in result.inventory.values() for ref in data.refs}
     printed = {ref for ref in refs if not ref.endswith(" (Inj)")}
     assert set(result.locations) == printed
 

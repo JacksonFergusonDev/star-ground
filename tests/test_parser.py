@@ -36,7 +36,12 @@ from star_ground.bom_lib import (
 )
 from star_ground.bom_lib.classifier import normalize_value_to_quantity
 from star_ground.bom_lib.enums import ComponentCategory, ComponentSpec
-from star_ground.bom_lib.types import ComponentKey, Inventory, PDFPageExtraction
+from star_ground.bom_lib.types import (
+    ComponentKey,
+    Inventory,
+    PDFPageExtraction,
+    ReadingStats,
+)
 
 # --- Standard Unit Tests ---
 
@@ -53,12 +58,12 @@ def test_basic_resistor_parsing():
     inventory, stats = res.inventory, res.stats
 
     key_r = ComponentKey(ComponentCategory.RESISTORS, "10k")
-    assert inventory[key_r]["qty"] == 1
-    assert "R1" in inventory[key_r]["refs"]
-    assert "R1" in inventory[key_r]["sources"]["Test Bench"]
+    assert inventory[key_r].qty == 1
+    assert "R1" in inventory[key_r].refs
+    assert "R1" in inventory[key_r].sources["Test Bench"]
 
-    assert stats["parts_found"] == 1
-    assert len(stats["residuals"]) == 0
+    assert stats.parts_found == 1
+    assert len(stats.residuals) == 0
 
 
 def test_source_tracking_logic():
@@ -73,13 +78,13 @@ def test_source_tracking_logic():
 
     # Simulate a merge operation (manually adding a second source)
     key_r = ComponentKey(ComponentCategory.RESISTORS, "10k")
-    inventory[key_r]["qty"] += 1
-    inventory[key_r]["sources"]["Tube Screamer"].append("R5")
+    inventory[key_r].qty += 1
+    inventory[key_r].sources["Tube Screamer"].append("R5")
 
     item = inventory[key_r]
-    assert item["qty"] == 2
-    assert item["sources"]["Big Muff"] == ["R1"]
-    assert item["sources"]["Tube Screamer"] == ["R5"]
+    assert item.qty == 2
+    assert item.sources["Big Muff"] == ["R1"]
+    assert item.sources["Tube Screamer"] == ["R5"]
 
 
 def test_pcb_trap():
@@ -93,8 +98,8 @@ def test_pcb_trap():
     inventory = parse_with_verification([raw_text], source_name="My Build").inventory
 
     key = ComponentKey(ComponentCategory.PCB, "BIG MUFF DIY PCB GUITAR EFFECT")
-    assert inventory[key]["qty"] == 1
-    assert "PCB" in inventory[key]["sources"]["My Build"]
+    assert inventory[key].qty == 1
+    assert "PCB" in inventory[key].sources["My Build"]
 
 
 def test_2n5457_behavior():
@@ -111,11 +116,11 @@ def test_2n5457_behavior():
 
     # Should stay as 2N5457
     key_2n = ComponentKey(ComponentCategory.TRANSISTORS, "2N5457")
-    assert inventory[key_2n]["qty"] == 1
+    assert inventory[key_2n].qty == 1
     # Should NOT inject adapter
     key_adapter = ComponentKey(ComponentCategory.HARDWARE_MISC, "SMD_ADAPTER_BOARD")
     adapter = inventory.get(key_adapter)
-    assert adapter is None or adapter["qty"] == 0
+    assert adapter is None or adapter.qty == 0
 
     # Case 2: Modern SMD Part
     raw_text_2 = "Q2 MMBF5457"
@@ -123,10 +128,10 @@ def test_2n5457_behavior():
 
     # Should stay as MMBF5457
     key_mmbf = ComponentKey(ComponentCategory.TRANSISTORS, "MMBF5457")
-    assert inventory_2[key_mmbf]["qty"] == 1
+    assert inventory_2[key_mmbf].qty == 1
     # Should NOT inject adapter (User might have SOT-23 pads on PCB)
     adapter_2 = inventory_2.get(key_adapter)
-    assert adapter_2 is None or adapter_2["qty"] == 0
+    assert adapter_2 is None or adapter_2.qty == 0
 
 
 def test_warning_flags():
@@ -172,7 +177,7 @@ def test_parser_never_crashes(garbage_string):
         inventory, stats = res.inventory, res.stats
 
         assert isinstance(inventory, MutableMapping)
-        assert isinstance(stats, dict)
+        assert isinstance(stats, ReadingStats)
 
     except Exception as e:
         # If the parser crashes, fail the test and print the input that killed it
@@ -382,29 +387,29 @@ def test_hardware_injection_and_smart_merge():
     inventory = Inventory()
     key_3k3 = ComponentKey(ComponentCategory.RESISTORS, "3.3k")
     key_pot = ComponentKey(ComponentCategory.POTENTIOMETERS, "100k-B")
-    inventory[key_3k3]["qty"] = 2
-    inventory[key_pot]["qty"] = 3
+    inventory[key_3k3].qty = 2
+    inventory[key_pot].qty = 3
 
     # Run injection for 1 pedal (Mutates in-place)
     get_standard_hardware(inventory, [BuildHardware(1)])
 
     # CHECK 1: Smart Merge
     # The function should have found "Resistors | 3.3k" and incremented it by 1 (for the LED).
-    assert inventory[key_3k3]["qty"] == 3  # 2 original + 1 injected
+    assert inventory[key_3k3].qty == 3  # 2 original + 1 injected
 
     # Verify the source tag was added
-    assert "Auto-Inject" in inventory[key_3k3]["sources"]
+    assert "Auto-Inject" in inventory[key_3k3].sources
 
     # CHECK 2: Forced Injection
     # Enclosures should be injected directly into inventory
     enc_key = ComponentKey(ComponentCategory.HARDWARE_MISC, "1590B Enclosure")
-    assert inventory[enc_key]["qty"] == 1
-    assert "Auto-Inject" in inventory[enc_key]["sources"]
+    assert inventory[enc_key].qty == 1
+    assert "Auto-Inject" in inventory[enc_key].sources
 
     # CHECK 3: Dynamic Knob Count
     # 3 Pots -> 3 Knobs injected
     knob_key = ComponentKey(ComponentCategory.HARDWARE_MISC, "Knob")
-    assert inventory[knob_key]["qty"] == 3
+    assert inventory[knob_key].qty == 3
 
 
 # --- Search Engine & Vendor Integration Tests ---
@@ -495,17 +500,17 @@ def test_fuzz_germanium_trigger():
     # Setup inventory with a Fuzz PCB
     inventory = Inventory()
     pcb_key = ComponentKey(ComponentCategory.PCB, "Fuzz Face")
-    inventory[pcb_key]["qty"] = 1
+    inventory[pcb_key].qty = 1
 
     get_standard_hardware(inventory, [BuildHardware(1)])
 
     # Check for Ge Transistors in the dictionary
     ge_key = ComponentKey(ComponentCategory.TRANSISTORS, "Germanium PNP")
     assert ge_key in inventory
-    assert inventory[ge_key]["qty"] == 0
+    assert inventory[ge_key].qty == 0
 
     # Check that the note made it into the source tag
-    sources = inventory[ge_key]["sources"]["Auto-Inject"]
+    sources = inventory[ge_key].sources["Auto-Inject"]
     assert any("Vintage Option" in s for s in sources)
 
 
@@ -612,13 +617,13 @@ def test_ref_expansion_integrity():
     item = inventory[key_r]
 
     # Qty check
-    assert item["qty"] == 3
+    assert item.qty == 3
 
     # Source Integrity Check
     # We want ['R1', 'R2', 'R3'], NOT ['R1-R3']
-    assert "R1" in item["sources"]["Range Test"]
-    assert "R2" in item["sources"]["Range Test"]
-    assert "R3" in item["sources"]["Range Test"]
+    assert "R1" in item.sources["Range Test"]
+    assert "R2" in item.sources["Range Test"]
+    assert "R3" in item.sources["Range Test"]
 
 
 # --- Inventory & Logistics Tests ---
@@ -676,13 +681,13 @@ Resistors,1k5,20
 
         # 1. Check Normalization (1k5 -> 1.5k)
         k_1k5 = ComponentKey(ComponentCategory.RESISTORS, "1.5k")
-        assert stock[k_1k5]["qty"] == 20
+        assert stock[k_1k5].qty == 20
 
         # 2. Check Basic Ingestion
         k_10k = ComponentKey(ComponentCategory.RESISTORS, "10k")
         k_100n = ComponentKey(ComponentCategory.CAPACITORS, "100n")
-        assert stock[k_10k]["qty"] == 100
-        assert stock[k_100n]["qty"] == 50
+        assert stock[k_10k].qty == 100
+        assert stock[k_100n].qty == 50
 
     finally:
         os.remove(tmp_path)
@@ -699,22 +704,22 @@ def test_net_needs_calculation():
     key_c = ComponentKey(ComponentCategory.CAPACITORS, "100n")
 
     bom = Inventory()
-    bom[key_r]["qty"] = 10  # Need 10
-    bom[key_c]["qty"] = 5  # Need 5
+    bom[key_r].qty = 10  # Need 10
+    bom[key_c].qty = 5  # Need 5
 
     # 2. Setup Stock
     stock = Inventory()
-    stock[key_r]["qty"] = 4  # Have 4 (Deficit 6)
-    stock[key_c]["qty"] = 10  # Have 10 (Surplus 5)
+    stock[key_r].qty = 4  # Have 4 (Deficit 6)
+    stock[key_c].qty = 10  # Have 10 (Surplus 5)
 
     # 3. Calculate
     net_inv = calculate_net_needs(bom, stock)
 
     # 4. Verify Deficit (10 - 4 = 6)
-    assert net_inv[key_r]["qty"] == 6
+    assert net_inv[key_r].qty == 6
 
     # 5. Verify Surplus (5 - 10 = -5 -> Floor at 0)
-    assert net_inv[key_c]["qty"] == 0
+    assert net_inv[key_c].qty == 0
 
 
 def test_serialize_inventory_leaves_out_injected_parts() -> None:
@@ -764,7 +769,7 @@ def test_a_designator_repeated_in_another_table_is_another_board() -> None:
     inventory, _ = _ingest_entries(entries, "T")
     q1 = inventory[ComponentKey(ComponentCategory.TRANSISTORS, "2N5088")]
     r102 = inventory[ComponentKey(ComponentCategory.RESISTORS, "100k")]
-    assert (q1["qty"], r102["qty"]) == (2, 1)
+    assert (q1.qty, r102.qty) == (2, 1)
 
 
 def _typed_page(
@@ -792,7 +797,6 @@ def _typed_page(
 
 def test_typed_table_repeated_labels_are_separate_parts() -> None:
     # Aion FX Asteria: 'GAIN | 1MA | ...pot' and 'GAIN | SPDT on-on | Toggle switch'.
-    from star_ground.bom_lib import create_empty_stats
     from star_ground.bom_lib.parser import _text_table_entries
 
     page = _typed_page(
@@ -802,20 +806,19 @@ def test_typed_table_repeated_labels_are_separate_parts() -> None:
             ("LEDR", "4k7", "Metal film resistor, 1/4W"),
         ]
     )
-    stats = create_empty_stats()
+    stats = ReadingStats()
     entries, _ = _text_table_entries([page], stats)
     assert [(e.ref, e.value) for e in entries] == [
         ("GAIN", "1MA"),
         ("GAIN (2)", "SPDT ON/ON"),
         ("LEDR", "4k7"),
     ]
-    assert stats["warnings"] == []
+    assert stats.warnings == []
 
 
 def test_typed_table_socket_row_keeps_its_label() -> None:
     # Aion FX Amethyst: 'IC1-SOCKET' is the socket, not IC1 named by its role
     # the way GuitarPCB's 'TR1-BIAS' is.
-    from star_ground.bom_lib import create_empty_stats
     from star_ground.bom_lib.parser import _text_table_entries
 
     page = _typed_page(
@@ -825,7 +828,7 @@ def test_typed_table_socket_row_keeps_its_label() -> None:
         ],
         cols=(50, 130, 220),
     )
-    entries, _ = _text_table_entries([page], create_empty_stats())
+    entries, _ = _text_table_entries([page], ReadingStats())
     assert [e.ref for e in entries] == ["IC1", "IC1-SOCKET"]
 
 
@@ -847,7 +850,7 @@ def test_listed_sockets_are_not_injected_again() -> None:
         ],
         "T",
     )
-    assert sorted(ref for data in inventory.values() for ref in data["refs"]) == [
+    assert sorted(ref for data in inventory.values() for ref in data.refs) == [
         "IC1",
         "IC1-S",
     ]
@@ -870,14 +873,13 @@ def test_reversed_text_is_not_read(matrix: tuple[float, ...], kept: bool) -> Non
 
 
 def test_untyped_grid_reads_named_controls_but_not_hardware() -> None:
-    from star_ground.bom_lib import create_empty_stats
     from star_ground.bom_lib.parser import _untyped_refs
 
-    stats = create_empty_stats()
+    stats = ReadingStats()
     assert _untyped_refs(stats, ["VOL"], "A500K") == ["VOL"]
     assert _untyped_refs(stats, ["Screw"], "M3 x 5mm") == []
     assert _untyped_refs(stats, ["R8", "RPDo"], "10k") == ["R8"]  # odd name reported
-    assert len(stats["warnings"]) == 1
+    assert len(stats.warnings) == 1
 
 
 def test_a_second_board_with_other_values_is_bought_too() -> None:
@@ -895,9 +897,9 @@ def test_a_second_board_with_other_values_is_bought_too() -> None:
         ],
         "T",
     )
-    refs = sorted(r for data in inventory.values() for r in data["refs"])
+    refs = sorted(r for data in inventory.values() for r in data.refs)
     assert refs == ["D1", "D1", "R1", "R1 (2)"]
-    assert [w.ref for w in stats["warnings"]] == ["R1"]
+    assert [w.ref for w in stats.warnings] == ["R1"]
 
 
 def test_value_column_grid_is_one_variant_per_column() -> None:
@@ -977,33 +979,31 @@ def _ruled_page(
 def test_listings_beside_a_ruled_row_are_read() -> None:
     # NostalgiTone: the table reads 'R2 | 1M' but merges the shaded row into
     # 'R1 1M', so C1, C2 and R1 are left to the layout reader.
-    from star_ground.bom_lib import create_empty_stats
     from star_ground.bom_lib.parser import read_pages
 
     page = _ruled_page(
         [["R1 1M", None, "C1 47n", None], ["R2", "1M", "C2", "220n"]],
         [("R1", "1M", "C1", "47n"), ("R2", "1M", "C2", "220n")],
     )
-    inventory, _, _ = read_pages([page], "Shaded", create_empty_stats())
-    refs = {ref for data in inventory.values() for ref in data["refs"]}
+    inventory, _, _ = read_pages([page], "Shaded", ReadingStats())
+    refs = {ref for data in inventory.values() for ref in data.refs}
     assert refs == {"R1", "R2", "C1", "C2"}
 
 
 def test_a_ruled_rows_value_is_not_read_as_a_listing() -> None:
     # Bad Mamma Jamma: 'D1 | LED | 3mm Red LED' is not a bare 'LED' listing.
-    from star_ground.bom_lib import create_empty_stats
     from star_ground.bom_lib.parser import read_pages
 
     page = _ruled_page([["D1", "LED", "3mm Red LED"]], [("D1", "LED", "3mm Red LED")])
-    inventory, _, _ = read_pages([page], "Ruled", create_empty_stats())
-    refs = {ref for data in inventory.values() for ref in data["refs"]}
+    inventory, _, _ = read_pages([page], "Ruled", ReadingStats())
+    refs = {ref for data in inventory.values() for ref in data.refs}
     assert refs == {"D1"}
 
 
 def test_pages_of_tables_are_all_read() -> None:
     # Five Cats Tone Monarch (OCR): the main table has its header, the
     # daughterboard's on the next page does not.
-    from star_ground.bom_lib import PDFWord, create_empty_stats
+    from star_ground.bom_lib import PDFWord
     from star_ground.bom_lib.parser import read_pages
 
     main = _typed_page(
@@ -1023,8 +1023,8 @@ def test_pages_of_tables_are_all_read() -> None:
     board = PDFPageExtraction(tables=[], text="", words=words)
 
     def refs(**kwargs: bool) -> set[str]:
-        inventory, _, _ = read_pages([main, board], "x", create_empty_stats(), **kwargs)
-        return {r for data in inventory.values() for r in data["refs"]}
+        inventory, _, _ = read_pages([main, board], "x", ReadingStats(), **kwargs)
+        return {r for data in inventory.values() for r in data.refs}
 
     assert "R23" not in refs()
     assert {"R1", "C1", "R23", "D13"} <= refs(tables_only=True)
@@ -1118,7 +1118,6 @@ def _words_page(
 
 def test_value_column_per_build_makes_builds() -> None:
     # Aion FX Aphelion: 'PART | VALUE (D+) | VALUE (250) | TYPE'.
-    from star_ground.bom_lib import create_empty_stats
     from star_ground.bom_lib.builds import plan_builds
     from star_ground.bom_lib.parser import _text_table_entries
 
@@ -1136,7 +1135,7 @@ def test_value_column_per_build_makes_builds() -> None:
             row("FSW", "3PDT", "", "Stomp switch, 3PDT"),
         ]
     )
-    entries, _ = _text_table_entries([page], create_empty_stats())
+    entries, _ = _text_table_entries([page], ReadingStats())
     assert [(e.ref, e.value, e.column) for e in entries] == [
         ("R2", "1M", "D+"),
         ("R2", "470k", "250"),
@@ -1175,7 +1174,6 @@ def test_two_build_list_rows_split_by_build(
 
 def test_alternate_spec_table_adds_no_parts() -> None:
     # Aion FX legacy Refractor: 'Silver Pony specs' restate listed values.
-    from star_ground.bom_lib import create_empty_stats
     from star_ground.bom_lib.builds import Entry
     from star_ground.bom_lib.parser import _alternate_spec_table
 
@@ -1192,14 +1190,14 @@ def test_alternate_spec_table_adds_no_parts() -> None:
         ["R21, R23", "1k8 / 4k7", "4k7 / 1k8", "Tone range"],
         ["C13", "820pF", "820pF", "Same"],
     ]
-    stats = create_empty_stats()
+    stats = ReadingStats()
     assert _alternate_spec_table(table, listed, stats)
-    assert sorted(w.ref for w in stats["warnings"]) == ["R10", "R17", "R21", "R23"]
+    assert sorted(w.ref for w in stats.warnings) == ["R10", "R17", "R21", "R23"]
     # A table of new parts is read as usual.
     assert not _alternate_spec_table(
         [["R30", "1k", "2k", "x"], ["R31", "1k", "2k", "x"], ["R32", "1k", "2k", "x"]],
         listed,
-        create_empty_stats(),
+        ReadingStats(),
     )
 
 
@@ -1313,11 +1311,10 @@ def test_tantalum_note_about_another_part_is_not_this_part() -> None:
 
 def test_socket_value_outranks_a_wrong_type() -> None:
     # Aion FX Nysiad Silicon: 'IC1-S | DIP-8 socket | BJT transistor, NPN, TO-92'.
-    from star_ground.bom_lib import create_empty_stats
     from star_ground.bom_lib.parser import _typed_row
 
     _, hint = _typed_row(
-        create_empty_stats(), "IC1-S", "DIP-8 socket", "BJT transistor, NPN, TO-92", ""
+        ReadingStats(), "IC1-S", "DIP-8 socket", "BJT transistor, NPN, TO-92", ""
     )
     assert hint == ComponentCategory.HARDWARE_MISC
 
@@ -1330,15 +1327,14 @@ def test_a_named_label_used_twice_is_two_parts() -> None:
     inventory, stats = _ingest_entries(
         [Entry("COMP", "5MM LED", 0), Entry("Comp", "SPDT", 0)], "T"
     )
-    refs = sorted(ref for data in inventory.values() for ref in data["refs"])
+    refs = sorted(ref for data in inventory.values() for ref in data.refs)
     assert refs == ["COMP", "Comp (2)"]
-    assert stats["warnings"] == []
+    assert stats.warnings == []
 
 
 def test_a_dashed_parts_list_drops_the_drawings_labels() -> None:
     # Tonepad: 'R1 - 10k' listings, and the schematic's 'AC  ADAPTOR' and
     # 'D1  47uF' labels on another page.
-    from star_ground.bom_lib import create_empty_stats
     from star_ground.bom_lib.parser import read_pages
 
     drawing = _words_page(
@@ -1352,14 +1348,14 @@ def test_a_dashed_parts_list_drops_the_drawings_labels() -> None:
             (("R4 - 4k7", 50.0), ("Q1 - 2N5088", 200.0)),
         ]
     )
-    inventory, _, _ = read_pages([drawing, parts], "Tonepad", create_empty_stats())
-    refs = {ref for data in inventory.values() for ref in data["refs"]}
+    inventory, _, _ = read_pages([drawing, parts], "Tonepad", ReadingStats())
+    refs = {ref for data in inventory.values() for ref in data.refs}
     assert refs == {"R1", "R2", "R3", "R4", "C1", "C2", "C3", "Q1"}
 
 
 def test_a_counted_list_is_read_without_designators() -> None:
     # Tonepad Rat: '2 - 1N914' counts the diodes the text calls D1 and D2.
-    from star_ground.bom_lib import ParseWarningKind, create_empty_stats
+    from star_ground.bom_lib import ParseWarningKind
     from star_ground.bom_lib.parser import read_pages
 
     page = _words_page(
@@ -1371,12 +1367,12 @@ def test_a_counted_list_is_read_without_designators() -> None:
         ],
         text="D1 and D2 clip the signal.\n2 - 1k\n1 - 10k\n3 - 100k",
     )
-    stats = create_empty_stats()
+    stats = ReadingStats()
     inventory, _, _ = read_pages([page], "Tonepad", stats)
     counted = {
-        (key.category, key.value): data["counted"]["Tonepad"]
+        (key.category, key.value): data.counted["Tonepad"]
         for key, data in inventory.items()
-        if data["counted"]
+        if data.counted
     }
     assert counted == {
         (ComponentCategory.RESISTORS, "1k"): 2,
@@ -1385,15 +1381,15 @@ def test_a_counted_list_is_read_without_designators() -> None:
         (ComponentCategory.DIODES, "1N914"): 2,
         (ComponentCategory.POTENTIOMETERS, "100k Log."): 3,
     }
-    assert inventory[ComponentKey(ComponentCategory.DIODES, "1N914")]["refs"] == []
-    kinds = {w.kind for w in stats["warnings"]}
+    assert inventory[ComponentKey(ComponentCategory.DIODES, "1N914")].refs == []
+    kinds = {w.kind for w in stats.warnings}
     assert ParseWarningKind.UNEXTRACTED_REF not in kinds
     assert ParseWarningKind.QUANTITY_LIST not in kinds
 
 
 def test_a_counted_row_of_unknown_kind_is_warned_not_guessed() -> None:
     # Tonepad LPB-1: '1 - 4k7' under 'Millbypass' could be a resistor or a trim.
-    from star_ground.bom_lib import ParseWarningKind, create_empty_stats
+    from star_ground.bom_lib import ParseWarningKind
     from star_ground.bom_lib.parser import read_pages
 
     page = _words_page(
@@ -1404,12 +1400,10 @@ def test_a_counted_row_of_unknown_kind_is_warned_not_guessed() -> None:
         ],
         text="1 - 4k7 1 - Off Axis\n1 - LED 2 - Center",
     )
-    stats = create_empty_stats()
+    stats = ReadingStats()
     inventory, _, _ = read_pages([page], "Tonepad", stats)
-    assert {key.value for key, data in inventory.items() if data["counted"]} == {"LED"}
-    [warning] = [
-        w for w in stats["warnings"] if w.kind == ParseWarningKind.QUANTITY_LIST
-    ]
+    assert {key.value for key, data in inventory.items() if data.counted} == {"LED"}
+    [warning] = [w for w in stats.warnings if w.kind == ParseWarningKind.QUANTITY_LIST]
     # A switch position ('1 - Off Axis') is no part to warn about.
     assert "'1 - 4k7'" in warning.message
     assert "Off Axis" not in warning.message
@@ -1433,7 +1427,6 @@ def test_included_refs(text: str, refs: set[str]) -> None:
 
 def test_a_part_included_with_the_pcb_is_listed_and_counted() -> None:
     # PedalPCB Deflector: the EEPROM comes programmed with the board.
-    from star_ground.bom_lib import create_empty_stats
     from star_ground.bom_lib.parser import read_pages
 
     page = _words_page(
@@ -1443,15 +1436,14 @@ def test_a_part_included_with_the_pcb_is_listed_and_counted() -> None:
         ],
         text="IC1 TL072\nIC3 24LC32A *Included",
     )
-    inventory, _, _ = read_pages([page], "Deflector", create_empty_stats())
-    included = {k.value: d["included"] for k, d in inventory.items() if d["refs"]}
+    inventory, _, _ = read_pages([page], "Deflector", ReadingStats())
+    included = {k.value: d.included for k, d in inventory.items() if d.refs}
     assert included["24LC32A"] == 1
     assert included["TL072"] == 0
 
 
 def test_a_box_around_board_artwork_is_no_parts_table() -> None:
     # Tonepad FraVerb: the artwork's labels read as a headerless one-row 'table'.
-    from star_ground.bom_lib import create_empty_stats
     from star_ground.bom_lib.parser import read_pages
 
     page: PDFPageExtraction = {
@@ -1459,8 +1451,8 @@ def test_a_box_around_board_artwork_is_no_parts_table() -> None:
         "text": "",
         "words": [],
     }
-    inventory, _, _ = read_pages([page], "Tonepad", create_empty_stats())
-    assert not any(data["refs"] for data in inventory.values())
+    inventory, _, _ = read_pages([page], "Tonepad", ReadingStats())
+    assert not any(data.refs for data in inventory.values())
 
 
 @pytest.mark.parametrize("value", ["Jumper to VR", "Jumper to GND", "JUMPER"])
@@ -1473,7 +1465,6 @@ def test_a_jumper_wire_is_not_populated(value: str) -> None:
 
 def test_a_second_versions_value_in_its_own_column() -> None:
     # Aion FX legacy Aurora: 'Parts (Ross / Dyna values)' over 'R2 | 470k | jumper'.
-    from star_ground.bom_lib import create_empty_stats
     from star_ground.bom_lib.parser import read_pages
 
     page: PDFPageExtraction = {
@@ -1489,9 +1480,9 @@ def test_a_second_versions_value_in_its_own_column() -> None:
         "text": "Parts (Ross / Dyna values)",
         "words": [],
     }
-    _, variants, _ = read_pages([page], "Aurora", create_empty_stats())
+    _, variants, _ = read_pages([page], "Aurora", ReadingStats())
     builds = {
-        v.name: {r: k.value for k, d in v.inventory.items() for r in d["refs"]}
+        v.name: {r: k.value for k, d in v.inventory.items() for r in d.refs}
         for v in variants
     }
     assert builds["Ross"] == {

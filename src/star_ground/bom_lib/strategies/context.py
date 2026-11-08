@@ -19,9 +19,9 @@ from star_ground.bom_lib.strategies.manual import ManualInputStrategy
 from star_ground.bom_lib.strategies.pdf import PDFParserStrategy
 from star_ground.bom_lib.types import (
     FileUpload,
+    Inventory,
     RawBOMData,
-    create_empty_inventory,
-    create_empty_stats,
+    ReadingStats,
 )
 
 logger = logging.getLogger(__name__)
@@ -55,9 +55,9 @@ def _from_download(doc: FetchedDocument) -> str | bytes | FileUpload:
 
 def _failed(error: ReadError) -> ParseResult:
     """An empty reading that reports why it is empty."""
-    stats = create_empty_stats()
-    stats["errors"].append(error)
-    return ParseResult(inventory=create_empty_inventory(), stats=stats)
+    stats = ReadingStats()
+    stats.errors.append(error)
+    return ParseResult(inventory=Inventory(), stats=stats)
 
 
 def _describe(method: InputMethod, data: RawBOMData, source_name: str) -> str:
@@ -103,8 +103,8 @@ class BOMParserContext:
         """
         if not data:
             return ParseResult(
-                inventory=create_empty_inventory(),
-                stats=create_empty_stats(),
+                inventory=Inventory(),
+                stats=ReadingStats(),
                 title=None,
                 raw_content=None,
             )

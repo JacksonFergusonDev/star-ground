@@ -31,13 +31,11 @@ from star_ground.bom_lib import (
     Inventory,
     ParseResult,
     ParseWarning,
+    ReadingStats,
     ReadPart,
-    ShoppingListRow,
-    StatsDict,
+    ShoppingLine,
     build_shopping_list,
     categorize_part,
-    create_empty_inventory,
-    create_empty_stats,
     get_standard_hardware,
     make_component_key,
     parse_user_inventory,
@@ -117,7 +115,7 @@ class MasterList:
 
     parts: Inventory
     kit: Inventory
-    stats: StatsDict
+    stats: ReadingStats
     projects: tuple[BuiltProject, ...]
     stock: Inventory | None = None
 
@@ -128,7 +126,7 @@ class MasterList:
 
     def shopping_list(
         self, show_hardware: bool = True, show_extras: bool = True
-    ) -> list[ShoppingListRow]:
+    ) -> list[ShoppingLine]:
         """What to buy, after stock and parts included with the PCB.
 
         Args:
@@ -355,7 +353,7 @@ def read_parts(result: ParseResult) -> tuple[ReadPart, ...]:
     return tuple(
         ReadPart(ref, key.category, key.value, result.locations.get(ref))
         for key, data in result.inventory.items()
-        for ref in data["refs"]
+        for ref in data.refs
         if not ref.endswith(INJECTED_SUFFIX)
     )
 
@@ -368,7 +366,7 @@ def counted_parts(result: ParseResult) -> tuple[CountedPart, ...]:
     return tuple(
         CountedPart(key.category, key.value, count)
         for key, data in result.inventory.items()
-        if (count := sum(data["counted"].values()))
+        if (count := sum(data.counted.values()))
     )
 
 
@@ -401,8 +399,8 @@ def generate_master_list(
     if unchosen:
         raise BuildNotChosenError(unchosen)
 
-    parts = create_empty_inventory()
-    stats = create_empty_stats()
+    parts = Inventory()
+    stats = ReadingStats()
     built: list[BuiltProject] = []
     # Each label's parts list: the same list entered twice shares its label
     # (one field manual for both), a different one gets its own.
@@ -428,11 +426,11 @@ def generate_master_list(
             rename_source_in_inventory(inventory, listed_as, label)
 
         parts.merge(inventory, project.count)
-        stats["lines_read"] += p_stats["lines_read"]
-        stats["parts_found"] += p_stats["parts_found"]
-        stats["residuals"].extend(p_stats["residuals"])
-        stats["errors"].extend(p_stats["errors"])
-        stats["warnings"].extend(p_stats["warnings"])
+        stats.lines_read += p_stats.lines_read
+        stats.parts_found += p_stats.parts_found
+        stats.residuals.extend(p_stats.residuals)
+        stats.errors.extend(p_stats.errors)
+        stats.warnings.extend(p_stats.warnings)
 
         built.append(
             BuiltProject(
@@ -445,8 +443,8 @@ def generate_master_list(
                     provided_hardware(inventory),
                     status_leds(inventory),
                 ),
-                warnings=tuple(p_stats["warnings"]),
-                errors=tuple(p_stats["errors"]),
+                warnings=tuple(p_stats.warnings),
+                errors=tuple(p_stats.errors),
                 options=tuple(str(o) for o in result.options),
                 document=result.raw_content,
                 parts=read_parts(result),

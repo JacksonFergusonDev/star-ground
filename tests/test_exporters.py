@@ -1,14 +1,15 @@
-"""Tests for CSV exporters using typed ShoppingListRow."""
+"""Tests for CSV exporters using typed ShoppingLine."""
 
 import csv
 import io
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
 
 from star_ground.bom_lib.enums import ComponentCategory, ComponentOrigin
 from star_ground.bom_lib.parser import parse_user_inventory
-from star_ground.bom_lib.types import FORMULA_PREFIXES, ShoppingListRow
+from star_ground.bom_lib.types import FORMULA_PREFIXES, ShoppingLine
 from star_ground.exporters import (
     BASE_SHOPPING_LIST_COLS,
     generate_shopping_list_csv,
@@ -38,106 +39,89 @@ def test_get_shopping_list_columns() -> None:
     assert "Search Term" in full_cols
 
 
+def _line(part: str = "10k", **overrides: object) -> ShoppingLine:
+    line = ShoppingLine(
+        origin=ComponentOrigin.CIRCUIT_BOARD,
+        category=ComponentCategory.RESISTORS,
+        part=part,
+        bom_qty=1,
+        included=0,
+        in_stock=0,
+        net_need=1,
+        buy_qty=1,
+        notes="",
+        search_term=part,
+        supplier_url="",
+    )
+    return replace(line, **overrides)  # type: ignore[arg-type]
+
+
 def test_generate_shopping_list_csv_standard() -> None:
-    """Generates standard CSV without formulas and without stock columns."""
-    rows: list[ShoppingListRow] = [
-        {
-            "Origin": ComponentOrigin.CIRCUIT_BOARD,
-            "Category": "Resistors",
-            "Part": "10k",
-            "BOM Qty": 4,
-            "Included": 0,
-            "Buy Qty": 10,
-            "Notes": "1/4W Metal Film",
-            "Search Term": "10k ohm 1/4w metal film",
-            "Tayda_Link": "https://www.taydaelectronics.com/catalogsearch/result/?q=10k",
-        }
+    """Writes one row per line under the shopping list's columns."""
+    rows = [
+        _line(
+            "10k",
+            bom_qty=4,
+            net_need=4,
+            buy_qty=10,
+            notes="1/4W Metal Film",
+            search_term="10k ohm 1/4w metal film",
+            supplier_url="https://www.taydaelectronics.com/catalogsearch/result/?q=10k",
+        )
     ]
 
-    csv_bytes = generate_shopping_list_csv(rows, use_excel_formulas=False)
-    decoded = csv_bytes.decode("utf-8-sig")
+    decoded = generate_shopping_list_csv(rows).decode("utf-8-sig")
 
-    assert (
-        "Category,Part,BOM Qty,Buy Qty,Notes,Search Term,Tayda_Link,Origin" in decoded
-    )
-    assert (
-        "Resistors,10k,4,10,1/4W Metal Film,10k ohm 1/4w metal film,https://www.taydaelectronics.com/catalogsearch/result/?q=10k,Circuit Board"
-        in decoded
-    )
+    assert decoded.splitlines() == [
+        "Category,Part,BOM Qty,In Stock,Net Need,Buy Qty,Notes,Search Term,Tayda_Link,Origin",
+        "Resistors,10k,4,0,4,10,1/4W Metal Film,10k ohm 1/4w metal film,https://www.taydaelectronics.com/catalogsearch/result/?q=10k,Circuit Board",
+    ]
 
 
 def test_generate_shopping_list_csv_with_stock_and_formula() -> None:
     """Generates CSV with stock columns and Excel HYPERLINK formulas."""
-    rows: list[ShoppingListRow] = [
-        {
-            "Origin": ComponentOrigin.CIRCUIT_BOARD,
-            "Category": "Capacitors",
-            "Part": "100n",
-            "BOM Qty": 5,
-            "Included": 0,
-            "In Stock": 2,
-            "Net Need": 3,
-            "Buy Qty": 10,
-            "Notes": "Box Film",
-            "Search Term": "100nF Box Film",
-            "Tayda_Link": "https://www.taydaelectronics.com/catalogsearch/result/?q=100n",
-        }
+    rows = [
+        _line(
+            "100n",
+            category=ComponentCategory.CAPACITORS,
+            bom_qty=5,
+            in_stock=2,
+            net_need=3,
+            buy_qty=10,
+            supplier_url="https://www.taydaelectronics.com/catalogsearch/result/?q=100n",
+        )
     ]
 
-    csv_bytes = generate_shopping_list_csv(rows, use_excel_formulas=True)
-    decoded = csv_bytes.decode("utf-8-sig")
+    decoded = generate_shopping_list_csv(rows, use_excel_formulas=True).decode(
+        "utf-8-sig"
+    )
 
-    import csv
-    import io
-
-    reader = list(csv.reader(io.StringIO(decoded)))
-    headers = reader[0]
-    row_data = reader[1]
-
-    assert "In Stock" in headers
-    assert "Net Need" in headers
-    tayda_idx = headers.index("Tayda_Link")
+    headers, row_data = list(csv.reader(io.StringIO(decoded)))
+    assert row_data[headers.index("In Stock")] == "2"
+    assert row_data[headers.index("Net Need")] == "3"
     assert (
-        row_data[tayda_idx]
+        row_data[headers.index("Tayda_Link")]
         == '=HYPERLINK("https://www.taydaelectronics.com/catalogsearch/result/?q=100n", "Buy")'
     )
 
 
 def test_generate_stock_update_csv() -> None:
     """Calculates remaining stock and excludes non-positive remainder rows."""
-    rows: list[ShoppingListRow] = [
-        {
-            "Origin": ComponentOrigin.CIRCUIT_BOARD,
-            "Category": "Resistors",
-            "Part": "10k",
-            "BOM Qty": 4,
-            "Included": 0,
-            "In Stock": 2,
-            "Net Need": 2,
-            "Buy Qty": 10,
-            "Notes": "",
-            "Search Term": "10k",
-            "Tayda_Link": "",
-        },
-        {
-            "Origin": ComponentOrigin.CIRCUIT_BOARD,
-            "Category": "ICs",
-            "Part": "TL072",
-            "BOM Qty": 2,
-            "Included": 0,
-            "In Stock": 2,
-            "Net Need": 0,
-            "Buy Qty": 0,
-            "Notes": "",
-            "Search Term": "TL072",
-            "Tayda_Link": "",
-        },
+    rows = [
+        _line("10k", bom_qty=4, in_stock=2, net_need=2, buy_qty=10),
+        _line(
+            "TL072",
+            category=ComponentCategory.ICS,
+            bom_qty=2,
+            in_stock=2,
+            net_need=0,
+            buy_qty=0,
+        ),
     ]
 
     # For 10k: (2 + 10) - 4 = 8 remaining -> should be included
     # For TL072: (2 + 0) - 2 = 0 remaining -> omitted
-    csv_bytes = generate_stock_update_csv(rows)
-    decoded = csv_bytes.decode("utf-8-sig")
+    decoded = generate_stock_update_csv(rows).decode("utf-8-sig")
 
     assert "Category,Part,Qty" in decoded
     assert "Resistors,10k,8" in decoded
@@ -146,38 +130,31 @@ def test_generate_stock_update_csv() -> None:
 
 def test_stock_update_does_not_spend_stock_on_included_parts() -> None:
     """A part that comes with the PCB is used without coming from stock."""
-    rows: list[ShoppingListRow] = [
-        {
-            "Origin": ComponentOrigin.CIRCUIT_BOARD,
-            "Category": "ICs",
-            "Part": "24LC32A",
-            "BOM Qty": 2,
-            "Included": 1,
-            "In Stock": 3,
-            "Net Need": 0,
-            "Buy Qty": 0,
-            "Notes": "",
-            "Search Term": "24LC32A",
-            "Tayda_Link": "",
-        },
+    rows = [
+        _line(
+            "24LC32A",
+            category=ComponentCategory.ICS,
+            bom_qty=2,
+            included=1,
+            in_stock=3,
+            net_need=0,
+            buy_qty=0,
+        )
     ]
     assert "ICs,24LC32A,2" in generate_stock_update_csv(rows).decode("utf-8-sig")
 
 
-def _row(category: str, part: str, buy: int, search: str = "") -> ShoppingListRow:
-    return {
-        "Origin": ComponentOrigin.CIRCUIT_BOARD,
-        "Category": category,
-        "Part": part,
-        "BOM Qty": buy,
-        "Included": 0,
-        "In Stock": 0,
-        "Net Need": buy,
-        "Buy Qty": buy,
-        "Notes": "",
-        "Search Term": search or part,
-        "Tayda_Link": "",
-    }
+def _row(
+    category: ComponentCategory, part: str, buy: int, search: str = ""
+) -> ShoppingLine:
+    return _line(
+        part,
+        category=category,
+        bom_qty=buy,
+        net_need=buy,
+        buy_qty=buy,
+        search_term=search or part,
+    )
 
 
 @pytest.mark.parametrize(
@@ -203,9 +180,9 @@ def test_only_real_part_numbers_are_given_to_the_supplier(
 
 def test_the_supplier_cart_lists_what_to_buy() -> None:
     rows = [
-        _row("ICs", "TL072", 2),
-        _row("Resistors", "10k", 10, "10k ohm 1/4w metal film"),
-        _row("Capacitors", "100n", 0),  # in stock: nothing to buy
+        _row(ComponentCategory.ICS, "TL072", 2),
+        _row(ComponentCategory.RESISTORS, "10k", 10, "10k ohm 1/4w metal film"),
+        _row(ComponentCategory.CAPACITORS, "100n", 0),  # in stock: nothing to buy
     ]
     text = generate_supplier_cart_csv(rows).decode("utf-8")
     assert text.splitlines() == [
@@ -215,22 +192,13 @@ def test_the_supplier_cart_lists_what_to_buy() -> None:
     ]
 
 
-def _shopping_row(part: str, **overrides: object) -> ShoppingListRow:
-    row: ShoppingListRow = {
-        "Origin": ComponentOrigin.CIRCUIT_BOARD,
-        "Category": "ICs",
-        "Part": part,
-        "BOM Qty": 1,
-        "Included": 0,
-        "In Stock": 0,
-        "Net Need": 1,
-        "Buy Qty": 1,
-        "Notes": "",
-        "Search Term": part,
-        "Tayda_Link": "https://www.taydaelectronics.com/catalogsearch/result/?q=x",
-    }
-    row.update(overrides)  # type: ignore[typeddict-item]
-    return row
+def _shopping_row(part: str, **overrides: object) -> ShoppingLine:
+    line = _line(
+        part,
+        category=ComponentCategory.ICS,
+        supplier_url="https://www.taydaelectronics.com/catalogsearch/result/?q=x",
+    )
+    return replace(line, **overrides)  # type: ignore[arg-type]
 
 
 @pytest.mark.parametrize("part", ["=1+1", "+cmd|calc", "-2+3", "@SUM(A1)"])
@@ -238,7 +206,7 @@ def test_document_text_never_becomes_a_spreadsheet_formula(part: str) -> None:
     rows = [_shopping_row(part)]
 
     shopping = generate_shopping_list_csv(rows, use_excel_formulas=True)
-    stock = generate_stock_update_csv([_shopping_row(part, **{"Buy Qty": 2})])
+    stock = generate_stock_update_csv([_shopping_row(part, buy_qty=2)])
     cart = generate_supplier_cart_csv(rows)
 
     for csv_bytes in (shopping, stock, cart):
@@ -256,7 +224,7 @@ def test_document_text_never_becomes_a_spreadsheet_formula(part: str) -> None:
 
 def test_the_stock_file_reads_back_a_guarded_part(tmp_path: Path) -> None:
     stock_csv = generate_stock_update_csv(
-        [_shopping_row("-2+3", Category="Transistors", **{"Buy Qty": 3})]
+        [_shopping_row("-2+3", category=ComponentCategory.TRANSISTORS, buy_qty=3)]
     )
     path = tmp_path / "stock.csv"
     path.write_bytes(stock_csv)

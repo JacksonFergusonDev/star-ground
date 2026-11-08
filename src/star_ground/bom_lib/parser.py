@@ -60,9 +60,7 @@ from star_ground.bom_lib.types import (
     PDFPageExtraction,
     PDFWord,
     Picture,
-    StatsDict,
-    create_empty_inventory,
-    create_empty_stats,
+    ReadingStats,
     make_component_key,
 )
 from star_ground.bom_lib.utils import expand_refs, parse_value_to_decimal
@@ -118,7 +116,7 @@ def ingest_bom_line(
     source: str,
     ref_raw: str,
     val_raw: str,
-    stats: StatsDict | None = None,
+    stats: ReadingStats | None = None,
     category_hint: ComponentCategory | None = None,
     qty: int = 1,
     inject: bool = True,
@@ -172,21 +170,21 @@ def ingest_bom_line(
             continue
 
         # De-dupe Check
-        if stats is not None and "seen_refs" in stats:
-            if not is_designator(r) and r not in stats["seen_refs"]:
+        if stats is not None:
+            if not is_designator(r) and r not in stats.seen_refs:
                 # A named label used twice is two parts, bought under 'COMP (2)'
                 # as in typed tables (Aion FX legacy L5 Preamp: 'COMP  5MM LED'
                 # and 'Comp  SPDT').
-                taken = {ref.upper() for ref in stats["seen_refs"]}
+                taken = {ref.upper() for ref in stats.seen_refs}
                 if r.upper() in taken:
                     n = 2
                     while f"{r.upper()} ({n})" in taken:
                         n += 1
                     r = f"{r} ({n})"
-            if r in stats["seen_refs"]:
-                check_duplicate(stats, r, stats["seen_refs"][r], val_raw)
+            if r in stats.seen_refs:
+                check_duplicate(stats, r, stats.seen_refs[r], val_raw)
                 continue
-            stats["seen_refs"][r] = val_raw
+            stats.seen_refs[r] = val_raw
 
         if stats is not None:
             check_classification(stats, r, val_raw, result.category, result.clean_value)
@@ -208,13 +206,13 @@ def ingest_bom_line(
 
 
 def _record_pcb(
-    inventory: Inventory, source_name: str, name: str, stats: StatsDict
+    inventory: Inventory, source_name: str, name: str, stats: ReadingStats
 ) -> None:
     key = make_component_key(ComponentCategory.PCB, name)
-    inventory[key]["qty"] += 1
-    if "PCB" not in inventory[key]["sources"][source_name]:
-        inventory[key]["sources"][source_name].append("PCB")
-    stats["parts_found"] += 1
+    inventory[key].qty += 1
+    if "PCB" not in inventory[key].sources[source_name]:
+        inventory[key].sources[source_name].append("PCB")
+    stats.parts_found += 1
 
 
 def parse_with_verification(
@@ -231,8 +229,8 @@ def parse_with_verification(
     Returns:
         A ParseResult containing updated inventory and parsing statistics.
     """
-    inventory = create_empty_inventory()
-    stats: StatsDict = create_empty_stats()
+    inventory = Inventory()
+    stats: ReadingStats = ReadingStats()
 
     # Regex: Matches Ref + Separator + Value.
     pattern = re.compile(r"^([a-zA-Z0-9_\-]+)[\s,]+(\S.*?)\s*$")
@@ -244,7 +242,7 @@ def parse_with_verification(
             line = line.strip()
             if not line:
                 continue
-            stats["lines_read"] += 1
+            stats.lines_read += 1
 
             # Check for PCB Definition (Prefix "PCB" + Value)
             parts = line.split(None, 1)
@@ -265,7 +263,7 @@ def parse_with_verification(
                 val_raw = match.group(2)
                 count = ingest_bom_line(inventory, source_name, ref_raw, val_raw, stats)
                 if count > 0:
-                    stats["parts_found"] += count
+                    stats.parts_found += count
                     success = True
 
             if not success:
@@ -273,7 +271,7 @@ def parse_with_verification(
                 if "PCB" in line.upper() and line.strip().upper() != "PCB":
                     _record_pcb(inventory, source_name, line.strip(), stats)
                 else:
-                    stats["residuals"].append(line)
+                    stats.residuals.append(line)
 
     return ParseResult(inventory=inventory, stats=stats)
 
@@ -319,11 +317,11 @@ def parse_csv_bom(filepath: str, source_name: str) -> ParseResult:
     Returns:
         A ParseResult containing updated inventory and parsing statistics.
     """
-    inventory = create_empty_inventory()
-    stats: StatsDict = create_empty_stats()
+    inventory = Inventory()
+    stats: ReadingStats = ReadingStats()
 
     for row in _read_table(filepath):
-        stats["lines_read"] += 1
+        stats.lines_read += 1
         row_clean = {str(k).lower().strip(): v for k, v in row.items() if k}
 
         # Try explicit columns
@@ -349,11 +347,11 @@ def parse_csv_bom(filepath: str, source_name: str) -> ParseResult:
         if ref and val:
             count = ingest_bom_line(inventory, source_name, ref, val, stats)
             if count > 0:
-                stats["parts_found"] += count
+                stats.parts_found += count
                 success = True
 
         if not success:
-            stats["residuals"].append(str(row))
+            stats.residuals.append(str(row))
 
     return ParseResult(inventory=inventory, stats=stats)
 
@@ -370,7 +368,7 @@ def parse_user_inventory(filepath: str) -> Inventory:
     Returns:
         A populated Inventory dictionary.
     """
-    stock: Inventory = create_empty_inventory()
+    stock: Inventory = Inventory()
 
     for row in _read_table(filepath):
         # A short row has None for its missing cells.
@@ -661,7 +659,7 @@ _ORIGINAL_PART = re.compile(r"\boriginal\b", re.IGNORECASE)
 
 def _table_entries(
     pages_data: list[PDFPageExtraction],
-    stats: StatsDict,
+    stats: ReadingStats,
     only_pages: set[int] | None = None,
 ) -> list[Entry]:
     """Strategy 1: Extract entries from ruled tables (LOCATION / VALUE / TYPE / NOTES).
@@ -749,7 +747,7 @@ def _table_entries(
 
             follows_or = False
             for row in table[start_row_idx:]:
-                stats["lines_read"] += 1
+                stats.lines_read += 1
                 row_safe = [str(cell) if cell else "" for cell in row]
                 filled = [c.strip() for c in row_safe if c.strip()]
                 if filled and (
@@ -1081,7 +1079,7 @@ _REF_ASIDE = re.compile(r"([A-Za-z]{1,4}\d{1,3})\s*\(([^\d()]*)\)", re.DOTALL)
 
 
 def _alternate_spec_table(
-    table: list[list[str | None]], listed: list[Entry], stats: StatsDict
+    table: list[list[str | None]], listed: list[Entry], stats: ReadingStats
 ) -> bool:
     """Reads a table restating listed parts' values beside other values.
 
@@ -1395,7 +1393,7 @@ def _value_column_grid(
 
 
 def _typed_row(
-    stats: StatsDict,
+    stats: ReadingStats,
     ref: str,
     value: str,
     type_text: str,
@@ -1446,7 +1444,7 @@ def _typed_row(
 
 
 def _check_typed_row(
-    stats: StatsDict, ref: str, value: str, hint: ComponentCategory | None
+    stats: ReadingStats, ref: str, value: str, hint: ComponentCategory | None
 ) -> None:
     """Reports a typed table row that no category fits (it must not vanish)."""
     if (
@@ -1461,7 +1459,7 @@ def _check_typed_row(
 
 
 def _text_table_entries(
-    pages_data: list[PDFPageExtraction], stats: StatsDict
+    pages_data: list[PDFPageExtraction], stats: ReadingStats
 ) -> tuple[list[Entry], dict[tuple[int, int], float]]:
     """Strategy 1b: Extract entries from unruled 'Reference | Value | Quantity' tables.
 
@@ -1483,7 +1481,7 @@ def _text_table_entries(
     noted: list[tuple[str, str, str]] = []
     for page_no, data in enumerate(pages_data):
         for row in find_bom_rows(data["words"]):
-            stats["lines_read"] += 1
+            stats.lines_read += 1
             noted.append((row.refs, row.value, row.notes))
             value, hint = row.value, None
             group = ref_group(row.refs)  # 'LDR 1 - 4' (GuitarPCB Band of Gypsys)
@@ -1552,7 +1550,7 @@ def _text_table_entries(
     return entries, spans
 
 
-def _untyped_refs(stats: StatsDict, refs: list[str], value: str) -> list[str]:
+def _untyped_refs(stats: ReadingStats, refs: list[str], value: str) -> list[str]:
     """The parts of an untyped table row: designators and named controls.
 
     A 'Part | Value' grid lists controls beside designators ('VOL | A100k',
@@ -1597,7 +1595,7 @@ def _is_not_populated(value: str) -> bool:
     )
 
 
-def _record_not_populated(stats: StatsDict, ref: str, value: str) -> None:
+def _record_not_populated(stats: ReadingStats, ref: str, value: str) -> None:
     """Marks a deliberately unpopulated designator as seen.
 
     It is not a part, but if the document lists the same designator again with
@@ -1605,7 +1603,7 @@ def _record_not_populated(stats: StatsDict, ref: str, value: str) -> None:
     rather than silently merged into this build.
     """
     for r in expand_refs(ref):
-        stats["seen_refs"].setdefault(r, value)
+        stats.seen_refs.setdefault(r, value)
 
 
 # Pin voltages beside a transistor: 'Q1  E-.39, B- .94, c- 1.62' (GuitarPCB
@@ -1636,7 +1634,7 @@ _PAD_LETTERS = re.compile(r"[A-Z]{1,2}")
 
 def _layout_entries(
     pages_data: list[PDFPageExtraction],
-    stats: StatsDict,
+    stats: ReadingStats,
     table_values: dict[str, str],
     only_pages: set[int] | None = None,
     row_ends: dict[tuple[int, int], float] | None = None,
@@ -1694,7 +1692,7 @@ def _layout_entries(
             if cells and cells[0].text.upper() in upper_values
         }
         for listing in found[page_no]:
-            stats["lines_read"] += 1
+            stats.lines_read += 1
             # A range lists each of its designators: 'D1-D2  1N4148'.
             refs = (
                 expand_refs(listing.ref)
@@ -1797,13 +1795,13 @@ def _counted_value(printed: str) -> str:
 
 
 def _counted_entries(
-    page_no: int, words: list[PDFWord], stats: StatsDict
+    page_no: int, words: list[PDFWord], stats: ReadingStats
 ) -> list[Entry]:
     """Reads the rows of a page that count parts by value ('4 - 10k', Tonepad).
 
     A row whose category neither its heading nor its value states is not
     read. Where its column has rows that were read, it is a part of the list
-    ('3 - jumpers' under Other), and is kept in `stats["unread_counted"]` for
+    ('3 - jumpers' under Other), and is kept in `stats.unread_counted` for
     `check_quantity_list`; elsewhere it is a switch position ('1 - Off Axis'
     under 'S1 = MIC', Tonepad SansAmp).
     """
@@ -1822,7 +1820,7 @@ def _counted_entries(
     for row, value, category in zip(rows, values, categories, strict=True):
         if category is None:
             if any(abs(row.x0 - x) <= _COUNTED_COLUMN_PT for x in read_columns):
-                stats["unread_counted"].append(row.text)
+                stats.unread_counted.append(row.text)
             continue
         named = _NAMED_COUNT.fullmatch(value)
         if row.count == 1 and named and is_designator(named.group("ref")):
@@ -1899,7 +1897,7 @@ def _cell_value(cells: list[Cell], listing: Listing) -> bool:
 
 def _ingest_entries(
     entries: list[Entry], source_name: str
-) -> tuple[Inventory, StatsDict]:
+) -> tuple[Inventory, ReadingStats]:
     """Ingests one build's entries into a fresh inventory.
 
     Each build gets its own duplicate tracking, so two variants listing the
@@ -1908,13 +1906,13 @@ def _ingest_entries(
     the same build belongs to another board (EV Mini's LFO and Audio PCBs
     both have Q1-Q4), so it is bought again rather than merged.
     """
-    inventory = create_empty_inventory()
-    stats = create_empty_stats()
+    inventory = Inventory()
+    stats = ReadingStats()
     table_of: dict[str, int] = {}
     lists_sockets = any(_SOCKET.search(entry.value) for entry in entries)
     for entry in entries:
         if entry.counted:
-            stats["parts_found"] += _ingest_counted(
+            stats.parts_found += _ingest_counted(
                 inventory, source_name, entry, inject=not lists_sockets
             )
             continue
@@ -1924,12 +1922,12 @@ def _ingest_entries(
         ref = entry.ref
         if entry.table is not None:
             first = table_of.setdefault(entry.ref, entry.table)
-            seen = stats["seen_refs"].get(entry.ref)
+            seen = stats.seen_refs.get(entry.ref)
             value = resolve_value_choice(None, entry.ref, entry.value)
             if first != entry.table and any(
                 _same_value(seen, v) for v in (entry.value, value)
             ):
-                del stats["seen_refs"][entry.ref]
+                del stats.seen_refs[entry.ref]
             elif first != entry.table and seen is not None and not entry.follows_or:
                 # Another table lists the same designator with another value:
                 # another board (Tweed Fuzztone's Tweed and Fuzz boards both
@@ -1937,7 +1935,7 @@ def _ingest_entries(
                 # builder is told which is which.
                 ref = _next_board_ref(stats, entry.ref)
                 check_second_board(stats, entry.ref, ref, seen, entry.value)
-        stats["parts_found"] += ingest_bom_line(
+        stats.parts_found += ingest_bom_line(
             inventory,
             source_name,
             ref,
@@ -1987,18 +1985,18 @@ def _same_value(seen: str | None, value: str) -> bool:
     return da is not None and da == db
 
 
-def _next_board_ref(stats: StatsDict, ref: str) -> str:
+def _next_board_ref(stats: ReadingStats, ref: str) -> str:
     """The first free 'R1 (2)', 'R1 (3)' ... for a designator on another board."""
     n = 2
-    while f"{ref} ({n})" in stats["seen_refs"]:
+    while f"{ref} ({n})" in stats.seen_refs:
         n += 1
     return f"{ref} ({n})"
 
 
-def _merge_warnings(target: StatsDict, source: StatsDict) -> None:
-    for warning in source["warnings"]:
-        if warning not in target["warnings"]:
-            target["warnings"].append(warning)
+def _merge_warnings(target: ReadingStats, source: ReadingStats) -> None:
+    for warning in source.warnings:
+        if warning not in target.warnings:
+            target.warnings.append(warning)
 
 
 # A part supplied with the PCB: 'IC3  24LC32A *Included' (PedalPCB Deflector),
@@ -2032,11 +2030,11 @@ def included_refs(page_texts: list[str]) -> frozenset[str]:
 def _mark_included(inventory: Inventory, refs: frozenset[str]) -> None:
     """Counts the parts of an inventory that come with the PCB."""
     for data in inventory.values():
-        data["included"] = sum(1 for r in data["refs"] if r in refs)
+        data.included = sum(1 for r in data.refs if r in refs)
 
 
 def _assemble_builds(
-    plan: BuildPlan, source_name: str, stats: StatsDict
+    plan: BuildPlan, source_name: str, stats: ReadingStats
 ) -> tuple[Inventory, tuple[BuildVariant, ...], tuple[OptionNote, ...], Inventory]:
     """Ingests every build in a plan.
 
@@ -2055,7 +2053,7 @@ def _assemble_builds(
     )
     # Merge each build and option choice separately: one variant's OMIT must not
     # hide another variant's part for the same designator.
-    union = create_empty_inventory()
+    union = Inventory()
     builds = [plan.build_entries(v) for v in plan.variants] or [plan.build_entries()]
     builds += [list(choice) for o in plan.options for _, choice in o.choices[1:]]
     for entries in builds:
@@ -2067,7 +2065,7 @@ def _assemble_builds(
             plan.build_entries(variant), source_name
         )
         _merge_warnings(stats, build_stats)
-        stats["parts_found"] += build_stats["parts_found"]
+        stats.parts_found += build_stats.parts_found
         return inventory, (), options, union
 
     variants = []
@@ -2076,10 +2074,8 @@ def _assemble_builds(
             plan.build_entries(planned), source_name
         )
         _merge_warnings(stats, build_stats)
-        variants.append(
-            BuildVariant(planned.name, inventory, build_stats["parts_found"])
-        )
-    return create_empty_inventory(), tuple(variants), options, union
+        variants.append(BuildVariant(planned.name, inventory, build_stats.parts_found))
+    return Inventory(), tuple(variants), options, union
 
 
 # Rotation terms this small are a PDF writer's rounding, not a rotation.
@@ -2218,7 +2214,7 @@ def _pictures(page: Any) -> list[Picture]:
 def read_pages(
     pages_data: list[PDFPageExtraction],
     source_name: str,
-    stats: StatsDict,
+    stats: ReadingStats,
     *,
     tables_only: bool = False,
 ) -> tuple[Inventory, tuple[BuildVariant, ...], tuple[OptionNote, ...]]:
@@ -2338,11 +2334,11 @@ def read_pages(
         for k, (data, text) in enumerate(zip(pages_data, page_texts, strict=True))
     ]
     check_parts_found(
-        stats, sum(len(d["refs"]) + sum(d["counted"].values()) for d in union.values())
+        stats, sum(len(d.refs) + sum(d.counted.values()) for d in union.values())
     )
     check_value_keyed_list(page_texts, stats)
     counted = [e.ref.removeprefix("#") for e in entries if e.counted]
-    check_quantity_list(page_texts, counted, stats["unread_counted"], stats)
+    check_quantity_list(page_texts, counted, stats.unread_counted, stats)
     omitted = frozenset(
         r for e in entries if _is_not_populated(e.value) for r in expand_refs(e.ref)
     )
@@ -2366,7 +2362,7 @@ def read_pages(
             ]
             if not variants or ref.upper() not in read_on.get(k, set())
         ],
-        union if not variants else create_empty_inventory(),
+        union if not variants else Inventory(),
         stats,
     )
     if tables_only:
@@ -2415,14 +2411,12 @@ def read_pages(
                     k, [(li.ref, li.value) for li in listings], read, stats
                 )
     check_bom_reconciliation(page_texts, union, stats)
-    if counted or any(
-        w.kind == ParseWarningKind.QUANTITY_LIST for w in stats["warnings"]
-    ):
+    if counted or any(w.kind == ParseWarningKind.QUANTITY_LIST for w in stats.warnings):
         # A list that counts parts ('3 - 1N914') names no designators for them,
         # so the schematic's D1-D3 are 'missing' by design: the parts were read
         # by count, or the document is told they were not read.
-        stats["warnings"][:] = [
-            w for w in stats["warnings"] if w.kind != ParseWarningKind.UNEXTRACTED_REF
+        stats.warnings[:] = [
+            w for w in stats.warnings if w.kind != ParseWarningKind.UNEXTRACTED_REF
         ]
     return inventory, variants, options
 
@@ -2561,8 +2555,8 @@ def parse_pedalpcb_pdf(filepath: str, source_name: str) -> ParseResult:
     # Lazy import to avoid loading heavy PDF libraries unless needed
     import pdfplumber
 
-    inventory = create_empty_inventory()
-    stats: StatsDict = create_empty_stats()
+    inventory = Inventory()
+    stats: ReadingStats = ReadingStats()
     variants: tuple[BuildVariant, ...] = ()
     options: tuple[OptionNote, ...] = ()
 
@@ -2608,7 +2602,7 @@ def parse_pedalpcb_pdf(filepath: str, source_name: str) -> ParseResult:
 
         # --- PHASE 2: TITLE EXTRACTION ---
         # A heuristic: a page with no title-like words leaves it unset.
-        stats["extracted_title"] = _title(pdf, pages_data, misread)
+        stats.extracted_title = _title(pdf, pages_data, misread)
 
         inventory, variants, options = read_pages(pages_data, source_name, stats)
         locations = locate(pages_data, inventory)
@@ -2624,7 +2618,7 @@ def parse_pedalpcb_pdf(filepath: str, source_name: str) -> ParseResult:
     return ParseResult(
         inventory=inventory,
         stats=stats,
-        title=stats.get("extracted_title"),
+        title=stats.extracted_title,
         variants=variants,
         options=options,
         locations=locations,

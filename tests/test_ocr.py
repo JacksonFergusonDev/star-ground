@@ -17,7 +17,6 @@ from star_ground.bom_lib import (
     InputMethod,
     OcrVerdict,
     ParseWarningKind,
-    create_empty_inventory,
     make_component_key,
 )
 from star_ground.bom_lib.ocr import (
@@ -38,10 +37,11 @@ from star_ground.bom_lib.ocr import (
 from star_ground.bom_lib.parser import parse_pedalpcb_pdf
 from star_ground.bom_lib.types import (
     BuildVariant,
+    Inventory,
     OcrAttempt,
     ParseResult,
     ParseWarning,
-    StatsDict,
+    ReadingStats,
 )
 
 # A parts table as RapidOCR reads it: one box per cell, 20pt rows, two
@@ -65,18 +65,8 @@ def _grid_boxes(top: float = 400.0) -> list[OcrBox]:
     return boxes
 
 
-def _stats(*warnings: ParseWarning) -> StatsDict:
-    stats: StatsDict = {
-        "lines_read": 0,
-        "parts_found": 0,
-        "residuals": [],
-        "extracted_title": None,
-        "seen_refs": {},
-        "unread_counted": [],
-        "errors": [],
-        "warnings": list(warnings),
-    }
-    return stats
+def _stats(*warnings: ParseWarning) -> ReadingStats:
+    return ReadingStats(warnings=list(warnings))
 
 
 def _blank_pdf(path: Path) -> str:
@@ -546,18 +536,16 @@ class TestNeedsOcr:
 
     def test_no_parts_list(self) -> None:
         warning = ParseWarning(ParseWarningKind.NO_PARTS_LIST, "", "none")
-        result = ParseResult(create_empty_inventory(), _stats(warning))
+        result = ParseResult(Inventory(), _stats(warning))
         assert needs_ocr(result)
 
     def test_clean_parse(self) -> None:
-        assert not needs_ocr(ParseResult(create_empty_inventory(), _stats()))
+        assert not needs_ocr(ParseResult(Inventory(), _stats()))
 
     def test_document_with_builds(self) -> None:
         warning = ParseWarning(ParseWarningKind.UNEXTRACTED_REF, "R9", "missing")
-        variant = BuildVariant("A", create_empty_inventory(), 0)
-        result = ParseResult(
-            create_empty_inventory(), _stats(warning), variants=(variant,)
-        )
+        variant = BuildVariant("A", Inventory(), 0)
+        result = ParseResult(Inventory(), _stats(warning), variants=(variant,))
         assert not needs_ocr(result)
 
 
@@ -582,12 +570,12 @@ class TestAttemptOcr:
         assert {"R1", "C3", "IC1", "D1", "D2"} <= ocr_refs
 
         accepted = ParseResult(result.inventory, result.stats, ocr=attempt).accept_ocr()
-        kinds = {w.kind for w in accepted.stats["warnings"]}
+        kinds = {w.kind for w in accepted.stats.warnings}
         assert ParseWarningKind.NO_PARTS_LIST not in kinds
         assert accepted.ocr is None
         cap = make_component_key(ComponentCategory.CAPACITORS, "1u")
-        assert accepted.inventory[cap]["refs"] == ["C3"]
-        assert accepted.stats["parts_found"] >= 11
+        assert accepted.inventory[cap].refs == ["C3"]
+        assert accepted.stats.parts_found >= 11
         # Each part points to its row in the image: C3 and its value, '1μ'.
         c3 = accepted.locations["C3"]
         assert (c3.page, c3.x0, c3.top, c3.x1) == (0, 180, 440, 266)
@@ -604,7 +592,7 @@ class TestAttemptOcr:
         ]
         attempt = attempt_ocr(path, result, "Image", lambda *_: boxes)
         assert attempt is not None
-        assert any("CLIP1" in d["refs"] for d in attempt.inventory.values())
+        assert any("CLIP1" in d.refs for d in attempt.inventory.values())
 
     def test_several_builds_are_offered(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
@@ -613,12 +601,12 @@ class TestAttemptOcr:
         def builds(*_: object, **__: object) -> tuple[Any, ...]:
             variants = []
             for name, value in (("Octavia", "10k"), ("Vintage", "1k")):
-                inventory = create_empty_inventory()
+                inventory = Inventory()
                 for n in range(1, 7):
                     key = make_component_key(ComponentCategory.RESISTORS, value)
                     inventory.add_part("x", key, f"R{n}", 1)
                 variants.append(BuildVariant(name, inventory, 6))
-            return create_empty_inventory(), tuple(variants), ()
+            return Inventory(), tuple(variants), ()
 
         monkeypatch.setattr("star_ground.bom_lib.ocr.read_pages", builds)
         path = _blank_pdf(tmp_path / "image.pdf")
@@ -636,8 +624,8 @@ class TestAttemptOcr:
         assert accepted.requires_choice
         vintage = accepted.select("Vintage")
         one_k = make_component_key(ComponentCategory.RESISTORS, "1k")
-        assert vintage.inventory[one_k]["refs"] == [f"R{n}" for n in range(1, 7)]
-        kinds = {w.kind for w in vintage.stats["warnings"]}
+        assert vintage.inventory[one_k].refs == [f"R{n}" for n in range(1, 7)]
+        kinds = {w.kind for w in vintage.stats.warnings}
         assert ParseWarningKind.NO_PARTS_LIST not in kinds
         assert ParseWarningKind.OCR_READ in kinds
 
@@ -687,7 +675,7 @@ class TestAttemptOcr:
     ) -> None:
         attempt = OcrAttempt(
             verdict=OcrVerdict.PARTIAL,
-            inventory=create_empty_inventory(),
+            inventory=Inventory(),
             warnings=(),
             pages=(0,),
             parts_read=13,
@@ -700,12 +688,12 @@ class TestAttemptOcr:
         def fail(*_: object) -> list[OcrBox]:
             raise AssertionError("OCR must not run")
 
-        result = ParseResult(create_empty_inventory(), _stats())
+        result = ParseResult(Inventory(), _stats())
         assert attempt_ocr(str(tmp_path / "x.pdf"), result, "X", fail) is None
 
     def test_accept_without_ocr_parts(self) -> None:
         with pytest.raises(ValueError, match="No OCR parts"):
-            ParseResult(create_empty_inventory(), _stats()).accept_ocr()
+            ParseResult(Inventory(), _stats()).accept_ocr()
 
 
 class TestOptIn:

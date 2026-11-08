@@ -57,7 +57,7 @@ from star_ground.bom_lib import (
     ParseWarning,
     ParseWarningKind,
     ReadPart,
-    ShoppingListRow,
+    ShoppingLine,
     get_residual_report,
     make_component_key,
 )
@@ -446,7 +446,7 @@ def _document_reading(
         else None,
         title=reading.title,
         file_title=file_title(method, data),
-        parts_found=reading.stats["parts_found"],
+        parts_found=reading.stats.parts_found,
         builds=list(reading.variant_names),
         ocr_builds=list(offered(reading, use_ocr=True).variant_names),
         ocr=OcrReading(
@@ -461,7 +461,7 @@ def _document_reading(
         else None,
         ocr_offered=services.settings.ocr and not ocr_run and needs_ocr(reading),
         options=[str(o) for o in reading.options],
-        errors=[_problem(services, e) for e in reading.stats["errors"]],
+        errors=[_problem(services, e) for e in reading.stats.errors],
     )
 
 
@@ -547,19 +547,19 @@ def _warning(w: ParseWarning) -> PartWarning:
     return PartWarning(kind=w.kind, ref=w.ref, message=w.message)
 
 
-def _row(row: ShoppingListRow) -> ShoppingRow:
+def _row(row: ShoppingLine) -> ShoppingRow:
     return ShoppingRow(
-        origin=row["Origin"],
-        category=row["Category"],
-        part=row["Part"],
-        bom_qty=row["BOM Qty"],
-        included=row["Included"],
-        in_stock=row.get("In Stock"),
-        net_need=row.get("Net Need"),
-        buy_qty=row["Buy Qty"],
-        notes=row["Notes"],
-        search_term=row["Search Term"],
-        supplier_url=row["Tayda_Link"],
+        origin=row.origin,
+        category=row.category.value,
+        part=row.part,
+        bom_qty=row.bom_qty,
+        included=row.included,
+        in_stock=row.in_stock,
+        net_need=row.net_need,
+        buy_qty=row.buy_qty,
+        notes=row.notes,
+        search_term=row.search_term,
+        supplier_url=row.supplier_url,
     )
 
 
@@ -594,8 +594,8 @@ def _result(
             for r in master.shopping_list(request.show_hardware, request.show_extras)
         ],
         stats=Stats(
-            lines_read=stats["lines_read"],
-            parts_found=stats["parts_found"],
+            lines_read=stats.lines_read,
+            parts_found=stats.parts_found,
         ),
         ignored_lines=get_residual_report(stats),
         has_stock=master.stock is not None,

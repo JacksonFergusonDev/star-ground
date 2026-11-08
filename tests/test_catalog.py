@@ -18,10 +18,13 @@ from star_ground.bom_lib import (
     ParseResult,
     ParseWarning,
     ParseWarningKind,
-    create_empty_inventory,
-    create_empty_stats,
 )
-from star_ground.bom_lib.types import Location, make_component_key
+from star_ground.bom_lib.types import (
+    Inventory,
+    Location,
+    ReadingStats,
+    make_component_key,
+)
 from star_ground.catalog.build import (
     BOARDS_VERSION,
     Budget,
@@ -540,13 +543,13 @@ def test_tonepad_documents_come_from_published_file_pages() -> None:
 
 
 def _reading(parts: int = 2, warnings: list[ParseWarning] | None = None) -> ParseResult:
-    inventory = create_empty_inventory()
+    inventory = Inventory()
     for n in range(1, parts + 1):
         inventory.add_part(
             "doc", make_component_key(ComponentCategory.RESISTORS, "10k"), f"R{n}"
         )
-    stats = create_empty_stats()
-    stats["warnings"] = warnings or []
+    stats = ReadingStats()
+    stats.warnings = warnings or []
     return ParseResult(inventory=inventory, stats=stats, title="Fuzz")
 
 
@@ -1054,7 +1057,7 @@ def test_a_dead_link_hides_its_build(tmp_path: Path, run: Any) -> None:
 
 def test_a_fingerprint_is_what_is_bought_not_where_or_in_what_order() -> None:
     a = _reading(parts=2)
-    b = create_empty_inventory()
+    b = Inventory()
     for n in (2, 1):
         b.add_part(
             "other", make_component_key(ComponentCategory.RESISTORS, "10k"), f"R{n}"
@@ -1064,9 +1067,7 @@ def test_a_fingerprint_is_what_is_bought_not_where_or_in_what_order() -> None:
         "doc", make_component_key(ComponentCategory.RESISTORS, "1k"), "R3"
     )
 
-    assert fingerprint(a) == fingerprint(
-        ParseResult(b, create_empty_stats(), title="Other")
-    )
+    assert fingerprint(a) == fingerprint(ParseResult(b, ReadingStats(), title="Other"))
     assert fingerprint(a) != fingerprint(c)
 
 
