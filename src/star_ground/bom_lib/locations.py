@@ -1,6 +1,6 @@
 """Where in a document each part was read.
 
-The readers in `parser.py` take many routes from positioned words to parts
+The readers in `pdf/` take many routes from positioned words to parts
 (ruled tables, text tables, column layouts, OCR), and none of them keeps
 positions. Rather than thread a position through every route, each part is
 found again afterwards: its designator is a word on the page, and the row it

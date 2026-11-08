@@ -25,12 +25,7 @@ from .manager import (
     serialize_inventory,
     sort_inventory,
 )
-from .parser import (
-    parse_csv_bom,
-    parse_pedalpcb_pdf,
-    parse_user_inventory,
-    parse_with_verification,
-)
+from .pdf.document import parse_pedalpcb_pdf
 from .sourcing import (
     build_shopping_list,
     determine_origin,
@@ -53,6 +48,8 @@ from .strategies import (
     ManualInputStrategy,
     PDFParserStrategy,
 )
+from .strategies.csv import parse_csv_bom, parse_user_inventory
+from .strategies.manual import parse_with_verification
 from .types import (
     AlternativeSpec,
     BuildHardware,

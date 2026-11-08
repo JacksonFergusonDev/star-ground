@@ -7,12 +7,12 @@ from star_ground.bom_lib import (
     ParseWarningKind,
     categorize_part,
 )
-from star_ground.bom_lib.parser import (
-    _table_entries,
+from star_ground.bom_lib.enrichment import (
     capacitor_notes,
     category_from_type,
     enrich_value_from_type,
 )
+from star_ground.bom_lib.pdf.ruled import table_entries
 from star_ground.bom_lib.types import PDFPageExtraction, ReadingStats
 from star_ground.bom_lib.utils import float_to_search_string
 
@@ -227,7 +227,7 @@ def test_table_values_drop_optional_markers_but_keep_placeholders() -> None:
         ["D101", "**", "Zener diode", "** Refer to page 2 **"],
     ]
     page = PDFPageExtraction(tables=[table], text="", words=[])
-    entries = _table_entries([page], ReadingStats())
+    entries = table_entries([page], ReadingStats())
     assert [(e.ref, e.value) for e in entries] == [("R24", "27K"), ("D101", "**")]
 
 
@@ -240,7 +240,7 @@ def test_table_or_row_marks_the_next_entry() -> None:
         ["D10b", "1N4007", "Standard recovery diode, DO-41", ""],
     ]
     page = PDFPageExtraction(tables=[table], text="", words=[])
-    entries = _table_entries([page], ReadingStats())
+    entries = table_entries([page], ReadingStats())
     assert [(e.ref, e.follows_or) for e in entries] == [
         ("D10", False),
         ("D10a", True),
@@ -254,7 +254,7 @@ def test_table_designator_quantity() -> None:
         ["TERMINAL BLOCK (Qty 3)", "5mm Screw Terminal Block, 2 position", "[LINK]"],
     ]
     page = PDFPageExtraction(tables=[table], text="", words=[])
-    entries = _table_entries([page], ReadingStats())
+    entries = table_entries([page], ReadingStats())
     assert ("TERMINAL BLOCK", 3) in [(e.ref, e.qty) for e in entries]
 
 
@@ -266,7 +266,7 @@ def test_blank_value_takes_the_first_choice_in_notes() -> None:
         ["SW1", "", "6mm x 6mm Push Button Switch", "[Link]"],
     ]
     page = PDFPageExtraction(tables=[table], text="", words=[])
-    entries = _table_entries([page], ReadingStats())
+    entries = table_entries([page], ReadingStats())
     assert [(e.ref, e.value) for e in entries] == [
         ("LDR1", "7530"),
         ("SW1", "6mm x 6mm Push Button Switch"),
@@ -282,7 +282,7 @@ def test_unrecognized_table_row_warns() -> None:
     ]
     page = PDFPageExtraction(tables=[table], text="", words=[])
     stats = ReadingStats()
-    _table_entries([page], stats)
+    table_entries([page], stats)
     assert [(w.kind, w.ref) for w in stats.warnings] == [
         (ParseWarningKind.UNPARSED_VALUE, "USB")
     ]
@@ -296,7 +296,7 @@ def test_blank_switch_value_is_completed_from_type_and_notes() -> None:
         ["C9", "470n (0.47uF)", "Film capacitor", ""],  # Tone Zester
     ]
     page = PDFPageExtraction(tables=[table], text="", words=[])
-    entries = _table_entries([page], ReadingStats())
+    entries = table_entries([page], ReadingStats())
     assert [(e.ref, e.value) for e in entries] == [
         ("VOICE", "SPDT ON/OFF/ON"),
         ("C9", "470n"),
@@ -313,7 +313,7 @@ def test_version_notes_warn() -> None:
     ]
     page = PDFPageExtraction(tables=[table], text="", words=[])
     stats = ReadingStats()
-    _table_entries([page], stats)
+    table_entries([page], stats)
     assert [(w.kind, w.ref) for w in stats.warnings] == [
         (ParseWarningKind.FOOTNOTE, "C3"),
         (ParseWarningKind.FOOTNOTE, "BALANCE"),
@@ -333,7 +333,7 @@ def test_choose_between_row_marks_the_next_entry() -> None:
         ["GAIN", "C250K", "16mm right-angle PCB mount pot", ""],
     ]
     page = PDFPageExtraction(tables=[table], text="", words=[])
-    entries = _table_entries([page], ReadingStats())
+    entries = table_entries([page], ReadingStats())
     assert [(e.ref, e.follows_or) for e in entries] == [
         ("GAIN_TRIM", False),
         ("GAIN", True),

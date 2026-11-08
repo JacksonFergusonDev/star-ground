@@ -6,9 +6,10 @@ import pytest
 
 from star_ground.bom_lib import constants
 from star_ground.bom_lib.enums import ComponentCategory, ComponentOrigin, ComponentSpec
-from star_ground.bom_lib.parser import parse_csv_bom, parse_with_verification
 from star_ground.bom_lib.sourcing import _format_alts, get_spec_type
 from star_ground.bom_lib.stages import BuildStage, build_stage, stage_order
+from star_ground.bom_lib.strategies.csv import parse_csv_bom
+from star_ground.bom_lib.strategies.manual import parse_with_verification
 from star_ground.bom_lib.types import (
     AlternativeSpec,
     CategorizationResult,

@@ -493,7 +493,7 @@ class PDFPageExtraction:
         pictures: The page's large images, where a parts table may be drawn
             as a picture rather than text.
         marked: Rows whose value carries a numbered footnote marker, as
-            (row label, marker) pairs (see `layout.marked_labels`).
+            (row label, marker) pairs (see `pdf.page_checks.marked_labels`).
     """
 
     tables: list[list[list[str | None]]]

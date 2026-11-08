@@ -14,11 +14,14 @@ Everything in `src/` except `server/` is the **backend**: it imports no web fram
 
 - **`bom_lib/strategies/`**: Input dispatch.
   - **Role:** `BOMParserContext` picks a strategy by input (PDF, CSV, pasted text). A URL is first fetched by `bom_lib/fetch.py`, since the hosted app fetches on the user's behalf. A `FetchPolicy` sets its reach: `http(s)` on ports 80 and 443 only, every resolved address public (IPv4 inside IPv6 unwrapped), each redirect checked again and never from https to http, the connection pinned to the checked address (so DNS can't rebind the host in between) with TLS still verified against the hostname, 30 MB at most counted after decompression, and 30 seconds for the whole download. Share links (GitHub file pages, Google Drive, Dropbox) are rewritten to the file. The result is routed by content: a PDF, a CSV (read as columns), or text; a web page or a damaged PDF is explained to the builder.
-- **`bom_lib/parser.py`**: The entry point for dynamic data.
-  - **Strategy:** Implements a **Hybrid Strategy**. It maps ruled PDF tables using `pdfplumber`, then runs a column-aware layout pass to recover everything the tables missed (or everything, for borderless multi-column parts lists).
-- **`bom_lib/layout.py`**: The layout reader.
-  - **Role:** Groups positioned words into lines and *cells* (split at column-sized gaps), then pairs each designator cell with its value cell. This keeps multi-word values whole (`3mm Red LED`, `10u (25V or higher)`) without bleeding into the neighboring column.
-  - **Counted rows:** A cell that counts parts by value (`4 - 10k`, Tonepad) is read with its column's heading (`counted_parts`). The classifier takes its category from a word in the value (`1n4001 diode`) or from the heading (`Resistors`, `Pots`, a designator prefix such as `RX`); a row neither names is not guessed. Counted parts have no designator: `PartData.counted` records how many one build of each project needs, and the build planner gives a row to each build only when every build's list repeats it (otherwise it is common).
+- **`bom_lib/ingest.py`**: Turns one parts-list row into inventory parts, for every input format: expands ranges, classifies, catches duplicates, adds IC sockets.
+- **`bom_lib/enrichment.py`**: Reads a table's TYPE and NOTES columns into the value (`1n` + `Film`).
+- **`bom_lib/pdf/`**: The build document reader. It maps ruled PDF tables using `pdfplumber`, then runs a column-aware layout pass to recover everything the tables missed (or everything, for borderless multi-column parts lists).
+  - **`document.py`** opens the PDF, cleans up its pages (overprint, skew, footnote marks, another program's OCR layer) and guesses the title.
+  - **`reading.py`** runs the readers over the pages, assembles the builds (`assemble.py`) and runs the self-checks. OCR'd pages come through the same function.
+  - **The readers:** `ruled.py` reads ruled tables, `text_tables.py` and `bom_table.py` read unruled `Part | Value | Type` tables, and `listings.py` reads `R1 10k` listings that `scan.py` finds.
+  - **Words to cells:** `geometry.py` groups positioned words into lines and *cells* (split at column-sized gaps), and `cells.py` tells what a cell holds. Pairing each designator cell with its value cell keeps multi-word values whole (`3mm Red LED`, `10u (25V or higher)`) without bleeding into the neighboring column.
+  - **Counted rows:** A cell that counts parts by value (`4 - 10k`, Tonepad) is read with its column's heading (`counted.py`). The classifier takes its category from a word in the value (`1n4001 diode`) or from the heading (`Resistors`, `Pots`, a designator prefix such as `RX`); a row neither names is not guessed. Counted parts have no designator: `PartData.counted` records how many one build of each project needs, and the build planner gives a row to each build only when every build's list repeats it (otherwise it is common).
 - **`bom_lib/ocr.py`**: The OCR fallback for parts lists printed as images.
   - **Role:** When a parse looks incomplete (no parts list, or designators missing from it), renders the candidate pages, reads them with RapidOCR, keeps only each page's parts *table* (evenly spaced rows of aligned listings), and runs the words through the same readers as a text layer. The reading is graded (`Looks complete` / `Partial` / `Unusable`) and offered on `ParseResult.ocr`; its parts join the list only through `ParseResult.accept_ocr()`, each with a `Read by OCR` warning. OCR runs one page at a time under a lock, at about 500 MB and 2.5 s a page.
 - **`bom_lib/designators.py`**: The designator grammar.
@@ -80,7 +83,7 @@ Everything in `src/` except `server/` is the **backend**: it imports no web fram
 ## 🧬 Data Flow
 
 1. **Input:** The user uploads a PDF or CSV, or pastes text or a link; `strategies/` dispatches it.
-1. **Parse:** `parser.py` and `layout.py` read the parts list; `builds.py` separates variants and options; `ocr.py` offers a reading of image-only lists.
+1. **Parse:** `pdf/` (or the CSV and text strategies) reads the parts list; `builds.py` separates variants and options; `ocr.py` offers a reading of image-only lists.
 1. **Verify:** `verification.py` re-reads the document and attaches review warnings.
 1. **Classify & Normalize:** `classifier.py` tags each part; the grammar parses its value to a `Decimal`.
 1. **Choose:** The frontend asks which build to make, and whether to use OCR's parts; `api.py` refuses to guess.

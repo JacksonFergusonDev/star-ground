@@ -33,7 +33,7 @@ from star_ground.bom_lib.ocr import (
     table_block,
     without_ocr,
 )
-from star_ground.bom_lib.parser import parse_pedalpcb_pdf
+from star_ground.bom_lib.pdf.document import parse_pedalpcb_pdf
 from star_ground.bom_lib.types import (
     BuildVariant,
     Inventory,
@@ -122,7 +122,7 @@ class TestPageWords:
                 *boxes,
                 OcrBox("1N4148", 502, 542, 665, 674),
             ]
-            from star_ground.bom_lib.layout import find_listings
+            from star_ground.bom_lib.pdf.scan import find_listings
 
             listings = find_listings(page_words(words).words)
             assert [(lst.ref, lst.value) for lst in listings] == [
@@ -132,7 +132,7 @@ class TestPageWords:
 
     def test_the_box_after_a_designator_starts_a_cell(self) -> None:
         # G2 Animal v3: '*D1 - D4' ends where '1N34A GE' starts.
-        from star_ground.bom_lib.layout import find_listings
+        from star_ground.bom_lib.pdf.scan import find_listings
 
         words = page_words(
             [
@@ -151,7 +151,7 @@ class TestPageWords:
     def test_a_description_starts_a_cell(self) -> None:
         # Five Cats: 'TL072 Dual Op Amp' read as one box, and '1N914' 3pt
         # before 'Dual Op Amp'.
-        from star_ground.bom_lib.layout import group_lines, split_cells
+        from star_ground.bom_lib.pdf.geometry import group_lines, split_cells
 
         for boxes in (
             # Narrow glyphs: a word space is within a cell gap.

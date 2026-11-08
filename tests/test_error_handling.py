@@ -40,13 +40,13 @@ def test_a_file_that_isnt_a_pdf_is_explained_not_reported_as_a_bug():
 
 def test_a_pdf_longer_than_any_build_document_is_not_read(tmp_path):
     """Every page costs seconds of shared CPU, so a huge PDF is refused unread."""
-    from star_ground.bom_lib.parser import MAX_PDF_PAGES
+    from star_ground.bom_lib.pdf.document import MAX_PDF_PAGES
 
     path = tmp_path / "long.pdf"
     path.write_bytes(text_pdf(pages=MAX_PDF_PAGES + 1))
 
     with (
-        patch("star_ground.bom_lib.parser.read_pages") as read_pages,
+        patch("star_ground.bom_lib.pdf.document.read_pages") as read_pages,
         pytest.raises(TooManyPagesError, match=f"has {MAX_PDF_PAGES + 1} pages"),
     ):
         parse_pedalpcb_pdf(str(path), source_name="Long")
@@ -59,7 +59,7 @@ def test_a_bug_while_parsing_a_pdf_is_reported_not_shown(tmp_path, caplog):
     upload = FileUpload("Fuzz.pdf", text_pdf("R1 10k"))
 
     with patch(
-        "star_ground.bom_lib.parser.read_pages",
+        "star_ground.bom_lib.pdf.document.read_pages",
         side_effect=TypeError(
             "_eval_standard() missing 1 required positional argument"
         ),
