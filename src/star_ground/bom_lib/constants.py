@@ -87,7 +87,7 @@ PURCHASING_CONFIG: dict[ComponentCategory, PurchasingRule] = {
     ComponentCategory.RESISTORS: ResistorPurchasingRule(
         buffer_add=5,
         round_to=10,
-        note="Use 1/4W Metal Film (1%)",
+        note="1/4 W metal film, 1%.",
         suspicious_threshold_low=ohms("1"),
     ),
     ComponentCategory.CAPACITORS: CapacitorPurchasingRule(

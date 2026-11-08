@@ -1,7 +1,7 @@
 """The order a board is built in: lowest parts first.
 
 Soldering the flattest parts first keeps the board level on the bench while
-each next, taller part goes in. The field manuals and bench mode both follow
+each next, taller part goes in. The build book and bench mode both follow
 this order, so a builder sees the same sequence on paper and on screen.
 """
 

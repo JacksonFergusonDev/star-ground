@@ -41,12 +41,12 @@ from star_ground.bom_lib.utils import (
 
 
 def _format_alts(alts: list[AlternativeSpec]) -> str:
-    """Format an alternatives list into a '💡 TRY: ...' string."""
+    """Formats an alternatives list as a sentence: 'Swaps to try: ...'."""
     txt_parts = [
         f"{alt.name} ({alt.profile}{': ' + alt.justification if alt.justification else ''})"
         for alt in alts
     ]
-    return f"💡 TRY: {', '.join(txt_parts)}"
+    return f"Swaps to try: {', '.join(txt_parts)}."
 
 
 def get_residual_report(stats: ReadingStats) -> list[str]:
@@ -251,7 +251,7 @@ def get_buy_details(
 
         note = resistor_rule.note
         if val_qty is not None and val_qty < resistor_rule.suspicious_threshold_low:
-            note = "⚠️ Suspicious Value (< 1Ω). Verify BOM."
+            note = "Under 1 Ω: check this value against the document."
 
     elif category == ComponentCategory.OPTOELECTRONICS:
         buy = count + 1  # Fragile legs
@@ -265,14 +265,14 @@ def get_buy_details(
         # Bypass caps (100nF) -> Bulk buy
         if val_qty is not None and val_qty == cap_rule.bulk_threshold:
             buffer = cap_rule.bulk_buffer
-            note_parts.append("Power filtering (buy bulk).")
+            note_parts.append("A common bypass value: worth buying in bulk.")
         # Large caps (>= 1uF) -> Low buffer
         elif val_qty is not None and val_qty >= cap_rule.large_threshold:
             buffer = cap_rule.large_buffer
 
         buy = count + buffer
         if val_qty is not None and val_qty > cap_rule.suspicious_threshold_high:
-            note_parts.append("⚠️ Suspicious Value (> 10mF).")
+            note_parts.append("Over 10 mF: check this value against the document.")
 
         spec_type = get_spec_type(category, val, val_qty=val_qty)
         if spec_type and spec_type != ComponentSpec.NONE:
@@ -281,12 +281,14 @@ def get_buy_details(
                 and val_qty is not None
                 and val_qty == cap_rule.large_threshold
             ):
-                note_parts.append("Rec: Box Film (Check BOM: Could be Electrolytic)")
+                note_parts.append(
+                    f"{spec_type.value}. The document may mean an electrolytic: check it."
+                )
             elif spec_type == ComponentSpec.MLCC:
-                note_parts.append("Rec: Class 1 Ceramic (C0G / NP0)")
+                note_parts.append("Class 1 ceramic (C0G/NP0).")
             else:
-                note_parts.append(f"Rec: {spec_type.value}")
-        note = " | ".join(note_parts)
+                note_parts.append(f"{spec_type.value}.")
+        note = " ".join(note_parts)
 
     elif category == ComponentCategory.DIODES:
         diode_rule = constants.PURCHASING_CONFIG.get(ComponentCategory.DIODES)
@@ -300,29 +302,29 @@ def get_buy_details(
     elif category == ComponentCategory.TRANSISTORS:
         buy = count + 1
         if "2N5457" in val.upper():
-            note = "⚠️ Obsolete part! Check for speciality vendors or consider MMBF5457."
+            note = "Obsolete: look for a specialist seller, or use an MMBF5457 on an adapter."
         elif "MMBF" in val.upper():
-            note = "SMD Part! Verify PCB pads or buy adapter."
+            note = "Surface-mount: check the board has pads for it, or buy an adapter."
 
     elif category == ComponentCategory.ICS:
         buy = count
-        note = "Socket Recommended"
+        note = "Fit it in a socket."
         clean_ic = re.sub(r"(CP|CN|P|N)$", "", val)
         if clean_ic in constants.IC_ALTS:
             alts = constants.IC_ALTS[clean_ic]
-            note += f" | {_format_alts(alts)}"
+            note += f" {_format_alts(alts)}"
 
     elif category == ComponentCategory.CRYSTALS_OSCILLATORS:
         buy = count + 1
-        note = "Heat sensitive / Fragile"
+        note = "Fragile and heat-sensitive."
 
     elif category == ComponentCategory.HARDWARE_MISC:
         if "ADAPTER" in val or "SOCKET" in val:
             buy = count + 1
             note = (
-                "[AUTO] Verify PCB pads."
+                "Added by Star Ground: check the board's pads."
                 if "ADAPTER" in val
-                else "[AUTO] For chip safety."
+                else "Added by Star Ground: keeps soldering heat off the chip."
             )
         else:
             buy = count
@@ -439,9 +441,12 @@ def get_standard_hardware(
             qty_override if qty_override is not None else (qty_per_pedal * pedals)
         )
 
-        inventory[key].qty += total_qty
-        inventory[key].refs.append("HW")
-        inventory[key].sources[AUTO_INJECT_SOURCE].append(f"Auto-Inject ({note})")
+        part = inventory[key]
+        if part.val_qty is None:
+            part.val_qty = normalize_value_to_quantity(category, val)
+        part.qty += total_qty
+        part.refs.append("HW")
+        part.sources[AUTO_INJECT_SOURCE].append(f"Auto-Inject ({note})")
 
     # 1. Smart Merges (Add to existing categories)
     # One resistor per status LED: a document may list several LEDs.
@@ -594,7 +599,7 @@ def resolve_part_sourcing(
     auto_inject_notes = sources.get(AUTO_INJECT_SOURCE, [])
     if auto_inject_notes and origin != ComponentOrigin.HARDWARE_KIT:
         formatted_notes = ", ".join(auto_inject_notes)
-        note += f" | 🤖 Standard Part: {formatted_notes}"
+        note = f"{note} Standard hardware: {formatted_notes}.".strip()
 
     spec_type = get_spec_type(category, val, val_qty=val_qty)
     search_term = generate_search_term(category, val, spec_type)
@@ -665,7 +670,7 @@ def build_shopping_list(
         )
         notes = resolved.notes
         if item.included:
-            notes = f"📦 {item.included} included with the PCB | {notes}"
+            notes = f"{item.included} come with the PCB. {notes}".strip()
 
         shopping_list.append(
             ShoppingLine(

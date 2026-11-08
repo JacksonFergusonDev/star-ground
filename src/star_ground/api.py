@@ -3,8 +3,7 @@
 A frontend gathers each project's inputs into a `Project`, may read uploads
 and links ahead of time with `read_document` (to ask which build, or whether
 to use OCR's parts), and calls `generate_master_list`. The `MasterList` it
-returns gives the shopping list and the generated documents; the CSVs come
-from `star_ground.exporters`.
+returns gives the shopping list, and `star_ground.exports` writes its files.
 
 Nothing here, or in anything it imports, depends on a UI framework: the
 frontend owns its widgets and session state, the backend owns every decision
@@ -46,7 +45,6 @@ from star_ground.bom_lib import (
 from star_ground.bom_lib.constants import INJECTED_SUFFIX
 from star_ground.bom_lib.errors import BuildNotChosenError, UnreadablePartError
 from star_ground.bom_lib.ocr import without_ocr
-from star_ground.pdf_generator import generate_master_zip, generate_pdf_bundle
 
 # Source label used while a document is read ahead of generating; replaced by
 # the project's final name when the master list is built.
@@ -137,24 +135,6 @@ class MasterList:
             One row per part, in display order.
         """
         return build_shopping_list(self.kit, self.stock, show_hardware, show_extras)
-
-    def pdf_bundle(self) -> bytes:
-        """A ZIP of each project's field manual and sticker sheet."""
-        return generate_pdf_bundle(self.kit, self.projects)
-
-    def build_pack(self, shopping_list_csv: bytes, stock_csv: bytes) -> bytes:
-        """A ZIP of everything: the CSVs, generated PDFs and source documents.
-
-        Args:
-            shopping_list_csv: From `star_ground.exporters.generate_shopping_list_csv`.
-            stock_csv: From `star_ground.exporters.generate_stock_update_csv`.
-
-        Returns:
-            The ZIP's bytes.
-        """
-        return generate_master_zip(
-            self.kit, self.projects, shopping_list_csv, stock_csv
-        )
 
 
 def document_key(method: InputMethod, data: ProjectData) -> str | None:
@@ -326,7 +306,7 @@ def _unique_label(
     """The label, numbered if another parts list already has it ('Fuzz (2)').
 
     Parts are listed under their project's label, so two different circuits
-    named alike would merge into one field manual with two R1s.
+    named alike would merge into one checklist with two R1s.
 
     Args:
         label: The project's label.
@@ -403,7 +383,7 @@ def generate_master_list(
     stats = ReadingStats()
     built: list[BuiltProject] = []
     # Each label's parts list: the same list entered twice shares its label
-    # (one field manual for both), a different one gets its own.
+    # (one checklist for both), a different one gets its own.
     labelled: dict[str, tuple[object, ...]] = {}
     for project, source, (result, listed_as) in zip(
         projects, sources, readings, strict=True

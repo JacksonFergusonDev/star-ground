@@ -148,7 +148,7 @@ def test_warning_flags():
         1,
         val_qty=normalize_value_to_quantity(ComponentCategory.TRANSISTORS, "2N5457"),
     ).note
-    assert "Obsolete" in note
+    assert note.startswith("Obsolete")
 
     # Test SMD Warning
     note = get_buy_details(
@@ -157,7 +157,7 @@ def test_warning_flags():
         1,
         val_qty=normalize_value_to_quantity(ComponentCategory.TRANSISTORS, "MMBF5457"),
     ).note
-    assert "SMD Part" in note
+    assert note.startswith("Surface-mount")
 
 
 # --- Stress Testing ---
@@ -265,8 +265,8 @@ def test_suspicious_physics_warnings():
         1,
         val_qty=normalize_value_to_quantity(ComponentCategory.RESISTORS, "0.1"),
     ).note
-    assert "Suspicious" in note_r
-    assert "< 1Ω" in note_r
+    assert "check this value" in note_r
+    assert note_r.startswith("Under 1 Ω")
 
     # 2. Capacitor too huge (1 Farad)
     # Note: "1F" -> parse_value_to_decimal -> 1.0 (Huge!)
@@ -276,8 +276,8 @@ def test_suspicious_physics_warnings():
         1,
         val_qty=normalize_value_to_quantity(ComponentCategory.CAPACITORS, "1F"),
     ).note
-    assert "Suspicious" in note_c
-    assert "> 10mF" in note_c
+    assert "check this value" in note_c
+    assert note_c.startswith("Over 10 mF")
 
     # 3. Normal values should be fine
     note_ok = get_buy_details(
@@ -286,7 +286,7 @@ def test_suspicious_physics_warnings():
         1,
         val_qty=normalize_value_to_quantity(ComponentCategory.RESISTORS, "10k"),
     ).note
-    assert "Suspicious" not in note_ok
+    assert "check this value" not in note_ok
 
 
 def test_resistor_rounding_logic():
@@ -339,7 +339,7 @@ def test_capacitor_material_recommendations():
         1,
         val_qty=normalize_value_to_quantity(ComponentCategory.CAPACITORS, "100p"),
     ).note
-    assert "Class 1 Ceramic" in note_p
+    assert "Class 1 ceramic" in note_p
 
     # Case 2: Nano range (> 1nF, < 1uF) -> Box Film
     note_n = get_buy_details(
@@ -359,7 +359,7 @@ def test_capacitor_material_recommendations():
         val_qty=normalize_value_to_quantity(ComponentCategory.CAPACITORS, "1u"),
     ).note
     assert ComponentSpec.BOX_FILM.value in note_1u
-    assert "Check BOM" in note_1u
+    assert "may mean an electrolytic" in note_1u
 
     # Case 4: Bulk range (> 1uF) -> Electrolytic
     note_bulk = get_buy_details(

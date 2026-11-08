@@ -448,7 +448,7 @@ def test_get_buy_details_exact_quantities() -> None:
         val_qty=normalize_value_to_quantity(ComponentCategory.CAPACITORS, "100n"),
     )
     assert rec_bulk.buy_qty == 11  # 1 + bulk_buffer (10)
-    assert "Power filtering (buy bulk)." in rec_bulk.note
+    assert "A common bypass value: worth buying in bulk." in rec_bulk.note
 
     # 1uF large cap low buffer
     rec_1u = get_buy_details(
@@ -458,4 +458,4 @@ def test_get_buy_details_exact_quantities() -> None:
         val_qty=normalize_value_to_quantity(ComponentCategory.CAPACITORS, "1u"),
     )
     assert rec_1u.buy_qty == 2  # 1 + large_buffer (1)
-    assert "Rec: Box Film (Check BOM: Could be Electrolytic)" in rec_1u.note
+    assert "The document may mean an electrolytic" in rec_1u.note

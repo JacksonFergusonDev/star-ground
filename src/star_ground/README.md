@@ -58,12 +58,11 @@ Everything in `src/` except `server/` is the **backend**: it imports no web fram
 
 ### 4. Output Layer (The Hands)
 
-- **`pdf_generator.py`**: Manufacturing Artifacts.
-  - **Feature:** **Z-Height Sorting**. It reorders the build instructions so the operator installs components from shortest (Resistors) to tallest (Capacitors), optimizing mechanical stability.
-
-- **`exporters.py`**: Digital serialization.
-  - **Feature:** Generates CSVs and Excel-compatible strings, injecting `=HYPERLINK()` formulas for one-click purchasing.
-  - **Supplier cart:** A `Quantity, Manufacturer Part Number, Description` CSV for Mouser's and Digi-Key's BOM upload pages. Only values in part-number categories (ICs, transistors, diodes, optoelectronics, transformers, relays) that look like one word of letters and digits are given as part numbers.
+- **`exports/`**: What the builder takes away.
+  - **`documents.py`** decides what the build book and label sheet say: each project's parts by build stage (lowest first, so the board sits flat), values written out (`4.7 kΩ`, `100 nF`), resistor colour bands, capacitor codes, and which way round each polarised part goes. It's plain frozen dataclasses, tested without rendering a page.
+  - **`typeset.py`** lays them out with Typst, from the templates in `templates/` and only the fonts in `fonts/`, so a PDF looks the same everywhere. The label sheet matches Avery 5160's geometry, column gaps included.
+  - **`spreadsheets.py`** writes the CSVs: the shopping list (with optional `=HYPERLINK()` formulas), the stock after this build, and a supplier cart. The cart's `Quantity, Manufacturer Part Number, Description` columns suit Mouser's and Digi-Key's BOM upload pages; only values in part-number categories (ICs, transistors, diodes, optoelectronics, transformers, relays) that look like one word of letters and digits are given as part numbers.
+  - **`pack.py`** puts all of it, and the documents the builder gave, in one dated folder in a ZIP.
 
 ### 5. Telemetry (The Nervous System)
 
@@ -73,7 +72,7 @@ Everything in `src/` except `server/` is the **backend**: it imports no web fram
 ### 6. The API (The Front Door)
 
 - **`api.py`**: What a frontend calls.
-  - **Flow:** The frontend gathers each project into a `Project` (name, count, input method, and the text, link or `FileUpload`). It may read uploads and links ahead of time with `read_document`, to ask which build or whether to use OCR's parts, and passes the reading back on the `Project`. `generate_master_list` returns a `MasterList`: the merged parts, the parts plus the hardware kit, the totals with every input's errors, and each project as a `BuiltProject` (its final name and label, warnings, options and source document). The `MasterList` gives the shopping list, the PDF bundle and the build pack; the CSVs come from `exporters.py`.
+  - **Flow:** The frontend gathers each project into a `Project` (name, count, input method, and the text, link or `FileUpload`). It may read uploads and links ahead of time with `read_document`, to ask which build or whether to use OCR's parts, and passes the reading back on the `Project`. `generate_master_list` returns a `MasterList`: the merged parts, the parts plus the hardware kit, the totals with every input's errors, and each project as a `BuiltProject` (its final name and label, warnings, options and source document). The `MasterList` gives the shopping list; `exports/` turns it into the build book, labels, CSVs and build pack.
   - **Invariants:** The backend never sees a UI framework's objects: uploads arrive as `FileUpload` (name and bytes). A multi-circuit document's build has no default, so `generate_master_list` raises `BuildNotChosenError` until each one is chosen. A reading passed in is never mutated, so the frontend can keep it between runs.
 
 ---
@@ -87,11 +86,11 @@ Everything in `src/` except `server/` is the **backend**: it imports no web fram
 1. **Choose:** The frontend asks which build to make, and whether to use OCR's parts; `api.py` refuses to guess.
 1. **Mutate:** `manager.py` merges projects and subtracts stock and parts included with the PCB.
 1. **Enrich:** `sourcing.py` applies buffers and buying notes, and adds the hardware kit.
-1. **Render:** `exporters.py` writes the CSVs; `pdf_generator.py` sorts by Z-height and draws the field manuals and sticker sheets.
+1. **Render:** `exports/` writes the CSVs and typesets the build book and labels in build order.
 
 ## 🛠 Type Safety
 
-The pipeline's types live in `bom_lib/types.py` as dataclasses. Accumulators, filled in as documents are read and merged, are mutable (`PartData`, `ReadingStats`); everything handed onward is frozen (`ShoppingLine`, `ParseResult`, `BuiltProject`). Column headers and display labels belong to the writers in `exporters.py`, never to these types.
+The pipeline's types live in `bom_lib/types.py` as dataclasses. Accumulators, filled in as documents are read and merged, are mutable (`PartData`, `ReadingStats`); everything handed onward is frozen (`ShoppingLine`, `ParseResult`, `BuiltProject`). Column headers and display labels belong to the writers in `exports/`, never to these types.
 
 ```python
 @dataclass(slots=True)

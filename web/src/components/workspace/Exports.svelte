@@ -1,6 +1,6 @@
 <script lang="ts">
-  // The master list's files: the shopping list, a supplier cart, the stock
-  // after this order, field manuals and sticker sheets, and the build pack.
+  // The master list's files: the build book, labels, the shopping list, a
+  // supplier cart, the stock after this order, and the build pack of them all.
   import type { ExportKind } from '../../lib/api';
   import type { Download, Failure } from '../../lib/server';
   import { bugOf } from '../../lib/server';
@@ -10,6 +10,16 @@
     $props();
 
   const files: { kind: ExportKind; label: string; detail: string }[] = [
+    {
+      kind: 'build-book',
+      label: 'Build book',
+      detail: "What to buy, then each project's parts in build order (PDF).",
+    },
+    {
+      kind: 'labels',
+      label: 'Labels',
+      detail: 'A label per part for Avery 5160 sheets (PDF).',
+    },
     { kind: 'shopping-list', label: 'Shopping list', detail: 'CSV of every part to buy.' },
     {
       kind: 'supplier-cart',
@@ -20,11 +30,6 @@
       kind: 'stock-update',
       label: 'Updated stock',
       detail: 'Your stock, minus these builds, plus this order.',
-    },
-    {
-      kind: 'field-manuals',
-      label: 'Field manuals',
-      detail: 'A build checklist and sticker sheet per project (PDF).',
     },
   ];
 
@@ -62,7 +67,7 @@
     {busy === 'build-pack' ? 'Preparing…' : 'Build pack (ZIP)'}
   </button>
   <p class="detail">
-    Everything below in one ZIP, with each project's source document where you uploaded it.
+    Everything below in one folder, with each project's source document where you uploaded it.
   </p>
   <ul>
     {#each files as file (file.kind)}

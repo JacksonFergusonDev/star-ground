@@ -216,7 +216,7 @@ export type ErrorKind = 'fetch' | 'unreadable_pdf' | 'too_many_pages' | 'build_n
  *
  * The files a master list exports.
  */
-export type ExportKind = 'shopping-list' | 'supplier-cart' | 'stock-update' | 'field-manuals' | 'build-pack';
+export type ExportKind = 'shopping-list' | 'supplier-cart' | 'stock-update' | 'build-book' | 'labels' | 'build-pack';
 
 /**
  * FeedbackIn
@@ -486,7 +486,7 @@ export type ProjectResult = {
     /**
      * Build Order
      *
-     * Its parts by the stage they're soldered in, lowest parts first, as the field manual orders them.
+     * Its parts by the stage they're soldered in, lowest parts first, as the build book orders them.
      */
     build_order: Array<BuildStep>;
 };

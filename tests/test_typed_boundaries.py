@@ -12,7 +12,6 @@ from star_ground.bom_lib.stages import BuildStage, build_stage, stage_order
 from star_ground.bom_lib.types import (
     AlternativeSpec,
     CategorizationResult,
-    ChecklistPart,
     ComponentKey,
     Inventory,
     ParseResult,
@@ -21,7 +20,6 @@ from star_ground.bom_lib.types import (
     SupportsName,
 )
 from star_ground.bom_lib.utils import natural_sort_key
-from star_ground.pdf_generator import condense_refs, sort_by_z_height
 
 
 def test_alternative_spec_formatting() -> None:
@@ -41,55 +39,6 @@ def test_alternative_spec_formatting() -> None:
     formatted = _format_alts(alts)
     assert "OPA2134 (Hi-Fi / Studio Clean: Low distortion)" in formatted
     assert "TLC2272 (High Headroom Clean)" in formatted
-
-
-def test_checklist_part_z_height_sorting() -> None:
-    """Sorts ChecklistPart items according to hardware assembly sequence."""
-    parts: list[ChecklistPart] = [
-        ChecklistPart(
-            category=ComponentCategory.ICS,
-            value="TL072",
-            qty=1,
-            refs=["U1"],
-            notes="",
-            polarized=True,
-        ),
-        ChecklistPart(
-            category=ComponentCategory.RESISTORS,
-            value="10k",
-            qty=2,
-            refs=["R1", "R2"],
-            notes="",
-            polarized=False,
-        ),
-        ChecklistPart(
-            category=ComponentCategory.PCB,
-            value="Triangulum",
-            qty=1,
-            refs=["PCB"],
-            notes="",
-            polarized=False,
-        ),
-        ChecklistPart(
-            category=ComponentCategory.HARDWARE_MISC,
-            value="8 PIN DIP SOCKET",
-            qty=1,
-            refs=["U1 (Inj)"],
-            notes="[!] Check Size",
-            polarized=False,
-        ),
-    ]
-
-    sorted_parts = sort_by_z_height(parts)
-    categories_in_order = [p.category for p in sorted_parts]
-
-    # PCB (0) -> Resistors (10) -> Sockets (18) -> ICs (90)
-    assert categories_in_order == [
-        ComponentCategory.PCB,
-        ComponentCategory.RESISTORS,
-        ComponentCategory.HARDWARE_MISC,
-        ComponentCategory.ICS,
-    ]
 
 
 def test_phase1_boundary_models() -> None:
@@ -125,42 +74,6 @@ def test_natural_sort_key_types() -> None:
     refs = ["R10", "R2", "R1"]
     sorted_refs = sorted(refs, key=natural_sort_key)
     assert sorted_refs == ["R1", "R2", "R10"]
-
-
-def test_capacitor_z_height_sorting_by_spec() -> None:
-    """Verifies that electrolytic caps rank after ceramic/film caps without string heuristics."""
-    parts: list[ChecklistPart] = [
-        ChecklistPart(
-            category=ComponentCategory.CAPACITORS,
-            value="100uF",
-            qty=1,
-            refs=["C3"],
-            notes="",
-            polarized=True,
-            spec_type=ComponentSpec.ELECTROLYTIC,
-        ),
-        ChecklistPart(
-            category=ComponentCategory.CAPACITORS,
-            value="100n",
-            qty=1,
-            refs=["C2"],
-            notes="",
-            polarized=False,
-            spec_type=ComponentSpec.BOX_FILM,
-        ),
-        ChecklistPart(
-            category=ComponentCategory.RESISTORS,
-            value="10k",
-            qty=1,
-            refs=["R1"],
-            notes="",
-            polarized=False,
-        ),
-    ]
-
-    sorted_parts = sort_by_z_height(parts)
-    # Resistors (10) -> Film cap (40) -> Electro cap (60)
-    assert [p.value for p in sorted_parts] == ["10k", "100n", "100uF"]
 
 
 def test_purchasing_config_typed_rules() -> None:
@@ -341,23 +254,6 @@ def test_ref_designator_value_object() -> None:
     assert r1 in ref_set
 
 
-def test_condense_refs_behavior() -> None:
-    """Verifies condense_refs properly collapses consecutive runs and handles unnumbered parts."""
-    # Standard consecutive collapse across prefixes
-    refs = ["R1", "R2", "R3", "C1", "Q3", "Q4"]
-    assert condense_refs(refs) == "C1, Q3-Q4, R1-R3"
-
-    # Non-consecutive numbers
-    assert condense_refs(["R1", "R3", "R5"]) == "R1, R3, R5"
-
-    # Unnumbered and mixed items
-    assert condense_refs(["HW", "R1", "R2"]) == "HW, R1-R2"
-
-    # Single item and empty
-    assert condense_refs(["R1"]) == "R1"
-    assert condense_refs([]) == ""
-
-
 def test_supports_name_protocol() -> None:
     """Verifies SupportsName runtime protocol matching."""
 
@@ -371,27 +267,6 @@ def test_supports_name_protocol() -> None:
     assert isinstance(NamedItem("test.csv"), SupportsName)
     assert not isinstance(UnnamedItem(), SupportsName)
     assert not isinstance("raw_string", SupportsName)
-
-
-def test_counted_parts_reach_each_projects_field_manual() -> None:
-    """Parts counted by value ('4 - 10k', Tonepad) have no designator, but the
-    project still needs them: its checklist counts them per project."""
-    from star_ground.bom_lib.manager import rename_source_in_inventory
-    from star_ground.pdf_generator import _get_project_parts
-
-    inventory = Inventory()
-    key = ComponentKey(ComponentCategory.RESISTORS, "10k")
-    inventory.add_counted("Rat", key, 4)
-    inventory.add_part("Rat", key, "R9")
-    inventory.add_counted("Muff", key, 2)
-    rename_source_in_inventory(inventory, "Rat", "La Rata")
-
-    totals = Inventory()
-    totals.merge(inventory, multiplier=2)
-    rata = {item.value: item for item in _get_project_parts(totals, "La Rata")}
-    assert rata["10k"].qty == 5  # one pedal's checklist: 4 counted + R9
-    assert rata["10k"].unique_refs == ["R9"]
-    assert totals[key].qty == 14
 
 
 def test_a_socket_goes_in_before_small_capacitors_and_its_chip_last() -> None:

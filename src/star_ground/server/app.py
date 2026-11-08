@@ -11,6 +11,7 @@ whole Star Ground: the Docker image runs it that way.
 """
 
 import contextvars
+import datetime
 import json
 import logging
 import os
@@ -33,6 +34,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, TypeAdapter, ValidationError
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
+from star_ground import version
 from star_ground.api import (
     Correction,
     MasterList,
@@ -72,11 +74,14 @@ from star_ground.bom_lib.errors import (
 )
 from star_ground.bom_lib.ocr import OcrGuard, needs_ocr, ocr_guard
 from star_ground.bom_lib.stages import BuildStage, build_stage, stage_order
-from star_ground.exporters import (
-    generate_shopping_list_csv,
-    generate_stock_update_csv,
-    generate_supplier_cart_csv,
+from star_ground.exports.documents import build_book, label_sheet
+from star_ground.exports.pack import PackContents, build_pack
+from star_ground.exports.spreadsheets import (
+    shopping_list_csv,
+    stock_after_csv,
+    supplier_cart_csv,
 )
+from star_ground.exports.typeset import build_book_pdf, label_sheet_pdf
 from star_ground.feedback import PartReport
 from star_ground.server.limits import (
     BodySizeLimit,
@@ -632,7 +637,7 @@ def _uploads(files: Sequence[UploadFile]) -> dict[str, FileUpload]:
 
 _EXPORT_RESPONSES: dict[int | str, dict[str, Any]] = {
     200: {
-        "content": {"text/csv": {}, "application/zip": {}},
+        "content": {"text/csv": {}, "application/pdf": {}, "application/zip": {}},
         "description": "The file, as an attachment.",
     },
     409: {"model": DocumentsMissing},
@@ -950,7 +955,7 @@ def create_app(
         stock: Annotated[UploadFile | None, File()] = None,
         links: LinkFormat = LinkFormat.PLAIN,
     ) -> Response:
-        """Exports the master list as a CSV or ZIP, from the same request body.
+        """Exports the master list as a CSV, PDF or ZIP, from the same request body.
 
         `links` sets how the shopping list (alone or in the build pack)
         writes supplier links: as plain URLs, or as Excel `HYPERLINK`s.
@@ -960,34 +965,33 @@ def create_app(
         master = master_list(client, parsed, files or [], stock)
         rows = master.shopping_list(parsed.show_hardware, parsed.show_extras)
         excel = links == LinkFormat.EXCEL
+        made = datetime.date.today()
         match kind:
             case ExportKind.SHOPPING_LIST:
                 out = _Exports(
-                    generate_shopping_list_csv(rows, use_excel_formulas=excel),
-                    "text/csv",
-                    "shopping-list.csv",
+                    shopping_list_csv(rows, excel), "text/csv", "shopping-list.csv"
                 )
             case ExportKind.SUPPLIER_CART:
-                out = _Exports(
-                    generate_supplier_cart_csv(rows), "text/csv", "supplier-cart.csv"
-                )
+                out = _Exports(supplier_cart_csv(rows), "text/csv", "supplier-cart.csv")
             case ExportKind.STOCK_UPDATE:
                 out = _Exports(
-                    generate_stock_update_csv(rows), "text/csv", "stock-update.csv"
+                    stock_after_csv(rows), "text/csv", "stock-after-these-builds.csv"
                 )
-            case ExportKind.FIELD_MANUALS:
+            case ExportKind.BUILD_BOOK:
+                book = build_book(master.kit, master.projects, rows, made, version())
                 out = _Exports(
-                    master.pdf_bundle(), "application/zip", "field-manuals.zip"
+                    build_book_pdf(book), "application/pdf", "build-book.pdf"
+                )
+            case ExportKind.LABELS:
+                sheet = label_sheet(master.kit, master.projects)
+                out = _Exports(
+                    label_sheet_pdf(sheet), "application/pdf", "labels-avery-5160.pdf"
                 )
             case ExportKind.BUILD_PACK:
-                out = _Exports(
-                    master.build_pack(
-                        generate_shopping_list_csv(rows, use_excel_formulas=excel),
-                        generate_stock_update_csv(rows),
-                    ),
-                    "application/zip",
-                    "build-pack.zip",
+                pack = PackContents(
+                    master.kit, master.projects, rows, excel, made, version()
                 )
+                out = _Exports(build_pack(pack), "application/zip", "build-pack.zip")
         return Response(
             out.content,
             media_type=out.media_type,

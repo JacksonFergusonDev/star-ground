@@ -1,6 +1,7 @@
 """Tests for the backend API a frontend calls (`star_ground.api`)."""
 
 import ast
+import datetime
 import io
 import zipfile
 from dataclasses import replace
@@ -30,6 +31,8 @@ from star_ground.bom_lib.errors import (
     FetchError,
     UnreadablePartError,
 )
+from star_ground.exports.documents import build_book
+from star_ground.exports.pack import PackContents, build_pack
 
 SAMPLES = Path(__file__).parent / "samples"
 SRC = Path(__file__).parent.parent / "src" / "star_ground"
@@ -132,17 +135,27 @@ def test_documents_are_named_by_label_and_keep_the_source() -> None:
         [Project(name="Kliche", method=InputMethod.UPLOAD_FILE, data=upload)]
     )
 
-    with zipfile.ZipFile(io.BytesIO(master.build_pack(b"list", b"stock"))) as zf:
-        names = set(zf.namelist())
-        assert zf.read("Source Documents/Kliche Source.pdf") == upload.content
-    assert {
-        "Shopping List.csv",
-        "Field Manuals/Kliche Field Manual.pdf",
-        "Sticker Sheets/Kliche Sticker Sheet.pdf",
-    } <= names
+    pack = build_pack(
+        PackContents(
+            master.kit,
+            master.projects,
+            master.shopping_list(),
+            excel_links=False,
+            made=datetime.date(2026, 11, 7),
+            version="test",
+        )
+    )
 
-    with zipfile.ZipFile(io.BytesIO(master.pdf_bundle())) as zf:
-        assert "Field Manuals/Kliche Field Manual.pdf" in zf.namelist()
+    folder = "Star Ground build pack 2026-11-07"
+    with zipfile.ZipFile(io.BytesIO(pack)) as zf:
+        assert zf.read(f"{folder}/Source documents/Kliche.pdf") == upload.content
+        assert {
+            f"{folder}/Build book.pdf",
+            f"{folder}/Labels (Avery 5160).pdf",
+            f"{folder}/Shopping list.csv",
+            f"{folder}/Supplier cart.csv",
+            f"{folder}/Stock after these builds.csv",
+        } <= set(zf.namelist())
 
 
 def test_an_upload_is_known_by_its_content() -> None:
@@ -217,12 +230,10 @@ def test_different_projects_with_one_name_are_kept_apart() -> None:
 
     assert [p.label for p in master.projects] == ["Fuzz", "Fuzz (2)"]
     assert master.parts[R10K].sources == {"Fuzz": ["R1"]}
-    with zipfile.ZipFile(io.BytesIO(master.pdf_bundle())) as zf:
-        manuals = [n for n in zf.namelist() if n.startswith("Field Manuals/")]
-    assert manuals == [
-        "Field Manuals/Fuzz Field Manual.pdf",
-        "Field Manuals/Fuzz (2) Field Manual.pdf",
-    ]
+    book = build_book(
+        master.kit, master.projects, master.shopping_list(), datetime.date.today(), ""
+    )
+    assert [p.name for p in book.projects] == ["Fuzz", "Fuzz (2)"]
 
 
 def test_the_same_project_entered_twice_shares_its_label() -> None:

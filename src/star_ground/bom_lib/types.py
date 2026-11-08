@@ -446,29 +446,6 @@ class ResolvedPartSourcing(NamedTuple):
     supplier_url: str
 
 
-@dataclass(frozen=True, slots=True)
-class ChecklistPart:
-    """Component checklist item for PDF Field Manual generation.
-
-    Attributes:
-        category: Component category enum (e.g., ComponentCategory.RESISTORS).
-        value: Cleaned component value string (e.g., '10k', 'TL072').
-        qty: Total count of this part in the project.
-        refs: List of designators for this component (e.g., ['R1', 'R2']).
-        notes: Build annotations (e.g. '[!] Check Size').
-        polarized: True if component requires orientation verification.
-        spec_type: Optional physical component specification (e.g. ComponentSpec.ELECTROLYTIC).
-    """
-
-    category: ComponentCategory
-    value: str
-    qty: int
-    refs: list[str]
-    notes: str
-    polarized: bool
-    spec_type: ComponentSpec | None = None
-
-
 class PDFWord(TypedDict):
     """A positioned word extracted from a PDF page (pdfplumber word dict subset).
 
@@ -690,6 +667,8 @@ class Inventory(UserDict[ComponentKey, PartData]):
             multiplier: Multiplication factor for the incoming inventory quantities.
         """
         for key, data in other.items():
+            if self[key].val_qty is None:
+                self[key].val_qty = data.val_qty
             self[key].qty += data.qty * multiplier
             self[key].included += data.included * multiplier
             for src, n in data.counted.items():

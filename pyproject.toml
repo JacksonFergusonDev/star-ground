@@ -8,7 +8,6 @@ classifiers = ["License :: OSI Approved :: MIT License"]
 requires-python = ">=3.14"
 dependencies = [
     "fastapi>=0.162.0",
-    "fpdf2==2.8.9",
     "google-auth==2.62.0",
     "gspread==6.2.1",
     "onnxruntime==1.31.0",
@@ -17,6 +16,7 @@ dependencies = [
     "python-multipart>=0.0.32",
     "rapidocr==3.10.0",
     "requests==2.34.2",
+    "typst==0.15.0",
     "uvicorn>=0.54.0",
 ]
 
@@ -192,11 +192,17 @@ style = "one"          # all list items numbered 1. – reduces diff noise
 paths = ["src", "tools"]
 min_confidence = 60
 ignore_names = [
-    # Called or read by a library: fpdf's page hook, requests' session flag,
-    # logging's handler list.
-    "footer",
+    # Called or read by a library: requests' session flag, logging's handler
+    # list.
     "handlers",
     "trust_env",
+    # Document fields read only by the Typst templates.
+    "about",
+    "bands",
+    "lines_to_buy",
+    "needed",
+    "orientation",
+    "pieces_to_buy",
     # FeedbackRating's members, picked by position from the API's 1-5 rating.
     "TERRIBLE",
     "BAD",

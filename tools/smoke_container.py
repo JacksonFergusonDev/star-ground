@@ -114,8 +114,6 @@ def smoke(image: str, artifacts: Path) -> None:
                 "--network=none",
                 "--mount",
                 f"type=bind,src={checks},dst=/smoke/checks.py,readonly",
-                "--env",
-                "PYTHONPATH=/app/src",
                 image,
                 "python",
                 "/smoke/checks.py",
