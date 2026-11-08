@@ -10,18 +10,21 @@ jobs:
   test:
     permissions:
       contents: read
+      deployments: read
     uses: ./.github/workflows/ci.yml # zizmor: ignore[self-repository] -- actionlint 1.7.12 rejects $/ workflow calls
 
-  # CI can finish for every push. Hold the lock from the check of main's tip
+  # Checks can finish for every push. Hold the lock from the deploy decision
   # through the live site check so deploys cannot interrupt each other.
   production:
     name: Production
     needs: test
+    if: needs.test.outputs.deploy == 'true'
     concurrency:
       group: deploy
       queue: max
     permissions:
       contents: read
+      deployments: read
       id-token: write
       pages: write
     uses: ./.github/workflows/deploy-production.yml # zizmor: ignore[self-repository] -- actionlint 1.7.12 rejects $/ workflow calls

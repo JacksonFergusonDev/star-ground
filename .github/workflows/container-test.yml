@@ -2,6 +2,11 @@ name: Container tests
 
 on:
   workflow_call:
+    inputs:
+      keep-image:
+        description: Keep the tested image for deployment or release
+        type: boolean
+        default: false
 
 permissions: {}
 
@@ -105,9 +110,8 @@ jobs:
           retention-days: 7
           if-no-files-found: warn
 
-      # A push is a deploy from main or a release tag; both ship this image.
       - name: Pass tested artifact to the publisher
-        if: github.event_name == 'push'
+        if: inputs.keep-image
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: container-image-${{ matrix.arch }}

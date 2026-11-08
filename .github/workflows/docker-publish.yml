@@ -51,6 +51,7 @@ jobs:
     needs: validate-release
     permissions:
       contents: read
+      deployments: read
     uses: ./.github/workflows/ci.yml # zizmor: ignore[self-repository] -- actionlint 1.7.12 rejects $/ workflow calls
 
   publish:

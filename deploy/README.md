@@ -5,9 +5,11 @@ Star Ground runs in two places (PLAN.md, "Hosting and cost"):
 - **The API** runs on Google Cloud Run, scaling to zero, from the same Docker image GHCR publishes.
 - **The site** is served by GitHub Pages at `star-ground.jacksonferguson.me`, built to call the API's Cloud Run URL.
 
-Every push to `main` runs CI in `.github/workflows/deploy.yml`. After CI passes, the run waits for its turn to deploy. If `main` has moved on when it gets that turn, the run records the reason in its summary and skips deployment.
+CI selects checks from the changed files on pull requests and pushes to `main`. For example, a change to this guide runs the Markdown checks, a Python test change runs the Python suite, and a site change runs the web and container checks. The required `CI OK` check reports whether the selected checks passed. The file groups live in `.github/scripts/changes.sh`.
 
-In `.github/workflows/deploy-production.yml`, `deploy-api` copies the exact `linux/amd64` image CI tested to Artifact Registry and deploys it. Then `deploy-site` builds the site against the API's URL and publishes it to Pages. Finally, `check-live` waits for Pages to serve that commit and pastes a parts list into the live site. The site goes live after the API, so it never calls routes the running API doesn't have yet. The three jobs hold the same deployment slot from start to finish.
+A push to `main` prepares a deployment if production inputs have changed since the last verified deploy. The run checks again after taking the deployment slot, when it also checks that its commit is still at the tip of `main`. This lets a later push carry a site change that was superseded while its checks ran. It also covers a revert after an interrupted deployment. If GitHub has no usable verification record, CI runs the full suite and prepares a deployment.
+
+In `.github/workflows/deploy-production.yml`, `deploy-api` copies the exact `linux/amd64` image CI tested to Artifact Registry and deploys it. Then `deploy-site` builds the site against the API's URL and publishes it to Pages. Finally, `check-live` waits for Pages to serve that commit and pastes a parts list into the live site. GitHub records the result in the `production-verification` environment. The site goes live after the API, so it never calls routes the running API doesn't have yet. The three jobs hold the same deployment slot from start to finish.
 
 Version tags (`v*`) no longer deploy. They publish the self-hosted image to GHCR (`.github/workflows/docker-publish.yml`), for people who pin a version. The hosted site has no versions: its visitors always get what's live.
 

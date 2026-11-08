@@ -13,13 +13,14 @@ defaults:
 
 jobs:
   check-main:
-    name: Check the tip of main
+    name: Check whether main needs a deploy
     runs-on: ubuntu-24.04
-    timeout-minutes: 2
+    timeout-minutes: 3
     permissions:
       contents: read
+      deployments: read
     outputs:
-      current: ${{ steps.check.outputs.current }}
+      deploy: ${{ steps.changes.outputs.deploy }}
     steps:
       - name: Skip a superseded commit
         id: check
@@ -36,6 +37,19 @@ jobs:
               "$GITHUB_SHA" "$tip" >> "$GITHUB_STEP_SUMMARY"
           fi
 
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        if: steps.check.outputs.current == 'true'
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Check for changes since the verified deploy
+        if: steps.check.outputs.current == 'true'
+        id: changes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash .github/scripts/changes.sh production
+
   # The API runs the exact linux/amd64 image CI just tested, copied into
   # Artifact Registry because Cloud Run can't pull from GHCR. Tagged with the
   # commit, so the registry's cleanup rule keeps the last few deploys to roll
@@ -43,7 +57,7 @@ jobs:
   deploy-api:
     name: Deploy the API to Cloud Run
     needs: check-main
-    if: needs.check-main.outputs.current == 'true' && vars.GCP_PROJECT_ID != ''
+    if: needs.check-main.outputs.deploy == 'true' && vars.GCP_PROJECT_ID != ''
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     environment: production
@@ -189,6 +203,8 @@ jobs:
     needs: deploy-site
     runs-on: ubuntu-24.04
     timeout-minutes: 20
+    # A successful status here records that both deploys passed the live check.
+    environment: production-verification
     permissions:
       contents: read
     env:

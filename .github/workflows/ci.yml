@@ -4,6 +4,9 @@ name: CI
 # version tags through docker-publish.yml.
 on:
   workflow_call:
+    outputs:
+      deploy:
+        value: ${{ jobs.changes.outputs.deploy }}
   pull_request:
     branches: [ "main" ]
 
@@ -21,8 +24,37 @@ env:
   UV_NO_SYNC: "1"
 
 jobs:
+  changes:
+    name: Select checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    permissions:
+      contents: read
+      deployments: read
+    outputs:
+      deploy: ${{ steps.select.outputs.deploy }}
+      markdown: ${{ steps.select.outputs.markdown }}
+      workflows: ${{ steps.select.outputs.workflows }}
+      python: ${{ steps.select.outputs.python }}
+      web: ${{ steps.select.outputs.web }}
+      container: ${{ steps.select.outputs.container }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Select checks from the changed files
+        id: select
+        env:
+          GH_TOKEN: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && github.token || '' }}
+          PUSH_BEFORE: ${{ github.event.before }}
+        run: bash .github/scripts/changes.sh
+
   python:
-    name: Python
+    name: Python and repository checks
+    needs: changes
+    if: needs.changes.outputs.python == 'true' || needs.changes.outputs.markdown == 'true' || needs.changes.outputs.workflows == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -34,21 +66,31 @@ jobs:
         uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
 
       - name: Install dependencies
+        if: needs.changes.outputs.python == 'true'
         run: uv sync --group ci --no-dev
 
+      - name: Install repository check tools
+        if: needs.changes.outputs.python != 'true'
+        run: uv sync --only-group ci
+
       - name: Ruff lint
+        if: needs.changes.outputs.python == 'true'
         run: uv run ruff check --output-format=github .
 
       - name: Ruff format
+        if: needs.changes.outputs.python == 'true'
         run: uv run ruff format --check --output-format=github .
 
       - name: Markdown lint
+        if: needs.changes.outputs.markdown == 'true'
         run: uv run rumdl check --output-format github .
 
       - name: Markdown format
+        if: needs.changes.outputs.markdown == 'true'
         run: uv run rumdl fmt --check --output-format github .
 
       - name: Audit workflows with zizmor
+        if: needs.changes.outputs.workflows == 'true'
         env:
           GH_TOKEN: ${{ github.token }} # enables zizmor's online audits
         run: uv run zizmor --format github .github/
@@ -56,6 +98,7 @@ jobs:
       # mypy's cache is incremental, so a stale cache from an older lockfile is
       # still a valid starting point.
       - name: Restore mypy cache
+        if: needs.changes.outputs.python == 'true'
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .mypy_cache
@@ -65,24 +108,30 @@ jobs:
             mypy-
 
       - name: Type check with mypy
+        if: needs.changes.outputs.python == 'true'
         run: uv run mypy
 
       # The corpus's PDFs belong to their publishers, so they're downloaded,
       # once per manifest change, instead of kept in the repository.
       - name: Restore test samples
+        if: needs.changes.outputs.python == 'true'
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: tests/samples/**/*.pdf
           key: samples-${{ hashFiles('tests/samples/manifest.json') }}
 
       - name: Fetch test samples
+        if: needs.changes.outputs.python == 'true'
         run: uv run python -m scripts.fetch_samples
 
       - name: Test with pytest
+        if: needs.changes.outputs.python == 'true'
         run: uv run pytest -n auto
 
   web:
     name: Web
+    needs: changes
+    if: needs.changes.outputs.web == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     outputs:
@@ -224,25 +273,34 @@ jobs:
 
   container:
     name: Container
+    needs: changes
+    if: needs.changes.outputs.container == 'true'
     permissions:
       contents: read
     uses: ./.github/workflows/container-test.yml # zizmor: ignore[self-repository] -- actionlint 1.7.12 rejects $/ workflow calls
+    with:
+      keep-image: ${{ github.ref_type == 'tag' || needs.changes.outputs.deploy == 'true' }}
 
   # The single required status check: add new jobs to `needs`, not to the ruleset.
   ci-ok:
     name: CI OK
     if: always()
-    needs: [python, web, web-browsers, container]
+    needs: [changes, python, web, web-browsers, container]
     runs-on: ubuntu-latest
     timeout-minutes: 2
     steps:
-      - name: Require every job to pass
+      - name: Require the selected jobs to pass
         env:
+          SELECTION: ${{ needs.changes.result }}
           RESULTS: ${{ join(needs.*.result, ' ') }}
         run: |
+          if [ "$SELECTION" != "success" ]; then
+            echo "::error::Could not select checks ($SELECTION)."
+            exit 1
+          fi
           for r in $RESULTS; do
-            if [ "$r" != "success" ]; then
-              echo "::error::A required job finished with: $r"
+            if [ "$r" != "success" ] && [ "$r" != "skipped" ]; then
+              echo "::error::A selected job finished with $r."
               exit 1
             fi
           done
