@@ -5,7 +5,9 @@ Star Ground runs in two places (PLAN.md, "Hosting and cost"):
 - **The API** runs on Google Cloud Run, scaling to zero, from the same Docker image GHCR publishes.
 - **The site** is served by GitHub Pages at `star-ground.jacksonferguson.me`, built to call the API's Cloud Run URL.
 
-Every push to `main` that passes CI deploys both, in `.github/workflows/deploy.yml`. The `deploy-api` job copies the exact `linux/amd64` image CI tested to Artifact Registry and deploys it. Then `deploy-site` builds the site against the API's URL and publishes it to Pages, and `check-live` waits for Pages to serve that commit and pastes a parts list into the live site. The site goes live after the API, so it never calls routes the running API doesn't have yet. A newer push cancels a deploy still running, so the newest commit always wins.
+Every push to `main` runs CI in `.github/workflows/deploy.yml`. After CI passes, the run waits for its turn to deploy. If `main` has moved on when it gets that turn, the run records the reason in its summary and skips deployment.
+
+In `.github/workflows/deploy-production.yml`, `deploy-api` copies the exact `linux/amd64` image CI tested to Artifact Registry and deploys it. Then `deploy-site` builds the site against the API's URL and publishes it to Pages. Finally, `check-live` waits for Pages to serve that commit and pastes a parts list into the live site. The site goes live after the API, so it never calls routes the running API doesn't have yet. The three jobs hold the same deployment slot from start to finish.
 
 Version tags (`v*`) no longer deploy. They publish the self-hosted image to GHCR (`.github/workflows/docker-publish.yml`), for people who pin a version. The hosted site has no versions: its visitors always get what's live.
 
@@ -175,7 +177,7 @@ Deploys copy only the `linux/amd64` image, so each deploy is one image in the re
 
 ## Deploying and rolling back
 
-Merging to `main` deploys. The run's summary links the deployed API, the `github-pages` environment links the site, and `https://star-ground.jacksonferguson.me/version.json` names the commit the site was built from. If `check-live` fails, the run keeps the browser's trace and screenshot as the `live-check` artifact.
+After a deploy, the run's summary links the deployed API, the `github-pages` environment links the site, and `https://star-ground.jacksonferguson.me/version.json` names the commit the site was built from. If `check-live` fails, the run keeps the browser's trace and screenshot as the `live-check` artifact.
 
 To undo a bad change, revert it on `main`: the revert deploys like any other push. If the API is broken and can't wait for a deploy, send its traffic back to the last good revision, which takes seconds:
 

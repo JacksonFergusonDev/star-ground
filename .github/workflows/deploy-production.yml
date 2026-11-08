@@ -1,0 +1,224 @@
+# Deploy uses this workflow after CI passes. See deploy/README.md for setup
+# and rollback.
+name: Deploy to production
+
+on:
+  workflow_call:
+
+permissions: {}
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  check-main:
+    name: Check the tip of main
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    permissions:
+      contents: read
+    outputs:
+      current: ${{ steps.check.outputs.current }}
+    steps:
+      - name: Skip a superseded commit
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tip=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq '.object.sha')
+          [[ "$tip" =~ ^[0-9a-f]{40}$ ]]
+          if [[ "$tip" == "$GITHUB_SHA" ]]; then
+            echo 'current=true' >> "$GITHUB_OUTPUT"
+          else
+            # shellcheck disable=SC2016
+            printf 'Skipped deploying `%s` because `main` is now at `%s`.\n' \
+              "$GITHUB_SHA" "$tip" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+  # The API runs the exact linux/amd64 image CI just tested, copied into
+  # Artifact Registry because Cloud Run can't pull from GHCR. Tagged with the
+  # commit, so the registry's cleanup rule keeps the last few deploys to roll
+  # back to. Skipped until the repository's GCP_* variables exist.
+  deploy-api:
+    name: Deploy the API to Cloud Run
+    needs: check-main
+    if: needs.check-main.outputs.current == 'true' && vars.GCP_PROJECT_ID != ''
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: production
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      url: ${{ steps.deploy.outputs.url }}
+    env:
+      PROJECT: ${{ vars.GCP_PROJECT_ID }}
+      REGION: ${{ vars.GCP_REGION }}
+      SITE: https://star-ground.jacksonferguson.me
+    steps:
+      - name: Download the tested image
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: container-image-amd64
+          path: ${{ runner.temp }}/image
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db # v3.0.1
+
+      - name: Install OCI image tooling
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y skopeo
+
+      - name: Copy the tested image to Artifact Registry
+        id: copy
+        run: |
+          expected="$(cat "${RUNNER_TEMP}/image/digest.txt")"
+          [[ "$expected" =~ ^sha256:[a-f0-9]{64}$ ]]
+          archive="oci-archive:${RUNNER_TEMP}/image/image.tar"
+          actual="sha256:$(skopeo inspect --raw "$archive" | sha256sum | cut -d ' ' -f 1)"
+          test "$actual" = "$expected"
+          registry="${REGION}-docker.pkg.dev"
+          target="${registry}/${PROJECT}/star-ground/star-ground"
+          gcloud auth print-access-token | \
+            skopeo login --username oauth2accesstoken --password-stdin "$registry"
+          # Only the runtime image, not the attestations beside it in the index.
+          skopeo copy --override-os linux --override-arch amd64 --preserve-digests \
+            --digestfile "${RUNNER_TEMP}/digest.txt" \
+            "$archive" "docker://${target}:${GITHUB_SHA}"
+          digest="$(cat "${RUNNER_TEMP}/digest.txt")"
+          [[ "$digest" =~ ^sha256:[a-f0-9]{64}$ ]]
+          echo "image=${target}@${digest}" >> "$GITHUB_OUTPUT"
+
+      # PLAN.md, "Hosting and cost": scale to zero, 2 GiB and 2 vCPU, a new
+      # instance past 4 requests, and max instances as the hard cost ceiling.
+      # The second-generation environment runs OCR faster (PLAN.md, step 4).
+      # OCR's threads match --cpu: an instance sees 5 CPUs but may use 2.
+      # --update-env-vars keeps variables set by hand, like STAR_GROUND_OCR=0.
+      # Cloud Run serves only the API; GitHub Pages serves the site.
+      - name: Deploy
+        id: deploy
+        env:
+          IMAGE: ${{ steps.copy.outputs.image }}
+        run: |
+          gcloud run deploy star-ground --project "$PROJECT" --region "$REGION" \
+            --image "$IMAGE" \
+            --service-account "star-ground-run@${PROJECT}.iam.gserviceaccount.com" \
+            --memory 2Gi --cpu 2 --cpu-boost --execution-environment gen2 \
+            --concurrency 4 --min-instances 0 --max-instances 3 \
+            --timeout 300 \
+            --update-env-vars "STAR_GROUND_TRUST_PROXY=1,STAR_GROUND_SITE_DIR=,STAR_GROUND_CORS_ORIGINS=${SITE},STAR_GROUND_OCR_THREADS=2" \
+            --quiet
+          url="$(gcloud run services describe star-ground --project "$PROJECT" --region "$REGION" \
+            --format 'value(status.url)')"
+          [[ "$url" =~ ^https://[a-z0-9.-]+$ ]]
+          curl --fail --silent --show-error --retry 5 --retry-all-errors --max-time 30 "${url}/api/health"
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          # shellcheck disable=SC2016
+          printf 'Deployed `%s` to %s\n' "$IMAGE" "$url" >> "$GITHUB_STEP_SUMMARY"
+
+  # The site goes live after the API it calls, so it never calls routes the
+  # running API doesn't have yet.
+  deploy-site:
+    name: Deploy the site to GitHub Pages
+    needs: deploy-api
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.pages.outputs.page_url }}
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      # A deploy builds from a clean install: no cache a PR could have written.
+      - name: Install pnpm
+        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        with:
+          package_json_file: web/package.json
+
+      - name: Install Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24"
+          package-manager-cache: false
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build against the deployed API
+        env:
+          PUBLIC_API_URL: ${{ needs.deploy-api.outputs.url }}
+        run: pnpm run build
+
+      # Names the commit the site was built from, so the live check (and
+      # anyone else) can tell which deploy Pages is serving.
+      - name: Record the commit
+        run: |
+          printf '{"commit": "%s"}\n' "$GITHUB_SHA" > dist/version.json
+
+      - name: Upload the site
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: web/dist
+
+      - name: Deploy
+        id: pages
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
+
+  # CI tested the build; this tests the deploy. It waits for Pages to serve
+  # this commit, then pastes a parts list into the live site and checks the
+  # shopping list, which exercises the real API, its CORS rule and the CDN.
+  check-live:
+    name: Check the live site
+    needs: deploy-site
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    env:
+      UV_LOCKED: "1"
+      UV_NO_SYNC: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+
+      - name: Install browser test dependencies
+        run: |
+          uv sync --only-group ci
+          uv run playwright install --with-deps chromium
+
+      - name: Check the live site
+        env:
+          PYTHONPATH: src
+        run: |
+          uv run python -m scripts.smoke_live https://star-ground.jacksonferguson.me "$GITHUB_SHA" \
+            --artifacts "${RUNNER_TEMP}/browser"
+
+      - name: Retain the browser trace
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: live-check
+          path: ${{ runner.temp }}/browser/
+          retention-days: 7
+          if-no-files-found: warn
