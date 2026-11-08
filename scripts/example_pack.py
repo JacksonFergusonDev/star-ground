@@ -13,6 +13,7 @@ from pathlib import Path
 
 from star_ground import version
 from star_ground.api import Project, generate_master_list
+from star_ground.cli_output import CliOutput
 from star_ground.exports.pack import PackContents, build_pack
 
 ROOT = Path(__file__).parent.parent
@@ -71,7 +72,7 @@ def main() -> None:
             path = OUT / name.split("/", 1)[1]
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_bytes(zf.read(name))
-    print(f"Wrote {OUT.relative_to(ROOT)}")
+    CliOutput().success(f"Wrote {OUT.relative_to(ROOT)}")
 
 
 if __name__ == "__main__":

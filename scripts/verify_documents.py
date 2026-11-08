@@ -24,6 +24,8 @@ from datetime import date
 from multiprocessing import Pool
 from pathlib import Path
 
+from rich.console import Console
+
 from star_ground.api import read_document
 from star_ground.bom_lib import FileUpload, InputMethod, OcrVerdict
 from star_ground.catalog.build import catalog_reading
@@ -33,6 +35,7 @@ from star_ground.catalog.verified import (
     document_hash,
     fingerprint,
 )
+from star_ground.cli_output import CliOutput
 from tests.accuracy import GoldenDoc, load_golden, score_result
 
 
@@ -71,6 +74,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--workers", type=int, default=4)
     args = parser.parse_args(argv)
 
+    output = CliOutput()
+    diagnostics = CliOutput(console=Console(stderr=True, highlight=False))
     docs: list[GoldenDoc] = []
     for spec in args.corpus:
         pdf_dir, golden_dir = (Path(d) for d in spec.split(":", 1))
@@ -79,7 +84,7 @@ def main(argv: list[str] | None = None) -> int:
             if doc.pdf.exists():
                 docs.append(doc)
             else:
-                print(f"skipped {path.name}: {doc.pdf} isn't here", file=sys.stderr)
+                diagnostics.warning(f"Skipped {path.name}. {doc.pdf} isn't here.")
 
     with Pool(args.workers) as pool:
         graded = pool.map(_verify, docs, chunksize=4)
@@ -89,14 +94,14 @@ def main(argv: list[str] | None = None) -> int:
     added = 0
     for name, digest, parts, why in graded:
         if parts is None:
-            print(f"not verified  {name}: {why}")
+            output.warning(f"{name}: {why}", title="Not verified")
             continue
         if verified.checked.get(digest, Checked("", "")).parts != parts:
             added += 1
         verified.checked[digest] = Checked(parts, today)
     verified.save(args.out)
     right = sum(parts is not None for _, _, parts, _ in graded)
-    print(
+    output.success(
         f"{right} of {len(graded)} labelled documents read right; {added} added or "
         f"refreshed; {len(verified.checked)} in {args.out}"
     )

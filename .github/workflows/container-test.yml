@@ -64,6 +64,7 @@ jobs:
         env:
           ARCH: ${{ matrix.arch }}
           EXPECTED_DIGEST: ${{ steps.build.outputs.digest }}
+          PYTHONPATH: src
         run: |
           skopeo inspect --raw "oci-archive:${RUNNER_TEMP}/image.tar" > "${RUNNER_TEMP}/index.json"
           actual="sha256:$(sha256sum "${RUNNER_TEMP}/index.json" | cut -d ' ' -f 1)"

@@ -1536,9 +1536,6 @@ dependencies = [
 ]
 
 [package.dev-dependencies]
-catalog = [
-    { name = "rich" },
-]
 ci = [
     { name = "httpx2" },
     { name = "hypothesis" },
@@ -1633,7 +1630,6 @@ requires-dist = [
 ]
 
 [package.metadata.requires-dev]
-catalog = [{ name = "rich", specifier = ">=14" }]
 ci = [
     { name = "httpx2", specifier = ">=2.16.0" },
     { name = "hypothesis", specifier = "==6.170.1" },
@@ -1644,7 +1640,7 @@ ci = [
     { name = "pytest-github-actions-annotate-failures", specifier = "==0.4.2" },
     { name = "pytest-mock", specifier = ">=3.17.0" },
     { name = "pytest-xdist", specifier = "==3.8.0" },
-    { name = "rich", specifier = ">=14" },
+    { name = "rich", specifier = ">=15.0.0" },
     { name = "ruff", specifier = "==0.17.1" },
     { name = "rumdl", specifier = ">=0.2.62" },
     { name = "rust-just", specifier = ">=1.58.0" },
@@ -1675,7 +1671,7 @@ dev = [
     { name = "pytest-github-actions-annotate-failures", specifier = "==0.4.2" },
     { name = "pytest-mock", specifier = ">=3.17.0" },
     { name = "pytest-xdist", specifier = "==3.8.0" },
-    { name = "rich", specifier = ">=14" },
+    { name = "rich", specifier = ">=15.0.0" },
     { name = "ruff", specifier = "==0.17.1" },
     { name = "rumdl", specifier = ">=0.2.62" },
     { name = "rust-just", specifier = ">=1.58.0" },

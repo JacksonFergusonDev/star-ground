@@ -9,6 +9,7 @@ import urllib.request
 from pathlib import Path
 
 from scripts.smoke_container import check_browser
+from star_ground.cli_output import CliOutput
 
 
 def served_commit(site: str, commit: str) -> str:
@@ -38,7 +39,7 @@ def wait_for_commit(site: str, commit: str, timeout: float = 600) -> None:
                 f"{site} serves {served}, not {commit}, after {timeout:.0f}s"
             )
         time.sleep(10)
-    print(f"{site} serves {commit}", flush=True)
+    CliOutput().success(f"{site} serves {commit}")
 
 
 def main() -> None:
@@ -53,10 +54,18 @@ def main() -> None:
     )
     args = parser.parse_args()
     site = args.site.rstrip("/")
-    wait_for_commit(site, args.commit)
-    with tempfile.TemporaryDirectory(prefix="star-ground-live-") as temporary:
-        check_browser(site, args.artifacts or Path(temporary))
-    print("The live site built a shopping list from a pasted parts list", flush=True)
+    output = CliOutput()
+    with output.report_failures("Live site checks"):
+        with output.section("Wait for the deployed commit"):
+            wait_for_commit(site, args.commit)
+        with (
+            output.section("Check the live site in Chromium"),
+            tempfile.TemporaryDirectory(prefix="star-ground-live-") as temporary,
+        ):
+            check_browser(site, args.artifacts or Path(temporary))
+    result = "The live site built a shopping list from a pasted parts list."
+    output.success(result)
+    output.step_summary(f"## Live site checks\n\n{result}\n")
 
 
 if __name__ == "__main__":

@@ -112,10 +112,14 @@ def check_ocr() -> None:
 def main() -> None:
     """Fail on any missing production capability, without network access."""
     assert os.getuid() != 0, "The production image must run as a non-root user"
-    for check in (check_concurrent_reads, check_backend, check_ocr):
-        print(f"Running {check.__name__}", flush=True)
+    # The host formats these messages after Docker returns its captured output.
+    for name, check in (
+        ("Concurrent PDF reads", check_concurrent_reads),
+        ("Parts lists, inventory and exports", check_backend),
+        ("OCR inference", check_ocr),
+    ):
+        print(f"Checking {name}", flush=True)
         check()
-    print("All offline container checks passed", flush=True)
 
 
 if __name__ == "__main__":

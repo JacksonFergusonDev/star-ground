@@ -1005,7 +1005,7 @@ def test_in_github_actions_failures_annotate_the_run(tmp_path: Path) -> None:
     assert text.startswith("::group::pedalpcb: reading\n")
     assert "::endgroup::" in text
     assert (
-        "::warning title=pedalpcb: failed::https://x.test/b.pdf (50%25 done%0Athen broke)"
+        "::warning title=pedalpcb%3A failed::https://x.test/b.pdf (50%25 done%0Athen broke)"
         in text
     )
     assert "| pedalpcb | 1 |" in summary.read_text()

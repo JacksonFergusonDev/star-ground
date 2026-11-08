@@ -71,7 +71,7 @@ jobs:
         uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
 
       - name: Install dependencies
-        run: uv sync --no-dev --group catalog
+        run: uv sync --no-dev
 
       # The open update's data is the last run's: carry this publisher's over,
       # so an unreviewed night's state isn't lost and nothing is asked twice.

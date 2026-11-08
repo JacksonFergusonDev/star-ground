@@ -20,6 +20,8 @@ from pathlib import Path
 
 import requests
 
+from star_ground.cli_output import CliOutput
+
 SAMPLES_DIR = Path(__file__).resolve().parent.parent / "tests" / "samples"
 MANIFEST = SAMPLES_DIR / "manifest.json"
 USER_AGENT = "star-ground-tests (+https://github.com/JacksonFergusonDev/star-ground)"
@@ -82,6 +84,7 @@ def fetch(samples: list[Sample], root: Path = SAMPLES_DIR) -> list[str]:
     Returns:
         One message per document that couldn't be fetched or verified.
     """
+    output = CliOutput()
     errors = []
     session = requests.Session()
     session.headers["User-Agent"] = USER_AGENT
@@ -104,7 +107,7 @@ def fetch(samples: list[Sample], root: Path = SAMPLES_DIR) -> list[str]:
             continue
         dest.parent.mkdir(parents=True, exist_ok=True)
         dest.write_bytes(response.content)
-        print(f"Fetched {sample.path}")
+        output.success(f"Fetched {sample.path}")
         time.sleep(POLITE_DELAY)
     return errors
 
@@ -115,9 +118,18 @@ def main() -> int:
     Returns:
         The exit code: 1 if any document couldn't be fetched or verified.
     """
-    errors = fetch(load_manifest())
-    for error in errors:
-        print(error, file=sys.stderr)
+    output = CliOutput()
+    with output.report_failures("Test samples"), output.section("Fetch test samples"):
+        samples = load_manifest()
+        errors = fetch(samples)
+        for error in errors:
+            output.error(error, title="Test samples")
+    if errors:
+        result = f"{len(errors)} of {len(samples)} test samples could not be prepared."
+    else:
+        result = f"All {len(samples)} test samples are ready."
+        output.success(result)
+    output.step_summary(f"## Test samples\n\n{result}\n")
     return 1 if errors else 0
 
 

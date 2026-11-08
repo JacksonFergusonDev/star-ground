@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
-import json
 import subprocess
 from collections.abc import Sequence
 
 import pytest
 
 from scripts import prepare_release
-from scripts.prepare_release import CheckoutState, OutputStyle, WorkflowRun
+from scripts.prepare_release import CheckoutState
 
 
 def _completed(
@@ -198,27 +197,3 @@ def test_confirm_handles_interactive_and_non_tty_input(
     answers = iter(["maybe", "y"])
     monkeypatch.setattr("builtins.input", lambda: next(answers))
     assert prepare_release.confirm("Continue?") is True
-
-
-def test_report_applies_ansi_when_forced(
-    monkeypatch: pytest.MonkeyPatch,
-    capsys: pytest.CaptureFixture[str],
-) -> None:
-    monkeypatch.delenv("CI", raising=False)
-    monkeypatch.delenv("NO_COLOR", raising=False)
-    monkeypatch.setenv("FORCE_COLOR", "1")
-
-    prepare_release.report("Ready", style=OutputStyle.SUCCESS)
-
-    out = capsys.readouterr().out
-    assert "\033[1;32mReady\033[0m" in out
-    assert isinstance(
-        WorkflowRun(
-            database_id=1,
-            head_sha="abc",
-            status="completed",
-            conclusion="success",
-            url=json.dumps("https://example.com"),
-        ),
-        WorkflowRun,
-    )
