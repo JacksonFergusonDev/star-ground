@@ -6,9 +6,9 @@ from star_ground.bom_lib import (
     ComponentKey,
     HardwareRole,
     Inventory,
-    get_standard_hardware,
     provided_hardware,
     status_leds,
+    with_standard_hardware,
 )
 
 HW = ComponentCategory.HARDWARE_MISC
@@ -82,14 +82,16 @@ class TestInjection:
 
     def test_no_project_lists_hardware(self) -> None:
         inventory = Inventory()
-        get_standard_hardware(inventory, [BuildHardware(2), BuildHardware(1)])
+        inventory = with_standard_hardware(
+            inventory, [BuildHardware(2), BuildHardware(1)]
+        )
         assert inventory[INPUT_JACK].qty == 3
         assert inventory[STOMP].qty == 3
 
     def test_project_listing_its_own_jacks_is_skipped(self) -> None:
         inventory = Inventory()
         own_jacks = frozenset({HardwareRole.AUDIO_JACKS, HardwareRole.DC_JACK})
-        get_standard_hardware(
+        inventory = with_standard_hardware(
             inventory, [BuildHardware(2, own_jacks), BuildHardware(1)]
         )
         assert inventory[INPUT_JACK].qty == 1  # only the other project's pedal
@@ -103,7 +105,7 @@ class TestInjection:
 
     def test_hardware_every_project_lists_is_not_added(self) -> None:
         inventory = Inventory()
-        get_standard_hardware(
+        inventory = with_standard_hardware(
             inventory, [BuildHardware(1, frozenset({HardwareRole.ENCLOSURE}))]
         )
         assert ENCLOSURE not in inventory
@@ -111,7 +113,9 @@ class TestInjection:
     def test_status_led_a_project_lists_is_not_added_again(self) -> None:
         inventory = Inventory()
         listed = frozenset({HardwareRole.LED_RESISTOR})
-        get_standard_hardware(inventory, [BuildHardware(1, listed), BuildHardware(1)])
+        inventory = with_standard_hardware(
+            inventory, [BuildHardware(1, listed), BuildHardware(1)]
+        )
         assert inventory[LED_RESISTOR].qty == 1  # only the other project's
         assert inventory[STATUS_LED].qty == 2  # neither lists the LED
 
@@ -123,7 +127,7 @@ class TestInjection:
         assert status_leds(leds) == 3
         inventory = Inventory()
         provided = provided_hardware(leds)
-        get_standard_hardware(
+        inventory = with_standard_hardware(
             inventory, [BuildHardware(2, provided, status_leds(leds))]
         )
         assert inventory[LED_RESISTOR].qty == 6

@@ -7,6 +7,7 @@ This module acts as the "Controller" for the BOM library. It handles:
 - Renaming sources/projects.
 """
 
+import copy
 from dataclasses import replace
 from decimal import Decimal
 
@@ -103,24 +104,26 @@ def sort_inventory(inventory: Inventory) -> list[tuple[ComponentKey, PartData]]:
     return sorted(inventory.items(), key=sort_key)
 
 
-def rename_source_in_inventory(
-    inventory: Inventory, old_name: str, new_name: str
-) -> None:
-    """Updates the source key in the inventory (e.g., renaming a project).
+def rename_source(inventory: Inventory, old_name: str, new_name: str) -> Inventory:
+    """A copy of the inventory with one source under a new label.
 
     Args:
-        inventory: The inventory to mutate.
+        inventory: The inventory, left unchanged.
         old_name: The existing source label.
         new_name: The new source label.
-    """
-    if old_name == new_name:
-        return
 
-    for part in inventory.values():
+    Returns:
+        The renamed copy.
+    """
+    renamed = copy.deepcopy(inventory)
+    if old_name == new_name:
+        return renamed
+    for part in renamed.values():
         if old_name in part.sources:
             part.sources[new_name] = part.sources.pop(old_name)
         if old_name in part.counted:
             part.counted[new_name] = part.counted.pop(old_name)
+    return renamed
 
 
 def serialize_inventory(inventory: Inventory) -> str:

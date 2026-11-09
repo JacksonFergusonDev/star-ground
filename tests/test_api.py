@@ -264,6 +264,26 @@ def test_a_correction_buys_the_part_the_document_prints() -> None:
     }
 
 
+def test_a_correction_leaves_the_reading_it_corrects_unchanged() -> None:
+    # The server keeps readings in a cache and builds every list from them.
+    upload = FileUpload("fuzz.csv", b"Ref,Value\nR1,1k\nR2,1k\n")
+    reading = read_document(InputMethod.UPLOAD_FILE, upload)
+    assert reading is not None
+    before = repr(reading)
+    project = Project(
+        name="Fuzz",
+        method=InputMethod.UPLOAD_FILE,
+        data=upload,
+        reading=reading,
+        corrections=(Correction("R1", R10K),),
+    )
+
+    master = generate_master_list([project])
+
+    assert master.parts[R10K].qty == 1
+    assert repr(reading) == before
+
+
 def test_a_correction_that_leaves_a_part_unused_removes_it() -> None:
     project = Project(data="R1 1k", corrections=(Correction("R1", R10K),))
 

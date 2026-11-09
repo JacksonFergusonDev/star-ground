@@ -7,6 +7,7 @@ This module contains the "Nerd Economics" logic, which includes:
 - Identifying missing or residual parts from parsing.
 """
 
+import copy
 import math
 import re
 from collections.abc import Sequence
@@ -402,10 +403,10 @@ def status_leds(inventory: Inventory) -> int:
     )
 
 
-def get_standard_hardware(
-    inventory: Inventory, builds: Sequence[BuildHardware]
-) -> None:
-    """Injects standard enclosure hardware into the inventory.
+def with_standard_hardware(
+    parts: Inventory, builds: Sequence[BuildHardware]
+) -> Inventory:
+    """A copy of the parts with standard enclosure hardware added.
 
     Adds items like jacks, switches, DC sockets, and wiring that are almost
     never listed on the PCB BOM but are required to build the pedal. Hardware a
@@ -413,9 +414,13 @@ def get_standard_hardware(
     only for the other projects' pedals, so nothing is bought twice.
 
     Args:
-        inventory: The inventory dictionary to mutate in-place.
+        parts: The master list's parts, left unchanged.
         builds: Each project's pedal count and the hardware it provides.
+
+    Returns:
+        The parts with the hardware added.
     """
+    inventory = copy.deepcopy(parts)
     pedal_count = sum(b.count for b in builds)
 
     def needing(role: HardwareRole | None) -> int:
@@ -544,6 +549,7 @@ def get_standard_hardware(
             f"Pot Seals ({total_pots})",
             qty_override=total_pots,
         )
+    return inventory
 
 
 def is_pure_hardware(sources: dict[str, list[str]]) -> bool:

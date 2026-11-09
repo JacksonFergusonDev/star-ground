@@ -10,12 +10,11 @@ frontend owns its widgets and session state, the backend owns every decision
 about parts.
 """
 
-import copy
 import os
 import tempfile
 from collections.abc import Sequence
 from contextlib import nullcontext
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from urllib.parse import unquote, urlsplit
 
 from star_ground.bom_lib import (
@@ -35,12 +34,12 @@ from star_ground.bom_lib import (
     ShoppingLine,
     build_shopping_list,
     categorize_part,
-    get_standard_hardware,
     make_component_key,
     parse_user_inventory,
     provided_hardware,
-    rename_source_in_inventory,
+    rename_source,
     status_leds,
+    with_standard_hardware,
 )
 from star_ground.bom_lib.constants import INJECTED_SUFFIX
 from star_ground.bom_lib.errors import BuildNotChosenError, UnreadablePartError
@@ -290,8 +289,7 @@ def _read(
     if project.reading is None:
         result = context.process(project.method, project.data, source_name=source)
         return offered(result, project.use_ocr), source
-    # Work on a copy, so the frontend's cached reading stays pristine.
-    return copy.deepcopy(offered(project.reading, project.use_ocr)), PENDING_SOURCE
+    return offered(project.reading, project.use_ocr), PENDING_SOURCE
 
 
 def _identity(project: Project) -> tuple[object, ...]:
@@ -391,9 +389,8 @@ def generate_master_list(
         chose_build = result.requires_choice
         if chose_build:
             result = result.select(str(project.variant))
-        inventory, p_stats = result.inventory, result.stats
-        for correction in project.corrections:
-            inventory.move(listed_as, correction.ref, correction.part)
+        p_stats = result.stats
+        moves = {c.ref: c.part for c in project.corrections}
 
         name = source
         title = result.title or file_title(project.method, project.data)
@@ -402,8 +399,11 @@ def generate_master_list(
         # Name the build in every output: 'Muffin Fuzz (Civil War)'.
         label = f"{name} ({project.variant})" if chose_build else name
         label = _unique_label(label, _identity(project), labelled)
-        if label != listed_as:
-            rename_source_in_inventory(inventory, listed_as, label)
+        inventory = rename_source(
+            result.inventory.moved(listed_as, moves), listed_as, label
+        )
+        # The check page lists the parts as corrected and labelled.
+        result = replace(result, inventory=inventory)
 
         parts.merge(inventory, project.count)
         stats.absorb(p_stats)
@@ -428,6 +428,5 @@ def generate_master_list(
             )
         )
 
-    kit = copy.deepcopy(parts)
-    get_standard_hardware(kit, [b.hardware for b in built])
+    kit = with_standard_hardware(parts, [b.hardware for b in built])
     return MasterList(parts, kit, stats, tuple(built), stock)
