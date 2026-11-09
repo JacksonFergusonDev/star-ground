@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 from star_ground.bom_lib.enums import ComponentCategory, ComponentOrigin
-from star_ground.bom_lib.parser import parse_user_inventory
+from star_ground.bom_lib.strategies.csv import parse_user_inventory
 from star_ground.bom_lib.types import FORMULA_PREFIXES, ShoppingLine
 from star_ground.exports.spreadsheets import (
     SHOPPING_LIST_COLUMNS,

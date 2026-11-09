@@ -1,6 +1,6 @@
 """Parser self-checks that turn silent failures into user-facing warnings.
 
-The extraction heuristics in `parser.py` will never be right for every
+The extraction heuristics in `pdf/` will never be right for every
 document. These checks are deliberately independent of those heuristics: they
 look at the source text and the finished inventory from a different angle and
 report every place where the two disagree. The invariant they enforce is that
@@ -340,7 +340,7 @@ def check_valueless_refs(
 
     Args:
         refs: Designators printed in a designator column with no value beside
-            them (`layout.valueless_refs`).
+            them (`pdf.page_checks.valueless_refs`).
         inventory: The finished inventory for this document.
         stats: Stats object that receives the warnings.
     """
@@ -1284,7 +1284,7 @@ def check_unreadable_rows(rows: list[str], stats: ReadingStats) -> None:
     """Warns that a row of an OCR'd parts list names no part it could read.
 
     Args:
-        rows: The rows' text (`layout.unreadable_rows`).
+        rows: The rows' text (`pdf.page_checks.unreadable_rows`).
         stats: Stats object that receives the warning.
     """
     if rows:

@@ -4,7 +4,7 @@ from dataclasses import replace
 
 from star_ground.bom_lib.enums import InputMethod
 from star_ground.bom_lib.ocr import attempt_ocr
-from star_ground.bom_lib.parser import parse_pedalpcb_pdf
+from star_ground.bom_lib.pdf.document import parse_pedalpcb_pdf
 from star_ground.bom_lib.strategies.base import BOMParserStrategy, ParseResult
 from star_ground.bom_lib.types import RawBOMData, SupportsName
 

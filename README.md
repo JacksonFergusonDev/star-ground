@@ -181,8 +181,8 @@ See [tests/README.md](tests/README.md) for how to run each layer.
 │   ├── bom_lib/           <-- Domain logic
 │   │   ├── strategies/    <-- Input dispatch: PDF, CSV, pasted text, URL
 │   │   ├── fetch.py       <-- Safe URL fetching
-│   │   ├── parser.py      <-- Build document reader
-│   │   ├── layout.py      <-- Word-position layout reader
+│   │   ├── pdf/           <-- Build document reader: tables, listings, layout
+│   │   ├── ingest.py      <-- One row into inventory parts
 │   │   ├── builds.py      <-- Variants and options
 │   │   ├── ocr.py         <-- OCR for image-only parts lists
 │   │   ├── verification.py <-- Self-checks and review warnings

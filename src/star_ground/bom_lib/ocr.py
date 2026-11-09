@@ -4,7 +4,7 @@ Some build documents print their parts list as a picture (GuitarPCB's DVF and
 Blues Power) or as text drawn in outline (SWAH v3): the PDF has no characters
 to read. When a parse looks incomplete, the pages that could hold such a list
 are rendered and read by OCR, and the recognized words go through the same
-readers as a text layer (`parser.read_pages`).
+readers as a text layer (`pdf.reading.read_pages`).
 
 OCR misreads plausibly ('1M' as '10M'), so its parts never join a parts list
 on their own. `attempt_ocr` grades the reading, and the caller shows its
@@ -29,18 +29,18 @@ from typing import TYPE_CHECKING, Any
 from star_ground.bom_lib.constants import INJECTED_SUFFIX
 from star_ground.bom_lib.designators import BOARD_REF, is_designator, parse_designator
 from star_ground.bom_lib.enums import ComponentCategory, OcrVerdict, ParseWarningKind
-from star_ground.bom_lib.layout import (
-    REF_RANGE,
+from star_ground.bom_lib.locations import locate
+from star_ground.bom_lib.pdf.bom_table import heads_typed_table
+from star_ground.bom_lib.pdf.cells import REF_RANGE, starts_description
+from star_ground.bom_lib.pdf.geometry import (
     Listing,
-    find_listings,
     group_lines,
-    heads_typed_table,
     page_lines,
     split_cells,
-    starts_description,
 )
-from star_ground.bom_lib.locations import locate
-from star_ground.bom_lib.parser import names_builds, read_pages
+from star_ground.bom_lib.pdf.reading import read_pages
+from star_ground.bom_lib.pdf.ruled import names_builds
+from star_ground.bom_lib.pdf.scan import find_listings
 from star_ground.bom_lib.types import (
     BuildVariant,
     ComponentKey,
@@ -804,7 +804,7 @@ def _build_grid(
     OKS Fuzz prints 'Component | ColorSound | 1996 | Meathead | Dark Meathead |
     Ritual' over rows of a designator and its value in each build. Read as
     listings, the values run together ('2M 2M 2M 2M 2M'); as a table, the
-    readers give each column its build (`parser._value_column_grid`).
+    readers give each column its build (`pdf.ruled._value_column_grid`).
 
     Returns:
         The header and rows, or None when the table has no named value columns.

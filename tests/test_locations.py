@@ -11,7 +11,7 @@ from star_ground.bom_lib import (
 )
 from star_ground.bom_lib.locations import locate
 from star_ground.bom_lib.ocr import without_ocr
-from star_ground.bom_lib.parser import parse_pedalpcb_pdf
+from star_ground.bom_lib.pdf.document import parse_pedalpcb_pdf
 from star_ground.bom_lib.types import make_component_key
 
 SAMPLES = Path(__file__).parent / "samples"

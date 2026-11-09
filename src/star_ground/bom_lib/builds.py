@@ -25,7 +25,7 @@ from statistics import median
 
 from star_ground.bom_lib import constants
 from star_ground.bom_lib.enums import ComponentCategory
-from star_ground.bom_lib.layout import Cell
+from star_ground.bom_lib.pdf.geometry import Cell
 from star_ground.bom_lib.types import PDFWord
 
 # Entries this close to a column's left edge (points) belong to that column.
@@ -105,7 +105,7 @@ class PageContext:
     """Layout information the detectors need for one page.
 
     Attributes:
-        lines: The cells of each visual line (see `layout.page_lines`).
+        lines: The cells of each visual line (see `pdf.geometry.page_lines`).
         text: The page's extracted text.
         labels: Margin labels beside the page's tables (see
             `PDFPageExtraction`).

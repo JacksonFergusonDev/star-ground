@@ -7,7 +7,7 @@ from star_ground.bom_lib import (
     ParseResult,
 )
 from star_ground.bom_lib.builds import Entry, PageContext, plan_builds
-from star_ground.bom_lib.layout import Cell
+from star_ground.bom_lib.pdf.geometry import Cell
 from star_ground.bom_lib.types import Inventory, PDFWord, ReadingStats
 
 
