@@ -411,6 +411,18 @@ def test_clients_are_rate_limited() -> None:
     assert statuses == [204, 204, 429]
 
 
+def test_an_invalid_request_uses_none_of_the_limit() -> None:
+    client = TestClient(create_app(Settings(requests_per_minute=2)))
+
+    statuses = [
+        client.post("/api/reports", json={}).status_code,
+        client.post("/api/reports", json={}).status_code,
+        client.post("/api/reports", json=_REPORT).status_code,
+    ]
+
+    assert statuses == [422, 422, 204]
+
+
 def test_behind_a_proxy_each_forwarded_client_is_limited_separately() -> None:
     client = TestClient(create_app(Settings(requests_per_minute=1, trust_proxy=True)))
 

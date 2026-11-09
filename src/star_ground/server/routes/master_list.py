@@ -21,7 +21,7 @@ from star_ground.server.models import (
 )
 from star_ground.server.reading import master_list, parse_request
 from star_ground.server.responses import master_list_result
-from star_ground.server.services import Client, ServicesDep
+from star_ground.server.services import Limit, ServicesDep
 
 router = APIRouter(tags=["master list"])
 
@@ -43,7 +43,7 @@ _EXPORT_RESPONSES: dict[int | str, dict[str, Any]] = {
     },
 )
 def build_master_list(
-    client: Client,
+    limit: Limit,
     services: ServicesDep,
     request: Annotated[str, Form(description="A `MasterListRequest`, as JSON.")],
     files: Annotated[list[UploadFile] | None, File()] = None,
@@ -54,6 +54,7 @@ def build_master_list(
     Uploads are sent as `files`, named as their projects' `file` says;
     `stock` is the builder's stock CSV (columns Category, Part, Qty).
     """
+    client = limit()
     parsed = parse_request(request)
     master = master_list(services, client, parsed, files or [], stock)
     return master_list_result(master, parsed)
@@ -61,7 +62,7 @@ def build_master_list(
 
 @router.post("/api/exports/{kind}", responses=_EXPORT_RESPONSES)
 def export(
-    client: Client,
+    limit: Limit,
     services: ServicesDep,
     kind: ExportKind,
     request: Annotated[str, Form(description="A `MasterListRequest`, as JSON.")],
@@ -74,6 +75,7 @@ def export(
     `links` sets how the shopping list (alone or in the build pack)
     writes supplier links: as plain URLs, or as Excel `HYPERLINK`s.
     """
+    client = limit()
     parsed = parse_request(request)
     master = master_list(services, client, parsed, files or [], stock)
     contents = PackContents(
@@ -93,11 +95,12 @@ def export(
 
 
 @router.post("/api/parts/read", responses={422: {"model": Problem}})
-def read_part(client: Client, body: PartIn) -> PartOut:
+def read_part(limit: Limit, body: PartIn) -> PartOut:
     """Reads a value the builder typed for a part, as a parts list's row.
 
     A correction is read here as it's typed, so the master list request
     carries it as the list will show it.
     """
+    limit()
     part = read_correction(body.ref, body.value, body.category)
     return PartOut(category=part.category, value=part.value)

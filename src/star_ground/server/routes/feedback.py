@@ -6,7 +6,7 @@ from fastapi import APIRouter
 
 from star_ground.bom_lib import FeedbackKind
 from star_ground.server.models import PartReportIn, ReportIn
-from star_ground.server.services import Client
+from star_ground.server.services import Limit
 
 logger = logging.getLogger(__name__)
 
@@ -14,13 +14,14 @@ router = APIRouter(tags=["feedback"])
 
 
 @router.post("/api/reports", status_code=204)
-def send_report(client: Client, body: ReportIn) -> None:
+def send_report(limit: Limit, body: ReportIn) -> None:
     """Records a builder's report of a bug, with what was being read.
 
     Never the document itself: an upload's name, or a link. The report is
     logged under the bug's code, beside the bug's own entry and traceback,
     which Error Reporting groups.
     """
+    limit()
     logger.warning(
         "Report of bug %s",
         body.code,
@@ -36,7 +37,7 @@ def send_report(client: Client, body: ReportIn) -> None:
 
 
 @router.post("/api/part-reports", status_code=204)
-def send_part_report(client: Client, body: PartReportIn) -> None:
+def send_part_report(limit: Limit, body: PartReportIn) -> None:
     """Records a builder's report that a part was read wrong.
 
     It names the document by its link (or an upload's name and hash) and
@@ -44,6 +45,7 @@ def send_part_report(client: Client, body: PartReportIn) -> None:
     regression corpus. Never the document itself. It's logged, and the log
     export keeps it in BigQuery (see `deploy/README.md`).
     """
+    limit()
     at = body.location
     logger.info(
         "Report of %s read as %s",

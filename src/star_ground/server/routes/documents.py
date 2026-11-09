@@ -21,7 +21,7 @@ from star_ground.server.models import (
 )
 from star_ground.server.reading import cache_key, ocr_on, read_cached, upload
 from star_ground.server.responses import document_reading, problem, sse
-from star_ground.server.services import Client, RefusedError, ServicesDep
+from star_ground.server.services import Limit, RefusedError, ServicesDep
 
 router = APIRouter(tags=["documents"])
 
@@ -43,7 +43,7 @@ router = APIRouter(tags=["documents"])
     },
 )
 def read(
-    client: Client,
+    limit: Limit,
     services: ServicesDep,
     file: Annotated[UploadFile | None, File()] = None,
     url: Annotated[str | None, Form(max_length=2048)] = None,
@@ -59,6 +59,7 @@ def read(
     runs only when asked (`ocr`) and takes seconds a page, so progress
     streams as server-sent events.
     """
+    client = limit()
     if (file is None) == (url is None):
         raise RefusedError(422, Problem(message="Send either a file or a url."))
     method, data = (
@@ -127,7 +128,7 @@ def read(
     },
 )
 def document_pdf(
-    client: Client,
+    limit: Limit,
     services: ServicesDep,
     url: Annotated[str, Query(max_length=2048)],
 ) -> Response:
@@ -136,6 +137,7 @@ def document_pdf(
     A browser can't fetch a publisher's file itself, so the API passes on
     the copy it read. Nothing is kept beyond the reading cache.
     """
+    client = limit()
     url = url.strip()
     key = document_key(InputMethod.FROM_URL, url)
     reading = (

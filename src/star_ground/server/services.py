@@ -2,7 +2,7 @@
 
 `create_app` builds one `Services` per application and keeps it on
 `app.state`; routes ask for it, and for the rate-limited client, as FastAPI
-dependencies (`ServicesDep`, `Client`).
+dependencies (`ServicesDep`, `Limit`).
 """
 
 import os
@@ -147,19 +147,40 @@ def client_address(request: Request, trust_proxy: bool) -> str:
     return request.client.host if request.client else "unknown"
 
 
-def limited_client(request: Request, services: ServicesDep) -> str:
-    """Counts the request against its client's limit; returns the client.
+@dataclass(frozen=True, slots=True)
+class RateLimit:
+    """A request's place in its client's limit, counted when called.
 
-    Raises:
-        RefusedError: The client has used its requests for this minute.
+    A route calls it first thing in its body. As a dependency that counted
+    on its own it would run before FastAPI checks the request, so a request
+    turned away as invalid (a 422) would use up one of the client's.
+
+    Attributes:
+        request: The request being counted.
+        services: The application's services, holding the limiter.
     """
-    client = client_address(request, services.settings.trust_proxy)
-    if not services.limiter.allow(client):
-        raise RefusedError(
-            429, Problem(message="Too many requests. Try again in a minute.")
-        )
-    return client
+
+    request: Request
+    services: Services
+
+    def __call__(self) -> str:
+        """Counts the request against its client's limit; returns the client.
+
+        Raises:
+            RefusedError: The client has used its requests for this minute.
+        """
+        client = client_address(self.request, self.services.settings.trust_proxy)
+        if not self.services.limiter.allow(client):
+            raise RefusedError(
+                429, Problem(message="Too many requests. Try again in a minute.")
+            )
+        return client
 
 
-Client = Annotated[str, Depends(limited_client)]
-"""A route parameter receiving the rate-limited client's address."""
+def rate_limit(request: Request, services: ServicesDep) -> RateLimit:
+    """The request's `RateLimit`, for its route to count."""
+    return RateLimit(request, services)
+
+
+Limit = Annotated[RateLimit, Depends(rate_limit)]
+"""A route parameter receiving the request's `RateLimit`, to call first."""
