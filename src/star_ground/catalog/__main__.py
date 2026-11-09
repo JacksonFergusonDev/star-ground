@@ -5,7 +5,7 @@ import sys
 import time
 from pathlib import Path
 
-from star_ground.catalog.build import Budget, build
+from star_ground.catalog.build import Budget, CatalogRun, Sample
 from star_ground.catalog.client import MIN_DELAY_S, PoliteClient, user_agent
 from star_ground.catalog.report import Outcome, Reporter
 from star_ground.catalog.sources import SOURCES, Publisher
@@ -90,15 +90,14 @@ def main(argv: list[str] | None = None) -> int:
         budget = Budget(now + share)
         reporter.info(f"{publisher}: {share / 60:.0f} minutes")
         try:
-            build(
+            CatalogRun(
                 client,
                 SOURCES[publisher],
                 args.out,
                 reporter,
                 budget,
-                args.pages,
-                args.documents,
-            )
+                Sample(args.pages, args.documents),
+            ).run()
         except Exception as error:  # One publisher failing doesn't stop the others.
             reporter.error(
                 f"{type(error).__name__}: {error}", title=f"{publisher}: run stopped"

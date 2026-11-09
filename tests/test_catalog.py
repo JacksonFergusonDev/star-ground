@@ -28,8 +28,9 @@ from star_ground.bom_lib.types import (
 from star_ground.catalog.build import (
     BOARDS_VERSION,
     Budget,
+    CatalogRun,
+    Sample,
     State,
-    build,
     clean,
     entry_id,
     entry_title,
@@ -59,6 +60,7 @@ from star_ground.catalog.effects import (
     from_categories,
     from_title,
 )
+from star_ground.catalog.entries import CatalogEntry
 from star_ground.catalog.report import Event, Outcome, Reporter
 from star_ground.catalog.sources import SOURCES, Publisher
 from star_ground.catalog.verified import (
@@ -590,17 +592,16 @@ def run(tmp_path: Path) -> Any:
         clock = _Clock()
         client = PoliteClient(web, sleep=clock.sleep, clock=clock)  # type: ignore[arg-type]
         budget = Budget(minutes * 60, clock=clock)
-        build(
+        CatalogRun(
             client,
             SOURCES[Publisher.PEDALPCB],
             tmp_path,
             reporter,
             budget,
-            None,
-            documents,
+            Sample(documents=documents),
             read,
             boards,
-        )
+        ).run()
         return reporter
 
     return go
@@ -1371,3 +1372,15 @@ def test_a_bundle_s_page_does_not_name_each_document_in_it() -> None:
     )
 
     assert [li.title for li in links] == [None, None]
+
+
+def test_every_committed_entry_reads_and_writes_back_unchanged(tmp_path: Path) -> None:
+    """The website reads entries as they are; the typed model must keep them so."""
+    entries = sorted(
+        (Path(__file__).parent.parent / "catalog" / "builds").glob("*/*.json")
+    )
+    assert entries
+    for path in entries:
+        copy = tmp_path / path.name
+        CatalogEntry.load(path).write(copy)
+        assert copy.read_text() == path.read_text(), path.name
