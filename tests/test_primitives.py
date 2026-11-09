@@ -343,6 +343,7 @@ def test_key_quantity() -> None:
     )
     assert key_quantity(ComponentKey(ComponentCategory.ICS, "TL072")) is None
     assert key_quantity(ComponentKey(ComponentCategory.UNKNOWN, "10k")) is None
+    assert key_quantity(ComponentKey(ComponentCategory.PCB, "1981 DRV")) is None
 
 
 # --- sort_inventory Tests ---
@@ -369,6 +370,18 @@ def test_sort_inventory_numerical_order() -> None:
         "Resistors | 100k",
         "Resistors | 1M",
     ]
+
+
+def test_sort_inventory_pcbs_by_name() -> None:
+    """PCBs sort by name, even when the name starts with a number."""
+    inv = Inventory()
+    k_drv = ComponentKey(ComponentCategory.PCB, "1981 DRV")
+    k_muff = ComponentKey(ComponentCategory.PCB, "Big Muff")
+
+    inv.add_part("P1", k_muff, "PCB")
+    inv.add_part("P2", k_drv, "PCB")
+
+    assert [key for key, _ in sort_inventory(inv)] == [k_drv, k_muff]
 
 
 def test_sort_inventory_capacitors_order() -> None:
