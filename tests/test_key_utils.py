@@ -5,7 +5,6 @@ import io
 from star_ground.bom_lib import (
     ComponentCategory,
     ComponentKey,
-    PDFPageExtraction,
     SupportsGetValue,
     SupportsRead,
     make_component_key,
@@ -54,14 +53,3 @@ def test_parser_context_with_raw_bom_data() -> None:
     # None / Empty
     res_empty = context.process(InputMethod.PASTE_TEXT, None, "Empty")
     assert len(res_empty.inventory) == 0
-
-
-def test_pdf_page_extraction_type() -> None:
-    """Verifies PDFPageExtraction TypedDict keys."""
-    extraction: PDFPageExtraction = {
-        "tables": [[["R1", "10k"]]],
-        "text": "R1 10k",
-        "words": [],
-    }
-    assert extraction["tables"][0][0] == ["R1", "10k"]
-    assert extraction["text"] == "R1 10k"

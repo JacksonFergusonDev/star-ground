@@ -96,7 +96,6 @@ The pipeline's types live in `bom_lib/types.py` as dataclasses. Accumulators, fi
 @dataclass(slots=True)
 class PartData:
     qty: int = 0
-    val_qty: Value | Decimal | None = None  # 10 kΩ for a "10k" resistor
     refs: list[str] = field(default_factory=list)  # ["R1", "R2"]
     sources: defaultdict[str, list[str]] = ...  # Traceability back to each project
     included: int = 0  # Of qty, how many come with the PCB

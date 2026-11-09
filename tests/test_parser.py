@@ -1446,11 +1446,11 @@ def test_a_box_around_board_artwork_is_no_parts_table() -> None:
     # Tonepad FraVerb: the artwork's labels read as a headerless one-row 'table'.
     from star_ground.bom_lib.parser import read_pages
 
-    page: PDFPageExtraction = {
-        "tables": [[["50k 50k trim p2 trim p1 int-ext 32768", "50k trim p2"]]],
-        "text": "",
-        "words": [],
-    }
+    page = PDFPageExtraction(
+        tables=[[["50k 50k trim p2 trim p1 int-ext 32768", "50k trim p2"]]],
+        text="",
+        words=[],
+    )
     inventory, _, _ = read_pages([page], "Tonepad", ReadingStats())
     assert not any(data.refs for data in inventory.values())
 
@@ -1467,8 +1467,8 @@ def test_a_second_versions_value_in_its_own_column() -> None:
     # Aion FX legacy Aurora: 'Parts (Ross / Dyna values)' over 'R2 | 470k | jumper'.
     from star_ground.bom_lib.parser import read_pages
 
-    page: PDFPageExtraction = {
-        "tables": [
+    page = PDFPageExtraction(
+        tables=[
             [
                 ["R1", "10k", None],
                 ["R2", "470k", "jumper"],
@@ -1477,9 +1477,9 @@ def test_a_second_versions_value_in_its_own_column() -> None:
                 ["RX2 (by switch)", "150k", None],
             ]
         ],
-        "text": "Parts (Ross / Dyna values)",
-        "words": [],
-    }
+        text="Parts (Ross / Dyna values)",
+        words=[],
+    )
     _, variants, _ = read_pages([page], "Aurora", ReadingStats())
     builds = {
         v.name: {r: k.value for k, d in v.inventory.items() for r in d.refs}

@@ -194,7 +194,7 @@ def locate(
     lines = [
         line
         for page, number in zip(pages, numbers, strict=True)
-        for line in _lines(number, page["words"])
+        for line in _lines(number, page.words)
     ]
     printed = _printed(lines)
     # Each label's designator ('R1' for 'R1 (2)') and where it's printed.

@@ -406,11 +406,7 @@ def generate_master_list(
             rename_source_in_inventory(inventory, listed_as, label)
 
         parts.merge(inventory, project.count)
-        stats.lines_read += p_stats.lines_read
-        stats.parts_found += p_stats.parts_found
-        stats.residuals.extend(p_stats.residuals)
-        stats.errors.extend(p_stats.errors)
-        stats.warnings.extend(p_stats.warnings)
+        stats.absorb(p_stats)
 
         built.append(
             BuiltProject(

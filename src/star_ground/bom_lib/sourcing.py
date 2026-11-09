@@ -14,7 +14,7 @@ from decimal import Decimal
 from urllib.parse import quote_plus
 
 from star_ground.bom_lib import constants
-from star_ground.bom_lib.classifier import normalize_value_to_quantity
+from star_ground.bom_lib.classifier import key_quantity, normalize_value_to_quantity
 from star_ground.bom_lib.constants import AUTO_INJECT_SOURCE
 from star_ground.bom_lib.enums import (
     ComponentCategory,
@@ -442,8 +442,6 @@ def get_standard_hardware(
         )
 
         part = inventory[key]
-        if part.val_qty is None:
-            part.val_qty = normalize_value_to_quantity(category, val)
         part.qty += total_qty
         part.refs.append("HW")
         part.sources[AUTO_INJECT_SOURCE].append(f"Auto-Inject ({note})")
@@ -660,7 +658,7 @@ def build_shopping_list(
             s_item = stock.get(part_key)
             in_stock = s_item.qty if s_item else 0
 
-        val_qty = item.val_qty
+        val_qty = key_quantity(part_key)
         resolved = resolve_part_sourcing(
             category=category,
             val=value,

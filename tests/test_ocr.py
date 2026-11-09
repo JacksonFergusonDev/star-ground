@@ -84,17 +84,17 @@ class TestPageWords:
             OcrBox("22n", 360, 385, 586, 601),
             OcrBox("63V", 398, 424, 584, 602),
         ]
-        words = page_words(boxes)["words"]
+        words = page_words(boxes).words
         assert {w["top"] for w in words} == {586}
 
     def test_a_box_of_several_words_is_split(self) -> None:
-        words = page_words([OcrBox("CA Bi-colour LED", 100, 260, 10, 24)])["words"]
+        words = page_words([OcrBox("CA Bi-colour LED", 100, 260, 10, 24)]).words
         assert [w["text"] for w in words] == ["CA", "Bi-colour", "LED"]
         assert words[0]["x0"] == 100
         assert words[-1]["x1"] == pytest.approx(260)
 
     def test_greek_mu_reads_as_micro(self) -> None:
-        words = page_words([OcrBox("1μ", 0, 20, 0, 14)])["words"]
+        words = page_words([OcrBox("1μ", 0, 20, 0, 14)]).words
         assert words[0]["text"] == "1µ"
 
     def test_close_rows_stay_apart(self) -> None:
@@ -107,7 +107,7 @@ class TestPageWords:
             OcrBox("R27", 20, 32, 452, 459),
             OcrBox("20K", 44, 56, 452, 459),
         ]
-        words = page_words(boxes)["words"]
+        words = page_words(boxes).words
         assert len({w["top"] for w in words if w["text"] in {"R26", "R27"}}) == 2
 
     def test_a_designator_starts_a_cell(self) -> None:
@@ -124,7 +124,7 @@ class TestPageWords:
             ]
             from star_ground.bom_lib.layout import find_listings
 
-            listings = find_listings(page_words(words)["words"])
+            listings = find_listings(page_words(words).words)
             assert [(lst.ref, lst.value) for lst in listings] == [
                 ("C9", "1µ 16V"),
                 ("D1-D2", "1N4148"),
@@ -141,7 +141,7 @@ class TestPageWords:
                 OcrBox("*D1 - D4", 377, 418, 735, 745),
                 OcrBox("1N34A GE", 418, 464, 735, 745),
             ]
-        )["words"]
+        ).words
         listings = find_listings(words)
         assert [(lst.ref, lst.value) for lst in listings] == [
             ("C12", "1n"),
@@ -161,13 +161,13 @@ class TestPageWords:
                 OcrBox("Dual Op Amp", 382, 414, 665, 674),
             ],
         ):
-            words = page_words([OcrBox("U1", 320, 334, 665, 674), *boxes])["words"]
+            words = page_words([OcrBox("U1", 320, 334, 665, 674), *boxes]).words
             (line,) = group_lines(words)
             assert [c.text for c in split_cells(line)] == ["U1", "TL072", "Dual Op Amp"]
 
     def test_vertical_labels_are_dropped(self) -> None:
         # A PCB render's rotated 'R15' reads as a tall, narrow box.
-        words = page_words([OcrBox("R15", 0, 10, 0, 40)])["words"]
+        words = page_words([OcrBox("R15", 0, 10, 0, 40)]).words
         assert words == []
 
     def test_offset_rows_of_tables_side_by_side_stay_apart(self) -> None:
@@ -179,7 +179,7 @@ class TestPageWords:
             OcrBox("U1", 350, 367, 564.8, 578.0),
             OcrBox("7660SEPA", 399, 440, 566.5, 577.5),
         ]
-        tops = {w["text"]: w["top"] for w in page_words(boxes)["words"]}
+        tops = {w["text"]: w["top"] for w in page_words(boxes).words}
         assert tops["R8"] == tops["100K"]
         assert tops["U1"] == tops["7660SEPA"] != tops["R8"]
 
@@ -196,7 +196,7 @@ class TestTableBlock:
             OcrBox("R9", 50, 66, 150, 164),
             OcrBox("05", 80, 96, 150, 164),
         ]
-        kept = {w["text"] for w in table_block(page_words(boxes))["words"]}
+        kept = {w["text"] for w in table_block(page_words(boxes)).words}
         assert {"R1", "TL072", "D1-D2"} <= kept
         assert not kept & {"V4", "IUNMANN", "R9", "05"}
 
@@ -222,7 +222,7 @@ class TestTableBlock:
             # The board drawing above.
             *row(300, ("Q1", 330), ("C4", 400)),
         ]
-        kept = {w["text"] for w in table_block(page_words(boxes))["words"]}
+        kept = {w["text"] for w in table_block(page_words(boxes)).words}
         assert {"Trim1", "Trim2", "Boost", "R1", "R6"} <= kept
         assert "Q1" not in kept
 
@@ -246,7 +246,7 @@ class TestTableBlock:
             *row(471, ("U1", 350), ("TL072", 399)),
             *row(523, ("Q1", 350), ("2N5457", 399)),
         ]
-        kept = {w["text"] for w in table_block(page_words(boxes))["words"]}
+        kept = {w["text"] for w in table_block(page_words(boxes)).words}
         assert {"R1", "R10", "D1", "U1", "Q1"} <= kept
 
     def test_rows_under_the_typed_header_belong(self) -> None:
@@ -268,7 +268,7 @@ class TestTableBlock:
             ],
         ]
         block = table_block(page_words(boxes))
-        assert {"3PDT-A", "4PDT", "D1"} <= {w["text"] for w in block["words"]}
+        assert {"3PDT-A", "4PDT", "D1"} <= {w["text"] for w in block.words}
         assert _unlisted([block], {f"D{k}" for k in range(1, 6)}) == {"3PDT-A", "4PDT"}
 
     def test_a_build_header_under_the_typed_header_is_left_out(self) -> None:
@@ -292,7 +292,7 @@ class TestTableBlock:
                 )
             ],
         ]
-        kept = {w["text"] for w in table_block(page_words(boxes))["words"]}
+        kept = {w["text"] for w in table_block(page_words(boxes)).words}
         assert "C1" in kept
         assert "Kraken" not in kept
 
@@ -325,7 +325,7 @@ class TestTableBlock:
                 for b in row(488 + 12 * k, (ref, 92), (a, 171), (b_, 237), (c, 304))
             ],
         ]
-        (table,) = table_block(page_words(boxes))["tables"]
+        (table,) = table_block(page_words(boxes)).tables
         assert table[0] == ["Component", "ColorSound", "1996", "Dark Meathead"]
         assert table[2] == ["R2", "10k", "18k", "10k"]
 
@@ -340,11 +340,11 @@ class TestTableBlock:
                 488 + 12 * k, (f"R{k + 1}", 40), ("10k", 100), ("Resistor", 170)
             )
         ]
-        assert table_block(page_words(boxes))["tables"] == []
+        assert table_block(page_words(boxes)).tables == []
 
     def test_a_page_without_a_grid_keeps_nothing(self) -> None:
         boxes = [OcrBox("R9", 50, 66, 150, 164), OcrBox("05", 80, 96, 150, 164)]
-        assert table_block(page_words(boxes))["words"] == []
+        assert table_block(page_words(boxes)).words == []
 
 
 class TestUnlisted:
@@ -389,7 +389,7 @@ class TestRereadLabels:
         data = _reread_labels(
             page_words(boxes), Image.new("RGB", (600, 800)), 1.0, recognizer
         )
-        return [w["text"] for w in data["words"] if w["x0"] < 60]
+        return [w["text"] for w in data.words if w["x0"] < 60]
 
     def test_a_misread_label(self) -> None:
         # Five Cats: 'C9' reads '60' in the whole page, 'C9' on its own.

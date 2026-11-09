@@ -19,7 +19,7 @@ import threading
 from collections.abc import Callable, Iterator
 from contextlib import AbstractContextManager, contextmanager
 from contextvars import ContextVar
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from decimal import Decimal
 from functools import cache
 from itertools import pairwise
@@ -471,7 +471,7 @@ def page_words(boxes: list[OcrBox]) -> PDFPageExtraction:
                 )
                 pos = (x0 - box.x0) / width + len(token) + 1
         lines.append(" ".join(b.text for b in row))
-    return {"tables": [], "text": "\n".join(lines), "words": words}
+    return PDFPageExtraction(tables=[], text="\n".join(lines), words=words)
 
 
 def _clusters(values: list[float], tolerance: float) -> list[list[float]]:
@@ -555,7 +555,7 @@ def table_block(data: PDFPageExtraction) -> PDFPageExtraction:
     Returns:
         The page restricted to its parts table, possibly empty.
     """
-    words = data["words"]
+    words = data.words
     lines = group_lines(words)
     listings = find_listings(words)
     columns = [
@@ -565,7 +565,7 @@ def table_block(data: PDFPageExtraction) -> PDFPageExtraction:
     ]
     aligned = [lst for lst in listings if any(c[0] <= lst.x0 <= c[-1] for c in columns)]
     if not aligned:
-        return {"tables": [], "text": "", "words": []}
+        return PDFPageExtraction(tables=[], text="", words=[])
     tops = sorted({lines[lst.line][0]["top"] for lst in aligned})
     pitch = median(b - a for a, b in pairwise(tops)) if len(tops) > 1 else 0.0
     # A row that read as no listing leaves a gap of one more pitch.
@@ -574,7 +574,7 @@ def table_block(data: PDFPageExtraction) -> PDFPageExtraction:
     row_pitch = _pitch(rows) or _column_pitch(aligned, lines, rows, columns)
     if row_pitch is None:
         # Aligned labels on a schematic (Apollo Tremolo's) are no table.
-        return {"tables": [], "text": "", "words": []}
+        return PDFPageExtraction(tables=[], text="", words=[])
     pitch = min(pitch, row_pitch)
     # Rows that read as no listing can split one table in two ('LED | LED'
     # rows, Tone Monarch's daughterboard): a later block in the same
@@ -641,12 +641,12 @@ def table_block(data: PDFPageExtraction) -> PDFPageExtraction:
         for w in words
         if rows[0] - margin <= w["top"] <= rows[-1] + margin and w["x1"] < left - 1
     ]
-    return {
-        "tables": [grid] if grid else [],
-        "text": text,
-        "words": kept,
-        "labels": labels,
-    }
+    return PDFPageExtraction(
+        tables=[grid] if grid else [],
+        text=text,
+        words=kept,
+        labels=labels,
+    )
 
 
 @dataclass(frozen=True)
@@ -761,11 +761,11 @@ def _reread_labels(
     Returns:
         The page, with the labels read again.
     """
-    table = table_block(data)["words"]
+    table = table_block(data).words
     cells = _label_cells(table)[:_MAX_REREADS]
     if not cells:
         return data
-    words = list(data["words"])
+    words = list(data.words)
     # The table's own listings: the board drawing beside it names parts too.
     listed = {lst.ref.upper() for lst in find_listings(table)}
     for cell in cells:
@@ -793,7 +793,7 @@ def _reread_labels(
                 PDFWord(**{**row, "text": ref, "x0": x0, "x1": x0 + width * len(ref)})
             )
     words.sort(key=lambda w: (w["top"], w["x0"]))
-    return {**data, "words": words}
+    return replace(data, words=words)
 
 
 def _build_grid(
@@ -1030,7 +1030,7 @@ def _unlisted(pages_data: list[PDFPageExtraction], listed: set[str]) -> set[str]
     """
     unlisted = set()
     for data in pages_data:
-        listings = find_listings(data["words"])
+        listings = find_listings(data.words)
         # A short column of controls counts ('Trim1 | Trim2 | VOL', above
         # Samurai Boost's unread 'Boost | Toggle | DPDT').
         columns = [
@@ -1038,7 +1038,7 @@ def _unlisted(pages_data: list[PDFPageExtraction], listed: set[str]) -> set[str]
             for c in _clusters([lst.x0 for lst in listings], _ALIGN_PT)
             if len(c) >= _LABEL_COLUMN
         ]
-        for cells in page_lines(data["words"]):
+        for cells in page_lines(data.words):
             for cell in cells:
                 label = cell.text.split()[0]
                 refs = expand_refs(label) if REF_RANGE.fullmatch(label) else [label]
@@ -1061,7 +1061,7 @@ def _unlisted(pages_data: list[PDFPageExtraction], listed: set[str]) -> set[str]
         if (m := _NAMED_SERIES.fullmatch(label))
     }
     for data in pages_data:
-        for word in data["words"]:
+        for word in data.words:
             for token in word["text"].split():
                 m = _NAMED_SERIES.fullmatch(token)
                 if m and m.group(1).upper() in series and token.upper() not in listed:
@@ -1214,7 +1214,7 @@ def attempt_ocr(
             image = page.to_image(resolution=dpi).original.convert("RGB")
             words = page_words(recognizer(image, 72 / dpi))
             words = _reread_labels(words, image, 72 / dpi, recognizer)
-            mentioned |= {w["text"] for w in words["words"]}
+            mentioned |= {w["text"] for w in words.words}
             whole.append(words)
             pages_data.append(table_block(words))
             read.append(number)
