@@ -3,10 +3,13 @@
 import hashlib
 import io
 import json
+import threading
+import time
 from collections.abc import Iterator, Mapping
 from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlsplit
 
 import pytest
 import requests
@@ -37,6 +40,9 @@ from star_ground.catalog.build import (
 )
 from star_ground.catalog.client import (
     BACKOFF_S,
+    MAX_REDIRECTS,
+    MAX_ROBOTS_BYTES,
+    MAX_WAIT_S,
     MIN_DELAY_S,
     RETRIES,
     BlockedError,
@@ -46,6 +52,7 @@ from star_ground.catalog.client import (
 )
 from star_ground.catalog.discover import (
     PAGE_VERSION,
+    Discovery,
     Listing,
     PageDetails,
     PageState,
@@ -78,13 +85,13 @@ class _Response:
     body: bytes = b""
     headers: dict[str, str] = field(default_factory=dict)
     cut_short: bool = False
-
-    @property
-    def text(self) -> str:
-        return self.body.decode()
+    closed: bool = False
+    read: int = 0
 
     def iter_content(self, size: int) -> Iterator[bytes]:
-        yield self.body
+        for start in range(0, len(self.body), size):
+            self.read = start + size
+            yield self.body[start : start + size]
         if self.cut_short:
             raise requests.exceptions.ChunkedEncodingError("length mismatch")
 
@@ -93,13 +100,13 @@ class _Response:
             raise requests.HTTPError(f"{self.status_code}")
 
     def close(self) -> None:
-        pass
+        self.closed = True
 
     def __enter__(self) -> _Response:
         return self
 
     def __exit__(self, *_: object) -> None:
-        pass
+        self.close()
 
 
 class _Web:
@@ -141,6 +148,11 @@ class _Clock:
         self.now += seconds
 
 
+def _on_test_sites(url: str) -> bool:
+    """The publisher's site, for the client's tests: any host under `.test`."""
+    return (urlsplit(url).hostname or "").endswith(".test")
+
+
 def _client(web: _Web, clock: _Clock | None = None) -> PoliteClient:
     clock = clock or _Clock()
     return PoliteClient(web, sleep=clock.sleep, clock=clock)  # type: ignore[arg-type]
@@ -152,7 +164,7 @@ def _client(web: _Web, clock: _Clock | None = None) -> PoliteClient:
 def test_every_request_says_it_is_star_ground() -> None:
     web = _Web({"https://a.test/x": _Response(body=b"hi")})
 
-    _client(web).get("https://a.test/x")
+    _client(web).get("https://a.test/x", allows=_on_test_sites)
 
     assert web.headers["User-Agent"].startswith("StarGround/")
     assert "star-ground.jacksonferguson.me" in web.headers["User-Agent"]
@@ -168,7 +180,7 @@ def test_a_url_robots_txt_disallows_is_not_requested() -> None:
     )
 
     with pytest.raises(DisallowedError):
-        _client(web).get("https://a.test/private/doc.pdf")
+        _client(web).get("https://a.test/private/doc.pdf", allows=_on_test_sites)
 
     assert web.urls() == []
 
@@ -186,8 +198,8 @@ def test_requests_to_a_site_are_spaced_by_its_crawl_delay() -> None:
     clock = _Clock()
     client = _client(web, clock)
 
-    client.get("https://a.test/1")
-    client.get("https://a.test/2")
+    client.get("https://a.test/1", allows=_on_test_sites)
+    client.get("https://a.test/2", allows=_on_test_sites)
 
     # robots.txt, then each page: never closer than the larger delay.
     assert len(clock.slept) == 2
@@ -198,8 +210,8 @@ def test_a_companion_client_s_requests_are_counted() -> None:
     web = _Web({"https://a.test/1": _Response(), "https://b.test/1": _Response()})
     client = _client(web)
 
-    client.get("https://a.test/1")
-    client.alongside().get("https://b.test/1")
+    client.get("https://a.test/1", allows=_on_test_sites)
+    client.alongside().get("https://b.test/1", allows=_on_test_sites)
 
     # Each host's robots.txt, then its page.
     assert client.request_count == 4
@@ -209,7 +221,7 @@ def test_requests_wait_at_least_the_minimum() -> None:
     web = _Web({"https://a.test/1": _Response()})
     clock = _Clock()
 
-    _client(web, clock).get("https://a.test/1")
+    _client(web, clock).get("https://a.test/1", allows=_on_test_sites)
 
     assert clock.slept
     assert clock.slept[0] >= MIN_DELAY_S
@@ -225,9 +237,9 @@ def test_a_bot_check_stops_the_site_for_the_run() -> None:
     client = _client(web)
 
     with pytest.raises(BlockedError, match="bot check"):
-        client.get("https://a.test/1")
+        client.get("https://a.test/1", allows=_on_test_sites)
     with pytest.raises(BlockedError):
-        client.get("https://a.test/2")
+        client.get("https://a.test/2", allows=_on_test_sites)
 
     assert web.urls() == ["https://a.test/1"]
 
@@ -243,7 +255,7 @@ def test_too_many_requests_is_waited_out() -> None:
     )
     clock = _Clock()
 
-    fetched = _client(web, clock).get("https://a.test/1")
+    fetched = _client(web, clock).get("https://a.test/1", allows=_on_test_sites)
 
     assert fetched.content == b"ok"
     assert 120 in clock.slept
@@ -253,7 +265,7 @@ def test_a_timeout_is_waited_out() -> None:
     web = _Web({"https://a.test/1": [requests.ReadTimeout(), _Response(body=b"ok")]})
     clock = _Clock()
 
-    fetched = _client(web, clock).get("https://a.test/1")
+    fetched = _client(web, clock).get("https://a.test/1", allows=_on_test_sites)
 
     assert fetched.content == b"ok"
     assert BACKOFF_S in clock.slept
@@ -263,7 +275,7 @@ def test_a_site_that_never_answers_fails_after_its_retries() -> None:
     web = _Web({"https://a.test/1": [requests.ConnectTimeout()]})
 
     with pytest.raises(ConnectionError, match="didn't answer"):
-        _client(web).get("https://a.test/1")
+        _client(web).get("https://a.test/1", allows=_on_test_sites)
     assert web.urls() == ["https://a.test/1"] * (RETRIES + 1)
 
 
@@ -271,13 +283,15 @@ def test_too_many_requests_that_persists_stops_the_site() -> None:
     web = _Web({"https://a.test/1": _Response(429)})
 
     with pytest.raises(BlockedError, match="429"):
-        _client(web).get("https://a.test/1")
+        _client(web).get("https://a.test/1", allows=_on_test_sites)
 
 
 def test_an_unchanged_document_costs_a_304() -> None:
     web = _Web({"https://a.test/d.pdf": _Response(304)})
 
-    fetched = _client(web).get("https://a.test/d.pdf", etag='"v1"', last_modified="Mon")
+    fetched = _client(web).get(
+        "https://a.test/d.pdf", etag='"v1"', last_modified="Mon", allows=_on_test_sites
+    )
 
     assert fetched.status == 304
     assert fetched.content == b""
@@ -293,7 +307,11 @@ def test_a_pdf_cut_short_at_its_end_marker_is_whole() -> None:
         }
     )
 
-    assert _client(web).get("https://a.test/d.pdf").content.endswith(b"%%EOF\n")
+    assert (
+        _client(web)
+        .get("https://a.test/d.pdf", allows=_on_test_sites)
+        .content.endswith(b"%%EOF\n")
+    )
 
 
 def test_a_pdf_cut_short_before_its_end_is_a_failure() -> None:
@@ -302,7 +320,212 @@ def test_a_pdf_cut_short_before_its_end_is_a_failure() -> None:
     )
 
     with pytest.raises(requests.exceptions.ChunkedEncodingError):
-        _client(web).get("https://a.test/d.pdf")
+        _client(web).get("https://a.test/d.pdf", allows=_on_test_sites)
+
+
+def _moved(to: str) -> _Response:
+    return _Response(301, headers={"Location": to})
+
+
+def test_a_redirect_within_the_site_is_followed() -> None:
+    web = _Web(
+        {
+            "https://a.test/old.pdf": _moved("https://docs.a.test/new.pdf"),
+            "https://docs.a.test/new.pdf": _Response(body=b"%PDF"),
+        }
+    )
+
+    fetched = _client(web).get("https://a.test/old.pdf", allows=_on_test_sites)
+
+    assert fetched.content == b"%PDF"
+    # The new host's robots.txt is read before it's asked.
+    assert [u for u, _ in web.asked] == [
+        "https://a.test/robots.txt",
+        "https://a.test/old.pdf",
+        "https://docs.a.test/robots.txt",
+        "https://docs.a.test/new.pdf",
+    ]
+
+
+def test_a_redirect_off_the_site_is_not_followed() -> None:
+    web = _Web({"https://a.test/d.pdf": _moved("https://elsewhere.example/d.pdf")})
+
+    with pytest.raises(DisallowedError, match="isn't on the publisher's site"):
+        _client(web).get("https://a.test/d.pdf", allows=_on_test_sites)
+
+    assert not any("elsewhere" in u for u, _ in web.asked)
+
+
+def test_a_redirect_robots_txt_disallows_is_not_followed() -> None:
+    web = _Web(
+        {
+            "https://a.test/d.pdf": _moved("/private/d.pdf"),
+            "https://a.test/robots.txt": _Response(
+                body=b"User-agent: *\nDisallow: /private/"
+            ),
+        }
+    )
+
+    with pytest.raises(DisallowedError, match=r"robots\.txt disallows"):
+        _client(web).get("https://a.test/d.pdf", allows=_on_test_sites)
+
+    assert web.urls() == ["https://a.test/d.pdf"]
+
+
+def test_each_redirect_waits_its_turn() -> None:
+    web = _Web(
+        {
+            "https://a.test/1": _moved("/2"),
+            "https://a.test/2": _Response(body=b"ok"),
+        }
+    )
+    clock = _Clock()
+
+    _client(web, clock).get("https://a.test/1", allows=_on_test_sites)
+
+    # robots.txt, then /1, then /2: each after the last by the minimum.
+    assert len(clock.slept) == 2
+    assert all(s >= MIN_DELAY_S for s in clock.slept)
+
+
+def test_redirects_are_followed_only_so_far() -> None:
+    web = _Web({f"https://a.test/{n}": _moved(f"/{n + 1}") for n in range(10)})
+
+    with pytest.raises(requests.exceptions.TooManyRedirects):
+        _client(web).get("https://a.test/0", allows=_on_test_sites)
+
+    assert len(web.urls()) == MAX_REDIRECTS + 1
+
+
+def test_a_robots_txt_that_cannot_be_read_stops_the_host() -> None:
+    web = _Web(
+        {"https://a.test/robots.txt": _Response(503), "https://a.test/1": _Response()}
+    )
+    client = _client(web)
+
+    with pytest.raises(BlockedError, match="503"):
+        client.get("https://a.test/1", allows=_on_test_sites)
+    with pytest.raises(BlockedError):
+        client.get("https://a.test/2", allows=_on_test_sites)
+
+    # Tried again after waiting, as any server error is; never the page.
+    assert [u for u, _ in web.asked] == ["https://a.test/robots.txt"] * (RETRIES + 1)
+
+
+def test_a_robots_txt_that_never_answers_stops_the_host() -> None:
+    web = _Web({"https://a.test/robots.txt": [requests.ConnectTimeout()]})
+
+    with pytest.raises(BlockedError, match="didn't answer"):
+        _client(web).get("https://a.test/1", allows=_on_test_sites)
+
+    assert web.urls() == []
+
+
+def test_a_missing_robots_txt_allows_everything() -> None:
+    web = _Web(
+        {"https://a.test/robots.txt": _Response(410), "https://a.test/1": _Response()}
+    )
+
+    assert _client(web).get("https://a.test/1", allows=_on_test_sites).status == 200
+
+
+def test_a_robots_txt_is_read_only_so_far_and_closed() -> None:
+    padding = b"# " + b"x" * 2 * MAX_ROBOTS_BYTES + b"\n"
+    robots = _Response(
+        body=b"User-agent: *\nDisallow: /a/\n" + padding + b"Disallow: /b/\n"
+    )
+    web = _Web({"https://a.test/robots.txt": robots, "https://a.test/b/1": _Response()})
+    client = _client(web)
+
+    with pytest.raises(DisallowedError):
+        client.get("https://a.test/a/1", allows=_on_test_sites)
+    # A rule past the first 500 KiB isn't read.
+    assert client.get("https://a.test/b/1", allows=_on_test_sites).status == 200
+    assert robots.read < len(robots.body)
+    assert robots.closed
+
+
+def test_a_retry_after_too_long_to_wait_stops_the_host() -> None:
+    web = _Web(
+        {
+            "https://a.test/1": _Response(429, headers={"Retry-After": "864000"}),
+            "https://a.test/2": _Response(),
+        }
+    )
+    clock = _Clock()
+    client = _client(web, clock)
+
+    with pytest.raises(BlockedError, match="864000"):
+        client.get("https://a.test/1", allows=_on_test_sites)
+    with pytest.raises(BlockedError):
+        client.get("https://a.test/2", allows=_on_test_sites)
+
+    assert max(clock.slept) <= MAX_WAIT_S
+
+
+def test_a_companion_client_waits_its_turn_at_a_shared_host() -> None:
+    web = _Web({"https://a.test/1": _Response(), "https://a.test/2": _Response()})
+    clock = _Clock()
+    client = _client(web, clock)
+
+    client.get("https://a.test/1", allows=_on_test_sites)
+    clock.slept.clear()
+    client.alongside().get("https://a.test/2", allows=_on_test_sites)
+
+    # robots.txt is read once for both, and the second request waits.
+    assert [u for u, _ in web.asked] == [
+        "https://a.test/robots.txt",
+        "https://a.test/1",
+        "https://a.test/2",
+    ]
+    assert len(clock.slept) == 1
+    assert clock.slept[0] >= MIN_DELAY_S
+
+
+def test_a_host_that_turns_one_client_away_is_skipped_by_its_companion() -> None:
+    web = _Web(
+        {
+            "https://a.test/1": _Response(403),
+            "https://a.test/2": _Response(),
+        }
+    )
+    client = _client(web)
+
+    with pytest.raises(BlockedError):
+        client.alongside().get("https://a.test/1", allows=_on_test_sites)
+    with pytest.raises(BlockedError, match="earlier in this run"):
+        client.get("https://a.test/2", allows=_on_test_sites)
+
+
+def test_clients_alongside_each_other_take_turns_at_a_host() -> None:
+    # Two threads at once: neither request goes before the other's turn ends.
+    web = _Web({f"https://a.test/{n}": _Response() for n in range(2)})
+    lock = threading.Lock()
+    slept: list[float] = []
+
+    def sleep(seconds: float) -> None:
+        with lock:
+            slept.append(seconds)
+
+    client = PoliteClient(web, sleep=sleep, clock=lambda: 0.0)  # type: ignore[arg-type]
+    client.get("https://a.test/0", allows=_on_test_sites)
+    slept.clear()
+    others = [client.alongside() for _ in range(2)]
+    threads = [
+        threading.Thread(
+            target=lambda c=c, n=n: c.get(f"https://a.test/{n}", allows=_on_test_sites)
+        )
+        for n, c in enumerate(others)
+    ]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join()
+
+    # With the clock stopped, each turn is a whole delay after the one before.
+    first, second = sorted(slept)
+    assert first >= MIN_DELAY_S
+    assert second >= first + MIN_DELAY_S
 
 
 # --- Discovery ---
@@ -499,7 +722,7 @@ def test_a_name_that_does_not_resolve_is_waited_out_not_gone() -> None:
     web = _Web({"https://a.test/d.pdf": [_unresolved(), _Response(body=b"%PDF")]})
     clock = _Clock()
 
-    fetched = _client(web, clock).get("https://a.test/d.pdf")
+    fetched = _client(web, clock).get("https://a.test/d.pdf", allows=_on_test_sites)
 
     assert fetched.content == b"%PDF"
     assert BACKOFF_S in clock.slept
@@ -509,14 +732,14 @@ def test_a_name_that_never_resolves_fails_after_its_retries() -> None:
     web = _Web({"https://a.test/d.pdf": [_unresolved()]})
 
     with pytest.raises(ConnectionError, match="didn't answer"):
-        _client(web).get("https://a.test/d.pdf")
+        _client(web).get("https://a.test/d.pdf", allows=_on_test_sites)
 
 
 def test_a_missing_document_is_gone() -> None:
     web = _Web({"https://a.test/d.pdf": _Response(404)})
 
     with pytest.raises(GoneError, match="404"):
-        _client(web).get("https://a.test/d.pdf")
+        _client(web).get("https://a.test/d.pdf", allows=_on_test_sites)
 
 
 def test_a_sample_spreads_across_the_pages() -> None:
@@ -525,6 +748,102 @@ def test_a_sample_spreads_across_the_pages() -> None:
     found = discover(_client(web), SOURCES[Publisher.PEDALPCB], limit=1)
 
     assert len(found.pages) == 1
+
+
+def test_a_sample_larger_than_the_pages_reads_each_once() -> None:
+    web = _pedalpcb_web()
+
+    found = discover(_client(web), SOURCES[Publisher.PEDALPCB], limit=5)
+
+    products = [u for u in web.urls() if "/product/" in u]
+    assert sorted(products) == [
+        "https://www.pedalpcb.com/product/drive/",
+        "https://www.pedalpcb.com/product/fuzz/",
+    ]
+    assert len(found.pages) == 2
+
+
+def test_a_malformed_link_is_skipped_not_the_page_or_the_run() -> None:
+    web = _pedalpcb_web()
+    web._pages["https://www.pedalpcb.com/product/fuzz/"] = [
+        _Response(
+            body=b'<a href="http://[oops/x.pdf">Build Docs</a>'
+            b'<a href="https://docs.pedalpcb.com/project/Fuzz.pdf">Build Docs</a>'
+        )
+    ]
+
+    found = discover(_client(web), SOURCES[Publisher.PEDALPCB])
+
+    assert sorted(found.listings) == [
+        "https://docs.pedalpcb.com/project/Drive.pdf",
+        "https://docs.pedalpcb.com/project/Fuzz.pdf",
+    ]
+    assert not found.failures
+
+
+def _tonepad_web(file_info: _Response) -> _Web:
+    return _Web(
+        {
+            "https://tonepad.com/projects.asp?projectType=fx": _Response(
+                body=b'<a href="project.asp?id=7">Fuzz</a>'
+                b'<a href="project.asp?id=8">Wah</a>'
+            ),
+            "https://tonepad.com/projects.asp?projectType=amp": _Response(body=b""),
+            "https://tonepad.com/project.asp?id=7": _Response(
+                body=b'<a href="getFileInfo.asp?id=81">fuzz_layout.pdf</a>'
+            ),
+            "https://tonepad.com/getFileInfo.asp?id=81": file_info,
+            "https://tonepad.com/project.asp?id=8": _Response(
+                body=b'<a href="getFileInfo.asp?id=91">wah_layout.pdf</a>'
+            ),
+            "https://tonepad.com/getFileInfo.asp?id=91": _Response(
+                body=b'<a href="getFile.asp?id=91">Download</a>'
+            ),
+        }
+    )
+
+
+_FUZZ_LAYOUT = Listing(
+    "https://tonepad.com/getFile.asp?id=81",
+    "https://tonepad.com/project.asp?id=7",
+    "fuzz_layout.pdf",
+)
+
+
+def test_a_tonepad_file_page_that_fails_keeps_its_project_s_documents() -> None:
+    web = _tonepad_web(_Response(500))
+    known = {_FUZZ_LAYOUT.page: PageState(None, (_FUZZ_LAYOUT,))}
+
+    found = discover(_client(web), SOURCES[Publisher.TONEPAD], known)
+
+    assert _FUZZ_LAYOUT.page in found.failures
+    # The other project is still read, and this one keeps what it linked.
+    assert sorted(found.listings) == [
+        "https://tonepad.com/getFile.asp?id=81",
+        "https://tonepad.com/getFile.asp?id=91",
+    ]
+
+
+def test_a_tonepad_file_page_that_is_gone_drops_only_its_document() -> None:
+    web = _tonepad_web(_Response(404))
+    known = {_FUZZ_LAYOUT.page: PageState(None, (_FUZZ_LAYOUT,))}
+
+    found = discover(_client(web), SOURCES[Publisher.TONEPAD], known)
+
+    assert not found.failures
+    assert found.pages[_FUZZ_LAYOUT.page].listings == ()
+    assert list(found.listings) == ["https://tonepad.com/getFile.asp?id=91"]
+
+
+def test_a_tonepad_file_page_behind_a_bot_check_stops_the_host() -> None:
+    web = _tonepad_web(_Response(403))
+
+    found = discover(_client(web), SOURCES[Publisher.TONEPAD])
+
+    assert "bot check" in found.failures[_FUZZ_LAYOUT.page]
+    # The next project isn't asked for.
+    assert "https://tonepad.com/project.asp?id=8" not in web.urls()
+    assert not found.listings
 
 
 def test_tonepad_documents_come_from_published_file_pages() -> None:
@@ -1345,6 +1664,121 @@ def test_a_failure_while_discovering_alongside_reading_is_raised(
 
     with pytest.raises(RuntimeError, match="sitemap broke"):
         run(_docs(_pedalpcb_web()), lambda upload: _reading())
+
+
+def test_a_checked_document_that_still_is_not_clean_settles(
+    tmp_path: Path, run: Any
+) -> None:
+    doubt = ParseWarning(ParseWarningKind.UNPARSED_VALUE, "R1", "Check its value.")
+    doubtful = _reading(warnings=[doubt])
+    run(_docs(_pedalpcb_web()), lambda upload: doubtful)
+    # Checked by hand, but with a reading other than today's.
+    _verify(tmp_path, b"%PDF fuzz", _reading(parts=3, warnings=[doubt]))
+    reads: list[str] = []
+
+    def read(upload: FileUpload) -> ParseResult:
+        reads.append(upload.name)
+        return doubtful
+
+    run(_conditional(), read)
+    assert reads == ["Fuzz.pdf"]
+    web = _conditional()
+
+    reporter = run(web, read)
+
+    # Read once against the list; after that it's asked for conditionally.
+    assert reads == ["Fuzz.pdf"]
+    assert [h for u, h in web.asked if u.endswith("Fuzz.pdf")] == [
+        {"If-None-Match": '"1"'}
+    ]
+    assert _fuzz_event(reporter).outcome == Outcome.NOT_CLEAN
+
+
+def test_a_document_redirected_off_the_site_is_not_fetched(
+    tmp_path: Path, run: Any
+) -> None:
+    web = _docs(_pedalpcb_web())
+    web._pages["https://docs.pedalpcb.com/project/Fuzz.pdf"] = [
+        _moved("https://elsewhere.example/Fuzz.pdf")
+    ]
+
+    reporter = run(web, lambda upload: _reading())
+
+    assert not any("elsewhere" in u for u, _ in web.asked)
+    assert _fuzz_event(reporter).outcome == Outcome.DISALLOWED
+
+
+def test_discovery_stops_and_is_waited_for_when_reading_fails(
+    run: Any, mocker: Any
+) -> None:
+    finished = threading.Event()
+
+    def endless(*args: Any, **kwargs: Any) -> Discovery:
+        spent = args[4]
+        kwargs["on_listing"](
+            Listing("https://docs.pedalpcb.com/project/Fuzz.pdf", "p", "Fuzz.pdf")
+        )
+        # Crawls until told to stop (or, failing that, gives up after a while).
+        for _ in range(500):
+            if spent():
+                break
+            time.sleep(0.01)
+        finished.set()
+        return Discovery()
+
+    mocker.patch("star_ground.catalog.build.discover", side_effect=endless)
+    mocker.patch.object(CatalogRun, "read_one", side_effect=RuntimeError("boom"))
+
+    with pytest.raises(RuntimeError, match="boom"):
+        run(_docs(_pedalpcb_web()), lambda upload: _reading())
+
+    assert finished.is_set()
+
+
+def test_a_run_saves_its_state_once_at_the_end(run: Any, mocker: Any) -> None:
+    web = _pedalpcb_web()
+    for page in ("fuzz", "drive"):
+        web._pages[f"https://www.pedalpcb.com/product/{page}/"] = [_Response()]
+    save = mocker.spy(State, "save")
+
+    run(web, lambda upload: _reading())
+
+    assert save.call_count == 1
+
+
+def test_state_is_written_whole_or_not_at_all(
+    tmp_path: Path, run: Any, mocker: Any
+) -> None:
+    run(_docs(_pedalpcb_web()), lambda upload: _reading())
+    path = tmp_path / "state" / "pedalpcb.json"
+    before = path.read_text()
+    mocker.patch(
+        "star_ground.catalog.entries.os.replace", side_effect=KeyboardInterrupt
+    )
+
+    with pytest.raises(KeyboardInterrupt):
+        State().save(path)
+
+    # The last state is still there, whole, and nothing is left beside it.
+    assert path.read_text() == before
+    State.load(path)
+    assert [p.name for p in path.parent.iterdir()] == ["pedalpcb.json"]
+
+
+def test_an_entry_is_written_whole_or_not_at_all(
+    tmp_path: Path, run: Any, mocker: Any
+) -> None:
+    run(_docs(_pedalpcb_web()), lambda upload: _reading())
+    path = tmp_path / "builds" / "pedalpcb" / "fuzz.json"
+    before = path.read_text()
+    entry = CatalogEntry.load(path)
+    mocker.patch("star_ground.catalog.entries.os.fdopen", side_effect=OSError("full"))
+
+    with pytest.raises(OSError, match="full"):
+        replace(entry, title="Other").write(path)
+
+    assert path.read_text() == before
+    assert sorted(p.name for p in path.parent.iterdir()) == ["drive.json", "fuzz.json"]
 
 
 def test_pedalpcb_documents_are_read_while_discovery_goes_on() -> None:

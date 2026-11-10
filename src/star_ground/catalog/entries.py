@@ -6,6 +6,8 @@ never the document itself. The website reads these files as they are.
 """
 
 import json
+import os
+import tempfile
 from collections.abc import Mapping
 from dataclasses import asdict, dataclass, field, replace
 from pathlib import Path
@@ -174,8 +176,32 @@ class CatalogEntry:
             f"{to_json(_rounded(value), _ENTRY_LAYOUT.get(key, 0), ' ')}"
             for key, value in data.items()
         ]
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text("{\n" + ",\n".join(members) + "\n}\n")
+        write_atomically(path, "{\n" + ",\n".join(members) + "\n}\n")
+
+
+def write_atomically(path: Path, text: str) -> None:
+    """Writes a file whole or not at all, so a job killed mid-write leaves the old one.
+
+    The text goes to a temporary file beside it, which then replaces it.
+
+    Args:
+        path: The file; its directory is made if needed.
+        text: What it should hold.
+    """
+    path.parent.mkdir(parents=True, exist_ok=True)
+    handle, name = tempfile.mkstemp(
+        dir=path.parent, prefix=f".{path.name}.", suffix=".tmp"
+    )
+    written = Path(name)
+    try:
+        with os.fdopen(handle, "w", encoding="utf-8") as temporary:
+            temporary.write(text)
+        # As `write_text` leaves a new file, not `mkstemp`'s owner-only.
+        written.chmod(0o644)
+        os.replace(written, path)
+    except BaseException:
+        written.unlink(missing_ok=True)
+        raise
 
 
 def rounded(location: Location) -> Location:
