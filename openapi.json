@@ -725,6 +725,7 @@
           "too_many_pages",
           "build_not_chosen",
           "ocr_refused",
+          "reading_refused",
           "unreadable_part",
           "bug"
         ],

@@ -27,6 +27,7 @@ class ErrorKind(StrEnum):
     TOO_MANY_PAGES = "too_many_pages"
     BUILD_NOT_CHOSEN = "build_not_chosen"
     OCR_REFUSED = "ocr_refused"
+    READING_REFUSED = "reading_refused"
     UNREADABLE_PART = "unreadable_part"
     BUG = "bug"
 
@@ -159,6 +160,19 @@ class OcrRefusedError(StarGroundError):
             "This document's parts list is an image, which Star Ground reads by "
             "OCR a limited number of times an hour for each person.",
             "Try again later.",
+        )
+
+
+class ReadingRefusedError(StarGroundError):
+    """A server declined to read another new document now (its per-client limit)."""
+
+    kind = ErrorKind.READING_REFUSED
+
+    def __init__(self) -> None:
+        super().__init__(
+            "Star Ground reads a limited number of new documents a minute for "
+            "each person.",
+            "Try again in a minute. Documents it has already read don't count.",
         )
 
 

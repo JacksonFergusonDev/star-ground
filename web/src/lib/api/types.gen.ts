@@ -209,7 +209,7 @@ export type DocumentsMissing = {
  *
  * What kind of problem stopped a reading or a request.
  */
-export type ErrorKind = 'fetch' | 'unreadable_pdf' | 'too_many_pages' | 'build_not_chosen' | 'ocr_refused' | 'unreadable_part' | 'bug';
+export type ErrorKind = 'fetch' | 'unreadable_pdf' | 'too_many_pages' | 'build_not_chosen' | 'ocr_refused' | 'reading_refused' | 'unreadable_part' | 'bug';
 
 /**
  * ExportKind

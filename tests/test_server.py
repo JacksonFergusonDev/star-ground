@@ -32,7 +32,7 @@ from star_ground.bom_lib.ocr import ocr_guard
 from star_ground.bom_lib.types import Inventory, ReadingStats
 from star_ground.server import Settings, create_app
 from star_ground.server.limits import OcrQueue, RateLimiter, ReadingCache
-from star_ground.server.models import BUG_CODE
+from star_ground.server.models import BUG_CODE, MAX_PROJECTS
 from star_ground.server.routes.documents import read_events
 from star_ground.server.services import Services
 from tests.pdfs import text_pdf
@@ -484,6 +484,78 @@ def test_idle_clients_are_forgotten() -> None:
     assert list(limiter._hits) == ["new"]
 
 
+def _kliche_reading() -> ParseResult:
+    reading = read_document(
+        InputMethod.UPLOAD_FILE, FileUpload("Kliche.pdf", KLICHE.read_bytes())
+    )
+    assert reading is not None
+    return reading
+
+
+def _links(*names: str) -> list[dict[str, Any]]:
+    return [{"method": "url", "url": f"https://docs.example/{n}.pdf"} for n in names]
+
+
+def test_each_link_a_master_list_reads_is_charged_to_its_client(
+    mocker: MockerFixture,
+) -> None:
+    client = TestClient(create_app(Settings(readings_per_minute=2)))
+    read = mocker.patch(
+        "star_ground.server.reading.read_document", return_value=_kliche_reading()
+    )
+
+    response = _post(client, "/api/master-list", _links("a", "b", "c"))
+
+    assert response.status_code == 429
+    assert response.json()["kind"] == ErrorKind.READING_REFUSED
+    assert "new documents a minute" in response.json()["message"]
+    assert read.call_count == 2  # the third link was never fetched
+
+
+def test_cached_readings_are_free(mocker: MockerFixture) -> None:
+    client = TestClient(create_app(Settings(readings_per_minute=2)))
+    read = mocker.patch(
+        "star_ground.server.reading.read_document", return_value=_kliche_reading()
+    )
+
+    statuses = [
+        _post(client, "/api/master-list", _links("a", "b")).status_code
+        for _ in range(3)
+    ]
+    export = _post(client, "/api/exports/shopping-list", _links("a", "b"))
+    shown = client.get("/api/documents/pdf", params={"url": _links("a")[0]["url"]})
+
+    assert statuses == [200, 200, 200]
+    assert (export.status_code, shown.status_code) == (200, 200)
+    assert read.call_count == 2
+
+
+def test_every_route_that_reads_charges_the_same_allowance(
+    mocker: MockerFixture,
+) -> None:
+    client = TestClient(create_app(Settings(readings_per_minute=2)))
+    mocker.patch(
+        "star_ground.server.reading.read_document", return_value=_kliche_reading()
+    )
+    url = _links("c")[0]["url"]
+
+    first = client.post("/api/documents/read", files=_upload("a.pdf"))
+    export = _post(client, "/api/exports/shopping-list", _links("b"))
+    read = _events(client.post("/api/documents/read", data={"url": url}).text)
+    shown = client.get("/api/documents/pdf", params={"url": url})
+
+    assert _events(first.text)[-1]["event"] == "result"
+    assert export.status_code == 200
+    assert read[-1]["event"] == "error"
+    assert read[-1]["kind"] == ErrorKind.READING_REFUSED
+    assert read[-1]["bug_code"] is None
+    assert shown.status_code == 429
+
+
+def test_the_reading_allowance_covers_a_full_master_list() -> None:
+    assert Settings().readings_per_minute > MAX_PROJECTS
+
+
 def test_a_body_over_the_limit_is_refused() -> None:
     client = TestClient(create_app(Settings(max_body_bytes=1_000)))
 
@@ -575,6 +647,7 @@ def test_settings_come_from_the_environment() -> None:
             "STAR_GROUND_CORS_ORIGINS": "https://a.example, https://b.example",
             "STAR_GROUND_OCR_PER_HOUR": "4",
             "STAR_GROUND_REQUESTS_PER_MINUTE": "5",
+            "STAR_GROUND_READINGS_PER_MINUTE": "7",
             "STAR_GROUND_TRUST_PROXY": "1",
             "STAR_GROUND_SITE_DIR": "/app/site",
         }
@@ -582,6 +655,7 @@ def test_settings_come_from_the_environment() -> None:
 
     assert settings.cors_origins == ("https://a.example", "https://b.example")
     assert (settings.ocr_per_hour, settings.requests_per_minute) == (4, 5)
+    assert settings.readings_per_minute == 7
     assert settings.trust_proxy
     assert settings.site_dir == Path("/app/site")
 
