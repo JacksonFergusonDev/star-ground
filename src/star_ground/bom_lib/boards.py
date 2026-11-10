@@ -26,6 +26,8 @@ from dataclasses import dataclass
 from typing import Any
 
 import pdfplumber
+from pdfplumber.page import Page
+from pdfplumber.pdf import PDF
 
 from star_ground.bom_lib.designators import is_designator
 from star_ground.bom_lib.ocr import OcrBox, Recognizer, recognize, render_resolution
@@ -84,7 +86,7 @@ def _overlap(a: Location, b: Location) -> float:
 
 
 def _text_marks(
-    page: Any, number: int, wanted: Mapping[str, str]
+    page: Page, number: int, wanted: Mapping[str, str]
 ) -> Iterable[BoardMark]:
     """Designators printed as words, on lines short enough to be labels.
 
@@ -148,14 +150,14 @@ def _image_key(image: Mapping[str, Any]) -> str:
     return hashlib.sha256(data or repr(image["srcsize"]).encode()).hexdigest()
 
 
-def _images(doc: Any) -> list[tuple[int, Any, tuple[float, float, float, float]]]:
+def _images(doc: PDF) -> list[tuple[int, Page, tuple[float, float, float, float]]]:
     """Each distinct image big enough to be a drawing: page number, page, box.
 
     Every one is read. Size doesn't pick out the board: Kliche Overdrive's
     wiring diagrams are bigger than its board render. Reading the drilling
     guides and photos too costs only the offline job's time.
     """
-    found: dict[str, tuple[int, Any, tuple[float, float, float, float]]] = {}
+    found: dict[str, tuple[int, Page, tuple[float, float, float, float]]] = {}
     for number, page in enumerate(doc.pages):
         area = float(page.width * page.height)
         if not area > 0:
@@ -175,7 +177,7 @@ def _images(doc: Any) -> list[tuple[int, Any, tuple[float, float, float, float]]
 
 
 def _image_marks(
-    page: Any,
+    page: Page,
     number: int,
     box: tuple[float, float, float, float],
     wanted: Mapping[str, str],
