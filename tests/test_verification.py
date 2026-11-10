@@ -35,6 +35,7 @@ from star_ground.bom_lib.verification import (
     check_version_note,
     find_bom_entries,
     find_listed_refs,
+    is_schematic_page,
 )
 
 
@@ -978,6 +979,12 @@ def test_schematic_net_labels_are_not_listings() -> None:
     stats = ReadingStats()
     check_unextracted_refs(["Schematic\nIN 1M 2N3565\nR1 1M"], _listed(), stats)
     assert [w.ref for w in stats.warnings] == ["R1"]
+
+
+@pytest.mark.parametrize("heading", ["SCHEMATIC", "Schematic", "schematic"])
+def test_a_schematic_heading_in_any_case_is_a_schematic(heading: str) -> None:
+    # The other-lists check and the unextracted-designators check agree.
+    assert is_schematic_page(f"{heading}\nR1 10k\nR2 22k")
 
 
 def test_build_notes_that_leave_out_a_control() -> None:
