@@ -21,11 +21,10 @@ This project uses [uv](https://github.com/astral-sh/uv) for dependency managemen
 
 1. **Environment Setup**
 
-   We use `uv` to manage the virtual environment and dependencies.
+   Install [just](https://just.systems/man/en/), Node 22.13 or newer, and [pnpm](https://pnpm.io/installation). From the repository root, run `just sync` to create the Python virtual environment and install the website dependencies in `web/`.
 
    ```bash
-   # Creates .venv and installs dependencies (including dev groups)
-   uv sync
+   just sync
    ```
 
    *Optional: If you use `direnv`, allow the automatically generated configuration:*
@@ -36,7 +35,7 @@ This project uses [uv](https://github.com/astral-sh/uv) for dependency managemen
 
 1. **Install Hooks**
 
-   Set up the prek hooks. They mirror CI. On commit they run `ruff`, `mypy` and `rumdl` (Markdown), plus the website's linters and type check when `web/` changes. On push they run the tests, plus knip, the website build and its browser tests when `web/` changes. The `web/` hooks need `pnpm install --frozen-lockfile` and `pnpm exec playwright install` in `web/` first.
+   Set up the prek hooks. They mirror CI. On commit they run `ruff`, `mypy` and `rumdl` (Markdown), plus the website's linters and type check when `web/` changes. On push they run the tests, plus knip, the website build and its browser tests when `web/` changes. After `just sync`, run `pnpm --dir web exec playwright install` to install the browsers for the push hook.
 
    ```bash
    prek install

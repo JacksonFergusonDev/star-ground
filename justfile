@@ -12,12 +12,17 @@ nc := '\033[0m'
 default:
     @just --list
 
-# Sync/install dependencies using uv
-sync:
+# Install Python and website dependencies
+sync: _sync-python _sync-web
+
+_sync-python:
     uv sync --quiet
 
+_sync-web:
+    pnpm --dir web install --frozen-lockfile
+
 # Auto-format Python and Markdown
-format: sync
+format: _sync-python
     @printf "\n{{ blue }}=== Formatting Code ==={{ nc }}\n"
     uv run ruff check --fix .
     uv run ruff format .
@@ -25,7 +30,7 @@ format: sync
     @printf "{{ green }}✔ Formatting complete{{ nc }}\n"
 
 # Run linters and check formatting (Ruff, Markdown, and GitHub Actions)
-lint: sync
+lint: _sync-python
     @printf "\n{{ blue }}=== Running Linters ==={{ nc }}\n"
     uv run ruff check .
     uv run ruff format --check .
@@ -35,37 +40,37 @@ lint: sync
     @printf "{{ green }}✔ Linting passed{{ nc }}\n"
 
 # Run static type checking with Mypy
-typecheck: sync
+typecheck: _sync-python
     @printf "\n{{ blue }}=== Running Type Checks ==={{ nc }}\n"
     uv run mypy
     @printf "{{ green }}✔ Type checking passed{{ nc }}\n"
 
 # Download the test corpus's build documents from their publishers
-fetch-samples: sync
+fetch-samples: _sync-python
     uv run python -m scripts.fetch_samples
 
 # Run the full automated testing matrix
-test: sync fetch-samples
+test: _sync-python fetch-samples
     @printf "\n{{ blue }}=== Running Tests ==={{ nc }}\n"
     uv run pytest -n auto
     @printf "{{ green }}✔ All tests passed{{ nc }}\n"
 
 # Print the parser accuracy scorecard against the golden parts lists
-accuracy *args: sync fetch-samples
+accuracy *args: _sync-python fetch-samples
     uv run python -m tests.accuracy -v {{ args }}
 
 # Fetch a real document from each publisher (needs the internet)
-test-network: sync
+test-network: _sync-python
     uv run pytest -m network -v
 
 # Run tests with coverage
-test-cov: sync fetch-samples
+test-cov: _sync-python fetch-samples
     @printf "\n{{ blue }}=== Running Tests with Coverage ==={{ nc }}\n"
     uv run pytest --cov
     @printf "{{ green }}✔ Coverage run complete{{ nc }}\n"
 
 # Find code nothing in the product calls (configured in [tool.vulture])
-deadcode: sync
+deadcode: _sync-python
     @printf "\n{{ blue }}=== Finding Dead Code ==={{ nc }}\n"
     uv run vulture
 
@@ -91,11 +96,11 @@ clean:
     @printf "{{ green }}✔ Workspace cleaned{{ nc }}\n"
 
 # Start the HTTP API, reloading on changes (interactive docs at /api/docs)
-serve-api: sync
+serve-api: _sync-python
     uv run uvicorn star_ground.server:app --reload --reload-dir src --host 127.0.0.1 --port 4501
 
 # Regenerate examples/build-pack/ from the Big Muff π netlist
-example-pack: sync
+example-pack: _sync-python
     uv run python -m scripts.example_pack
 
 # Regenerate openapi.json and the website's API types after changing src/star_ground/server/
@@ -104,10 +109,9 @@ openapi: sync
     pnpm --dir web run types
 
 # Install locked dependencies and start the website's dev server
-serve-web:
+serve-web: _sync-web
     #!/usr/bin/env bash
     set -euo pipefail
-    pnpm --dir web install --frozen-lockfile
     if [[ -t 0 ]]; then
         status=$(pnpm --dir web exec astro dev status)
         if [[ $status =~ Dev\ server\ running\ at\ ([^[:space:]]+)\ \(pid\ ([0-9]+), ]]; then
