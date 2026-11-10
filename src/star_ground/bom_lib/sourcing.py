@@ -15,20 +15,30 @@ from decimal import Decimal
 from urllib.parse import quote_plus
 
 from star_ground.bom_lib import constants
-from star_ground.bom_lib.classifier import key_quantity, normalize_value_to_quantity
-from star_ground.bom_lib.constants import AUTO_INJECT_SOURCE
+from star_ground.bom_lib.classifier import (
+    categorize_part,
+    key_quantity,
+    normalize_value_to_quantity,
+)
+from star_ground.bom_lib.constants import IC_SOCKET, INJECTED_SUFFIX
+from star_ground.bom_lib.designators import parse_designator
 from star_ground.bom_lib.enums import (
     ComponentCategory,
     ComponentOrigin,
     ComponentSpec,
     HardwareRole,
 )
-from star_ground.bom_lib.manager import calculate_net_needs, sort_inventory
+from star_ground.bom_lib.manager import (
+    POT_RESISTANCE,
+    calculate_net_needs,
+    sort_inventory,
+)
 from star_ground.bom_lib.types import (
     AlternativeSpec,
     BuildHardware,
     ComponentKey,
     Inventory,
+    PartData,
     PurchaseRecommendation,
     ReadingStats,
     ResolvedPartSourcing,
@@ -132,11 +142,6 @@ def get_spec_type(
     return ComponentSpec.NONE
 
 
-# A pot's resistance, with a taper letter before or after it: 'B100K',
-# '100kB', '100K-A'.
-_POT_RESISTANCE = re.compile(
-    r"(?<![A-Z0-9])([ABCWG])?(\d+(?:\.\d+)?[KM]?\d*)(?:-?([ABCWG])(?![A-Z]))?"
-)
 # A taper spelled as a word. Reverse log before log.
 _POT_TAPER_WORDS = (
     (re.compile(r"REV(?:ERSE)?\.?\s*LOG"), "Reverse Log"),
@@ -149,6 +154,7 @@ def generate_search_term(
     category: ComponentCategory,
     val: str,
     spec_type: ComponentSpec = ComponentSpec.NONE,
+    trimmer: bool = False,
 ) -> str:
     """Generates a supplier-optimized search string.
 
@@ -158,6 +164,8 @@ def generate_search_term(
         category: Component category.
         val: Component value.
         spec_type: Optional material type (from get_spec_type).
+        trimmer: Whether a potentiometer is a board-mounted trimmer (see
+            `trimmer_count`), which has no taper or knob.
 
     Returns:
         A search string (e.g., "100k ohm Linear potentiometer").
@@ -179,10 +187,12 @@ def generate_search_term(
     if category == ComponentCategory.POTENTIOMETERS:
         val_upper = val.upper()
         is_dual = "DUAL" in val_upper or "STEREO" in val_upper
-        resistance = _POT_RESISTANCE.search(val_upper)
+        resistance = POT_RESISTANCE.search(val_upper)
         dec = parse_value_to_decimal(resistance.group(2)) if resistance else None
         if resistance is None or dec is None:
             return val  # 'Wah pot' names the part itself
+        if trimmer:
+            return f"{value_to_search_string(ohms(dec))} ohm trimmer potentiometer"
         # A taper is a letter by the value ('B100K', '100kB', '100k-A') or a
         # word ('100k Log.', '500k Rev. Log', Tonepad).
         code = resistance.group(1) or resistance.group(3)
@@ -200,9 +210,10 @@ def generate_search_term(
     if category == ComponentCategory.INDUCTORS and "INDUCTOR" not in val.upper():
         return f"{val} inductor"
 
-    # Overrides
-    if val == "8 PIN DIP SOCKET":
-        return "8 pin DIP IC Socket Adaptor Solder Type"
+    # Overrides. The socket's size depends on its chip, so the search lists
+    # every size.
+    if is_extra_part(ComponentKey(category, val)):
+        return "DIP IC Socket Adaptor Solder Type"
     if "JRC4558" in val.upper():
         return "NJM4558D"
 
@@ -222,6 +233,7 @@ def get_buy_details(
     val: str,
     count: int,
     val_qty: Value | Decimal | None = None,
+    socketed: bool = False,
 ) -> PurchaseRecommendation:
     """Calculates the purchase quantity and notes based on 'Nerd Economics'.
 
@@ -233,6 +245,8 @@ def get_buy_details(
         val: Component value.
         count: The raw net need (BOM Qty - Stock Qty).
         val_qty: Pre-computed quantity or Decimal value of the component, if available.
+        socketed: Whether Star Ground added a socket for a chip (see
+            `takes_socket`); a regulator gets none.
 
     Returns:
         PurchaseRecommendation containing buy_qty and notes.
@@ -309,24 +323,20 @@ def get_buy_details(
 
     elif category == ComponentCategory.ICS:
         buy = count
-        note = "Fit it in a socket."
-        clean_ic = re.sub(r"(CP|CN|P|N)$", "", val)
-        if clean_ic in constants.IC_ALTS:
-            alts = constants.IC_ALTS[clean_ic]
-            note += f" {_format_alts(alts)}"
+        ic_notes = ["Fit it in a socket."] if socketed else []
+        ic_alts = constants.IC_ALTS.get(_base_part_number(val))
+        if ic_alts:
+            ic_notes.append(_format_alts(ic_alts))
+        note = " ".join(ic_notes)
 
     elif category == ComponentCategory.CRYSTALS_OSCILLATORS:
         buy = count + 1
         note = "Fragile and heat-sensitive."
 
     elif category == ComponentCategory.HARDWARE_MISC:
-        if "ADAPTER" in val or "SOCKET" in val:
+        if is_extra_part(ComponentKey(category, val)):
             buy = count + 1
-            note = (
-                "Added by Star Ground: check the board's pads."
-                if "ADAPTER" in val
-                else "Added by Star Ground: keeps soldering heat off the chip."
-            )
+            note = "Added by Star Ground: keeps soldering heat off the chip."
         else:
             buy = count
 
@@ -448,8 +458,7 @@ def with_standard_hardware(
 
         part = inventory[key]
         part.qty += total_qty
-        part.refs.append("HW")
-        part.sources[AUTO_INJECT_SOURCE].append(f"Auto-Inject ({note})")
+        part.hardware.append(note)
 
     # 1. Smart Merges (Add to existing categories)
     # One resistor per status LED: a document may list several LEDs.
@@ -528,9 +537,10 @@ def with_standard_hardware(
     inject(ComponentCategory.HARDWARE_MISC, "9V BATTERY CLIP", 1, "Optional")
     inject(ComponentCategory.HARDWARE_MISC, "Heat Shrink Tubing", 1, "Insulation")
 
-    # 4. Potentiometer Hardware (Knobs/Seals)
+    # 4. Potentiometer Hardware (Knobs/Seals): a trimmer is set on the board
+    # and takes neither.
     total_pots = sum(
-        d.qty
+        d.qty - trimmer_count(k, d)
         for k, d in inventory.items()
         if k.category == ComponentCategory.POTENTIOMETERS
     )
@@ -552,61 +562,157 @@ def with_standard_hardware(
     return inventory
 
 
-def is_pure_hardware(sources: dict[str, list[str]]) -> bool:
-    """Returns True if the part is exclusively auto-injected hardware."""
-    return len(sources) == 1 and AUTO_INJECT_SOURCE in sources
+def is_pure_hardware(data: PartData) -> bool:
+    """Whether a part is only in the hardware kit: no project lists it."""
+    return bool(data.hardware) and not data.sources
 
 
-def is_extra_part(val: str) -> bool:
-    """Returns True if the part is a socket or adapter extra."""
-    val_upper = val.upper()
-    return "SOCKET" in val_upper or "ADAPTER" in val_upper
+def is_extra_part(key: ComponentKey) -> bool:
+    """Whether a part is the socket Star Ground adds for a chip.
+
+    Known by its key, never by the word 'socket': a document's DC socket or
+    tube socket is one of its own parts.
+    """
+    return key == IC_SOCKET
 
 
-def determine_origin(val: str, sources: dict[str, list[str]]) -> ComponentOrigin:
+def determine_origin(key: ComponentKey, data: PartData) -> ComponentOrigin:
     """Classifies component origin as Hardware Kit, Extras, or Circuit Board."""
-    if is_pure_hardware(sources):
+    if is_pure_hardware(data):
         return ComponentOrigin.HARDWARE_KIT
-    if is_extra_part(val):
+    if is_extra_part(key):
         return ComponentOrigin.EXTRAS
     return ComponentOrigin.CIRCUIT_BOARD
 
 
+# Letters after a chip's part number name its package or grade, not another
+# chip: 'TL072CP', 'JRC4558D', 'NE5532P' are a TL072, a JRC4558, an NE5532.
+_PART_NUMBER = re.compile(r"([A-Z]*\d+)[A-Z]*")
+
+
+def _base_part_number(val: str) -> str:
+    """A chip's part number without its package letters ('jrc4558d' -> 'JRC4558')."""
+    upper = val.strip().upper()
+    match = _PART_NUMBER.fullmatch(upper)
+    return match.group(1) if match else upper
+
+
+# Designator prefixes for trimmers: 'TRIM1' (PedalPCB), 'TR1' and 'T1'
+# (GuitarPCB). A 'VR' is a trimmer in some documents and a panel pot in
+# others (Tonepad's 'VR1  100kB'), so it counts as a pot.
+_TRIMMER_PREFIXES = frozenset({"TRIM", "TR", "T"})
+_REPEAT_SUFFIX = re.compile(r"\s+\(\d+\)$")
+
+
+def is_trimmer_ref(ref: str) -> bool:
+    """Whether a potentiometer's designator marks it as a trimmer.
+
+    Args:
+        ref: The designator ('TRIM1', 'TR2', 'T1', 'BIAS TRIM', 'VOLUME').
+
+    Returns:
+        True for a trimmer prefix, or a label naming a trim.
+    """
+    ref = _REPEAT_SUFFIX.sub("", ref.strip())
+    designator = parse_designator(ref)
+    if designator is not None:
+        return designator.prefix in _TRIMMER_PREFIXES
+    return "TRIM" in ref.upper()
+
+
+def trimmer_count(key: ComponentKey, data: PartData) -> int:
+    """How many of a potentiometer part are trimmers, not panel pots.
+
+    A trimmer is set once on the board, so it takes no knob or dust seal and
+    is bought as a trimmer.
+
+    Args:
+        key: The part.
+        data: Its quantities and designators.
+
+    Returns:
+        All of them for a value that names a trim ('100k trimpots', Tonepad),
+        else the number with a trimmer designator (see `is_trimmer_ref`).
+    """
+    if key.category != ComponentCategory.POTENTIOMETERS:
+        return 0
+    if "TRIM" in key.value.upper():
+        return data.qty
+    trimmers = sum(
+        is_trimmer_ref(ref) for refs in data.sources.values() for ref in refs
+    )
+    return min(trimmers, data.qty)
+
+
+def takes_socket(key: ComponentKey, data: PartData, socket: PartData | None) -> bool:
+    """Whether Star Ground added a socket for a chip.
+
+    The classifier injects one per DIP chip, as 'IC1 (Inj)' beside 'IC1', and
+    none for a regulator or a module.
+
+    Args:
+        key: The chip.
+        data: Its quantities and designators.
+        socket: The injected sockets (`constants.IC_SOCKET`), if any.
+
+    Returns:
+        True if one of its designators has a socket, or if a project counts
+        it by value and the classifier gives such a chip one.
+    """
+    if socket is None:
+        return False
+    for source, refs in data.sources.items():
+        injected = socket.sources.get(source, [])
+        if any(f"{ref}{INJECTED_SUFFIX}" in injected for ref in refs):
+            return True
+        if data.counted.get(source) and socket.counted.get(source):
+            result = categorize_part("", key.value, ComponentCategory.ICS)
+            if result is not None and result.injected_key is not None:
+                return True
+    return False
+
+
 def resolve_part_sourcing(
-    category: ComponentCategory,
-    val: str,
+    key: ComponentKey,
+    data: PartData,
     net_qty: int,
-    sources: dict[str, list[str]],
-    val_qty: Value | Decimal | None = None,
+    socketed: bool = False,
 ) -> ResolvedPartSourcing:
     """Resolves the complete purchasing and supplier specification for a component.
 
-    Unifies origin assignment, buffer calculation, auto-inject notes,
+    Unifies origin assignment, buffer calculation, hardware notes,
     dielectric spec resolution, and the supplier search.
 
     Args:
-        category: Component category enum.
-        val: Component value or part name.
+        key: The part.
+        data: Its quantities, designators and hardware notes.
         net_qty: Quantity required after deducting stock (deficit).
-        sources: Project sources mapping.
-        val_qty: Cached physical unit quantity or Decimal.
+        socketed: Whether Star Ground added a socket for a chip (see
+            `takes_socket`).
 
     Returns:
         ResolvedPartSourcing with origin, buy_qty, notes, spec_type, search_term, supplier_url.
     """
-    origin = determine_origin(val, sources)
+    category, val = key.category, key.value
+    val_qty = key_quantity(key)
+    origin = determine_origin(key, data)
 
-    advice = get_buy_details(category, val, net_qty, val_qty=val_qty)
+    advice = get_buy_details(category, val, net_qty, val_qty=val_qty, socketed=socketed)
     buy_qty = advice.buy_qty
     note = advice.note
 
-    auto_inject_notes = sources.get(AUTO_INJECT_SOURCE, [])
-    if auto_inject_notes and origin != ComponentOrigin.HARDWARE_KIT:
-        formatted_notes = ", ".join(auto_inject_notes)
-        note = f"{note} Standard hardware: {formatted_notes}.".strip()
+    if data.hardware and origin != ComponentOrigin.HARDWARE_KIT:
+        note = f"{note} Standard hardware: {', '.join(data.hardware)}.".strip()
 
     spec_type = get_spec_type(category, val, val_qty=val_qty)
-    search_term = generate_search_term(category, val, spec_type)
+    trimmers = trimmer_count(key, data)
+    all_trimmers = 0 < trimmers == data.qty
+    search_term = generate_search_term(category, val, spec_type, trimmer=all_trimmers)
+    if trimmers and not all_trimmers:
+        trimmer_term = generate_search_term(category, val, spec_type, trimmer=True)
+        which = "is a trimmer" if trimmers == 1 else "are trimmers"
+        note = f"{note} {trimmers} of these {which}: search for '{trimmer_term}'."
+        note = note.strip()
 
     url = generate_tayda_url(search_term)
 
@@ -634,8 +740,8 @@ def build_shopping_list(
     Args:
         inventory: Aggregated inventory from all projects.
         stock: Optional user stock inventory to calculate net needs.
-        show_hardware: Whether to include pure auto-injected hardware kit parts.
-        show_extras: Whether to include sockets and SMD adapters.
+        show_hardware: Whether to include the hardware kit's own parts.
+        show_extras: Whether to include the sockets Star Ground adds for chips.
 
     Returns:
         One line per part, in display order.
@@ -644,14 +750,14 @@ def build_shopping_list(
 
     sorted_parts = sort_inventory(inventory)
     shopping_list: list[ShoppingLine] = []
+    socket = inventory.get(IC_SOCKET)
 
     for part_key, item in sorted_parts:
         category, value = part_key.category, part_key.value
-        sources = item.sources
 
-        if is_pure_hardware(sources) and not show_hardware:
+        if is_pure_hardware(item) and not show_hardware:
             continue
-        if is_extra_part(value) and not show_extras:
+        if is_extra_part(part_key) and not show_extras:
             continue
 
         gross_qty = item.qty
@@ -664,13 +770,12 @@ def build_shopping_list(
             s_item = stock.get(part_key)
             in_stock = s_item.qty if s_item else 0
 
-        val_qty = key_quantity(part_key)
         resolved = resolve_part_sourcing(
-            category=category,
-            val=value,
-            net_qty=net_qty,
-            sources=sources,
-            val_qty=val_qty,
+            part_key,
+            item,
+            net_qty,
+            socketed=category == ComponentCategory.ICS
+            and takes_socket(part_key, item, socket),
         )
         notes = resolved.notes
         if item.included:

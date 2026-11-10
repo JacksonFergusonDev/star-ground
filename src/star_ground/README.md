@@ -104,4 +104,7 @@ class PartData:
     sources: defaultdict[str, list[str]] = ...  # Traceability back to each project
     included: int = 0  # Of qty, how many come with the PCB
     counted: dict[str, int] = field(default_factory=dict)
+    hardware: list[str] = field(default_factory=list)  # Kit notes: ["Input"]
 ```
+
+Star Ground's own parts are told apart by identity, never by text a document or builder could write. The hardware kit records itself in `PartData.hardware`, which only `with_standard_hardware` fills, so a project named "Auto-Inject" stays a project. The socket added for each chip is the key `constants.IC_SOCKET`, so a document's own DC socket or tube socket is never mistaken for it.

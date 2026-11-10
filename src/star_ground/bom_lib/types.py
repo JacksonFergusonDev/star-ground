@@ -278,6 +278,10 @@ class PartData:
         counted: How many one build of each source counts by value, with no
             designator ('4 - 10k', Tonepad). Like a source's designators, it
             describes one pedal, whatever the number built.
+        hardware: What each addition of standard hardware is for ('Input',
+            'LED CLR'), one note per addition. Only the hardware kit
+            (`sourcing.with_standard_hardware`) writes it, so no document or
+            project name can make a part hardware.
     """
 
     qty: int = 0
@@ -287,6 +291,7 @@ class PartData:
     )
     included: int = 0
     counted: dict[str, int] = field(default_factory=dict)
+    hardware: list[str] = field(default_factory=list)
 
 
 @dataclass(frozen=True, slots=True)
@@ -672,6 +677,7 @@ class Inventory(UserDict[ComponentKey, PartData]):
                 counted = self[key].counted
                 counted[src] = max(counted.get(src, 0), n)
             self[key].refs.extend(data.refs)
+            self[key].hardware.extend(data.hardware)
             for src, refs in data.sources.items():
                 self[key].sources[src].extend(refs * multiplier)
 
