@@ -10,10 +10,11 @@ from star_ground.bom_lib import (
 )
 from star_ground.bom_lib.errors import (
     BUG_MESSAGE,
+    ReadError,
     TooManyPagesError,
     UnreadablePdfError,
 )
-from tests.pdfs import text_pdf
+from tests.pdfs import assemble, stream, text_pdf
 
 try:
     import pdfplumber
@@ -73,3 +74,82 @@ def test_a_bug_while_parsing_a_pdf_is_reported_not_shown(tmp_path, caplog):
     assert f"Bug {bug.code}" in caplog.text
     assert "reading the upload Fuzz.pdf" in caplog.text
     assert "_eval_standard" in caplog.text
+
+
+def _one_page(
+    page: str, resources: str = "", draws: bytes = b"", *more: bytes
+) -> bytes:
+    """A one-page PDF listing 'R1 10k'.
+
+    Args:
+        page: The page dictionary's own entries, such as its MediaBox.
+        resources: More entries for its resources ('/XObject << ... >>').
+        draws: More of its content stream, after the listing ('/Fm0 Do').
+        more: More objects, numbered from 6.
+    """
+    return assemble(
+        b"<< /Type /Catalog /Pages 2 0 R >>",
+        b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+        f"<< /Type /Page /Parent 2 0 R {page} /Contents 4 0 R "
+        f"/Resources << /Font << /F1 5 0 R >> {resources} >> >>".encode(),
+        stream(b"BT /F1 10 Tf 50 700 Td (R1 10k) Tj ET " + draws),
+        b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+        *more,
+    )
+
+
+def _read(pdf: bytes) -> ReadError:
+    (error,) = (
+        BOMParserContext()
+        .process(InputMethod.UPLOAD_FILE, FileUpload("damaged.pdf", pdf), "X")
+        .stats.errors
+    )
+    return error
+
+
+_LETTER = "/MediaBox [0 0 612 792]"
+
+
+@pytest.mark.parametrize(
+    "page",
+    [
+        pytest.param("/MediaBox [0 0 (a) 792]", id="box-of-text"),
+        pytest.param("", id="no-box"),
+        pytest.param("/MediaBox [0 0 612]", id="box-of-three"),
+        pytest.param("/MediaBox 5", id="box-of-a-number"),
+        pytest.param("/MediaBox 9 0 R", id="box-missing-object"),
+        pytest.param(f"{_LETTER} /CropBox [0 0 1]", id="crop-box-of-three"),
+        pytest.param(f"{_LETTER} /Rotate (a)", id="rotation-of-text"),
+    ],
+)
+def test_a_page_with_no_readable_size_is_explained(tmp_path, page):
+    """pdfplumber reads each page's size when listing the pages, after opening."""
+    path = tmp_path / "damaged.pdf"
+    path.write_bytes(_one_page(page))
+    with pytest.raises(UnreadablePdfError):
+        parse_pedalpcb_pdf(str(path), "Damaged")
+
+    error = _read(path.read_bytes())
+    assert error == UnreadablePdfError().as_read_error()
+    assert error.bug is None
+
+
+def test_a_page_with_a_readable_size_is_read(tmp_path):
+    path = tmp_path / "fine.pdf"
+    path.write_bytes(_one_page(f"{_LETTER} /CropBox [0 0 612 792] /Rotate 0"))
+    result = parse_pedalpcb_pdf(str(path), "Fine")
+    assert [ref for part in result.inventory.values() for ref in part.refs] == ["R1"]
+
+
+def test_a_page_pdfminer_cant_draw_is_explained(tmp_path):
+    """pdfminer parses a page's drawing only when its contents are first read."""
+    # The page draws a form whose matrix is text, which pdfminer can't multiply.
+    form = stream(
+        b"BT /F1 10 Tf (R2 22k) Tj ET",
+        "/Subtype /Form /BBox [0 0 9 9] /Matrix [(a) 0 0 1 0 0] ",
+    )
+    path = tmp_path / "damaged.pdf"
+    path.write_bytes(_one_page(_LETTER, "/XObject << /Fm0 6 0 R >>", b"/Fm0 Do", form))
+    with pytest.raises(UnreadablePdfError):
+        parse_pedalpcb_pdf(str(path), "Damaged")
+    assert _read(path.read_bytes()).bug is None

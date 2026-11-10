@@ -27,7 +27,12 @@ from star_ground.bom_lib import (
     ParseResult,
     make_component_key,
 )
-from star_ground.bom_lib.errors import BUG_MESSAGE, ErrorKind, OcrRefusedError
+from star_ground.bom_lib.errors import (
+    BUG_MESSAGE,
+    ErrorKind,
+    OcrRefusedError,
+    UnreadableSpreadsheetError,
+)
 from star_ground.bom_lib.ocr import ocr_guard
 from star_ground.bom_lib.types import Inventory, ReadingStats
 from star_ground.server import Settings, create_app
@@ -274,6 +279,20 @@ def test_stock_is_subtracted(client: TestClient) -> None:
     assert result["has_stock"] is True
     row = next(r for r in result["shopping_list"] if r["part"] == "10k")
     assert (row["bom_qty"], row["in_stock"], row["net_need"]) == (1, 1, 0)
+
+
+def test_a_damaged_stock_file_is_explained(client: TestClient) -> None:
+    request = json.dumps({"projects": [{"method": "paste", "text": "R1 10k"}]})
+    stock = b'Category,Part,Qty\nResistors,"10k,1\n' + b"x" * 140_000
+
+    response = client.post(
+        "/api/master-list",
+        data={"request": request},
+        files={"stock": ("stock.csv", stock, "text/csv")},
+    )
+
+    assert response.status_code == 422
+    assert response.json()["message"] == UnreadableSpreadsheetError().message
 
 
 def test_a_multi_circuit_document_needs_its_build_chosen(client: TestClient) -> None:

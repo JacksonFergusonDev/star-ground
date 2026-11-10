@@ -12,12 +12,14 @@ lines, a page 200 inches square), the bound is tested instead.
 import gc
 import io
 import time
+import tracemalloc
 import zlib
 from collections.abc import Callable
 from pathlib import Path
 
 import pdfplumber
 import pytest
+from pdfminer.pdftypes import PDFStream
 from PIL import Image
 
 from star_ground.bom_lib import FileUpload, builds, classifier, locations, ocr
@@ -25,11 +27,12 @@ from star_ground.bom_lib.boards import board_marks
 from star_ground.bom_lib.builds import PageContext, plan_builds
 from star_ground.bom_lib.choices import choose_value
 from star_ground.bom_lib.enums import ComponentCategory, InputMethod
-from star_ground.bom_lib.errors import CrowdedPageError, ErrorKind
+from star_ground.bom_lib.errors import CrowdedPageError, ErrorKind, HeavyPageError
 from star_ground.bom_lib.ocr import OcrBox
 from star_ground.bom_lib.pdf import bom_table, page_checks, scan
 from star_ground.bom_lib.pdf import document as pdf_document
 from star_ground.bom_lib.pdf.cells import CONTROL_VALUE
+from star_ground.bom_lib.pdf.content import content_bytes
 from star_ground.bom_lib.pdf.geometry import Cell, page_lines
 from star_ground.bom_lib.pdf.page_checks import (
     footnote_marks,
@@ -48,7 +51,7 @@ from star_ground.bom_lib.types import (
     make_component_key,
 )
 from star_ground.bom_lib.verification import check_footnotes
-from tests.pdfs import typeset
+from tests.pdfs import assemble, stream, typeset
 
 _BOUND_S = 1.0
 
@@ -215,26 +218,14 @@ def _pdf(content: str, width: float = 612, height: float = 792) -> bytes:
         width: The page's width, in points (US Letter's by default).
         height: The page's height, in points.
     """
-    stream = zlib.compress(content.encode("latin-1"))
-    objects = [
+    return assemble(
         b"<< /Type /Catalog /Pages 2 0 R >>",
         b"<< /Type /Pages /Kids [4 0 R] /Count 1 >>",
         b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
         f"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 {width} {height}] ".encode()
         + b"/Resources << /Font << /F1 3 0 R >> >> /Contents 5 0 R >>",
-        f"<< /Length {len(stream)} /Filter /FlateDecode >>\nstream\n".encode()
-        + stream
-        + b"\nendstream",
-    ]
-    out, offsets = b"%PDF-1.4\n", []
-    for number, body in enumerate(objects, start=1):
-        offsets.append(len(out))
-        out += f"{number} 0 obj\n".encode() + body + b"\nendobj\n"
-    xref = len(out)
-    out += f"xref\n0 {len(objects) + 1}\n0000000000 65535 f \n".encode()
-    out += b"".join(f"{o:010d} 00000 n \n".encode() for o in offsets)
-    out += f"trailer\n<< /Size {len(objects) + 1} /Root 1 0 R >>\n".encode()
-    return out + f"startxref\n{xref}\n%%EOF\n".encode()
+        stream(content.encode("latin-1")),
+    )
 
 
 def test_dropping_many_footnote_marks_from_a_page(tmp_path: Path) -> None:
@@ -315,6 +306,61 @@ def test_long_part_description() -> None:
     cells = [Cell((_word("POT", 10 + 20 * i, 10),)) for i in range(20000)]
     assert _seconds(lambda: _description_end(cells, 0, frozenset())) < _BOUND_S
     assert _description_end(cells, 0, frozenset()) == 20000
+
+
+def _dashed_listings(count: int) -> list[PDFWord]:
+    """One line of 'R1 - 10k R2 - 10k …', set with word spaces: one cell."""
+    words: list[PDFWord] = []
+    x = 10.0
+    for i in range(count):
+        for text in (f"{'RCDQ'[i // 999]}{i % 999 + 1}", "-", "10k"):
+            words.append(_word(text, x, 100))
+            x = words[-1]["x1"] + 2.5
+    return words
+
+
+def test_many_dashed_listings_in_one_cell() -> None:
+    # A RecursionError, reported as a bug: each listing recursed into the rest.
+    words = _dashed_listings(3000)
+    cells = scan._dash_listing(Cell(tuple(words)))
+    assert cells is not None
+    assert [c.text for c in cells[:4]] == ["R1", "10k", "R2", "10k"]
+    assert len(cells) == 6000
+    listings = find_listings(words)
+    assert len(listings) == 3000
+    assert all(lst.dashed and lst.value == "10k" for lst in listings)
+
+
+@pytest.mark.parametrize(
+    ("text", "cells"),
+    [
+        # Tonepad MAS Distortion; a glued dash only starts a cell's first listing.
+        (
+            "R7 - 500k Rev. Log. pot. C7 - 0.001 µF Q1- 2N3904 D1 - D5 - Silicon",
+            [
+                "R7",
+                "500k Rev. Log. pot.",
+                "C7",
+                "0.001 µF Q1- 2N3904",
+                "D1-D5",
+                "Silicon",
+            ],
+        ),
+        (
+            "Q1- 2N3904 C7 - 10n R2, R3 - 4k7 A B E",
+            ["Q1", "2N3904", "C7", "10n R2,", "R3", "4k7"],
+        ),
+        # A tail that is no listing stays one cell.
+        ("R1, R2 - 10k R3 - D1 - D5 x", ["R1 R2", "10k", "R3-D1", "D5 x"]),
+        ("POT1 - 6", None),
+    ],
+)
+def test_dashed_listings_in_one_cell_are_split_as_before(
+    text: str, cells: list[str] | None
+) -> None:
+    words = [_word(t, 10 + 40 * i, 100) for i, t in enumerate(text.split())]
+    split = scan._dash_listing(Cell(tuple(words)))
+    assert (None if split is None else [c.text for c in split]) == cells
 
 
 def test_designator_printed_many_times_on_a_line() -> None:
@@ -417,6 +463,98 @@ def test_too_many_ruled_lines_to_count_their_crossings(tmp_path: Path) -> None:
         tables, seconds = _timed(lambda: pdf_document._tables(page, 0))
     assert seconds < _BOUND_S
     assert tables == []
+
+
+def _drawing(content: bytes, *forms: bytes) -> bytes:
+    """A one-page PDF listing 'R1 10k', then drawing the content.
+
+    Args:
+        content: More of the page's content stream ('/Fm0 Do').
+        forms: Form XObjects, named /Fm0, /Fm1… in the page's resources.
+    """
+    names = " ".join(f"/Fm{n} {6 + n} 0 R" for n in range(len(forms)))
+    return assemble(
+        b"<< /Type /Catalog /Pages 2 0 R >>",
+        b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+        b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R "
+        b"/Resources << /Font << /F1 5 0 R >> /XObject << "
+        + names.encode()
+        + b" >> >> >>",
+        stream(b"BT /F1 10 Tf 50 700 Td (R1 10k) Tj ET " + content),
+        b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+        *forms,
+    )
+
+
+def _form(content: bytes) -> bytes:
+    return stream(content, "/Subtype /Form /BBox [0 0 612 792] ")
+
+
+def _refs(path: Path) -> set[str]:
+    result = pdf_document.parse_pedalpcb_pdf(str(path), "P")
+    return {ref for part in result.inventory.values() for ref in part.refs}
+
+
+def test_page_that_decompresses_to_gigabytes_is_refused(tmp_path: Path) -> None:
+    # pdfminer decompressed every content stream whole before reading it:
+    # this 16 KB page took 16 MB, and a 50 MB upload could take 50 GB.
+    path = tmp_path / "bomb.pdf"
+    path.write_bytes(_drawing(b" " * (16 << 20)))
+    assert path.stat().st_size < 20_000
+    tracemalloc.start()
+    try:
+        with pytest.raises(HeavyPageError, match="Page 1 of this PDF draws far more"):
+            pdf_document.parse_pedalpcb_pdf(str(path), "Bomb")
+        _, peak = tracemalloc.get_traced_memory()
+    finally:
+        tracemalloc.stop()
+    assert peak < 4 * pdf_document.MAX_PAGE_CONTENT_BYTES
+
+    result = BOMParserContext().process(
+        InputMethod.UPLOAD_FILE, FileUpload("bomb.pdf", path.read_bytes()), "X"
+    )
+    (error,) = result.stats.errors
+    assert error.kind == ErrorKind.UNREADABLE_PDF
+    assert error.bug is None
+
+
+def test_form_the_page_draws_counts_toward_its_drawing(tmp_path: Path) -> None:
+    big = _form(b" " * (pdf_document.MAX_PAGE_CONTENT_BYTES + 1))
+    path = tmp_path / "form.pdf"
+    path.write_bytes(_drawing(b"/Fm0 Do", big))
+    with pytest.raises(HeavyPageError):
+        _refs(path)
+
+    # A form the page has but never draws isn't read.
+    path.write_bytes(_drawing(b"", big))
+    assert _refs(path) == {"R1"}
+
+
+def test_page_drawing_is_counted_as_pdfminer_decodes_it(tmp_path: Path) -> None:
+    form = _form(b"BT /F1 10 Tf 50 600 Td (R2 22k) Tj ET")
+    path = tmp_path / "page.pdf"
+    path.write_bytes(_drawing(b"/Fm0 Do /Fm0 Do", form))
+    with pdfplumber.open(path) as pdf:
+        page = pdf.pages[0].page_obj
+        counted = content_bytes(page, pdf_document.MAX_PAGE_CONTENT_BYTES)
+        decoded = [s.get_data() for s in page.contents]
+        form_stream = pdf.doc.getobj(6)
+        assert isinstance(form_stream, PDFStream)
+        drawn = form_stream.get_data()
+    assert counted == sum(map(len, decoded)) + len(drawn)
+    assert content_bytes(page, counted) == counted
+    assert content_bytes(page, counted - 1) is None
+
+
+def test_page_with_a_damaged_stream_is_still_read(tmp_path: Path) -> None:
+    # A stream whose checksum is wrong is read up to it, as pdfminer reads it.
+    pdf = _drawing(b"", _form(b"BT ET"))
+    listing = zlib.compress(b"BT /F1 10 Tf 50 700 Td (R1 10k) Tj ET ")
+    damaged = listing[:-1] + bytes([listing[-1] ^ 0xFF])
+    path = tmp_path / "damaged.pdf"
+    path.write_bytes(pdf.replace(listing, damaged))
+    assert path.read_bytes() != pdf
+    assert _refs(path) == {"R1"}
 
 
 def test_page_of_too_many_characters_is_refused(tmp_path: Path) -> None:

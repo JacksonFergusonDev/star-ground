@@ -101,7 +101,7 @@ class FetchError(StarGroundError):
 
 
 class UnreadablePdfError(StarGroundError):
-    """A file that couldn't be opened as a PDF."""
+    """A file that couldn't be opened as a PDF, or whose pages are damaged."""
 
     kind = ErrorKind.UNREADABLE_PDF
 
@@ -146,6 +146,44 @@ class CrowdedPageError(StarGroundError):
             f"Page {page} of this PDF holds {chars:,} characters, far more than "
             "a build document's page, so the PDF wasn't read.",
             "Check it's the build document for the pedal.",
+        )
+
+
+class HeavyPageError(StarGroundError):
+    """A PDF page drawing far more than any build document's page.
+
+    Its drawing instructions are checked before the page is read, because
+    reading them all can take gigabytes of memory.
+
+    Args:
+        page: The page, counting from 1.
+    """
+
+    kind = ErrorKind.UNREADABLE_PDF
+
+    def __init__(self, page: int) -> None:
+        super().__init__(
+            f"Page {page} of this PDF draws far more than a build document's "
+            "page, so the PDF wasn't read.",
+            "Check it's the build document for the pedal.",
+        )
+
+
+class UnreadableSpreadsheetError(StarGroundError):
+    """A spreadsheet export too damaged to read.
+
+    It shares `ErrorKind.UNREADABLE_PDF`, the kind for a file that can't be
+    read, whatever its type.
+    """
+
+    kind = ErrorKind.UNREADABLE_PDF
+
+    def __init__(self) -> None:
+        super().__init__(
+            "This spreadsheet couldn't be read: one of its cells runs on far "
+            "longer than any part's.",
+            "It may have a quote mark that's never closed. Check the file, or "
+            "export it again.",
         )
 
 

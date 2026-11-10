@@ -8,8 +8,14 @@ from unittest.mock import patch
 
 import pytest
 
+from star_ground.bom_lib.constants import IC_SOCKET
 from star_ground.bom_lib.enums import ComponentCategory, InputMethod
-from star_ground.bom_lib.errors import BUG_MESSAGE, ErrorKind, FetchError
+from star_ground.bom_lib.errors import (
+    BUG_MESSAGE,
+    ErrorKind,
+    FetchError,
+    UnreadableSpreadsheetError,
+)
 from star_ground.bom_lib.fetch import FetchedDocument
 from star_ground.bom_lib.strategies import (
     BOMParserContext,
@@ -18,6 +24,7 @@ from star_ground.bom_lib.strategies import (
     ParseResult,
     PDFParserStrategy,
 )
+from star_ground.bom_lib.strategies.csv import parse_user_inventory
 from star_ground.bom_lib.types import ComponentKey, FileUpload
 
 
@@ -173,6 +180,65 @@ class TestCSVParserStrategy:
 
         assert result.stats.parts_found == 1
         assert result.stats.residuals == []
+
+    @pytest.mark.parametrize(
+        ("method", "data"),
+        [
+            (InputMethod.PASTE_TEXT, "IC1 TL072\nIC1-S DIP-8 socket\n"),
+            (
+                InputMethod.UPLOAD_FILE,
+                FileUpload("bom.csv", b"Ref,Value\nIC1,TL072\nIC1-S,DIP-8 socket\n"),
+            ),
+            (
+                InputMethod.UPLOAD_FILE,
+                FileUpload("bom.csv", b"IC1,TL072\nIC2,IC socket\n"),
+            ),
+        ],
+    )
+    def test_a_list_with_its_own_chip_sockets_gets_none_added(
+        self, method: InputMethod, data: str | FileUpload
+    ) -> None:
+        # Pasted and CSV lists got a second socket for each chip.
+        result = BOMParserContext().process(method, data, "List")
+        tl072 = ComponentKey(ComponentCategory.ICS, "TL072")
+
+        assert tl072 in result.inventory
+        assert IC_SOCKET not in result.inventory
+
+    @pytest.mark.parametrize(
+        ("method", "data"),
+        [
+            (InputMethod.PASTE_TEXT, "IC1 TL072\nJ1 DC socket\n"),
+            (
+                InputMethod.UPLOAD_FILE,
+                FileUpload("bom.csv", b"IC1,TL072\nJ1,DC socket"),
+            ),
+        ],
+    )
+    def test_a_chip_still_gets_its_socket(
+        self, method: InputMethod, data: str | FileUpload
+    ) -> None:
+        # A DC socket is no chip's.
+        result = BOMParserContext().process(method, data, "List")
+
+        assert result.inventory[IC_SOCKET].refs == ["IC1 (Inj)"]
+
+    @pytest.mark.parametrize(
+        "content",
+        [
+            b'Ref,Value\nR1,"10k\nR2,22k\n' + b"x" * 140_000,  # a quote never closed
+            b"R1," + b"1" * 140_000,
+        ],
+    )
+    def test_a_damaged_spreadsheet_is_explained(self, content: bytes) -> None:
+        # The csv module's 'field larger than field limit' was reported as a bug.
+        upload = FileUpload("bom.csv", content)
+        result = BOMParserContext().process(InputMethod.UPLOAD_FILE, upload, "Sheet")
+
+        assert result.stats.errors == [UnreadableSpreadsheetError().as_read_error()]
+        assert result.stats.errors[0].bug is None
+        with pytest.raises(UnreadableSpreadsheetError):
+            parse_user_inventory(b"Category,Part,Qty\nResistors,'" + b"1" * 140_000)
 
     def test_parse_unsupported_type_raises(self) -> None:
         strategy = CSVParserStrategy()

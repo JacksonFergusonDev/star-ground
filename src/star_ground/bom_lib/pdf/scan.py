@@ -163,60 +163,96 @@ def _dash_listing(cell: Cell) -> list[Cell] | None:
     The designators are one ('R7 - 220'), a comma list ('R2, R7, R18, R20 -
     47k', 'R11,R12 - 220k') or a range ('D1 - D5 - Silicon diode'). A bare
     'R7 - 220' would otherwise read as a range, and a long value as prose.
+    Listings set against each other in one cell ('R7 - 500k Rev. Log. pot.
+    C7 - 0.001 µF', Tonepad MAS Distortion) are split one after another; if
+    the rest isn't a listing, it's one cell.
     """
     words = tuple(
         _retext(w, part)
         for w in cell.words
         for part in re.findall(r"[^,]+,?", w["text"]) or [w["text"]]
     )
-    glued = _GLUED_DASH.fullmatch(words[0]["text"]) if len(words) > 1 else None
+    cells: list[Cell] = []
+    start: int | None = 0
+    while start is not None:
+        listing = _next_dash_listing(words, start)
+        if listing is None:
+            return [*cells, Cell(words[start:])] if cells else None
+        found, start = listing
+        cells += found
+    return cells
+
+
+def _next_dash_listing(
+    words: tuple[PDFWord, ...], start: int
+) -> tuple[list[Cell], int | None] | None:
+    """The dashed listing starting at `words[start]`, and where the next starts.
+
+    Each listing is read from its own words and the next one's first two, so
+    a line of thousands of them is read in linear time.
+
+    Returns:
+        The listing's cells (designators, then value), and the index of the
+        next listing set against it (None if there's none); or None if no
+        listing starts there.
+    """
+    head: tuple[PDFWord, ...] = (words[start],)
+    glued = (
+        _GLUED_DASH.fullmatch(words[start]["text"]) if len(words) - start > 1 else None
+    )
     if glued and _listed_ref(glued.group(1)):
         # 'Q1- 2N3904' (Tonepad Filter/Sample/Hold): the dash set against it.
-        words = (_retext(words[0], glued.group(1)), _retext(words[0], "-"), *words[1:])
-    texts = [w["text"] for w in words]
+        head = (_retext(words[start], glued.group(1)), _retext(words[start], "-"))
+    # Position i of this listing's words is head[i], then words[body + i].
+    body = start + 1 - len(head)
+    count = len(words) - body
+
+    def at(i: int) -> PDFWord:
+        return head[i] if i < len(head) else words[body + i]
+
+    def text(i: int) -> str:
+        return at(i)["text"]
+
     if (
-        len(texts) > 4
-        and is_designator(texts[0])
-        and texts[1] in _DASHES
-        and is_designator(texts[2])
-        and texts[3] in _DASHES
+        count > 4
+        and is_designator(text(0))
+        and text(1) in _DASHES
+        and is_designator(text(2))
+        and text(3) in _DASHES
     ):
-        span = _retext(words[0], f"{texts[0]}-{texts[2]}", x1=words[2]["x1"])
-        return [Cell((span,)), Cell(words[4:])]
+        span = _retext(at(0), f"{text(0)}-{text(2)}", x1=at(2)["x1"])
+        return [Cell((span,)), Cell(words[body + 4 :])], None
     k = 0
-    while k < len(texts) - 1 and texts[k].endswith(","):
-        if not _listed_ref(texts[k].rstrip(",")):
+    while k < count - 1 and text(k).endswith(","):
+        if not _listed_ref(text(k).rstrip(",")):
             return None
         k += 1
-    if k + 2 >= len(texts) or texts[k + 1] not in _DASHES:
+    if k + 2 >= count or text(k + 1) not in _DASHES:
         return None
-    if not _listed_ref(texts[k]) or is_designator(texts[k + 2]):
+    if not _listed_ref(text(k)) or is_designator(text(k + 2)):
         return None  # 'D21 - D28' is a range
-    if not k and texts[k + 2].isdigit() and len(texts[k + 2]) < 3 and len(texts) == 3:
+    if not k and text(k + 2).isdigit() and len(text(k + 2)) < 3 and count == 3:
         return None  # 'POT1 - 6' is a range
-    refs = [_retext(w, w["text"].rstrip(",")) for w in words[: k + 1]]
-    value = list(words[k + 2 :])
-    # The next listing set against this one: 'R7 - 500k Rev. Log. pot. C7 -
-    # 0.001 µF' (Tonepad MAS Distortion).
-    nxt = next(
+    refs = tuple(_retext(at(i), text(i).rstrip(",")) for i in range(k + 1))
+    # The next listing set against this one starts with a designator and a
+    # dash, after at least one word of value.
+    first = k + 2
+    end = next(
         (
-            j
-            for j in range(1, len(value) - 2)
-            if is_designator(value[j]["text"]) and value[j + 1]["text"] in _DASHES
+            i
+            for i in range(first + 1, count - 2)
+            if is_designator(text(i)) and text(i + 1) in _DASHES
         ),
-        None,
+        count,
     )
-    rest: list[Cell] = []
-    if nxt is not None:
-        rest = _dash_listing(Cell(tuple(value[nxt:]))) or [Cell(tuple(value[nxt:]))]
-        value = value[:nxt]
+    value = [at(i) for i in range(first, end)]
     # A drawing's pad letters set against the value: '100µF / 16v A B E'.
     letters = 0
     while letters < len(value) and _PAD_LETTER.fullmatch(value[-1 - letters]["text"]):
         letters += 1
     if 2 <= letters < len(value):
         value = value[:-letters]
-    return [Cell(tuple(refs)), Cell(tuple(value)), *rest]
+    return [Cell(refs), Cell(tuple(value))], body + end if end < count else None
 
 
 _PAD_LETTER = re.compile(r"[A-Z]")
@@ -338,22 +374,48 @@ def find_listings(words: list[PDFWord]) -> list[Listing]:
     return _mark_trimmers(_wrapped_values(listings, lines), lines)
 
 
-def _dash_after(line: list[PDFWord], ref: Cell) -> bool:
-    """Whether the word after a designator cell on its line is a dash."""
-    if any(
-        w["x0"] == ref.words[-1]["x0"] and _GLUED_DASH.fullmatch(w["text"])
-        for w in line
-    ):
-        return True  # 'Q1- 2N3904' (Tonepad Filter/Sample/Hold)
-    end = ref.words[-1]["x1"]
-    after = [
-        w for w in line if w["x0"] >= end - 0.5 and w["text"] != ref.words[-1]["text"]
-    ]
-    if not after:
-        return False
-    nxt = min(after, key=lambda w: w["x0"])["text"]
-    # 'C3 -10n' (GuitarPCB Dr-Phybes): the dash set against the value.
-    return nxt in _DASHES or (nxt[:1] in _DASHES and nxt[1:2].isdigit())
+class _LineDashes:
+    """Answers, for each designator cell on a line, whether a dash follows it.
+
+    The line's words are sorted once, so each answer is a bisection rather
+    than a scan of the line: a line of thousands of listings ('R1 - 10k R2 -
+    10k …') took seconds.
+
+    Args:
+        line: The line's words.
+    """
+
+    def __init__(self, line: list[PDFWord]) -> None:
+        # A word at no position (NaN) is never beside anything.
+        placed = [w for w in line if not math.isnan(w["x0"])]
+        self._glued = {w["x0"] for w in placed if _GLUED_DASH.fullmatch(w["text"])}
+        placed.sort(key=lambda w: w["x0"])  # Stable: ties keep the line's order.
+        self._x0s = [w["x0"] for w in placed]
+        self._texts = [w["text"] for w in placed]
+        # For each word, the first from it on with other text.
+        self._other = list(range(1, len(placed) + 1))
+        for i in reversed(range(len(placed) - 1)):
+            if self._texts[i + 1] == self._texts[i]:
+                self._other[i] = self._other[i + 1]
+
+    def after(self, ref: Cell) -> bool:
+        """Whether the word after a designator cell on its line is a dash."""
+        last = ref.words[-1]
+        if last["x0"] in self._glued:
+            return True  # 'Q1- 2N3904' (Tonepad Filter/Sample/Hold)
+        start = last["x1"] - 0.5
+        if math.isnan(start):
+            return False
+        # The leftmost word starting at or after the cell's end, other than
+        # another copy of its last word.
+        i = bisect_left(self._x0s, start)
+        if i < len(self._texts) and self._texts[i] == last["text"]:
+            i = self._other[i]
+        if i >= len(self._texts):
+            return False
+        nxt = self._texts[i]
+        # 'C3 -10n' (GuitarPCB Dr-Phybes): the dash set against the value.
+        return nxt in _DASHES or (nxt[:1] in _DASHES and nxt[1:2].isdigit())
 
 
 def _undashed_dropped(listings: list[Listing], counted: int) -> list[Listing]:
@@ -515,6 +577,7 @@ def _scan(
         cells = _absorb_continuations(cells, above, listings)
         texts = [c.text for c in cells]
         current: list[tuple[float, float, int]] = []
+        dashes: _LineDashes | None = None  # Indexed once a listing needs it.
         i = 0
         while i < len(texts):
             if _in_column(cells[i].x0, cells[i].size, only_types):
@@ -584,7 +647,10 @@ def _scan(
             value = clean_value(" ".join(parts))
             if value:
                 current.append((cells[i + 1].x0, cells[i + 1].size, len(listings)))
-                if _dash_after(line, cells[i]):
+                if dashes is None:
+                    dashes = _LineDashes(line)
+                dashed = dashes.after(cells[i])
+                if dashed:
                     # A dashed cell wraps under its start: 'IC3 - 5v positive
                     # Regulator' / '(78L05)' (Tonepad Rebote 2.5).
                     current.append((cells[i].x0, cells[i].size, len(listings)))
@@ -594,7 +660,7 @@ def _scan(
                         value=value,
                         line=line_no,
                         x0=cells[i].x0,
-                        dashed=_dash_after(line, cells[i]),
+                        dashed=dashed,
                     )
                 )
             following = _text_at(texts, j + 1)

@@ -321,7 +321,8 @@ def _read_bom(words: list[PDFWord]) -> tuple[list[BomRow], list[Cell], list[str]
     last_row: dict[int, int] = {}
     # The table each section belongs to, keyed by its first column's x0.
     table_of: dict[float, int] = {}
-    header_no = -1
+    # How many tables the header lines so far have started.
+    tables = 0
     lines = page_lines(words)
     # Value cells read into a neighbouring line's row (`_borrow_offset_values`).
     borrowed: set[int] = set()
@@ -337,13 +338,12 @@ def _read_bom(words: list[PDFWord]) -> tuple[list[BomRow], list[Cell], list[str]
             ]
             sections = sorted(kept + found, key=lambda sec: sec[0].x0)
             last_row = {}
-            header_no += 1
-            for sec, group in zip(
-                found,
-                _board_groups(found, lines[line_no - 1] if line_no else []),
-                strict=True,
-            ):
-                table_of[sec[0].x0] = header_no + group
+            # A header line starts one table per board it heads, numbered
+            # after every table before it.
+            groups = _board_groups(found, lines[line_no - 1] if line_no else [])
+            for sec, group in zip(found, groups, strict=True):
+                table_of[sec[0].x0] = tables + group
+            tables += max(groups) + 1
             # The rest of the line is a row of the tables beside the new header.
             cells = [c for c in cells if c.x0 < lo or c.x0 > hi]
         if not sections:
@@ -452,13 +452,13 @@ def _read_bom(words: list[PDFWord]) -> tuple[list[BomRow], list[Cell], list[str]
                 BomRow(
                     refs=refs,
                     value=value,
-                    quantity=int(qty) if qty.isdigit() else None,
+                    quantity=_quantity(qty),
                     line=line_no,
                     x0=first_x0[k],
                     marking=marking.group(1) if marking else "",
                     type_text=fields.get((k, "type"), ""),
                     notes=notes,
-                    table=table_of.get(sections[k][0].x0, header_no),
+                    table=table_of[sections[k][0].x0],
                     end=end,
                     builds=builds,
                 )
@@ -491,6 +491,20 @@ def _build_values(
                 cell = value  # '_' (GuitarPCB Emexar v4): as the first build
         out.append((col.build, cell))
     return tuple(out)
+
+
+# A Quantity cell: digits, perhaps with a footnote mark set after them ('2¹').
+_QUANTITY = re.compile(r"([0-9]+)[\u00b9\u00b2\u00b3\u2070\u2074-\u2079]*")
+
+
+def _quantity(cell: str) -> int | None:
+    """How many of a row's part a Quantity cell asks for, if it's a number.
+
+    A superscript after the digits is a footnote mark, not part of the
+    number; a superscript alone ('²') is no quantity.
+    """
+    match = _QUANTITY.fullmatch(cell)
+    return int(match.group(1)) if match else None
 
 
 # 'CLR x1', 'CLR x 2': how many of the part to buy.
