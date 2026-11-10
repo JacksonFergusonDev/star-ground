@@ -59,6 +59,56 @@ class _TableTitle:
     name: str
 
 
+@dataclass(frozen=True, slots=True)
+class _RuledColumns:
+    """Which column of a ruled table holds what.
+
+    Attributes:
+        refs: The designator column.
+        value: The value column.
+        type: The TYPE column; -1 when there is none.
+        notes: The NOTES column; -1 when there is none.
+        headerless: Whether the table has no header row naming its
+            designators and values, so its first two columns are read as
+            them, from its first row.
+    """
+
+    refs: int
+    value: int
+    type: int = -1
+    notes: int = -1
+    headerless: bool = False
+
+
+def _ruled_columns(header: list[str | None]) -> _RuledColumns | None:
+    """Reads a ruled table's columns from its first row.
+
+    A blank header cell keeps its place, so each header's index is its
+    column's: '| Part | Value' has a blank first column.
+
+    Returns:
+        The columns, or None for a table that lists no designators.
+    """
+    headers = [str(h).upper().strip() if h else "" for h in header]
+    refs = value = type_ = notes = -1
+    for i, h in enumerate(headers):
+        if h in ("LOCATION", "REF", "DESIGNATOR", "PART"):
+            refs = i
+        elif h in ("VALUE", "VAL", "DESCRIPTION"):
+            value = i
+        elif h == "TYPE":
+            type_ = i
+        elif h in ("NOTES", "COMMENTS"):
+            # GuitarPCB Fuzzy Bee: 'Part | Value | Comments'.
+            notes = i
+    if refs == -1 and {"QTY", "QUANTITY"} & set(headers):
+        # ProtoBoard: 'QTY | PART NUMBER | DESCRIPTION' lists no designators.
+        return None
+    if refs == -1 or value == -1:
+        return _RuledColumns(0, 1, type_, notes, headerless=True)
+    return _RuledColumns(refs, value, type_, notes)
+
+
 def table_entries(
     pages_data: list[PDFPageExtraction],
     stats: ReadingStats,
@@ -88,202 +138,247 @@ def table_entries(
             if not table:
                 continue
             table_no += 1
-
-            this_table: list[Entry] = []
             if _alternate_spec_table(table, entries, stats):
                 continue
             grid = _value_column_grid(table, page_no, table_no)
             if grid is not None:
                 entries += grid
                 continue
-
             # 'Dist +™' over 'Part | Value' (GuitarPCB EMEXAR): the table's title.
             title = _table_title(table)
             if title is not None:
                 titles[table_no] = _TableTitle(page_no, title)
                 table = table[1:]
-            # Header mapping. A blank header cell keeps its place, so each
-            # header's index is its column's: '| Part | Value' has a blank
-            # first column.
-            headers = [str(h).upper().strip() if h else "" for h in table[0]]
-            loc_idx = -1
-            val_idx = -1
-            type_idx = -1
-            notes_idx = -1
-            start_row_idx = 1
-
-            for i, h in enumerate(headers):
-                if h in ("LOCATION", "REF", "DESIGNATOR", "PART"):
-                    loc_idx = i
-                elif h in ("VALUE", "VAL", "DESCRIPTION"):
-                    val_idx = i
-                elif h == "TYPE":
-                    type_idx = i
-                elif h in ("NOTES", "COMMENTS"):
-                    # GuitarPCB Fuzzy Bee: 'Part | Value | Comments'.
-                    notes_idx = i
-
-            if loc_idx == -1 and {"QTY", "QUANTITY"} & set(headers):
-                # ProtoBoard: 'QTY | PART NUMBER | DESCRIPTION' lists no designators.
+            columns = _ruled_columns(table[0])
+            if columns is None:
                 continue
-
-            # Fallback mapping
-            headerless = loc_idx == -1 or val_idx == -1
-            if headerless:
-                loc_idx, val_idx, start_row_idx = 0, 1, 0
+            if columns.headerless:
                 # The table is also read pair by pair; those rows only fill in
                 # for the other readers (`fill_in`).
-                for ref, value in _shaded_pairs(table) or []:
-                    value = drop_remarks(strip_asides(" ".join(value.split())))
-                    if (
-                        ref
-                        and value
-                        and not is_ignored(value)  # 'BIAS | TP' is a test point
-                        # 'C8A | * | 63V' (MoWah) gives only a rating: the value
-                        # is in the notes.
-                        and not RATING_CELL.fullmatch(value.strip("* "))
-                        and (page_no, ref, value) not in shaded_seen
-                    ):
-                        shaded_seen.add((page_no, ref, value))
-                        entries.append(
-                            Entry(ref, value, page_no, table=table_no, shaded=True)
-                        )
-
-            follows_or = False
-            for row in table[start_row_idx:]:
-                stats.lines_read += 1
-                row_safe = [str(cell) if cell else "" for cell in row]
-                filled = [c.strip() for c in row_safe if c.strip()]
-                if filled and (
-                    all(c.upper() == "OR" for c in filled)
-                    # Spelunker: 'Choose between internal trimpot or external
-                    # potentiometer, do not install both'.
-                    or (len(filled) == 1 and _CHOOSE_ROW.match(filled[0]))
-                ):
-                    # Shindig: an 'OR' row between two alternatives for one spot.
-                    follows_or = True
-                    continue
-
-                # Skip Summary lines (e.g., "1 x 100k")
-                first_content = next((c for c in row_safe if c), "")
-                if re.match(r"^\d+\s*[xX]", first_content):
-                    continue
-
-                ref_raw = ""
-                val_raw = ""
-                hint: ComponentCategory | None = None
-
-                if len(row_safe) > max(loc_idx, val_idx):
-                    # A footnote marker is no part of the designator ('*BOOST').
-                    ref_raw = row_safe[loc_idx].replace("\n", " ").strip()
-                    ref_raw = ref_raw.lstrip("*").strip() or ref_raw
-                    # 'Order switch' (GuitarPCB Wylde Child): the noun restates
-                    # the category, as in text tables.
-                    ref_raw = _RULED_LABEL_NOUN.sub("", ref_raw)
-                    # 'IC1 / & / IC2' (GuitarPCB Disturbance): two designators.
-                    pair = _REF_PAIR.fullmatch(ref_raw)
-                    if pair and all(is_designator(g) for g in pair.groups()):
-                        ref_raw = f"{pair.group(1)},{pair.group(2)}"
-                    named = _NAMED_REF.match(ref_raw)
-                    if named and "=" in ref_raw:
-                        ref_raw = named.group(1)  # 'P1=FUZZ' (GuitarPCB PUFF v4)
-                    # 'P2-Volume' (GuitarPCB Sho' Nuff).
-                    ref_raw = control_designator(ref_raw) or ref_raw
-                    # 'RX2 (by IC1)', 'RX2 (by switch)' (Aion FX legacy Aurora):
-                    # two positions printed with one designator.
-                    position = _POSITION_ASIDE.fullmatch(ref_raw)
-                    if position and is_designator(position.group(1)):
-                        ref_raw = position.group(1)
-                        if any(e.ref == ref_raw for e in this_table):
-                            ref_raw = f"{ref_raw} (2)"
-                    # 'TR1 (see text)', 'TR2 (Volume)' (GuitarPCB D'Lay): an aside
-                    # on the designator.
-                    aside = _REF_ASIDE.fullmatch(ref_raw)
-                    note = (
-                        " ".join(ZERO_WIDTH.sub("", aside.group(2)).split())
-                        if aside
-                        else ""
-                    )
-                    if (
-                        aside
-                        and is_designator(aside.group(1))
-                        and (note.lower().startswith("see ") or names_control(note))
-                    ):
-                        ref_raw = aside.group(1)
-                    val_raw = " ".join(row_safe[val_idx].split())
-                    # Optional-part markers are not part of the value ('*27K*'),
-                    # but a value of only markers is a placeholder and stays one.
-                    unmarked = " ".join(val_raw.replace("*", " ").split())
-                    if unmarked:
-                        val_raw = unmarked
-                    if 0 <= type_idx < len(row_safe):
-                        notes = (
-                            row_safe[notes_idx]
-                            if 0 <= notes_idx < len(row_safe)
-                            else ""
-                        )
-                        val_raw, hint = typed_row(
-                            stats, ref_raw, val_raw, row_safe[type_idx], notes
-                        )
-                    # '100k (see text)' (GuitarPCB Mini-Me): the aside is no value.
-                    val_raw = drop_restated_value(strip_asides(val_raw))
-                    if 0 <= notes_idx < len(row_safe):
-                        val_raw = capacitor_notes(ref_raw, val_raw, row_safe[notes_idx])
-                        if not is_not_populated(val_raw):
-                            check_version_note(stats, ref_raw, row_safe[notes_idx])
-                elif len(row_safe) == 1 and row_safe[0]:
-                    parts = row_safe[0].strip().split(None, 1)
-                    if len(parts) == 2:
-                        ref_raw, val_raw = parts[0].strip(), parts[1].strip()
-
-                if headerless and len(val_raw) > _PROSE_CHARS:
-                    # A page border drawn as a box reads as a one-cell 'table'
-                    # holding the page's prose (GuitarPCB): not a parts row.
-                    continue
-                if headerless and len(ref_raw.split()) > _REF_WORDS_MAX:
-                    # A box around board artwork reads as a 'table' of its
-                    # labels: '50k 50k trim p2 trim p1 int-ext ...' (Tonepad).
-                    continue
-
-                # Auditorium: 'TERMINAL BLOCK (Qty 3)'.
-                qty = 1
-                quantity = _REF_QUANTITY.search(ref_raw)
-                if quantity:
-                    qty = int(quantity.group(1))
-                    ref_raw = ref_raw[: quantity.start()].strip()
-
-                if versions and " / " not in val_raw:
-                    # 'Parts (Ross / Dyna values)' over 'R2 | 470k | jumper' (Aion
-                    # FX legacy Aurora): the second version's value in a column
-                    # of its own.
-                    second = next(
-                        (c.strip() for c in row_safe[val_idx + 1 :] if c.strip()), ""
-                    )
-                    if _SECOND_VALUE.fullmatch(second):
-                        val_raw = f"{val_raw} / {second}"
-
-                if ref_raw and val_raw:
-                    for ref, value, version in _version_split(
-                        ref_raw, val_raw, versions
-                    ):
-                        this_table.append(
-                            Entry(
-                                ref,
-                                value,
-                                page_no,
-                                table=table_no,
-                                hint=hint,
-                                follows_or=follows_or,
-                                qty=qty,
-                                column=version,
-                            )
-                        )
-                    follows_or = False
+                entries += _shaded_entries(table, page_no, table_no, shaded_seen)
+            this_table = _table_rows(
+                table, columns, _TablePlace(page_no, table_no, versions), stats
+            )
             if _is_change_list(this_table, seen_refs, data.text):
                 continue
             seen_refs.update(e.ref for e in this_table)
             entries += this_table
     return _titled_builds(entries, titles)
+
+
+def _shaded_entries(
+    table: list[list[str | None]],
+    page_no: int,
+    table_no: int,
+    seen: set[tuple[int, str, str]],
+) -> list[Entry]:
+    """A headerless table's rows re-read as shaded pairs (`_shaded_pairs`).
+
+    Args:
+        table: The table's rows.
+        page_no: The page it is on.
+        table_no: The table's number.
+        seen: The (page, designator, value) pairs re-read so far; updated.
+
+    Returns:
+        The pairs not re-read before, marked `shaded`.
+    """
+    entries = []
+    for ref, value in _shaded_pairs(table) or []:
+        value = drop_remarks(strip_asides(" ".join(value.split())))
+        if (
+            ref
+            and value
+            and not is_ignored(value)  # 'BIAS | TP' is a test point
+            # 'C8A | * | 63V' (MoWah) gives only a rating: the value
+            # is in the notes.
+            and not RATING_CELL.fullmatch(value.strip("* "))
+            and (page_no, ref, value) not in seen
+        ):
+            seen.add((page_no, ref, value))
+            entries.append(Entry(ref, value, page_no, table=table_no, shaded=True))
+    return entries
+
+
+@dataclass(frozen=True, slots=True)
+class _TablePlace:
+    """Where a ruled table is, and what its page's heading says of it.
+
+    Attributes:
+        page: The page it is on.
+        table: The table's number.
+        versions: The two versions a 'Parts (Ross / Dyna values)' heading
+            names, whose values are in two columns; None without one.
+    """
+
+    page: int
+    table: int
+    versions: tuple[str, str] | None
+
+
+def _table_rows(
+    table: list[list[str | None]],
+    columns: _RuledColumns,
+    place: _TablePlace,
+    stats: ReadingStats,
+) -> list[Entry]:
+    """Reads a ruled table's rows of parts.
+
+    Args:
+        table: The table's rows, its title row dropped.
+        columns: Which column holds what.
+        place: Where the table is.
+        stats: The reading's counts and warnings, updated in place.
+
+    Returns:
+        One entry per row (and version) that names a designator and a value.
+    """
+    this_table: list[Entry] = []
+    follows_or = False
+    for row in table[0 if columns.headerless else 1 :]:
+        stats.lines_read += 1
+        row_safe = [str(cell) if cell else "" for cell in row]
+        filled = [c.strip() for c in row_safe if c.strip()]
+        if filled and (
+            all(c.upper() == "OR" for c in filled)
+            # Spelunker: 'Choose between internal trimpot or external
+            # potentiometer, do not install both'.
+            or (len(filled) == 1 and _CHOOSE_ROW.match(filled[0]))
+        ):
+            # Shindig: an 'OR' row between two alternatives for one spot.
+            follows_or = True
+            continue
+        # Skip Summary lines (e.g., "1 x 100k")
+        first_content = next((c for c in row_safe if c), "")
+        if re.match(r"^\d+\s*[xX]", first_content):
+            continue
+        ref_raw, val_raw, hint = _row_cells(row_safe, columns, this_table, stats)
+        if columns.headerless and len(val_raw) > _PROSE_CHARS:
+            # A page border drawn as a box reads as a one-cell 'table'
+            # holding the page's prose (GuitarPCB): not a parts row.
+            continue
+        if columns.headerless and len(ref_raw.split()) > _REF_WORDS_MAX:
+            # A box around board artwork reads as a 'table' of its
+            # labels: '50k 50k trim p2 trim p1 int-ext ...' (Tonepad).
+            continue
+        # Auditorium: 'TERMINAL BLOCK (Qty 3)'.
+        qty = 1
+        quantity = _REF_QUANTITY.search(ref_raw)
+        if quantity:
+            qty = int(quantity.group(1))
+            ref_raw = ref_raw[: quantity.start()].strip()
+        if place.versions and " / " not in val_raw:
+            # 'Parts (Ross / Dyna values)' over 'R2 | 470k | jumper' (Aion
+            # FX legacy Aurora): the second version's value in a column
+            # of its own.
+            second = next(
+                (c.strip() for c in row_safe[columns.value + 1 :] if c.strip()), ""
+            )
+            if _SECOND_VALUE.fullmatch(second):
+                val_raw = f"{val_raw} / {second}"
+        if ref_raw and val_raw:
+            for ref, value, version in _version_split(ref_raw, val_raw, place.versions):
+                this_table.append(
+                    Entry(
+                        ref,
+                        value,
+                        place.page,
+                        table=place.table,
+                        hint=hint,
+                        follows_or=follows_or,
+                        qty=qty,
+                        column=version,
+                    )
+                )
+            follows_or = False
+    return this_table
+
+
+def _row_cells(
+    row: list[str],
+    columns: _RuledColumns,
+    this_table: list[Entry],
+    stats: ReadingStats,
+) -> tuple[str, str, ComponentCategory | None]:
+    """A ruled row's designator and value, cleaned, and the category its TYPE gives.
+
+    Args:
+        row: The row's cells, blank where empty.
+        columns: Which column holds what.
+        this_table: The table's rows read so far.
+        stats: The reading's warnings, updated in place.
+
+    Returns:
+        The designator cell, the value, and the TYPE's category (None
+        without one); the cells are empty when the row has neither.
+    """
+    if len(row) <= max(columns.refs, columns.value):
+        if len(row) == 1 and row[0]:
+            parts = row[0].strip().split(None, 1)
+            if len(parts) == 2:
+                return parts[0].strip(), parts[1].strip(), None
+        return "", "", None
+    ref_raw = _ref_cell(row[columns.refs], this_table)
+    val_raw = " ".join(row[columns.value].split())
+    # Optional-part markers are not part of the value ('*27K*'), but a value
+    # of only markers is a placeholder and stays one.
+    unmarked = " ".join(val_raw.replace("*", " ").split())
+    if unmarked:
+        val_raw = unmarked
+    hint: ComponentCategory | None = None
+    notes = row[columns.notes] if 0 <= columns.notes < len(row) else ""
+    if 0 <= columns.type < len(row):
+        val_raw, hint = typed_row(stats, ref_raw, val_raw, row[columns.type], notes)
+    # '100k (see text)' (GuitarPCB Mini-Me): the aside is no value.
+    val_raw = drop_restated_value(strip_asides(val_raw))
+    if 0 <= columns.notes < len(row):
+        val_raw = capacitor_notes(ref_raw, val_raw, notes)
+        if not is_not_populated(val_raw):
+            check_version_note(stats, ref_raw, notes)
+    return ref_raw, val_raw, hint
+
+
+def _ref_cell(cell: str, this_table: list[Entry]) -> str:
+    """A ruled row's designator cell, cleaned up to the designator it names.
+
+    Args:
+        cell: The cell as printed.
+        this_table: The table's rows read so far, for a designator printed
+            twice for two positions.
+    """
+    # A footnote marker is no part of the designator ('*BOOST').
+    ref_raw = cell.replace("\n", " ").strip()
+    ref_raw = ref_raw.lstrip("*").strip() or ref_raw
+    # 'Order switch' (GuitarPCB Wylde Child): the noun restates the category,
+    # as in text tables.
+    ref_raw = _RULED_LABEL_NOUN.sub("", ref_raw)
+    # 'IC1 / & / IC2' (GuitarPCB Disturbance): two designators.
+    pair = _REF_PAIR.fullmatch(ref_raw)
+    if pair and all(is_designator(g) for g in pair.groups()):
+        ref_raw = f"{pair.group(1)},{pair.group(2)}"
+    named = _NAMED_REF.match(ref_raw)
+    if named and "=" in ref_raw:
+        ref_raw = named.group(1)  # 'P1=FUZZ' (GuitarPCB PUFF v4)
+    # 'P2-Volume' (GuitarPCB Sho' Nuff).
+    ref_raw = control_designator(ref_raw) or ref_raw
+    # 'RX2 (by IC1)', 'RX2 (by switch)' (Aion FX legacy Aurora): two
+    # positions printed with one designator.
+    position = _POSITION_ASIDE.fullmatch(ref_raw)
+    if position and is_designator(position.group(1)):
+        ref_raw = position.group(1)
+        if any(e.ref == ref_raw for e in this_table):
+            ref_raw = f"{ref_raw} (2)"
+    # 'TR1 (see text)', 'TR2 (Volume)' (GuitarPCB D'Lay): an aside on the
+    # designator.
+    aside = _REF_ASIDE.fullmatch(ref_raw)
+    note = " ".join(ZERO_WIDTH.sub("", aside.group(2)).split()) if aside else ""
+    if (
+        aside
+        and is_designator(aside.group(1))
+        and (note.lower().startswith("see ") or names_control(note))
+    ):
+        ref_raw = aside.group(1)
+    return ref_raw
 
 
 _VARIANT_SHARE = 0.8
