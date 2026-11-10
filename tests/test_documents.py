@@ -3,6 +3,7 @@
 import datetime
 import io
 import zipfile
+from dataclasses import replace
 
 import pdfplumber
 import pytest
@@ -208,6 +209,7 @@ def test_the_pack_holds_everything_in_one_folder() -> None:
             master.kit,
             master.projects,
             master.shopping_list(),
+            stock=master.stock,
             excel_links=True,
             made=MADE,
             version="x",
@@ -220,6 +222,72 @@ def test_the_pack_holds_everything_in_one_folder() -> None:
     assert {n.split("/")[0] for n in names} == {"Star Ground build pack 2026-11-07"}
     assert len(names) == 5  # no source documents for pasted text
     assert b"=HYPERLINK(" in shopping
+
+
+def test_source_documents_get_unique_safe_names() -> None:
+    master = generate_master_list([Project(name="Fuzz", data=FUZZ)])
+    (fuzz,) = master.projects
+    labels = ["A/B", "AB", "x\x00y", "???", "../../evil", "Fuzz", "fuzz", " . "]
+    projects = [
+        replace(fuzz, label=label, document=f"%PDF {i}".encode())
+        for i, label in enumerate(labels)
+    ]
+    pack = build_pack(
+        PackContents(
+            master.kit,
+            projects,
+            master.shopping_list(),
+            stock=None,
+            excel_links=False,
+            made=MADE,
+            version="x",
+        )
+    )
+
+    with zipfile.ZipFile(io.BytesIO(pack)) as zf:
+        sources = [
+            (info.filename.split("/Source documents/")[1], zf.read(info))
+            for info in zf.infolist()
+            if "/Source documents/" in info.filename
+        ]
+    names = [name for name, _ in sources]
+    assert names == [
+        "AB.pdf",
+        "AB (2).pdf",
+        "xy.pdf",
+        "Source document.pdf",
+        "evil.pdf",
+        "Fuzz.pdf",
+        "fuzz (2).pdf",
+        "Source document (2).pdf",
+    ]
+    assert [document for _, document in sources] == [
+        f"%PDF {i}".encode() for i in range(len(labels))
+    ]
+    assert all(name.isprintable() for name in names)
+
+
+def test_a_long_label_makes_a_file_name_any_filesystem_takes() -> None:
+    master = generate_master_list([Project(name="Fuzz", data=FUZZ)])
+    (fuzz,) = master.projects
+    project = replace(fuzz, label="é" * 300, document=b"%PDF")
+    pack = build_pack(
+        PackContents(
+            master.kit,
+            [project],
+            master.shopping_list(),
+            stock=None,
+            excel_links=False,
+            made=MADE,
+            version="x",
+        )
+    )
+
+    with zipfile.ZipFile(io.BytesIO(pack)) as zf:
+        (name,) = [n for n in zf.namelist() if "/Source documents/" in n]
+    file_name = name.rsplit("/", 1)[1]
+    assert file_name.endswith(".pdf")
+    assert len(file_name.encode()) < 255
 
 
 def test_a_regulator_turns_like_a_transistor_not_a_chip() -> None:

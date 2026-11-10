@@ -60,6 +60,7 @@ def main() -> None:
             master.kit,
             master.projects,
             master.shopping_list(),
+            stock=master.stock,
             excel_links=False,
             made=date.today(),
             version=version(),

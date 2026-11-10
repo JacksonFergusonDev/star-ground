@@ -60,7 +60,9 @@ def check_backend() -> None:
     exported = list(csv.DictReader(io.StringIO(shopping.decode("utf-8-sig"))))
     assert next(row for row in exported if row["Part"] == "10k")["Still needed"] == "2"
     made = datetime.date(2026, 1, 1)
-    contents = PackContents(master.kit, master.projects, rows, False, made, version())
+    contents = PackContents(
+        master.kit, master.projects, rows, master.stock, False, made, version()
+    )
     folder = "Star Ground build pack 2026-01-01"
     with zipfile.ZipFile(io.BytesIO(build_pack(contents))) as pack:
         assert pack.testzip() is None

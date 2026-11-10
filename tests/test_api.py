@@ -145,6 +145,7 @@ def test_documents_are_named_by_label_and_keep_the_source() -> None:
             master.kit,
             master.projects,
             master.shopping_list(),
+            stock=master.stock,
             excel_links=False,
             made=datetime.date(2026, 11, 7),
             version="test",

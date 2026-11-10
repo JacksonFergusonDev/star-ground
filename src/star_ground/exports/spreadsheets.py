@@ -10,7 +10,12 @@ import re
 from collections.abc import Sequence
 
 from star_ground.bom_lib.enums import ComponentCategory
-from star_ground.bom_lib.types import FORMULA_PREFIXES, ShoppingLine
+from star_ground.bom_lib.types import (
+    FORMULA_PREFIXES,
+    ComponentKey,
+    Inventory,
+    ShoppingLine,
+)
 
 SHOPPING_LIST_COLUMNS = (
     "Category",
@@ -113,25 +118,41 @@ def shopping_list_csv(
     return _write(SHOPPING_LIST_COLUMNS, rows).encode("utf-8-sig")
 
 
-def stock_after_csv(lines: Sequence[ShoppingLine]) -> bytes:
+def stock_after_csv(
+    lines: Sequence[ShoppingLine], kit: Inventory, stock: Inventory | None
+) -> bytes:
     """The builder's stock after this order arrives and these pedals are built.
 
     New stock is what was in stock, plus what's bought, less what the builds
     use. Parts that come with a board are used without coming from stock.
-    Parts with none left are left out. Star Ground reads this file back as
-    stock next time.
+    Stock the builds don't use stays, and so does stock of a part the
+    shopping list hides (the hardware kit, sockets), less what the builds
+    use of it. Parts with none left are left out. Star Ground reads this
+    file back as stock next time.
 
     Args:
-        lines: The shopping list.
+        lines: The shopping list, as shown.
+        kit: Everything the builds use, including parts the list hides.
+        stock: The builder's stock, if given.
 
     Returns:
         The CSV, UTF-8 with a byte order mark.
     """
-    rows = []
+    stock = stock or Inventory()
+    left: dict[ComponentKey, int] = {}
     for line in lines:
-        left = line.in_stock + line.buy_qty - (line.bom_qty - line.included)
-        if left > 0:
-            rows.append([line.category.value, _cell(line.part), left])
+        key = ComponentKey(line.category, line.part)
+        left[key] = line.in_stock + line.buy_qty - (line.bom_qty - line.included)
+    for key, data in kit.items():
+        if key not in left and (held := stock.get(key)) is not None:
+            left[key] = held.qty - (data.qty - data.included)
+    for key, data in stock.items():
+        left.setdefault(key, data.qty)
+    rows = [
+        [key.category.value, _cell(key.value), qty]
+        for key, qty in left.items()
+        if qty > 0
+    ]
     return _write(STOCK_COLUMNS, rows).encode("utf-8-sig")
 
 

@@ -57,7 +57,7 @@ def render_export(kind: ExportKind, contents: PackContents) -> ExportFile:
             csv = supplier_cart_csv(contents.lines)
             return ExportFile(csv, "text/csv", "supplier-cart.csv")
         case ExportKind.STOCK_UPDATE:
-            csv = stock_after_csv(contents.lines)
+            csv = stock_after_csv(contents.lines, contents.kit, contents.stock)
             return ExportFile(csv, "text/csv", "stock-after-these-builds.csv")
         case ExportKind.BUILD_BOOK:
             book = build_book(
