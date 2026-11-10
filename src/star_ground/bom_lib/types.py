@@ -550,19 +550,6 @@ class ShoppingLine:
     supplier_url: str
 
 
-def make_component_key(category: ComponentCategory, val: str) -> ComponentKey:
-    """Creates a standardized component key for inventory dictionaries.
-
-    Args:
-        category: Component category enum.
-        val: Component value or part name string.
-
-    Returns:
-        Standardized ComponentKey instance.
-    """
-    return ComponentKey(category=category, value=val)
-
-
 class Inventory(UserDict[ComponentKey, PartData]):
     """Stateful domain model for tracking aggregated BOM components.
 

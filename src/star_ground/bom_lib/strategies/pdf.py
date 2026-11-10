@@ -1,10 +1,10 @@
-"""Strategy for parsing PedalPCB PDF build documents."""
+"""Strategy for reading PDF build documents."""
 
 from dataclasses import replace
 
 from star_ground.bom_lib.enums import InputMethod
 from star_ground.bom_lib.ocr import attempt_ocr
-from star_ground.bom_lib.pdf.document import parse_pedalpcb_pdf
+from star_ground.bom_lib.pdf.document import parse_pdf
 from star_ground.bom_lib.strategies.base import BOMParserStrategy, ParseResult
 from star_ground.bom_lib.types import RawBOMData, SupportsName
 
@@ -14,12 +14,12 @@ def _parse(path: str, source_name: str) -> ParseResult:
 
     The OCR parts are offered on the result (`ParseResult.ocr`), not added.
     """
-    res = parse_pedalpcb_pdf(path, source_name=source_name)
+    res = parse_pdf(path, source_name=source_name)
     return replace(res, ocr=attempt_ocr(path, res, source_name))
 
 
 class PDFParserStrategy(BOMParserStrategy):
-    """Parses PDF BOM files by extracting contents and delegating to parse_pedalpcb_pdf."""
+    """Reads PDF build documents with `parse_pdf`, then OCR when it looks incomplete."""
 
     def can_handle(self, method: InputMethod, data: RawBOMData) -> bool:
         """Determine if this strategy can handle PDF inputs via extension or magic bytes."""

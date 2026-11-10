@@ -12,11 +12,11 @@ import pytest
 from star_ground.api import read_document
 from star_ground.bom_lib import (
     ComponentCategory,
+    ComponentKey,
     FileUpload,
     InputMethod,
     OcrVerdict,
     ParseWarningKind,
-    make_component_key,
 )
 from star_ground.bom_lib.errors import BUG_MESSAGE
 from star_ground.bom_lib.ocr import (
@@ -34,7 +34,8 @@ from star_ground.bom_lib.ocr import (
     table_block,
     without_ocr,
 )
-from star_ground.bom_lib.pdf.document import parse_pedalpcb_pdf
+from star_ground.bom_lib.pdf.assemble import AssembledBuilds
+from star_ground.bom_lib.pdf.document import parse_pdf
 from star_ground.bom_lib.strategies import BOMParserContext
 from star_ground.bom_lib.types import (
     BuildVariant,
@@ -425,7 +426,7 @@ class TestPlausible:
     """Values OCR typically misreads are suspect."""
 
     def test_prose_beside_the_table(self) -> None:
-        key = make_component_key(
+        key = ComponentKey(
             ComponentCategory.TRANSISTORS, "J201/2N5457 super small size."
         )
         assert not _plausible(key)
@@ -446,14 +447,14 @@ class TestPlausible:
     def test_value(
         self, category: ComponentCategory, value: str, expected: bool
     ) -> None:
-        assert _plausible(make_component_key(category, value)) is expected
+        assert _plausible(ComponentKey(category, value)) is expected
 
 
 class TestUnread:
     """Designators a reading seems to have missed are named."""
 
     def _listed(self, **parts: tuple[ComponentCategory, str]) -> dict[str, Any]:
-        return {ref: make_component_key(cat, val) for ref, (cat, val) in parts.items()}
+        return {ref: ComponentKey(cat, val) for ref, (cat, val) in parts.items()}
 
     def test_a_gap_in_a_series(self) -> None:
         r = (ComponentCategory.RESISTORS, "10k")
@@ -486,7 +487,7 @@ class TestUnread:
         # GuitarPCB Space Modulator prints 'CLR x3' under its table.
         listed = self._listed(EFL1=(ComponentCategory.DIODES, "Status LED"))
         assert _unread(listed, {"CLR"}) == {"CLR"}
-        listed["CLR"] = make_component_key(ComponentCategory.RESISTORS, "1k8")
+        listed["CLR"] = ComponentKey(ComponentCategory.RESISTORS, "1k8")
         assert _unread(listed, {"CLR"}) == set()
 
     def test_each_hundred_is_a_series(self) -> None:
@@ -554,7 +555,7 @@ class TestAttemptOcr:
 
     def test_reads_grades_and_offers_the_parts(self, tmp_path: Path) -> None:
         path = _blank_pdf(tmp_path / "image.pdf")
-        result = parse_pedalpcb_pdf(path, "Image")
+        result = parse_pdf(path, "Image")
         assert needs_ocr(result)
 
         attempt = attempt_ocr(path, result, "Image", lambda *_: _grid_boxes())
@@ -573,7 +574,7 @@ class TestAttemptOcr:
         kinds = {w.kind for w in accepted.stats.warnings}
         assert ParseWarningKind.NO_PARTS_LIST not in kinds
         assert accepted.ocr is None
-        cap = make_component_key(ComponentCategory.CAPACITORS, "1u")
+        cap = ComponentKey(ComponentCategory.CAPACITORS, "1u")
         assert accepted.inventory[cap].refs == ["C3"]
         assert accepted.stats.parts_found >= 11
         # Each part points to its row in the image: C3 and its value, '1μ'.
@@ -584,7 +585,7 @@ class TestAttemptOcr:
     def test_a_switch_symbol_is_read(self, tmp_path: Path) -> None:
         # Five Cats Jive-By Shooter: 'CLIP1 | SW_SPDT | SPDT Toggle'.
         path = _blank_pdf(tmp_path / "image.pdf")
-        result = parse_pedalpcb_pdf(path, "Image")
+        result = parse_pdf(path, "Image")
         boxes = [
             *_grid_boxes(),
             OcrBox("CLIP1", 40, 80, 500, 514),
@@ -598,19 +599,19 @@ class TestAttemptOcr:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         # Octavia: a second table relists parts for another build.
-        def builds(*_: object, **__: object) -> tuple[Any, ...]:
+        def builds(*_: object, **__: object) -> AssembledBuilds:
             variants = []
             for name, value in (("Octavia", "10k"), ("Vintage", "1k")):
                 inventory = Inventory()
                 for n in range(1, 7):
-                    key = make_component_key(ComponentCategory.RESISTORS, value)
+                    key = ComponentKey(ComponentCategory.RESISTORS, value)
                     inventory.add_part("x", key, f"R{n}", 1)
                 variants.append(BuildVariant(name, inventory, 6))
-            return Inventory(), tuple(variants), ()
+            return AssembledBuilds(Inventory(), tuple(variants), (), Inventory())
 
         monkeypatch.setattr("star_ground.bom_lib.ocr.read_pages", builds)
         path = _blank_pdf(tmp_path / "image.pdf")
-        result = parse_pedalpcb_pdf(path, "Image")
+        result = parse_pdf(path, "Image")
         attempt = attempt_ocr(path, result, "Image", lambda *_: _grid_boxes())
 
         assert attempt is not None
@@ -623,7 +624,7 @@ class TestAttemptOcr:
         accepted = ParseResult(result.inventory, result.stats, ocr=attempt).accept_ocr()
         assert accepted.requires_choice
         vintage = accepted.select("Vintage")
-        one_k = make_component_key(ComponentCategory.RESISTORS, "1k")
+        one_k = ComponentKey(ComponentCategory.RESISTORS, "1k")
         assert vintage.inventory[one_k].refs == [f"R{n}" for n in range(1, 7)]
         kinds = {w.kind for w in vintage.stats.warnings}
         assert ParseWarningKind.NO_PARTS_LIST not in kinds
@@ -632,7 +633,7 @@ class TestAttemptOcr:
     def test_values_side_by_side_are_partial(self, tmp_path: Path) -> None:
         # Victory III: 'R4 | 22K | 10K' under build columns, read as one list.
         path = _blank_pdf(tmp_path / "image.pdf")
-        result = parse_pedalpcb_pdf(path, "Image")
+        result = parse_pdf(path, "Image")
         boxes = [
             OcrBox(
                 text,
@@ -661,7 +662,7 @@ class TestAttemptOcr:
 
     def test_unreadable_image(self, tmp_path: Path) -> None:
         path = _blank_pdf(tmp_path / "image.pdf")
-        result = parse_pedalpcb_pdf(path, "Image")
+        result = parse_pdf(path, "Image")
 
         attempt = attempt_ocr(path, result, "Image", lambda *_: [])
 
@@ -713,7 +714,7 @@ class TestOptIn:
 
     def test_without_ocr_never_reaches_the_recognizer(self, tmp_path: Path) -> None:
         path = _blank_pdf(tmp_path / "image.pdf")
-        result = parse_pedalpcb_pdf(path, "Image")
+        result = parse_pdf(path, "Image")
 
         def recognizer(*_: Any) -> list[OcrBox]:
             raise AssertionError("OCR ran")

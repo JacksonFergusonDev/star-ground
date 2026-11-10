@@ -23,10 +23,10 @@ from star_ground.bom_lib import (
     ParseWarningKind,
 )
 from star_ground.bom_lib.types import (
+    ComponentKey,
     Inventory,
     Location,
     ReadingStats,
-    make_component_key,
 )
 from star_ground.catalog.build import (
     BOARDS_VERSION,
@@ -907,7 +907,7 @@ def _reading(parts: int = 2, warnings: list[ParseWarning] | None = None) -> Pars
     inventory = Inventory()
     for n in range(1, parts + 1):
         inventory.add_part(
-            "doc", make_component_key(ComponentCategory.RESISTORS, "10k"), f"R{n}"
+            "doc", ComponentKey(ComponentCategory.RESISTORS, "10k"), f"R{n}"
         )
     stats = ReadingStats()
     stats.warnings = warnings or []
@@ -995,7 +995,7 @@ def test_parts_counted_by_value_are_listed_with_their_count(
 ) -> None:
     reading = _reading(parts=1)
     reading.inventory.add_counted(
-        "doc", make_component_key(ComponentCategory.RESISTORS, "47"), 2
+        "doc", ComponentKey(ComponentCategory.RESISTORS, "47"), 2
     )
 
     run(_docs(_pedalpcb_web()), lambda upload: reading)
@@ -1517,13 +1517,9 @@ def test_a_fingerprint_is_what_is_bought_not_where_or_in_what_order() -> None:
     a = _reading(parts=2)
     b = Inventory()
     for n in (2, 1):
-        b.add_part(
-            "other", make_component_key(ComponentCategory.RESISTORS, "10k"), f"R{n}"
-        )
+        b.add_part("other", ComponentKey(ComponentCategory.RESISTORS, "10k"), f"R{n}")
     c = _reading(parts=2)
-    c.inventory.add_part(
-        "doc", make_component_key(ComponentCategory.RESISTORS, "1k"), "R3"
-    )
+    c.inventory.add_part("doc", ComponentKey(ComponentCategory.RESISTORS, "1k"), "R3")
 
     assert fingerprint(a) == fingerprint(ParseResult(b, ReadingStats(), title="Other"))
     assert fingerprint(a) != fingerprint(c)
@@ -1533,7 +1529,7 @@ def test_a_fingerprint_counts_parts_counted_by_value() -> None:
     def counting(count: int) -> ParseResult:
         reading = _reading()
         reading.inventory.add_counted(
-            "doc", make_component_key(ComponentCategory.RESISTORS, "47"), count
+            "doc", ComponentKey(ComponentCategory.RESISTORS, "47"), count
         )
         return reading
 

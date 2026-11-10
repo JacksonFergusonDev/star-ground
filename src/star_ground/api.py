@@ -33,7 +33,6 @@ from star_ground.bom_lib import (
     ShoppingLine,
     build_shopping_list,
     categorize_part,
-    make_component_key,
     parse_user_inventory,
     provided_hardware,
     rename_source,
@@ -240,7 +239,7 @@ def read_correction(
     result = categorize_part(ref, value, category) if value.strip() else None
     if result is None:
         raise UnreadablePartError(ref, value.strip())
-    return make_component_key(result.category, result.clean_value)
+    return ComponentKey(result.category, result.clean_value)
 
 
 def parts_to_review(warnings: Sequence[ParseWarning]) -> dict[str, list[ParseWarning]]:

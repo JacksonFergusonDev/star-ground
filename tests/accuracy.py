@@ -36,7 +36,7 @@ from star_ground.bom_lib import (
     OcrVerdict,
     ParseResult,
     ParseWarningKind,
-    parse_pedalpcb_pdf,
+    parse_pdf,
 )
 from star_ground.bom_lib.ocr import attempt_ocr
 from star_ground.bom_lib.utils import parse_value_to_decimal
@@ -526,7 +526,7 @@ def _pair_builds(
 
 @functools.cache
 def _parse_cached(pdf: Path) -> ParseResult:
-    return parse_pedalpcb_pdf(str(pdf), source_name="Sample")
+    return parse_pdf(str(pdf), source_name="Sample")
 
 
 def parse_sample(pdf: Path) -> ParseResult:

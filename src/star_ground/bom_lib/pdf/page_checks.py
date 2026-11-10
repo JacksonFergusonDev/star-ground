@@ -108,7 +108,7 @@ def _finite(*values: float) -> bool:
     return all(math.isfinite(v) for v in values)
 
 
-def marked_labels(words: list[PDFWord]) -> list[tuple[str, str]]:
+def marked_labels(words: list[PDFWord], marks: list[PDFWord]) -> list[tuple[str, str]]:
     """The label of each table row whose value carries a footnote marker.
 
     Aion FX legacy Lumin lists 'R15  15k¹' and 'Midrange  50kB¹', and footnote 1
@@ -117,11 +117,11 @@ def marked_labels(words: list[PDFWord]) -> list[tuple[str, str]]:
 
     Args:
         words: Words extracted from one page, markers included.
+        marks: The page's markers, from `footnote_marks(words)`.
 
     Returns:
         (row label, marker) pairs: ('R15', '1'), ('High Freq', '2').
     """
-    marks = footnote_marks(words)
     if not marks:
         return []
     marked = {id(m) for m in marks}

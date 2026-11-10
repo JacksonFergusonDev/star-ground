@@ -7,21 +7,20 @@ from star_ground.bom_lib import (
     ComponentKey,
     SupportsGetValue,
     SupportsRead,
-    make_component_key,
 )
 from star_ground.bom_lib.enums import InputMethod
 from star_ground.bom_lib.strategies.context import BOMParserContext
 
 
-def test_make_component_key() -> None:
-    """Verifies that make_component_key constructs a strongly typed ComponentKey."""
-    key = make_component_key(ComponentCategory.RESISTORS, "10k")
+def test_component_key() -> None:
+    """Verifies that a ComponentKey keeps its fields and prints as `Category | Value`."""
+    key = ComponentKey(ComponentCategory.RESISTORS, "10k")
     assert isinstance(key, ComponentKey)
     assert key.category == ComponentCategory.RESISTORS
     assert key.value == "10k"
     assert str(key) == "Resistors | 10k"
 
-    key_pcb = make_component_key(ComponentCategory.PCB, "Big Muff")
+    key_pcb = ComponentKey(ComponentCategory.PCB, "Big Muff")
     assert key_pcb == ComponentKey(ComponentCategory.PCB, "Big Muff")
     assert str(key_pcb) == "PCB | Big Muff"
 

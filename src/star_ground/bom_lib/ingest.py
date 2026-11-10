@@ -10,10 +10,10 @@ from star_ground.bom_lib.classifier import (
 from star_ground.bom_lib.designators import is_designator
 from star_ground.bom_lib.enums import ComponentCategory, ParseWarningKind
 from star_ground.bom_lib.types import (
+    ComponentKey,
     Inventory,
     ParseWarning,
     ReadingStats,
-    make_component_key,
 )
 from star_ground.bom_lib.utils import MAX_RANGE_PARTS, expand_refs, is_ref_range
 from star_ground.bom_lib.verification import (
@@ -86,7 +86,7 @@ def ingest_bom_line(
             continue
         check_classification(stats, claimed, value, result.category, result.clean_value)
         parts_found += 1
-        key = make_component_key(result.category, result.clean_value)
+        key = ComponentKey(result.category, result.clean_value)
         inventory.add_part(source, key, claimed, qty)
         if result.injected_key and inject:
             # An implied part, such as an IC's socket: one for each chip.
@@ -166,7 +166,7 @@ def record_pcb(
         name: The board's name.
         stats: The reading's statistics, whose part count it adds to.
     """
-    key = make_component_key(ComponentCategory.PCB, name)
+    key = ComponentKey(ComponentCategory.PCB, name)
     inventory[key].qty += 1
     if "PCB" not in inventory[key].sources[source_name]:
         inventory[key].sources[source_name].append("PCB")

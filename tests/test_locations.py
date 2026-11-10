@@ -11,8 +11,8 @@ from star_ground.bom_lib import (
 )
 from star_ground.bom_lib.locations import locate
 from star_ground.bom_lib.ocr import without_ocr
-from star_ground.bom_lib.pdf.document import parse_pedalpcb_pdf
-from star_ground.bom_lib.types import make_component_key
+from star_ground.bom_lib.pdf.document import parse_pdf
+from star_ground.bom_lib.types import ComponentKey
 
 SAMPLES = Path(__file__).parent / "samples"
 
@@ -34,7 +34,7 @@ def _page(*lines: tuple[float, list[str]]) -> PDFPageExtraction:
 def _parts(*parts: tuple[str, str]) -> Inventory:
     inventory = Inventory()
     for ref, value in parts:
-        inventory.add_part("Fuzz", make_component_key(_R, value), ref)
+        inventory.add_part("Fuzz", ComponentKey(_R, value), ref)
     return inventory
 
 
@@ -70,9 +70,7 @@ def test_a_row_ends_at_the_next_column() -> None:
     # Two columns of parts on one line: R1's box stops before C1.
     page = _page((100, ["R1", "10k", "C1", "10k"]))
     inventory = _parts(("R1", "10k"))
-    inventory.add_part(
-        "Fuzz", make_component_key(ComponentCategory.CAPACITORS, "10k"), "C1"
-    )
+    inventory.add_part("Fuzz", ComponentKey(ComponentCategory.CAPACITORS, "10k"), "C1")
 
     located = locate([page], inventory)
 
@@ -132,7 +130,7 @@ def test_pages_are_numbered_as_in_the_document() -> None:
 
 def test_every_part_of_a_document_is_located() -> None:
     with without_ocr():
-        result = parse_pedalpcb_pdf(str(SAMPLES / "clean" / "Kliche-PedalPCB.pdf"), "K")
+        result = parse_pdf(str(SAMPLES / "clean" / "Kliche-PedalPCB.pdf"), "K")
 
     refs = {ref for data in result.inventory.values() for ref in data.refs}
     printed = {ref for ref in refs if not ref.endswith(" (Inj)")}
@@ -142,7 +140,7 @@ def test_every_part_of_a_document_is_located() -> None:
 def test_each_build_locates_its_own_rows() -> None:
     # Ungula's builds list D1 in different tables, with different values.
     with without_ocr():
-        result = parse_pedalpcb_pdf(str(SAMPLES / "dirty" / "Ungula.pdf"), "U")
+        result = parse_pdf(str(SAMPLES / "dirty" / "Ungula.pdf"), "U")
 
     rows = {v.name: v.locations["D1"].top for v in result.variants}
     assert len(set(rows.values())) == len(rows) > 1

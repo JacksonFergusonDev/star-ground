@@ -27,10 +27,10 @@ from star_ground.api import (
     read_stock,
 )
 from star_ground.bom_lib import (
+    ComponentKey,
     FileUpload,
     InputMethod,
     ParseResult,
-    make_component_key,
 )
 from star_ground.bom_lib.errors import OcrRefusedError, ReadingRefusedError
 from star_ground.bom_lib.ocr import OcrGuard, ocr_guard
@@ -177,7 +177,7 @@ def _project(
         variant=project.variant,
         use_ocr=project.use_ocr,
         corrections=tuple(
-            Correction(c.ref, make_component_key(c.category, c.value))
+            Correction(c.ref, ComponentKey(c.category, c.value))
             for c in project.corrections
         ),
     )

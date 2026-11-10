@@ -14,10 +14,10 @@ from star_ground.bom_lib.ingest import ingest_bom_line
 from star_ground.bom_lib.pdf.rows import record_not_populated, same_value
 from star_ground.bom_lib.types import (
     BuildVariant,
+    ComponentKey,
     Inventory,
     OptionNote,
     ReadingStats,
-    make_component_key,
 )
 from star_ground.bom_lib.verification import (
     check_second_board,
@@ -37,7 +37,7 @@ def _ingest_counted(
     if result is None:
         return 0
     inventory.add_counted(
-        source_name, make_component_key(result.category, result.clean_value), entry.qty
+        source_name, ComponentKey(result.category, result.clean_value), entry.qty
     )
     if result.injected_key and inject:
         inventory.add_counted(source_name, result.injected_key, entry.qty)

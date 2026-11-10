@@ -1254,9 +1254,8 @@ def attempt_ocr(
     inventory = Inventory()
     variants: tuple[BuildVariant, ...] = ()
     if pages_data:
-        inventory, variants, _ = read_pages(
-            pages_data, source_name, stats, tables_only=True
-        )
+        built = read_pages(pages_data, source_name, stats, tables_only=True)
+        inventory, variants = built.inventory, built.variants
     if variants:
         # Several builds (Five Cats Octavia's 'To build the vintage Octavia'
         # table, OKS Fuzz's version columns): every part of every build.

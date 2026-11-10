@@ -57,7 +57,6 @@ from star_ground.bom_lib.types import (
     PDFPageExtraction,
     PDFWord,
     ReadingStats,
-    make_component_key,
 )
 from star_ground.bom_lib.verification import check_footnotes
 from tests.pdfs import assemble, stream, typeset
@@ -274,7 +273,11 @@ def test_page_of_many_small_numbers() -> None:
 
 def test_page_of_many_footnote_marks() -> None:
     # 6.2 s before (`marked_labels`), and `footnote_marks` was quadratic too.
-    _scales_linearly(lambda n: partial(marked_labels, _footnoted_values(n)), 4000)
+    def label(count: int) -> Callable[[], object]:
+        words = _footnoted_values(count)
+        return lambda: marked_labels(words, footnote_marks(words))
+
+    _scales_linearly(label, 4000)
     words = _footnoted_values(8000)
     marks = footnote_marks(words)
     assert len(marks) == 8000
@@ -315,14 +318,20 @@ def _marked_values(count: int) -> str:
     return " ".join(text)
 
 
+def _without_marks(page: Page) -> Page:
+    """The page without the footnote marks found in its words."""
+    marks = footnote_marks(pdf_document._page_words(page))
+    return pdf_document._without_marks(page, marks)
+
+
 def test_dropping_many_footnote_marks_from_a_page() -> None:
     # 6.5 s for 5,000 before: every character was compared with every mark.
     def drop(count: int) -> Callable[[], object]:
         page = _parsed(_marked_values(count))
-        return lambda: pdf_document._without_marks(page).chars
+        return lambda: _without_marks(page).chars
 
     _scales_linearly(drop, 3000)
-    chars = pdf_document._without_marks(_parsed(_marked_values(5000))).chars
+    chars = _without_marks(_parsed(_marked_values(5000))).chars
     assert "".join(c["text"] for c in chars) == "10k" * 5000
 
 
@@ -489,9 +498,7 @@ def test_designator_printed_many_times_on_a_line() -> None:
     # 51 s for 8,000 before: each mention searched the rest of the line for
     # its value.
     inventory = Inventory()
-    inventory.add_part(
-        "s", make_component_key(ComponentCategory.RESISTORS, "10k"), "R1", 1
-    )
+    inventory.add_part("s", ComponentKey(ComponentCategory.RESISTORS, "10k"), "R1", 1)
     _scales_linearly(
         lambda n: partial(locations.locate, [_mentions(n)], inventory), 1600
     )
@@ -567,7 +574,7 @@ def test_page_of_many_ruled_lines_is_read_as_text(
     path = tmp_path / "grid.pdf"
     path.write_bytes(_pdf(f"{_grid(160)} {parts}", width=800))
     monkeypatch.setattr(pdfplumber.page.Page, "extract_tables", _never)
-    result = pdf_document.parse_pedalpcb_pdf(str(path), "G")
+    result = pdf_document.parse_pdf(str(path), "G")
     refs = {ref for part in result.inventory.values() for ref in part.refs}
     assert refs == {"R1", "R2"}
 
@@ -618,7 +625,7 @@ def _form(content: bytes) -> bytes:
 
 
 def _refs(path: Path) -> set[str]:
-    result = pdf_document.parse_pedalpcb_pdf(str(path), "P")
+    result = pdf_document.parse_pdf(str(path), "P")
     return {ref for part in result.inventory.values() for ref in part.refs}
 
 
@@ -631,7 +638,7 @@ def test_page_that_decompresses_to_gigabytes_is_refused(tmp_path: Path) -> None:
     tracemalloc.start()
     try:
         with pytest.raises(HeavyPageError, match="Page 1 of this PDF draws far more"):
-            pdf_document.parse_pedalpcb_pdf(str(path), "Bomb")
+            pdf_document.parse_pdf(str(path), "Bomb")
         _, peak = tracemalloc.get_traced_memory()
     finally:
         tracemalloc.stop()
@@ -689,7 +696,7 @@ def test_page_of_too_many_characters_is_refused(tmp_path: Path) -> None:
     path = tmp_path / "crowded.pdf"
     path.write_bytes(_pdf(_tiny_ones(pdf_document.MAX_PAGE_CHARS + 1)))
     with pytest.raises(CrowdedPageError, match="Page 1 of this PDF holds 20,001 "):
-        pdf_document.parse_pedalpcb_pdf(str(path), "Crowded")
+        pdf_document.parse_pdf(str(path), "Crowded")
 
     result = BOMParserContext().process(
         InputMethod.UPLOAD_FILE, FileUpload("crowded.pdf", path.read_bytes()), "X"
@@ -712,7 +719,7 @@ def test_huge_page_is_rendered_within_the_pixel_bound(tmp_path: Path) -> None:
     # million pixels, and one 200 inches square would take 1.6 billion (4.8 GB).
     path = tmp_path / "huge.pdf"
     path.write_bytes(_pdf("", width=3000, height=3000))
-    result = pdf_document.parse_pedalpcb_pdf(str(path), "Huge")
+    result = pdf_document.parse_pdf(str(path), "Huge")
     sizes: list[tuple[int, int]] = []
     assert ocr.needs_ocr(result)
     ocr.attempt_ocr(str(path), result, "Huge", _recorded(sizes))
@@ -730,7 +737,7 @@ def test_page_of_no_size_is_not_rendered(tmp_path: Path) -> None:
     # Its resolution divided by zero.
     path = tmp_path / "empty.pdf"
     path.write_bytes(_pdf("", width=0, height=0))
-    result = pdf_document.parse_pedalpcb_pdf(str(path), "Empty")
+    result = pdf_document.parse_pdf(str(path), "Empty")
     sizes: list[tuple[int, int]] = []
     assert ocr.needs_ocr(result)
     attempt = ocr.attempt_ocr(str(path), result, "Empty", _recorded(sizes))

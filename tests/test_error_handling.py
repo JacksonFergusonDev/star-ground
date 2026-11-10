@@ -6,7 +6,7 @@ from star_ground.bom_lib import (
     BOMParserContext,
     FileUpload,
     InputMethod,
-    parse_pedalpcb_pdf,
+    parse_pdf,
 )
 from star_ground.bom_lib.errors import (
     BUG_MESSAGE,
@@ -29,7 +29,7 @@ def test_a_file_that_isnt_a_pdf_is_explained_not_reported_as_a_bug():
         patch("pdfplumber.open", side_effect=Exception("Simulated PDF Corruption")),
         pytest.raises(UnreadablePdfError),
     ):
-        parse_pedalpcb_pdf("fake_path.pdf", source_name="CrashTest")
+        parse_pdf("fake_path.pdf", source_name="CrashTest")
 
     result = BOMParserContext().process(
         InputMethod.UPLOAD_FILE, FileUpload("damaged.pdf", b"%PDF-1.4 not really"), "X"
@@ -50,7 +50,7 @@ def test_a_pdf_longer_than_any_build_document_is_not_read(tmp_path):
         patch("star_ground.bom_lib.pdf.document.read_pages") as read_pages,
         pytest.raises(TooManyPagesError, match=f"has {MAX_PDF_PAGES + 1} pages"),
     ):
-        parse_pedalpcb_pdf(str(path), source_name="Long")
+        parse_pdf(str(path), source_name="Long")
 
     read_pages.assert_not_called()
 
@@ -127,7 +127,7 @@ def test_a_page_with_no_readable_size_is_explained(tmp_path, page):
     path = tmp_path / "damaged.pdf"
     path.write_bytes(_one_page(page))
     with pytest.raises(UnreadablePdfError):
-        parse_pedalpcb_pdf(str(path), "Damaged")
+        parse_pdf(str(path), "Damaged")
 
     error = _read(path.read_bytes())
     assert error == UnreadablePdfError().as_read_error()
@@ -137,7 +137,7 @@ def test_a_page_with_no_readable_size_is_explained(tmp_path, page):
 def test_a_page_with_a_readable_size_is_read(tmp_path):
     path = tmp_path / "fine.pdf"
     path.write_bytes(_one_page(f"{_LETTER} /CropBox [0 0 612 792] /Rotate 0"))
-    result = parse_pedalpcb_pdf(str(path), "Fine")
+    result = parse_pdf(str(path), "Fine")
     assert [ref for part in result.inventory.values() for ref in part.refs] == ["R1"]
 
 
@@ -151,5 +151,5 @@ def test_a_page_pdfminer_cant_draw_is_explained(tmp_path):
     path = tmp_path / "damaged.pdf"
     path.write_bytes(_one_page(_LETTER, "/XObject << /Fm0 6 0 R >>", b"/Fm0 Do", form))
     with pytest.raises(UnreadablePdfError):
-        parse_pedalpcb_pdf(str(path), "Damaged")
+        parse_pdf(str(path), "Damaged")
     assert _read(path.read_bytes()).bug is None
