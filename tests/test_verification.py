@@ -9,7 +9,7 @@ from star_ground.bom_lib import (
     parse_with_verification,
 )
 from star_ground.bom_lib.choices import ValueChoice, choose_value
-from star_ground.bom_lib.types import Inventory, ReadingStats
+from star_ground.bom_lib.types import ComponentKey, Inventory, ReadingStats
 from star_ground.bom_lib.verification import (
     check_alternate_value,
     check_bom_reconciliation,
@@ -283,6 +283,17 @@ class TestBomReconciliation:
         assert [(w.kind, w.ref) for w in stats.warnings] == [
             (ParseWarningKind.BOM_MISMATCH, "D3")
         ]
+
+    def test_a_blank_entry_or_value_agrees_with_nothing(self) -> None:
+        # '3 x ' with trailing spaces gave a blank entry, and a part with a
+        # blank value a blank key: either raised IndexError.
+        page = self.BOM_PAGE + "\n3 x  "
+        assert "" in [e.strip() for e in find_bom_entries([page])]
+        inventory = self._inventory([(ComponentCategory.DIODES, "9v1 Zener", "D1")])
+        inventory.add_part("T", ComponentKey(ComponentCategory.DIODES, ""), "D2")
+        stats = ReadingStats()
+        check_bom_reconciliation([page], inventory, stats)
+        assert [w.ref for w in stats.warnings] == ["D1", "D2"]
 
     def test_dimensions_outside_a_bom_page_are_not_entries(self) -> None:
         text = "C8 22n Film capacitor, 7.2 x 2.5mm\n" * 10

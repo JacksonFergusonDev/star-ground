@@ -70,6 +70,11 @@ _SWITCHCRAFT_JACK = re.compile(r"11[12][A-Z]?X\b")
 # A photo-FET optocoupler: Blueshift's 'OPTO  H11F1'.
 _OPTOCOUPLER = re.compile(r"H11F\d\b")
 _REVERB_BRICK = re.compile(r"BTDR-?\d")
+# A chip's socket names the chip's package or the chip: 'DIP-8 socket',
+# '8 pin DIP socket', 'IC socket', 'DIP8 SOCKETS'. Two plain searches, so a
+# long value is read once each (`is_chip_socket`).
+_CHIP_WORD = re.compile(r"\b(?:DIP|SIP|IC|CHIP)\d*\b", re.IGNORECASE)
+_SOCKET_WORD = re.compile(r"\bSOCKETS?\b", re.IGNORECASE)
 # A pot's body size, printed before or after its value: '1kC 9mm' (Aion FX
 # legacy Deimos), '16mm B10K'.
 _POT_SIZE = re.compile(r"^(?:9|16|24)\s?mm\s+|\s+(?:9|16|24)\s?mm$", re.IGNORECASE)
@@ -436,6 +441,25 @@ _COUNTED_VALUE_KINDS: tuple[tuple[re.Pattern[str], ComponentCategory], ...] = (
     ),
     (re.compile(r"resistor", re.I), ComponentCategory.RESISTORS),
 )
+
+
+def is_chip_socket(value: str) -> bool:
+    """Whether a part is a chip's socket, as a document lists its own.
+
+    The one rule for a socket the document lists itself ('DIP-8 socket', 'IC
+    socket'): a document that lists them gets no socket added for its chips,
+    and they are soldered in with the sockets. A DC socket or a tube socket
+    names no chip, so it is the document's hardware.
+
+    Args:
+        value: The part's value.
+
+    Returns:
+        True if the value names a socket and a chip or its package.
+    """
+    return bool(_SOCKET_WORD.search(value) and _CHIP_WORD.search(value))
+
+
 # A chip's part number: letters, then digits ('LM308', 'CD4049', 'FV-1').
 _CHIP_NUMBER = re.compile(r"[A-Z]{2,4}-?\d[\w-]*")
 

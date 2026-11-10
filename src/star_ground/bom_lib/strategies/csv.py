@@ -3,10 +3,13 @@
 import csv
 import io
 import os
+from collections.abc import Iterator
+from dataclasses import dataclass
 
 from star_ground.bom_lib.classifier import (
     normalize_value_by_category,
 )
+from star_ground.bom_lib.designators import is_designator
 from star_ground.bom_lib.enums import ComponentCategory, InputMethod
 from star_ground.bom_lib.ingest import ingest_bom_line
 from star_ground.bom_lib.strategies.base import BOMParserStrategy
@@ -19,44 +22,78 @@ from star_ground.bom_lib.types import (
     SupportsName,
     make_component_key,
 )
+from star_ground.bom_lib.utils import expand_refs
+
+# Column names that hold a part's designators, and its value, by preference.
+_REF_COLUMNS = ("ref", "designator", "part", "location")
+_VALUE_COLUMNS = ("value", "val", "description")
 
 
-def _read_table(filepath: str) -> csv.DictReader[str]:
-    """Reads a spreadsheet export as rows keyed by its header.
+@dataclass(frozen=True)
+class _Sheet:
+    """A spreadsheet export, decoded, with how its columns are separated."""
+
+    text: str
+    dialect: type[csv.Dialect] | csv.Dialect
+
+    def rows(self) -> Iterator[list[str]]:
+        """Every row as its cells, header included."""
+        return csv.reader(io.StringIO(self.text), dialect=self.dialect)
+
+    def records(self) -> csv.DictReader[str]:
+        """The rows after the first, keyed by the first row (the header)."""
+        return csv.DictReader(io.StringIO(self.text), dialect=self.dialect)
+
+
+def _read_sheet(content: bytes) -> _Sheet:
+    """Decodes a spreadsheet export.
 
     Spreadsheets save CSV as UTF-8, or as Windows-1252 (Excel on Windows), and
     separate columns with commas, tabs (TSV) or semicolons (Excel in locales
     that write '4,7' for 4.7). Both are detected.
 
     Args:
-        filepath: Path to the file.
+        content: The file's bytes.
 
     Returns:
-        A reader over the file's rows.
+        The text and its dialect.
     """
-    with open(filepath, "rb") as f:
-        raw = f.read()
     try:
-        text = raw.decode("utf-8-sig")
+        text = content.decode("utf-8-sig")
     except UnicodeDecodeError:
-        text = raw.decode("cp1252", errors="replace")
+        text = content.decode("cp1252", errors="replace")
     try:
         dialect: type[csv.Dialect] | csv.Dialect = csv.Sniffer().sniff(
             text[:4096], delimiters=",\t;"
         )
     except csv.Error:
         dialect = csv.excel
-    return csv.DictReader(io.StringIO(text), dialect=dialect)
+    return _Sheet(text, dialect)
 
 
-def parse_csv_bom(filepath: str, source_name: str) -> ParseResult:
+def _has_header(first: list[str]) -> bool:
+    """Whether a parts list's first row is its header.
+
+    It is unless it names no known column and starts with a designator:
+    'R1,10k' is the first part of a list with no header.
+    """
+    cells = [cell.lower().strip() for cell in first]
+    if set(cells) & {*_REF_COLUMNS, *_VALUE_COLUMNS}:
+        return True
+    refs = expand_refs(first[0]) if first else []
+    return not (refs and all(is_designator(ref) for ref in refs))
+
+
+def parse_csv_bom(content: bytes, source_name: str) -> ParseResult:
     """Parses a CSV BOM file.
 
-    Attempts to intelligently guess columns ('Ref', 'Value') or falls back
-    to using the first two columns.
+    Reads the columns its header names ('Ref', 'Value'). A list with no header
+    ('R1,10k' on the first row), or a header naming neither column with only
+    two columns, is read as designators in the first column and values in the
+    second.
 
     Args:
-        filepath: Path to the CSV file.
+        content: The file's bytes.
         source_name: Label for the source.
 
     Returns:
@@ -64,30 +101,21 @@ def parse_csv_bom(filepath: str, source_name: str) -> ParseResult:
     """
     inventory = Inventory()
     stats: ReadingStats = ReadingStats()
+    sheet = _read_sheet(content)
+    first = next((row for row in sheet.rows() if row), [])
 
-    for row in _read_table(filepath):
+    pairs: Iterator[tuple[str | None, str | None, str]]
+    if _has_header(first):
+        pairs = (_header_pair(row) for row in sheet.records())
+    else:
+        pairs = (
+            (row[0], row[1] if len(row) > 1 else None, str(row))
+            for row in sheet.rows()
+            if row
+        )
+
+    for ref, val, raw in pairs:
         stats.lines_read += 1
-        row_clean = {str(k).lower().strip(): v for k, v in row.items() if k}
-
-        # Try explicit columns
-        ref = (
-            row_clean.get("ref")
-            or row_clean.get("designator")
-            or row_clean.get("part")
-            or row_clean.get("location")
-        )
-        val = (
-            row_clean.get("value")
-            or row_clean.get("val")
-            or row_clean.get("description")
-        )
-
-        # Fallback: Assume Col 1 = Ref, Col 2 = Val
-        if not ref and not val and len(row_clean) == 2:
-            vals = list(row_clean.values())
-            ref = vals[0]
-            val = vals[1]
-
         success = False
         if ref and val:
             count = ingest_bom_line(inventory, source_name, ref, val, stats)
@@ -96,26 +124,42 @@ def parse_csv_bom(filepath: str, source_name: str) -> ParseResult:
                 success = True
 
         if not success:
-            stats.residuals.append(str(row))
+            stats.residuals.append(raw)
 
     return ParseResult(inventory=inventory, stats=stats)
 
 
-def parse_user_inventory(filepath: str) -> Inventory:
+def _header_pair(
+    row: dict[str | None, str | None],
+) -> tuple[str | None, str | None, str]:
+    """A headed row's designators and value, and the row as written.
+
+    Falls back to the first two columns when the header names neither and the
+    row has only two.
+    """
+    row_clean = {str(k).lower().strip(): v for k, v in row.items() if k}
+    ref = next((row_clean[c] for c in _REF_COLUMNS if row_clean.get(c)), None)
+    val = next((row_clean[c] for c in _VALUE_COLUMNS if row_clean.get(c)), None)
+    if not ref and not val and len(row_clean) == 2:
+        ref, val = list(row_clean.values())
+    return ref, val, str(row)
+
+
+def parse_user_inventory(content: bytes) -> Inventory:
     """Parses a user's stock CSV.
 
     Expects columns: Category, Part, Qty.
     Applies the same value normalization as BOM parsing to ensure keys match.
 
     Args:
-        filepath: Path to the user inventory CSV.
+        content: The stock CSV's bytes.
 
     Returns:
         A populated Inventory dictionary.
     """
     stock: Inventory = Inventory()
 
-    for row in _read_table(filepath):
+    for row in _read_sheet(content).records():
         # A short row has None for its missing cells.
         row_clean = {k.lower().strip(): v or "" for k, v in row.items() if k}
 
@@ -167,7 +211,7 @@ class CSVParserStrategy(BOMParserStrategy):
         )
 
     def parse(self, data: RawBOMData, source_name: str) -> ParseResult:
-        """Parse CSV data into a ParseResult, managing temporary files as needed.
+        """Parse CSV data into a ParseResult.
 
         A string is never read as a file path (see `PDFParserStrategy.parse`).
 
@@ -178,13 +222,5 @@ class CSVParserStrategy(BOMParserStrategy):
         Returns:
             ParseResult containing the parsed inventory and statistics.
         """
-        ext = ".csv"
-        if isinstance(data, SupportsName):
-            filename = str(data.name)
-            detected_ext = os.path.splitext(filename)[1]
-            if detected_ext:
-                ext = detected_ext.lower()
-
         raw_content = self._read_to_bytes(data, "CSVParserStrategy")
-        with self._temp_file_from_bytes(raw_content, ext) as tmp_path:
-            return parse_csv_bom(tmp_path, source_name=source_name)
+        return parse_csv_bom(raw_content, source_name=source_name)

@@ -137,24 +137,42 @@ class TestCSVParserStrategy:
         assert result.stats.parts_found == 2
         assert result.stats.residuals == []
 
-    def test_parse_temp_file_cleanup(self) -> None:
-        strategy = CSVParserStrategy()
-        csv_bytes = b"Ref,Val\nR1,10k\n"
-
-        created_temp_files: list[str] = []
-        original_named_temp_file = tempfile.NamedTemporaryFile
-
-        def track_temp_file(*args: Any, **kwargs: Any) -> Any:
-            tmp = original_named_temp_file(*args, **kwargs)
-            created_temp_files.append(tmp.name)
-            return tmp
-
-        with patch("tempfile.NamedTemporaryFile", side_effect=track_temp_file):
-            result = strategy.parse(csv_bytes, source_name="CleanupTest")
+    def test_parse_reads_in_memory(self) -> None:
+        # The upload was written to a temporary file only to be read back.
+        with patch("tempfile.NamedTemporaryFile", side_effect=AssertionError):
+            result = CSVParserStrategy().parse(b"Ref,Val\nR1,10k\n", "Memory")
 
         assert result.stats.parts_found == 1
-        assert len(created_temp_files) == 1
-        assert not os.path.exists(created_temp_files[0])
+
+    @pytest.mark.parametrize(
+        "content",
+        [
+            b"R1,10k\nR2,22k\nR3,47k\n",
+            b"R1;10k\nR2;22k\nR3;47k\n",
+            b"\nR1,10k,Metal film\nR2,22k,Metal film\nR3,47k,Metal film\n",
+        ],
+    )
+    def test_a_list_with_no_header_reads_its_first_row(self, content: bytes) -> None:
+        # The first row was taken for the header: R1 vanished with no warning.
+        result = CSVParserStrategy().parse(FileUpload("bom.csv", content), "Sheet")
+
+        refs = sorted(r for data in result.inventory.values() for r in data.refs)
+        assert refs == ["R1", "R2", "R3"]
+        assert result.stats.residuals == []
+
+    @pytest.mark.parametrize(
+        "content",
+        [
+            b"Designator,Value\nR1,10k\n",
+            b"Component,Amount\nR1,10k\n",  # an unknown header of two columns
+            b"Part,Value,Notes\nR1,10k,\n",
+        ],
+    )
+    def test_a_header_is_still_a_header(self, content: bytes) -> None:
+        result = CSVParserStrategy().parse(FileUpload("bom.csv", content), "Sheet")
+
+        assert result.stats.parts_found == 1
+        assert result.stats.residuals == []
 
     def test_parse_unsupported_type_raises(self) -> None:
         strategy = CSVParserStrategy()

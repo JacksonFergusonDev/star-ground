@@ -138,6 +138,9 @@ def read_entries(
             if p + 1 < len(pages_data) and continues_list(pages_data[p + 1])
         }
     entries = table_entries(pages_data, stats, bom_pages)
+    first_text_table = 1 + max(
+        (e.table for e in entries if e.table is not None), default=-1
+    )
     # Re-paired shaded grids only fill in for the other readers (see `fill_in`).
     shaded = [e for e in entries if e.line == SHADED_LINE]
     entries = [e for e in entries if e.line != SHADED_LINE]
@@ -165,12 +168,14 @@ def read_entries(
             for v in ruled.get((r.page, REPEAT.sub("", r.ref)), ())
         )
     ]
-    # Number the text tables after the ruled ones. A table's rows come
-    # together, so the first board keeps its designators ('R1' before 'R1 (2)')
-    # however the boards' rows interleave on the page (GuitarPCB DumbleTone).
+    # Number the text tables after the ruled ones, so no text table shares
+    # a ruled table's number (`assemble` would take another board's R1 for a
+    # conflicting duplicate). A table's rows come together, so the first board
+    # keeps its designators ('R1' before 'R1 (2)') however the boards' rows
+    # interleave on the page (GuitarPCB DumbleTone).
     text_rows.sort(key=lambda row: (row.page, row.table or 0))
     entries += [
-        replace(row, table=len(entries) + (row.table or 0)) for row in text_rows
+        replace(row, table=first_text_table + (row.table or 0)) for row in text_rows
     ]
 
     # --- STRATEGY 2: LAYOUT ANALYSIS ---

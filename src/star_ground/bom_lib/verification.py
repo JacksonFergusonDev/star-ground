@@ -1484,8 +1484,14 @@ def _value_tokens(value: str) -> frozenset[str]:
 
 
 def _values_agree(part_value: str, bom_value: str) -> bool:
-    head_a, head_b = part_value.split()[0], bom_value.split()[0]
-    dec_a, dec_b = parse_value_to_decimal(head_a), parse_value_to_decimal(head_b)
+    words_a, words_b = part_value.split(), bom_value.split()
+    if not words_a or not words_b:
+        # A blank value ('3 x ' with nothing after it) agrees with nothing.
+        return False
+    dec_a, dec_b = (
+        parse_value_to_decimal(words_a[0]),
+        parse_value_to_decimal(words_b[0]),
+    )
     if dec_a is not None and dec_b is not None:
         return dec_a == dec_b
     a, b = _value_tokens(part_value), _value_tokens(bom_value)
