@@ -253,7 +253,8 @@ def _read_body(
     """
     too_big = FetchError(f"The document is over {policy.max_bytes / 2**20:g} MB")
     declared = response.headers.get("content-length", "")
-    if declared.isdigit() and int(declared) > policy.max_bytes:
+    # A header of '²' is no length: `isdigit` is true for it, `int` refuses it.
+    if declared.isdecimal() and int(declared) > policy.max_bytes:
         raise too_big
     body = bytearray()
     while chunk := response.raw.read1(_CHUNK_BYTES, decode_content=True):
