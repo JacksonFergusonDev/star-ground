@@ -26,12 +26,15 @@ from star_ground.bom_lib.types import (
     CategorizationResult,
     ComponentKey,
     Inventory,
+    RefDesignator,
 )
 from star_ground.bom_lib.units import Unit, Value, farads, ohms
 from star_ground.bom_lib.utils import (
     expand_refs,
+    is_ref_range,
     natural_sort_key,
     parse_value_to_decimal,
+    value_to_search_string,
 )
 
 # --- parse_value_to_decimal Tests ---
@@ -126,6 +129,58 @@ def test_expand_refs_non_ranges_and_malformed() -> None:
     assert expand_refs("U1") == ["U1"]
     assert expand_refs("R1-") == ["R1-"]
     assert expand_refs("-R4") == ["-R4"]
+
+
+def test_expand_refs_reversed_lettered_and_padded_ranges() -> None:
+    # Each was left as written, then read as one named control: a pot.
+    assert expand_refs("R5-R1") == ["R1", "R2", "R3", "R4", "R5"]
+    assert expand_refs("R1A-R1D") == ["R1A", "R1B", "R1C", "R1D"]
+    assert expand_refs("R01-R03") == ["R01", "R02", "R03"]
+    assert expand_refs("R08-R10") == ["R08", "R09", "R10"]
+
+
+def test_expand_refs_shorthand_continuation() -> None:
+    # 'C1-C3, 5-7' gave a literal designator '5-7'.
+    assert expand_refs("C1-C3, 5-7") == ["C1", "C2", "C3", "C5", "C6", "C7"]
+
+
+def test_unexpandable_ranges_are_told_apart() -> None:
+    for ref in ("R1-R60", "R1-C3", "R1A-R2B"):
+        assert expand_refs(ref) == [ref]
+        assert is_ref_range(ref)
+    for ref in ("R1", "VOLUME", "OSC-SW", "R1-", "1990-2000"):
+        assert not is_ref_range(ref)
+
+
+def test_designators_with_thousands_of_digits_are_no_numbers() -> None:
+    # Python refuses to convert more than 4300 digits to an int: this text
+    # raised ValueError, and the builder was told Star Ground hit a bug.
+    digits = "1" * 5000
+    assert expand_refs(f"R{digits}-2") == [f"R{digits}-2"]
+    assert is_ref_range(f"R{digits}-2")
+    assert natural_sort_key(f"R{digits}")[0] == "R"
+    parsed = RefDesignator.from_string(f"R{digits}")
+    assert parsed.number is None
+    assert str(parsed) == f"R{digits}"
+    assert RefDesignator.from_string("R1234") == RefDesignator("R", 1234)
+
+
+@pytest.mark.parametrize(
+    ("value", "written"),
+    [
+        # A resistance under one ohm was read as a capacitance: '470000u'.
+        (ohms("0.47"), "0.47"),
+        (ohms("4.7"), "4.7"),
+        # Under a picofarad was rounded to '0'.
+        (farads("0.5e-12"), "0.5p"),
+        (farads("100e-9"), "100n"),
+        (farads("4.7e-6"), "4.7u"),
+        (ohms("1500"), "1.5k"),
+        (ohms("0"), "0"),
+    ],
+)
+def test_values_are_written_in_their_unit(value: Value, written: str) -> None:
+    assert value_to_search_string(value) == written
 
 
 # --- categorize_part Tests ---

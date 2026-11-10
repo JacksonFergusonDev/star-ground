@@ -14,7 +14,8 @@ from star_ground.bom_lib.enrichment import (
 )
 from star_ground.bom_lib.pdf.ruled import table_entries
 from star_ground.bom_lib.types import PDFPageExtraction, ReadingStats
-from star_ground.bom_lib.utils import float_to_search_string
+from star_ground.bom_lib.units import farads, ohms
+from star_ground.bom_lib.utils import value_to_search_string
 
 
 @pytest.mark.parametrize(
@@ -214,10 +215,12 @@ def test_trimmer_notes_are_not_part_of_the_value() -> None:
 
 
 def test_search_strings_keep_significant_digits() -> None:
-    assert float_to_search_string(4650.0) == "4.65k"
-    assert float_to_search_string(68100.0) == "68.1k"
-    assert float_to_search_string(4700.0) == "4.7k"
-    assert float_to_search_string(2.2e-9) == "2.2n"
+    assert value_to_search_string(ohms("4650")) == "4.65k"
+    assert value_to_search_string(ohms("68100")) == "68.1k"
+    assert value_to_search_string(ohms("4700")) == "4.7k"
+    assert value_to_search_string(farads("2.2e-9")) == "2.2n"
+    # Every digit, not the six a float's ':g' kept (1.23457M).
+    assert value_to_search_string(ohms("1234567")) == "1.234567M"
 
 
 def test_table_values_drop_optional_markers_but_keep_placeholders() -> None:

@@ -34,10 +34,10 @@ from star_ground.bom_lib.types import (
     ResolvedPartSourcing,
     ShoppingLine,
 )
-from star_ground.bom_lib.units import Value, farads
+from star_ground.bom_lib.units import Value, farads, ohms
 from star_ground.bom_lib.utils import (
-    float_to_search_string,
     parse_value_to_decimal,
+    value_to_search_string,
 )
 
 
@@ -188,7 +188,7 @@ def generate_search_term(
         code = resistance.group(1) or resistance.group(3)
         word = next((t for p, t in _POT_TAPER_WORDS if p.search(val_upper)), None)
         taper = word or constants.POT_TAPER_MAP.get(code or "B", "Linear")
-        base_term = f"{float_to_search_string(float(dec))} ohm {taper} potentiometer"
+        base_term = f"{value_to_search_string(ohms(dec))} ohm {taper} potentiometer"
         return f"Dual Gang {base_term}" if is_dual else base_term
 
     if category == ComponentCategory.DIODES:

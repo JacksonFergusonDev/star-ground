@@ -14,6 +14,7 @@ from star_ground.bom_lib.grammar import (
     build_value_parser,
     parse_value_to_decimal,
 )
+from star_ground.bom_lib.units import Unit
 
 
 @pytest.mark.parametrize(
@@ -167,3 +168,53 @@ def test_a_fresh_parser_is_safe_to_share_between_threads() -> None:
             t.join()
 
         assert set(results) == {Decimal(4700), Decimal(10000)}
+
+
+@pytest.mark.parametrize(
+    ("val_str", "expected"),
+    [
+        # Upper-case nano and micro, as some schematics print them.
+        ("100NF", Decimal("100e-9")),
+        ("100N", Decimal("100e-9")),
+        ("10UF", Decimal("10e-6")),
+        ("47U", Decimal("47e-6")),
+        ("4U7", Decimal("4.7e-6")),
+        # 'MF' and 'MFD' on old schematics are microfarads.
+        ("10MFD", Decimal("10e-6")),
+        ("10mfd", Decimal("10e-6")),
+        ("10MF", Decimal("10e-6")),
+        ("4.7uFD", Decimal("4.7e-6")),
+        # A lower-case 'mF' keeps its SI meaning, and 'M' alone is still mega.
+        ("10mF", Decimal("10e-3")),
+        ("10M", Decimal("10e6")),
+        ("2M2", Decimal("2.2e6")),
+        # A comma as decimal mark or thousands separator.
+        ("0,068", Decimal("0.068")),
+        ("0,068µF", Decimal("68e-9")),
+        ("4,7k", Decimal("4700")),
+        ("4,700", Decimal("4700")),
+        ("1,000uF", Decimal("1000e-6")),
+    ],
+)
+def test_upper_case_prefixes_old_farads_and_commas(
+    val_str: str, expected: Decimal
+) -> None:
+    assert parse_value_to_decimal(val_str) == expected
+
+
+@pytest.mark.parametrize("token", ["4N7", "1N4148", "2N3904", "4N35", "1,2,3"])
+def test_upper_case_n_between_digits_is_a_part_number(token: str) -> None:
+    # Diodes, transistors and optocouplers are named with an upper-case N.
+    assert parse_value_to_decimal(token) is None
+
+
+def test_a_value_in_another_unit_is_refused() -> None:
+    assert parse_value_to_decimal("25V") == Decimal(25)
+    assert parse_value_to_decimal("25V", Unit.FARAD) is None
+    assert parse_value_to_decimal("100kΩ", Unit.FARAD) is None
+    assert parse_value_to_decimal("100nF", Unit.OHM) is None
+    assert parse_value_to_decimal("100kΩ", Unit.OHM) == Decimal(100000)
+    assert parse_value_to_decimal("47 ohm", Unit.OHM) == Decimal(47)
+    assert parse_value_to_decimal("100nF", Unit.FARAD) == Decimal("100e-9")
+    # A value with no unit written is read in the part's unit.
+    assert parse_value_to_decimal("100n", Unit.FARAD) == Decimal("100e-9")

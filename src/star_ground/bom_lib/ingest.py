@@ -15,7 +15,7 @@ from star_ground.bom_lib.types import (
     ReadingStats,
     make_component_key,
 )
-from star_ground.bom_lib.utils import expand_refs
+from star_ground.bom_lib.utils import MAX_RANGE_PARTS, expand_refs, is_ref_range
 from star_ground.bom_lib.verification import (
     check_classification,
     check_duplicate,
@@ -68,6 +68,9 @@ def ingest_bom_line(
 
     parts_found = 0
     for ref in refs:
+        if is_ref_range(ref):
+            _warn_unexpanded(stats, ref)
+            continue
         if POINTER_VALUE.fullmatch(value.strip()):
             # 'Q1-Q6  See Text' (GuitarPCB G-02 Animal): the value is in the
             # build notes, so there is nothing to buy until the builder reads it.
@@ -91,6 +94,24 @@ def ingest_bom_line(
                 source, result.injected_key, f"{claimed}{constants.INJECTED_SUFFIX}"
             )
     return parts_found
+
+
+def _warn_unexpanded(stats: ReadingStats, ref: str) -> None:
+    """Warns that a designator range was too long, or too odd, to expand.
+
+    Such a range ('R1-R60', 'R1-C3') is many parts, so none is guessed.
+    """
+    stats.warnings.append(
+        ParseWarning(
+            kind=ParseWarningKind.UNREADABLE_ROW,
+            ref=ref,
+            message=(
+                f"{ref} names more than {MAX_RANGE_PARTS} parts, or parts of "
+                "different kinds, so they are missing from the list: check the "
+                "document and add them by hand."
+            ),
+        )
+    )
 
 
 def _without_pointer(stats: ReadingStats, refs: list[str], value: str) -> str:

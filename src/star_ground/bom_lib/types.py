@@ -376,8 +376,11 @@ class RefDesignator:
         if not cleaned:
             return cls(prefix="")
 
-        # Match pattern: letter prefix, optional digits, optional suffix
-        m = re.match(r"^([a-zA-Z]+)(?:(\d+))?(?:\s*(.*))?$", cleaned)
+        # Match pattern: letter prefix, optional digits, optional suffix.
+        # No real designator has more than a few digits: a longer run is no
+        # number of one (and reading it as an int could pass Python's limit
+        # on converting digits), so it stays in the suffix.
+        m = re.match(r"^([a-zA-Z]+)(?:(\d{1,4})(?!\d))?(?:\s*(.*))?$", cleaned)
         if m:
             prefix = m.group(1)
             num_str = m.group(2)

@@ -16,6 +16,7 @@ from star_ground.bom_lib import constants
 from star_ground.bom_lib.designators import is_designator
 from star_ground.bom_lib.enums import ComponentCategory, ParseWarningKind
 from star_ground.bom_lib.types import Inventory, ParseWarning, ReadingStats
+from star_ground.bom_lib.units import Unit
 from star_ground.bom_lib.utils import parse_value_to_decimal
 
 # Numbered designators (R1, IC10, LED2) and the bare ones PedalPCB uses (LED, CLR).
@@ -1458,7 +1459,10 @@ def check_classification(
 
     if category in (ComponentCategory.RESISTORS, ComponentCategory.CAPACITORS):
         head = value.split()[0] if value.split() else value
-        if "mm" not in value.lower() and parse_value_to_decimal(head) is None:
+        # Read in the part's unit, as the classifier reads it: '25V' is no
+        # capacitance.
+        unit = Unit.OHM if category == ComponentCategory.RESISTORS else Unit.FARAD
+        if "mm" not in value.lower() and parse_value_to_decimal(head, unit) is None:
             _warn(
                 stats,
                 ParseWarningKind.UNPARSED_VALUE,

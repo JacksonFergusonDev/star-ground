@@ -13,10 +13,11 @@ from star_ground.bom_lib import constants
 from star_ground.bom_lib.designators import parse_designator
 from star_ground.bom_lib.enums import ComponentCategory
 from star_ground.bom_lib.types import CategorizationResult, ComponentKey
-from star_ground.bom_lib.units import Value, farads, ohms
+from star_ground.bom_lib.units import Unit, Value
 from star_ground.bom_lib.utils import (
-    float_to_search_string,
+    is_ref_range,
     parse_value_to_decimal,
+    value_to_search_string,
 )
 
 _SIZED_LED = re.compile(r"\d+(?:\.\d+)?mm(?:\s+[A-Za-z]+)?", re.IGNORECASE)
@@ -39,7 +40,8 @@ _LED_VALUE = re.compile(r"\bLED\b")
 _LED_SPEC = re.compile(r"\d+(?:\.\d+)?\s*MM\b(?: [A-Z]+)? LED\b")
 _NUMBERED_LABEL = re.compile(r"[A-Z]{2,5}\d{1,3}")
 _SLASH_RATING = re.compile(r"(?<=[\dpnuµF])\s*/\s*(\d+(?:\.\d+)?)\s*V\b", re.IGNORECASE)
-# A capacitor's unit set apart from its number: '0.068 µF', '100 pF' (Tonepad).
+# A capacitor's unit set apart from its number: '0.068 µF', '100 pF' (Tonepad),
+# '0,068 µF' with a decimal comma, which the value parser reads too.
 _SPACED_FARADS = re.compile(r"^(\d*[.,]?\d+)\s+([pnuµμ]F?|F)(?!\w)", re.IGNORECASE)
 # A bare fraction is in microfarads: '.01', '0.001' (Tonepad's MAS Distortion).
 _BARE_FRACTION = re.compile(r"^0?\.\d+(?=\s|$)")
@@ -75,6 +77,14 @@ _POT_VALUE = re.compile(
 )
 
 
+# The unit each category's values are measured in. A value written in another
+# unit is no value of the part: a capacitor's '25V' is its voltage rating.
+_UNITS = {
+    ComponentCategory.RESISTORS: Unit.OHM,
+    ComponentCategory.CAPACITORS: Unit.FARAD,
+}
+
+
 def _capacitor_head(value: str) -> str:
     """Joins a capacitor's number and unit, and gives a bare fraction its unit."""
     value = _SPACED_FARADS.sub(r"\1\2", value)
@@ -103,15 +113,11 @@ def normalize_value_to_quantity(
     # Qualifiers after the number ('1u MLCC', '10u (25V or higher)') do not
     # change the nominal value.
     head = clean_val.split()[0] if clean_val else clean_val
-    dec = parse_value_to_decimal(head)
+    unit = _UNITS.get(category)
+    dec = parse_value_to_decimal(head, unit)
     if dec is None:
         return None
-
-    if category == ComponentCategory.RESISTORS:
-        return ohms(dec)
-    if category == ComponentCategory.CAPACITORS:
-        return farads(dec)
-    return dec
+    return dec if unit is None else Value(dec, unit)
 
 
 # Parsing a value takes about 40 µs and a master list asks again for every
@@ -168,20 +174,22 @@ def normalize_value_by_category(category: ComponentCategory, val_raw: str) -> st
         # 'R31  47 ohm' (GuitarPCB Mini-Me): the unit spelled out.
         clean_val = _OHM_WORD.sub(r"\1", clean_val)
         head, _, rest = clean_val.partition(" ")
-        dec = parse_value_to_decimal(head)
+        unit = _UNITS[category]
+        dec = parse_value_to_decimal(head, unit)
         restated = _RESTATED.match(rest)
         if dec is not None and restated:
             # '8k2 (8.2k)', '4M7 (4.7M)' (Tonepad): the same value in other notation.
             inner = parse_value_to_decimal(
                 _capacitor_head(restated.group(1))
                 if category == ComponentCategory.CAPACITORS
-                else restated.group(1)
+                else restated.group(1),
+                unit,
             )
             if inner == dec:
                 rest = rest[restated.end() :]
         if dec is not None:
             clean_val = " ".join(
-                p for p in (float_to_search_string(float(dec)), rest.strip()) if p
+                p for p in (value_to_search_string(Value(dec, unit)), rest.strip()) if p
             )
 
     # A diode specified only by size and color ('5mm Yellow') is an LED.
@@ -334,6 +342,11 @@ def categorize_part(
             # A transformer is no bare resistance: GuitarPCB numbers trimmers
             # 'T1  5k' (ColorTone Bass Fuzz).
             category = ComponentCategory.POTENTIOMETERS
+    elif is_ref_range(ref):
+        # A range `expand_refs` could not expand ('R1-R60', 'R1-C3') is many
+        # parts, not one named control: reading '10k' beside it as a pot would
+        # buy one pot, a knob and a dust seal. The ingest warns about it.
+        return None
     else:
         # A TYPE column states the category outright; the value is only a
         # guess (Aion FX: 'LEDR | 10k | Metal film resistor' is no pot).

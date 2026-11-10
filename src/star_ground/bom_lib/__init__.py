@@ -85,8 +85,8 @@ from .utils import (
     deduplicate_refs,
     expand_refs,
     float_to_display_string,
-    float_to_search_string,
     parse_value_to_decimal,
+    value_to_search_string,
 )
 
 __all__ = [
@@ -139,7 +139,6 @@ __all__ = [
     "determine_origin",
     "expand_refs",
     "float_to_display_string",
-    "float_to_search_string",
     "generate_search_term",
     "generate_tayda_url",
     "get_buy_details",
@@ -161,5 +160,6 @@ __all__ = [
     "serialize_inventory",
     "sort_inventory",
     "status_leds",
+    "value_to_search_string",
     "with_standard_hardware",
 ]
