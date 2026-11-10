@@ -6,15 +6,30 @@ import pytest
 
 from star_ground.bom_lib import PDFWord
 from star_ground.bom_lib.enrichment import enrich_value_from_type
-from star_ground.bom_lib.pdf.bom_table import BomRow, bom_note_cells, find_bom_rows
+from star_ground.bom_lib.pdf.bom_table import BomReading, BomRow, read_bom
 from star_ground.bom_lib.pdf.cells import clean_value
-from star_ground.bom_lib.pdf.geometry import Listing, group_lines, split_cells
+from star_ground.bom_lib.pdf.geometry import (
+    Listing,
+    group_lines,
+    page_lines,
+    split_cells,
+)
 from star_ground.bom_lib.pdf.page_checks import footnote_marks, valueless_refs
 from star_ground.bom_lib.pdf.scan import find_listings
 
 SIZE = 12.0
 SPACE = 2.7  # ordinary word space at 12pt (~0.23em)
 COLUMN = 20.0  # column gap
+
+
+def _bom(words: list[PDFWord]) -> BomReading:
+    """The typed text tables on a page of words."""
+    return read_bom(page_lines(words))
+
+
+def _bom_rows(words: list[PDFWord]) -> list[BomRow]:
+    """The rows of the typed text tables on a page of words."""
+    return _bom(words).rows
 
 
 def _line(*cells: str, top: float = 100.0) -> list[PDFWord]:
@@ -574,7 +589,7 @@ class TestTextBillOfMaterials:
             )
             + self._row(160, ("Copyright: Sheepylove.com 2026-03-18", cols[0]))
         )
-        rows = find_bom_rows(words)
+        rows = _bom_rows(words)
         assert [(r.refs, r.value, r.quantity) for r in rows] == [
             ("R10-R12,R18", "47k", 4),
             ("D3,D4", "Ge", 2),
@@ -602,7 +617,7 @@ class TestTextBillOfMaterials:
             ("R11, R13", 450),
             ("2", 556),
         )
-        rows = find_bom_rows(header + row)
+        rows = _bom_rows(header + row)
         assert [(r.refs, r.value, r.quantity, r.marking) for r in rows] == [
             ("C12,15,16", "100n", 3, "104"),
             ("R11,R13", "47R", 2, ""),
@@ -612,7 +627,7 @@ class TestTextBillOfMaterials:
         # GuitarPCB Blues Buster: 'R1 - 1M' centred under a 'Part Value' header.
         header = self._row(100, ("Part", 50), ("Value", 100))
         row = self._row(112, ("R1 - 1M", 60))
-        rows = find_bom_rows(header + row)
+        rows = _bom_rows(header + row)
         assert [(r.refs, r.value) for r in rows] == [("R1", "1M")]
 
     def test_value_set_half_a_line_off_its_label(self) -> None:
@@ -630,7 +645,7 @@ class TestTextBillOfMaterials:
             + self._row(143, ("NE5532", 260))
             + self._row(161, ("R3", 50), ("10k", 100), ("D4", 200), ("3mm", 260))
         )
-        rows = find_bom_rows(words)
+        rows = _bom_rows(words)
         assert [(r.refs, r.value) for r in rows] == [
             ("R1", "1M"),
             ("LEVEL", "A100k"),
@@ -652,7 +667,7 @@ class TestTextBillOfMaterials:
                 [("R1", "10k", "2¹"), ("R2", "22k", "²"), ("R3", "47k", "3")]
             )
         ]
-        found = find_bom_rows(header + [w for row in rows for w in row])
+        found = _bom_rows(header + [w for row in rows for w in row])
         assert [(r.refs, r.quantity) for r in found] == [
             ("R1", 2),
             ("R2", None),
@@ -671,7 +686,7 @@ class TestTextBillOfMaterials:
             + self._row(140, ("Part", 50), ("Value", 100))
             + self._row(160, ("R2", 50), ("1k", 100), ("R2", 250), ("2k2", 300))
         )
-        rows = find_bom_rows(words)
+        rows = _bom_rows(words)
         assert [(r.refs, r.value, r.table) for r in rows] == [
             ("R1", "10k", 0),
             ("R1", "22k", 1),
@@ -681,17 +696,15 @@ class TestTextBillOfMaterials:
 
     def test_designator_with_an_empty_value_cell_is_reported(self) -> None:
         # GuitarPCB The Burner prints 'D2' with nothing beside it.
-        from star_ground.bom_lib.pdf.bom_table import bom_valueless_refs
-
         words = (
             self._row(100, ("Part", 50), ("Value", 100), ("Part", 200), ("Value", 260))
             + self._row(120, ("D1", 50), ("1N5817", 100), ("HEAT", 200), ("B50K", 260))
             + self._row(140, ("D2", 50), ("FUEL", 200), ("A10K", 260))
         )
-        assert bom_valueless_refs(words) == ["D2"]
+        assert _bom(words).valueless == ["D2"]
 
     def test_no_header_no_rows(self) -> None:
-        assert find_bom_rows(_line("R1", "10K", "C1", "100n")) == []
+        assert _bom_rows(_line("R1", "10K", "C1", "100n")) == []
 
     def test_typed_part_table(self) -> None:
         # Aion FX: 'PART | VALUE | TYPE | NOTES'. Every row with a TYPE is a part,
@@ -721,14 +734,14 @@ class TestTextBillOfMaterials:
                 200, ("ACHILLES AMP", cols[0]), ("OVERDRIVE", cols[1]), ("4", cols[3])
             )
         )
-        rows = find_bom_rows(words)
+        rows = _bom_rows(words)
         assert [(r.refs, r.value, r.type_text) for r in rows] == [
             ("R1", "1M", "Metal film resistor"),
             ("VOL.", "100kA", "16mm right-angle PCB mount pot"),
             ("FSW", "3PDT", "Stomp switch, 3PDT"),
         ]
         assert rows[1].notes == "Original uses 50kA, but 100k gives more range."
-        assert [c.text for c in bom_note_cells(words)] == [
+        assert [c.text for c in _bom(words).note_cells] == [
             "Original uses 50kA,",
             "but 100k gives more range.",
             "4",
@@ -745,7 +758,7 @@ class TestTextBillOfMaterials:
             ("20kB", cols[1]),
             ("16mm right-angle PCB mount pot", cols[2]),
         )
-        assert [(r.refs, r.value) for r in find_bom_rows(words)] == [("100HZ", "20kB")]
+        assert [(r.refs, r.value) for r in _bom_rows(words)] == [("100HZ", "20kB")]
 
     def test_grid_labels_markers_and_counts(self) -> None:
         # GuitarPCB 'Part | Value' grids: named controls, '*' markers on refs and
@@ -768,7 +781,7 @@ class TestTextBillOfMaterials:
                 ("1k8 - 4k7", cols[3]),
             )
         )
-        rows = find_bom_rows(words)
+        rows = _bom_rows(words)
         assert [(r.refs, r.value, r.quantity) for r in rows] == [
             ("C5", "100p", None),
             ("VOL", "A500K", None),
@@ -802,7 +815,7 @@ class TestTextBillOfMaterials:
                 160, *zip(("R3", "1k", "1/4 Watt Resistor"), cols, strict=False)
             )
         )
-        rows = find_bom_rows(words)
+        rows = _bom_rows(words)
         assert [(r.refs, r.value, r.type_text, r.end) for r in rows] == [
             ("R1", "33k", "1/4 Watt Resistor", 330.0),
             ("R2", "1M", "1/4 Watt Resistor", 330.0),
@@ -821,7 +834,7 @@ class TestTextBillOfMaterials:
             + self._row(200, ("Part", cols[0]), ("Value", cols[1]))
             + self._row(220, ("R1", cols[0]), ("1k", cols[1]))
         )
-        assert [(r.refs, r.value, r.table) for r in find_bom_rows(words)] == [
+        assert [(r.refs, r.value, r.table) for r in _bom_rows(words)] == [
             ("R1", "1M", 0),
             ("R1", "1k", 1),
         ]
@@ -880,8 +893,6 @@ def test_trim_before_a_value_is_no_control_name() -> None:
 
 def test_side_by_side_boards_are_two_tables() -> None:
     # GuitarPCB DumbleTone: 'FrontStage' and 'DumbleTone' head one header line.
-    from star_ground.bom_lib.pdf.bom_table import find_bom_rows
-
     words = [
         *_line("FrontStage", top=80.0),
         *[
@@ -899,7 +910,7 @@ def test_side_by_side_boards_are_two_tables() -> None:
             for w in _line("R1", "2M2", top=120.0)
         ],
     ]
-    rows = find_bom_rows(words)
+    rows = _bom_rows(words)
     assert [(r.refs, r.value) for r in rows] == [("R1", "1M5"), ("R1", "2M2")]
     assert rows[0].table != rows[1].table
 
@@ -941,9 +952,7 @@ def test_pole_type_in_label_joins_the_value() -> None:
         *_line("Part", "Value", top=100.0),
         *_line("SW - SPDT", "On-Off_On", top=120.0),
     ]
-    assert [(r.refs, r.value) for r in find_bom_rows(words)] == [
-        ("SW", "SPDT On-Off_On")
-    ]
+    assert [(r.refs, r.value) for r in _bom_rows(words)] == [("SW", "SPDT On-Off_On")]
 
 
 def test_a_footnote_marker_is_no_value() -> None:

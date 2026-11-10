@@ -11,7 +11,8 @@ from dataclasses import dataclass
 
 from star_ground.bom_lib.builds import Entry
 from star_ground.bom_lib.enums import ParseWarningKind
-from star_ground.bom_lib.pdf.bom_table import bom_valueless_refs
+from star_ground.bom_lib.pdf.bom_table import read_bom
+from star_ground.bom_lib.pdf.geometry import page_lines
 from star_ground.bom_lib.pdf.page_checks import (
     pictured_lists,
     unreadable_rows,
@@ -172,7 +173,10 @@ def _valueless_refs(facts: ReadingFacts) -> list[str]:
         ref
         for k, data in enumerate(facts.pages)
         if facts.on_parts_list(k)
-        for ref in [*valueless_refs(data.words), *bom_valueless_refs(data.words)]
+        for ref in [
+            *valueless_refs(data.words),
+            *read_bom(page_lines(data.words)).valueless,
+        ]
         if not facts.variants or ref.upper() not in read_on.get(k, set())
     ]
 

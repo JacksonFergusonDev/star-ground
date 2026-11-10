@@ -19,9 +19,9 @@ from star_ground.bom_lib.enrichment import (
     enrich_value_from_type,
 )
 from star_ground.bom_lib.enums import ComponentCategory
-from star_ground.bom_lib.pdf.bom_table import bom_note_cells, find_bom_rows
+from star_ground.bom_lib.pdf.bom_table import read_bom
 from star_ground.bom_lib.pdf.cells import ref_group
-from star_ground.bom_lib.pdf.geometry import group_lines
+from star_ground.bom_lib.pdf.geometry import group_lines, page_lines
 from star_ground.bom_lib.pdf.rows import (
     CONTROL_LABEL,
     SOCKET,
@@ -139,7 +139,7 @@ def text_table_entries(
     seen: Counter[str] = Counter()
     noted: list[tuple[str, str, str]] = []
     for page_no, data in enumerate(pages_data):
-        for row in find_bom_rows(data.words):
+        for row in read_bom(page_lines(data.words)).rows:
             stats.lines_read += 1
             noted.append((row.refs, row.value, row.notes))
             value, hint = row.value, None
@@ -235,14 +235,14 @@ def _untyped_refs(stats: ReadingStats, refs: list[str], value: str) -> list[str]
 
 
 def without_note_cells(data: PDFPageExtraction, text: str) -> str:
-    """Page text with typed tables' NOTES cells removed (see `bom_note_cells`).
+    """Page text with typed tables' NOTES cells removed (see `BomReading.note_cells`).
 
     Each cell is removed where it sits, not wherever its text first appears:
     a NOTES cell 'C2' is the page's nth whole-word 'C2' if n - 1 come before
     it in reading order, so the 'C2' of an earlier 'C20' row, or the
     designator of the row it notes, stays.
     """
-    cells = bom_note_cells(data.words)
+    cells = read_bom(page_lines(data.words)).note_cells
     if not cells:
         return text
     # The page's words in reading order, as the text runs, and where each starts.
