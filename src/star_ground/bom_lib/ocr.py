@@ -13,6 +13,7 @@ of which then carries a warning to check it against the document.
 """
 
 import logging
+import math
 import os
 import re
 import threading
@@ -61,15 +62,22 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 # Pages are rendered at this resolution; detection then works on a copy whose
-# longest side is _DETECT_SIDE pixels. Together they keep one page under about
-# 500 MB, with the same accuracy as 300 dpi on GuitarPCB's image tables.
+# longest side is _DETECT_SIDE pixels. That gives the same accuracy as 300 dpi
+# on GuitarPCB's image tables.
 _DPI = 200
 # A small page (Five Cats' A5 inserts, 7pt table rows) is rendered larger, to
 # at least this many pixels on its longest side: at 200 dpi OCR reads 'R27' as
 # 'R21' and '220nF' as '220nl'.
 _MIN_RENDER_SIDE = 2400
 _DETECT_SIDE = 1280
-# At about 2.5 s a page, a document never takes more than about 20 s.
+# The most pixels a page is rendered with, about 48 MB as RGB: an A2 page at
+# 200 dpi (15.5 million), against 3.7 million for US Letter. A larger page is
+# rendered at a lower resolution: at 200 dpi a page 200 inches square would be
+# 40,000 pixels square, about 4.8 GB.
+_MAX_RENDER_PIXELS = 16_000_000
+# A page takes about 2.5 s to read, and re-reading its misread labels (at most
+# _MAX_REREADS cells, each at up to two sizes) can take about as long again, so
+# a document takes at most about 40 s.
 _MAX_PAGES = 8
 # A page is a candidate when an image covers this share of it, or when it has
 # almost no characters (SWAH v3 draws its table's text as outlines).
@@ -309,7 +317,28 @@ def needs_ocr(result: ParseResult) -> bool:
     )
 
 
+def render_resolution(width: float, height: float, dpi: float) -> float:
+    """The resolution to render an area at: `dpi`, or less for a huge area.
+
+    Args:
+        width: The area's width, in points.
+        height: Its height, in points.
+        dpi: The resolution wanted.
+
+    Returns:
+        `dpi`, lowered as far as it takes to keep the rendering within
+        `_MAX_RENDER_PIXELS`.
+    """
+    pixels = width * height * (dpi / 72) ** 2
+    if pixels <= _MAX_RENDER_PIXELS:
+        return dpi
+    return dpi * math.sqrt(_MAX_RENDER_PIXELS / pixels)
+
+
 def _candidate(page: Page) -> bool:
+    if not all(math.isfinite(side) and side > 0 for side in (page.width, page.height)):
+        # Nothing to render, and its resolution would divide by zero.
+        return False
     area = page.width * page.height
     pictured = any(
         (im["x1"] - im["x0"]) * (im["bottom"] - im["top"]) >= _IMAGE_SHARE * area
@@ -1210,7 +1239,11 @@ def attempt_ocr(
                 break
             if not _candidate(page):
                 continue
-            dpi = max(_DPI, 72 * _MIN_RENDER_SIDE / max(page.width, page.height))
+            dpi = render_resolution(
+                page.width,
+                page.height,
+                max(_DPI, 72 * _MIN_RENDER_SIDE / max(page.width, page.height)),
+            )
             image = page.to_image(resolution=dpi).original.convert("RGB")
             words = page_words(recognizer(image, 72 / dpi))
             words = _reread_labels(words, image, 72 / dpi, recognizer)

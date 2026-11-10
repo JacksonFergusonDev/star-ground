@@ -131,6 +131,24 @@ class TooManyPagesError(StarGroundError):
         )
 
 
+class CrowdedPageError(StarGroundError):
+    """A PDF page holding far more text than any build document's page.
+
+    Args:
+        page: The page, counting from 1.
+        chars: How many characters it holds.
+    """
+
+    kind = ErrorKind.UNREADABLE_PDF
+
+    def __init__(self, page: int, chars: int) -> None:
+        super().__init__(
+            f"Page {page} of this PDF holds {chars:,} characters, far more than "
+            "a build document's page, so the PDF wasn't read.",
+            "Check it's the build document for the pedal.",
+        )
+
+
 class BuildNotChosenError(StarGroundError):
     """A multi-circuit document's build was not chosen.
 

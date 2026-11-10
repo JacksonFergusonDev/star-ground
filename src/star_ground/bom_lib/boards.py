@@ -28,7 +28,7 @@ from typing import Any
 import pdfplumber
 
 from star_ground.bom_lib.designators import is_designator
-from star_ground.bom_lib.ocr import OcrBox, Recognizer, recognize
+from star_ground.bom_lib.ocr import OcrBox, Recognizer, recognize, render_resolution
 from star_ground.bom_lib.types import Location
 
 # The parts-list OCR's resolution: it reads 'R27' reliably at this size.
@@ -158,6 +158,8 @@ def _images(doc: Any) -> list[tuple[int, Any, tuple[float, float, float, float]]
     found: dict[str, tuple[int, Any, tuple[float, float, float, float]]] = {}
     for number, page in enumerate(doc.pages):
         area = float(page.width * page.height)
+        if not area > 0:
+            continue
         for image in page.images:
             box = (
                 max(float(image["x0"]), 0.0),
@@ -180,8 +182,10 @@ def _image_marks(
     recognizer: Recognizer,
 ) -> Iterable[BoardMark]:
     x0, top, x1, _ = box
-    image = page.crop(box).to_image(resolution=_DPI).original.convert("RGB")
-    scale = 72 / _DPI
+    # pdfplumber renders the whole page, then crops it.
+    dpi = render_resolution(page.width, page.height, _DPI)
+    image = page.crop(box).to_image(resolution=dpi).original.convert("RGB")
+    scale = 72 / dpi
 
     def placed(b: OcrBox) -> OcrBox:
         return OcrBox(b.text, b.x0 + x0, b.x1 + x0, b.top + top, b.bottom + top)
