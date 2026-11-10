@@ -63,6 +63,22 @@ accuracy *args: _sync-python fetch-samples
 test-network: _sync-python
     uv run pytest -m network -v
 
+# Build the image and run the container gate against it (needs Docker running)
+test-container: _sync-python
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if ! docker info > /dev/null 2>&1; then
+        printf 'The container check needs Docker, and Docker is not running here.\n' >&2
+        printf 'Start Docker and push again. CI runs this check on the pull request either way.\n' >&2
+        exit 1
+    fi
+    printf "\n{{ blue }}=== Testing the Container ==={{ nc }}\n"
+    uv run playwright install chromium
+    docker build --tag star-ground:smoke .
+    artifacts=$(mktemp -d)
+    uv run python -m scripts.smoke_container star-ground:smoke --artifacts "$artifacts"
+    printf "{{ green }}✔ Container check passed{{ nc }}\n"
+
 # Run tests with coverage
 test-cov: _sync-python fetch-samples
     @printf "\n{{ blue }}=== Running Tests with Coverage ==={{ nc }}\n"
@@ -127,7 +143,11 @@ serve-web: _sync-web
     fi
     exec pnpm --dir web run dev
 
+# The shared release script, pinned to a commit so `just bump` runs reviewed code.
+# To adopt a newer version, read its diff and replace the commit here.
+release_script := 'https://raw.githubusercontent.com/JacksonFergusonDev/ci-cd-release-infrastructure/0f7ac0b09417daed4bf3ee42407351bb285b1cff/scripts/release.py'
+
 # Offer to wait for CI and verify local state before bumping
 bump part:
     uv run python -m scripts.prepare_release
-    uv run --refresh https://raw.githubusercontent.com/JacksonFergusonDev/ci-cd-release-infrastructure/refs/heads/main/scripts/release.py {{ part }}
+    uv run --refresh {{ release_script }} {{ part }}

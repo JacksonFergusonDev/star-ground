@@ -89,6 +89,16 @@ repos:
         pass_filenames: false
         stages: [pre-push]
 
+      # Mirrors CI's Container job, on the files that select it in
+      # .github/scripts/changes.sh. It needs Docker running.
+      - id: container
+        name: container
+        entry: uv run just test-container
+        language: system
+        pass_filenames: false
+        files: ^(src/|pyproject\.toml|uv\.lock|README\.md|LICENSE|Dockerfile|\.dockerignore|\.python-version|branding/theme\.css|catalog/builds/|web/(src/|public/|astro\.config\.mjs|svelte\.config\.js|tsconfig\.json|package\.json|pnpm-lock\.yaml|pnpm-workspace\.yaml|\.npmrc)|\.github/(workflows/(ci|container-test)\.yml|scripts/|actions/)|scripts/(_browser_smoke|smoke_container|container_checks)\.py)
+        stages: [pre-push]
+
   # Website (web/), mirroring CI's Web job. Hooks run from the repository root,
   # so each one moves into web/ and drops the web/ prefix from the file names.
   - repo: local
