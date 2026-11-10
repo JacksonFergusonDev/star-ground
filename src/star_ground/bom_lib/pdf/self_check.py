@@ -213,7 +213,7 @@ def _check_other_lists(facts: ReadingFacts, stats: ReadingStats) -> None:
         # A schematic's 'REF value' labels are a drawing (Aion FX Procyon).
         if k in facts.bom_pages or is_schematic_page(data.text):
             continue
-        listings = find_listings(data.words)
+        listings = find_listings(page_lines(data.words))
         columns = Counter(round(listing.x0) for listing in listings)
         # A table, not labels scattered over a schematic or board render.
         if len(listings) >= _OTHER_LIST_MIN and max(columns.values()) >= (

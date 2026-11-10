@@ -125,9 +125,10 @@ class TestPageWords:
                 *boxes,
                 OcrBox("1N4148", 502, 542, 665, 674),
             ]
+            from star_ground.bom_lib.pdf.geometry import page_lines
             from star_ground.bom_lib.pdf.scan import find_listings
 
-            listings = find_listings(page_words(words).words)
+            listings = find_listings(page_lines(page_words(words).words))
             assert [(lst.ref, lst.value) for lst in listings] == [
                 ("C9", "1µ 16V"),
                 ("D1-D2", "1N4148"),
@@ -135,6 +136,7 @@ class TestPageWords:
 
     def test_the_box_after_a_designator_starts_a_cell(self) -> None:
         # G2 Animal v3: '*D1 - D4' ends where '1N34A GE' starts.
+        from star_ground.bom_lib.pdf.geometry import page_lines
         from star_ground.bom_lib.pdf.scan import find_listings
 
         words = page_words(
@@ -145,7 +147,7 @@ class TestPageWords:
                 OcrBox("1N34A GE", 418, 464, 735, 745),
             ]
         ).words
-        listings = find_listings(words)
+        listings = find_listings(page_lines(words))
         assert [(lst.ref, lst.value) for lst in listings] == [
             ("C12", "1n"),
             ("D1-D4", "1N34A GE"),

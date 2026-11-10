@@ -157,7 +157,7 @@ def valueless_refs(words: list[PDFWord]) -> list[str]:
         The designators, ranges expanded.
     """
     lines = page_lines(words)
-    listings = find_listings(words)
+    listings = find_listings(page_lines(words))
     starts = {(lst.line, round(lst.x0)) for lst in listings}
     edges = [
         (cell.x0, cell.words[-1]["x1"])
@@ -305,7 +305,7 @@ def unreadable_rows(words: list[PDFWord]) -> list[str]:
     """
     lines = page_lines(words)
     values: list[float] = []
-    for lst in find_listings(words):
+    for lst in find_listings(page_lines(words)):
         cells = lines[lst.line]
         k = next(
             (

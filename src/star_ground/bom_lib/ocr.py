@@ -583,7 +583,7 @@ def table_block(data: PDFPageExtraction) -> PDFPageExtraction:
     """
     words = data.words
     lines = group_lines(words)
-    listings = find_listings(words)
+    listings = find_listings(page_lines(words))
     columns = [
         c
         for c in _clusters([lst.x0 for lst in listings], _ALIGN_PT)
@@ -706,7 +706,7 @@ def _label_cells(words: list[PDFWord]) -> list[_LabelCell]:
         The cells, top to bottom within each column.
     """
     lines = page_lines(words)
-    listings = find_listings(words)
+    listings = find_listings(page_lines(words))
     starts = {(lst.line, round(lst.x0)) for lst in listings}
     cells: list[_LabelCell] = []
     for column in _clusters([lst.x0 for lst in listings], _ALIGN_PT):
@@ -793,7 +793,7 @@ def _reread_labels(
         return data
     words = list(data.words)
     # The table's own listings: the board drawing beside it names parts too.
-    listed = {lst.ref.upper() for lst in find_listings(table)}
+    listed = {lst.ref.upper() for lst in find_listings(page_lines(table))}
     for cell in cells:
         word, row = cell.word, cell.row
         height = row["size"] / _GLYPH_SHARE
@@ -1056,7 +1056,7 @@ def _unlisted(pages_data: list[PDFPageExtraction], listed: set[str]) -> set[str]
     """
     unlisted = set()
     for data in pages_data:
-        listings = find_listings(data.words)
+        listings = find_listings(page_lines(data.words))
         # A short column of controls counts ('Trim1 | Trim2 | VOL', above
         # Samurai Boost's unread 'Boost | Toggle | DPDT').
         columns = [

@@ -75,7 +75,7 @@ def layout_entries(
     """
     entries: list[Entry] = []
     found = {
-        page_no: find_listings(data.words)
+        page_no: find_listings(page_lines(data.words))
         for page_no, data in enumerate(pages_data)
         if only_pages is None or page_no in only_pages
     }

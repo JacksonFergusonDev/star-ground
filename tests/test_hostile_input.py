@@ -92,6 +92,11 @@ def _seconds(work: Callable[[], object]) -> float:
         gc.enable()
 
 
+def _listings(words: list[PDFWord]) -> list[Listing]:
+    """The listings on a page of words."""
+    return find_listings(page_lines(words))
+
+
 def _scales_linearly(work: Callable[[int], Callable[[], object]], size: int) -> None:
     """Asserts the work grows about linearly with its input.
 
@@ -343,11 +348,13 @@ def _valueless_refs_alone(
     Finding listings isn't what these tests time, and it is most of the work.
     """
     found: dict[int, list[Listing]] = {}
-    monkeypatch.setattr(page_checks, "find_listings", lambda words: found[id(words)])
+    monkeypatch.setattr(
+        page_checks, "find_listings", lambda lines: found[id(lines[0][0].words[0])]
+    )
 
     def work(size: int) -> Callable[[], list[str]]:
         words = page(size)
-        found[id(words)] = find_listings(words)
+        found[id(words[0])] = _listings(words)
         return partial(valueless_refs, words)
 
     return work
@@ -409,7 +416,7 @@ def test_long_page_of_typed_listings() -> None:
     words = _typed_listings(4000)
     columns = scan._type_columns(page_lines(words))
     assert columns == {65 + 120 * k for k in range(10)}
-    listings = find_listings(words)
+    listings = _listings(words)
     assert len(listings) == 4000
     assert {lst.value for lst in listings} == {"10k"}
 
@@ -440,7 +447,7 @@ def _dashed_listings(count: int) -> list[PDFWord]:
 def test_many_dashed_listings_on_a_line() -> None:
     # 2.2 s for 800 before: each listing searched the whole line for the word
     # after it (`_dash_after`), and split the rest of its cell again.
-    _scales_linearly(lambda n: partial(find_listings, _dashed_listings(n)), 800)
+    _scales_linearly(lambda n: partial(_listings, _dashed_listings(n)), 800)
 
 
 def test_many_dashed_listings_in_one_cell() -> None:
@@ -450,7 +457,7 @@ def test_many_dashed_listings_in_one_cell() -> None:
     assert cells is not None
     assert [c.text for c in cells[:4]] == ["R1", "10k", "R2", "10k"]
     assert len(cells) == 6000
-    listings = find_listings(words)
+    listings = _listings(words)
     assert len(listings) == 3000
     assert all(lst.dashed and lst.value == "10k" for lst in listings)
 
