@@ -7,7 +7,7 @@ values to ensure consistent matching between BOMs and Inventory.
 
 import re
 from decimal import Decimal
-from functools import cache
+from functools import lru_cache
 
 from star_ground.bom_lib import constants
 from star_ground.bom_lib.designators import parse_designator
@@ -48,8 +48,14 @@ _OHMS = re.compile(r"(?<![\w.])\d+(?:\.\d+)?R\d*(?![\w.])")
 _VACTROL = re.compile(r"VTL\d|NSL-?\d")
 # A DIP switch, written with a dash ('DIP-5'), unlike socket sizes ('DIP8').
 # 'DIP-5 Dip Switch' (PedalPCB Muffin Factory), '2-POLE_DIP' (GuitarPCB Afterblaster).
+# 'DIP8 ... SWITCH' is a switch when SWITCH follows any DIP size, so it is
+# enough to look after the first on its line: the last branch is anchored to
+# the line's start and skips to it, where an unanchored search would scan the
+# rest of the line again from every DIP size it found.
+_DIP_SIZE = r"\bDIP[- ]?\d+\b"
 DIP_SWITCH = re.compile(
-    r"\bDIP-\d+\b|\bDIP[- ]?\d+\b.*\bSWITCH|\bDIP SWITCH|\b\d-POLE[_ ]DIP\b"
+    r"\bDIP-\d+\b|\bDIP SWITCH|\b\d-POLE[_ ]DIP\b"
+    rf"|(?m:^)(?:(?!{_DIP_SIZE}).)*{_DIP_SIZE}.*\bSWITCH"
 )
 _JACK_VALUE = re.compile(r"\b(?:TRS|JACK)\b")
 # A TO-92/TO-220 voltage regulator takes no DIP socket: '78L06', 'MC7815', 'LM317'.
@@ -108,7 +114,10 @@ def normalize_value_to_quantity(
     return dec
 
 
-@cache
+# Parsing a value takes about 40 µs and a master list asks again for every
+# part it sorts and sources; the bound keeps the keys builders send from
+# piling up for the life of the server.
+@lru_cache(maxsize=4096)
 def key_quantity(key: ComponentKey) -> Value | Decimal | None:
     """A part's value with its physical unit, for sorting and sourcing.
 
@@ -122,10 +131,7 @@ def key_quantity(key: ComponentKey) -> Value | Decimal | None:
     """
     if key.category in (ComponentCategory.UNKNOWN, ComponentCategory.PCB):
         return None
-    try:
-        return normalize_value_to_quantity(key.category, key.value)
-    except ValueError:
-        return None
+    return normalize_value_to_quantity(key.category, key.value)
 
 
 _RESTATED = re.compile(r"\(\s*([^()\s]+)\s*\)\s*")

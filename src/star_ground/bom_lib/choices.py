@@ -25,10 +25,14 @@ class ValueChoice:
     note: str | None = None
 
 
-# A value given as a range: 'RPD  1M to 2M2', 'CLR  1k8 - 4k7'.
+# A value given as a range: 'RPD  1M to 2M2', 'CLR  1k8 - 4k7'. Digits after
+# the number belong to a multiplier ('2M2'); with the multiplier optional, a
+# bare run of digits could be split between `\d+` and `\d*` in every way,
+# quadratic in its length.
+_RANGE_END = r"\d+(?:\.\d+)?(?:[pnuµmkKMR]\d*)?[FΩ]?"
 _VALUE_RANGE = re.compile(
-    r"(?P<lo>\d+(?:\.\d+)?[pnuµmkKMR]?\d*[FΩ]?)\s*(?:to|-|\u2013)\s*"
-    r"(?P<hi>\d+(?:\.\d+)?[pnuµmkKMR]?\d*[FΩ]?)(?P<rest>(?:\s.*)?)",
+    rf"(?P<lo>{_RANGE_END})\s*(?:to|-|\u2013)\s*"
+    rf"(?P<hi>{_RANGE_END})(?P<rest>(?:\s.*)?)",
     re.IGNORECASE,
 )
 # Two part numbers or switch types, either of which may be bought. In a
@@ -41,18 +45,28 @@ _PART_PAIR = re.compile(
     rf"|({_LISTED_CODE}),\s*({_LISTED_CODE})"
 )
 # Words describing both values may follow: '4u7 or 5uF electro' (Tonepad).
+# The first value has no slash (no value does), so only the first slash can
+# split the pair: trying every slash would rescan the rest of the word for
+# each, quadratic in a word like 'a/a/a/...'.
 _VALUE_PAIR = re.compile(
-    r"(\S+?)(?:\s+or\s+|\s*/\s*)(\S+)((?:\s+[A-Za-z][A-Za-z.]*)*)", re.IGNORECASE
+    r"([^\s/]+?)(?:\s+or\s+|\s*/\s*)(\S+)((?:\s+[A-Za-z][A-Za-z.]*)*)",
+    re.IGNORECASE,
 )
 _UNIT = re.compile(r"[A-Za-zµΩ]")
 _VOLTAGE = re.compile(r"\d+(?:\.\d+)?V", re.IGNORECASE)
 _SINGLE_REF = re.compile(r"[^\s,]+")
 # Examples of a part type: 'Silicon diode (1N456, 1N4148, etc)' (Tonepad).
-_EXAMPLES = re.compile(r"\s*\(([^()]*),\s*etc\.?\)\s*$", re.IGNORECASE)
+# These two start at the parenthesis, not at the spaces before it (the text
+# around them is stripped or re-spaced anyway): a search starting with `\s*`
+# rescans a run of spaces from each of its characters.
+_EXAMPLES = re.compile(r"\(([^()]*),\s*etc\.?\)\s*$", re.IGNORECASE)
 # An alternative printed inside the value: '51pF (or 47pF) MLCC'.
-# Tonepad: 'NP4124 (use 2N3904)', '4558 (TL072 will also work)'.
+# Tonepad: 'NP4124 (use 2N3904)', '4558 (TL072 will also work)'. The
+# alternative starts and ends on a non-space, so it never competes with the
+# spaces around it for the same characters.
 _OR_ALTERNATIVE = re.compile(
-    r"\s*\(\s*(?:or|use)\s+([^()]+?)\s*\)|\s*\(([^()]+?)\s+will\s+also\s+work\)",
+    r"\(\s*(?:or|use)\s+([^()\s](?:[^()]*[^()\s])?)\s*\)"
+    r"|\(([^()]*?[^()\s])\s+will\s+also\s+work\)",
     re.IGNORECASE,
 )
 

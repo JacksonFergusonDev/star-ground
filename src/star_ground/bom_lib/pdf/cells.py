@@ -42,8 +42,11 @@ CONTROL_VALUE = re.compile(
     r"\*?(?:(?i:dual|latching|momentary|mini|slide|type-?2|on(?:\s*[/-]\s*(?:on|off))+)\s+)*"
     # Kilohms in either case: 'VOL  A100k' (GuitarPCB Blues Power).
     r"(?:[ABCWG]\d+(?:\.\d+)?[KkM][ABC]?\b|\d+(?:\.\d+)?[KkMR][ABC]?\b|[SD34]P[DS]T\b|\dP\dT\b"
-    # A jack: 'SIDECHAIN  1/4" Switching TRS' (Muzzle).
-    r"|(?=\S*\d.*\b(?i:trs|jack)\b)"
+    # A jack: 'SIDECHAIN  1/4" Switching TRS' (Muzzle). A digit in the first
+    # word, then TRS or JACK: the first digit is enough, so the lookahead
+    # stops there rather than trying each digit in turn (quadratic in a long
+    # number).
+    r"|(?=[^\s\d]*\d.*\b(?i:trs|jack)\b)"
     # Toggle positions alone: 'SLA  ON/OFF/ON' (Trojan Horse).
     r"|(?i:\(?on(?:\s*[/-]\s*(?:on|off))+\)?)$)"
 )
