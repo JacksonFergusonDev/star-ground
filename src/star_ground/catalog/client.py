@@ -10,8 +10,8 @@ It is deliberately slow and plain:
   never less than `MIN_DELAY_S` plus up to `JITTER_S` more at random
   (docs.pedalpcb.com asks for 10 seconds). The job runs nightly, so going
   slowly costs nothing and is less likely to be turned away.
-- **Patient:** a 429, a server error, a timeout or a dropped connection is
-  waited out (a 429's `Retry-After`, or `BACKOFF_S`) and tried again, up to
+- **Patient:** a 429, a server error, a timeout, a dropped connection or a
+  name that doesn't resolve is waited out (a 429's `Retry-After`, or `BACKOFF_S`) and tried again, up to
   `RETRIES` times. So is a sitemap that comes back as something else
   (`discover`), as a site's error page sometimes does.
 - **Stopped by a bot check:** a challenge (Cloudflare's, a 403, or a 429 that
@@ -62,9 +62,12 @@ class BlockedError(Exception):
 
 
 class GoneError(Exception):
-    """A link that's dead: its host no longer exists, or it answers 404 or 410.
+    """A link that's dead: it answers 404 or 410.
 
     Not a failure to look into: the document is no longer published there.
+    A host whose name doesn't resolve isn't gone: a resolver failing on the
+    job's runner looks the same, so it's a failed fetch, tried again next
+    run, and its builds stay listed.
     """
 
 
@@ -214,15 +217,12 @@ class PoliteClient:
                 requests.exceptions.ConnectionError,
                 requests.exceptions.Timeout,
             ) as error:
-                if "NameResolutionError" in repr(error):
-                    raise GoneError(
-                        f"{host} no longer exists (its name doesn't resolve)"
-                    ) from None
                 if attempt == RETRIES:
                     raise ConnectionError(
                         f"{host} didn't answer {url} in {RETRIES + 1} tries"
                     ) from error
-                # A slow or dropped answer is waited out like a server error.
+                # A slow or dropped answer, or a name that doesn't resolve,
+                # is waited out like a server error.
                 wait = BACKOFF_S * 2**attempt
                 logger.warning(
                     "%s didn't answer %s (%s); waiting %.0f s before trying "

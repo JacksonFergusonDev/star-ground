@@ -1,8 +1,9 @@
 """Reads each discovered document and keeps what it derived.
 
-For each document the job fetches it (conditionally, after the first time),
-reads it as an upload would be read, with OCR for image parts lists, and
-keeps the result only when it reads cleanly (`clean`). The catalog holds:
+For each document the job fetches it (conditionally, once a reading of it
+has settled: see `_SETTLED`), reads it as an upload would be read, with OCR
+for image parts lists, and keeps the result only when it reads cleanly
+(`clean`). The catalog holds:
 
 - `builds/<publisher>/<id>.json`: a `CatalogEntry` per listed document, with
   where its board and schematic draw each part (`boards`, step 7) and what
@@ -28,6 +29,7 @@ from datetime import UTC, datetime
 from hashlib import sha256
 from pathlib import Path
 
+from star_ground import version
 from star_ground.api import offered, read_document
 from star_ground.bom_lib import (
     FileUpload,
@@ -63,6 +65,15 @@ from star_ground.catalog.verified import (
 # new positions, without being read or listed again.
 BOARDS_VERSION = 1
 
+# Outcomes after which the state holds a reading of the document as it was
+# fetched, listed or judged not clean, so a 304 or the same hash means there's
+# nothing new to read. After any other (gone, failed, blocked, disallowed) the
+# state's reading may be missing or stale, so the document is fetched in full
+# and read again: a document that comes back, unchanged, is listed again.
+_SETTLED = frozenset(
+    {Outcome.LISTED, Outcome.UPDATED, Outcome.UNCHANGED, Outcome.NOT_CLEAN}
+)
+
 FindBoards = Callable[[bytes, list[str], list[Location]], dict[str, list[Location]]]
 
 
@@ -97,6 +108,7 @@ class DocumentState:
         verification: Whether that reading was checked by hand, then.
         boards: The `BOARDS_VERSION` its entry's board positions came from;
             0 for none.
+        reader: The Star Ground version that last read it, when it was read.
         title: The title its reading found, when it was read; the entry's
             title is this, or what its page calls it (`entry_title`).
         postponed: Whether the last run ran out of time before asking about
@@ -112,6 +124,7 @@ class DocumentState:
     parts: str | None = None
     verification: str = ""
     boards: int = 0
+    reader: str = ""
     title: str | None = None
     postponed: bool = False
 
@@ -266,6 +279,17 @@ def _unchanged(
     return Event(
         publisher, url, Outcome.UNCHANGED, how, verified=kept == Verification.VERIFIED
     )
+
+
+def _relisted(previous: DocumentState, digest: str, parts: str) -> tuple[Outcome, str]:
+    """What became of a document just read and listed, and why."""
+    if not previous.entry:
+        return Outcome.LISTED, ""
+    if digest != previous.sha256:
+        return Outcome.UPDATED, "the document changed since it was listed; check it"
+    if parts != previous.parts:
+        return Outcome.UPDATED, "read again, and its parts changed; check it"
+    return Outcome.UNCHANGED, "read again"
 
 
 def _found_while_reading(
@@ -446,19 +470,27 @@ class CatalogRun:
             return
         self.reporter.info(f"{label} {listing.name}")
         checked = _now()
+        checked_by_hand = previous.sha256 in self.verified.checked
         # A document left out but since checked by hand is fetched in full,
         # so it can be read and listed.
-        newly_checked = (
-            previous.outcome == Outcome.NOT_CLEAN
-            and previous.sha256 in self.verified.checked
-        )
+        newly_checked = previous.outcome == Outcome.NOT_CLEAN and checked_by_hand
+        # A checked document last read by another version of Star Ground is
+        # read again, so a reader change that alters its parts loses its mark.
+        read_again = checked_by_hand and previous.reader != version()
         # A listed build without current board positions is fetched in full
         # too, so they can be found.
         needs_boards = previous.entry is not None and previous.boards < BOARDS_VERSION
-        fetched = self._fetch(listing, previous, full=newly_checked or needs_boards)
+        settled = previous.outcome in _SETTLED
+        fetched = self._fetch(
+            listing,
+            previous,
+            full=newly_checked or read_again or needs_boards or not settled,
+        )
         if fetched is None:
             return
         if fetched.status == 304:
+            # Only a settled document is asked for conditionally, so the
+            # outcome it keeps is the one reported.
             kept = self._still(previous)
             self._refresh(previous, listing, kept)
             self._record(
@@ -474,17 +506,7 @@ class CatalogRun:
             etag=fetched.etag,
             last_modified=fetched.last_modified,
         )
-        if (
-            digest == previous.sha256
-            and not newly_checked
-            and previous.outcome
-            in (
-                Outcome.LISTED,
-                Outcome.UPDATED,
-                Outcome.UNCHANGED,
-                Outcome.NOT_CLEAN,
-            )
-        ):
+        if digest == previous.sha256 and settled and not (newly_checked or read_again):
             self._same_document(
                 listing, previous, fetched_state, fetched.content, needs_boards
             )
@@ -591,7 +613,11 @@ class CatalogRun:
         digest: str,
         checked: str,
     ) -> None:
-        """Reads a new or changed document and lists it, if it reads cleanly."""
+        """Reads a document and lists it, if it reads cleanly.
+
+        It's new or changed, or its last reading needs doing again (it failed,
+        it's gone and back, or it was checked by hand and the reader changed).
+        """
         url, publisher = listing.document, self.publisher
         try:
             reading = self.read(FileUpload(listing.name, content))
@@ -602,12 +628,21 @@ class CatalogRun:
             parts = fingerprint(accepted)
         except Exception as error:  # A reading bug is reported; the rest go on.
             reason = f"couldn't read it: {type(error).__name__}: {error}"
+            # The last good reading stays listed, and the state keeps what it
+            # was read from, so the next run fetches the document in full and
+            # tries again. A reading that fails every night fails the job the
+            # first time, then is only listed.
+            again = previous.outcome == Outcome.FAILED
             self._record(
                 url,
-                replace(
-                    fetched_state, outcome=Outcome.FAILED, reason=reason, entry=None
+                replace(previous, outcome=Outcome.FAILED, reason=reason),
+                Event(
+                    publisher,
+                    url,
+                    Outcome.FAILED,
+                    f"{reason} (it failed last run too)" if again else reason,
+                    again=again,
                 ),
-                Event(publisher, url, Outcome.FAILED, reason),
             )
             return
         verification = self.verified.check(digest, parts)
@@ -616,6 +651,7 @@ class CatalogRun:
             parts=parts,
             verification=verification,
             title=accepted.title,
+            reader=version(),
         )
         if verification == Verification.CHANGED:
             self.reporter.warning(
@@ -644,12 +680,7 @@ class CatalogRun:
         listed = self._entry(listing, digest, accepted, checked, is_verified)
         listed = listed.with_boards(self._boards(listed, content))
         listed.write(self._entry_path(listed.id))
-        outcome = Outcome.UPDATED if previous.entry else Outcome.LISTED
-        reason = (
-            "the document changed since it was listed; check it"
-            if previous.entry
-            else ""
-        )
+        outcome, reason = _relisted(previous, digest, parts)
         self._record(
             url,
             replace(

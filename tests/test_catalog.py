@@ -109,7 +109,9 @@ class _Web:
         self, pages: Mapping[str, _Response | list[_Response | Exception]]
     ) -> None:
         self.headers: dict[str, str] = {}
-        self._pages = {k: v if isinstance(v, list) else [v] for k, v in pages.items()}
+        self._pages: dict[str, list[_Response | Exception]] = {
+            k: v if isinstance(v, list) else [v] for k, v in pages.items()
+        }
         self.asked: list[tuple[str, dict[str, str]]] = []
 
     def get(self, url: str, headers: dict[str, str], **_: Any) -> _Response:
@@ -486,15 +488,28 @@ def test_a_page_that_fails_is_reported_and_the_rest_go_on() -> None:
     assert list(found.listings) == ["https://docs.pedalpcb.com/project/Drive.pdf"]
 
 
-def test_a_dead_host_is_gone_not_failed() -> None:
-    class _Dead(_Web):
-        def get(self, url: str, headers: dict[str, str], **_: Any) -> _Response:
-            raise requests.exceptions.ConnectionError(
-                "NameResolutionError: no such host"
-            )
+def _unresolved() -> requests.exceptions.ConnectionError:
+    return requests.exceptions.ConnectionError(
+        "NameResolutionError: Failed to resolve 'docs.pedalpcb.com'"
+    )
 
-    with pytest.raises(GoneError, match="no longer exists"):
-        _client(_Dead({})).get("http://old.test/doc.pdf")
+
+def test_a_name_that_does_not_resolve_is_waited_out_not_gone() -> None:
+    # A resolver blip on the runner looks just like a host that's gone.
+    web = _Web({"https://a.test/d.pdf": [_unresolved(), _Response(body=b"%PDF")]})
+    clock = _Clock()
+
+    fetched = _client(web, clock).get("https://a.test/d.pdf")
+
+    assert fetched.content == b"%PDF"
+    assert BACKOFF_S in clock.slept
+
+
+def test_a_name_that_never_resolves_fails_after_its_retries() -> None:
+    web = _Web({"https://a.test/d.pdf": [_unresolved()]})
+
+    with pytest.raises(ConnectionError, match="didn't answer"):
+        _client(web).get("https://a.test/d.pdf")
 
 
 def test_a_missing_document_is_gone() -> None:
@@ -1041,6 +1056,104 @@ def test_aion_fx_is_not_in_the_catalog() -> None:
     assert all("aionfx" not in s.site for s in SOURCES.values())
 
 
+class _Conditional(_Web):
+    """A fake web whose documents answer a conditional request with a 304."""
+
+    def get(self, url: str, headers: dict[str, str], **kwargs: Any) -> _Response:
+        if url.endswith(".pdf") and "If-None-Match" in headers:
+            self.asked.append((url, headers))
+            return _Response(304)
+        return super().get(url, headers, **kwargs)
+
+
+def _conditional(body: bytes = b"%PDF fuzz") -> _Web:
+    web = _Conditional({})
+    web._pages = _docs(_pedalpcb_web(), body)._pages
+    return web
+
+
+def _fuzz_event(reporter: Reporter) -> Event:
+    return next(e for e in reporter.tally.events if e.document.endswith("Fuzz.pdf"))
+
+
+def test_a_build_whose_document_returns_unchanged_is_listed_again(
+    tmp_path: Path, run: Any
+) -> None:
+    run(_docs(_pedalpcb_web()), lambda upload: _reading())
+    gone = _docs(_pedalpcb_web())
+    gone._pages["https://docs.pedalpcb.com/project/Fuzz.pdf"] = [_Response(404)]
+    run(gone, lambda upload: _reading())
+    assert not (tmp_path / "builds" / "pedalpcb" / "fuzz.json").exists()
+    web = _conditional()
+
+    reporter = run(web, lambda upload: _reading())
+
+    # Fetched in full: its ETag is from before it went, so a 304 says nothing.
+    fuzz_asks = [h for u, h in web.asked if u.endswith("Fuzz.pdf")]
+    assert fuzz_asks == [{}]
+    assert (tmp_path / "builds" / "pedalpcb" / "fuzz.json").exists()
+    assert _fuzz_event(reporter).outcome == Outcome.LISTED
+
+
+def test_a_resolver_failure_keeps_the_builds_listed(tmp_path: Path, run: Any) -> None:
+    run(_docs(_pedalpcb_web()), lambda upload: _reading())
+    web = _docs(_pedalpcb_web())
+    web._pages["https://docs.pedalpcb.com/project/Fuzz.pdf"] = [_unresolved()]
+
+    reporter = run(web, lambda upload: _reading())
+
+    assert (tmp_path / "builds" / "pedalpcb" / "fuzz.json").exists()
+    assert _fuzz_event(reporter).outcome == Outcome.FAILED
+
+
+def test_a_changed_document_that_fails_to_read_keeps_its_last_reading(
+    tmp_path: Path, run: Any
+) -> None:
+    run(_docs(_pedalpcb_web()), lambda upload: _reading())
+    fuzz_path = tmp_path / "builds" / "pedalpcb" / "fuzz.json"
+    listed = fuzz_path.read_text()
+
+    def broken(upload: FileUpload) -> ParseResult:
+        raise RuntimeError("boom")
+
+    first = _fuzz_event(run(_docs(_pedalpcb_web(), b"%PDF fuzz v2"), broken))
+    # Builders still see the last good reading.
+    assert fuzz_path.read_text() == listed
+    second = _fuzz_event(run(_conditional(b"%PDF fuzz v2"), broken))
+    # Tried again in full; failing twice is known, not news.
+    assert (first.outcome, first.again) == (Outcome.FAILED, False)
+    assert (second.outcome, second.again) == (Outcome.FAILED, True)
+    assert fuzz_path.read_text() == listed
+
+    reporter = run(_conditional(b"%PDF fuzz v2"), lambda upload: _reading(parts=3))
+
+    assert _fuzz_event(reporter).outcome == Outcome.UPDATED
+    fuzz = json.loads(fuzz_path.read_text())
+    assert fuzz["sha256"] == document_hash(b"%PDF fuzz v2")
+    assert len(fuzz["builds"][0]["parts"]) == 3
+
+
+def test_a_document_back_from_a_failure_is_not_reported_as_failing_again(
+    tmp_path: Path, run: Any
+) -> None:
+    run(_docs(_pedalpcb_web()), lambda upload: _reading())
+
+    def broken() -> _Web:
+        web = _docs(_pedalpcb_web())
+        web._pages["https://docs.pedalpcb.com/project/Fuzz.pdf"] = [_Response(500)]
+        return web
+
+    run(broken(), lambda upload: _reading())
+    back = _fuzz_event(run(_conditional(), lambda upload: _reading()))
+    state = State.load(tmp_path / "state" / "pedalpcb.json")
+    failed = _fuzz_event(run(broken(), lambda upload: _reading()))
+
+    assert back.outcome == Outcome.UNCHANGED
+    fuzz = state.documents["https://docs.pedalpcb.com/project/Fuzz.pdf"]
+    assert fuzz.outcome == Outcome.UNCHANGED
+    assert (failed.outcome, failed.again) == (Outcome.FAILED, False)
+
+
 def test_a_dead_link_hides_its_build(tmp_path: Path, run: Any) -> None:
     run(_docs(_pedalpcb_web()), lambda upload: _reading())
     web = _docs(_pedalpcb_web())
@@ -1070,6 +1183,23 @@ def test_a_fingerprint_is_what_is_bought_not_where_or_in_what_order() -> None:
 
     assert fingerprint(a) == fingerprint(ParseResult(b, ReadingStats(), title="Other"))
     assert fingerprint(a) != fingerprint(c)
+
+
+def test_a_fingerprint_counts_parts_counted_by_value() -> None:
+    def counting(count: int) -> ParseResult:
+        reading = _reading()
+        reading.inventory.add_counted(
+            "doc", make_component_key(ComponentCategory.RESISTORS, "47"), count
+        )
+        return reading
+
+    assert fingerprint(counting(2)) != fingerprint(counting(3))
+    assert fingerprint(counting(2)) != fingerprint(_reading())
+    # A reading that counts nothing keeps the fingerprint it was checked with.
+    assert (
+        fingerprint(_reading())
+        == "4a55a41713604242c7756e7dcdba2e66fe4eb1ca07c891e85e99dbd6fd5e4c23"
+    )
 
 
 def test_a_document_is_verified_only_with_its_checked_reading(tmp_path: Path) -> None:
@@ -1132,6 +1262,48 @@ def test_a_checked_file_that_now_reads_differently_loses_its_mark(
     fuzz = json.loads((tmp_path / "builds" / "pedalpcb" / "fuzz.json").read_text())
     assert fuzz["verified"] is False
     assert "likely a parser regression" in reporter._stream.getvalue()
+
+
+def test_a_checked_document_is_read_again_by_a_new_version(
+    tmp_path: Path, run: Any, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _verify(tmp_path, b"%PDF fuzz", _reading())
+    run(_docs(_pedalpcb_web()), lambda upload: _reading())
+    reads: list[str] = []
+
+    def regressed(upload: FileUpload) -> ParseResult:
+        reads.append(upload.name)
+        return _reading(parts=3)
+
+    # The same version doesn't read an unchanged document again.
+    run(_conditional(), regressed)
+    assert reads == []
+    monkeypatch.setattr("star_ground.catalog.build.version", lambda: "99.0.0")
+
+    reporter = run(_conditional(), regressed)
+
+    assert reads == ["Fuzz.pdf"]
+    fuzz = json.loads((tmp_path / "builds" / "pedalpcb" / "fuzz.json").read_text())
+    assert fuzz["verified"] is False
+    assert "likely a parser regression" in reporter._stream.getvalue()
+    assert _fuzz_event(reporter).outcome == Outcome.UPDATED
+
+
+def test_a_checked_document_that_reads_the_same_keeps_its_mark(
+    tmp_path: Path, run: Any, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _verify(tmp_path, b"%PDF fuzz", _reading())
+    run(_docs(_pedalpcb_web()), lambda upload: _reading())
+    monkeypatch.setattr("star_ground.catalog.build.version", lambda: "99.0.0")
+
+    reporter = run(_conditional(), lambda upload: _reading())
+
+    fuzz = json.loads((tmp_path / "builds" / "pedalpcb" / "fuzz.json").read_text())
+    assert fuzz["verified"] is True
+    event = _fuzz_event(reporter)
+    assert (event.outcome, event.reason) == (Outcome.UNCHANGED, "read again")
+    state = State.load(tmp_path / "state" / "pedalpcb.json")
+    assert state.documents[fuzz["document"]].reader == "99.0.0"
 
 
 def test_a_newly_verified_unchanged_document_gains_its_mark(

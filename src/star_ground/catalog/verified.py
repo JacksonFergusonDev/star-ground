@@ -8,7 +8,10 @@ Everything else is **unverified**: read automatically, not yet checked.
 
 Keeping the reading's fingerprint, not just the file's hash, means a parser
 change that alters a checked document's parts can't keep its mark: the build
-goes back to unverified and the run flags it (`Verification.CHANGED`).
+goes back to unverified and the run flags it (`Verification.CHANGED`). The
+job reads a checked document again whenever Star Ground's version differs
+from the one that last read it, even when the file hasn't changed, so the
+check happens on the first night after a release.
 
 The list is grown with `scripts/verify_documents.py`, which grades the job's
 own reading of a labelled document and adds it only when every part is right.
@@ -20,7 +23,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
 
-from star_ground.api import read_parts
+from star_ground.api import counted_parts, read_parts
 from star_ground.bom_lib import ParseResult
 
 
@@ -73,16 +76,20 @@ def builds(result: ParseResult) -> list[tuple[str | None, ParseResult]]:
 def fingerprint(result: ParseResult) -> str:
     """A hash of everything a builder buys from a reading: each build's parts.
 
-    Locations, warnings and the title don't count: they don't change what's
-    bought. Order doesn't count either.
+    That's the parts read by designator and the parts counted by value with
+    none (most of a Tonepad build). Locations, warnings and the title don't
+    count: they don't change what's bought. Order doesn't count either.
     """
-    canonical = sorted(
-        (
-            name or "",
-            sorted((p.ref, p.category.value, p.value) for p in read_parts(build)),
+    canonical: list[tuple[object, ...]] = []
+    # By build name, which is unique within a reading.
+    for name, build in sorted(builds(result), key=lambda b: b[0] or ""):
+        read = sorted((p.ref, p.category.value, p.value) for p in read_parts(build))
+        counted = sorted(
+            (p.category.value, p.value, p.count) for p in counted_parts(build)
         )
-        for name, build in builds(result)
-    )
+        # A build that counts nothing leaves the count out, so its
+        # fingerprint is the one checked before counted parts were included.
+        canonical.append((name or "", read, counted) if counted else (name or "", read))
     return hashlib.sha256(json.dumps(canonical).encode()).hexdigest()
 
 
