@@ -616,7 +616,6 @@
           "Hardware/Misc",
           "ICs",
           "Optoelectronics",
-          "Unknown",
           "PCB"
         ],
         "title": "ComponentCategory",

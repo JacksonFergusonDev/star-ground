@@ -7,13 +7,8 @@ from typing import cast
 import pyparsing as pp
 import pytest
 
-from star_ground.bom_lib.grammar import (
-    DIGIT,
-    MULTIPLIER,
-    UNIT,
-    build_value_parser,
-    parse_value_to_decimal,
-)
+from star_ground.bom_lib.grammar import parse_value_to_decimal
+from star_ground.bom_lib.grammar.value_parser import build_value_parser
 from star_ground.bom_lib.units import Unit
 
 
@@ -80,26 +75,6 @@ def test_parse_value_to_decimal_none_returns(val_str: str) -> None:
 def test_parse_value_to_decimal_falsy_none() -> None:
     """Verifies that None input safely returns None."""
     assert parse_value_to_decimal(cast(str, None)) is None
-
-
-def test_grammar_primitives() -> None:
-    """Verifies standalone parsing of atomic grammar primitives."""
-    # DIGIT
-    assert DIGIT.parse_string("123", parse_all=True)[0] == "123"
-
-    # MULTIPLIER
-    assert MULTIPLIER.parse_string("k", parse_all=True)[0] == "k"
-    assert MULTIPLIER.parse_string("µ", parse_all=True)[0] == "µ"
-    assert MULTIPLIER.parse_string("M", parse_all=True)[0] == "M"
-
-    # UNIT
-    assert UNIT.parse_string("Ω", parse_all=True)[0] == "Ω"
-    assert UNIT.parse_string("F", parse_all=True)[0] == "F"
-    assert UNIT.parse_string("ohm", parse_all=True)[0] == "ohm"
-
-    # build_value_parser returns valid parser
-    parser = build_value_parser()
-    assert parser is not None
 
 
 def test_greek_mu_is_micro() -> None:

@@ -202,10 +202,13 @@ ignore_names = [
     "kwargs",
     # API response fields and Pydantic's config, read when a model serializes.
     "bom_qty",
+    "build_order",
+    "has_stock",
     "ignored_lines",
     "model_config",
     "net_need",
     "ocr_builds",
+    "ocr_offered",
     "ocr_reads",
     "reviews",
     # Catalog entry fields read only by the website, from the entry files
@@ -217,5 +220,11 @@ ignore_names = [
     "handle_endtag",
     "handle_starttag",
 ]
-# FastAPI registers these; nothing calls them by name.
-ignore_decorators = ["@app.get", "@app.post", "@app.exception_handler"]
+# FastAPI registers these, and Pydantic runs a model's validators; nothing
+# calls them by name.
+ignore_decorators = [
+    "@app.exception_handler",
+    "@model_validator",
+    "@router.get",
+    "@router.post",
+]

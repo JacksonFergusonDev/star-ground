@@ -33,10 +33,10 @@ SI_MULTIPLIERS: Final[dict[str, Decimal]] = {
 
 # --- Atomic Grammar Primitives ---
 
-DIGIT: Final[pp.ParserElement] = pp.Word(pp.nums)
+_DIGIT: Final[pp.ParserElement] = pp.Word(pp.nums)
 
 _sorted_multiplier_keys = sorted(SI_MULTIPLIERS.keys(), key=len, reverse=True)
-MULTIPLIER: Final[pp.ParserElement] = pp.one_of(_sorted_multiplier_keys, exact=True)
+_MULTIPLIER: Final[pp.ParserElement] = pp.one_of(_sorted_multiplier_keys, exact=True)
 # An upper-case N between two numbers is a part number, never a value:
 # diodes (1N4148), transistors (2N3904) and optocouplers (4N35) are named so.
 _SANDWICH_MULTIPLIERS: Final[pp.ParserElement] = pp.one_of(
@@ -44,7 +44,7 @@ _SANDWICH_MULTIPLIERS: Final[pp.ParserElement] = pp.one_of(
 )
 
 _UNITS = ["ohm", "ohms", "Ω", "F", "Hz", "H", "V", "W"]
-UNIT: Final[pp.ParserElement] = pp.one_of(_UNITS, caseless=True) | pp.Literal("Ω")
+_UNIT: Final[pp.ParserElement] = pp.one_of(_UNITS, caseless=True) | pp.Literal("Ω")
 # What each written unit measures, by its lower case ('Ω' is 'ω'); the rest
 # (Hz, H, V, W) measure neither.
 _UNIT_OF: Final[dict[str, Unit]] = {
@@ -86,7 +86,7 @@ def build_value_parser() -> pp.ParserElement:
     Returns:
         A `ParserElement` that parses SI-value strings into `Decimal` objects.
     """
-    integer = DIGIT
+    integer = _DIGIT
     decimal_number = pp.Combine(
         (pp.Word(pp.nums) + pp.Optional(pp.Literal(".") + pp.Word(pp.nums)))
         | (pp.Literal(".") + pp.Word(pp.nums))
@@ -99,12 +99,12 @@ def build_value_parser() -> pp.ParserElement:
 
     # Standard Notation: e.g. "10k", "4.7u", "100", "0.1", "100kΩ"
     standard = (
-        decimal_number("number") + pp.Optional(MULTIPLIER)("mult")
+        decimal_number("number") + pp.Optional(_MULTIPLIER)("mult")
     ).set_parse_action(_eval_standard)
 
     # The unit is kept apart from the number so a reading can be checked
     # against the unit the part is measured in.
-    return (sandwich | standard) + pp.Optional(UNIT)("unit") + pp.StringEnd()
+    return (sandwich | standard) + pp.Optional(_UNIT)("unit") + pp.StringEnd()
 
 
 _VALUE_PARSER: Final[pp.ParserElement] = build_value_parser()

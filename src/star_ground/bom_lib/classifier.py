@@ -138,11 +138,11 @@ def key_quantity(key: ComponentKey) -> Value | Decimal | None:
         key: The part.
 
     Returns:
-        The value as `normalize_value_to_quantity` reads it, or None for an
-        unknown part, a PCB (its value is the board's name, so "1981 DRV"
-        is not 1981 of anything) or a value with no number.
+        The value as `normalize_value_to_quantity` reads it, or None for a
+        PCB (its value is the board's name, so "1981 DRV" is not 1981 of
+        anything) or a value with no number.
     """
-    if key.category in (ComponentCategory.UNKNOWN, ComponentCategory.PCB):
+    if key.category == ComponentCategory.PCB:
         return None
     return normalize_value_to_quantity(key.category, key.value)
 

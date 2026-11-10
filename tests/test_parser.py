@@ -23,7 +23,6 @@ from star_ground.bom_lib import (
     calculate_net_needs,
     deduplicate_refs,
     expand_refs,
-    float_to_display_string,
     generate_search_term,
     generate_tayda_url,
     get_buy_details,
@@ -31,7 +30,6 @@ from star_ground.bom_lib import (
     parse_user_inventory,
     parse_value_to_decimal,
     parse_with_verification,
-    serialize_inventory,
     value_to_search_string,
     with_standard_hardware,
 )
@@ -209,7 +207,7 @@ def test_value_normalization_lifecycle():
     """
     Verifies the full lifecycle of component value normalization.
 
-    Workflow: Raw String -> Decimal (Backend) -> Display String / Search String.
+    Workflow: Raw String -> Decimal (Backend) -> Search String.
     Ensures that "1k5" becomes Decimal("1500") and converts back correctly.
     """
     # Test Case: 1.5k Resistor
@@ -220,7 +218,6 @@ def test_value_normalization_lifecycle():
 
     assert val == Decimal("1500")
     assert value_to_search_string(ohms(val)) == "1.5k"
-    assert float_to_display_string(ohms(val)) == "1k5"
 
     # Test Case: 100n (Capacitor Normalization)
     val1 = parse_value_to_decimal("100n")
@@ -233,18 +230,6 @@ def test_value_normalization_lifecycle():
     # but the numeric value must be correct.
     out = value_to_search_string(farads(val1))
     assert "u" in out or "n" in out
-
-
-def test_bs1852_formatting():
-    """
-    Verifies the 'BS 1852' (European) formatting style.
-
-    Ensures decimal points are replaced by unit multipliers (e.g., 4.7k -> 4k7)
-    to prevent misreading dirty prints.
-    """
-    assert float_to_display_string(ohms("1500")) == "1k5"
-    assert float_to_display_string(ohms("2200000")) == "2M2"
-    assert float_to_display_string(ohms("4700")) == "4k7"
 
 
 def test_suspicious_physics_warnings():
@@ -705,13 +690,6 @@ def test_net_needs_calculation():
 
     # 5. Verify Surplus (5 - 10 = -5 -> Floor at 0)
     assert net_inv[key_c].qty == 0
-
-
-def test_serialize_inventory_leaves_out_injected_parts() -> None:
-    """A serialized inventory parses back without its injected parts doubled."""
-    inventory = parse_with_verification(["IC1 TL072"]).inventory
-
-    assert serialize_inventory(inventory) == "IC1 TL072"
 
 
 def test_ref_deduplication_and_sorting():

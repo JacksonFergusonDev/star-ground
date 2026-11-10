@@ -22,7 +22,6 @@ from .enums import (
 from .manager import (
     calculate_net_needs,
     rename_source,
-    serialize_inventory,
     sort_inventory,
 )
 from .pdf.document import parse_pedalpcb_pdf
@@ -84,7 +83,6 @@ from .units import Unit, Value
 from .utils import (
     deduplicate_refs,
     expand_refs,
-    float_to_display_string,
     parse_value_to_decimal,
     value_to_search_string,
 )
@@ -138,7 +136,6 @@ __all__ = [
     "deduplicate_refs",
     "determine_origin",
     "expand_refs",
-    "float_to_display_string",
     "generate_search_term",
     "generate_tayda_url",
     "get_buy_details",
@@ -157,7 +154,6 @@ __all__ = [
     "provided_hardware",
     "rename_source",
     "resolve_part_sourcing",
-    "serialize_inventory",
     "sort_inventory",
     "status_leds",
     "value_to_search_string",

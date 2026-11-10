@@ -1,10 +1,9 @@
-"""High-level inventory management and data mutation logic.
+"""Whole-inventory operations: ordering, net needs and relabelling.
 
-This module acts as the "Controller" for the BOM library. It handles:
-- Core dictionary mutation (recording parts).
+This module handles:
 - Sorting and organizing the inventory for display.
 - Calculating net purchasing needs (BOM vs. Stock).
-- Renaming sources/projects.
+- Relabelling a project's parts (`rename_source`).
 """
 
 import copy
@@ -13,7 +12,6 @@ from dataclasses import replace
 from decimal import Decimal
 
 from star_ground.bom_lib.classifier import key_quantity
-from star_ground.bom_lib.constants import INJECTED_SUFFIX
 from star_ground.bom_lib.enums import ComponentCategory
 from star_ground.bom_lib.types import (
     ComponentKey,
@@ -155,40 +153,3 @@ def rename_source(inventory: Inventory, old_name: str, new_name: str) -> Invento
         if old_name in part.multiples:
             part.multiples[new_name] = part.multiples.pop(old_name)
     return renamed
-
-
-def serialize_inventory(inventory: Inventory) -> str:
-    r"""Converts the inventory dict back into the standardized text format.
-
-    e.g. {'Resistors | 10k': refs=['R1', 'R2']} -> "R1 10k\nR2 10k"
-
-    Parts the parser injected (IC sockets, refs like 'IC1 (Inj)') are left
-    out: parsing the text injects them again. So is the hardware kit, which
-    no document lists.
-
-    Args:
-        inventory: The populated inventory dictionary.
-
-    Returns:
-        A newline-separated string suitable for the 'Manual Input' text area.
-    """
-    lines = []
-
-    # Use the existing sort logic in this module
-    sorted_items = sort_inventory(inventory)
-
-    for key, data in sorted_items:
-        if data.hardware and not data.sources:
-            continue
-        clean_val = key.value
-
-        # If we have specific refs (R1, C1), list them individually
-        if data.refs:
-            for ref in data.refs:
-                if not ref.endswith(INJECTED_SUFFIX):
-                    lines.append(f"{ref} {clean_val}")
-        else:
-            # Fallback for parts without refs
-            lines.append(f"{clean_val} (Qty: {data.qty})")
-
-    return "\n".join(lines)
