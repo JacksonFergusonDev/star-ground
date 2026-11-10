@@ -1,6 +1,7 @@
 """Turns the readers' entries into each build's inventory, variants and options."""
 
 import re
+from dataclasses import dataclass
 
 from star_ground.bom_lib.builds import BuildPlan, Entry
 from star_ground.bom_lib.choices import choose_value
@@ -146,15 +147,38 @@ def mark_included(inventory: Inventory, refs: frozenset[str]) -> None:
         data.included = sum(1 for r in data.refs if r in refs)
 
 
+@dataclass(frozen=True, slots=True)
+class AssembledBuilds:
+    """Every build of a document, ingested.
+
+    Attributes:
+        inventory: The single build's parts; empty when the document has
+            variants.
+        variants: Every build of a multi-circuit document; empty otherwise.
+        options: The interchangeable choices, resolved to the document's
+            first.
+        union: Every build's and option choice's parts together, for the
+            self-checks, which must see everything the document lists.
+    """
+
+    inventory: Inventory
+    variants: tuple[BuildVariant, ...]
+    options: tuple[OptionNote, ...]
+    union: Inventory
+
+
 def assemble_builds(
     plan: BuildPlan, source_name: str, stats: ReadingStats
-) -> tuple[Inventory, tuple[BuildVariant, ...], tuple[OptionNote, ...], Inventory]:
+) -> AssembledBuilds:
     """Ingests every build in a plan.
 
+    Args:
+        plan: The document's builds and options.
+        source_name: Label for the source.
+        stats: The reading's counts and warnings, updated in place.
+
     Returns:
-        The single-build inventory (empty when the document has variants), the
-        variants, the option notes, and the union of every build and option
-        choice (for the self-checks, which must see everything the document lists).
+        Each build's parts, the option notes, and the union of them all.
     """
     options = tuple(
         OptionNote(
@@ -179,7 +203,7 @@ def assemble_builds(
         )
         _merge_warnings(stats, build_stats)
         stats.parts_found += build_stats.parts_found
-        return inventory, (), options, union
+        return AssembledBuilds(inventory, (), options, union)
 
     variants = []
     for planned in plan.variants:
@@ -188,4 +212,4 @@ def assemble_builds(
         )
         _merge_warnings(stats, build_stats)
         variants.append(BuildVariant(planned.name, inventory, build_stats.parts_found))
-    return Inventory(), tuple(variants), options, union
+    return AssembledBuilds(Inventory(), tuple(variants), options, union)

@@ -81,6 +81,8 @@ class Entry:
         counted: A row that counts parts by value ('4 - 10k'): `ref` is the
             row as printed, `qty` its count and `hint` its category, and the
             parts are bought without a designator.
+        shaded: A row re-read pair by pair from a shaded grid, which only
+            fills in for the other readers (`pdf.ruled.fill_in`).
     """
 
     ref: str
@@ -94,6 +96,7 @@ class Entry:
     qty: int = 1
     column: str | None = None
     counted: bool = False
+    shaded: bool = False
 
     @property
     def not_populated(self) -> bool:

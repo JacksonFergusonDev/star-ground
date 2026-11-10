@@ -126,7 +126,7 @@ def text_table_entries(
 
     Args:
         pages_data: Pre-extracted page data including word positions.
-        stats: The statistics dictionary for tracking progress.
+        stats: The reading's counts and warnings, updated in place.
 
     Returns:
         One entry per designator, in reading order, and for each (page, line)
