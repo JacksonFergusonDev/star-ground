@@ -3,23 +3,32 @@
 Each case once took several seconds or minutes, because a regex retried a
 scan from every position (or a check compared every line with every other).
 A pasted list may be 200,000 characters and an upload far more, and a reading
-has no time limit, so each could hold a server core. The bound is generous
-(each input took 3 s or more before), so the tests aren't flaky on a slow
-runner. Where only a bound can help (a page drawn with thousands of ruled
-lines, a page 200 inches square), the bound is tested instead.
+has no time limit, so each could hold a server core.
+
+A test times the work on an input and on one four times as large
+(`_scales_linearly`), not against a bound in seconds: the suite runs on every
+core at once, often beside other work, and a busy machine slows both inputs
+alike. Where only a bound can help (a page drawn with thousands of ruled
+lines, a page 200 inches square, a stream that inflates to gigabytes), the
+bound is tested instead, by what the reader skips or the memory it takes.
 """
 
 import gc
 import io
+import math
 import time
 import tracemalloc
 import zlib
 from collections.abc import Callable
+from functools import partial
 from pathlib import Path
 
 import pdfplumber
+import pdfplumber.page
+import pdfplumber.table
 import pytest
 from pdfminer.pdftypes import PDFStream
+from pdfplumber.page import Page
 from PIL import Image
 
 from star_ground.bom_lib import FileUpload, builds, classifier, locations, ocr
@@ -33,7 +42,7 @@ from star_ground.bom_lib.pdf import bom_table, page_checks, scan
 from star_ground.bom_lib.pdf import document as pdf_document
 from star_ground.bom_lib.pdf.cells import CONTROL_VALUE
 from star_ground.bom_lib.pdf.content import content_bytes
-from star_ground.bom_lib.pdf.geometry import Cell, page_lines
+from star_ground.bom_lib.pdf.geometry import Cell, Listing, page_lines
 from star_ground.bom_lib.pdf.page_checks import (
     footnote_marks,
     marked_labels,
@@ -53,33 +62,75 @@ from star_ground.bom_lib.types import (
 from star_ground.bom_lib.verification import check_footnotes
 from tests.pdfs import assemble, stream, typeset
 
-_BOUND_S = 1.0
+# A scaling check times the work on an input and on one `_GROWTH` times as
+# large. Linear work takes about 4 times as long, and n log n about 5; the
+# quadratic work each test guards against took about 16 times, so the check
+# allows 10. Each input's size is one the quadratic work took a second or
+# two on, so a regression fails quickly.
+_GROWTH = 4
+_MAX_SLOWDOWN = 10
+# Each timing runs the work until the larger input's runs take about this
+# long, so the timer's resolution is small beside it.
+_MIN_TIMED_S = 0.01
+_SAMPLES = 5
 
 
-def _timed[T](work: Callable[[], T]) -> tuple[T, float]:
-    """The work's result and how long it took, without the garbage collector.
+def _seconds(work: Callable[[], object]) -> float:
+    """The processor time the work took, without the garbage collector.
 
-    A test worker holds every corpus reading it has made, and the collector
+    Processor time, not time on the clock: the suite runs on every core, often
+    beside other work, and time spent waiting for a core isn't the work's. A
+    test worker holds every corpus reading it has made, and the collector
     walks them all whenever the work allocates enough: under the full suite
     that took over ten times as long as the work itself.
     """
     gc.disable()
     try:
-        start = time.perf_counter()
-        result = work()
-        return result, time.perf_counter() - start
+        start = time.thread_time()
+        work()
+        return time.thread_time() - start
     finally:
         gc.enable()
 
 
-def _seconds(work: Callable[[], object]) -> float:
-    return _timed(work)[1]
+def _scales_linearly(work: Callable[[int], Callable[[], object]], size: int) -> None:
+    """Asserts the work grows about linearly with its input.
+
+    Both inputs are built first. Each timing runs the larger input's work
+    some number of times and the smaller's `_GROWTH` times as often, so both
+    take about as long and a busy machine slows them alike. The two are
+    timed in turn, `_SAMPLES` times, and each one's fastest timing is kept.
+
+    Args:
+        work: Builds the input of a given size and returns the work on it.
+        size: The larger input's size; the smaller is a quarter of it.
+    """
+    small, large = work(size // _GROWTH), work(size)
+    small()  # Once to warm up, then once to see how often to run each.
+    repeat = math.ceil(_MIN_TIMED_S / max(_GROWTH * _seconds(small), 1e-6))
+
+    def runs(once: Callable[[], object], times: int) -> Callable[[], None]:
+        def run() -> None:
+            for _ in range(times):
+                once()
+
+        return run
+
+    small_s = large_s = math.inf
+    for _ in range(_SAMPLES):
+        small_s = min(small_s, _seconds(runs(small, _GROWTH * repeat)) / _GROWTH)
+        large_s = min(large_s, _seconds(runs(large, repeat)))
+    assert large_s < _MAX_SLOWDOWN * small_s, (
+        f"{size // _GROWTH:,} took {small_s / repeat:.5f} s and {size:,} took "
+        f"{large_s / repeat:.5f} s"
+    )
 
 
 def test_pasted_line_with_a_long_run_of_spaces() -> None:
-    # 15.6 s before; quadrupled per doubling of the spaces.
-    line = "R1 x" + " " * 40000 + "x"
-    assert _seconds(lambda: parse_with_verification([line])) < _BOUND_S
+    # 15.6 s for 40,000 spaces before; quadrupled per doubling of the spaces.
+    _scales_linearly(
+        lambda n: partial(parse_with_verification, ["R1 x" + " " * n + "x"]), 16_000
+    )
 
 
 def test_pasted_line_is_still_read() -> None:
@@ -89,26 +140,31 @@ def test_pasted_line_is_still_read() -> None:
 
 
 def test_pasted_value_of_many_slashes() -> None:
-    # 14.2 s before, through the paste reader to `choose_value`.
-    text = "R1 " + "a/" * 20000 + " 1"
-    context = BOMParserContext()
-    assert (
-        _seconds(lambda: context.process(InputMethod.PASTE_TEXT, text, "s")) < _BOUND_S
+    # 14.2 s for 20,000 before, through the paste reader to `choose_value`.
+    process = BOMParserContext().process
+    _scales_linearly(
+        lambda n: partial(
+            process, InputMethod.PASTE_TEXT, "R1 " + "a/" * n + " 1", "s"
+        ),
+        8000,
     )
 
 
 @pytest.mark.parametrize(
-    "value",
+    ("value", "size"),
     [
-        pytest.param("a/" * 20000 + " 1", id="slashes"),  # 14 s
-        pytest.param("1" * 40000 + "!", id="digits"),  # 30 s
-        pytest.param("a" + " " * 40000 + "b", id="spaces"),  # 4 s
-        pytest.param("(or a" + " " * 40000 + "b", id="open-alternative"),  # 11 s
-        pytest.param("(a" + " " * 40000 + "b", id="open-will-also-work"),
+        # Each with how long its smaller size took before.
+        pytest.param(lambda n: "a/" * n + " 1", 8000, id="slashes"),  # 14 s
+        pytest.param(lambda n: "1" * n + "!", 10_000, id="digits"),  # 30 s
+        pytest.param(lambda n: "a" + " " * n + "b", 32_000, id="spaces"),  # 4 s
+        pytest.param(
+            lambda n: "(or a" + " " * n + "b", 16_000, id="open-alternative"
+        ),  # 11 s
+        pytest.param(lambda n: "(a" + " " * n + "b", 16_000, id="open-will-also-work"),
     ],
 )
-def test_choose_value_on_long_values(value: str) -> None:
-    assert _seconds(lambda: choose_value("R1", value)) < _BOUND_S
+def test_choose_value_on_long_values(value: Callable[[int], str], size: int) -> None:
+    _scales_linearly(lambda n: partial(choose_value, "R1", value(n)), size)
 
 
 def test_choose_value_still_reads_choices() -> None:
@@ -124,8 +180,10 @@ def test_choose_value_still_reads_choices() -> None:
 
 def test_many_dip_sizes_in_one_value() -> None:
     # 6.3 s before: each DIP size rescanned the rest for 'SWITCH'.
+    _scales_linearly(
+        lambda n: partial(classifier.categorize_part, "FOO", "DIP1 " * n), 12_000
+    )
     value = "DIP1 " * 20000
-    assert _seconds(lambda: classifier.categorize_part("FOO", value)) < _BOUND_S
     assert classifier.DIP_SWITCH.search(value) is None
     assert classifier.DIP_SWITCH.search(value + "SWITCH") is not None
     assert classifier.DIP_SWITCH.search("X DIP8 8 POSITION SWITCH") is not None
@@ -134,15 +192,23 @@ def test_many_dip_sizes_in_one_value() -> None:
 
 def test_many_either_notes_on_a_page() -> None:
     # 9.2 s before: each 'either' scanned the rest of the page for 'control'.
-    page = PageContext([], "either " * 14000 + "x control or y")
-    assert _seconds(lambda: plan_builds([], [page])) < _BOUND_S
+    _scales_linearly(
+        lambda n: partial(
+            plan_builds, [], [PageContext([], "either " * n + "x control or y")]
+        ),
+        7000,
+    )
     assert builds._EITHER_OR.search("either Nature control, or Treble + Bass controls")
 
 
 def test_many_starred_lines() -> None:
     # 5.5 s before: every '*' heading matched against every line.
-    text = "\n".join(f"*a{i}" for i in range(4000))
-    assert _seconds(lambda: check_footnotes([text], ReadingStats())) < _BOUND_S
+    _scales_linearly(
+        lambda n: partial(
+            check_footnotes, ["\n".join(f"*a{i}" for i in range(n))], ReadingStats()
+        ),
+        2400,
+    )
 
 
 def test_footnote_is_still_found() -> None:
@@ -159,15 +225,17 @@ def test_footnote_is_still_found() -> None:
 
 
 def test_control_value_on_a_long_number() -> None:
-    # 4.7 s per match before, and a cell is matched several times.
-    assert _seconds(lambda: CONTROL_VALUE.match("1" * 40000)) < _BOUND_S
+    # 4.7 s per match of 40,000 digits before, and a cell is matched several times.
+    _scales_linearly(lambda n: partial(CONTROL_VALUE.match, "1" * n), 24_000)
     assert CONTROL_VALUE.match('1/4" Switching TRS') is not None
 
 
 def test_unclosed_aside_after_many_parentheses() -> None:
     # 3.3 s before: each '(' rescanned the rest of the cell for ')'.
     cell = "(" * 40000 + ")"
-    assert _seconds(lambda: bom_table._without_unclosed_aside(cell)) < _BOUND_S
+    # Two C-level scans of the cell now, which take microseconds: too little
+    # to compare two sizes by, and a million times inside this bound.
+    assert _seconds(partial(bom_table._without_unclosed_aside, cell)) < 1.0
     assert bom_table._without_unclosed_aside(cell) == cell
     assert bom_table._without_unclosed_aside("1N5226 (1N5") == "1N5226"
     assert bom_table._without_unclosed_aside("100n (104) (low") == "100n (104)"
@@ -193,18 +261,21 @@ def _footnoted_values(rows: int) -> list[PDFWord]:
     return words
 
 
-def test_page_of_many_small_numbers() -> None:
-    # 22.7 s before: every number was compared with every word on the page.
-    words = [
-        _word("1", 10 + (i % 100) * 6, 10 + (i // 100) * 8, 6.0) for i in range(20000)
+def _small_numbers(count: int) -> list[PDFWord]:
+    return [
+        _word("1", 10 + (i % 100) * 6, 10 + (i // 100) * 8, 6.0) for i in range(count)
     ]
-    assert _seconds(lambda: footnote_marks(words)) < _BOUND_S
+
+
+def test_page_of_many_small_numbers() -> None:
+    # 22.7 s for 20,000 before: every number was compared with every word.
+    _scales_linearly(lambda n: partial(footnote_marks, _small_numbers(n)), 6000)
 
 
 def test_page_of_many_footnote_marks() -> None:
     # 6.2 s before (`marked_labels`), and `footnote_marks` was quadratic too.
+    _scales_linearly(lambda n: partial(marked_labels, _footnoted_values(n)), 4000)
     words = _footnoted_values(8000)
-    assert _seconds(lambda: marked_labels(words)) < _BOUND_S
     marks = footnote_marks(words)
     assert len(marks) == 8000
     assert all(m["text"] == "1" for m in marks)
@@ -228,84 +299,122 @@ def _pdf(content: str, width: float = 612, height: float = 792) -> bytes:
     )
 
 
-def test_dropping_many_footnote_marks_from_a_page(tmp_path: Path) -> None:
-    # 6.5 s before: every character was compared with every mark.
+def _parsed(content: str) -> Page:
+    """The page of a one-page PDF, parsed: parsing it isn't what's timed."""
+    page = pdfplumber.open(io.BytesIO(_pdf(content))).pages[0]
+    assert page.chars is not None
+    return page
+
+
+def _marked_values(count: int) -> str:
+    """A content stream of `count` 4pt '10k's, each with a 2pt '1'."""
     text = []
-    for i in range(5000):
+    for i in range(count):
         x, y = 10 + (i % 40) * 15, 780 - (i // 40) * 6
         text.append(f"BT /F1 4 Tf {x} {y} Td (10k) Tj /F1 2 Tf 8 1 Td (1) Tj ET")
-    path = tmp_path / "marks.pdf"
-    path.write_bytes(_pdf(" ".join(text)))
-    with pdfplumber.open(path) as pdf:
-        page = pdf.pages[0]
-        assert page.chars  # Reading the PDF itself isn't what's timed.
-        chars, seconds = _timed(lambda: pdf_document._without_marks(page).chars)
-        assert seconds < _BOUND_S
+    return " ".join(text)
+
+
+def test_dropping_many_footnote_marks_from_a_page() -> None:
+    # 6.5 s for 5,000 before: every character was compared with every mark.
+    def drop(count: int) -> Callable[[], object]:
+        page = _parsed(_marked_values(count))
+        return lambda: pdf_document._without_marks(page).chars
+
+    _scales_linearly(drop, 3000)
+    chars = pdf_document._without_marks(_parsed(_marked_values(5000))).chars
     assert "".join(c["text"] for c in chars) == "10k" * 5000
 
 
 def _valueless_refs_alone(
-    words: list[PDFWord], monkeypatch: pytest.MonkeyPatch
-) -> tuple[list[str], float]:
-    """`valueless_refs` and its time, with the page's listings found beforehand.
+    page: Callable[[int], list[PDFWord]], monkeypatch: pytest.MonkeyPatch
+) -> Callable[[int], Callable[[], list[str]]]:
+    """`valueless_refs` on a page of a size, its listings found beforehand.
 
     Finding listings isn't what these tests time, and it is most of the work.
     """
-    listings = find_listings(words)
-    monkeypatch.setattr(page_checks, "find_listings", lambda _: listings)
-    return _timed(lambda: valueless_refs(words))
+    found: dict[int, list[Listing]] = {}
+    monkeypatch.setattr(page_checks, "find_listings", lambda words: found[id(words)])
+
+    def work(size: int) -> Callable[[], list[str]]:
+        words = page(size)
+        found[id(words)] = find_listings(words)
+        return partial(valueless_refs, words)
+
+    return work
+
+
+def _two_columns(count: int) -> list[PDFWord]:
+    words = []
+    for i in range(count):
+        x, top = 10 + (i % 2) * 60, 10 + (i // 2) * 12
+        words += [_word(f"R{i % 999 + 1}", x, top), _word("10k", x + 25, top)]
+    return words
 
 
 def test_designator_column_of_a_long_page(monkeypatch: pytest.MonkeyPatch) -> None:
-    # 6.5 s before: each cell was compared with every listing and every word.
+    # 6.5 s for 8,000 before: each cell was compared with every listing and
+    # every word.
+    work = _valueless_refs_alone(_two_columns, monkeypatch)
+    _scales_linearly(work, 4000)
+    assert work(8000)() == []
+
+
+def _half_valueless(count: int) -> list[PDFWord]:
     words = []
-    for i in range(8000):
-        x, top = 10 + (i % 2) * 60, 10 + (i // 2) * 12
-        words += [_word(f"R{i % 999 + 1}", x, top), _word("10k", x + 25, top)]
-    refs, seconds = _valueless_refs_alone(words, monkeypatch)
-    assert seconds < _BOUND_S
-    assert refs == []
+    for i in range(count):
+        words.append(_word(f"R{i % 900 + 1}", 10, 10 + i * 12))
+        if i % 2:
+            words.append(_word("10k", 60, 10 + i * 12))
+    return words
 
 
 def test_valueless_designators_of_a_long_column(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    # 3.6 s before.
-    words = []
-    for i in range(8000):
-        words.append(_word(f"R{i % 900 + 1}", 10, 10 + i * 12))
-        if i % 2:
-            words.append(_word("10k", 60, 10 + i * 12))
-    refs, seconds = _valueless_refs_alone(words, monkeypatch)
-    assert seconds < _BOUND_S
+    # 3.6 s for 8,000 before.
+    work = _valueless_refs_alone(_half_valueless, monkeypatch)
+    _scales_linearly(work, 4000)
+    refs = work(8000)()
     assert len(refs) == 4000
     assert set(refs) == {f"R{n}" for n in range(1, 901, 2)}
 
 
-def test_long_page_of_typed_listings() -> None:
-    # 6.6 s before: each typed cell re-typed every cell on the page.
+def _typed_listings(count: int) -> list[PDFWord]:
     words = []
-    for i in range(4000):
+    for i in range(count):
         x, top = 10 + (i % 10) * 120, 10 + (i // 10) * 12
         words += [
             _word(f"R{i % 999 + 1}", x, top),
             _word("10k", x + 25, top),
             _word("Resistor", x + 55, top),
         ]
-    lines = page_lines(words)
-    columns, seconds = _timed(lambda: scan._type_columns(lines))
-    assert seconds < _BOUND_S
+    return words
+
+
+def test_long_page_of_typed_listings() -> None:
+    # 6.6 s for 4,000 before: each typed cell re-typed every cell on the page.
+    _scales_linearly(
+        lambda n: partial(scan._type_columns, page_lines(_typed_listings(n))), 2000
+    )
+    words = _typed_listings(4000)
+    columns = scan._type_columns(page_lines(words))
     assert columns == {65 + 120 * k for k in range(10)}
     listings = find_listings(words)
     assert len(listings) == 4000
     assert {lst.value for lst in listings} == {"10k"}
 
 
+def _pots(count: int) -> list[Cell]:
+    return [Cell((_word("POT", 10 + 20 * i, 10),)) for i in range(count)]
+
+
 def test_long_part_description() -> None:
-    # 82 s before: each step rebuilt the texts of the whole line.
-    cells = [Cell((_word("POT", 10 + 20 * i, 10),)) for i in range(20000)]
-    assert _seconds(lambda: _description_end(cells, 0, frozenset())) < _BOUND_S
-    assert _description_end(cells, 0, frozenset()) == 20000
+    # 82 s for 20,000 before: each step rebuilt the texts of the whole line.
+    _scales_linearly(
+        lambda n: partial(_description_end, _pots(n), 0, frozenset()), 3000
+    )
+    assert _description_end(_pots(20_000), 0, frozenset()) == 20_000
 
 
 def _dashed_listings(count: int) -> list[PDFWord]:
@@ -317,6 +426,12 @@ def _dashed_listings(count: int) -> list[PDFWord]:
             words.append(_word(text, x, 100))
             x = words[-1]["x1"] + 2.5
     return words
+
+
+def test_many_dashed_listings_on_a_line() -> None:
+    # 2.2 s for 800 before: each listing searched the whole line for the word
+    # after it (`_dash_after`), and split the rest of its cell again.
+    _scales_linearly(lambda n: partial(find_listings, _dashed_listings(n)), 800)
 
 
 def test_many_dashed_listings_in_one_cell() -> None:
@@ -363,19 +478,26 @@ def test_dashed_listings_in_one_cell_are_split_as_before(
     assert (None if split is None else [c.text for c in split]) == cells
 
 
+def _mentions(count: int) -> PDFPageExtraction:
+    """A line of 'R1, R1, … 10k', mentioning R1 `count` times."""
+    words = [_word("R1,", 10 + 25 * i, 100) for i in range(count)]
+    words.append(_word("10k", 10 + 25 * count, 100))
+    return PDFPageExtraction(tables=[], text="", words=words)
+
+
 def test_designator_printed_many_times_on_a_line() -> None:
-    # 51 s before: each mention searched the rest of the line for its value.
+    # 51 s for 8,000 before: each mention searched the rest of the line for
+    # its value.
     inventory = Inventory()
     inventory.add_part(
         "s", make_component_key(ComponentCategory.RESISTORS, "10k"), "R1", 1
     )
-    words = [_word("R1,", 10 + 25 * i, 100) for i in range(8000)] + [
-        _word("10k", 10 + 25 * 8000, 100)
-    ]
-    page = PDFPageExtraction(tables=[], text="", words=words)
-    located, seconds = _timed(lambda: locations.locate([page], inventory))
-    assert seconds < _BOUND_S
-    assert located["R1"].x1 == words[-1]["x1"]
+    _scales_linearly(
+        lambda n: partial(locations.locate, [_mentions(n)], inventory), 1600
+    )
+    page = _mentions(8000)
+    located = locations.locate([page], inventory)
+    assert located["R1"].x1 == page.words[-1]["x1"]
 
 
 def test_number_cache_is_bounded() -> None:
@@ -393,16 +515,15 @@ def _tiny_ones(count: int) -> str:
     )
 
 
-def test_page_of_many_characters_drops_overprint_quickly(tmp_path: Path) -> None:
-    # 3.2 s before: pdfplumber's `dedupe_chars` sorts by `list.index`.
-    path = tmp_path / "ones.pdf"
-    path.write_bytes(_pdf(_tiny_ones(12000)))
-    with pdfplumber.open(path) as pdf:
-        page = pdf.pages[0]
-        assert len(page.chars) == 12000  # Reading the PDF itself isn't what's timed.
-        chars, seconds = _timed(lambda: pdf_document._without_overprint(page).chars)
-    assert seconds < _BOUND_S
-    assert len(chars) == 12000
+def test_page_of_many_characters_drops_overprint_quickly() -> None:
+    # 3.2 s for 12,000 before: pdfplumber's `dedupe_chars` sorts by `list.index`.
+    def drop(count: int) -> Callable[[], object]:
+        page = _parsed(_tiny_ones(count))
+        return lambda: pdf_document._without_overprint(page).chars
+
+    _scales_linearly(drop, 10_000)
+    page = _parsed(_tiny_ones(12_000))
+    assert len(pdf_document._without_overprint(page).chars) == 12_000
 
 
 def test_overprint_keeps_what_pdfplumber_keeps(tmp_path: Path) -> None:
@@ -433,14 +554,20 @@ def _grid(lines: int) -> str:
     return "0.5 w " + " ".join(rules)
 
 
-def test_page_of_many_ruled_lines_is_read_as_text(tmp_path: Path) -> None:
+def _never(*_: object, **__: object) -> None:
+    raise AssertionError("called")
+
+
+def test_page_of_many_ruled_lines_is_read_as_text(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     # 9.4 s before, and about 15 times as long with each doubling: finding
     # tables compares every crossing of two lines with every other.
     parts = "BT /F1 10 Tf 700 700 Td (R1 10k) Tj 0 -14 Td (R2 22k) Tj ET"
     path = tmp_path / "grid.pdf"
     path.write_bytes(_pdf(f"{_grid(160)} {parts}", width=800))
-    result, seconds = _timed(lambda: pdf_document.parse_pedalpcb_pdf(str(path), "G"))
-    assert seconds < _BOUND_S
+    monkeypatch.setattr(pdfplumber.page.Page, "extract_tables", _never)
+    result = pdf_document.parse_pedalpcb_pdf(str(path), "G")
     refs = {ref for part in result.inventory.values() for ref in part.refs}
     assert refs == {"R1", "R2"}
 
@@ -454,15 +581,15 @@ def test_ruled_table_within_the_bounds_is_still_found(tmp_path: Path) -> None:
     assert len(tables[0]) == 39
 
 
-def test_too_many_ruled_lines_to_count_their_crossings(tmp_path: Path) -> None:
+def test_too_many_ruled_lines_to_count_their_crossings(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # Counting the crossings of 400 lines by 400 would itself take seconds.
     path = tmp_path / "lines.pdf"
     path.write_bytes(_pdf(_grid(400), width=1700, height=1700))
+    monkeypatch.setattr(pdfplumber.table, "edges_to_intersections", _never)
     with pdfplumber.open(path) as pdf:
-        page = pdf.pages[0]
-        assert page.edges  # Reading the PDF itself isn't what's timed.
-        tables, seconds = _timed(lambda: pdf_document._tables(page, 0))
-    assert seconds < _BOUND_S
-    assert tables == []
+        assert pdf_document._tables(pdf.pages[0], 0) == []
 
 
 def _drawing(content: bytes, *forms: bytes) -> bytes:
