@@ -33,6 +33,8 @@ from star_ground.bom_lib.types import Inventory, ReadingStats
 from star_ground.server import Settings, create_app
 from star_ground.server.limits import OcrQueue, RateLimiter, ReadingCache
 from star_ground.server.models import BUG_CODE
+from star_ground.server.routes.documents import read_events
+from star_ground.server.services import Services
 from tests.pdfs import text_pdf
 
 ROOT = Path(__file__).parent.parent
@@ -826,6 +828,34 @@ def test_a_document_waiting_for_ocr_streams_its_place(mocker: MockerFixture) -> 
 
 
 # --- Document references ---
+
+
+def test_a_builder_leaving_mid_read_never_waits_for_the_reading(
+    mocker: MockerFixture,
+) -> None:
+    services = Services.for_settings(Settings())
+    mocker.patch("star_ground.server.reading.read_document", side_effect=_ocr_read())
+    cached = threading.Event()
+    put = services.cache.put
+
+    def put_and_tell(key: str, reading: ParseResult) -> None:
+        put(key, reading)
+        cached.set()
+
+    mocker.patch.object(services.cache, "put", side_effect=put_and_tell)
+    upload = FileUpload("late.pdf", KLICHE.read_bytes())
+
+    with services.ocr_queue.slot():  # another document's OCR holds the turn
+        stream = read_events(services, "a", InputMethod.UPLOAD_FILE, upload, True)
+        assert _events(next(stream))[0]["event"] == "reading"
+        assert _events(next(stream))[0]["event"] == "queued"
+        closing = threading.Thread(target=stream.close)
+        closing.start()
+        closing.join(2)
+        assert not closing.is_alive()  # the stream closed with the read waiting
+
+    assert cached.wait(5)  # the read finished on its own, for next time
+    assert services.ocr_queue.queue_position() == 0  # and gave back its turn
 
 
 def test_a_read_upload_can_be_named_instead_of_sent(client: TestClient) -> None:
