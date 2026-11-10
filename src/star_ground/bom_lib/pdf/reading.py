@@ -14,8 +14,8 @@ from star_ground.bom_lib.pdf.assemble import (
     included_refs,
     mark_included,
 )
-from star_ground.bom_lib.pdf.geometry import page_lines
 from star_ground.bom_lib.pdf.listings import layout_entries
+from star_ground.bom_lib.pdf.page import PDFPageExtraction
 from star_ground.bom_lib.pdf.rows import REPEAT, same_value, wrapped
 from star_ground.bom_lib.pdf.ruled import (
     continues_list,
@@ -24,7 +24,7 @@ from star_ground.bom_lib.pdf.ruled import (
 )
 from star_ground.bom_lib.pdf.self_check import ReadingFacts, check_reading
 from star_ground.bom_lib.pdf.text_tables import text_table_entries
-from star_ground.bom_lib.types import PDFPageExtraction, ReadingStats
+from star_ground.bom_lib.types import ReadingStats
 
 
 def read_pages(
@@ -56,7 +56,7 @@ def read_pages(
     # --- BUILDS: variants and options ---
     pages = [
         PageContext(
-            page_lines(data.words),
+            data.lines,
             data.text,
             tuple(data.labels),
         )

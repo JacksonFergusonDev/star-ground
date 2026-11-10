@@ -25,6 +25,7 @@ from .manager import (
     sort_inventory,
 )
 from .pdf.document import parse_pdf
+from .pdf.page import PDFPageExtraction
 from .sourcing import (
     build_shopping_list,
     determine_origin,
@@ -65,7 +66,6 @@ from .types import (
     ParseResult,
     ParseWarning,
     PartData,
-    PDFPageExtraction,
     PDFWord,
     PurchaseRecommendation,
     RawBOMData,

@@ -35,10 +35,10 @@ from star_ground.bom_lib import (
 )
 from star_ground.bom_lib.classifier import normalize_value_to_quantity
 from star_ground.bom_lib.enums import ComponentCategory, ComponentSpec
+from star_ground.bom_lib.pdf.page import PDFPageExtraction
 from star_ground.bom_lib.types import (
     ComponentKey,
     Inventory,
-    PDFPageExtraction,
     ReadingStats,
 )
 from star_ground.bom_lib.units import farads, ohms

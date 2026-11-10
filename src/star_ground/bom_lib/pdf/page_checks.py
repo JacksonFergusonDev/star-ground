@@ -12,7 +12,7 @@ from itertools import pairwise
 from star_ground.bom_lib.designators import is_designator
 from star_ground.bom_lib.pdf.cells import REF_RANGE, is_ref_cell
 from star_ground.bom_lib.pdf.geometry import Cell, group_lines, page_lines
-from star_ground.bom_lib.pdf.scan import find_listings
+from star_ground.bom_lib.pdf.page import PDFPageExtraction
 from star_ground.bom_lib.types import PDFWord, Picture
 from star_ground.bom_lib.utils import expand_refs
 
@@ -144,20 +144,19 @@ _MARKER_SIZE = 0.8
 _VALUELESS_ALIGN_PT = 2.0
 
 
-def valueless_refs(words: list[PDFWord]) -> list[str]:
+def valueless_refs(page: PDFPageExtraction) -> list[str]:
     """Designators in a parts table's designator column printed with no value.
 
     'D6-D9  ³' leaves the value to the builder (Aion FX legacy Cirrus); with
     its footnote marker dropped, it is no listing, and would vanish silently.
 
     Args:
-        words: Words extracted from one page.
+        page: One page.
 
     Returns:
         The designators, ranges expanded.
     """
-    lines = page_lines(words)
-    listings = find_listings(page_lines(words))
+    lines, listings = page.lines, page.listings
     starts = {(lst.line, round(lst.x0)) for lst in listings}
     edges = [
         (cell.x0, cell.words[-1]["x1"])
@@ -174,7 +173,7 @@ def valueless_refs(words: list[PDFWord]) -> list[str]:
             >= _VALUELESS_COLUMN
         )
 
-    between = _WordsBetween(words)
+    between = _WordsBetween(page.words)
 
     refs: list[str] = []
     for number, cells in enumerate(lines):
@@ -290,7 +289,7 @@ _PART_LIKE = re.compile(
 )
 
 
-def unreadable_rows(words: list[PDFWord]) -> list[str]:
+def unreadable_rows(page: PDFPageExtraction) -> list[str]:
     """Rows of a parts table whose designator cell is no designator.
 
     OCR reads GuitarPCB Guitar/Bass Driver's 'Q9  MPF102' as '60  MPF102': the
@@ -298,14 +297,14 @@ def unreadable_rows(words: list[PDFWord]) -> list[str]:
     is dropped. Only for OCR'd pages, whose text is uncertain.
 
     Args:
-        words: Words read from one page.
+        page: One page, read by OCR.
 
     Returns:
         Each such row's text.
     """
-    lines = page_lines(words)
+    lines = page.lines
     values: list[float] = []
-    for lst in find_listings(page_lines(words)):
+    for lst in page.listings:
         cells = lines[lst.line]
         k = next(
             (

@@ -19,7 +19,8 @@ from functools import lru_cache
 
 from star_ground.bom_lib.constants import INJECTED_SUFFIX
 from star_ground.bom_lib.designators import is_designator
-from star_ground.bom_lib.types import Inventory, Location, PDFPageExtraction, PDFWord
+from star_ground.bom_lib.pdf.page import PDFPageExtraction
+from star_ground.bom_lib.types import Inventory, Location, PDFWord
 from star_ground.bom_lib.utils import expand_refs, parse_value_to_decimal
 
 # Words this close to each other's top (as a share of their size) share a line.

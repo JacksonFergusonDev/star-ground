@@ -11,20 +11,17 @@ from dataclasses import dataclass
 
 from star_ground.bom_lib.builds import Entry
 from star_ground.bom_lib.enums import ParseWarningKind
-from star_ground.bom_lib.pdf.bom_table import read_bom
-from star_ground.bom_lib.pdf.geometry import page_lines
+from star_ground.bom_lib.pdf.page import PDFPageExtraction
 from star_ground.bom_lib.pdf.page_checks import (
     pictured_lists,
     unreadable_rows,
     valueless_refs,
 )
 from star_ground.bom_lib.pdf.rows import REPEAT, is_not_populated
-from star_ground.bom_lib.pdf.scan import find_listings
 from star_ground.bom_lib.pdf.text_tables import without_note_cells
 from star_ground.bom_lib.types import (
     BuildVariant,
     Inventory,
-    PDFPageExtraction,
     ReadingStats,
 )
 from star_ground.bom_lib.utils import expand_refs
@@ -116,7 +113,7 @@ def check_reading(facts: ReadingFacts, stats: ReadingStats) -> None:
     )
     if facts.tables_only:
         check_unreadable_rows(
-            [row for data in facts.pages for row in unreadable_rows(data.words)],
+            [row for data in facts.pages for row in unreadable_rows(data)],
             stats,
         )
     check_footnotes(page_texts, stats)
@@ -173,10 +170,7 @@ def _valueless_refs(facts: ReadingFacts) -> list[str]:
         ref
         for k, data in enumerate(facts.pages)
         if facts.on_parts_list(k)
-        for ref in [
-            *valueless_refs(data.words),
-            *read_bom(page_lines(data.words)).valueless,
-        ]
+        for ref in [*valueless_refs(data), *data.bom.valueless]
         if not facts.variants or ref.upper() not in read_on.get(k, set())
     ]
 
@@ -213,7 +207,7 @@ def _check_other_lists(facts: ReadingFacts, stats: ReadingStats) -> None:
         # A schematic's 'REF value' labels are a drawing (Aion FX Procyon).
         if k in facts.bom_pages or is_schematic_page(data.text):
             continue
-        listings = find_listings(page_lines(data.words))
+        listings = data.listings
         columns = Counter(round(listing.x0) for listing in listings)
         # A table, not labels scattered over a schematic or board render.
         if len(listings) >= _OTHER_LIST_MIN and max(columns.values()) >= (

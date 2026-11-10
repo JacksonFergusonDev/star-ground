@@ -24,6 +24,7 @@ from star_ground.bom_lib.errors import (
     UnreadablePdfError,
 )
 from star_ground.bom_lib.locations import locate
+from star_ground.bom_lib.pdf.page import PDFPageExtraction
 from star_ground.bom_lib.pdf.page_checks import (
     footnote_marks,
     marked_labels,
@@ -32,7 +33,6 @@ from star_ground.bom_lib.pdf.page_checks import (
 from star_ground.bom_lib.pdf.reading import read_pages
 from star_ground.bom_lib.types import (
     ParseResult,
-    PDFPageExtraction,
     PDFWord,
     Picture,
     ReadingStats,

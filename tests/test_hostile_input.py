@@ -38,11 +38,12 @@ from star_ground.bom_lib.choices import choose_value
 from star_ground.bom_lib.enums import ComponentCategory, InputMethod
 from star_ground.bom_lib.errors import CrowdedPageError, ErrorKind, HeavyPageError
 from star_ground.bom_lib.ocr import OcrBox
-from star_ground.bom_lib.pdf import bom_table, page_checks, scan
+from star_ground.bom_lib.pdf import bom_table, scan
 from star_ground.bom_lib.pdf import document as pdf_document
 from star_ground.bom_lib.pdf.cells import CONTROL_VALUE
 from star_ground.bom_lib.pdf.content import content_bytes
 from star_ground.bom_lib.pdf.geometry import Cell, Listing, page_lines
+from star_ground.bom_lib.pdf.page import PDFPageExtraction
 from star_ground.bom_lib.pdf.page_checks import (
     footnote_marks,
     marked_labels,
@@ -54,7 +55,6 @@ from star_ground.bom_lib.strategies.manual import parse_with_verification
 from star_ground.bom_lib.types import (
     ComponentKey,
     Inventory,
-    PDFPageExtraction,
     PDFWord,
     ReadingStats,
 )
@@ -341,21 +341,17 @@ def test_dropping_many_footnote_marks_from_a_page() -> None:
 
 
 def _valueless_refs_alone(
-    page: Callable[[int], list[PDFWord]], monkeypatch: pytest.MonkeyPatch
+    words: Callable[[int], list[PDFWord]],
 ) -> Callable[[int], Callable[[], list[str]]]:
     """`valueless_refs` on a page of a size, its listings found beforehand.
 
     Finding listings isn't what these tests time, and it is most of the work.
     """
-    found: dict[int, list[Listing]] = {}
-    monkeypatch.setattr(
-        page_checks, "find_listings", lambda lines: found[id(lines[0][0].words[0])]
-    )
 
     def work(size: int) -> Callable[[], list[str]]:
-        words = page(size)
-        found[id(words[0])] = _listings(words)
-        return partial(valueless_refs, words)
+        page = PDFPageExtraction(tables=[], text="", words=words(size))
+        assert page.listings is not None  # Found once, and kept on the page.
+        return partial(valueless_refs, page)
 
     return work
 
@@ -368,10 +364,10 @@ def _two_columns(count: int) -> list[PDFWord]:
     return words
 
 
-def test_designator_column_of_a_long_page(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_designator_column_of_a_long_page() -> None:
     # 6.5 s for 8,000 before: each cell was compared with every listing and
     # every word.
-    work = _valueless_refs_alone(_two_columns, monkeypatch)
+    work = _valueless_refs_alone(_two_columns)
     _scales_linearly(work, 4000)
     assert work(8000)() == []
 
@@ -385,11 +381,9 @@ def _half_valueless(count: int) -> list[PDFWord]:
     return words
 
 
-def test_valueless_designators_of_a_long_column(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_valueless_designators_of_a_long_column() -> None:
     # 3.6 s for 8,000 before.
-    work = _valueless_refs_alone(_half_valueless, monkeypatch)
+    work = _valueless_refs_alone(_half_valueless)
     _scales_linearly(work, 4000)
     refs = work(8000)()
     assert len(refs) == 4000

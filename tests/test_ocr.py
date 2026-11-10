@@ -391,8 +391,9 @@ class TestRereadLabels:
             height = image.height * scale
             return [OcrBox(reads, 0, 16, height / 2 - 7, height / 2 + 7)]
 
+        page = page_words(boxes)
         data = _reread_labels(
-            page_words(boxes), Image.new("RGB", (600, 800)), 1.0, recognizer
+            page, table_block(page), Image.new("RGB", (600, 800)), 1.0, recognizer
         )
         return [w["text"] for w in data.words if w["x0"] < 60]
 

@@ -6,12 +6,12 @@ from star_ground.bom_lib import (
     ComponentCategory,
     Inventory,
     Location,
-    PDFPageExtraction,
     PDFWord,
 )
 from star_ground.bom_lib.locations import locate
 from star_ground.bom_lib.ocr import without_ocr
 from star_ground.bom_lib.pdf.document import parse_pdf
+from star_ground.bom_lib.pdf.page import PDFPageExtraction
 from star_ground.bom_lib.types import ComponentKey
 
 SAMPLES = Path(__file__).parent / "samples"

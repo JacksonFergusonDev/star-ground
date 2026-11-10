@@ -35,12 +35,11 @@ from star_ground.bom_lib.pdf.cells import REF_RANGE, starts_description
 from star_ground.bom_lib.pdf.geometry import (
     Listing,
     group_lines,
-    page_lines,
     split_cells,
 )
+from star_ground.bom_lib.pdf.page import PDFPageExtraction
 from star_ground.bom_lib.pdf.reading import read_pages
 from star_ground.bom_lib.pdf.ruled import names_builds
-from star_ground.bom_lib.pdf.scan import find_listings
 from star_ground.bom_lib.types import (
     BuildVariant,
     ComponentKey,
@@ -48,7 +47,6 @@ from star_ground.bom_lib.types import (
     OcrAttempt,
     ParseResult,
     ParseWarning,
-    PDFPageExtraction,
     PDFWord,
     ReadingStats,
 )
@@ -583,7 +581,7 @@ def table_block(data: PDFPageExtraction) -> PDFPageExtraction:
     """
     words = data.words
     lines = group_lines(words)
-    listings = find_listings(page_lines(words))
+    listings = data.listings
     columns = [
         c
         for c in _clusters([lst.x0 for lst in listings], _ALIGN_PT)
@@ -692,7 +690,7 @@ class _LabelCell:
     right: float
 
 
-def _label_cells(words: list[PDFWord]) -> list[_LabelCell]:
+def _label_cells(table: PDFPageExtraction) -> list[_LabelCell]:
     """The table's designator cells that read as no designator.
 
     A cell in a designator column that starts no listing ('60 | 10uF', 'ε3 |
@@ -700,13 +698,12 @@ def _label_cells(words: list[PDFWord]) -> list[_LabelCell]:
     its designator column (the label went undetected).
 
     Args:
-        words: The words of the page's parts table (`table_block`).
+        table: The page's parts table (`table_block`).
 
     Returns:
         The cells, top to bottom within each column.
     """
-    lines = page_lines(words)
-    listings = find_listings(page_lines(words))
+    lines, listings = table.lines, table.listings
     starts = {(lst.line, round(lst.x0)) for lst in listings}
     cells: list[_LabelCell] = []
     for column in _clusters([lst.x0 for lst in listings], _ALIGN_PT):
@@ -769,7 +766,11 @@ def _reread(
 
 
 def _reread_labels(
-    data: PDFPageExtraction, image: Image, scale: float, recognizer: Recognizer
+    data: PDFPageExtraction,
+    table: PDFPageExtraction,
+    image: Image,
+    scale: float,
+    recognizer: Recognizer,
 ) -> PDFPageExtraction:
     """Reads the table's misread designator cells again, one cell at a time.
 
@@ -780,20 +781,21 @@ def _reread_labels(
 
     Args:
         data: One OCR'd page.
+        table: Its parts table (`table_block`).
         image: The page's rendering.
         scale: Points per pixel of the rendering.
         recognizer: The OCR engine.
 
     Returns:
-        The page, with the labels read again.
+        The page, with the labels read again; the same page when no cell
+        needed it.
     """
-    table = table_block(data).words
     cells = _label_cells(table)[:_MAX_REREADS]
     if not cells:
         return data
     words = list(data.words)
     # The table's own listings: the board drawing beside it names parts too.
-    listed = {lst.ref.upper() for lst in find_listings(page_lines(table))}
+    listed = {lst.ref.upper() for lst in table.listings}
     for cell in cells:
         word, row = cell.word, cell.row
         height = row["size"] / _GLYPH_SHARE
@@ -1056,7 +1058,7 @@ def _unlisted(pages_data: list[PDFPageExtraction], listed: set[str]) -> set[str]
     """
     unlisted = set()
     for data in pages_data:
-        listings = find_listings(page_lines(data.words))
+        listings = data.listings
         # A short column of controls counts ('Trim1 | Trim2 | VOL', above
         # Samurai Boost's unread 'Boost | Toggle | DPDT').
         columns = [
@@ -1064,7 +1066,7 @@ def _unlisted(pages_data: list[PDFPageExtraction], listed: set[str]) -> set[str]
             for c in _clusters([lst.x0 for lst in listings], _ALIGN_PT)
             if len(c) >= _LABEL_COLUMN
         ]
-        for cells in page_lines(data.words):
+        for cells in data.lines:
             for cell in cells:
                 label = cell.text.split()[0]
                 refs = expand_refs(label) if REF_RANGE.fullmatch(label) else [label]
@@ -1243,10 +1245,13 @@ def attempt_ocr(
             )
             image = page.to_image(resolution=dpi).original.convert("RGB")
             words = page_words(recognizer(image, 72 / dpi))
-            words = _reread_labels(words, image, 72 / dpi, recognizer)
+            table = table_block(words)
+            reread = _reread_labels(words, table, image, 72 / dpi, recognizer)
+            if reread is not words:
+                words, table = reread, table_block(reread)
             mentioned |= {w["text"] for w in words.words}
             whole.append(words)
-            pages_data.append(table_block(words))
+            pages_data.append(table)
             read.append(number)
             page.close()
 

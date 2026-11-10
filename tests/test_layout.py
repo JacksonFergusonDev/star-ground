@@ -14,6 +14,7 @@ from star_ground.bom_lib.pdf.geometry import (
     page_lines,
     split_cells,
 )
+from star_ground.bom_lib.pdf.page import PDFPageExtraction
 from star_ground.bom_lib.pdf.page_checks import footnote_marks, valueless_refs
 from star_ground.bom_lib.pdf.scan import find_listings
 
@@ -25,6 +26,11 @@ COLUMN = 20.0  # column gap
 def _listings(words: list[PDFWord]) -> list[Listing]:
     """The listings on a page of words."""
     return find_listings(page_lines(words))
+
+
+def _page(words: list[PDFWord]) -> PDFPageExtraction:
+    """A page of nothing but words."""
+    return PDFPageExtraction(tables=[], text="", words=words)
 
 
 def _bom(words: list[PDFWord]) -> BomReading:
@@ -869,7 +875,7 @@ def test_valueless_refs() -> None:
         for k, (ref, value) in enumerate(rows)
         for w in _line(*(c for c in (ref, value) if c), top=100.0 + 20 * k)
     ]
-    assert valueless_refs(words) == ["D6", "D7", "D8", "D9"]
+    assert valueless_refs(_page(words)) == ["D6", "D7", "D8", "D9"]
 
 
 def test_a_control_name_labels_a_board_designator() -> None:
@@ -961,7 +967,7 @@ def test_a_footnote_marker_is_no_value() -> None:
         + _line("D4-5", top=142)
         + [PDFWord(text="2", x0=82.0, x1=86.0, top=142, size=6.4)]
     )
-    assert valueless_refs(words) == ["D4", "D5"]
+    assert valueless_refs(_page(words)) == ["D4", "D5"]
 
 
 @pytest.mark.parametrize(
@@ -991,7 +997,7 @@ def test_an_unreadable_designator_beside_a_value() -> None:
         + _line("Q3", "J201", top=128)
         + _line("60", "MPF102", top=142)
     )
-    assert unreadable_rows(words) == ["60  MPF102"]
+    assert unreadable_rows(_page(words)) == ["60  MPF102"]
 
 
 def test_a_slash_pair_of_designators() -> None:

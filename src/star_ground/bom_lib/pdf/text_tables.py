@@ -19,9 +19,9 @@ from star_ground.bom_lib.enrichment import (
     enrich_value_from_type,
 )
 from star_ground.bom_lib.enums import ComponentCategory
-from star_ground.bom_lib.pdf.bom_table import read_bom
 from star_ground.bom_lib.pdf.cells import ref_group
-from star_ground.bom_lib.pdf.geometry import group_lines, page_lines
+from star_ground.bom_lib.pdf.geometry import group_lines
+from star_ground.bom_lib.pdf.page import PDFPageExtraction
 from star_ground.bom_lib.pdf.rows import (
     CONTROL_LABEL,
     SOCKET,
@@ -29,7 +29,6 @@ from star_ground.bom_lib.pdf.rows import (
     next_label,
 )
 from star_ground.bom_lib.types import (
-    PDFPageExtraction,
     ReadingStats,
 )
 from star_ground.bom_lib.utils import expand_refs
@@ -139,7 +138,7 @@ def text_table_entries(
     seen: Counter[str] = Counter()
     noted: list[tuple[str, str, str]] = []
     for page_no, data in enumerate(pages_data):
-        for row in read_bom(page_lines(data.words)).rows:
+        for row in data.bom.rows:
             stats.lines_read += 1
             noted.append((row.refs, row.value, row.notes))
             value, hint = row.value, None
@@ -242,7 +241,7 @@ def without_note_cells(data: PDFPageExtraction, text: str) -> str:
     it in reading order, so the 'C2' of an earlier 'C20' row, or the
     designator of the row it notes, stays.
     """
-    cells = read_bom(page_lines(data.words)).note_cells
+    cells = data.bom.note_cells
     if not cells:
         return text
     # The page's words in reading order, as the text runs, and where each starts.

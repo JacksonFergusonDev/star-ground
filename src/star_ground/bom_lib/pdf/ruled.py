@@ -19,6 +19,7 @@ from star_ground.bom_lib.pdf.cells import (
     names_control,
     strip_asides,
 )
+from star_ground.bom_lib.pdf.page import PDFPageExtraction
 from star_ground.bom_lib.pdf.rows import (
     CONTROL_LABEL,
     RATING_CELL,
@@ -28,7 +29,6 @@ from star_ground.bom_lib.pdf.rows import (
 )
 from star_ground.bom_lib.pdf.text_tables import typed_row
 from star_ground.bom_lib.types import (
-    PDFPageExtraction,
     ReadingStats,
 )
 from star_ground.bom_lib.utils import expand_refs, parse_value_to_decimal

@@ -3,8 +3,7 @@
 import re
 from dataclasses import dataclass
 
-from star_ground.bom_lib.pdf.geometry import Cell, page_lines
-from star_ground.bom_lib.types import PDFWord
+from star_ground.bom_lib.pdf.geometry import Cell
 
 # A row that counts parts instead of naming them: '1 - 25k lin.' (Tonepad).
 COUNTED_ROW = re.compile(r"\d{1,2}\s*[-\u2013]\s+\S")
@@ -53,19 +52,18 @@ _QUALIFIER_CELL = re.compile(r"(?i)(?:lin|log|rev\.? ?log|tant|trim|np)\.?")
 _HEADING_ALIGN_PT = 12.0
 
 
-def counted_parts(words: list[PDFWord]) -> list[CountedRow]:
+def counted_parts(lines: list[list[Cell]]) -> list[CountedRow]:
     """Finds every row that counts parts by value, with its column heading.
 
     A zero count is a switch position, not a part ('0 - Chorus-reverb',
     Tonepad Digital Reverb).
 
     Args:
-        words: Words extracted from one page.
+        lines: The cells of every line on one page (`page_lines`).
 
     Returns:
         Counted rows in reading order.
     """
-    lines = page_lines(words)
     rows = []
     for k, cells in enumerate(lines):
         for i, cell in enumerate(cells):
