@@ -15,7 +15,7 @@ from collections import Counter
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from decimal import Decimal
-from functools import cache
+from functools import lru_cache
 
 from star_ground.bom_lib.constants import INJECTED_SUFFIX
 from star_ground.bom_lib.designators import is_designator
@@ -86,7 +86,10 @@ def _names(words: Sequence[PDFWord], start: int, end: int) -> set[str]:
     return {_clean(ref) for ref in expand_refs(text)}
 
 
-@cache
+# Comparing words asks for the same values again and again: the cache saves
+# about 40% of the time `locate` takes on the corpus. The bound keeps the
+# words of every document a server reads from piling up for its life.
+@lru_cache(maxsize=4096)
 def _number(text: str) -> Decimal | None:
     return parse_value_to_decimal(text)
 
@@ -104,28 +107,73 @@ def _same(printed: str, wanted: str) -> bool:
     return number is not None and number == _number(wanted)
 
 
-def _value_words(words: Sequence[PDFWord], after: int, value: str) -> tuple[int, int]:
-    """Where the words after a designator that match its value end, and how many.
+class _ValueRuns:
+    """Where a value is printed on a line, for each place a search can start.
 
-    The value is the first run of matching words ('3mm Red LED'): the rest of
-    the line can be another column of parts, or a picture's labels beside the
-    table. The next designator on the line starts another row, unless the
-    designators are a list.
+    A line can print one designator many times ('R1, R1, R1, ...'), and each
+    mention searches the rest of the line for its value. The searches from
+    every start share their ends, so each word is read once per value:
+    `found[k]` is the run of value words the search from word k finds
+    (start, end), or None when a designator ends the search first.
     """
-    wanted = {t.strip(_PUNCTUATION) for t in value.split()} - {""}
-    matched, end = 0, after
-    for k in range(after, len(words)):
-        word = words[k]["text"].strip(_PUNCTUATION)
-        if word and any(_same(word, t) for t in wanted):
-            matched += 1
-            end = k + 1
-        elif matched:
-            break
-        elif is_designator(word) and not words[k - 1]["text"].endswith(","):
-            # A designator can be the value, though ('Q4  J201', 'D3  LED'),
-            # and a list goes on to its value: 'D1, D2, D3  1N914'.
-            break
-    return end, matched
+
+    def __init__(self, words: Sequence[PDFWord], value: str) -> None:
+        """Prepares to search a line for a value.
+
+        Args:
+            words: The line's words, left to right.
+            value: The value, as the reading stores it.
+        """
+        self._words = words
+        self._wanted = {t.strip(_PUNCTUATION) for t in value.split()} - {""}
+        self._found: dict[int, tuple[int, int] | None] = {}
+
+    def _matches(self, k: int) -> bool:
+        word = self._words[k]["text"].strip(_PUNCTUATION)
+        return bool(word) and any(_same(word, t) for t in self._wanted)
+
+    def after(self, start: int) -> tuple[int, int]:
+        """Where the words after a designator that match its value end, and how many.
+
+        The value is the first run of matching words ('3mm Red LED'): the rest
+        of the line can be another column of parts, or a picture's labels
+        beside the table. The next designator on the line starts another row,
+        unless the designators are a list.
+
+        Args:
+            start: The word just past the designator.
+
+        Returns:
+            Just past the value's last word (`start` when none is found), and
+            how many words matched.
+        """
+        words, found = self._words, self._found
+        passed: list[int] = []
+        run: tuple[int, int] | None = None
+        k = start
+        while k < len(words):
+            if k in found:
+                run = found[k]
+                break
+            if self._matches(k):
+                end = k + 1
+                while end < len(words) and self._matches(end):
+                    end += 1
+                # A search starting inside the run finds the rest of it.
+                found.update((j, (j, end)) for j in range(k, end))
+                run = (k, end)
+                break
+            word = words[k]["text"].strip(_PUNCTUATION)
+            if is_designator(word) and not words[k - 1]["text"].endswith(","):
+                # A designator can be the value, though ('Q4  J201', 'D3  LED'),
+                # and a list goes on to its value: 'D1, D2, D3  1N914'.
+                break
+            passed.append(k)
+            k += 1
+        found.update((j, run) for j in passed)
+        if run is None:
+            return start, 0
+        return run[1], run[1] - run[0]
 
 
 def _printed(lines: Iterable[_Line]) -> dict[str, list[tuple[_Line, int, int]]]:
@@ -199,13 +247,22 @@ def locate(
     printed = _printed(lines)
     # Each label's designator ('R1' for 'R1 (2)') and where it's printed.
     mentions: dict[str, tuple[str, list[_Mention]]] = {}
+    # Each line's search for each value, shared by every mention on it.
+    runs: dict[tuple[int, str], _ValueRuns] = {}
+
+    def value_words(line: _Line, end: int, value: str) -> tuple[int, int]:
+        key = (id(line), value)
+        if key not in runs:
+            runs[key] = _ValueRuns(line.words, value)
+        return runs[key].after(end)
+
     for label, value in _designators(inventory).items():
         repeat = _REPEAT.match(label)
         ref = _clean(repeat[1] if repeat else label)
         mentions[label] = (
             ref,
             [
-                _Mention(line, start, end, *_value_words(line.words, end, value))
+                _Mention(line, start, end, *value_words(line, end, value))
                 for line, start, end in printed.get(ref, [])
             ],
         )

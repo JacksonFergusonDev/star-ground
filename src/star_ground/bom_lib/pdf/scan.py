@@ -5,9 +5,12 @@ description, or come glued together ('R1-10k'); the scan pairs each
 designator with its value.
 """
 
+import math
 import re
+from bisect import bisect_left, bisect_right
 from collections import Counter
 from dataclasses import replace
+from itertools import accumulate
 
 from star_ground.bom_lib import constants
 from star_ground.bom_lib.designators import BOARD_REF, is_designator
@@ -415,15 +418,40 @@ def _type_columns(lines: list[list[Cell]]) -> frozenset[int]:
         following = described[id(cell)][len(cell.text) + 1 :] or None
         return describes(cell.text, following)
 
-    typed_cells = [cell for cell in cells if typed(cell)]
+    kinds = [typed(cell) for cell in cells]
+    # The cells near each typed cell's x-position, and how many are typed.
+    # Each cell reaches the positions within its tolerance, one run of the
+    # sorted positions, so a difference array counts them all in one pass
+    # instead of comparing every typed cell with every cell.
+    starts = sorted(
+        {
+            cell.x0
+            for cell, kind in zip(cells, kinds, strict=True)
+            if kind and math.isfinite(cell.x0)
+        }
+    )
+    near = [0] * (len(starts) + 1)
+    near_typed = [0] * (len(starts) + 1)
+    for cell, kind in zip(cells, kinds, strict=True):
+        reach = _COLUMN_TOLERANCE_EM * cell.size
+        if not math.isfinite(cell.x0) or math.isnan(reach):
+            continue
+        # `x - cell.x0` only grows with x.
+        origin = cell.x0
+        lo = bisect_left(starts, -reach, key=lambda x: x - origin)
+        hi = bisect_right(starts, reach, key=lambda x: x - origin)
+        if lo < hi:
+            near[lo] += 1
+            near[hi] -= 1
+            if kind:
+                near_typed[lo] += 1
+                near_typed[hi] -= 1
     columns = set()
-    for cell in typed_cells:
-        near = [
-            c for c in cells if abs(c.x0 - cell.x0) <= _COLUMN_TOLERANCE_EM * c.size
-        ]
-        kinds = sum(1 for c in near if typed(c))
-        if kinds >= _MIN_COLUMN_REFS and kinds >= _TYPE_SHARE * len(near):
-            columns.add(round(cell.x0))
+    for x, total, typed_total in zip(
+        starts, accumulate(near), accumulate(near_typed), strict=False
+    ):
+        if typed_total >= _MIN_COLUMN_REFS and typed_total >= _TYPE_SHARE * total:
+            columns.add(round(x))
     return frozenset(columns)
 
 
@@ -602,7 +630,9 @@ def _description_end(cells: list[Cell], start: int, designators: frozenset[int])
         or NUMBERED_LABEL.fullmatch(cells[k].text)
         or (
             cells[k].text.isupper()
-            and is_ref_cell(cells[k].text, _text_at([c.text for c in cells], k + 1))
+            and is_ref_cell(
+                cells[k].text, cells[k + 1].text if k + 1 < len(cells) else None
+            )
         )
         or _in_column(cells[k].x0, cells[k].size, designators)
     ):
