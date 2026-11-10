@@ -436,6 +436,52 @@ def test_behind_a_proxy_each_forwarded_client_is_limited_separately() -> None:
     assert post("2.2.2.2") == 204
 
 
+def test_an_ipv6_client_is_limited_by_its_slash_64() -> None:
+    client = TestClient(create_app(Settings(requests_per_minute=1, trust_proxy=True)))
+
+    def post(forwarded: str) -> int:
+        return client.post(
+            "/api/reports", json=_REPORT, headers={"x-forwarded-for": forwarded}
+        ).status_code
+
+    assert post("2001:db8:1:2::1") == 204
+    assert post("2001:db8:1:2:ffff:ffff:ffff:fffe") == 429  # same /64
+    assert post("2001:db8:1:3::1") == 204  # the next /64 is someone else
+    assert post("1.1.1.1") == 204
+    assert post("::ffff:1.1.1.1") == 429  # IPv4 written as IPv6
+
+
+def test_the_ocr_allowance_counts_an_ipv6_client_by_its_slash_64(
+    mocker: MockerFixture,
+) -> None:
+    client = TestClient(create_app(Settings(ocr_per_hour=1, trust_proxy=True)))
+    mocker.patch("star_ground.server.reading.read_document", side_effect=_ocr_read())
+
+    def read(name: str, forwarded: str) -> str:
+        response = client.post(
+            "/api/documents/read",
+            files=_upload(name),
+            data={"ocr": "true"},
+            headers={"x-forwarded-for": forwarded},
+        )
+        return str(_events(response.text)[-1]["event"])
+
+    assert read("a.pdf", "2001:db8::1") == "result"
+    assert read("b.pdf", "2001:db8::2") == "error"
+
+
+def test_idle_clients_are_forgotten() -> None:
+    now = [0.0]
+    limiter = RateLimiter(1, clock=lambda: now[0])
+    for i in range(10_001):
+        limiter.allow(f"client {i}")
+
+    now[0] = 60.0
+    limiter.allow("new")
+
+    assert list(limiter._hits) == ["new"]
+
+
 def test_a_body_over_the_limit_is_refused() -> None:
     client = TestClient(create_app(Settings(max_body_bytes=1_000)))
 

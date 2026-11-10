@@ -5,6 +5,7 @@
 dependencies (`ServicesDep`, `Limit`).
 """
 
+import ipaddress
 import os
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -139,12 +140,27 @@ ServicesDep = Annotated[Services, Depends(services)]
 """A route parameter receiving the application's `Services`."""
 
 
-def client_address(request: Request, trust_proxy: bool) -> str:
-    """The client's address; behind a proxy, the last hop it appended."""
+def client_key(request: Request, trust_proxy: bool) -> str:
+    """Who the limits count a request against.
+
+    The client's address (behind a proxy, the last hop it appended). An IPv6
+    client counts by its /64: a home or a server is handed a whole /64 and
+    can take a fresh address from it for every request.
+    """
     forwarded = request.headers.get("x-forwarded-for")
     if trust_proxy and forwarded:
-        return forwarded.split(",")[-1].strip()
-    return request.client.host if request.client else "unknown"
+        address = forwarded.split(",")[-1].strip()
+    else:
+        address = request.client.host if request.client else "unknown"
+    try:
+        ip = ipaddress.ip_address(address)
+    except ValueError:
+        return address
+    if isinstance(ip, ipaddress.IPv6Address):
+        if ip.ipv4_mapped is not None:
+            return str(ip.ipv4_mapped)
+        return str(ipaddress.IPv6Network((ip, 64), strict=False))
+    return address
 
 
 @dataclass(frozen=True, slots=True)
@@ -169,7 +185,7 @@ class RateLimit:
         Raises:
             RefusedError: The client has used its requests for this minute.
         """
-        client = client_address(self.request, self.services.settings.trust_proxy)
+        client = client_key(self.request, self.services.settings.trust_proxy)
         if not self.services.limiter.allow(client):
             raise RefusedError(
                 429, Problem(message="Too many requests. Try again in a minute.")

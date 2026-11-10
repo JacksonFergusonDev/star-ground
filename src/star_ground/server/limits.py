@@ -114,7 +114,7 @@ class RateLimiter:
         """Records a request from the client, if it's within the limit.
 
         Args:
-            client: The client's address.
+            client: The client (`star_ground.server.services.client_key`).
 
         Returns:
             Whether the request may go ahead.
@@ -127,9 +127,15 @@ class RateLimiter:
             if len(hits) >= self.limit:
                 return False
             hits.append(now)
-            # Forget idle clients, so the table can't grow without bound.
+            # Forget clients idle for a window, so the table can't grow
+            # without bound. A deque only empties as its client comes back,
+            # so idle ones are known by their last use.
             if len(self._hits) > 10_000:
-                self._hits = {k: v for k, v in self._hits.items() if v}
+                self._hits = {
+                    k: v
+                    for k, v in self._hits.items()
+                    if v and now - v[-1] < self.window
+                }
             return True
 
 
