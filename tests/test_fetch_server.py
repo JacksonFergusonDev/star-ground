@@ -19,6 +19,7 @@ from pathlib import Path
 
 import pytest
 import trustme
+from pytest_mock import MockerFixture
 
 from star_ground.bom_lib import ComponentCategory, ComponentKey, InputMethod, fetch
 from star_ground.bom_lib.errors import ErrorKind, FetchError
@@ -37,6 +38,11 @@ class Site:
     https_port: int
     ca_path: str
     requests: list[dict[str, str]] = field(default_factory=list)
+    now: float = 0.0
+    """The fetch's clock, in seconds; a route can move it on."""
+
+    def clock(self) -> float:
+        return self.now
 
     def url(self, path: str, host: str = "docs.test", tls: bool = False) -> str:
         scheme, port = ("https", self.https_port) if tls else ("http", self.http_port)
@@ -101,6 +107,7 @@ def _handler(site: Site) -> type[BaseHTTPRequestHandler]:
                 "/missing": lambda: self.send(404, b"not here"),
                 "/private": lambda: self.send(403, b"sign in"),
                 "/redirect": lambda: self.redirect("/bom.pdf"),
+                "/late-redirect": lambda: self.late_redirect(),
                 "/loop": lambda: self.redirect("/loop"),
                 "/to-private": lambda: self.redirect(
                     f"http://private.test:{site.http_port}/bom.pdf"
@@ -118,6 +125,10 @@ def _handler(site: Site) -> type[BaseHTTPRequestHandler]:
                 "/stall": lambda: self.stall(),
             }
             routes.get(self.path, lambda: self.send(404))()
+
+        def late_redirect(self) -> None:
+            site.now += 4.0  # the hop took 4 s, by the fetch's clock
+            self.redirect("/bom.pdf")
 
         def big_declared(self) -> None:
             self.send_response(200)
@@ -315,6 +326,27 @@ class TestLimits:
         with pytest.raises(FetchError, match="too long"):
             fetch_url(site.url("/slow"), site.policy(deadline_s=0.5))
         assert time.monotonic() - start < 2.0
+
+    def test_the_deadline_is_checked_before_each_redirect(self, site: Site) -> None:
+        with pytest.raises(FetchError, match="too long"):
+            fetch_url(
+                site.url("/late-redirect"),
+                site.policy(deadline_s=3.0, clock=site.clock),
+            )
+        assert [r["path"] for r in site.requests] == ["/late-redirect"]
+
+    def test_each_hop_waits_only_for_the_time_left(
+        self, site: Site, mocker: MockerFixture
+    ) -> None:
+        hop = mocker.spy(fetch, "_get")
+
+        fetch_url(
+            site.url("/late-redirect"), site.policy(deadline_s=5.0, clock=site.clock)
+        )
+
+        first, second = (call.args[4] for call in hop.call_args_list)
+        assert first == (5.0, 2.0)  # the policy's own timeouts, under the deadline
+        assert second == (1.0, 1.0)  # one second left after the 4 s hop
 
     def test_a_stalled_server_times_out(self, site: Site) -> None:
         with pytest.raises(FetchError, match="too long"):
