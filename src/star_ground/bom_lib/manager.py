@@ -152,6 +152,8 @@ def rename_source(inventory: Inventory, old_name: str, new_name: str) -> Invento
             part.sources[new_name] = part.sources.pop(old_name)
         if old_name in part.counted:
             part.counted[new_name] = part.counted.pop(old_name)
+        if old_name in part.multiples:
+            part.multiples[new_name] = part.multiples.pop(old_name)
     return renamed
 
 

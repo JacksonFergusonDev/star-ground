@@ -282,6 +282,10 @@ class PartData:
             'LED CLR'), one note per addition. Only the hardware kit
             (`sourcing.with_standard_hardware`) writes it, so no document or
             project name can make a part hardware.
+        multiples: The designators of each source that stand for more than
+            one part, with how many ('TB1  TERMINAL BLOCK (Qty 3)' is
+            {'TB1': 3}). Like `counted`, it describes one pedal. A designator
+            missing here is one part.
     """
 
     qty: int = 0
@@ -292,6 +296,7 @@ class PartData:
     included: int = 0
     counted: dict[str, int] = field(default_factory=dict)
     hardware: list[str] = field(default_factory=list)
+    multiples: dict[str, dict[str, int]] = field(default_factory=dict)
 
 
 @dataclass(frozen=True, slots=True)
@@ -613,6 +618,8 @@ class Inventory(UserDict[ComponentKey, PartData]):
         if ref:
             part.refs.append(ref)
             part.sources[source].append(ref)
+            if qty != 1:
+                part.multiples.setdefault(source, {})[ref] = qty
 
     def add_counted(self, source: str, key: ComponentKey, qty: int) -> None:
         """Records parts the document counts by value, with no designator.
@@ -631,8 +638,10 @@ class Inventory(UserDict[ComponentKey, PartData]):
         """A copy listing some of a source's designators as other parts.
 
         A builder's correction: the document prints R1 as 10k, but the
-        reading took 1k. A part left with no designators or count is removed,
-        and a designator the source doesn't list is ignored.
+        reading took 1k. A designator moves with its whole quantity ('TB1'
+        for three terminal blocks moves all three). A part left with no
+        designators or count is removed, and a designator the source doesn't
+        list is ignored.
 
         Args:
             source: The source the designators were read from.
@@ -643,25 +652,56 @@ class Inventory(UserDict[ComponentKey, PartData]):
         """
         inventory = copy.deepcopy(self)
         for ref, key in moves.items():
-            found = next(
-                (
-                    k
-                    for k, data in inventory.items()
-                    if ref in data.sources.get(source, [])
-                ),
-                None,
-            )
-            if found is None or found == key:
+            if inventory.part_of(source, ref) in (None, key):
                 continue
-            old = inventory[found]
-            old.refs.remove(ref)
-            old.sources[source].remove(ref)
-            old.qty -= 1
-            old.included = min(old.included, old.qty)
-            if old.qty <= 0:
-                del inventory[found]
-            inventory.add_part(source, key, ref)
+            taken = inventory.take(source, ref)
+            if taken is not None:
+                inventory.add_part(source, key, ref, taken[1])
         return inventory
+
+    def part_of(self, source: str, ref: str) -> ComponentKey | None:
+        """The part a source lists a designator as, if it lists it.
+
+        Args:
+            source: The source the designator was read from.
+            ref: The designator ('R1', 'IC1 (Inj)').
+
+        Returns:
+            The part, or None when the source doesn't list the designator.
+        """
+        return next(
+            (k for k, data in self.items() if ref in data.sources.get(source, [])),
+            None,
+        )
+
+    def take(self, source: str, ref: str) -> tuple[ComponentKey, int] | None:
+        """Removes a source's designator, with every part it stands for.
+
+        A part left with no designators or count is removed.
+
+        Args:
+            source: The source the designator was read from.
+            ref: The designator ('R1', 'IC1 (Inj)').
+
+        Returns:
+            The part the designator was and how many it stood for, or None
+            when the source doesn't list it.
+        """
+        key = self.part_of(source, ref)
+        if key is None:
+            return None
+        part = self[key]
+        part.refs.remove(ref)
+        part.sources[source].remove(ref)
+        multiples = part.multiples.get(source, {})
+        qty = multiples.pop(ref, 1)
+        if not multiples:
+            part.multiples.pop(source, None)
+        part.qty -= qty
+        part.included = min(part.included, part.qty)
+        if part.qty <= 0:
+            del self[key]
+        return key, qty
 
     def merge(self, other: Inventory, multiplier: int = 1) -> None:
         """Merges another inventory into this one.
@@ -678,6 +718,8 @@ class Inventory(UserDict[ComponentKey, PartData]):
                 counted[src] = max(counted.get(src, 0), n)
             self[key].refs.extend(data.refs)
             self[key].hardware.extend(data.hardware)
+            for src, multiples in data.multiples.items():
+                self[key].multiples.setdefault(src, {}).update(multiples)
             for src, refs in data.sources.items():
                 self[key].sources[src].extend(refs * multiplier)
 

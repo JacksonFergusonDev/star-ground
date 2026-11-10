@@ -346,12 +346,24 @@ def get_buy_details(
     return PurchaseRecommendation(buy_qty=buy, note=note)
 
 
+# A document's own power connector, whatever it calls it: 'DC JACK',
+# '2.1MM DC SOCKET', 'POWER SOCKET', 'DC power jack', 'Barrel connector'. A
+# chip's socket names no power. Up to two words may come between 'DC' and
+# the connector, which keeps the search linear.
+_DC_POWER = re.compile(
+    r"\b(?:DC|POWER)(?:[\s_-]+[^\s_-]+){0,2}?[\s_-]+(?:JACK|SOCKET|CONNECTOR)S?\b"
+    r"|\bBARREL\b|\b\d(?:\.\d)?\s*MM\s+DC\b"
+)
+
+
 def provided_hardware(inventory: Inventory) -> frozenset[HardwareRole]:
     """Off-board hardware a project's own parts list already includes.
 
-    Only explicit mentions count (a part described as a jack, a DC jack, a 3PDT
-    footswitch, or an enclosure), so standard hardware is skipped only when the
-    document clearly supplies it. A status LED and its resistor count by their
+    Only explicit mentions count (a part described as a jack, a DC power
+    connector, a 3PDT footswitch, or an enclosure), so standard hardware is
+    skipped only when the document clearly supplies it. A DC power connector
+    counts whatever it is called (jack, socket, barrel). A status LED and its
+    resistor count by their
     designators: 'LED', 'LED1', 'EFL1' (GuitarPCB NostalgiTone) for the LED;
     'CLR' (PedalPCB, GuitarPCB) and 'LEDR' (Aion FX) for the resistor. A
     clipping LED is a numbered diode ('D1  3mm Red LED') and counts as neither.
@@ -367,10 +379,10 @@ def provided_hardware(inventory: Inventory) -> frozenset[HardwareRole]:
         text = " ".join([key.value, *data.refs]).upper()
         if "ENCLOSURE" in text:
             roles.add(HardwareRole.ENCLOSURE)
-        if "JACK" in text:
-            roles.add(
-                HardwareRole.DC_JACK if "DC" in text else HardwareRole.AUDIO_JACKS
-            )
+        if _DC_POWER.search(text):
+            roles.add(HardwareRole.DC_JACK)
+        elif "JACK" in text:
+            roles.add(HardwareRole.AUDIO_JACKS)
         if (
             key.category == ComponentCategory.SWITCHES
             and "3PDT" in text
@@ -421,7 +433,8 @@ def with_standard_hardware(
     Adds items like jacks, switches, DC sockets, and wiring that are almost
     never listed on the PCB BOM but are required to build the pedal. Hardware a
     project's document already lists (see `provided_hardware`) is supplied
-    only for the other projects' pedals, so nothing is bought twice.
+    only for the other projects' pedals, so nothing is bought twice. With no
+    pedals, nothing is added.
 
     Args:
         parts: The master list's parts, left unchanged.
@@ -432,6 +445,8 @@ def with_standard_hardware(
     """
     inventory = copy.deepcopy(parts)
     pedal_count = sum(b.count for b in builds)
+    if pedal_count == 0:
+        return inventory  # no pedal to house
 
     def needing(role: HardwareRole | None) -> int:
         if role is None:

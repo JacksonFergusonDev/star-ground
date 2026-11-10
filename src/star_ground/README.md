@@ -105,6 +105,9 @@ class PartData:
     included: int = 0  # Of qty, how many come with the PCB
     counted: dict[str, int] = field(default_factory=dict)
     hardware: list[str] = field(default_factory=list)  # Kit notes: ["Input"]
+    multiples: dict[str, dict[str, int]] = ...  # {"Fuzz": {"TB1": 3}}
 ```
+
+A builder's correction gives the list a document printing the corrected value would give. The designator moves with every part it stands for (`multiples`), and the classifier decides again which parts it implies, so correcting `IC1` from a TL072 to a 78L05 drops its socket.
 
 Star Ground's own parts are told apart by identity, never by text a document or builder could write. The hardware kit records itself in `PartData.hardware`, which only `with_standard_hardware` fills, so a project named "Auto-Inject" stays a project. The socket added for each chip is the key `constants.IC_SOCKET`, so a document's own DC socket or tube socket is never mistaken for it.
