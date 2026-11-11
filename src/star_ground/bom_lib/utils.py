@@ -4,29 +4,46 @@ This module handles the low-level formatting logic, including:
 - Natural sorting (R1, R2, R10).
 - Range expansion (R1-R5 -> R1, R2...).
 - SI unit parsing (1k5 -> 1500.0).
-- Search string generation (1500.0 -> 1.5k).
+- Search string generation (1500 ohms -> 1.5k).
 """
 
 import re
+from decimal import Decimal
 
 from star_ground.bom_lib.grammar import parse_value_to_decimal
-from star_ground.bom_lib.types import RefDesignator
+from star_ground.bom_lib.units import Unit, Value
 
 __all__ = [
     "deduplicate_refs",
     "expand_refs",
     "float_to_display_string",
-    "float_to_search_string",
+    "is_ref_range",
     "natural_sort_key",
     "parse_value_to_decimal",
+    "value_to_search_string",
 ]
+
+# The most parts one designator range is expanded into: 'R1-R50' is fifty
+# resistors, but a longer range is more likely a misreading than a parts list.
+MAX_RANGE_PARTS = 50
+
+# A designator range: 'R1-R4', 'C1-3', 'POT1 - 6', 'R01-R03', 'R5-R1', and
+# channels of one part, 'R1A-R1D'.
+_RANGE = re.compile(r"([a-zA-Z]+)(\d+)([A-Ha-h]?)\s*-\s*([a-zA-Z]+)?(\d+)([A-Ha-h]?)")
+# No real designator has more than a few digits. A range with more is not
+# expanded, and its numbers are never read: converting thousands of digits
+# to an int passes Python's limit and raises.
+_MAX_REF_DIGITS = 4
+# A natural sort compares runs of digits as numbers, a bounded run at a time.
+_SORT_DIGITS = re.compile(r"(\d{1,18})")
 
 
 def natural_sort_key(ref: str) -> list[int | str]:
     """Generates a sort key for natural alphanumeric sorting.
 
     Splits strings into text and numeric chunks so that 'R10' comes
-    after 'R2', rather than 'R1'.
+    after 'R2', rather than 'R1'. A run of more than 18 digits, which no
+    designator has, is compared 18 digits at a time.
 
     Args:
         ref: The reference designator string.
@@ -36,7 +53,7 @@ def natural_sort_key(ref: str) -> list[int | str]:
     """
     return [
         int(text) if text.isdigit() else text.upper()
-        for text in re.split(r"(\d+)", ref)
+        for text in _SORT_DIGITS.split(ref)
     ]
 
 
@@ -59,9 +76,9 @@ def deduplicate_refs(refs: list[str]) -> list[str]:
 def expand_refs(ref_raw: str) -> list[str]:
     """Explodes range and list strings into individual references.
 
-    Handles ranges like 'R1-R4' or 'C1-3' and comma-separated lists of
-    either ('R10-R12,R18'). Includes a sanity check to prevent exploding
-    massive invalid ranges (limit 50).
+    Handles ranges like 'R1-R4', 'C1-3', 'R5-R1' and 'R1A-R1D', and
+    comma-separated lists of either ('R10-R12,R18'). A range of more than
+    `MAX_RANGE_PARTS` parts is left as written: `is_ref_range` tells it apart.
 
     Args:
         ref_raw: The raw reference string (e.g., "R1-4").
@@ -74,106 +91,111 @@ def expand_refs(ref_raw: str) -> list[str]:
     ref_raw = re.sub(r"[\u2012-\u2015]", "-", ref_raw)
     parts = [p.strip() for p in ref_raw.split(",")]
     if len(parts) > 1 and all(parts):
-        # 'C12, 15, 16' (Q-Tune): a bare number reuses the previous prefix.
+        # 'C12, 15, 16' (Q-Tune) and 'C1-C3, 5-7': a bare number or range
+        # reuses the previous prefix.
         prefix = ""
         for k, part in enumerate(parts):
             m = re.match(r"[A-Za-z]+", part)
             if m:
                 prefix = m.group(0)
-            elif prefix and part.isdigit():
+            elif prefix and re.fullmatch(r"\d+(?:\s*-\s*\d+)?", part):
                 parts[k] = prefix + part
         return [ref for part in parts for ref in _expand_range(part)]
     return _expand_range(ref_raw)
 
 
-def _expand_range(ref_raw: str) -> list[str]:
-    ref_raw = ref_raw.strip()
-    if "-" not in ref_raw:
-        return [ref_raw]
-
-    # Match pattern: Prefix1, StartNum, optional Prefix2, EndNum
-    # 'POT1 - 6' (6 Band EQ) spaces the dash.
-    m = re.match(r"^([a-zA-Z]+)(\d+)\s*-\s*([a-zA-Z]+)?(\d+)$", ref_raw)
-    if m:
-        prefix1 = m.group(1)
-        start = int(m.group(2))
-        prefix2 = m.group(3)
-        end = int(m.group(4))
-
-        # If a second prefix is provided, it must match the first prefix
-        if prefix2 and prefix2.upper() != prefix1.upper():
-            return [ref_raw]
-
-        # Sanity check: Avoid accidental explosion of massive numbers
-        if 0 <= (end - start) < 50:
-            return [
-                str(RefDesignator(prefix=prefix1, number=i))
-                for i in range(start, end + 1)
-            ]
-
-    return [ref_raw]
-
-
-def float_to_search_string(val: float | None) -> str:
-    """Converts a float back to a standard engineering string (e.g., '1.5k').
-
-    This format is optimized for searching parts suppliers (e.g., Tayda).
+def is_ref_range(ref: str) -> bool:
+    """Whether a reference is a designator range, as `expand_refs` leaves one.
 
     Args:
-        val: The float value (e.g., 1500.0).
+        ref: One reference from `expand_refs`.
+
+    Returns:
+        True for a range it could not expand: 'R1-R60' (over the limit),
+        'R1-C3' (two kinds of part).
+    """
+    return _RANGE.fullmatch(ref.strip()) is not None
+
+
+def _expand_range(ref_raw: str) -> list[str]:
+    """Expands one range ('R1-R4', 'POT1 - 6', 'R1A-R1D'), or returns it as written."""
+    ref_raw = ref_raw.strip()
+    m = _RANGE.fullmatch(ref_raw)
+    if m is None:
+        return [ref_raw]
+    prefix, first, first_letter, prefix2, last, last_letter = m.groups()
+    # If a second prefix is provided, it must match the first prefix
+    if prefix2 and prefix2.upper() != prefix.upper():
+        return [ref_raw]
+    if max(len(first), len(last)) > _MAX_REF_DIGITS:
+        return [ref_raw]
+
+    if first_letter or last_letter:
+        # Channels of one part: 'R1A-R1D'.
+        if first != last or not (first_letter and last_letter):
+            return [ref_raw]
+        lo, hi = sorted((ord(first_letter), ord(last_letter)))
+        return [f"{prefix}{first}{chr(c)}" for c in range(lo, hi + 1)]
+
+    lo, hi = sorted((int(first), int(last)))
+    if hi - lo >= MAX_RANGE_PARTS:
+        return [ref_raw]
+    # 'R01-R03' keeps its zero padding.
+    padded = any(len(n) > 1 and n.startswith("0") for n in (first, last))
+    width = max(len(first), len(last)) if padded else 0
+    return [f"{prefix}{i:0{width}d}" for i in range(lo, hi + 1)]
+
+
+_LARGE_PREFIXES = (("M", Decimal("1e6")), ("k", Decimal("1e3")))
+_SMALL_FARAD_PREFIXES = (("u", Decimal("1e-6")), ("n", Decimal("1e-9")))
+_PICO = Decimal("1e-12")
+
+
+def value_to_search_string(value: Value) -> str:
+    """Writes a value the way parts suppliers list it (e.g., '1.5k', '100n').
+
+    This format is optimized for searching parts suppliers (e.g., Tayda).
+    Every significant digit is kept: 4K65 is 4.65k, not 4.7k. A resistance
+    under one ohm is written as a plain decimal ('0.47', as '4.7' is 4.7
+    ohms); a capacitance under one farad takes u, n or p ('0.5p').
+
+    Args:
+        value: The value with its unit (e.g., 1500 ohms).
 
     Returns:
         A string formatted with SI suffixes (k, M, u, n, p).
-        Returns empty string if val is None.
     """
-    if val is None:
-        return ""
-
-    val = float(val)  # Ensure float
-
-    # Resistor/Large values (k, M)
-    # We purposefully iterate high-to-low to find the first fit.
-    for suffix, multiplier in [("M", 1e6), ("k", 1e3)]:
-        if val >= multiplier:
-            reduced = val / multiplier
-            reduced = round(reduced, 6)  # Floating point sanity
-
-            if reduced.is_integer():
-                return f"{int(reduced)}{suffix}"
-            # Keep every significant digit: 4K65 is 4.65k, not 4.7k.
-            return f"{reduced:g}{suffix}"
-
-    # Capacitor/Inductor values (u, n, p)
-    # Applied primarily for values < 1.0 (assuming base unit is Farads/Henries)
-    if val < 1.0:
-        for suffix, multiplier in [("u", 1e-6), ("n", 1e-9), ("p", 1e-12)]:
-            if val >= multiplier:
-                reduced = val / multiplier
-                reduced = round(reduced, 6)
-                if reduced.is_integer():
-                    return f"{int(reduced)}{suffix}"
-                return f"{reduced:g}{suffix}"
-
-    # Fallback for plain numbers (e.g. 100R)
-    val = round(val, 6)
-    if val.is_integer():
-        return str(int(val))
-    return str(val)
+    magnitude = value.magnitude
+    size = abs(magnitude)
+    for suffix, multiplier in _LARGE_PREFIXES:
+        if size >= multiplier:
+            return f"{_digits(magnitude / multiplier)}{suffix}"
+    if value.unit == Unit.FARAD and 0 < size < 1:
+        for suffix, multiplier in _SMALL_FARAD_PREFIXES:
+            if size >= multiplier:
+                return f"{_digits(magnitude / multiplier)}{suffix}"
+        return f"{_digits(magnitude / _PICO)}p"
+    return _digits(magnitude)
 
 
-def float_to_display_string(val: float) -> str:
-    """Converts a float to BS 1852 "Sandwich" format (e.g., '1k5').
+def _digits(number: Decimal) -> str:
+    """A number's significant digits, without exponent or trailing zeros."""
+    return format(number.normalize(), "f")
+
+
+def float_to_display_string(value: Value) -> str:
+    """Converts a value to BS 1852 "Sandwich" format (e.g., '1k5').
 
     This format is preferred for printed checklists and PCBs as it is
     more compact and harder to misread (no decimal points).
 
     Args:
-        val: The float value (e.g., 1500.0).
+        value: The value with its unit (e.g., 1500 ohms).
 
     Returns:
         A string formatted as '1k5', '4u7', etc.
     """
-    base = float_to_search_string(val)
+    base = value_to_search_string(value)
 
     # Transform 4.7k -> 4k7
     if "." in base and any(c.isalpha() for c in base):

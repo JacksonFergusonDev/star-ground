@@ -152,3 +152,22 @@ def test_a_type_column_names_the_new_categories(
     type_text: str, category: ComponentCategory
 ) -> None:
     assert category_from_type(type_text) == category
+
+
+@pytest.mark.parametrize("ref", ["R1-R60", "R1-C3", "POT1 - 70"])
+def test_a_range_left_unexpanded_is_no_named_control(ref: str) -> None:
+    # Its '10k' made one pot, with a knob and a dust seal, for many parts.
+    assert categorize_part(ref, "10k") is None
+
+
+def test_a_capacitors_unit_decides_its_value() -> None:
+    from star_ground.bom_lib.classifier import normalize_value_to_quantity
+    from star_ground.bom_lib.units import farads
+
+    assert normalize_value_to_quantity(ComponentCategory.CAPACITORS, "25V") is None
+    assert normalize_value_to_quantity(ComponentCategory.CAPACITORS, "10MFD") == farads(
+        "10e-6"
+    )
+    part = categorize_part("C1", "0,068 µF")
+    assert part is not None
+    assert part.clean_value == "68n"

@@ -23,7 +23,6 @@ from star_ground.bom_lib import (
     deduplicate_refs,
     expand_refs,
     float_to_display_string,
-    float_to_search_string,
     generate_search_term,
     generate_tayda_url,
     get_buy_details,
@@ -32,6 +31,7 @@ from star_ground.bom_lib import (
     parse_value_to_decimal,
     parse_with_verification,
     serialize_inventory,
+    value_to_search_string,
     with_standard_hardware,
 )
 from star_ground.bom_lib.classifier import normalize_value_to_quantity
@@ -42,6 +42,7 @@ from star_ground.bom_lib.types import (
     PDFPageExtraction,
     ReadingStats,
 )
+from star_ground.bom_lib.units import farads, ohms
 
 # --- Standard Unit Tests ---
 
@@ -217,8 +218,8 @@ def test_value_normalization_lifecycle():
     assert val is not None
 
     assert val == Decimal("1500")
-    assert float_to_search_string(float(val)) == "1.5k"
-    assert float_to_display_string(float(val)) == "1k5"
+    assert value_to_search_string(ohms(val)) == "1.5k"
+    assert float_to_display_string(ohms(val)) == "1k5"
 
     # Test Case: 100n (Capacitor Normalization)
     val1 = parse_value_to_decimal("100n")
@@ -229,7 +230,7 @@ def test_value_normalization_lifecycle():
     # We normalized 100n -> 1.0e-7.
     # Our renderer might output "100n" or "0.1u" depending on formatting rules,
     # but the numeric value must be correct.
-    out = float_to_search_string(float(val1))
+    out = value_to_search_string(farads(val1))
     assert "u" in out or "n" in out
 
 
@@ -240,14 +241,9 @@ def test_bs1852_formatting():
     Ensures decimal points are replaced by unit multipliers (e.g., 4.7k -> 4k7)
     to prevent misreading dirty prints.
     """
-    val = 1500.0  # 1.5k
-    assert float_to_display_string(val) == "1k5"
-
-    val = 2200000.0  # 2.2M
-    assert float_to_display_string(val) == "2M2"
-
-    val = 4700.0  # 4.7k
-    assert float_to_display_string(val) == "4k7"
+    assert float_to_display_string(ohms("1500")) == "1k5"
+    assert float_to_display_string(ohms("2200000")) == "2M2"
+    assert float_to_display_string(ohms("4700")) == "4k7"
 
 
 def test_suspicious_physics_warnings():
@@ -1539,3 +1535,97 @@ def test_a_switch_pad_label_is_a_letter_or_two() -> None:
     assert _PAD_LETTERS.fullmatch("C")
     assert _PAD_LETTERS.fullmatch("EF")
     assert not _PAD_LETTERS.fullmatch("MOMENTARY")
+
+
+def _read(*lines: str) -> tuple[dict[ComponentKey, list[str]], list[tuple[str, str]]]:
+    """A pasted list's parts (key -> designators) and warnings (kind, designator)."""
+    result = parse_with_verification(list(lines), source_name="P")
+    parts = {key: sorted(data.refs) for key, data in result.inventory.items()}
+    warnings = [(w.kind.value, w.ref) for w in result.stats.warnings]
+    return parts, warnings
+
+
+@pytest.mark.parametrize(
+    ("lines", "expected"),
+    [
+        # 'R1 0R47' became '470000u' and 'C3 0p5' became '0'.
+        (["R1 0R47"], {ComponentKey(ComponentCategory.RESISTORS, "0.47"): ["R1"]}),
+        (["C3 0p5"], {ComponentKey(ComponentCategory.CAPACITORS, "0.5p"): ["C3"]}),
+        # Upper-case prefixes were unparsed values, kept apart from '100n'.
+        (
+            ["C1 100NF", "C2 100n", "C3 100N"],
+            {ComponentKey(ComponentCategory.CAPACITORS, "100n"): ["C1", "C2", "C3"]},
+        ),
+        (
+            ["C1 10UF", "C2 10MFD", "C3 10u"],
+            {ComponentKey(ComponentCategory.CAPACITORS, "10u"): ["C1", "C2", "C3"]},
+        ),
+        (["R1 10M"], {ComponentKey(ComponentCategory.RESISTORS, "10M"): ["R1"]}),
+        # The classifier joined '0,068 µF', then the parser refused the comma.
+        (
+            ["C1 0,068 µF"],
+            {ComponentKey(ComponentCategory.CAPACITORS, "68n"): ["C1"]},
+        ),
+        # Reversed, lettered and zero-padded ranges were each one 10k pot.
+        (
+            ["R5-R1 10k"],
+            {
+                ComponentKey(ComponentCategory.RESISTORS, "10k"): [
+                    "R1",
+                    "R2",
+                    "R3",
+                    "R4",
+                    "R5",
+                ]
+            },
+        ),
+        (
+            ["R1A-R1D 10k"],
+            {
+                ComponentKey(ComponentCategory.RESISTORS, "10k"): [
+                    "R1A",
+                    "R1B",
+                    "R1C",
+                    "R1D",
+                ]
+            },
+        ),
+        (
+            ["R01-R03 10k"],
+            {ComponentKey(ComponentCategory.RESISTORS, "10k"): ["R01", "R02", "R03"]},
+        ),
+    ],
+)
+def test_small_upper_case_comma_values_and_odd_ranges(
+    lines: list[str], expected: dict[ComponentKey, list[str]]
+) -> None:
+    parts, warnings = _read(*lines)
+    assert parts == expected
+    assert warnings == []
+
+
+def test_a_capacitors_voltage_is_no_capacitance() -> None:
+    # 'C1 25V' was read as 25 farads.
+    parts, warnings = _read("C1 25V")
+    assert ComponentKey(ComponentCategory.CAPACITORS, "25") not in parts
+    assert warnings == [("Unparsed value", "C1")]
+
+
+@pytest.mark.parametrize("ref", ["R1-R60", "R1-C3", "R" + "1" * 5000 + "-2"])
+def test_a_range_too_long_to_expand_is_warned_not_bought(ref: str) -> None:
+    # Each became one 10k pot, with a knob and dust seal, and no warning; the
+    # 5000-digit one raised ValueError and was reported as a bug.
+    parts, warnings = _read(f"{ref} 10k")
+    assert parts == {}
+    assert warnings == [("Unreadable designator", ref)]
+
+
+def test_a_range_continued_by_number_is_expanded() -> None:
+    # 'C1-C3, 5-7' gave a literal designator '5-7'.
+    from star_ground.bom_lib.ingest import ingest_bom_line
+
+    inventory = Inventory()
+    stats = ReadingStats()
+    ingest_bom_line(inventory, "P", "C1-C3, 5-7", "100n", stats)
+    key = ComponentKey(ComponentCategory.CAPACITORS, "100n")
+    assert sorted(inventory[key].refs) == ["C1", "C2", "C3", "C5", "C6", "C7"]
