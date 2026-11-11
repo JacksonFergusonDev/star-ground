@@ -604,20 +604,27 @@ def check_footnotes(page_texts: list[str], stats: ReadingStats) -> None:
     """
     for text in page_texts:
         lines = [" ".join(line.split()) for line in text.splitlines()]
+        # The marked listings ('OSC-ROOT *DPDT On/On/On'), by what follows the
+        # asterisk, so each heading looks its listings up instead of matching
+        # every line of the page.
+        marked: dict[str, list[tuple[str, str]]] = {}
+        for line in lines:
+            ref, _, rest = line.partition(" ")
+            if ref and rest.startswith("*"):
+                marked.setdefault(rest[1:], []).append((ref, line))
         for k, heading in enumerate(lines):
             if not heading.startswith("*") or k + 1 >= len(lines):
                 continue
             body = heading.lstrip("*").strip()
             if not body:
                 continue
-            for line in lines:
-                m = re.match(rf"(\S+) \*{re.escape(body)}$", line)
-                if m and line != heading:
+            for ref, line in marked.get(body, []):
+                if line != heading:
                     _warn(
                         stats,
                         ParseWarningKind.FOOTNOTE,
-                        m.group(1),
-                        f"{m.group(1)} ({body}) has a note: {lines[k + 1]}",
+                        ref,
+                        f"{ref} ({body}) has a note: {lines[k + 1]}",
                     )
 
 

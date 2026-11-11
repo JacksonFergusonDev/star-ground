@@ -13,6 +13,11 @@ from star_ground.bom_lib.types import (
     ReadingStats,
 )
 
+# A designator, separators, then its value. The line is already stripped, so
+# the value runs to the end: a lazy value followed by `\s*$` would retry the
+# trailing match at every character, quadratic in a long run of spaces.
+_LISTING = re.compile(r"([a-zA-Z0-9_\-]+)[\s,]+(\S.*)")
+
 
 def parse_with_verification(
     bom_list: list[str], source_name: str = "Manual Input"
@@ -30,9 +35,6 @@ def parse_with_verification(
     """
     inventory = Inventory()
     stats: ReadingStats = ReadingStats()
-
-    # Regex: Matches Ref + Separator + Value.
-    pattern = re.compile(r"^([a-zA-Z0-9_\-]+)[\s,]+(\S.*?)\s*$")
 
     for raw_text in bom_list:
         lines = raw_text.strip().split("\n")
@@ -54,7 +56,7 @@ def parse_with_verification(
                 record_pcb(inventory, source_name, clean_name, stats)
                 continue
 
-            match = pattern.match(line)
+            match = _LISTING.fullmatch(line)
             success = False
 
             if match:

@@ -151,6 +151,9 @@ def record_pcb(
 
 # A value that only points to the build notes.
 POINTER_VALUE = re.compile(r"see (?:build )?(?:notes?|text)", re.IGNORECASE)
+# It starts at the dash, not at the spaces before it (the value is stripped
+# there anyway): a search starting with `\s*` rescans a run of spaces from
+# each of its characters.
 _POINTER_TAIL = re.compile(
-    r"\s*[-\u2013\u2014]\s*see (?:build )?(?:notes?|text)\s*$", re.IGNORECASE
+    r"[-\u2013\u2014]\s*see (?:build )?(?:notes?|text)\s*$", re.IGNORECASE
 )

@@ -55,8 +55,6 @@ _BOM_COLUMNS = {
 }
 # A cell starting this many ems right of the last header is outside the table.
 _BEYOND_TABLE_EM = 4.0
-# A wrapped value loses its closing parenthesis: '1N5226 (1N5' / '226)'.
-_UNCLOSED_ASIDE = re.compile(r"\s*\([^)]*$")
 # A part's printed marking is not its value: '100n (104)', '1N4148 (41 48)',
 # '100n (.100J63)'. Words in parentheses ('(low ESR)', '(KY5050)') stay.
 _MARKING = re.compile(r"\s*\(\s*(\.?\d[\d .]*(?:[JKM]\d+)?)\s*\)$")
@@ -111,6 +109,18 @@ class _Column:
     @property
     def center(self) -> float:
         return (self.x0 + self.x1) / 2
+
+
+def _without_unclosed_aside(text: str) -> str:
+    """Drops a parenthesis left open at the end of a cell, and what follows it.
+
+    A wrapped value loses its closing parenthesis: '1N5226 (1N5' / '226)'.
+    The open aside starts at the first '(' after the last ')'. A regex
+    searching for a '(' with no ')' after it would rescan the rest of the
+    cell from every '(', quadratic in a run of them.
+    """
+    start = text.find("(", text.rfind(")") + 1)
+    return text if start < 0 else text[:start].rstrip()
 
 
 def heads_typed_table(words: list[PDFWord]) -> bool:
@@ -403,7 +413,7 @@ def _read_bom(words: list[PDFWord]) -> tuple[list[BomRow], list[Cell], list[str]
             if role:
                 refs = role.group(1)
             value = drop_remarks(
-                _UNCLOSED_ASIDE.sub("", ASIDE.sub("", fields.get((k, "value"), "")))
+                _without_unclosed_aside(ASIDE.sub("", fields.get((k, "value"), "")))
             )
             # 'SW - SPDT | On-Off_On' (GuitarPCB Skyn-Tone): the pole type in
             # the label belongs to the value.
@@ -472,7 +482,7 @@ def _build_values(
     for col in named:
         cell = value
         if col.field != "value":
-            raw = _UNCLOSED_ASIDE.sub("", ASIDE.sub("", fields.get((k, col.field), "")))
+            raw = _without_unclosed_aside(ASIDE.sub("", fields.get((k, col.field), "")))
             marking = _MARKING.search(raw)
             if marking:
                 raw = raw[: marking.start()]

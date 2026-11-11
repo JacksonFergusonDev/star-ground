@@ -50,8 +50,11 @@ _BUILD_HEADING = re.compile(
 )
 _CHOOSE_BETWEEN = re.compile(r"choose between (?P<a>.+?) or (?P<b>.+?)\W*$", re.I)
 # 'designed for either Nature control, or Treble + Bass controls' (Fuchsia).
+# Each side names a few controls, so it is at most 60 characters: unbounded,
+# every 'either' on a page would scan the rest of the page for 'control'.
 _EITHER_OR = re.compile(
-    r"\beither\s+(?:the\s+)?(?P<a>.+?)\s+controls?,?\s+or\s+(?:the\s+)?(?P<b>.+?)\s+controls?\b",
+    r"\beither\s+(?:the\s+)?(?P<a>.{1,60}?)\s+controls?,?\s+or\s+"
+    r"(?:the\s+)?(?P<b>.{1,60}?)\s+controls?\b",
     re.I,
 )
 _NAME_LIST = re.compile(r"\s*(?:\+|,|&|\band\b)\s*", re.I)
