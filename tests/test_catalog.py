@@ -32,6 +32,7 @@ from star_ground.catalog.build import (
     BOARDS_VERSION,
     Budget,
     CatalogRun,
+    DocumentState,
     Sample,
     State,
     clean,
@@ -1752,9 +1753,7 @@ def test_state_is_written_whole_or_not_at_all(
     run(_docs(_pedalpcb_web()), lambda upload: _reading())
     path = tmp_path / "state" / "pedalpcb.json"
     before = path.read_text()
-    mocker.patch(
-        "star_ground.catalog.entries.os.replace", side_effect=KeyboardInterrupt
-    )
+    mocker.patch("star_ground.catalog.files.os.replace", side_effect=KeyboardInterrupt)
 
     with pytest.raises(KeyboardInterrupt):
         State().save(path)
@@ -1772,13 +1771,76 @@ def test_an_entry_is_written_whole_or_not_at_all(
     path = tmp_path / "builds" / "pedalpcb" / "fuzz.json"
     before = path.read_text()
     entry = CatalogEntry.load(path)
-    mocker.patch("star_ground.catalog.entries.os.fdopen", side_effect=OSError("full"))
+    mocker.patch("star_ground.catalog.files.os.fdopen", side_effect=OSError("full"))
 
     with pytest.raises(OSError, match="full"):
         replace(entry, title="Other").write(path)
 
     assert path.read_text() == before
     assert sorted(p.name for p in path.parent.iterdir()) == ["drive.json", "fuzz.json"]
+
+
+def test_the_verified_list_is_written_whole_or_not_at_all(
+    tmp_path: Path, mocker: Any
+) -> None:
+    path = tmp_path / "verified.json"
+    VerifiedList({"abc": Checked("parts", "2026-10-30")}).save(path)
+    before = path.read_text()
+    mocker.patch("star_ground.catalog.files.os.replace", side_effect=KeyboardInterrupt)
+
+    with pytest.raises(KeyboardInterrupt):
+        VerifiedList({"def": Checked("other", "2026-11-01")}).save(path)
+
+    assert path.read_text() == before
+    assert [p.name for p in tmp_path.iterdir()] == ["verified.json"]
+
+
+def test_a_state_and_its_entries_load_as_enums(tmp_path: Path, run: Any) -> None:
+    run(_docs(_pedalpcb_web()), lambda upload: _reading())
+    state = State.load(tmp_path / "state" / "pedalpcb.json")
+    document = state.documents["https://docs.pedalpcb.com/project/Fuzz.pdf"]
+    entry = CatalogEntry.load(tmp_path / "builds" / "pedalpcb" / "fuzz.json")
+
+    assert type(document.outcome) is Outcome
+    assert type(document.verification) is Verification
+    assert type(entry.publisher) is Publisher
+    assert all(type(effect) is Effect for effect in entry.effects)
+    assert all(type(part.category) is ComponentCategory for part in entry.parts)
+
+
+def test_a_document_never_read_keeps_no_verification(tmp_path: Path) -> None:
+    path = tmp_path / "state.json"
+    gone = DocumentState(outcome=Outcome.GONE)
+    State(documents={"https://x.test/a.pdf": gone}).save(path)
+    text = path.read_text()
+
+    document = State.load(path).documents["https://x.test/a.pdf"]
+
+    assert '"verification": ""' in text
+    assert (document.outcome, document.verification) == (Outcome.GONE, None)
+
+
+_CATALOG = Path(__file__).parents[1] / "catalog"
+
+
+def test_committed_state_and_verified_list_save_as_they_load(tmp_path: Path) -> None:
+    # The files the job wrote are the format: typing them changes no byte.
+    # (`test_every_committed_entry_reads_and_writes_back_unchanged` does the
+    # entries.)
+    states = sorted((_CATALOG / "state").glob("*.json"))
+    assert states
+
+    def unread(text: str) -> str:
+        # State written before `reader` was kept has none; it loads as "".
+        return text.replace('"reader": "", ', "")
+
+    for path in states:
+        State.load(path).save(tmp_path / "state.json")
+        saved = (tmp_path / "state.json").read_text()
+        assert unread(saved) == unread(path.read_text()), path
+    VerifiedList.load(_CATALOG / "verified.json").save(tmp_path / "verified.json")
+    verified = (tmp_path / "verified.json").read_text()
+    assert verified == (_CATALOG / "verified.json").read_text()
 
 
 def test_pedalpcb_documents_are_read_while_discovery_goes_on() -> None:

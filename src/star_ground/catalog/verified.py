@@ -25,6 +25,7 @@ from pathlib import Path
 
 from star_ground.api import counted_parts, read_parts
 from star_ground.bom_lib import ParseResult
+from star_ground.catalog.files import write_atomically
 
 
 def document_hash(content: bytes) -> str:
@@ -112,13 +113,16 @@ class VerifiedList:
         return cls({digest: Checked(**entry) for digest, entry in raw.items()})
 
     def save(self, path: Path) -> None:
-        """Writes the list, sorted so additions diff cleanly."""
-        path.parent.mkdir(parents=True, exist_ok=True)
+        """Writes the list, sorted so additions diff cleanly.
+
+        It's written whole or not at all, so an interrupted save leaves the
+        last list.
+        """
         data = {
             digest: {"parts": c.parts, "checked": c.checked}
             for digest, c in sorted(self.checked.items())
         }
-        path.write_text(json.dumps(data, indent=1) + "\n")
+        write_atomically(path, json.dumps(data, indent=1) + "\n")
 
     def check(self, digest: str, parts: str) -> Verification:
         """Whether a document's reading is the one checked by hand.

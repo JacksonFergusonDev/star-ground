@@ -6,16 +6,18 @@ never the document itself. The website reads these files as they are.
 """
 
 import json
-import os
-import tempfile
 from collections.abc import Mapping
 from dataclasses import asdict, dataclass, field, replace
+from enum import Enum
 from pathlib import Path
 from typing import Any
 
 from star_ground.api import counted_parts, read_parts
-from star_ground.bom_lib import ParseResult
+from star_ground.bom_lib import ComponentCategory, ParseResult
 from star_ground.bom_lib.types import Location
+from star_ground.catalog.effects import Effect
+from star_ground.catalog.files import write_atomically
+from star_ground.catalog.sources import Publisher
 from star_ground.catalog.verified import builds
 
 
@@ -27,14 +29,14 @@ class EntryPart:
         ref: Its designator; None for a part counted by value ('2 - 47', as
             Tonepad lists most of a build).
         count: How many: 1 for a designator, the count for a counted part.
-        category: Its category, as `ComponentCategory` names it.
+        category: Its category.
         value: Its value.
         location: Where the document lists it, when it was found.
     """
 
     ref: str | None
     count: int
-    category: str
+    category: ComponentCategory
     value: str
     location: Location | None = None
 
@@ -63,11 +65,11 @@ class EntryBuild:
             The build.
         """
         designated = [
-            EntryPart(p.ref, 1, p.category.value, p.value, p.location)
+            EntryPart(p.ref, 1, p.category, p.value, p.location)
             for p in read_parts(reading)
         ]
         counted = [
-            EntryPart(None, p.count, p.category.value, p.value)
+            EntryPart(None, p.count, p.category, p.value)
             for p in counted_parts(reading)
         ]
         return cls(name, (*designated, *counted))
@@ -79,7 +81,7 @@ class CatalogEntry:
 
     Attributes:
         id: Its id (`build.entry_id`, made unique among the publisher's).
-        publisher: The publisher's id.
+        publisher: The publisher.
         title: The build's title (`build.entry_title`).
         effects: What kind of effect it is (`effects.effects`).
         document: The document's URL.
@@ -95,9 +97,9 @@ class CatalogEntry:
     """
 
     id: str
-    publisher: str
+    publisher: Publisher
     title: str
-    effects: tuple[str, ...]
+    effects: tuple[Effect, ...]
     document: str
     page: str
     file_name: str
@@ -138,7 +140,8 @@ class CatalogEntry:
         return cls(
             **{
                 **raw,
-                "effects": tuple(raw["effects"]),
+                "publisher": Publisher(raw["publisher"]),
+                "effects": tuple(Effect(effect) for effect in raw["effects"]),
                 "builds": tuple(
                     EntryBuild(
                         build["name"],
@@ -146,6 +149,7 @@ class CatalogEntry:
                             EntryPart(
                                 **{
                                     **part,
+                                    "category": ComponentCategory(part["category"]),
                                     "location": _location(part["location"]),
                                 }
                             )
@@ -173,40 +177,15 @@ class CatalogEntry:
         data = asdict(self)
         members = [
             f" {json.dumps(key)}: "
-            f"{to_json(_rounded(value), _ENTRY_LAYOUT.get(key, 0), ' ')}"
+            f"{to_json(_plain(value), _ENTRY_LAYOUT.get(key, 0), ' ')}"
             for key, value in data.items()
         ]
         write_atomically(path, "{\n" + ",\n".join(members) + "\n}\n")
 
 
-def write_atomically(path: Path, text: str) -> None:
-    """Writes a file whole or not at all, so a job killed mid-write leaves the old one.
-
-    The text goes to a temporary file beside it, which then replaces it.
-
-    Args:
-        path: The file; its directory is made if needed.
-        text: What it should hold.
-    """
-    path.parent.mkdir(parents=True, exist_ok=True)
-    handle, name = tempfile.mkstemp(
-        dir=path.parent, prefix=f".{path.name}.", suffix=".tmp"
-    )
-    written = Path(name)
-    try:
-        with os.fdopen(handle, "w", encoding="utf-8") as temporary:
-            temporary.write(text)
-        # As `write_text` leaves a new file, not `mkstemp`'s owner-only.
-        written.chmod(0o644)
-        os.replace(written, path)
-    except BaseException:
-        written.unlink(missing_ok=True)
-        raise
-
-
 def rounded(location: Location) -> Location:
     """A location as an entry keeps it: to a hundredth of a point."""
-    return Location(**_rounded(asdict(location)))
+    return Location(**_plain(asdict(location)))
 
 
 def _location(raw: dict[str, Any] | None) -> Location | None:
@@ -242,12 +221,14 @@ def to_json(value: Any, expand: int, indent: str = "") -> str:
     return "[\n" + ",\n".join(items) + f"\n{indent}]"
 
 
-def _rounded(value: Any) -> Any:
-    """`value` with its coordinates kept to a hundredth of a point."""
+def _plain(value: Any) -> Any:
+    """`value` as plain JSON data: enums as their values, coordinates to a hundredth."""
+    if isinstance(value, Enum):
+        return value.value
     if isinstance(value, float):
         return round(value, 2)
     if isinstance(value, dict):
-        return {key: _rounded(member) for key, member in value.items()}
+        return {key: _plain(member) for key, member in value.items()}
     if isinstance(value, list | tuple):
-        return [_rounded(item) for item in value]
+        return [_plain(item) for item in value]
     return value

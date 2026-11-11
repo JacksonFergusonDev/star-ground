@@ -208,6 +208,14 @@ ignore_names = [
     "ocr_builds",
     "ocr_reads",
     "reviews",
+    # Catalog entry fields read only by the website, from the entry files
+    # (web/src/content.config.ts and the catalog's build pages).
+    "file_name",
+    "read_by_ocr",
+    # HTMLParser calls these on the catalog's page parsers as it parses.
+    "handle_data",
+    "handle_endtag",
+    "handle_starttag",
 ]
 # FastAPI registers these; nothing calls them by name.
 ignore_decorators = ["@app.get", "@app.post", "@app.exception_handler"]

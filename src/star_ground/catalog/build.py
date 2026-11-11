@@ -28,6 +28,7 @@ from dataclasses import asdict, dataclass, field, replace
 from datetime import UTC, datetime
 from hashlib import sha256
 from pathlib import Path
+from typing import Any
 
 from star_ground import version
 from star_ground.api import offered, read_document
@@ -48,13 +49,9 @@ from star_ground.catalog.client import (
     PoliteClient,
 )
 from star_ground.catalog.discover import Discovery, Listing, PageState, discover
-from star_ground.catalog.effects import Overrides, effects
-from star_ground.catalog.entries import (
-    CatalogEntry,
-    rounded,
-    to_json,
-    write_atomically,
-)
+from star_ground.catalog.effects import Effect, Overrides, effects
+from star_ground.catalog.entries import CatalogEntry, rounded, to_json
+from star_ground.catalog.files import write_atomically
 from star_ground.catalog.report import Event, Outcome, Reporter
 from star_ground.catalog.sources import Source
 from star_ground.catalog.verified import (
@@ -106,11 +103,12 @@ class DocumentState:
         sha256: Its `verified.document_hash`, if it was read.
         etag: Its `ETag`, to ask whether it changed.
         last_modified: Its `Last-Modified`, likewise.
-        outcome: What became of it then.
+        outcome: What became of it then; None before it was first asked about.
         reason: Why, for anything but success.
         entry: Its entry's id, when it's listed.
         parts: The `verified.fingerprint` of its reading, when it was read.
-        verification: Whether that reading was checked by hand, then.
+        verification: Whether that reading was checked by hand, then; None
+            until it was read.
         boards: The `BOARDS_VERSION` its entry's board positions came from;
             0 for none.
         reader: The Star Ground version that last read it, when it was read.
@@ -123,15 +121,50 @@ class DocumentState:
     sha256: str | None = None
     etag: str | None = None
     last_modified: str | None = None
-    outcome: str = ""
+    outcome: Outcome | None = None
     reason: str = ""
     entry: str | None = None
     parts: str | None = None
-    verification: str = ""
+    verification: Verification | None = None
     boards: int = 0
     reader: str = ""
     title: str | None = None
     postponed: bool = False
+
+    @classmethod
+    def from_json(cls, raw: dict[str, Any]) -> DocumentState:
+        """Reads a document's state as `as_json` wrote it.
+
+        Args:
+            raw: Its member of a state file's `documents`.
+
+        Returns:
+            The document's state.
+        """
+        return cls(
+            **{
+                **raw,
+                "outcome": Outcome(raw["outcome"]) if raw["outcome"] else None,
+                "verification": (
+                    Verification(raw["verification"]) if raw["verification"] else None
+                ),
+            }
+        )
+
+    def as_json(self) -> dict[str, Any]:
+        """The document's state as a state file keeps it.
+
+        An outcome or verification it doesn't have yet is written as "", as
+        the state files have always kept it.
+
+        Returns:
+            Plain JSON data, a member per attribute.
+        """
+        return {
+            **asdict(self),
+            "outcome": self.outcome.value if self.outcome else "",
+            "verification": self.verification.value if self.verification else "",
+        }
 
 
 @dataclass(slots=True)
@@ -163,7 +196,7 @@ class State:
                 for url, page in raw["pages"].items()
             },
             documents={
-                url: DocumentState(**document)
+                url: DocumentState.from_json(document)
                 for url, document in raw["documents"].items()
             },
         )
@@ -176,7 +209,9 @@ class State:
         """
         data = {
             "pages": {url: asdict(page) for url, page in sorted(self.pages.items())},
-            "documents": {url: asdict(d) for url, d in sorted(self.documents.items())},
+            "documents": {
+                url: d.as_json() for url, d in sorted(self.documents.items())
+            },
         }
         write_atomically(path, to_json(data, expand=2) + "\n")
 
@@ -735,7 +770,7 @@ class CatalogRun:
         title = entry_title(reading.title, listing)
         return CatalogEntry(
             id=entry_key,
-            publisher=self.publisher,
+            publisher=self.source.publisher,
             title=title,
             effects=self._effects(entry_key, title, listing),
             document=listing.document,
@@ -748,7 +783,9 @@ class CatalogRun:
             builds=CatalogEntry.builds_of(reading),
         )
 
-    def _effects(self, entry_key: str, title: str, listing: Listing) -> tuple[str, ...]:
+    def _effects(
+        self, entry_key: str, title: str, listing: Listing
+    ) -> tuple[Effect, ...]:
         return tuple(
             effects(
                 f"{self.publisher}/{entry_key}",
