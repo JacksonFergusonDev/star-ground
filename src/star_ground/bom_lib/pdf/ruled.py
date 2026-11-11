@@ -94,8 +94,10 @@ def table_entries(
             if title is not None:
                 titles[table_no] = (page_no, title)
                 table = table[1:]
-            # Header mapping
-            headers = [str(h).upper().strip() for h in table[0] if h]
+            # Header mapping. A blank header cell keeps its place, so each
+            # header's index is its column's: '| Part | Value' has a blank
+            # first column.
+            headers = [str(h).upper().strip() if h else "" for h in table[0]]
             loc_idx = -1
             val_idx = -1
             type_idx = -1

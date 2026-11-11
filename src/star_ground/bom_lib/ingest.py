@@ -89,9 +89,12 @@ def ingest_bom_line(
         key = make_component_key(result.category, result.clean_value)
         inventory.add_part(source, key, claimed, qty)
         if result.injected_key and inject:
-            # An implied part, such as an IC's socket.
+            # An implied part, such as an IC's socket: one for each chip.
             inventory.add_part(
-                source, result.injected_key, f"{claimed}{constants.INJECTED_SUFFIX}"
+                source,
+                result.injected_key,
+                f"{claimed}{constants.INJECTED_SUFFIX}",
+                qty,
             )
     return parts_found
 

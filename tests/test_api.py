@@ -352,6 +352,38 @@ def test_a_correction_adds_no_socket_where_the_document_lists_its_own() -> None:
     assert IC_SOCKET not in master.parts
 
 
+def _pdf_project(inventory: Inventory, correction: Correction) -> Project:
+    """A read PDF project, with one correction."""
+    return Project(
+        name="Fuzz",
+        method=InputMethod.UPLOAD_FILE,
+        data=FileUpload("fuzz.pdf", b"%PDF"),
+        reading=ParseResult(inventory=inventory, stats=ReadingStats()),
+        corrections=(correction,),
+    )
+
+
+def test_a_correction_adds_a_socket_beside_a_dc_socket() -> None:
+    # A document's 'DC socket' was taken for a chip socket of its own.
+    inventory = Inventory()
+    inventory.add_part(PENDING_SOURCE, REGULATOR, "IC1")
+    dc = ComponentKey(ComponentCategory.HARDWARE_MISC, "2.1MM DC SOCKET")
+    inventory.add_part(PENDING_SOURCE, dc, "J1")
+
+    master = generate_master_list([_pdf_project(inventory, Correction("IC1", TL072))])
+
+    assert master.parts[IC_SOCKET].qty == 1
+
+
+def test_a_correction_adds_a_socket_for_each_chip() -> None:
+    inventory = Inventory()
+    inventory.add_part(PENDING_SOURCE, REGULATOR, "IC1", qty=2)
+
+    master = generate_master_list([_pdf_project(inventory, Correction("IC1", TL072))])
+
+    assert (master.parts[TL072].qty, master.parts[IC_SOCKET].qty) == (2, 2)
+
+
 def test_a_correction_moves_every_part_its_designator_stands_for() -> None:
     blocks = ComponentKey(ComponentCategory.HARDWARE_MISC, "TERMINAL BLOCK")
     screws = ComponentKey(ComponentCategory.HARDWARE_MISC, "SCREW TERMINAL")

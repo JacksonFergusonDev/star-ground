@@ -1,7 +1,5 @@
 """Tests for boundary models, typed structures, and sort utilities."""
 
-from pathlib import Path
-
 import pytest
 
 from star_ground.bom_lib import constants
@@ -106,7 +104,7 @@ def test_get_spec_type_derivation_without_val_qty() -> None:
     assert get_spec_type(ComponentCategory.RESISTORS, "10k") == ComponentSpec.NONE
 
 
-def test_parser_functions_return_parse_result(tmp_path: Path) -> None:
+def test_parser_functions_return_parse_result() -> None:
     """Verifies that parse_with_verification and parse_csv_bom return ParseResult."""
     # parse_with_verification
     res_text = parse_with_verification(["R1 10k"], source_name="Manual")
@@ -115,9 +113,7 @@ def test_parser_functions_return_parse_result(tmp_path: Path) -> None:
     assert ComponentKey(ComponentCategory.RESISTORS, "10k") in res_text.inventory
 
     # parse_csv_bom
-    csv_file = tmp_path / "test_bom.csv"
-    csv_file.write_text("Designator,Value\nR1,10k\nC1,100n\n", encoding="utf-8")
-    res_csv = parse_csv_bom(str(csv_file), source_name="CSV Test")
+    res_csv = parse_csv_bom(b"Designator,Value\nR1,10k\nC1,100n\n", "CSV Test")
     assert isinstance(res_csv, ParseResult)
     assert res_csv.stats.parts_found == 2
     assert ComponentKey(ComponentCategory.RESISTORS, "10k") in res_csv.inventory

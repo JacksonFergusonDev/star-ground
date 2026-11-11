@@ -10,6 +10,7 @@ This suite covers:
 """
 
 from collections.abc import MutableMapping
+from dataclasses import replace
 from decimal import Decimal
 from typing import Any
 
@@ -664,29 +665,17 @@ Resistors,10k,100
 Capacitors,100n,50
 Resistors,1k5,20
 """
-    # Create temp file
-    import os
-    import tempfile
+    stock = parse_user_inventory(csv_content.encode())
 
-    with tempfile.NamedTemporaryFile(mode="w+", delete=False, suffix=".csv") as tmp:
-        tmp.write(csv_content)
-        tmp_path = tmp.name
+    # 1. Check Normalization (1k5 -> 1.5k)
+    k_1k5 = ComponentKey(ComponentCategory.RESISTORS, "1.5k")
+    assert stock[k_1k5].qty == 20
 
-    try:
-        stock = parse_user_inventory(tmp_path)
-
-        # 1. Check Normalization (1k5 -> 1.5k)
-        k_1k5 = ComponentKey(ComponentCategory.RESISTORS, "1.5k")
-        assert stock[k_1k5].qty == 20
-
-        # 2. Check Basic Ingestion
-        k_10k = ComponentKey(ComponentCategory.RESISTORS, "10k")
-        k_100n = ComponentKey(ComponentCategory.CAPACITORS, "100n")
-        assert stock[k_10k].qty == 100
-        assert stock[k_100n].qty == 50
-
-    finally:
-        os.remove(tmp_path)
+    # 2. Check Basic Ingestion
+    k_10k = ComponentKey(ComponentCategory.RESISTORS, "10k")
+    k_100n = ComponentKey(ComponentCategory.CAPACITORS, "100n")
+    assert stock[k_10k].qty == 100
+    assert stock[k_100n].qty == 50
 
 
 def test_net_needs_calculation():
@@ -850,6 +839,63 @@ def test_listed_sockets_are_not_injected_again() -> None:
         "IC1",
         "IC1-S",
     ]
+
+
+@pytest.mark.parametrize(
+    "value", ["2.1MM DC SOCKET", "DC socket", "9-pin tube socket", "Power socket"]
+)
+def test_a_documents_other_sockets_keep_its_chips_sockets(value: str) -> None:
+    # Any value with the word 'socket' turned injection off for the whole build.
+    from star_ground.bom_lib.builds import Entry
+    from star_ground.bom_lib.constants import IC_SOCKET
+    from star_ground.bom_lib.pdf.assemble import _ingest_entries
+
+    inventory, _ = _ingest_entries(
+        [Entry("IC1", "TL072", 0, table=0), Entry("J1", value, 0, table=0)], "T"
+    )
+    assert inventory[IC_SOCKET].refs == ["IC1 (Inj)"]
+
+
+@pytest.mark.parametrize(
+    ("value", "chip"),
+    [
+        ("DIP-8 socket", True),
+        ("8 pin DIP socket", True),
+        ("IC socket", True),
+        ("DIP8 SOCKETS", True),
+        ("DIP SOCKET (Check Size)", True),
+        ("2.1MM DC SOCKET", False),
+        ("9-pin tube socket", False),
+        ("DIP-8", False),
+        ("TL072", False),
+    ],
+)
+def test_a_chip_socket_names_a_chip(value: str, chip: bool) -> None:
+    from star_ground.bom_lib.classifier import is_chip_socket
+
+    assert is_chip_socket(value) is chip
+
+
+def test_a_chip_socket_is_told_quickly_in_a_long_value() -> None:
+    import time
+
+    from star_ground.bom_lib.classifier import is_chip_socket
+
+    started = time.perf_counter()
+    assert is_chip_socket("IC " * 60000) is False
+    assert is_chip_socket("SOCKET " * 60000) is False
+    assert time.perf_counter() - started < 1
+
+
+def test_a_chip_bought_several_times_gets_as_many_sockets() -> None:
+    # 'IC1 | TL072 (Qty 2)' added one socket.
+    from star_ground.bom_lib.constants import IC_SOCKET
+    from star_ground.bom_lib.ingest import ingest_bom_line
+
+    inventory = Inventory()
+    ingest_bom_line(inventory, "P", "IC1", "TL072", ReadingStats(), qty=2)
+    tl072 = ComponentKey(ComponentCategory.ICS, "TL072")
+    assert (inventory[tl072].qty, inventory[IC_SOCKET].qty) == (2, 2)
 
 
 @pytest.mark.parametrize(
@@ -1629,3 +1675,164 @@ def test_a_range_continued_by_number_is_expanded() -> None:
     ingest_bom_line(inventory, "P", "C1-C3, 5-7", "100n", stats)
     key = ComponentKey(ComponentCategory.CAPACITORS, "100n")
     assert sorted(inventory[key].refs) == ["C1", "C2", "C3", "C5", "C6", "C7"]
+
+
+@pytest.mark.parametrize(
+    "table",
+    [
+        [[None, "Part", "Value"], [None, "R1", "10k"], [None, "R2", "22k"]],
+        [
+            ["", "LOCATION", "VALUE", "TYPE"],
+            ["", "R1", "10k", "Metal film resistor, 1/4W"],
+            ["", "R2", "22k", "Metal film resistor, 1/4W"],
+        ],
+    ],
+)
+def test_a_ruled_table_with_a_blank_header_keeps_its_columns(
+    table: list[list[str | None]],
+) -> None:
+    # The blank header was dropped, so every header's index was one column off
+    # and no row was read.
+    from star_ground.bom_lib.pdf.ruled import table_entries
+
+    page = PDFPageExtraction(tables=[table], text="", words=[])
+    entries = table_entries([page], ReadingStats())
+    assert [(e.ref, e.value) for e in entries] == [("R1", "10k"), ("R2", "22k")]
+
+
+def test_a_text_table_is_numbered_apart_from_every_ruled_table() -> None:
+    # Text tables were numbered from the count of ruled rows, not ruled
+    # tables: with a skipped ruled table first, the text table took the
+    # number of the ruled 'Part | Value' table, and its R1 was dropped as a
+    # conflicting duplicate instead of bought for another board.
+    from star_ground.bom_lib.pdf.assemble import _ingest_entries
+    from star_ground.bom_lib.pdf.reading import read_entries
+
+    page = replace(
+        _typed_page([("R1", "1k", "Metal film resistor, 1/4W")]),
+        tables=[
+            [["QTY", "PART NUMBER", "DESCRIPTION"], ["1", "PCB", "Board"]],
+            [["Part", "Value"], ["R1", "1M"]],
+        ],
+    )
+    entries = read_entries([page], ReadingStats()).entries
+    ruled = {e.table for e in entries if e.value == "1M"}
+    text = {e.table for e in entries if e.value == "1k"}
+    assert ruled
+    assert text
+    assert not ruled & text
+
+    inventory, _ = _ingest_entries(entries, "T")
+    refs = sorted(r for data in inventory.values() for r in data.refs)
+    assert refs == ["R1", "R1 (2)"]
+
+
+def test_text_tables_on_a_page_are_numbered_without_a_limit() -> None:
+    # Tables were numbered page * 100 + header line: a page's 100th header
+    # line ran into the next page's first table.
+    from star_ground.bom_lib.pdf.text_tables import text_table_entries
+
+    pages = [
+        _typed_page([("R1", "1k", "Metal film resistor, 1/4W")]),
+        _typed_page([("R2", "2k", "Metal film resistor, 1/4W")]),
+    ]
+    entries, _ = text_table_entries(pages, ReadingStats())
+    assert [(e.ref, e.table) for e in entries] == [("R1", 0), ("R2", 1)]
+
+
+def test_a_note_cell_is_removed_where_it_sits() -> None:
+    # A NOTES cell 'C2' blanked the first 'C2' on the page: the start of an
+    # earlier 'C20' row.
+    from star_ground.bom_lib import PDFWord
+    from star_ground.bom_lib.pdf.text_tables import without_note_cells
+
+    rows = [
+        ("PART", "VALUE", "TYPE", "NOTES"),
+        ("C20", "1u", "Film capacitor", ""),
+        ("C2", "100n", "Film capacitor", "C2"),
+    ]
+    words = []
+    for k, cells in enumerate(rows):
+        for text, x in zip(cells, (50.0, 110.0, 170.0, 300.0), strict=True):
+            for word in text.split():
+                words.append(
+                    PDFWord(
+                        text=word,
+                        x0=x,
+                        x1=x + 6 * len(word),
+                        top=100.0 + 20 * k,
+                        size=12.0,
+                    )
+                )
+                x += 6 * len(word) + 2.7
+    text = "\n".join(" ".join(c for c in cells if c) for cells in rows)
+    page = PDFPageExtraction(tables=[], text=text, words=words)
+
+    assert without_note_cells(page, text).split() == (
+        [
+            "PART",
+            "VALUE",
+            "TYPE",
+            "NOTES",
+            "C20",
+            "1u",
+            "Film",
+            "capacitor",
+            "C2",
+            "100n",
+            "Film",
+            "capacitor",
+        ]
+    )
+
+
+R10K = ComponentKey(ComponentCategory.RESISTORS, "10k")
+C100N = ComponentKey(ComponentCategory.CAPACITORS, "100n")
+
+
+@pytest.mark.parametrize(
+    ("line", "expected"),
+    [
+        # The value was split off at the first separator: 'C1-C3' and
+        # '5-7 100n', or 'R1' and 'R2, R5 10k'.
+        ("C1-C3, 5-7 100n", {C100N: ["C1", "C2", "C3", "C5", "C6", "C7"]}),
+        ("R1, R2, R5 10k", {R10K: ["R1", "R2", "R5"]}),
+        ("R1,R2 10k", {R10K: ["R1", "R2"]}),
+        ("C12, 15, 16 100n", {C100N: ["C12", "C15", "C16"]}),
+        ("R1, R2, 10k", {R10K: ["R1", "R2"]}),
+        # A comma between a designator and its value is still a separator.
+        ("R1, 10k", {R10K: ["R1"]}),
+        ("R1 , 10k", {R10K: ["R1"]}),
+    ],
+)
+def test_a_pasted_designator_list_stays_together(
+    line: str, expected: dict[ComponentKey, list[str]]
+) -> None:
+    parts, warnings = _read(line)
+    assert parts == expected
+    assert warnings == []
+
+
+@pytest.mark.parametrize(
+    ("line", "ref"),
+    [
+        # A number after a comma, then a comma, is the value: R1 is 100 ohms.
+        ("R1, 100, 1/4W", "R1"),
+        # A part number shaped like a designator of another kind is the value.
+        ("Q1, BC549 NPN", "Q1"),
+    ],
+)
+def test_a_pasted_value_after_a_comma_is_no_designator(line: str, ref: str) -> None:
+    parts, _ = _read(line)
+    assert list(parts.values()) == [[ref]]
+
+
+def test_a_long_pasted_designator_list_is_split_quickly() -> None:
+    import time
+
+    from star_ground.bom_lib.strategies.manual import _split_listing
+
+    started = time.perf_counter()
+    _split_listing("R1" + ", R2" * 20_000 + " 10k")
+    _split_listing("R1" + ", 2" * 20_000)
+    assert time.perf_counter() - started < 1

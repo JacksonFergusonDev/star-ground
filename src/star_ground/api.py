@@ -11,7 +11,6 @@ about parts.
 """
 
 import os
-import tempfile
 from collections.abc import Sequence
 from contextlib import nullcontext
 from dataclasses import dataclass, replace
@@ -41,10 +40,10 @@ from star_ground.bom_lib import (
     status_leds,
     with_standard_hardware,
 )
+from star_ground.bom_lib.classifier import is_chip_socket
 from star_ground.bom_lib.constants import IC_SOCKET, INJECTED_SUFFIX
 from star_ground.bom_lib.errors import BuildNotChosenError, UnreadablePartError
 from star_ground.bom_lib.ocr import without_ocr
-from star_ground.bom_lib.pdf.rows import SOCKET
 
 # Source label used while a document is read ahead of generating; replaced by
 # the project's final name when the master list is built.
@@ -271,12 +270,7 @@ def read_stock(upload: FileUpload) -> Inventory:
     Returns:
         The stock, keyed like the master list's parts.
     """
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".csv") as tmp:
-        tmp.write(upload.content)
-    try:
-        return parse_user_inventory(tmp.name)
-    finally:
-        os.remove(tmp.name)
+    return parse_user_inventory(upload.content)
 
 
 def _read(
@@ -312,7 +306,8 @@ def _adds_sockets(inventory: Inventory, source: str) -> bool:
     """Whether the reading added chip sockets to the source's parts.
 
     It adds none for a document that lists its own (Aion FX's 'IC1-S |
-    DIP-8 socket'), which is told by a socket among its parts.
+    DIP-8 socket'), which is told by a chip socket among its parts, by the
+    reading's own rule (`is_chip_socket`).
     """
     listed = False
     for key, data in inventory.items():
@@ -320,7 +315,7 @@ def _adds_sockets(inventory: Inventory, source: str) -> bool:
             continue
         if key == IC_SOCKET:
             return True
-        listed = listed or bool(SOCKET.search(key.value))
+        listed = listed or is_chip_socket(key.value)
     return not listed
 
 
@@ -352,7 +347,9 @@ def _corrected(
         fixed.take(source, implied_ref)
         result = categorize_part(ref, part.value, part.category)
         if adds_sockets and result is not None and result.injected_key is not None:
-            fixed.add_part(source, result.injected_key, implied_ref)
+            # One socket for each chip the designator stands for, as on reading.
+            chips = fixed[part].multiples.get(source, {}).get(ref, 1)
+            fixed.add_part(source, result.injected_key, implied_ref, chips)
     return fixed
 
 

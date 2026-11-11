@@ -2,6 +2,8 @@
 
 import re
 from collections import Counter
+from dataclasses import replace
+from itertools import islice
 
 from star_ground.bom_lib import constants
 from star_ground.bom_lib.builds import Entry
@@ -19,6 +21,7 @@ from star_ground.bom_lib.enrichment import (
 from star_ground.bom_lib.enums import ComponentCategory
 from star_ground.bom_lib.pdf.bom_table import bom_note_cells, find_bom_rows
 from star_ground.bom_lib.pdf.cells import ref_group
+from star_ground.bom_lib.pdf.geometry import group_lines
 from star_ground.bom_lib.pdf.rows import (
     CONTROL_LABEL,
     SOCKET,
@@ -41,11 +44,6 @@ from star_ground.bom_lib.verification import (
 
 # The first of a list of interchangeable parts: '(7530, 7532, 9203, or similar)'.
 _NOTES_CHOICE = re.compile(r"\(?\s*([A-Z]*\d[\w./-]*)\s*,")
-
-
-# Text tables are numbered page * this + header line, so two tables on one
-# page stay apart.
-_TABLES_PER_PAGE = 100
 
 
 _TABLE_HEADERS = frozenset({"LOCATION", "QUANTITY", "VALUE", "TYPE"})
@@ -132,7 +130,9 @@ def text_table_entries(
 
     Returns:
         One entry per designator, in reading order, and for each (page, line)
-        read as a row, where the row ends (see `BomRow.end`).
+        read as a row, where the row ends (see `BomRow.end`). Tables are
+        numbered from 0 in page order, and by header line within a page, so
+        two tables on one page stay apart.
     """
     entries: list[Entry] = []
     spans: dict[tuple[int, int], float] = {}
@@ -198,7 +198,7 @@ def text_table_entries(
                     page_no,
                     line=row.line,
                     x0=row.x0,
-                    table=page_no * _TABLES_PER_PAGE + row.table,
+                    table=row.table,  # numbered across pages below
                     hint=hint,
                     column=build,
                 )
@@ -206,6 +206,12 @@ def text_table_entries(
                 for ref in refs
             ]
     check_part_versions(stats, noted)
+    tables = sorted({(e.page, e.table) for e in entries if e.table is not None})
+    number = {table: n for n, table in enumerate(tables)}
+    entries = [
+        replace(e, table=number[e.page, e.table]) if e.table is not None else e
+        for e in entries
+    ]
     return entries, spans
 
 
@@ -229,7 +235,36 @@ def _untyped_refs(stats: ReadingStats, refs: list[str], value: str) -> list[str]
 
 
 def without_note_cells(data: PDFPageExtraction, text: str) -> str:
-    """Page text with typed tables' NOTES cells removed (see `bom_note_cells`)."""
-    for cell in bom_note_cells(data.words):
-        text = text.replace(cell.text, " ", 1)
+    """Page text with typed tables' NOTES cells removed (see `bom_note_cells`).
+
+    Each cell is removed where it sits, not wherever its text first appears:
+    a NOTES cell 'C2' is the page's nth whole-word 'C2' if n - 1 come before
+    it in reading order, so the 'C2' of an earlier 'C20' row, or the
+    designator of the row it notes, stays.
+    """
+    cells = bom_note_cells(data.words)
+    if not cells:
+        return text
+    # The page's words in reading order, as the text runs, and where each starts.
+    starts: dict[int, int] = {}
+    stream: list[str] = []
+    offset = 0
+    for line in group_lines(data.words):
+        for word in line:
+            starts[id(word)] = offset
+            stream.append(word["text"])
+            offset += len(word["text"]) + 1
+    words_text = " ".join(stream)
+    spans: set[tuple[int, int]] = set()
+    for cell in cells:
+        start = starts.get(id(cell.words[0]))
+        if start is None:
+            continue
+        pattern = re.compile(rf"(?<!\S){re.escape(cell.text)}(?!\S)")
+        before = sum(1 for _ in pattern.finditer(words_text, 0, start))
+        found = next(islice(pattern.finditer(text), before, None), None)
+        if found is not None:
+            spans.add(found.span())
+    for begin, end in sorted(spans, reverse=True):
+        text = f"{text[:begin]} {text[end:]}"
     return text

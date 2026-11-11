@@ -6,10 +6,11 @@ from star_ground.bom_lib.builds import BuildPlan, Entry
 from star_ground.bom_lib.choices import choose_value
 from star_ground.bom_lib.classifier import (
     categorize_part,
+    is_chip_socket,
 )
 from star_ground.bom_lib.designators import is_designator
 from star_ground.bom_lib.ingest import ingest_bom_line
-from star_ground.bom_lib.pdf.rows import SOCKET, record_not_populated, same_value
+from star_ground.bom_lib.pdf.rows import record_not_populated, same_value
 from star_ground.bom_lib.types import (
     BuildVariant,
     Inventory,
@@ -56,7 +57,9 @@ def _ingest_entries(
     inventory = Inventory()
     stats = ReadingStats()
     table_of: dict[str, int] = {}
-    lists_sockets = any(SOCKET.search(entry.value) for entry in entries)
+    # A document listing its chips' sockets (Aion FX's 'IC1-S | DIP-8 socket')
+    # gets none added; its DC socket or tube socket is no chip's.
+    lists_sockets = any(is_chip_socket(entry.value) for entry in entries)
     for entry in entries:
         if entry.counted:
             stats.parts_found += _ingest_counted(

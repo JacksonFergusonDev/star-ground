@@ -3,7 +3,6 @@
 import csv
 import io
 from dataclasses import replace
-from pathlib import Path
 
 import pytest
 
@@ -209,30 +208,25 @@ def test_document_text_never_becomes_a_spreadsheet_formula(part: str) -> None:
     assert '"=HYPERLINK(""https://' in shopping.decode("utf-8-sig")
 
 
-def test_the_stock_file_reads_back_a_guarded_part(tmp_path: Path) -> None:
+def test_the_stock_file_reads_back_a_guarded_part() -> None:
     stock_csv = stock_after_csv(
         [_shopping_row("-2+3", category=ComponentCategory.TRANSISTORS, buy_qty=3)],
         Inventory(),
         None,
     )
-    path = tmp_path / "stock.csv"
-    path.write_bytes(stock_csv)
-
-    stock = parse_user_inventory(str(path))
+    stock = parse_user_inventory(stock_csv)
 
     assert [k.value for k in stock] == ["-2+3"]
 
 
-def _read_back(csv_bytes: bytes, tmp_path: Path) -> dict[tuple[str, str], int]:
-    path = tmp_path / "stock.csv"
-    path.write_bytes(csv_bytes)
+def _read_back(csv_bytes: bytes) -> dict[tuple[str, str], int]:
     return {
         (k.category.value, k.value): d.qty
-        for k, d in parse_user_inventory(str(path)).items()
+        for k, d in parse_user_inventory(csv_bytes).items()
     }
 
 
-def test_stock_the_builds_dont_use_stays_in_stock(tmp_path: Path) -> None:
+def test_stock_the_builds_dont_use_stays_in_stock() -> None:
     stock = read_stock(
         FileUpload(
             "stock.csv",
@@ -244,7 +238,7 @@ def test_stock_the_builds_dont_use_stays_in_stock(tmp_path: Path) -> None:
     )
     lines = master.shopping_list()
 
-    after = _read_back(stock_after_csv(lines, master.kit, master.stock), tmp_path)
+    after = _read_back(stock_after_csv(lines, master.kit, master.stock))
 
     hundred_n = next(line for line in lines if line.part == "100n")
     assert after[("Resistors", "10k")] == 4
@@ -253,7 +247,7 @@ def test_stock_the_builds_dont_use_stays_in_stock(tmp_path: Path) -> None:
     assert after[("Capacitors", "100n")] == hundred_n.buy_qty - 1
 
 
-def test_stock_of_a_hidden_part_is_used_by_the_builds(tmp_path: Path) -> None:
+def test_stock_of_a_hidden_part_is_used_by_the_builds() -> None:
     master = generate_master_list([Project(name="Fuzz", data="R1 10k")])
     hidden = next(line for line in master.shopping_list() if line.part not in {"10k"})
     held = hidden.bom_qty + 2
@@ -261,6 +255,6 @@ def test_stock_of_a_hidden_part_is_used_by_the_builds(tmp_path: Path) -> None:
     stock.add_part("User Stock", ComponentKey(hidden.category, hidden.part), "", held)
     lines = [line for line in master.shopping_list() if line.part == "10k"]
 
-    after = _read_back(stock_after_csv(lines, master.kit, stock), tmp_path)
+    after = _read_back(stock_after_csv(lines, master.kit, stock))
 
     assert after[(hidden.category.value, hidden.part)] == 2
