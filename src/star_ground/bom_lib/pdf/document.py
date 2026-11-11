@@ -6,6 +6,7 @@ title is guessed from the first pages.
 """
 
 import logging
+import math
 import re
 from dataclasses import replace
 from typing import TYPE_CHECKING, Any
@@ -14,7 +15,11 @@ if TYPE_CHECKING:
     from pdfplumber.page import Page
 from star_ground.bom_lib.errors import TooManyPagesError, UnreadablePdfError
 from star_ground.bom_lib.locations import locate
-from star_ground.bom_lib.pdf.page_checks import footnote_marks, marked_labels
+from star_ground.bom_lib.pdf.page_checks import (
+    footnote_marks,
+    marked_labels,
+    size_cell,
+)
 from star_ground.bom_lib.pdf.reading import read_pages
 from star_ground.bom_lib.types import (
     BuildVariant,
@@ -143,15 +148,32 @@ def _without_marks(page: Page) -> Page:
     marks = footnote_marks(_page_words(page))
     if not marks:
         return page
+    # Each character is compared only with the marks filed in its grid cell,
+    # not with every mark: a page of thousands would take minutes. Marks are
+    # filed by size, within a factor of two, in every cell of a grid scaled
+    # to that size that their box touches.
+    grid: dict[float, dict[tuple[int, int], list[PDFWord]]] = {}
+    for m in marks:
+        bottom = m["top"] + m["size"]
+        if not all(math.isfinite(v) for v in (m["x0"], m["x1"], m["top"], bottom)):
+            continue
+        cell = size_cell(m["size"])
+        cells = grid.setdefault(cell, {})
+        for x in range(math.floor(m["x0"] / cell), math.floor(m["x1"] / cell) + 1):
+            for y in range(math.floor(m["top"] / cell), math.floor(bottom / cell) + 1):
+                cells.setdefault((x, y), []).append(m)
 
     def keep(obj: dict[str, Any]) -> bool:
         if obj.get("object_type") != "char":
             return True
         center = (obj["x0"] + obj["x1"]) / 2
+        line = obj["top"] + 0.5
+        if not (math.isfinite(center) and math.isfinite(line)):
+            return True
         return not any(
-            m["x0"] <= center <= m["x1"]
-            and m["top"] <= obj["top"] + 0.5 <= m["top"] + m["size"]
-            for m in marks
+            m["x0"] <= center <= m["x1"] and m["top"] <= line <= m["top"] + m["size"]
+            for cell, cells in grid.items()
+            for m in cells.get((math.floor(center / cell), math.floor(line / cell)), ())
         )
 
     return page.filter(keep)

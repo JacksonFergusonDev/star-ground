@@ -6,6 +6,7 @@ couldn't read, and parts lists drawn as pictures.
 
 import math
 import re
+from bisect import bisect_left, bisect_right
 from itertools import pairwise
 
 from star_ground.bom_lib.designators import is_designator
@@ -37,19 +38,74 @@ def footnote_marks(words: list[PDFWord]) -> list[PDFWord]:
     Returns:
         The marker words, so the caller can drop their characters.
     """
-    return [
-        w
-        for w in words
-        # 'Volume  100kA ³˒⁶' marks two footnotes.
-        if _MARKS.fullmatch(w["text"])
-        and any(
-            v is not w
-            and w["size"] <= _SUPERSCRIPT_RATIO * v["size"]
-            and 0 <= w["x0"] - v["x1"] <= _ALONE_EM * v["size"]
-            and abs((v["top"] + v["size"]) - (w["top"] + w["size"])) < v["size"]
-            for v in words
+    # A marker is compared only with the words in the few grid cells it could
+    # follow, not with every word on the page: a page of thousands of small
+    # numbers would otherwise take minutes. Words are filed by size, within a
+    # factor of two, on a grid scaled to that size, so a word's reach (one
+    # size up or down, `_ALONE_EM` sizes right) spans a fixed few cells.
+    grid: dict[float, dict[tuple[int, int], list[PDFWord]]] = {}
+    largest: dict[float, float] = {}
+    for v in words:
+        # A word of no size marks nothing (the baseline test needs a size).
+        if not (0 < v["size"] < math.inf and _finite(v["x1"], _baseline(v))):
+            continue
+        cell = size_cell(v["size"])
+        key = (
+            math.floor(v["x1"] / (_ALONE_EM * cell)),
+            math.floor(_baseline(v) / cell),
         )
-    ]
+        grid.setdefault(cell, {}).setdefault(key, []).append(v)
+        largest[cell] = max(largest.get(cell, 0.0), v["size"])
+
+    def marked(w: PDFWord) -> bool:
+        if not _finite(w["x0"], _baseline(w)):
+            return False
+        for cell, cells in grid.items():
+            if w["size"] > _SUPERSCRIPT_RATIO * largest[cell]:
+                continue
+            gx = math.floor(w["x0"] / (_ALONE_EM * cell))
+            gy = math.floor(_baseline(w) / cell)
+            # A size is under two cells, so its reach is under two cells
+            # left and two up or down; one more each way absorbs rounding.
+            for x in range(gx - 3, gx + 1):
+                for y in range(gy - 3, gy + 4):
+                    if any(
+                        v is not w
+                        and w["size"] <= _SUPERSCRIPT_RATIO * v["size"]
+                        and 0 <= w["x0"] - v["x1"] <= _ALONE_EM * v["size"]
+                        and abs(_baseline(v) - _baseline(w)) < v["size"]
+                        for v in cells.get((x, y), ())
+                    ):
+                        return True
+        return False
+
+    # 'Volume  100kA ³˒⁶' marks two footnotes.
+    return [w for w in words if _MARKS.fullmatch(w["text"]) and marked(w)]
+
+
+def _baseline(word: PDFWord) -> float:
+    return word["top"] + word["size"]
+
+
+def size_cell(size: float) -> float:
+    """The side of a grid cell for filing words of a size, in points.
+
+    It is the power of two at or below the size, so sizes within a factor of
+    two share a grid and a size is less than two cells. It is at least a
+    point, so a vanishingly small word doesn't make a grid of countless cells
+    (all sizes under two points share one grid).
+
+    Args:
+        size: A word's size, finite.
+
+    Returns:
+        The cell's side.
+    """
+    return max(1.0, math.ldexp(1.0, math.frexp(size)[1] - 1))
+
+
+def _finite(*values: float) -> bool:
+    return all(math.isfinite(v) for v in values)
 
 
 def marked_labels(words: list[PDFWord]) -> list[tuple[str, str]]:
@@ -68,11 +124,12 @@ def marked_labels(words: list[PDFWord]) -> list[tuple[str, str]]:
     marks = footnote_marks(words)
     if not marks:
         return []
+    marked = {id(m) for m in marks}
     found: list[tuple[str, str]] = []
     for cells in page_lines(words):
         for k, cell in enumerate(cells):
             for word in cell.words:
-                if any(word is m for m in marks) and k > 0:
+                if id(word) in marked and k > 0:
                     label = cells[k - 1].text
                     if cell.words[0] is word and k > 1:
                         label = cells[k - 2].text  # the marker is a cell of its own
@@ -102,18 +159,22 @@ def valueless_refs(words: list[PDFWord]) -> list[str]:
     lines = page_lines(words)
     listings = find_listings(words)
     starts = {(lst.line, round(lst.x0)) for lst in listings}
-    edges: list[tuple[float, float]] = [
+    edges = [
         (cell.x0, cell.words[-1]["x1"])
         for lst in listings
         for cell in lines[lst.line]
         if abs(cell.x0 - lst.x0) <= _VALUELESS_ALIGN_PT
     ]
+    lefts = sorted(a for a, _ in edges if math.isfinite(a))
+    rights = sorted(b for _, b in edges if math.isfinite(b))
 
     def in_column(cell: Cell) -> bool:
-        x1 = cell.words[-1]["x1"]
-        lefts = sum(abs(cell.x0 - a) <= _VALUELESS_ALIGN_PT for a, _ in edges)
-        rights = sum(abs(x1 - b) <= _VALUELESS_ALIGN_PT for _, b in edges)
-        return max(lefts, rights) >= _VALUELESS_COLUMN
+        return (
+            max(_aligned(lefts, cell.x0), _aligned(rights, cell.words[-1]["x1"]))
+            >= _VALUELESS_COLUMN
+        )
+
+    between = _WordsBetween(words)
 
     refs: list[str] = []
     for number, cells in enumerate(lines):
@@ -136,14 +197,87 @@ def valueless_refs(words: list[PDFWord]) -> list[str]:
             # A value in smaller type sits a little off the line ('RX2  jumper¹').
             end, middle = cell.words[-1]["x1"], _middle(cell.words[0])
             stop = after.x0 if after else math.inf
-            if any(
-                end < w["x0"] < stop
-                and abs(_middle(w) - middle) < cell.words[0]["size"]
-                for w in words
-            ):
+            if between.any(end, stop, middle, cell.words[0]["size"]):
                 continue
             refs += expand_refs(text) if ranged else [text]
     return refs
+
+
+def _aligned(edges: list[float], x: float) -> int:
+    """How many of the sorted edges are within `_VALUELESS_ALIGN_PT` of x.
+
+    `edge - x` only grows with the edge, so the edges within reach are one
+    run of the list, found by bisection.
+    """
+    reach = _VALUELESS_ALIGN_PT
+    if math.isnan(x):
+        return 0
+    return bisect_right(edges, reach, key=lambda a: a - x) - bisect_left(
+        edges, -reach, key=lambda a: a - x
+    )
+
+
+class _WordsBetween:
+    """Whether any word of a page starts between two x positions near a line.
+
+    The words are sorted by their middle, and a segment tree holds the left
+    edges of each run of them, sorted, so a question takes two bisections per
+    tree node it visits (O(log² n)) instead of a pass over the page.
+    """
+
+    def __init__(self, words: list[PDFWord]) -> None:
+        """Indexes a page's words.
+
+        Args:
+            words: Words extracted from one page.
+        """
+        placed = sorted(
+            (
+                (_middle(w), w["x0"])
+                for w in words
+                if math.isfinite(_middle(w)) and math.isfinite(w["x0"])
+            ),
+        )
+        self._middles = [m for m, _ in placed]
+        self._leaves = 1 << max(0, len(placed) - 1).bit_length()
+        self._tree: list[list[float]] = [[] for _ in range(2 * self._leaves)]
+        for k, (_, x0) in enumerate(placed):
+            self._tree[self._leaves + k] = [x0]
+        for k in range(self._leaves - 1, 0, -1):
+            self._tree[k] = sorted(self._tree[2 * k] + self._tree[2 * k + 1])
+
+    def any(self, left: float, right: float, middle: float, size: float) -> bool:
+        """Whether a word starts between left and right, near a line.
+
+        Args:
+            left: The word starts right of this...
+            right: ...and left of this.
+            middle: The middle of the line, in points from the top.
+            size: The word's middle is less than this from the line's.
+
+        Returns:
+            Whether there is such a word.
+        """
+        # `m - middle` only grows with m, so the near words are one run.
+        lo = bisect_right(self._middles, -size, key=lambda m: m - middle)
+        hi = bisect_left(self._middles, size, key=lambda m: m - middle)
+        lo, hi = lo + self._leaves, hi + self._leaves
+        while lo < hi:
+            if lo & 1:
+                if self._starts(self._tree[lo], left, right):
+                    return True
+                lo += 1
+            if hi & 1:
+                hi -= 1
+                if self._starts(self._tree[hi], left, right):
+                    return True
+            lo, hi = lo >> 1, hi >> 1
+        return False
+
+    @staticmethod
+    def _starts(x0s: list[float], left: float, right: float) -> bool:
+        k = bisect_right(x0s, left)
+        return k < len(x0s) and x0s[k] < right
 
 
 # OCR's boxes start this far apart within one column.
