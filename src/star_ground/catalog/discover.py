@@ -23,7 +23,14 @@ from dataclasses import dataclass, field, replace
 from datetime import UTC, datetime
 from html.parser import HTMLParser
 from pathlib import PurePosixPath
-from urllib.parse import parse_qs, unquote, urljoin, urlsplit, urlunsplit
+from urllib.parse import (
+    SplitResult,
+    parse_qs,
+    unquote,
+    urljoin,
+    urlsplit,
+    urlunsplit,
+)
 from xml.etree import ElementTree
 
 from star_ground.catalog.client import RETRIES, GoneError, PoliteClient
@@ -289,7 +296,9 @@ def pdf_links(page: str, html: str, source: Source) -> list[Listing]:
     )
     found: dict[str, Listing] = {}
     for anchor in anchors(html):
-        url = urlsplit(urljoin(page, anchor.href.strip().strip("\"'")))
+        url = _link(page, anchor.href.strip().strip("\"'"))
+        if url is None:
+            continue
         document = urlunsplit(url._replace(fragment=""))
         if not source.allows(document) or not unquote(url.path).lower().endswith(
             ".pdf"
@@ -321,9 +330,23 @@ def pdf_links(page: str, html: str, source: Source) -> list[Listing]:
     return list(found.values())
 
 
+def _link(base: str, href: str) -> SplitResult | None:
+    """A link on a page, resolved; None, and a note in the log, if it's malformed.
+
+    One bad link ('http://[oops/x.pdf') is skipped, not the page around it.
+    """
+    try:
+        return urlsplit(urljoin(base, href))
+    except ValueError as error:
+        logger.info("%s links %r, which isn't a URL (%s); skipped", base, href, error)
+        return None
+
+
 def _published_id(base: str, href: str, path: str, source: Source) -> str | None:
     """A published numeric-id link, normalized; ids are never guessed."""
-    url = urlsplit(urljoin(base, href))
+    url = _link(base, href)
+    if url is None:
+        return None
     query = parse_qs(url.query, keep_blank_values=True)
     ids = query.get("id", [])
     if (
@@ -337,7 +360,7 @@ def _published_id(base: str, href: str, path: str, source: Source) -> str | None
     return urljoin(source.site, path.lstrip("/")) + f"?id={int(ids[0])}"
 
 
-def _sitemap(client: PoliteClient, url: str) -> ElementTree.Element:
+def _sitemap(client: PoliteClient, url: str, source: Source) -> ElementTree.Element:
     """A sitemap, asked for again when what comes back isn't XML.
 
     PedalPCB has answered its sitemap index with a 200 and a page that isn't
@@ -345,10 +368,10 @@ def _sitemap(client: PoliteClient, url: str) -> ElementTree.Element:
     """
     for attempt in range(RETRIES):
         try:
-            return ElementTree.fromstring(client.get(url).content)
+            return ElementTree.fromstring(client.get(url, allows=source.allows).content)
         except ElementTree.ParseError as error:
             client.back_off(attempt, f"{url} didn't answer with a sitemap ({error})")
-    content = client.get(url).content
+    content = client.get(url, allows=source.allows).content
     try:
         return ElementTree.fromstring(content)
     except ElementTree.ParseError as error:
@@ -394,7 +417,7 @@ def _sitemap_pages(client: PoliteClient, source: Source) -> dict[str, str | None
             continue
         seen.add(url)
         logger.info("Sitemap %s", url)
-        root = _sitemap(client, url)
+        root = _sitemap(client, url, source)
         kind = root.tag.rsplit("}", 1)[-1]
         if kind == "sitemapindex":
             for loc in root.findall("{*}sitemap/{*}loc"):
@@ -425,7 +448,7 @@ def _file_index_pages(
     projects: set[str] = set()
     for page in index.indexes:
         logger.info("Project index %s", page)
-        for anchor in anchors(client.get(page).text):
+        for anchor in anchors(client.get(page, allows=source.allows).text):
             project = _published_id(page, anchor.href, index.project_path, source)
             if project:
                 projects.add(project)
@@ -435,7 +458,12 @@ def _file_index_pages(
 def _file_index_links(
     client: PoliteClient, page: str, html: str, index: FileIndex, source: Source
 ) -> list[Listing]:
-    """A project's PDF attachments, through their information pages."""
+    """A project's PDF attachments, through their information pages.
+
+    An attachment whose information page is gone is skipped. Any other
+    failure fails the project's page, so it keeps the documents it linked
+    last time rather than losing one to a passing error.
+    """
     details = page_details(html)
     found: list[Listing] = []
     for anchor in anchors(html):
@@ -444,9 +472,14 @@ def _file_index_links(
             continue
         if source.excluded and source.excluded.search(anchor.label):
             continue
+        try:
+            info_page = client.get(info, allows=source.allows).text
+        except GoneError as error:
+            logger.info("%s: %s; %s skipped", page, error, anchor.label)
+            continue
         downloads = {
             link
-            for item in anchors(client.get(info).text)
+            for item in anchors(info_page)
             if (link := _published_id(info, item.href, index.download_path, source))
         }
         if len(downloads) == 1:
@@ -460,6 +493,86 @@ def _file_index_links(
                 )
             )
     return found
+
+
+def _listing_pages(
+    client: PoliteClient, source: Source, known: Mapping[str, PageState]
+) -> list[tuple[str, str | None]]:
+    """Every listing page to consider, with its `<lastmod>`, in the order to read.
+
+    Pages never read and those the last run ran out of time for go first, so
+    a run out of time carries on where the last one stopped.
+    """
+    pages: dict[str, str | None]
+    if source.file_index:
+        pages = dict.fromkeys(_file_index_pages(client, source.file_index, source))
+    elif source.sitemap:
+        pages = _sitemap_pages(client, source)
+    else:
+        pages = {}
+    pages.update({p.url: None for p in source.document_pages})
+    unlisted = [page for page in known if page not in pages]
+    if unlisted:
+        logger.info(
+            "%d pages read before aren't listed now; visiting them", len(unlisted)
+        )
+    pages.update(dict.fromkeys(unlisted))
+    return sorted(
+        pages.items(),
+        key=lambda item: (
+            item[0] in known and not known[item[0]].postponed,
+            item[0],
+        ),
+    )
+
+
+def _sample[T](items: list[T], limit: int | None) -> list[T]:
+    """At most `limit` items spread evenly across a list, each once; all for None.
+
+    The first few alone can be parts and kits with no documents (PedalPCB's
+    are capacitors), so a sample is taken across the whole list.
+    """
+    if limit is None or limit >= len(items):
+        return items
+    return [items[i * len(items) // limit] for i in range(limit)]
+
+
+def _unchanged(before: PageState, lastmod: str | None) -> bool:
+    """Whether a page needn't be read: the sitemap gives no later date for it.
+
+    Only a later date is a change: one the same or earlier is the sitemap
+    listing the page from an older copy.
+    """
+    return bool(
+        before.version >= PAGE_VERSION
+        and lastmod
+        and _newest(before.lastmod, lastmod) == before.lastmod
+    )
+
+
+def _read_page(
+    client: PoliteClient,
+    source: Source,
+    page: str,
+    lastmod: str | None,
+    before: PageState | None,
+) -> PageState:
+    """Reads a listing page for the documents it links.
+
+    Raises:
+        GoneError: The page is gone.
+        Exception: Anything else that kept it, or a page it leads to, from
+            being read.
+    """
+    html = client.get(page, allows=source.allows).text
+    links: Iterable[Listing] = (
+        _file_index_links(client, page, html, source.file_index, source)
+        if source.file_index
+        else pdf_links(page, html, source)
+    )
+    # One the sitemap left out keeps its `<lastmod>`, so it isn't read again
+    # when the sitemap lists it unchanged.
+    return PageState(lastmod or (before.lastmod if before else None), tuple(links))
 
 
 def discover(
@@ -479,8 +592,9 @@ def discover(
             `<lastmod>` hasn't changed isn't fetched again, and one the
             sitemap no longer lists is still visited.
         limit: Read at most this many listing pages (a sample).
-        spent: Whether the run's time is spent; the pages left keep what
-            the last run found on them, and wait for the next run.
+        spent: Whether the run's time is spent, or the run is stopping; the
+            pages left keep what the last run found on them, and wait for
+            the next run.
         on_listing: Called with each document as it's first found, so it
             can be read while discovery goes on.
 
@@ -509,47 +623,23 @@ def discover(
                 categories=tuple(dict.fromkeys(first.categories + listing.categories)),
             )
 
-    pages: dict[str, str | None]
-    if source.file_index:
-        pages = dict.fromkeys(_file_index_pages(client, source.file_index, source))
-    elif source.sitemap:
-        pages = _sitemap_pages(client, source)
-    else:
-        pages = {}
-    pages.update({p.url: None for p in source.document_pages})
-    unlisted = [page for page in known if page not in pages]
-    if unlisted:
-        logger.info(
-            "%d pages read before aren't listed now; visiting them", len(unlisted)
-        )
-    pages.update(dict.fromkeys(unlisted))
-    # Pages never read and those the last run ran out of time for go first,
-    # so a run out of time carries on where the last one stopped.
-    ordered = sorted(
-        pages.items(),
-        key=lambda item: (
-            item[0] in known and not known[item[0]].postponed,
-            item[0],
-        ),
-    )
-    # A sample takes pages spread across the list: the first few alone can be
-    # parts and kits with no documents (PedalPCB's are capacitors).
-    chosen = (
-        ordered
-        if limit is None
-        else [
-            ordered[i * len(ordered) // limit] for i in range(min(limit, len(ordered)))
-        ]
-    )
+    def keep(page: str, state: PageState) -> None:
+        result.pages[page] = state
+        for listing in state.listings:
+            add(listing)
+
+    ordered = _listing_pages(client, source, known)
+    chosen = _sample(ordered, limit)
     logger.info(
         "%d listing pages%s",
-        len(pages),
+        len(ordered),
         f"; reading {len(chosen)} spread across them (sample)"
         if limit is not None
         else "",
     )
     for number, (page, lastmod) in enumerate(chosen, 1):
         before = known.get(page)
+        step = f"[{number}/{len(chosen)}]"
         if spent():
             result.complete = False
             left = chosen[number - 1 :]
@@ -559,65 +649,33 @@ def discover(
             )
             for later, _ in left:
                 if later in known:
-                    result.pages[later] = replace(known[later], postponed=True)
-                    for listing in known[later].listings:
-                        add(listing)
+                    keep(later, replace(known[later], postponed=True))
             break
-        # Only a later date is a change: one the same or earlier is the
-        # sitemap listing the page from an older copy.
-        if (
-            before
-            and before.version >= PAGE_VERSION
-            and lastmod
-            and _newest(before.lastmod, lastmod) == before.lastmod
-        ):
+        if before and _unchanged(before, lastmod):
             logger.info(
-                "[%d/%d] %s unchanged since %s; %d documents as before",
-                number,
-                len(chosen),
+                "%s %s unchanged since %s; %d documents as before",
+                step,
                 page,
                 before.lastmod,
                 len(before.listings),
             )
-            state = replace(before, postponed=False)
-        else:
-            try:
-                html = client.get(page).text
-            except GoneError as error:
-                # Its documents are no longer linked, unless another page does.
-                logger.info("[%d/%d] %s", number, len(chosen), error)
-                continue
-            # A page failing is reported, and the rest go on.
-            except Exception as error:
-                result.failures[page] = str(error)
-                logger.warning(
-                    "[%d/%d] %s not read: %s", number, len(chosen), page, error
-                )
-                # Its documents are kept as last read: they aren't known to
-                # be gone, and not adding them would remove their builds.
-                if before:
-                    result.pages[page] = replace(before, postponed=False)
-                    for listing in before.listings:
-                        add(listing)
-                continue
-            links: Iterable[Listing] = (
-                _file_index_links(client, page, html, source.file_index, source)
-                if source.file_index
-                else pdf_links(page, html, source)
-            )
-            # One the sitemap left out keeps its `<lastmod>`, so it isn't
-            # read again when the sitemap lists it unchanged.
-            state = PageState(
-                lastmod or (before.lastmod if before else None), tuple(links)
-            )
-            logger.info(
-                "[%d/%d] %s: %d build documents",
-                number,
-                len(chosen),
-                page,
-                len(state.listings),
-            )
-        result.pages[page] = state
-        for listing in state.listings:
-            add(listing)
+            keep(page, replace(before, postponed=False))
+            continue
+        try:
+            state = _read_page(client, source, page, lastmod, before)
+        except GoneError as error:
+            # Its documents are no longer linked, unless another page does.
+            logger.info("%s %s", step, error)
+            continue
+        # A page failing is reported, and the rest go on.
+        except Exception as error:
+            result.failures[page] = str(error)
+            logger.warning("%s %s not read: %s", step, page, error)
+            # Its documents are kept as last read: they aren't known to be
+            # gone, and not adding them would remove their builds.
+            if before:
+                keep(page, replace(before, postponed=False))
+            continue
+        logger.info("%s %s: %d build documents", step, page, len(state.listings))
+        keep(page, state)
     return result

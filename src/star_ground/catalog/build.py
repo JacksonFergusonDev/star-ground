@@ -49,7 +49,12 @@ from star_ground.catalog.client import (
 )
 from star_ground.catalog.discover import Discovery, Listing, PageState, discover
 from star_ground.catalog.effects import Overrides, effects
-from star_ground.catalog.entries import CatalogEntry, rounded, to_json
+from star_ground.catalog.entries import (
+    CatalogEntry,
+    rounded,
+    to_json,
+    write_atomically,
+)
 from star_ground.catalog.report import Event, Outcome, Reporter
 from star_ground.catalog.sources import Source
 from star_ground.catalog.verified import (
@@ -164,13 +169,16 @@ class State:
         )
 
     def save(self, path: Path) -> None:
-        """Writes the state sorted, a page or document per line, to diff cleanly."""
-        path.parent.mkdir(parents=True, exist_ok=True)
+        """Writes the state sorted, a page or document per line, to diff cleanly.
+
+        It's written whole or not at all: a run killed mid-write leaves the
+        last state, which the next run can load.
+        """
         data = {
             "pages": {url: asdict(page) for url, page in sorted(self.pages.items())},
             "documents": {url: asdict(d) for url, d in sorted(self.documents.items())},
         }
-        path.write_text(to_json(data, expand=2) + "\n")
+        write_atomically(path, to_json(data, expand=2) + "\n")
 
 
 def clean(result: ParseResult) -> str | None:
@@ -303,9 +311,14 @@ def _found_while_reading(
 ) -> Discovery:
     """Discovers on one thread and reads each document as it's found.
 
-    For a publisher whose documents are on another host than its pages
-    (PedalPCB's docs.pedalpcb.com): discovery gets its own client, so each
-    host keeps its own spacing and neither waits for the other.
+    For a publisher whose documents are mostly on another host than its
+    pages (PedalPCB's docs.pedalpcb.com): discovery gets its own client
+    (`PoliteClient.alongside`), so neither thread waits for the other's
+    hosts, while a host both ask is still spaced and blocked as one.
+
+    If reading fails outright, discovery is told to stop and is waited for
+    before the failure goes on, so it never keeps crawling behind the next
+    publisher's run.
 
     Returns:
         What discovery found.
@@ -313,6 +326,7 @@ def _found_while_reading(
     found: queue.SimpleQueue[Listing | None] = queue.SimpleQueue()
     result: list[Discovery] = []
     failure: list[BaseException] = []
+    stop = threading.Event()
 
     def find() -> None:
         try:
@@ -322,7 +336,7 @@ def _found_while_reading(
                     source,
                     known,
                     page_limit,
-                    budget.spent,
+                    lambda: stop.is_set() or budget.spent(),
                     on_listing=found.put,
                 )
             )
@@ -334,12 +348,15 @@ def _found_while_reading(
     finder = threading.Thread(target=find, name=f"{source.publisher}-discovery")
     finder.start()
     count = 0
-    while (listing := found.get()) is not None:
-        if document_limit is not None and count >= document_limit:
-            continue
-        count += 1
-        read_one(listing, f"[{count}]")
-    finder.join()
+    try:
+        while (listing := found.get()) is not None:
+            if document_limit is not None and count >= document_limit:
+                continue
+            count += 1
+            read_one(listing, f"[{count}]")
+    finally:
+        stop.set()
+        finder.join()
     if failure:
         raise failure[0]
     return result[0]
@@ -449,7 +466,6 @@ class CatalogRun:
         if self.sample.pages is None and found.complete:
             with reporter.section(f"{publisher}: documents no longer linked"):
                 self._remove_unlinked(found)
-                self.state.save(self.state_path)
         self.state.save(self.state_path)
 
     def read_one(self, listing: Listing, label: str) -> None:
@@ -472,8 +488,14 @@ class CatalogRun:
         checked = _now()
         checked_by_hand = previous.sha256 in self.verified.checked
         # A document left out but since checked by hand is fetched in full,
-        # so it can be read and listed.
-        newly_checked = previous.outcome == Outcome.NOT_CLEAN and checked_by_hand
+        # so it can be read and listed. Only once: if the list says the same
+        # of its reading as when it was read (it was checked and still isn't
+        # clean, or the reading checked differs from it), it has settled.
+        newly_checked = (
+            previous.outcome == Outcome.NOT_CLEAN
+            and checked_by_hand
+            and self._still(previous) != previous.verification
+        )
         # A checked document last read by another version of Star Ground is
         # read again, so a reader change that alters its parts loses its mark.
         read_again = checked_by_hand and previous.reader != version()
@@ -530,11 +552,14 @@ class CatalogRun:
         """
         url, publisher = listing.document, self.publisher
         try:
+            allows = self.source.allows
             if self.source.visit_page_first:
-                self.client.get(listing.page)
+                self.client.get(listing.page, allows=allows)
             if full:
-                return self.client.get(url)
-            return self.client.get(url, previous.etag, previous.last_modified)
+                return self.client.get(url, allows=allows)
+            return self.client.get(
+                url, previous.etag, previous.last_modified, allows=allows
+            )
         except BlockedError as error:
             self._record(
                 url,
