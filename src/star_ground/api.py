@@ -41,9 +41,10 @@ from star_ground.bom_lib import (
     status_leds,
     with_standard_hardware,
 )
-from star_ground.bom_lib.constants import INJECTED_SUFFIX
+from star_ground.bom_lib.constants import IC_SOCKET, INJECTED_SUFFIX
 from star_ground.bom_lib.errors import BuildNotChosenError, UnreadablePartError
 from star_ground.bom_lib.ocr import without_ocr
+from star_ground.bom_lib.pdf.rows import SOCKET
 
 # Source label used while a document is read ahead of generating; replaced by
 # the project's final name when the master list is built.
@@ -293,9 +294,66 @@ def _read(
 
 
 def _identity(project: Project) -> tuple[object, ...]:
-    """What makes two projects the same parts list."""
+    """What makes two projects the same parts list.
+
+    Corrections count: the same document corrected two ways is two lists.
+    """
     document = document_key(project.method, project.data) or project.data
-    return (project.method, document, project.variant, project.use_ocr)
+    corrections = frozenset(_moves(project.corrections).items())
+    return (project.method, document, project.variant, project.use_ocr, corrections)
+
+
+def _moves(corrections: Sequence[Correction]) -> dict[str, ComponentKey]:
+    """The part each corrected designator is; a later correction wins."""
+    return {c.ref: c.part for c in corrections}
+
+
+def _adds_sockets(inventory: Inventory, source: str) -> bool:
+    """Whether the reading added chip sockets to the source's parts.
+
+    It adds none for a document that lists its own (Aion FX's 'IC1-S |
+    DIP-8 socket'), which is told by a socket among its parts.
+    """
+    listed = False
+    for key, data in inventory.items():
+        if source not in data.sources:
+            continue
+        if key == IC_SOCKET:
+            return True
+        listed = listed or bool(SOCKET.search(key.value))
+    return not listed
+
+
+def _corrected(
+    inventory: Inventory, source: str, corrections: Sequence[Correction]
+) -> Inventory:
+    """A copy of a reading's parts with the builder's corrections applied.
+
+    A corrected designator becomes the part the document prints, with the
+    parts the classifier adds for it, as if the document had printed that
+    value: correcting IC1 from a TL072 to a 78L05 drops its socket, and the
+    other way adds one.
+
+    Args:
+        inventory: One build's parts, as read; left unchanged.
+        source: The source the parts are listed under.
+        corrections: The builder's corrections.
+
+    Returns:
+        The corrected parts.
+    """
+    moves = _moves(corrections)
+    adds_sockets = _adds_sockets(inventory, source)
+    fixed = inventory.moved(source, moves)
+    for ref, part in moves.items():
+        if fixed.part_of(source, ref) != part:
+            continue  # the source doesn't list it
+        implied_ref = f"{ref}{INJECTED_SUFFIX}"
+        fixed.take(source, implied_ref)
+        result = categorize_part(ref, part.value, part.category)
+        if adds_sockets and result is not None and result.injected_key is not None:
+            fixed.add_part(source, result.injected_key, implied_ref)
+    return fixed
 
 
 def _unique_label(
@@ -390,7 +448,6 @@ def generate_master_list(
         if chose_build:
             result = result.select(str(project.variant))
         p_stats = result.stats
-        moves = {c.ref: c.part for c in project.corrections}
 
         name = source
         title = result.title or file_title(project.method, project.data)
@@ -400,7 +457,9 @@ def generate_master_list(
         label = f"{name} ({project.variant})" if chose_build else name
         label = _unique_label(label, _identity(project), labelled)
         inventory = rename_source(
-            result.inventory.moved(listed_as, moves), listed_as, label
+            _corrected(result.inventory, listed_as, project.corrections),
+            listed_as,
+            label,
         )
         # The check page lists the parts as corrected and labelled.
         result = replace(result, inventory=inventory)
@@ -428,5 +487,9 @@ def generate_master_list(
             )
         )
 
-    kit = with_standard_hardware(parts, [b.hardware for b in built])
+    # A project whose reading found no parts builds no pedal: it gets no
+    # enclosure, jacks or footswitch.
+    kit = with_standard_hardware(
+        parts, [b.hardware for b in built if b.parts or b.counted]
+    )
     return MasterList(parts, kit, stats, tuple(built), stock)

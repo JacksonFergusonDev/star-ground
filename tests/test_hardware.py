@@ -1,5 +1,9 @@
 """Standard hardware is supplied only for pedals whose document doesn't list its own."""
 
+import time
+
+import pytest
+
 from star_ground.bom_lib import (
     BuildHardware,
     ComponentCategory,
@@ -40,6 +44,43 @@ class TestProvidedHardware:
             HardwareRole.AUDIO_JACKS,
             HardwareRole.DC_JACK,
         }
+
+    @pytest.mark.parametrize(
+        ("value", "ref"),
+        [
+            ("2.1MM DC SOCKET", "J1"),
+            ("DC SOCKET", "J1"),
+            ("POWER SOCKET", "J1"),
+            ("DC power jack", "J1"),
+            ("Barrel connector", "PWR"),
+            ("2.1mm", "DC"),
+        ],
+    )
+    def test_dc_power_connector_whatever_it_is_called(
+        self, value: str, ref: str
+    ) -> None:
+        inventory = _inventory((HW, value, ref))
+        assert provided_hardware(inventory) == {HardwareRole.DC_JACK}
+
+    @pytest.mark.parametrize(
+        "value", ["DIP SOCKET (Check Size)", "8 pin DIP socket", "IC socket"]
+    )
+    def test_chip_socket_is_no_power_connector(self, value: str) -> None:
+        inventory = _inventory((HW, value, "IC1-S"))
+        assert provided_hardware(inventory) == frozenset()
+
+    def test_a_listed_dc_socket_is_not_bought_again(self) -> None:
+        inventory = _inventory((HW, "2.1MM DC SOCKET", "J1"))
+        kit = with_standard_hardware(
+            inventory, [BuildHardware(1, provided_hardware(inventory), 1)]
+        )
+        assert DC_JACK not in kit
+
+    def test_dc_power_connector_search_is_linear(self) -> None:
+        inventory = _inventory((HW, "DC" + "-" * 100_000 + "x", "J1"))
+        start = time.perf_counter()
+        provided_hardware(inventory)
+        assert time.perf_counter() - start < 1
 
     def test_latching_3pdt_footswitch(self) -> None:
         inventory = _inventory(

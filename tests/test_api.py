@@ -25,7 +25,11 @@ from star_ground.bom_lib import (
     ComponentKey,
     FileUpload,
     InputMethod,
+    Inventory,
+    ParseResult,
+    ReadingStats,
 )
+from star_ground.bom_lib.constants import IC_SOCKET
 from star_ground.bom_lib.errors import (
     BuildNotChosenError,
     FetchError,
@@ -38,6 +42,7 @@ SAMPLES = Path(__file__).parent / "samples"
 SRC = Path(__file__).parent.parent / "src" / "star_ground"
 
 R10K = ComponentKey(ComponentCategory.RESISTORS, "10k")
+R1K = ComponentKey(ComponentCategory.RESISTORS, "1k")
 
 
 def _upload(path: Path) -> FileUpload:
@@ -298,6 +303,122 @@ def test_a_correction_to_a_part_not_listed_changes_nothing() -> None:
     master = generate_master_list([project])
 
     assert R10K not in master.parts
+
+
+TL072 = ComponentKey(ComponentCategory.ICS, "TL072")
+REGULATOR = ComponentKey(ComponentCategory.ICS, "78L05")
+
+
+@pytest.mark.parametrize(
+    ("read", "correction", "printed"),
+    [
+        # A chip corrected to a regulator loses its socket...
+        ("IC1 TL072\nR1 10k", Correction("IC1", REGULATOR), "IC1 78L05\nR1 10k"),
+        # ...and a regulator corrected to a chip gains one.
+        ("IC1 78L05\nR1 10k", Correction("IC1", TL072), "IC1 TL072\nR1 10k"),
+        ("R1 1k\nR2 1k", Correction("R1", R10K), "R1 10k\nR2 1k"),
+    ],
+)
+def test_a_correction_gives_the_list_of_a_document_printing_it(
+    read: str, correction: Correction, printed: str
+) -> None:
+    corrected = generate_master_list(
+        [Project(name="Fuzz", data=read, corrections=(correction,))]
+    )
+    document = generate_master_list([Project(name="Fuzz", data=printed)])
+
+    assert dict(corrected.kit) == dict(document.kit)
+
+
+def test_a_correction_adds_no_socket_where_the_document_lists_its_own() -> None:
+    # Aion FX lists 'IC1-S | DIP-8 socket', so the reading adds none.
+    inventory = Inventory()
+    inventory.add_part(PENDING_SOURCE, REGULATOR, "IC1")
+    socket = ComponentKey(ComponentCategory.HARDWARE_MISC, "DIP-8 socket")
+    inventory.add_part(PENDING_SOURCE, socket, "IC1-S")
+    reading = ParseResult(inventory=inventory, stats=ReadingStats())
+    project = Project(
+        name="Fuzz",
+        method=InputMethod.UPLOAD_FILE,
+        data=FileUpload("fuzz.pdf", b"%PDF"),
+        reading=reading,
+        corrections=(Correction("IC1", TL072),),
+    )
+
+    master = generate_master_list([project])
+
+    assert master.parts[TL072].qty == 1
+    assert IC_SOCKET not in master.parts
+
+
+def test_a_correction_moves_every_part_its_designator_stands_for() -> None:
+    blocks = ComponentKey(ComponentCategory.HARDWARE_MISC, "TERMINAL BLOCK")
+    screws = ComponentKey(ComponentCategory.HARDWARE_MISC, "SCREW TERMINAL")
+    inventory = Inventory()
+    inventory.add_part(PENDING_SOURCE, blocks, "TB1", qty=3)
+    inventory.add_part(PENDING_SOURCE, blocks, "TB2")
+    reading = ParseResult(inventory=inventory, stats=ReadingStats())
+    project = Project(
+        name="Fuzz",
+        count=2,
+        method=InputMethod.UPLOAD_FILE,
+        data=FileUpload("fuzz.pdf", b"%PDF"),
+        reading=reading,
+        corrections=(Correction("TB1", screws),),
+    )
+
+    master = generate_master_list([project])
+
+    assert master.parts[screws].qty == 6
+    assert master.parts[blocks].qty == 2
+    assert master.parts[blocks].refs == ["TB2"]
+    # How many its designator stands for follows it to the project's label.
+    assert master.parts[screws].multiples == {"Fuzz": {"TB1": 3}}
+    assert master.parts[blocks].multiples == {}
+
+
+def test_the_same_document_corrected_two_ways_is_two_lists() -> None:
+    plain = Project(name="Fuzz", data="R1 10k")
+    fixed = replace(plain, corrections=(Correction("R1", R1K),))
+
+    master = generate_master_list([plain, fixed])
+
+    assert [p.label for p in master.projects] == ["Fuzz", "Fuzz (2)"]
+    assert dict(master.parts[R10K].sources) == {"Fuzz": ["R1"]}
+    assert dict(master.parts[R1K].sources) == {"Fuzz (2)": ["R1"]}
+
+
+def test_the_same_corrections_in_any_order_share_a_label() -> None:
+    first = Project(
+        name="Fuzz",
+        data="R1 10k\nR2 10k",
+        corrections=(Correction("R1", R1K), Correction("R2", R1K)),
+    )
+    second = replace(first, corrections=first.corrections[::-1])
+
+    master = generate_master_list([first, second])
+
+    assert [p.label for p in master.projects] == ["Fuzz", "Fuzz"]
+
+
+ENCLOSURE = ComponentKey(ComponentCategory.HARDWARE_MISC, "1590B Enclosure")
+
+
+def test_a_project_with_no_parts_gets_no_hardware() -> None:
+    master = generate_master_list(
+        [
+            Project(name="Fuzz", count=2, data="R1 10k"),
+            Project(name="Unread", count=3, data="nothing to read here"),
+        ]
+    )
+
+    assert master.kit[ENCLOSURE].qty == 2
+
+
+def test_a_master_list_of_no_projects_has_no_hardware() -> None:
+    master = generate_master_list([])
+
+    assert len(master.kit) == 0
 
 
 @pytest.mark.parametrize(
