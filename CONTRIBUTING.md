@@ -49,6 +49,7 @@ The web frontend talks to the HTTP API in `src/star_ground/server/`, a FastAPI a
 | --- | --- |
 | `STAR_GROUND_CORS_ORIGINS` | Comma-separated browser origins allowed to call the API (the hosted site). Unset when the site and API share an origin. |
 | `STAR_GROUND_REQUESTS_PER_MINUTE` | Each client's request limit on the working routes (default 30). |
+| `STAR_GROUND_READINGS_PER_MINUTE` | Each client's limit on uploads and links read rather than found in the reading cache, across all routes (default 60). |
 | `STAR_GROUND_READ_SLOTS` | Documents read at once; the rest queue (default 2). OCR needs over 1 GB per read. |
 | `STAR_GROUND_TRUST_PROXY` | `1` to take the client's address from `X-Forwarded-For`, behind the hosting platform's proxy. |
 

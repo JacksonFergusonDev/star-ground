@@ -65,12 +65,16 @@ class FetchPolicy:
         connect_timeout_s: Seconds to connect to a host.
         read_timeout_s: Seconds to wait for each piece of the response.
         deadline_s: Seconds for the whole fetch, every redirect included: a
-            server dribbling a byte at a time can't hold the app.
+            server dribbling a byte at a time, or a chain of slow redirects,
+            can't hold the app. It's checked before each hop and between the
+            body's pieces, and each hop's timeouts are cut to the time left,
+            so a fetch ends within one wait for a piece of the deadline.
         ports: Ports a URL may name; any other is refused, so the app can't
             be used to probe a public host's services.
         allow: Which resolved addresses may be connected to.
         verify: TLS trust: True for the system's certificates, or a CA
             bundle path (tests).
+        clock: Seconds, monotonic, for the deadline; injectable for tests.
     """
 
     max_bytes: int = 30 * 1024 * 1024
@@ -81,6 +85,7 @@ class FetchPolicy:
     ports: frozenset[int] = frozenset({80, 443})
     allow: Callable[[IPAddress], bool] = field(default=is_public)
     verify: bool | str = True
+    clock: Callable[[], float] = field(default=time.monotonic)
 
 
 DEFAULT_POLICY = FetchPolicy()
@@ -212,12 +217,16 @@ class _PinnedTLSAdapter(HTTPAdapter):
 
 @contextmanager
 def _get(
-    url: str, hostname: str, address: IPAddress, policy: FetchPolicy
+    url: str,
+    hostname: str,
+    address: IPAddress,
+    policy: FetchPolicy,
+    timeout: tuple[float, float],
 ) -> Iterator[requests.Response]:
     """Streams a GET of the URL, connected to the given address.
 
     Proxies from the environment are ignored: a proxy would resolve the host
-    again itself.
+    again itself. `timeout` is the hop's connect and read timeouts, in seconds.
     """
     with requests.Session() as session:
         session.trust_env = False
@@ -225,7 +234,7 @@ def _get(
         with session.get(
             _pinned_url(url, address),
             headers={"Host": _host_header(hostname, url), "User-Agent": USER_AGENT},
-            timeout=(policy.connect_timeout_s, policy.read_timeout_s),
+            timeout=timeout,
             stream=True,
             allow_redirects=False,
             verify=policy.verify,
@@ -251,9 +260,25 @@ def _read_body(
         body += chunk
         if len(body) > policy.max_bytes:
             raise too_big
-        if time.monotonic() > deadline:
-            raise FetchError("The site took too long to send the document.")
+        if policy.clock() > deadline:
+            raise _too_slow()
     return bytes(body)
+
+
+def _too_slow() -> FetchError:
+    return FetchError("The site took too long to send the document.")
+
+
+def _hop_timeout(policy: FetchPolicy, deadline: float) -> tuple[float, float]:
+    """The next hop's connect and read timeouts, cut to the time left.
+
+    Raises:
+        FetchError: The deadline has passed.
+    """
+    left = deadline - policy.clock()
+    if left <= 0:
+        raise _too_slow()
+    return min(policy.connect_timeout_s, left), min(policy.read_timeout_s, left)
 
 
 def _status_error(response: requests.Response) -> FetchError:
@@ -288,12 +313,13 @@ def fetch_url(url: str, policy: FetchPolicy | None = None) -> FetchedDocument:
             answers with an error. The message is meant for the builder.
     """
     policy = policy or DEFAULT_POLICY
-    deadline = time.monotonic() + policy.deadline_s
+    deadline = policy.clock() + policy.deadline_s
     url = direct_link(url.strip())
     for _ in range(policy.max_redirects + 1):
         hostname, _port, address = _target(url, policy)
+        timeout = _hop_timeout(policy, deadline)
         try:
-            with _get(url, hostname, address, policy) as response:
+            with _get(url, hostname, address, policy, timeout) as response:
                 if response.is_redirect:
                     nxt = urljoin(url, response.headers["location"])
                     if (

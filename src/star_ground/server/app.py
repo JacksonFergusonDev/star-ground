@@ -38,6 +38,7 @@ from star_ground.server.services import RefusedError, Services, Settings
 
 _STATUS: dict[ErrorKind, int] = {
     ErrorKind.OCR_REFUSED: 429,
+    ErrorKind.READING_REFUSED: 429,
     ErrorKind.BUILD_NOT_CHOSEN: 422,
 }
 """The HTTP status a `StarGroundError` that ends a request answers with; any

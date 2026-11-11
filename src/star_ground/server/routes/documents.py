@@ -2,14 +2,14 @@
 
 import contextvars
 import queue
-from collections.abc import Iterator
+from collections.abc import Generator
 from concurrent.futures import ThreadPoolExecutor
 from typing import Annotated
 
 from fastapi import APIRouter, File, Form, Query, UploadFile
 from fastapi.responses import Response, StreamingResponse
 
-from star_ground.api import document_key, file_title
+from star_ground.api import ProjectData, document_key, file_title
 from star_ground.bom_lib import InputMethod, ParseResult
 from star_ground.bom_lib.errors import StarGroundError, bug_reading
 from star_ground.server.models import (
@@ -21,7 +21,7 @@ from star_ground.server.models import (
 )
 from star_ground.server.reading import cache_key, ocr_on, read_cached, upload
 from star_ground.server.responses import document_reading, problem, sse
-from star_ground.server.services import Limit, RefusedError, ServicesDep
+from star_ground.server.services import Limit, RefusedError, Services, ServicesDep
 
 router = APIRouter(tags=["documents"])
 
@@ -67,6 +67,26 @@ def read(
         if file is not None
         else (InputMethod.FROM_URL, str(url).strip())
     )
+    return StreamingResponse(
+        read_events(services, client, method, data, ocr),
+        media_type="text/event-stream",
+    )
+
+
+def read_events(
+    services: Services,
+    client: str,
+    method: InputMethod,
+    data: ProjectData,
+    ocr: bool,
+) -> Generator[str]:
+    """A document's reading as server-sent events, from the cache or read now.
+
+    The reading runs on its own thread, so the OCR queue's events stream
+    while it waits for a turn. A builder who leaves mid-read closes the
+    stream; closing never waits for the reading, which finishes on its thread,
+    releases what it holds (its OCR turn) and is cached for the next request.
+    """
     ocr_run = ocr_on(services, ocr)
 
     def done(reading: ParseResult) -> str:
@@ -78,45 +98,43 @@ def read(
             )
         )
 
-    def events() -> Iterator[str]:
-        key = cache_key(services, method, data, ocr)
-        cached = services.cache.get(key) if key else None
-        if cached is not None:
-            yield done(cached)
-            return
-        # The reading runs on its own thread, so the OCR queue's events
-        # stream while it waits for a turn.
-        yield sse(ReadStarted())
-        progress: queue.SimpleQueue[ReadEvent] = queue.SimpleQueue()
-        with ThreadPoolExecutor(max_workers=1) as pool:
-            job = pool.submit(
-                contextvars.copy_context().run,
-                read_cached,
-                services,
-                client,
-                method,
-                data,
-                ocr,
-                progress.put,
-            )
-            while not job.done() or not progress.empty():
-                try:
-                    yield sse(progress.get(timeout=0.2))
-                except queue.Empty:
-                    continue
+    key = cache_key(services, method, data, ocr)
+    cached = services.cache.get(key) if key else None
+    if cached is not None:
+        yield done(cached)
+        return
+    yield sse(ReadStarted())
+    progress: queue.SimpleQueue[ReadEvent] = queue.SimpleQueue()
+    pool = ThreadPoolExecutor(max_workers=1)
+    try:
+        job = pool.submit(
+            contextvars.copy_context().run,
+            read_cached,
+            services,
+            client,
+            method,
+            data,
+            ocr,
+            progress.put,
+        )
+        while not job.done() or not progress.empty():
             try:
-                reading = job.result()
-            except StarGroundError as e:
-                yield sse(ReadFailed(kind=e.kind, message=e.message, hint=e.hint))
-                return
-            except Exception:
-                # The response has started, so `_BugBoundary` can't answer.
-                error = bug_reading(f"reading {file_title(method, data) or key}")
-                yield sse(ReadFailed(**problem(error).model_dump()))
-                return
-        yield done(reading)
-
-    return StreamingResponse(events(), media_type="text/event-stream")
+                yield sse(progress.get(timeout=0.2))
+            except queue.Empty:
+                continue
+        try:
+            reading = job.result()
+        except StarGroundError as e:
+            yield sse(ReadFailed(kind=e.kind, message=e.message, hint=e.hint))
+            return
+        except Exception:
+            # The response has started, so `_BugBoundary` can't answer.
+            error = bug_reading(f"reading {file_title(method, data) or key}")
+            yield sse(ReadFailed(**problem(error).model_dump()))
+            return
+    finally:
+        pool.shutdown(wait=False)
+    yield done(reading)
 
 
 @router.get(

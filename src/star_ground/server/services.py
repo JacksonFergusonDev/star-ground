@@ -5,6 +5,7 @@
 dependencies (`ServicesDep`, `Limit`).
 """
 
+import ipaddress
 import os
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -26,6 +27,12 @@ class Settings:
             Pages site); none when the site is served from the same origin.
         max_body_bytes: The largest request body accepted.
         requests_per_minute: Each client's limit on the API's working routes.
+        readings_per_minute: Each client's limit on documents (uploads and
+            links) read rather than found in the reading cache, whichever
+            request asks for them. A request can name `MAX_PROJECTS` links,
+            each fetched and read, so counting requests alone doesn't bound
+            the work; this does. It's above `MAX_PROJECTS`, so a full master
+            list can be read again on an instance that hasn't seen it.
         ocr: Whether OCR runs at all; off, image parts lists are reported
             and never offered.
         ocr_per_hour: Each client's limit on documents read by OCR, which
@@ -40,6 +47,7 @@ class Settings:
     cors_origins: tuple[str, ...] = ()
     max_body_bytes: int = 50_000_000
     requests_per_minute: int = 30
+    readings_per_minute: int = 60
     ocr: bool = True
     ocr_per_hour: int = 10
     trust_proxy: bool = False
@@ -64,6 +72,9 @@ class Settings:
             requests_per_minute=int(
                 env.get("STAR_GROUND_REQUESTS_PER_MINUTE", defaults.requests_per_minute)
             ),
+            readings_per_minute=int(
+                env.get("STAR_GROUND_READINGS_PER_MINUTE", defaults.readings_per_minute)
+            ),
             ocr=env.get("STAR_GROUND_OCR", "1") != "0",
             ocr_per_hour=int(
                 env.get("STAR_GROUND_OCR_PER_HOUR", defaults.ocr_per_hour)
@@ -80,6 +91,7 @@ class Services:
     Attributes:
         settings: The instance's configuration.
         limiter: Each client's limit on the working routes.
+        reading_limiter: Each client's limit on documents read, not cached.
         ocr_limiter: Each client's hourly limit on documents read by OCR.
         ocr_queue: The one OCR slot, and who waits for it.
         cache: Readings of uploads and links, by document.
@@ -87,6 +99,7 @@ class Services:
 
     settings: Settings
     limiter: RateLimiter
+    reading_limiter: RateLimiter
     ocr_limiter: RateLimiter
     ocr_queue: OcrQueue
     cache: ReadingCache
@@ -104,6 +117,7 @@ class Services:
         return cls(
             settings=settings,
             limiter=RateLimiter(settings.requests_per_minute),
+            reading_limiter=RateLimiter(settings.readings_per_minute),
             ocr_limiter=RateLimiter(settings.ocr_per_hour, window=3600),
             ocr_queue=OcrQueue(1),
             cache=ReadingCache(settings.cache_bytes),
@@ -139,12 +153,27 @@ ServicesDep = Annotated[Services, Depends(services)]
 """A route parameter receiving the application's `Services`."""
 
 
-def client_address(request: Request, trust_proxy: bool) -> str:
-    """The client's address; behind a proxy, the last hop it appended."""
+def client_key(request: Request, trust_proxy: bool) -> str:
+    """Who the limits count a request against.
+
+    The client's address (behind a proxy, the last hop it appended). An IPv6
+    client counts by its /64: a home or a server is handed a whole /64 and
+    can take a fresh address from it for every request.
+    """
     forwarded = request.headers.get("x-forwarded-for")
     if trust_proxy and forwarded:
-        return forwarded.split(",")[-1].strip()
-    return request.client.host if request.client else "unknown"
+        address = forwarded.split(",")[-1].strip()
+    else:
+        address = request.client.host if request.client else "unknown"
+    try:
+        ip = ipaddress.ip_address(address)
+    except ValueError:
+        return address
+    if isinstance(ip, ipaddress.IPv6Address):
+        if ip.ipv4_mapped is not None:
+            return str(ip.ipv4_mapped)
+        return str(ipaddress.IPv6Network((ip, 64), strict=False))
+    return address
 
 
 @dataclass(frozen=True, slots=True)
@@ -169,7 +198,7 @@ class RateLimit:
         Raises:
             RefusedError: The client has used its requests for this minute.
         """
-        client = client_address(self.request, self.services.settings.trust_proxy)
+        client = client_key(self.request, self.services.settings.trust_proxy)
         if not self.services.limiter.allow(client):
             raise RefusedError(
                 429, Problem(message="Too many requests. Try again in a minute.")

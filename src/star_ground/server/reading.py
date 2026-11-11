@@ -1,7 +1,9 @@
 """Turns a request's documents into readings and its projects into a master list.
 
 Uploads and links are read through the instance's cache (`ReadingCache`),
-so sending a document again costs a lookup, not another reading. OCR runs
+so sending a document again costs a lookup, not another reading. Every
+reading the cache can't answer is charged to its client, whichever route
+asks for it, so a request naming many links costs what it reads. OCR runs
 only when asked, within the client's hourly allowance and in its turn.
 """
 
@@ -30,7 +32,7 @@ from star_ground.bom_lib import (
     ParseResult,
     make_component_key,
 )
-from star_ground.bom_lib.errors import OcrRefusedError
+from star_ground.bom_lib.errors import OcrRefusedError, ReadingRefusedError
 from star_ground.bom_lib.ocr import OcrGuard, ocr_guard
 from star_ground.server.models import (
     DocumentsMissing,
@@ -94,10 +96,16 @@ def read_cached(
 ) -> ParseResult:
     """An upload or link's reading, from the cache or read now.
 
+    A cached reading is free. Reading one now, link or upload, uses one of
+    the client's readings for the minute (`Settings.readings_per_minute`),
+    before anything is fetched or read.
+
     OCR runs only when asked (`ocr`, the builder having accepted it) and the
     server allows it; the readings with and without it are cached apart.
 
     Raises:
+        ReadingRefusedError: The document isn't cached and the client has
+            used its readings for this minute.
         OcrRefusedError: The document needs OCR and the client has used its
             hourly allowance.
     """
@@ -106,6 +114,8 @@ def read_cached(
         raise ValueError(f"{method} isn't read ahead of time")
     reading = services.cache.get(key)
     if reading is None:
+        if not services.reading_limiter.allow(client):
+            raise ReadingRefusedError
         token = ocr_guard.set(_ocr_guard(services, client, report))
         try:
             reading = read_document(method, data, ocr=ocr_on(services, ocr))
@@ -234,6 +244,10 @@ def master_list(
     Raises:
         RefusedError: An upload is named twice or not sent, or the cache no
             longer holds documents the request names (409).
+        ReadingRefusedError: The client has used its readings for this
+            minute; the documents read before it stay cached (429).
+        OcrRefusedError: A project accepted OCR past the client's hourly
+            allowance (429).
     """
     uploads = _uploads(files)
     projects: list[Project] = []
