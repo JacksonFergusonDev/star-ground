@@ -40,7 +40,7 @@ from star_ground.bom_lib.errors import CrowdedPageError, ErrorKind, HeavyPageErr
 from star_ground.bom_lib.ingest import ingest_bom_line
 from star_ground.bom_lib.ocr import OcrBox
 from star_ground.bom_lib.pdf import assemble as pdf_assemble
-from star_ground.bom_lib.pdf import bom_table, scan
+from star_ground.bom_lib.pdf import bom_table, guard, scan
 from star_ground.bom_lib.pdf import document as pdf_document
 from star_ground.bom_lib.pdf.cells import CONTROL_VALUE
 from star_ground.bom_lib.pdf.content import content_bytes
@@ -646,7 +646,7 @@ def test_page_that_decompresses_to_gigabytes_is_refused(tmp_path: Path) -> None:
         _, peak = tracemalloc.get_traced_memory()
     finally:
         tracemalloc.stop()
-    assert peak < 4 * pdf_document.MAX_PAGE_CONTENT_BYTES
+    assert peak < 4 * guard.MAX_PAGE_CONTENT_BYTES
 
     result = BOMParserContext().process(
         InputMethod.UPLOAD_FILE, FileUpload("bomb.pdf", path.read_bytes()), "X"
@@ -657,7 +657,7 @@ def test_page_that_decompresses_to_gigabytes_is_refused(tmp_path: Path) -> None:
 
 
 def test_form_the_page_draws_counts_toward_its_drawing(tmp_path: Path) -> None:
-    big = _form(b" " * (pdf_document.MAX_PAGE_CONTENT_BYTES + 1))
+    big = _form(b" " * (guard.MAX_PAGE_CONTENT_BYTES + 1))
     path = tmp_path / "form.pdf"
     path.write_bytes(_drawing(b"/Fm0 Do", big))
     with pytest.raises(HeavyPageError):
@@ -668,18 +668,19 @@ def test_form_the_page_draws_counts_toward_its_drawing(tmp_path: Path) -> None:
     assert _refs(path) == {"R1"}
 
 
-def test_page_drawing_is_counted_as_pdfminer_decodes_it(tmp_path: Path) -> None:
+def test_page_drawing_is_counted_as_pdfminer_runs_it(tmp_path: Path) -> None:
     form = _form(b"BT /F1 10 Tf 50 600 Td (R2 22k) Tj ET")
     path = tmp_path / "page.pdf"
     path.write_bytes(_drawing(b"/Fm0 Do /Fm0 Do", form))
     with pdfplumber.open(path) as pdf:
         page = pdf.pages[0].page_obj
-        counted = content_bytes(page, pdf_document.MAX_PAGE_CONTENT_BYTES)
+        counted = content_bytes(page, guard.MAX_PAGE_CONTENT_BYTES)
         decoded = [s.get_data() for s in page.contents]
         form_stream = pdf.doc.getobj(6)
         assert isinstance(form_stream, PDFStream)
         drawn = form_stream.get_data()
-    assert counted == sum(map(len, decoded)) + len(drawn)
+    # The form is decoded once, and run twice.
+    assert counted == sum(map(len, decoded)) + 2 * len(drawn)
     assert content_bytes(page, counted) == counted
     assert content_bytes(page, counted - 1) is None
 
@@ -698,7 +699,7 @@ def test_page_with_a_damaged_stream_is_still_read(tmp_path: Path) -> None:
 def test_page_of_too_many_characters_is_refused(tmp_path: Path) -> None:
     # Reading time grows with a page's characters: 60,000 took 3.2 s.
     path = tmp_path / "crowded.pdf"
-    path.write_bytes(_pdf(_tiny_ones(pdf_document.MAX_PAGE_CHARS + 1)))
+    path.write_bytes(_pdf(_tiny_ones(guard.MAX_PAGE_CHARS + 1)))
     with pytest.raises(CrowdedPageError, match="Page 1 of this PDF holds 20,001 "):
         pdf_document.parse_pdf(str(path), "Crowded")
 

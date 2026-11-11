@@ -37,6 +37,7 @@ from star_ground.bom_lib.pdf.geometry import (
     group_lines,
     split_cells,
 )
+from star_ground.bom_lib.pdf.guard import list_pages, open_pdf, parse_page
 from star_ground.bom_lib.pdf.page import PDFPageExtraction
 from star_ground.bom_lib.pdf.reading import read_pages
 from star_ground.bom_lib.pdf.ruled import names_builds
@@ -1283,11 +1284,14 @@ class _ImagePages:
     read: list[int]
 
 
-def _read_images(filepath: str, recognizer: Recognizer) -> _ImagePages:
+def _read_images(
+    filepath: str, source_name: str, recognizer: Recognizer
+) -> _ImagePages:
     """Renders a document's candidate pages and reads them by OCR.
 
     Args:
         filepath: Path to the PDF.
+        source_name: Label for the source.
         recognizer: The OCR engine.
 
     Returns:
@@ -1295,15 +1299,17 @@ def _read_images(filepath: str, recognizer: Recognizer) -> _ImagePages:
 
     Raises:
         OcrRefusedError: The guard (`ocr_guard`) declined to run OCR.
+        HeavyPageError: A page draws far more than a build document's.
+        CrowdedPageError: A page holds far more text than a build document's.
     """
-    import pdfplumber
-
     pages = _ImagePages([], [], set(), [])
-    with ocr_guard.get()(), pdfplumber.open(filepath) as pdf:
-        for number, page in enumerate(pdf.pages):
+    with ocr_guard.get()(), open_pdf(filepath, source_name) as pdf:
+        for number, page in enumerate(list_pages(pdf, source_name)):
             if len(pages.read) == _MAX_PAGES:
                 break
+            parse_page(page, number, source_name)
             if not _candidate(page):
+                page.close()
                 continue
             dpi = render_resolution(
                 page.width,
@@ -1348,7 +1354,7 @@ def attempt_ocr(
     """
     if not _RUN_OCR.get() or not needs_ocr(result):
         return None
-    pages = _read_images(filepath, recognizer)
+    pages = _read_images(filepath, source_name, recognizer)
     stats = ReadingStats()
     inventory, variants = _read_tables(pages, source_name, stats)
     known = _refs(result.inventory)

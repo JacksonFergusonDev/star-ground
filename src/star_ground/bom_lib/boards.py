@@ -18,19 +18,17 @@ left out: those rows are already outlined.
 """
 
 import hashlib
-import io
 import re
 from collections import Counter
 from collections.abc import Collection, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
 
-import pdfplumber
 from pdfplumber.page import Page
-from pdfplumber.pdf import PDF
 
 from star_ground.bom_lib.designators import is_designator
 from star_ground.bom_lib.ocr import OcrBox, Recognizer, recognize, render_resolution
+from star_ground.bom_lib.pdf.guard import list_pages, open_pdf, parse_page
 from star_ground.bom_lib.types import Location
 
 # The parts-list OCR's resolution: it reads 'R27' reliably at this size.
@@ -45,6 +43,8 @@ _LINE_PT = 2
 _LABEL_WORDS = 6
 _TOKEN = re.compile(r"[A-Za-z][A-Za-z0-9_]*")
 _REPEAT = re.compile(r" \(\d+\)$")
+# What the log calls the document: its name isn't known here.
+_SOURCE = "the document"
 
 
 @dataclass(frozen=True, slots=True)
@@ -150,7 +150,9 @@ def _image_key(image: Mapping[str, Any]) -> str:
     return hashlib.sha256(data or repr(image["srcsize"]).encode()).hexdigest()
 
 
-def _images(doc: PDF) -> list[tuple[int, Page, tuple[float, float, float, float]]]:
+def _images(
+    pages: Sequence[Page],
+) -> list[tuple[int, Page, tuple[float, float, float, float]]]:
     """Each distinct image big enough to be a drawing: page number, page, box.
 
     Every one is read. Size doesn't pick out the board: Kliche Overdrive's
@@ -158,10 +160,11 @@ def _images(doc: PDF) -> list[tuple[int, Page, tuple[float, float, float, float]
     guides and photos too costs only the offline job's time.
     """
     found: dict[str, tuple[int, Page, tuple[float, float, float, float]]] = {}
-    for number, page in enumerate(doc.pages):
+    for number, page in enumerate(pages):
         area = float(page.width * page.height)
         if not area > 0:
             continue
+        parse_page(page, number, _SOURCE)
         for image in page.images:
             box = (
                 max(float(image["x0"]), 0.0),
@@ -173,6 +176,7 @@ def _images(doc: PDF) -> list[tuple[int, Page, tuple[float, float, float, float]
             key = _image_key(image)
             if size / area >= _MIN_SHARE and key not in found:
                 found[key] = (number, page, box)
+        page.close()  # Rendered later, parsed again then.
     return list(found.values())
 
 
@@ -236,13 +240,24 @@ def board_marks(
     Returns:
         Each place a designator is drawn, in page order; a designator can be
         drawn several times (board and schematic).
+
+    Raises:
+        UnreadablePdfError: The PDF can't be opened or a page read.
+        TooManyPagesError: The PDF is far longer than a build document.
+        HeavyPageError: A page draws far more than a build document's.
+        CrowdedPageError: A page holds far more text than a build document's.
+        HeavyStreamError: The PDF's streams decode to far more than a build
+            document's.
     """
     wanted = {base_ref(ref).upper(): base_ref(ref) for ref in refs}
     marks: list[BoardMark] = []
-    with pdfplumber.open(io.BytesIO(content)) as doc:
-        for number, page in enumerate(doc.pages):
+    with open_pdf(content, _SOURCE) as doc:
+        pages = list_pages(doc, _SOURCE)
+        for number, page in enumerate(pages):
+            parse_page(page, number, _SOURCE)
             marks.extend(_text_marks(page, number, wanted))
-        for number, page, box in _images(doc):
+            page.close()
+        for number, page, box in _images(pages):
             marks.extend(_image_marks(page, number, box, wanted, recognizer))
     marks.sort(key=lambda m: (m.location.page, m.location.top, m.location.x0))
     return _distinct(marks, listing)
