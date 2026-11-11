@@ -7,23 +7,16 @@ title is guessed from the first pages.
 
 import logging
 import math
-import numbers
 import re
 from dataclasses import replace
 from operator import itemgetter
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from pdfminer.pdfpage import PDFPage
     from pdfplumber.page import Page
     from pdfplumber.pdf import PDF
-from star_ground.bom_lib.errors import (
-    CrowdedPageError,
-    HeavyPageError,
-    TooManyPagesError,
-    UnreadablePdfError,
-)
 from star_ground.bom_lib.locations import locate
+from star_ground.bom_lib.pdf.guard import list_pages, open_pdf, parse_page
 from star_ground.bom_lib.pdf.page import PDFPageExtraction
 from star_ground.bom_lib.pdf.page_checks import (
     footnote_marks,
@@ -45,22 +38,6 @@ from star_ground.bom_lib.verification import (
 # merges words in tightly kerned documents (Muffin Fuzz draws word spaces of
 # 1.3pt between overlapping glyphs: 'TONEBYPASSSWITCH').
 _WORD_GAP_PT = 1.0
-# The most pages a PDF may have. The longest corpus document has 34; a longer
-# one isn't a build document, and every page costs seconds of shared CPU.
-MAX_PDF_PAGES = 60
-# The most characters a page may hold. The sample documents' busiest page
-# holds 2,142, and a page of 6pt text about 10,000. Reading time grows with
-# the characters (a page of 60,000 takes seconds), so a page past this is
-# refused rather than read.
-MAX_PAGE_CHARS = 20_000
-# The most bytes a page's drawing instructions (its content streams and the
-# forms they draw) may decode to. pdfminer decodes and reads them all before
-# its characters can be counted, at about 1.8 KB of memory for each one
-# drawn, and they compress a thousandfold or more. The sample documents'
-# busiest page decodes to 75,622 bytes (LowTide, page 7), and their busiest
-# text page draws a character for every 33 bytes, so a page at
-# `MAX_PAGE_CHARS` written the same way would take about 660,000.
-MAX_PAGE_CONTENT_BYTES = 1 << 20
 # Ruled tables are found by pdfplumber, which compares every vertical ruled
 # line with every horizontal one, then every crossing of two with every
 # other, then every row of cells with every character on the page. A grid of
@@ -419,92 +396,6 @@ def _title(
     return None
 
 
-# The boxes pdfplumber reads from a page when the pages are listed: the
-# MediaBox always, the others when the page has them.
-_BOXES = ("MediaBox", "CropBox", "TrimBox", "BleedBox", "ArtBox")
-
-
-def _unsized(page: PDFPage) -> bool:
-    """Whether pdfplumber can't read a page's size.
-
-    It reads each box as four numbers, and the rotation as a number. A page
-    missing its MediaBox, or with a box of three numbers or a rotation that
-    is text, fails with a `TypeError` or `IndexError`, not its own error.
-    """
-    from pdfminer.pdftypes import resolve_all
-
-    for name in _BOXES:
-        if name != "MediaBox" and name not in page.attrs:
-            continue
-        box = resolve_all(page.attrs.get(name))
-        if not (
-            isinstance(box, list)
-            and len(box) >= 4
-            and all(isinstance(v, numbers.Number) for v in box)
-        ):
-            return True
-    rotation = resolve_all(page.attrs.get("Rotate"))
-    return rotation is not None and not isinstance(rotation, numbers.Number)
-
-
-def _pages(pdf: PDF, source_name: str) -> list[Page]:
-    """The PDF's pages, as pdfplumber lists them.
-
-    Listing them reads the page tree and each page's size, so a damaged file
-    can open and still fail here.
-
-    Raises:
-        UnreadablePdfError: The page tree or a page's size is damaged.
-    """
-    from pdfminer.pdfpage import PDFPage
-    from pdfplumber.utils.exceptions import MalformedPDFException, PdfminerException
-
-    try:
-        return pdf.pages
-    except (PdfminerException, MalformedPDFException) as e:
-        # pdfminer couldn't walk the page tree, or a box holds a non-number.
-        logger.info("Couldn't list the pages of %s: %s", source_name, e)
-        raise UnreadablePdfError from e
-    except (TypeError, IndexError) as e:
-        # A box missing or too short, which pdfplumber doesn't check for. The
-        # pages up to the failing one are walked again; any other failure is
-        # a bug.
-        if not any(_unsized(page) for page in PDFPage.create_pages(pdf.doc)):
-            raise
-        logger.info("A page of %s has no readable size: %s", source_name, e)
-        raise UnreadablePdfError from e
-
-
-def _parse(page: Page, number: int, source_name: str) -> None:
-    """Parses a page's drawing, if it's readable and not far too big.
-
-    pdfplumber parses a page when its contents are first asked for.
-
-    Args:
-        page: The page, not yet parsed.
-        number: The page, counting from 0.
-        source_name: The document, for the log.
-
-    Raises:
-        HeavyPageError: Its drawing instructions pass `MAX_PAGE_CONTENT_BYTES`.
-        UnreadablePdfError: pdfminer can't read them.
-        CrowdedPageError: It holds more than `MAX_PAGE_CHARS` characters.
-    """
-    from pdfplumber.utils.exceptions import PdfminerException
-
-    from star_ground.bom_lib.pdf.content import content_bytes
-
-    if content_bytes(page.page_obj, MAX_PAGE_CONTENT_BYTES) is None:
-        raise HeavyPageError(number + 1)
-    try:
-        chars = len(page.chars)
-    except PdfminerException as e:
-        logger.info("Couldn't read page %d of %s: %s", number + 1, source_name, e)
-        raise UnreadablePdfError from e
-    if chars > MAX_PAGE_CHARS:
-        raise CrowdedPageError(number + 1, chars)
-
-
 def _extract(raw_page: Page, number: int, source_name: str) -> PDFPageExtraction | None:
     """Parses one page, cleans it up, and extracts its tables, text and words.
 
@@ -517,7 +408,7 @@ def _extract(raw_page: Page, number: int, source_name: str) -> PDFPageExtraction
         The page's extraction, or None when its text is another program's
         misread OCR (`_misread`), to be read as an image instead.
     """
-    _parse(raw_page, number, source_name)
+    parse_page(raw_page, number, source_name)
     straight = _straighten(_without_overprint(raw_page.filter(_readable)))
     # Footnote marks are found once: which rows they mark is recorded, then
     # their characters are dropped.
@@ -537,17 +428,6 @@ def _extract(raw_page: Page, number: int, source_name: str) -> PDFPageExtraction
         pictures=_pictures(raw_page),
         marked=marked,
     )
-
-
-def _close(pdf: PDF, pages: list[Page] | None) -> None:
-    """Closes the document, or only its file if its pages couldn't be listed.
-
-    Closing lists the pages again, which would fail the same way.
-    """
-    if pages is not None:
-        pdf.close()
-    else:
-        pdf.stream.close()
 
 
 def parse_pdf(filepath: str, source_name: str) -> ParseResult:
@@ -573,29 +453,22 @@ def parse_pdf(filepath: str, source_name: str) -> ParseResult:
         TooManyPagesError: The PDF is far longer than a build document.
         HeavyPageError: A page draws far more than a build document's.
         CrowdedPageError: A page holds far more text than a build document's.
+        HeavyStreamError: The PDF's streams decode to far more than a build
+            document's.
     """
-    # Lazy import to avoid loading heavy PDF libraries unless needed
-    import pdfplumber
-
     stats = ReadingStats()
-    try:
-        pdf = pdfplumber.open(filepath)
-    except Exception as e:
-        # Whatever pdfplumber raises here, the file is no PDF it can open.
-        logger.info("Couldn't open %s as a PDF: %s", source_name, e)
-        raise UnreadablePdfError from e
-    pages: list[Page] | None = None
-    try:
-        pages = _pages(pdf, source_name)
-        if len(pages) > MAX_PDF_PAGES:
-            raise TooManyPagesError(len(pages), MAX_PDF_PAGES)
-        # Once a page is parsed (`_parse`), a failure is a bug in Star
+    with open_pdf(filepath, source_name) as pdf:
+        pages = list_pages(pdf, source_name)
+        # Once a page is parsed (`parse_page`), a failure is a bug in Star
         # Ground: the reading's caller records it
         # (`star_ground.bom_lib.errors.record_bug`).
         pages_data: list[PDFPageExtraction] = []
         misread: set[int] = set()
         for number, raw_page in enumerate(pages):
             extraction = _extract(raw_page, number, source_name)
+            # pdfplumber keeps a page's layout until the document closes,
+            # which is every page's at once; the title page is parsed again.
+            raw_page.close()
             if extraction is None:
                 # Read as an image page instead (see `ocr.py`).
                 check_misread_text(stats, number)
@@ -604,14 +477,11 @@ def parse_pdf(filepath: str, source_name: str) -> ParseResult:
             pages_data.append(extraction)
         # A heuristic: a page with no title-like words leaves it unset.
         stats.extracted_title = _title(pdf, pages_data, misread)
-        built = read_pages(pages_data, source_name, stats)
-        locations = locate(pages_data, built.inventory)
-        variants = tuple(
-            replace(v, locations=locate(pages_data, v.inventory))
-            for v in built.variants
-        )
-    finally:
-        _close(pdf, pages)
+    built = read_pages(pages_data, source_name, stats)
+    locations = locate(pages_data, built.inventory)
+    variants = tuple(
+        replace(v, locations=locate(pages_data, v.inventory)) for v in built.variants
+    )
 
     return ParseResult(
         inventory=built.inventory,

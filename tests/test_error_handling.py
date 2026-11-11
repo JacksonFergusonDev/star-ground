@@ -22,14 +22,14 @@ except ImportError:
     pdfplumber = None  # type: ignore
 
 
-@pytest.mark.skipif(pdfplumber is None, reason="pdfplumber not installed")
-def test_a_file_that_isnt_a_pdf_is_explained_not_reported_as_a_bug():
+def test_a_file_that_isnt_a_pdf_is_explained_not_reported_as_a_bug(tmp_path):
     """A damaged file is the builder's to fix, so it's explained in plain words."""
-    with (
-        patch("pdfplumber.open", side_effect=Exception("Simulated PDF Corruption")),
-        pytest.raises(UnreadablePdfError),
-    ):
-        parse_pdf("fake_path.pdf", source_name="CrashTest")
+    path = tmp_path / "damaged.pdf"
+    path.write_bytes(b"%PDF-1.4 not really")
+    with pytest.raises(UnreadablePdfError):
+        parse_pdf(str(path), source_name="CrashTest")
+    with pytest.raises(UnreadablePdfError):
+        parse_pdf(str(tmp_path / "missing.pdf"), source_name="CrashTest")
 
     result = BOMParserContext().process(
         InputMethod.UPLOAD_FILE, FileUpload("damaged.pdf", b"%PDF-1.4 not really"), "X"
@@ -41,7 +41,7 @@ def test_a_file_that_isnt_a_pdf_is_explained_not_reported_as_a_bug():
 
 def test_a_pdf_longer_than_any_build_document_is_not_read(tmp_path):
     """Every page costs seconds of shared CPU, so a huge PDF is refused unread."""
-    from star_ground.bom_lib.pdf.document import MAX_PDF_PAGES
+    from star_ground.bom_lib.pdf.guard import MAX_PDF_PAGES
 
     path = tmp_path / "long.pdf"
     path.write_bytes(text_pdf(pages=MAX_PDF_PAGES + 1))

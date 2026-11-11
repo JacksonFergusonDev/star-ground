@@ -169,6 +169,24 @@ class HeavyPageError(StarGroundError):
         )
 
 
+class HeavyStreamError(StarGroundError):
+    """A PDF whose compressed data decompresses to far more than a build document's.
+
+    Its structure (the streams that hold its objects and its cross-reference
+    table) is decoded as the file opens, before any page is checked, so the
+    data a document may decode to is bounded as a whole.
+    """
+
+    kind = ErrorKind.UNREADABLE_PDF
+
+    def __init__(self) -> None:
+        super().__init__(
+            "This PDF's compressed data expands to far more than a build "
+            "document's, so it wasn't read.",
+            "Check it's the build document for the pedal.",
+        )
+
+
 class UnreadableSpreadsheetError(StarGroundError):
     """A spreadsheet export too damaged to read.
 
