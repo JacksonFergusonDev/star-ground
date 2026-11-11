@@ -5,10 +5,12 @@ scan from every position (or a check compared every line with every other).
 A pasted list may be 200,000 characters and an upload far more, and a reading
 has no time limit, so each could hold a server core. The bound is generous
 (each input took 3 s or more before), so the tests aren't flaky on a slow
-runner.
+runner. Where only a bound can help (a page drawn with thousands of ruled
+lines, a page 200 inches square), the bound is tested instead.
 """
 
 import gc
+import io
 import time
 import zlib
 from collections.abc import Callable
@@ -16,11 +18,15 @@ from pathlib import Path
 
 import pdfplumber
 import pytest
+from PIL import Image
 
-from star_ground.bom_lib import builds, classifier, locations
+from star_ground.bom_lib import FileUpload, builds, classifier, locations, ocr
+from star_ground.bom_lib.boards import board_marks
 from star_ground.bom_lib.builds import PageContext, plan_builds
 from star_ground.bom_lib.choices import choose_value
 from star_ground.bom_lib.enums import ComponentCategory, InputMethod
+from star_ground.bom_lib.errors import CrowdedPageError, ErrorKind
+from star_ground.bom_lib.ocr import OcrBox
 from star_ground.bom_lib.pdf import bom_table, page_checks, scan
 from star_ground.bom_lib.pdf import document as pdf_document
 from star_ground.bom_lib.pdf.cells import CONTROL_VALUE
@@ -42,6 +48,7 @@ from star_ground.bom_lib.types import (
     make_component_key,
 )
 from star_ground.bom_lib.verification import check_footnotes
+from tests.pdfs import typeset
 
 _BOUND_S = 1.0
 
@@ -200,15 +207,21 @@ def test_page_of_many_footnote_marks() -> None:
     assert all(m["text"] == "1" for m in marks)
 
 
-def _pdf(content: str) -> bytes:
-    """A one-page PDF drawing the content stream in Helvetica."""
+def _pdf(content: str, width: float = 612, height: float = 792) -> bytes:
+    """A one-page PDF drawing the content stream in Helvetica.
+
+    Args:
+        content: The page's content stream.
+        width: The page's width, in points (US Letter's by default).
+        height: The page's height, in points.
+    """
     stream = zlib.compress(content.encode("latin-1"))
     objects = [
         b"<< /Type /Catalog /Pages 2 0 R >>",
         b"<< /Type /Pages /Kids [4 0 R] /Count 1 >>",
         b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
-        b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] "
-        b"/Resources << /Font << /F1 3 0 R >> >> /Contents 5 0 R >>",
+        f"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 {width} {height}] ".encode()
+        + b"/Resources << /Font << /F1 3 0 R >> >> /Contents 5 0 R >>",
         f"<< /Length {len(stream)} /Filter /FlateDecode >>\nstream\n".encode()
         + stream
         + b"\nendstream",
@@ -323,3 +336,153 @@ def test_number_cache_is_bounded() -> None:
     # Keyed by words from uploaded documents: unbounded, it grows for the
     # server's life.
     assert locations._number.cache_info().maxsize is not None
+
+
+def _tiny_ones(count: int) -> str:
+    """A content stream of `count` 2pt '1's, each in its own place."""
+    return " ".join(
+        f"BT /F1 2 Tf {10 + (i % 230) * 2.5:.1f} {780 - (i // 230) * 2.5:.1f} Td"
+        " (1) Tj ET"
+        for i in range(count)
+    )
+
+
+def test_page_of_many_characters_drops_overprint_quickly(tmp_path: Path) -> None:
+    # 3.2 s before: pdfplumber's `dedupe_chars` sorts by `list.index`.
+    path = tmp_path / "ones.pdf"
+    path.write_bytes(_pdf(_tiny_ones(12000)))
+    with pdfplumber.open(path) as pdf:
+        page = pdf.pages[0]
+        assert len(page.chars) == 12000  # Reading the PDF itself isn't what's timed.
+        chars, seconds = _timed(lambda: pdf_document._without_overprint(page).chars)
+    assert seconds < _BOUND_S
+    assert len(chars) == 12000
+
+
+def test_overprint_keeps_what_pdfplumber_keeps(tmp_path: Path) -> None:
+    # Labels printed twice a hair apart (Tonepad's artwork), copies 1pt apart
+    # and more, another glyph in the same place, and a smaller copy.
+    text = []
+    for i, (dx, dy) in enumerate([(0.3, 0.2), (0.9, 0), (1.5, 0), (0, 1.2)]):
+        x = 50 + 130 * i
+        text.append(f"BT /F1 10 Tf {x} 700 Td (R7 THRESHLD) Tj ET")
+        text.append(f"BT /F1 10 Tf {x + dx} {700 + dy} Td (R7 THRESHLD) Tj ET")
+    text.append("BT /F1 10 Tf 50 600 Td (R7) Tj ET BT /F1 10 Tf 50 600 Td (C7) Tj ET")
+    text.append("BT /F1 10 Tf 50 500 Td (R7) Tj ET BT /F1 9 Tf 50 500 Td (R7) Tj ET")
+    path = tmp_path / "overprint.pdf"
+    path.write_bytes(_pdf(" ".join(text)))
+    with pdfplumber.open(path) as pdf:
+        page = pdf.pages[0]
+        expected = page.dedupe_chars(tolerance=1.0).chars
+        kept = pdf_document._first_copies(page.chars)
+        assert [id(c) for c in kept] == [id(c) for c in expected]
+        assert len(kept) < len(page.chars)
+
+
+def _grid(lines: int) -> str:
+    """A grid of `lines` ruled lines each way, 4pt apart."""
+    end = 20 + 4 * (lines - 1)
+    rules = [f"20 {20 + 4 * i} m {end} {20 + 4 * i} l S" for i in range(lines)]
+    rules += [f"{20 + 4 * i} 20 m {20 + 4 * i} {end} l S" for i in range(lines)]
+    return "0.5 w " + " ".join(rules)
+
+
+def test_page_of_many_ruled_lines_is_read_as_text(tmp_path: Path) -> None:
+    # 9.4 s before, and about 15 times as long with each doubling: finding
+    # tables compares every crossing of two lines with every other.
+    parts = "BT /F1 10 Tf 700 700 Td (R1 10k) Tj 0 -14 Td (R2 22k) Tj ET"
+    path = tmp_path / "grid.pdf"
+    path.write_bytes(_pdf(f"{_grid(160)} {parts}", width=800))
+    result, seconds = _timed(lambda: pdf_document.parse_pedalpcb_pdf(str(path), "G"))
+    assert seconds < _BOUND_S
+    refs = {ref for part in result.inventory.values() for ref in part.refs}
+    assert refs == {"R1", "R2"}
+
+
+def test_ruled_table_within_the_bounds_is_still_found(tmp_path: Path) -> None:
+    path = tmp_path / "table.pdf"
+    path.write_bytes(_pdf(_grid(40)))
+    with pdfplumber.open(path) as pdf:
+        tables = pdf_document._tables(pdf.pages[0], 0)
+    assert len(tables) == 1
+    assert len(tables[0]) == 39
+
+
+def test_too_many_ruled_lines_to_count_their_crossings(tmp_path: Path) -> None:
+    path = tmp_path / "lines.pdf"
+    path.write_bytes(_pdf(_grid(400), width=1700, height=1700))
+    with pdfplumber.open(path) as pdf:
+        page = pdf.pages[0]
+        assert page.edges  # Reading the PDF itself isn't what's timed.
+        tables, seconds = _timed(lambda: pdf_document._tables(page, 0))
+    assert seconds < _BOUND_S
+    assert tables == []
+
+
+def test_page_of_too_many_characters_is_refused(tmp_path: Path) -> None:
+    # Reading time grows with a page's characters: 60,000 took 3.2 s.
+    path = tmp_path / "crowded.pdf"
+    path.write_bytes(_pdf(_tiny_ones(pdf_document.MAX_PAGE_CHARS + 1)))
+    with pytest.raises(CrowdedPageError, match="Page 1 of this PDF holds 20,001 "):
+        pdf_document.parse_pedalpcb_pdf(str(path), "Crowded")
+
+    result = BOMParserContext().process(
+        InputMethod.UPLOAD_FILE, FileUpload("crowded.pdf", path.read_bytes()), "X"
+    )
+    (error,) = result.stats.errors
+    assert error.kind == ErrorKind.UNREADABLE_PDF
+    assert error.bug is None
+
+
+def _recorded(sizes: list[tuple[int, int]]) -> ocr.Recognizer:
+    def recognizer(image: Image.Image, scale: float) -> list[OcrBox]:
+        sizes.append(image.size)
+        return []
+
+    return recognizer
+
+
+def test_huge_page_is_rendered_within_the_pixel_bound(tmp_path: Path) -> None:
+    # Rendered at 200 dpi before: this page, 3,000 points square, took 69
+    # million pixels, and one 200 inches square would take 1.6 billion (4.8 GB).
+    path = tmp_path / "huge.pdf"
+    path.write_bytes(_pdf("", width=3000, height=3000))
+    result = pdf_document.parse_pedalpcb_pdf(str(path), "Huge")
+    sizes: list[tuple[int, int]] = []
+    assert ocr.needs_ocr(result)
+    ocr.attempt_ocr(str(path), result, "Huge", _recorded(sizes))
+    ((width, height),) = sizes
+    assert width * height <= ocr._MAX_RENDER_PIXELS
+    assert width > 3900  # Lowered only as far as the bound needs.
+
+
+def test_ordinary_pages_are_rendered_as_before() -> None:
+    assert ocr.render_resolution(612, 792, 200) == 200
+    assert ocr.render_resolution(1191, 1684, 200) == 200  # A2.
+
+
+def test_page_of_no_size_is_not_rendered(tmp_path: Path) -> None:
+    # Its resolution divided by zero.
+    path = tmp_path / "empty.pdf"
+    path.write_bytes(_pdf("", width=0, height=0))
+    result = pdf_document.parse_pedalpcb_pdf(str(path), "Empty")
+    sizes: list[tuple[int, int]] = []
+    assert ocr.needs_ocr(result)
+    attempt = ocr.attempt_ocr(str(path), result, "Empty", _recorded(sizes))
+    assert attempt is not None
+    assert attempt.pages == ()
+    assert sizes == []
+
+
+def test_huge_board_is_rendered_within_the_pixel_bound() -> None:
+    image = io.BytesIO()
+    Image.new("RGB", (400, 400), "white").save(image, format="PNG")
+    png = ", ".join(str(b) for b in image.getvalue())
+    content = typeset(
+        "#set page(width: 3000pt, height: 3000pt, margin: 0pt)\n"
+        f"#place(image(bytes(({png},)), width: 3000pt, height: 3000pt))"
+    )
+    sizes: list[tuple[int, int]] = []
+    board_marks(content, ["R1"], (), _recorded(sizes))
+    assert sizes
+    assert all(width * height <= ocr._MAX_RENDER_PIXELS for width, height in sizes)

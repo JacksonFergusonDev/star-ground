@@ -9,11 +9,16 @@ import logging
 import math
 import re
 from dataclasses import replace
+from operator import itemgetter
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from pdfplumber.page import Page
-from star_ground.bom_lib.errors import TooManyPagesError, UnreadablePdfError
+from star_ground.bom_lib.errors import (
+    CrowdedPageError,
+    TooManyPagesError,
+    UnreadablePdfError,
+)
 from star_ground.bom_lib.locations import locate
 from star_ground.bom_lib.pdf.page_checks import (
     footnote_marks,
@@ -42,6 +47,23 @@ _WORD_GAP_PT = 1.0
 # The most pages a PDF may have. The longest corpus document has 34; a longer
 # one isn't a build document, and every page costs seconds of shared CPU.
 MAX_PDF_PAGES = 60
+# The most characters a page may hold. The sample documents' busiest page
+# holds 2,142, and a page of 6pt text about 10,000. Reading time grows with
+# the characters (a page of 60,000 takes seconds), so a page past this is
+# refused rather than read.
+MAX_PAGE_CHARS = 20_000
+# Ruled tables are found by pdfplumber, which compares every vertical ruled
+# line with every horizontal one, then every crossing of two with every
+# other, then every row of cells with every character on the page. A grid of
+# 160 by 160 lines took 9.4 s, and the time grows about 15 times with each
+# doubling. A page past either bound has its tables read as text, like a page
+# without rules: `_table_work` counts the work.
+# The busiest sample pages have 16 vertical and 59 horizontal lines (944
+# pairs), crossing 261 times, among at most 1,434 characters (a work of
+# 442,395). At these bounds a page's tables take at most about a second.
+_MAX_RULE_PAIRS = 100_000
+_MAX_TABLE_WORK = 10_000_000
+_TABLE_SETTINGS = {"text_x_tolerance": _WORD_GAP_PT}
 
 # Initialize Logger
 logger = logging.getLogger(__name__)
@@ -82,6 +104,30 @@ def _page_words(page: Page) -> list[PDFWord]:
 
 # Two copies of a character this close (points) are one glyph printed twice.
 _OVERPRINT_PT = 1.0
+# Characters are copies of each other only when all of these match.
+_SAME_GLYPH = itemgetter("upright", "text", "fontname", "size")
+
+
+def _first_copies(chars: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """The characters left when copies printed within `_OVERPRINT_PT` go.
+
+    The same characters, in the same order, as pdfplumber's `dedupe_chars`
+    with that tolerance, whose last step sorts by `list.index` and so takes
+    seconds on a page of thousands of characters (30 s for 30,000). Like it,
+    characters of one glyph are clustered by `doctop`, then by `x0`, and each
+    cluster keeps its topmost, then leftmost, character.
+    """
+    from pdfplumber.utils.clustering import cluster_objects
+
+    by_glyph: dict[tuple[Any, ...], list[dict[str, Any]]] = {}
+    for c in chars:
+        by_glyph.setdefault(_SAME_GLYPH(c), []).append(c)
+    kept: set[int] = set()
+    for copies in by_glyph.values():
+        for row in cluster_objects(copies, itemgetter("doctop"), _OVERPRINT_PT):
+            for cluster in cluster_objects(row, itemgetter("x0"), _OVERPRINT_PT):
+                kept.add(id(min(cluster, key=itemgetter("doctop", "x0"))))
+    return [c for c in chars if id(c) in kept]
 
 
 def _without_overprint(page: Page) -> Page:
@@ -92,7 +138,7 @@ def _without_overprint(page: Page) -> Page:
     ('RR77' for R7, 'THRESHLD' beside it). Read once they would be a second,
     conflicting list of the board's labels, so both copies are dropped.
     """
-    kept = {id(c) for c in page.dedupe_chars(tolerance=_OVERPRINT_PT).chars}
+    kept = {id(c) for c in _first_copies(page.chars)}
     doubled = {
         (c["text"], round(c["x0"]), round(c["top"]))
         for c in page.chars
@@ -177,6 +223,65 @@ def _without_marks(page: Page) -> Page:
         )
 
     return page.filter(keep)
+
+
+def _table_work(page: Page) -> int | None:
+    """Roughly how many steps pdfplumber takes to find the page's ruled tables.
+
+    The table finder's edges are merged exactly as it merges them, and their
+    crossings counted; the work is the crossings times the crossings and the
+    characters (see `_MAX_TABLE_WORK`).
+
+    Returns:
+        The work, or None when there are too many pairs of ruled lines even
+        to count their crossings.
+    """
+    from pdfplumber.table import TableSettings, edges_to_intersections, merge_edges
+    from pdfplumber.utils.geometry import filter_edges
+
+    settings = TableSettings.resolve(_TABLE_SETTINGS)
+    edges = [
+        edge
+        for orientation in ("v", "h")
+        for edge in filter_edges(
+            page.edges, orientation, min_length=settings.edge_min_length_prefilter
+        )
+    ]
+    edges = filter_edges(
+        merge_edges(
+            edges,
+            snap_x_tolerance=settings.snap_x_tolerance,
+            snap_y_tolerance=settings.snap_y_tolerance,
+            join_x_tolerance=settings.join_x_tolerance,
+            join_y_tolerance=settings.join_y_tolerance,
+        ),
+        min_length=settings.edge_min_length,
+    )
+    vertical = sum(edge["orientation"] == "v" for edge in edges)
+    if vertical * (len(edges) - vertical) > _MAX_RULE_PAIRS:
+        return None
+    crossings = len(
+        edges_to_intersections(
+            edges,
+            settings.intersection_x_tolerance,
+            settings.intersection_y_tolerance,
+        )
+    )
+    return crossings * (crossings + len(page.chars))
+
+
+def _tables(page: Page, number: int) -> list[list[list[str | None]]]:
+    """The page's ruled tables, cell by cell; none when they're too much work.
+
+    Args:
+        page: The cleaned-up page.
+        number: The page, counting from 0, for the log.
+    """
+    work = _table_work(page)
+    if work is None or work > _MAX_TABLE_WORK:
+        logger.info("Page %d has too many ruled lines to find tables in", number + 1)
+        return []
+    return page.extract_tables(_TABLE_SETTINGS)
 
 
 # An image covering this share of a page may be a parts table.
@@ -321,6 +426,7 @@ def parse_pedalpcb_pdf(filepath: str, source_name: str) -> ParseResult:
     Raises:
         UnreadablePdfError: The file can't be opened as a PDF.
         TooManyPagesError: The PDF is far longer than a build document.
+        CrowdedPageError: A page holds far more text than a build document's.
     """
     # Lazy import to avoid loading heavy PDF libraries unless needed
     import pdfplumber
@@ -348,6 +454,8 @@ def parse_pedalpcb_pdf(filepath: str, source_name: str) -> ParseResult:
         pages_data: list[PDFPageExtraction] = []
         misread: set[int] = set()
         for number, raw_page in enumerate(pdf.pages):
+            if len(raw_page.chars) > MAX_PAGE_CHARS:
+                raise CrowdedPageError(number + 1, len(raw_page.chars))
             straight = _straighten(_without_overprint(raw_page.filter(_readable)))
             marked = marked_labels(_page_words(straight))
             page = _without_marks(straight)
@@ -362,7 +470,7 @@ def parse_pedalpcb_pdf(filepath: str, source_name: str) -> ParseResult:
                 PDFPageExtraction(
                     # Same word gap as the layout reader: kerned cells
                     # otherwise run together ('3mmRedLED,Diffused').
-                    tables=page.extract_tables({"text_x_tolerance": _WORD_GAP_PT}),
+                    tables=_tables(page, number),
                     text=page.extract_text() or "",
                     words=page_words,
                     pictures=_pictures(raw_page),
