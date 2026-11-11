@@ -2,6 +2,7 @@
 
 import re
 
+from star_ground.bom_lib.classifier import is_chip_socket
 from star_ground.bom_lib.enums import InputMethod
 from star_ground.bom_lib.ingest import ingest_bom_line, record_pcb
 from star_ground.bom_lib.strategies.base import BOMParserStrategy
@@ -94,43 +95,53 @@ def parse_with_verification(
     """
     inventory = Inventory()
     stats: ReadingStats = ReadingStats()
+    lines = [
+        stripped
+        for raw_text in bom_list
+        for line in raw_text.strip().split("\n")
+        if (stripped := line.strip())
+    ]
+    # A "PCB Name" line names the board; any other may list a part.
+    listings = [
+        None if line.split(None, 1)[0].upper() == "PCB" else _split_listing(line)
+        for line in lines
+    ]
+    # A list with its own chip sockets ('IC1-S DIP-8 socket') gets none added.
+    inject = not any(
+        listing is not None and is_chip_socket(listing[1]) for listing in listings
+    )
 
-    for raw_text in bom_list:
-        lines = raw_text.strip().split("\n")
+    for line, listing in zip(lines, listings, strict=True):
+        stats.lines_read += 1
 
-        for line in lines:
-            line = line.strip()
-            if not line:
+        # Check for PCB Definition (Prefix "PCB" + Value)
+        parts = line.split(None, 1)
+        if parts[0].upper() == "PCB":
+            # Skip header "PCB"
+            if len(parts) == 1:
                 continue
-            stats.lines_read += 1
 
-            # Check for PCB Definition (Prefix "PCB" + Value)
-            parts = line.split(None, 1)
-            if parts and parts[0].upper() == "PCB":
-                # Skip header "PCB"
-                if len(parts) == 1:
-                    continue
+            clean_name = parts[1].strip()
+            record_pcb(inventory, source_name, clean_name, stats)
+            continue
 
-                clean_name = parts[1].strip()
-                record_pcb(inventory, source_name, clean_name, stats)
-                continue
+        success = False
 
-            listing = _split_listing(line)
-            success = False
+        if listing:
+            ref_raw, val_raw = listing[0].upper(), listing[1]
+            count = ingest_bom_line(
+                inventory, source_name, ref_raw, val_raw, stats, inject=inject
+            )
+            if count > 0:
+                stats.parts_found += count
+                success = True
 
-            if listing:
-                ref_raw, val_raw = listing[0].upper(), listing[1]
-                count = ingest_bom_line(inventory, source_name, ref_raw, val_raw, stats)
-                if count > 0:
-                    stats.parts_found += count
-                    success = True
-
-            if not success:
-                # Fallback: Check if line contains "PCB" (heuristic)
-                if "PCB" in line.upper() and line.strip().upper() != "PCB":
-                    record_pcb(inventory, source_name, line.strip(), stats)
-                else:
-                    stats.residuals.append(line)
+        if not success:
+            # Fallback: Check if line contains "PCB" (heuristic)
+            if "PCB" in line.upper() and line.upper() != "PCB":
+                record_pcb(inventory, source_name, line, stats)
+            else:
+                stats.residuals.append(line)
 
     return ParseResult(inventory=inventory, stats=stats)
 

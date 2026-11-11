@@ -51,7 +51,9 @@ def natural_sort_key(ref: str) -> list[int | str]:
         A list of mixed types (int/str) suitable for sort keys.
     """
     return [
-        int(text) if text.isdigit() else text.upper()
+        # `isdigit` is true for '²', which int() refuses; `\d` and int() agree
+        # on decimal digits.
+        int(text) if text.isdecimal() else text.upper()
         for text in _SORT_DIGITS.split(ref)
     ]
 

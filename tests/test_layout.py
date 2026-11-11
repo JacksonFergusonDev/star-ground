@@ -640,6 +640,45 @@ class TestTextBillOfMaterials:
             ("D4", "3mm"),
         ]
 
+    def test_quantity_with_a_footnote_mark(self) -> None:
+        # '²'.isdigit() is true, so int() failed and the document wasn't read.
+        cols = (50.0, 150.0, 220.0)
+        header = self._row(
+            100, *zip(("Reference", "Value", "Quantity"), cols, strict=True)
+        )
+        rows = [
+            self._row(120 + 20 * n, *zip(cells, cols, strict=True))
+            for n, cells in enumerate(
+                [("R1", "10k", "2¹"), ("R2", "22k", "²"), ("R3", "47k", "3")]
+            )
+        ]
+        found = find_bom_rows(header + [w for row in rows for w in row])
+        assert [(r.refs, r.quantity) for r in found] == [
+            ("R1", 2),
+            ("R2", None),
+            ("R3", 3),
+        ]
+
+    def test_tables_under_later_headers_get_their_own_numbers(self) -> None:
+        # One header line heads two boards' tables (tables 0 and 1); the next
+        # header line was numbered 1 as well, so its R2 joined the right board.
+        words = (
+            self._row(80, ("FrontStage", 50), ("DumbleTone", 250))
+            + self._row(
+                100, ("Part", 50), ("Value", 100), ("Part", 250), ("Value", 300)
+            )
+            + self._row(120, ("R1", 50), ("10k", 100), ("R1", 250), ("22k", 300))
+            + self._row(140, ("Part", 50), ("Value", 100))
+            + self._row(160, ("R2", 50), ("1k", 100), ("R2", 250), ("2k2", 300))
+        )
+        rows = find_bom_rows(words)
+        assert [(r.refs, r.value, r.table) for r in rows] == [
+            ("R1", "10k", 0),
+            ("R1", "22k", 1),
+            ("R2", "1k", 2),
+            ("R2", "2k2", 1),
+        ]
+
     def test_designator_with_an_empty_value_cell_is_reported(self) -> None:
         # GuitarPCB The Burner prints 'D2' with nothing beside it.
         from star_ground.bom_lib.pdf.bom_table import bom_valueless_refs

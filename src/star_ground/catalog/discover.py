@@ -354,7 +354,7 @@ def _published_id(base: str, href: str, path: str, source: Source) -> str | None
         or url.path.casefold() != path.casefold()
         or set(query) != {"id"}
         or len(ids) != 1
-        or not ids[0].isdigit()
+        or not ids[0].isdecimal()  # '²' (from '%C2%B2') isn't a number
     ):
         return None
     return urljoin(source.site, path.lstrip("/")) + f"?id={int(ids[0])}"

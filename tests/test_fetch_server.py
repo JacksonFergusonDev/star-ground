@@ -119,6 +119,7 @@ def _handler(site: Site) -> type[BaseHTTPRequestHandler]:
                     f"HTTP://docs.test:{site.http_port}/bom.pdf"
                 ),
                 "/declared-big": lambda: self.big_declared(),
+                "/superscript-length": lambda: self.superscript_length(),
                 "/streamed-big": lambda: self.streamed_big(),
                 "/gzip-bomb": lambda: self.gzip_bomb(),
                 "/slow": lambda: self.slow(),
@@ -135,6 +136,15 @@ def _handler(site: Site) -> type[BaseHTTPRequestHandler]:
             self.send_header("Content-Length", str(LIMIT * 10))
             self.end_headers()
             self.wfile.write(b"x" * 1024)
+
+        def superscript_length(self) -> None:
+            self.send_response(200)
+            self.send_header("Content-Type", "text/plain")
+            self.send_header("Content-Length", "\u00b2")
+            self.send_header("Connection", "close")
+            self.end_headers()
+            self.wfile.write(b"R1 10k\n")
+            self.close_connection = True
 
         def streamed_big(self) -> None:
             self.send_response(200)
@@ -311,6 +321,11 @@ class TestLimits:
     ) -> None:
         with pytest.raises(FetchError, match="over"):
             fetch_url(site.url("/declared-big"), site.policy(max_bytes=LIMIT))
+
+    def test_a_declared_size_that_isnt_a_number_is_ignored(self, site: Site) -> None:
+        # 'Content-Length: \u00b2' raised ValueError: '\u00b2'.isdigit() is true.
+        doc = fetch_url(site.url("/superscript-length"), site.policy(max_bytes=LIMIT))
+        assert doc.content == b"R1 10k\n"
 
     def test_a_stream_over_the_limit_is_cut_off(self, site: Site) -> None:
         with pytest.raises(FetchError, match="over"):

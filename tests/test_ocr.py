@@ -18,6 +18,7 @@ from star_ground.bom_lib import (
     ParseWarningKind,
     make_component_key,
 )
+from star_ground.bom_lib.errors import BUG_MESSAGE
 from star_ground.bom_lib.ocr import (
     OcrBox,
     _plausible,
@@ -34,6 +35,7 @@ from star_ground.bom_lib.ocr import (
     without_ocr,
 )
 from star_ground.bom_lib.pdf.document import parse_pedalpcb_pdf
+from star_ground.bom_lib.strategies import BOMParserContext
 from star_ground.bom_lib.types import (
     BuildVariant,
     Inventory,
@@ -729,3 +731,28 @@ class TestOptIn:
             monkeypatch.setenv("STAR_GROUND_OCR_THREADS", value)
 
         assert _threads() == threads
+
+
+def test_a_bug_reading_ocr_text_is_reported(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    # It was logged and swallowed: the reading went on with no parts, no bug
+    # code and nothing for the builder to report.
+    def read_pages(*_: object, **__: object) -> None:
+        raise RuntimeError("table reader broke")
+
+    def recognized(path: str, result: ParseResult, name: str) -> OcrAttempt | None:
+        return attempt_ocr(path, result, name, lambda *_: _grid_boxes())
+
+    monkeypatch.setattr("star_ground.bom_lib.ocr.read_pages", read_pages)
+    monkeypatch.setattr("star_ground.bom_lib.strategies.pdf.attempt_ocr", recognized)
+    path = _blank_pdf(tmp_path / "image.pdf")
+    upload = FileUpload("image.pdf", Path(path).read_bytes())
+
+    result = BOMParserContext().process(InputMethod.UPLOAD_FILE, upload, "Image")
+
+    (error,) = result.stats.errors
+    assert error.message == BUG_MESSAGE
+    assert error.bug is not None
+    assert f"Bug {error.bug.code}" in caplog.text
+    assert "table reader broke" in caplog.text

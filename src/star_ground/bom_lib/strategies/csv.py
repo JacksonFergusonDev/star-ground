@@ -7,10 +7,12 @@ from collections.abc import Iterator
 from dataclasses import dataclass
 
 from star_ground.bom_lib.classifier import (
+    is_chip_socket,
     normalize_value_by_category,
 )
 from star_ground.bom_lib.designators import is_designator
 from star_ground.bom_lib.enums import ComponentCategory, InputMethod
+from star_ground.bom_lib.errors import UnreadableSpreadsheetError
 from star_ground.bom_lib.ingest import ingest_bom_line
 from star_ground.bom_lib.strategies.base import BOMParserStrategy
 from star_ground.bom_lib.types import (
@@ -37,12 +39,33 @@ class _Sheet:
     dialect: type[csv.Dialect] | csv.Dialect
 
     def rows(self) -> Iterator[list[str]]:
-        """Every row as its cells, header included."""
-        return csv.reader(io.StringIO(self.text), dialect=self.dialect)
+        """Every row as its cells, header included.
 
-    def records(self) -> csv.DictReader[str]:
-        """The rows after the first, keyed by the first row (the header)."""
-        return csv.DictReader(io.StringIO(self.text), dialect=self.dialect)
+        Raises:
+            UnreadableSpreadsheetError: The file is damaged.
+        """
+        return _undamaged(csv.reader(io.StringIO(self.text), dialect=self.dialect))
+
+    def records(self) -> Iterator[dict[str | None, str | None]]:
+        """The rows after the first, keyed by the first row (the header).
+
+        Raises:
+            UnreadableSpreadsheetError: The file is damaged.
+        """
+        return _undamaged(csv.DictReader(io.StringIO(self.text), dialect=self.dialect))
+
+
+def _undamaged[T](rows: Iterator[T]) -> Iterator[T]:
+    """The rows, until the csv module finds the file damaged.
+
+    It refuses a cell longer than its field size limit (131,072 characters),
+    which is what an unclosed quote mark makes of the rest of the file. The
+    limit is a guard on memory, so it stays.
+    """
+    try:
+        yield from rows
+    except csv.Error as e:
+        raise UnreadableSpreadsheetError from e
 
 
 def _read_sheet(content: bytes) -> _Sheet:
@@ -98,6 +121,9 @@ def parse_csv_bom(content: bytes, source_name: str) -> ParseResult:
 
     Returns:
         A ParseResult containing updated inventory and parsing statistics.
+
+    Raises:
+        UnreadableSpreadsheetError: The file is damaged.
     """
     inventory = Inventory()
     stats: ReadingStats = ReadingStats()
@@ -114,11 +140,16 @@ def parse_csv_bom(content: bytes, source_name: str) -> ParseResult:
             if row
         )
 
-    for ref, val, raw in pairs:
+    rows = list(pairs)
+    # A list with its own chip sockets ('IC1-S, DIP-8 socket') gets none added.
+    inject = not any(val and is_chip_socket(val) for _, val, _ in rows)
+    for ref, val, raw in rows:
         stats.lines_read += 1
         success = False
         if ref and val:
-            count = ingest_bom_line(inventory, source_name, ref, val, stats)
+            count = ingest_bom_line(
+                inventory, source_name, ref, val, stats, inject=inject
+            )
             if count > 0:
                 stats.parts_found += count
                 success = True
@@ -156,6 +187,9 @@ def parse_user_inventory(content: bytes) -> Inventory:
 
     Returns:
         A populated Inventory dictionary.
+
+    Raises:
+        UnreadableSpreadsheetError: The file is damaged.
     """
     stock: Inventory = Inventory()
 

@@ -12,7 +12,6 @@ verdict and lets the builder accept the parts (`ParseResult.accept_ocr`), each
 of which then carries a warning to check it against the document.
 """
 
-import logging
 import math
 import os
 import re
@@ -58,8 +57,6 @@ from star_ground.bom_lib.utils import expand_refs, parse_value_to_decimal
 if TYPE_CHECKING:
     from pdfplumber.page import Page
     from PIL.Image import Image
-
-logger = logging.getLogger(__name__)
 
 # Pages are rendered at this resolution; detection then works on a copy whose
 # longest side is _DETECT_SIDE pixels. That gives the same accuracy as 300 dpi
@@ -1257,12 +1254,9 @@ def attempt_ocr(
     inventory = Inventory()
     variants: tuple[BuildVariant, ...] = ()
     if pages_data:
-        try:
-            inventory, variants, _ = read_pages(
-                pages_data, source_name, stats, tables_only=True
-            )
-        except Exception:
-            logger.exception("Reading OCR text failed for %s", source_name)
+        inventory, variants, _ = read_pages(
+            pages_data, source_name, stats, tables_only=True
+        )
     if variants:
         # Several builds (Five Cats Octavia's 'To build the vintage Octavia'
         # table, OKS Fuzz's version columns): every part of every build.

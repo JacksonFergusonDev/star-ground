@@ -876,6 +876,30 @@ def test_tonepad_documents_come_from_published_file_pages() -> None:
     ]
 
 
+def test_a_tonepad_link_whose_id_is_a_superscript_is_skipped() -> None:
+    # '?id=%C2%B2' reads '\u00b2', which isdigit() passes and int() refuses.
+    web = _Web(
+        {
+            "https://tonepad.com/projects.asp?projectType=fx": _Response(
+                body=b'<a href="project.asp?id=%C2%B2">Odd</a>'
+                b'<a href="project.asp?id=7">Fuzz</a>'
+            ),
+            "https://tonepad.com/projects.asp?projectType=amp": _Response(body=b""),
+            "https://tonepad.com/project.asp?id=7": _Response(
+                body=b'<a href="getFileInfo.asp?id=81">fuzz_layout.pdf</a>'
+            ),
+            "https://tonepad.com/getFileInfo.asp?id=81": _Response(
+                body=b'<a href="getFile.asp?id=81">Download</a>'
+            ),
+        }
+    )
+
+    found = discover(_client(web), SOURCES[Publisher.TONEPAD])
+
+    assert not found.failures
+    assert list(found.listings) == ["https://tonepad.com/getFile.asp?id=81"]
+
+
 # --- Reading and keeping ---
 
 

@@ -165,6 +165,17 @@ def test_designators_with_thousands_of_digits_are_no_numbers() -> None:
     assert RefDesignator.from_string("R1234") == RefDesignator("R", 1234)
 
 
+def test_superscript_digits_sort_as_text() -> None:
+    # '\u00b2'.isdigit() is true, so int() was tried on it and raised ValueError.
+    assert natural_sort_key("R1\u00b2") == ["R", 1, "\u00b2"]
+    assert natural_sort_key("\u00b2") == ["\u00b2"]
+    assert sorted(["R10", "R1\u00b2", "R2"], key=natural_sort_key) == [
+        "R1\u00b2",
+        "R2",
+        "R10",
+    ]
+
+
 @pytest.mark.parametrize(
     ("value", "written"),
     [
