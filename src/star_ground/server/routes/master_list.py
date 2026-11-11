@@ -82,6 +82,7 @@ def export(
         kit=master.kit,
         projects=master.projects,
         lines=master.shopping_list(parsed.show_hardware, parsed.show_extras),
+        stock=master.stock,
         excel_links=links == LinkFormat.EXCEL,
         made=datetime.date.today(),
         version=version(),

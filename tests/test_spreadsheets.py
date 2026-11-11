@@ -7,9 +7,16 @@ from pathlib import Path
 
 import pytest
 
+from star_ground.api import Project, generate_master_list, read_stock
 from star_ground.bom_lib.enums import ComponentCategory, ComponentOrigin
 from star_ground.bom_lib.strategies.csv import parse_user_inventory
-from star_ground.bom_lib.types import FORMULA_PREFIXES, ShoppingLine
+from star_ground.bom_lib.types import (
+    FORMULA_PREFIXES,
+    ComponentKey,
+    FileUpload,
+    Inventory,
+    ShoppingLine,
+)
 from star_ground.exports.spreadsheets import (
     SHOPPING_LIST_COLUMNS,
     manufacturer_part_number,
@@ -99,7 +106,7 @@ def test_stock_after_csv() -> None:
 
     # For 10k: (2 + 10) - 4 = 8 remaining -> should be included
     # For TL072: (2 + 0) - 2 = 0 remaining -> omitted
-    decoded = stock_after_csv(rows).decode("utf-8-sig")
+    decoded = stock_after_csv(rows, Inventory(), None).decode("utf-8-sig")
 
     assert "Category,Part,Qty" in decoded
     assert "Resistors,10k,8" in decoded
@@ -119,7 +126,9 @@ def test_stock_update_does_not_spend_stock_on_included_parts() -> None:
             buy_qty=0,
         )
     ]
-    assert "ICs,24LC32A,2" in stock_after_csv(rows).decode("utf-8-sig")
+    assert "ICs,24LC32A,2" in stock_after_csv(rows, Inventory(), None).decode(
+        "utf-8-sig"
+    )
 
 
 def _row(
@@ -184,7 +193,7 @@ def test_document_text_never_becomes_a_spreadsheet_formula(part: str) -> None:
     rows = [_shopping_row(part)]
 
     shopping = shopping_list_csv(rows, excel_links=True)
-    stock = stock_after_csv([_shopping_row(part, buy_qty=2)])
+    stock = stock_after_csv([_shopping_row(part, buy_qty=2)], Inventory(), None)
     cart = supplier_cart_csv(rows)
 
     for csv_bytes in (shopping, stock, cart):
@@ -202,7 +211,9 @@ def test_document_text_never_becomes_a_spreadsheet_formula(part: str) -> None:
 
 def test_the_stock_file_reads_back_a_guarded_part(tmp_path: Path) -> None:
     stock_csv = stock_after_csv(
-        [_shopping_row("-2+3", category=ComponentCategory.TRANSISTORS, buy_qty=3)]
+        [_shopping_row("-2+3", category=ComponentCategory.TRANSISTORS, buy_qty=3)],
+        Inventory(),
+        None,
     )
     path = tmp_path / "stock.csv"
     path.write_bytes(stock_csv)
@@ -210,3 +221,46 @@ def test_the_stock_file_reads_back_a_guarded_part(tmp_path: Path) -> None:
     stock = parse_user_inventory(str(path))
 
     assert [k.value for k in stock] == ["-2+3"]
+
+
+def _read_back(csv_bytes: bytes, tmp_path: Path) -> dict[tuple[str, str], int]:
+    path = tmp_path / "stock.csv"
+    path.write_bytes(csv_bytes)
+    return {
+        (k.category.value, k.value): d.qty
+        for k, d in parse_user_inventory(str(path)).items()
+    }
+
+
+def test_stock_the_builds_dont_use_stays_in_stock(tmp_path: Path) -> None:
+    stock = read_stock(
+        FileUpload(
+            "stock.csv",
+            b"Category,Part,Qty\nResistors,10k,5\nResistors,999k,40\nICs,TL072,3\n",
+        )
+    )
+    master = generate_master_list(
+        [Project(name="Fuzz", data="R1 10k\nC1 100n")], stock=stock
+    )
+    lines = master.shopping_list()
+
+    after = _read_back(stock_after_csv(lines, master.kit, master.stock), tmp_path)
+
+    hundred_n = next(line for line in lines if line.part == "100n")
+    assert after[("Resistors", "10k")] == 4
+    assert after[("Resistors", "999k")] == 40
+    assert after[("ICs", "TL072")] == 3
+    assert after[("Capacitors", "100n")] == hundred_n.buy_qty - 1
+
+
+def test_stock_of_a_hidden_part_is_used_by_the_builds(tmp_path: Path) -> None:
+    master = generate_master_list([Project(name="Fuzz", data="R1 10k")])
+    hidden = next(line for line in master.shopping_list() if line.part not in {"10k"})
+    held = hidden.bom_qty + 2
+    stock = Inventory()
+    stock.add_part("User Stock", ComponentKey(hidden.category, hidden.part), "", held)
+    lines = [line for line in master.shopping_list() if line.part == "10k"]
+
+    after = _read_back(stock_after_csv(lines, master.kit, stock), tmp_path)
+
+    assert after[(hidden.category.value, hidden.part)] == 2

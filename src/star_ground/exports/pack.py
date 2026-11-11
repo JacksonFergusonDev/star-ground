@@ -42,6 +42,7 @@ class PackContents:
         kit: The master list's parts, hardware kit included.
         projects: The master list's projects.
         lines: The shopping list.
+        stock: The builder's stock, if given.
         excel_links: Whether the shopping list's links are Excel formulas.
         made: The day it's made.
         version: Star Ground's version.
@@ -50,23 +51,57 @@ class PackContents:
     kit: Inventory
     projects: Sequence[BuiltProject]
     lines: Sequence[ShoppingLine]
+    stock: Inventory | None
     excel_links: bool
     made: datetime.date
     version: str
 
 
+# A file name's longest stem, in characters: under the 255 bytes
+# filesystems allow, with room for ' (2)' and '.pdf', even when every
+# character takes UTF-8's 4 bytes.
+_MAX_STEM = 60
+# Characters some filesystem refuses in a name, and control characters,
+# which zipfile cuts a name at (NUL) or extractors refuse.
+_UNSAFE = re.compile(r'[<>:"/\\|?*\x00-\x1f\x7f]')
+_FALLBACK = "Source document"
+
+
 def _file_name(name: str) -> str:
-    """A name safe on every filesystem: no path separators or reserved marks."""
-    return re.sub(r'[<>:"/\\|?*]', "", name).strip()
+    """A file name stem from a label, without separators or marks.
+
+    Dots and spaces are trimmed from the ends, so a name is never hidden
+    ('.x') or a path ('..'), and Windows keeps it as written.
+
+    Args:
+        name: A project's label.
+
+    Returns:
+        The stem, or a fallback when nothing of the label is left.
+    """
+    stem = _UNSAFE.sub("", name)[:_MAX_STEM].strip(" .")
+    return stem or _FALLBACK
 
 
 def _sources(projects: Sequence[BuiltProject]) -> list[tuple[str, bytes]]:
-    """Each project's source document that the builder gave, once each."""
-    return [
-        (f"{SOURCES}/{_file_name(p.label)}.pdf", p.document)
-        for p in unique_projects(projects)
-        if p.document
-    ]
+    """Each project's source document that the builder gave, once each.
+
+    Names are made safe first, then numbered where two are alike ('A/B'
+    and 'AB'; 'Fuzz' and 'fuzz', which are one file on macOS and Windows).
+    """
+    taken: set[str] = set()
+    sources = []
+    for project in unique_projects(projects):
+        if not project.document:
+            continue
+        stem = _file_name(project.label)
+        name, n = stem, 1
+        while name.casefold() in taken:
+            n += 1
+            name = f"{stem} ({n})"
+        taken.add(name.casefold())
+        sources.append((f"{SOURCES}/{name}.pdf", project.document))
+    return sources
 
 
 def build_pack(contents: PackContents) -> bytes:
@@ -112,7 +147,10 @@ def build_pack(contents: PackContents) -> bytes:
             shopping_list_csv(contents.lines, contents.excel_links),
         )
         zf.writestr(f"{folder}/{SUPPLIER_CART}", supplier_cart_csv(contents.lines))
-        zf.writestr(f"{folder}/{STOCK_AFTER}", stock_after_csv(contents.lines))
+        zf.writestr(
+            f"{folder}/{STOCK_AFTER}",
+            stock_after_csv(contents.lines, contents.kit, contents.stock),
+        )
         for name, document in sources:
             zf.writestr(f"{folder}/{name}", document)
     return buf.getvalue()
