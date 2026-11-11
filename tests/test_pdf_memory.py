@@ -6,6 +6,7 @@ rather than a number of megabytes: the same file would take about its size
 decompressed, or its page count times a page's layout, without the bound.
 """
 
+import gc
 import tracemalloc
 import zlib
 from collections.abc import Callable
@@ -154,10 +155,19 @@ def test_pages_are_released_as_they_are_read(tmp_path: Path) -> None:
     one, many = tmp_path / "one.pdf", tmp_path / "many.pdf"
     one.write_bytes(_pages(1, 5_000))
     many.write_bytes(_pages(20, 5_000))
-    peak_one, error = _peak(lambda: _read(one))
-    assert error is None
-    peak_many, error = _peak(lambda: _read(many))
-    assert error is None
+    _read(one)  # Warm up imports before measuring either file.
+    gc.collect()
+    gc_enabled = gc.isenabled()
+    gc.disable()  # Page caches must be cleared even between collections.
+    try:
+        peak_one, error = _peak(lambda: _read(one))
+        assert error is None
+        peak_many, error = _peak(lambda: _read(many))
+        assert error is None
+    finally:
+        if gc_enabled:
+            gc.enable()
+        gc.collect()
     assert peak_many < 2 * peak_one
 
 

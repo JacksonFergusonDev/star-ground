@@ -8,6 +8,7 @@ title is guessed from the first pages.
 import logging
 import math
 import re
+from contextlib import ExitStack, closing
 from dataclasses import replace
 from operator import itemgetter
 from typing import TYPE_CHECKING, Any
@@ -378,7 +379,8 @@ def _title(
     first = int(len(pdf.pages) > 1 and bool(_DISCLAIMER.match(pages_data[0].text)))
     if first >= len(pdf.pages) or first in misread:
         return None
-    words = _without_overprint(pdf.pages[first]).extract_words(extra_attrs=["size"])
+    with closing(_without_overprint(pdf.pages[first])) as page:
+        words = page.extract_words(extra_attrs=["size"])
     candidates = [
         w for w in words if w["text"].upper() not in _TITLE_IGNORE and w["size"] > 10
     ]
@@ -409,25 +411,34 @@ def _extract(raw_page: Page, number: int, source_name: str) -> PDFPageExtraction
         misread OCR (`_misread`), to be read as an image instead.
     """
     parse_page(raw_page, number, source_name)
-    straight = _straighten(_without_overprint(raw_page.filter(_readable)))
-    # Footnote marks are found once: which rows they mark is recorded, then
-    # their characters are dropped.
-    marked_words = _page_words(straight)
-    marks = footnote_marks(marked_words)
-    marked = marked_labels(marked_words, marks)
-    page = _without_marks(straight, marks)
-    page_words = _page_words(page)
-    if _misread(page_words):
-        return None
-    return PDFPageExtraction(
-        # Same word gap as the layout reader: kerned cells otherwise run
-        # together ('3mmRedLED,Diffused').
-        tables=_tables(page, number),
-        text=page.extract_text() or "",
-        words=page_words,
-        pictures=_pictures(raw_page),
-        marked=marked,
-    )
+    # Each filtered page has its own caches. Closing the original page
+    # leaves these caches live until cyclic garbage collection runs.
+    with ExitStack() as cleanup:
+        readable = cleanup.enter_context(closing(raw_page.filter(_readable)))
+        deduped = _without_overprint(readable)
+        if deduped is not readable:
+            cleanup.callback(deduped.close)
+        straight = _straighten(deduped)
+        # Footnote marks are found once: which rows they mark is recorded, then
+        # their characters are dropped.
+        marked_words = _page_words(straight)
+        marks = footnote_marks(marked_words)
+        marked = marked_labels(marked_words, marks)
+        page = _without_marks(straight, marks)
+        if page is not straight:
+            cleanup.callback(page.close)
+        page_words = _page_words(page)
+        if _misread(page_words):
+            return None
+        return PDFPageExtraction(
+            # Same word gap as the layout reader: kerned cells otherwise run
+            # together ('3mmRedLED,Diffused').
+            tables=_tables(page, number),
+            text=page.extract_text() or "",
+            words=page_words,
+            pictures=_pictures(raw_page),
+            marked=marked,
+        )
 
 
 def parse_pdf(filepath: str, source_name: str) -> ParseResult:
