@@ -97,11 +97,7 @@ class TestInjection:
         assert inventory[INPUT_JACK].qty == 1  # only the other project's pedal
         assert inventory[DC_JACK].qty == 1
         assert inventory[STOMP].qty == 3  # nobody listed a footswitch
-        assert any(
-            "list their own" in note
-            for notes in inventory[INPUT_JACK].sources.values()
-            for note in notes
-        )
+        assert any("list their own" in note for note in inventory[INPUT_JACK].hardware)
 
     def test_hardware_every_project_lists_is_not_added(self) -> None:
         inventory = Inventory()

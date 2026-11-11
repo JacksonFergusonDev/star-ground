@@ -70,7 +70,9 @@ _SWITCHCRAFT_JACK = re.compile(r"11[12][A-Z]?X\b")
 # A photo-FET optocoupler: Blueshift's 'OPTO  H11F1'.
 _OPTOCOUPLER = re.compile(r"H11F\d\b")
 _REVERB_BRICK = re.compile(r"BTDR-?\d")
-_POT_SIZE = re.compile(r"\s+(?:9|16|24)\s?mm$", re.IGNORECASE)
+# A pot's body size, printed before or after its value: '1kC 9mm' (Aion FX
+# legacy Deimos), '16mm B10K'.
+_POT_SIZE = re.compile(r"^(?:9|16|24)\s?mm\s+|\s+(?:9|16|24)\s?mm$", re.IGNORECASE)
 _DC_JACK = re.compile(r"\b\d(?:\.\d)?\s*MM DC\b|\bDC (?:JACK|SOCKET)\b")
 _POT_VALUE = re.compile(
     r"(?<![\w.])(?:[ABCWG]\d+(?:\.\d+)?[KM][ABC]?|\d+(?:\.\d+)?[KM][ABCWG]?)(?![\w.])"
@@ -205,8 +207,7 @@ def normalize_value_by_category(category: ComponentCategory, val_raw: str) -> st
         # 'Trim - 50k' (GuitarPCB NostalgiTone Chorus) leaves no dash behind.
         trimmed = " ".join(_TRIM_NOTE.sub(" ", clean_val).split()).lstrip("-\u2013 ")
         clean_val = trimmed or clean_val
-        # A pot's body size is no part of its value: 'Fuzz  1kC 9mm' (Aion FX
-        # legacy Deimos).
+        # A pot's body size is no part of its value.
         clean_val = _POT_SIZE.sub("", clean_val) or clean_val
 
     return clean_val
@@ -385,9 +386,7 @@ def categorize_part(
             designator is not None and designator.prefix in ("REG", "RG")
         )
         if not regulator and not any(k in val_up for k in skip_injection_keywords):
-            injection = ComponentKey(
-                ComponentCategory.HARDWARE_MISC, "DIP SOCKET (Check Size)"
-            )
+            injection = constants.IC_SOCKET
 
     # Final Normalization
     val_clean = normalize_value_by_category(category, val_clean)

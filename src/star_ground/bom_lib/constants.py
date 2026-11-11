@@ -14,7 +14,7 @@ import re
 from dataclasses import dataclass
 
 from star_ground.bom_lib.enums import ComponentCategory
-from star_ground.bom_lib.types import AlternativeSpec
+from star_ground.bom_lib.types import AlternativeSpec, ComponentKey
 from star_ground.bom_lib.units import Value, farads, ohms
 
 # --- Standards ---
@@ -434,7 +434,10 @@ IGNORE_VALUES = [
     "PKG",
 ]
 
-AUTO_INJECT_SOURCE = "Auto-Inject"
+# The socket Star Ground adds for each DIP chip. The sourcing knows it by this
+# key, never by the word 'socket' in a value: a document's own DC socket or
+# tube socket is a part the builder needs, not an extra.
+IC_SOCKET = ComponentKey(ComponentCategory.HARDWARE_MISC, "DIP SOCKET (Check Size)")
 # Marks the designator of a part Star Ground adds for one the document lists
 # (an IC's socket: 'IC1 (Inj)'), so it's never printed in the document.
 INJECTED_SUFFIX = " (Inj)"

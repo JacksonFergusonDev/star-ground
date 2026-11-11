@@ -5,10 +5,19 @@ each next, taller part goes in. The build book and bench mode both follow
 this order, so a builder sees the same sequence on paper and on screen.
 """
 
+import re
 from enum import StrEnum
 
+from star_ground.bom_lib.constants import IC_SOCKET
 from star_ground.bom_lib.enums import ComponentCategory, ComponentSpec
 from star_ground.bom_lib.sourcing import get_spec_type
+from star_ground.bom_lib.types import ComponentKey
+
+# A chip's socket a document lists itself ('8 pin DIP socket', 'IC socket').
+# A DC socket or a tube socket is soldered with the rest of the hardware.
+_CHIP_SOCKET = re.compile(
+    r"\b(?:DIP|IC|CHIP)\b.*\bSOCKET|\bSOCKET\b.*\b(?:DIP|IC|CHIP)\b", re.IGNORECASE
+)
 
 
 class BuildStage(StrEnum):
@@ -66,10 +75,10 @@ def build_stage(
             for a capacitor otherwise.
 
     Returns:
-        The stage: a socket's own, and an electrolytic capacitor's after the
+        The stage: a chip socket's own, and an electrolytic capacitor's after the
         transistors, since it stands taller than a film or ceramic one.
     """
-    if "SOCKET" in value.upper():
+    if ComponentKey(category, value) == IC_SOCKET or _CHIP_SOCKET.search(value):
         return BuildStage.SOCKETS
     if category == ComponentCategory.CAPACITORS:
         spec = spec or get_spec_type(category, value)

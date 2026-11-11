@@ -393,14 +393,15 @@ def test_hardware_injection_and_smart_merge():
     # The function should have found "Resistors | 3.3k" and incremented it by 1 (for the LED).
     assert inventory[key_3k3].qty == 3  # 2 original + 1 injected
 
-    # Verify the source tag was added
-    assert "Auto-Inject" in inventory[key_3k3].sources
+    # The addition is noted as hardware, under no project's name
+    assert inventory[key_3k3].hardware == ["LED CLR"]
+    assert not inventory[key_3k3].sources
 
     # CHECK 2: Forced Injection
     # Enclosures should be injected directly into inventory
     enc_key = ComponentKey(ComponentCategory.HARDWARE_MISC, "1590B Enclosure")
     assert inventory[enc_key].qty == 1
-    assert "Auto-Inject" in inventory[enc_key].sources
+    assert inventory[enc_key].hardware == ["Verify PCB fit"]
 
     # CHECK 3: Dynamic Knob Count
     # 3 Pots -> 3 Knobs injected
@@ -505,9 +506,8 @@ def test_fuzz_germanium_trigger():
     assert ge_key in inventory
     assert inventory[ge_key].qty == 0
 
-    # Check that the note made it into the source tag
-    sources = inventory[ge_key].sources["Auto-Inject"]
-    assert any("Vintage Option" in s for s in sources)
+    # Check that the note made it into the hardware notes
+    assert inventory[ge_key].hardware == ["Vintage Option"]
 
 
 def test_search_term_generation():
