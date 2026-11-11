@@ -9,12 +9,13 @@ from dataclasses import dataclass, replace
 from star_ground.bom_lib.builds import Entry, PageContext, plan_builds
 from star_ground.bom_lib.designators import is_designator
 from star_ground.bom_lib.pdf.assemble import (
+    AssembledBuilds,
     assemble_builds,
     included_refs,
     mark_included,
 )
-from star_ground.bom_lib.pdf.geometry import page_lines
 from star_ground.bom_lib.pdf.listings import layout_entries
+from star_ground.bom_lib.pdf.page import PDFPageExtraction
 from star_ground.bom_lib.pdf.rows import REPEAT, same_value, wrapped
 from star_ground.bom_lib.pdf.ruled import (
     continues_list,
@@ -23,13 +24,7 @@ from star_ground.bom_lib.pdf.ruled import (
 )
 from star_ground.bom_lib.pdf.self_check import ReadingFacts, check_reading
 from star_ground.bom_lib.pdf.text_tables import text_table_entries
-from star_ground.bom_lib.types import (
-    BuildVariant,
-    Inventory,
-    OptionNote,
-    PDFPageExtraction,
-    ReadingStats,
-)
+from star_ground.bom_lib.types import ReadingStats
 
 
 def read_pages(
@@ -38,7 +33,7 @@ def read_pages(
     stats: ReadingStats,
     *,
     tables_only: bool = False,
-) -> tuple[Inventory, tuple[BuildVariant, ...], tuple[OptionNote, ...]]:
+) -> AssembledBuilds:
     """Reads the parts lists of a document's pages and checks the result.
 
     The same readers serve a PDF's text layer and OCR'd page images (see
@@ -53,15 +48,15 @@ def read_pages(
             text bill of materials.
 
     Returns:
-        The single-build inventory (empty when the document has variants),
-        the variants, and the option notes.
+        The single build's parts (empty when the document has variants), the
+        variants, the option notes, and every part of them all.
     """
     found = read_entries(pages_data, stats, tables_only=tables_only)
 
     # --- BUILDS: variants and options ---
     pages = [
         PageContext(
-            page_lines(data.words),
+            data.lines,
             data.text,
             tuple(data.labels),
         )
@@ -84,7 +79,7 @@ def read_pages(
         ),
         stats,
     )
-    return built.inventory, built.variants, built.options
+    return built
 
 
 @dataclass(frozen=True, slots=True)

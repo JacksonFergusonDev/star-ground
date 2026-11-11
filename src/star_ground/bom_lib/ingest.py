@@ -10,10 +10,10 @@ from star_ground.bom_lib.classifier import (
 from star_ground.bom_lib.designators import is_designator
 from star_ground.bom_lib.enums import ComponentCategory, ParseWarningKind
 from star_ground.bom_lib.types import (
+    ComponentKey,
     Inventory,
     ParseWarning,
     ReadingStats,
-    make_component_key,
 )
 from star_ground.bom_lib.utils import MAX_RANGE_PARTS, expand_refs, is_ref_range
 from star_ground.bom_lib.verification import (
@@ -86,7 +86,7 @@ def ingest_bom_line(
             continue
         check_classification(stats, claimed, value, result.category, result.clean_value)
         parts_found += 1
-        key = make_component_key(result.category, result.clean_value)
+        key = ComponentKey(result.category, result.clean_value)
         inventory.add_part(source, key, claimed, qty)
         if result.injected_key and inject:
             # An implied part, such as an IC's socket: one for each chip.
@@ -141,17 +141,14 @@ def _claim(stats: ReadingStats, ref: str, value: str) -> str | None:
     Returns:
         The label to buy the part under, or None for a designator read before.
     """
-    if not is_designator(ref) and ref not in stats.seen_refs:
-        taken = {seen.upper() for seen in stats.seen_refs}
-        if ref.upper() in taken:
-            n = 2
-            while f"{ref.upper()} ({n})" in taken:
-                n += 1
-            ref = f"{ref} ({n})"
-    if ref in stats.seen_refs:
-        check_duplicate(stats, ref, stats.seen_refs[ref], value)
+    seen = stats.seen_refs
+    if not is_designator(ref) and ref not in seen and seen.has_upper(ref.upper()):
+        ref = f"{ref} ({seen.free_number(ref.upper())})"
+    first = seen.get(ref)
+    if first is not None:
+        check_duplicate(stats, ref, first, value)
         return None
-    stats.seen_refs[ref] = value
+    seen.record(ref, value)
     return ref
 
 
@@ -166,7 +163,7 @@ def record_pcb(
         name: The board's name.
         stats: The reading's statistics, whose part count it adds to.
     """
-    key = make_component_key(ComponentCategory.PCB, name)
+    key = ComponentKey(ComponentCategory.PCB, name)
     inventory[key].qty += 1
     if "PCB" not in inventory[key].sources[source_name]:
         inventory[key].sources[source_name].append("PCB")

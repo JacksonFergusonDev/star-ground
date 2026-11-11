@@ -5,7 +5,6 @@ import pytest
 from star_ground.bom_lib import (
     ComponentCategory,
     ParseWarningKind,
-    make_component_key,
     parse_with_verification,
 )
 from star_ground.bom_lib.choices import ValueChoice, choose_value
@@ -83,9 +82,7 @@ class TestUnextractedRefs:
 
     def test_warns_for_listed_but_missing_ref(self) -> None:
         inventory = Inventory()
-        inventory.add_part(
-            "T", make_component_key(ComponentCategory.RESISTORS, "1M"), "R1"
-        )
+        inventory.add_part("T", ComponentKey(ComponentCategory.RESISTORS, "1M"), "R1")
         stats = ReadingStats()
 
         check_unextracted_refs(["R1 1M\nR13 330"], inventory, stats)
@@ -103,9 +100,7 @@ class TestUnextractedRefs:
     def test_bare_label_is_the_notes_only_numbered_one(self) -> None:
         # NostalgiTone Compressor: the table's 'SW - SPDT' is the notes' 'SW1'.
         inventory = Inventory()
-        inventory.add_part(
-            "T", make_component_key(ComponentCategory.SWITCHES, "SPDT"), "SW"
-        )
+        inventory.add_part("T", ComponentKey(ComponentCategory.SWITCHES, "SPDT"), "SW")
         stats = ReadingStats()
         check_unextracted_refs(["SW SPDT\nSW1 UP: fastest"], inventory, stats)
         assert stats.warnings == []
@@ -115,7 +110,7 @@ class TestUnextractedRefs:
         inventory = Inventory()
         for ref in ("LED1", "LED2"):
             inventory.add_part(
-                "T", make_component_key(ComponentCategory.DIODES, "5mm LED"), ref
+                "T", ComponentKey(ComponentCategory.DIODES, "5mm LED"), ref
             )
         stats = ReadingStats()
         check_unextracted_refs(["LED mounting: There are two LEDs."], inventory, stats)
@@ -125,7 +120,7 @@ class TestUnextractedRefs:
         # Golden Falk: 'Q1-Q5  J201  JFET transistor' lists J201 as a value.
         inventory = Inventory()
         inventory.add_part(
-            "T", make_component_key(ComponentCategory.TRANSISTORS, "J201"), "Q1"
+            "T", ComponentKey(ComponentCategory.TRANSISTORS, "J201"), "Q1"
         )
         stats = ReadingStats()
         check_unextracted_refs(["Q1-Q5 J201 JFET transistor"], inventory, stats)
@@ -133,9 +128,7 @@ class TestUnextractedRefs:
 
     def test_op_amp_sections_of_an_extracted_chip(self) -> None:
         inventory = Inventory()
-        inventory.add_part(
-            "T", make_component_key(ComponentCategory.ICS, "TL072"), "IC2"
-        )
+        inventory.add_part("T", ComponentKey(ComponentCategory.ICS, "TL072"), "IC2")
         stats = ReadingStats()
         check_unextracted_refs(["IC2A TL072\nIC3B TL072"], inventory, stats)
         assert [w.ref for w in stats.warnings] == ["IC3B"]
@@ -144,7 +137,7 @@ class TestUnextractedRefs:
         # Shindig lists 'D10a'; the inventory may hold it in either case.
         inventory = Inventory()
         inventory.add_part(
-            "T", make_component_key(ComponentCategory.DIODES, "1N4007"), "D10A"
+            "T", ComponentKey(ComponentCategory.DIODES, "1N4007"), "D10A"
         )
         stats = ReadingStats()
 
@@ -156,7 +149,7 @@ class TestUnextractedRefs:
 
     def test_injected_refs_do_not_count_as_extracted(self) -> None:
         inventory = Inventory()
-        key = make_component_key(ComponentCategory.HARDWARE_MISC, "DIP SOCKET")
+        key = ComponentKey(ComponentCategory.HARDWARE_MISC, "DIP SOCKET")
         inventory.add_part("T", key, "IC1 (Inj)")
         stats = ReadingStats()
 
@@ -250,7 +243,7 @@ class TestBomReconciliation:
     def _inventory(self, parts: list[tuple[ComponentCategory, str, str]]):
         inventory = Inventory()
         for category, value, ref in parts:
-            inventory.add_part("T", make_component_key(category, value), ref)
+            inventory.add_part("T", ComponentKey(category, value), ref)
         return inventory
 
     def test_value_missing_from_bom_warns(self) -> None:
@@ -389,10 +382,10 @@ class TestAionChecks:
     def test_two_word_labels_and_bare_led_account_for_their_words(self) -> None:
         inventory = Inventory()
         inventory.add_part(
-            "doc", make_component_key(ComponentCategory.SWITCHES, "DPDT"), "HI CUT"
+            "doc", ComponentKey(ComponentCategory.SWITCHES, "DPDT"), "HI CUT"
         )
         inventory.add_part(
-            "doc", make_component_key(ComponentCategory.DIODES, "5mm LED"), "LED"
+            "doc", ComponentKey(ComponentCategory.DIODES, "5mm LED"), "LED"
         )
         stats = ReadingStats()
         check_unextracted_refs(["HI CUT DPDT slide\nLED1 5mm\nCUT 1"], inventory, stats)
@@ -523,7 +516,7 @@ def test_an_unreadable_document_says_so() -> None:
 def _inventory(*parts: tuple[ComponentCategory, str, str]):
     inv = Inventory()
     for category, value, ref in parts:
-        inv[make_component_key(category, value)].refs.append(ref)
+        inv[ComponentKey(category, value)].refs.append(ref)
     return inv
 
 
@@ -815,7 +808,7 @@ def test_footnotes_on_building_without_a_part() -> None:
         ("CX1", "1n5", ComponentCategory.CAPACITORS),
         ("C10", "100n", ComponentCategory.CAPACITORS),
     ):
-        inventory[make_component_key(cat, value)].refs.append(ref)
+        inventory[ComponentKey(cat, value)].refs.append(ref)
     stats = ReadingStats()
     check_numbered_footnotes([marked], [text], inventory, stats)
     assert sorted(w.ref for w in stats.warnings) == ["CX1", "MIDRANGE", "R15"]
@@ -824,7 +817,7 @@ def test_footnotes_on_building_without_a_part() -> None:
 def _listed(*parts: tuple[str, str, ComponentCategory]):
     inventory = Inventory()
     for ref, value, cat in parts:
-        inventory[make_component_key(cat, value)].refs.append(ref)
+        inventory[ComponentKey(cat, value)].refs.append(ref)
     return inventory
 
 

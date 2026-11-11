@@ -24,7 +24,8 @@ from .manager import (
     rename_source,
     sort_inventory,
 )
-from .pdf.document import parse_pedalpcb_pdf
+from .pdf.document import parse_pdf
+from .pdf.page import PDFPageExtraction
 from .sourcing import (
     build_shopping_list,
     determine_origin,
@@ -65,7 +66,6 @@ from .types import (
     ParseResult,
     ParseWarning,
     PartData,
-    PDFPageExtraction,
     PDFWord,
     PurchaseRecommendation,
     RawBOMData,
@@ -77,7 +77,6 @@ from .types import (
     SupportsGetValue,
     SupportsName,
     SupportsRead,
-    make_component_key,
 )
 from .units import Unit, Value
 from .utils import (
@@ -143,11 +142,10 @@ __all__ = [
     "get_spec_type",
     "is_extra_part",
     "is_pure_hardware",
-    "make_component_key",
     "normalize_value_by_category",
     "normalize_value_to_quantity",
     "parse_csv_bom",
-    "parse_pedalpcb_pdf",
+    "parse_pdf",
     "parse_user_inventory",
     "parse_value_to_decimal",
     "parse_with_verification",

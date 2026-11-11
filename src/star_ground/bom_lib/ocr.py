@@ -35,12 +35,11 @@ from star_ground.bom_lib.pdf.cells import REF_RANGE, starts_description
 from star_ground.bom_lib.pdf.geometry import (
     Listing,
     group_lines,
-    page_lines,
     split_cells,
 )
+from star_ground.bom_lib.pdf.page import PDFPageExtraction
 from star_ground.bom_lib.pdf.reading import read_pages
 from star_ground.bom_lib.pdf.ruled import names_builds
-from star_ground.bom_lib.pdf.scan import find_listings
 from star_ground.bom_lib.types import (
     BuildVariant,
     ComponentKey,
@@ -48,7 +47,6 @@ from star_ground.bom_lib.types import (
     OcrAttempt,
     ParseResult,
     ParseWarning,
-    PDFPageExtraction,
     PDFWord,
     ReadingStats,
 )
@@ -568,6 +566,21 @@ def _column_pitch(
     return _pitch(tops)
 
 
+@dataclass(frozen=True)
+class _TableRows:
+    """Where an OCR'd page's parts table lies.
+
+    Attributes:
+        tops: Each of its rows' top, in points, top to bottom.
+        pitch: The distance between its rows, in points.
+        left: Its left edge, in points.
+    """
+
+    tops: list[float]
+    pitch: float
+    left: float
+
+
 def table_block(data: PDFPageExtraction) -> PDFPageExtraction:
     """Keeps only the words of the page's parts table.
 
@@ -581,9 +594,8 @@ def table_block(data: PDFPageExtraction) -> PDFPageExtraction:
     Returns:
         The page restricted to its parts table, possibly empty.
     """
-    words = data.words
-    lines = group_lines(words)
-    listings = find_listings(words)
+    lines = group_lines(data.words)
+    listings = data.listings
     columns = [
         c
         for c in _clusters([lst.x0 for lst in listings], _ALIGN_PT)
@@ -592,6 +604,29 @@ def table_block(data: PDFPageExtraction) -> PDFPageExtraction:
     aligned = [lst for lst in listings if any(c[0] <= lst.x0 <= c[-1] for c in columns)]
     if not aligned:
         return PDFPageExtraction(tables=[], text="", words=[])
+    table = _main_rows(lines, aligned, columns)
+    if table is None:
+        # Aligned labels on a schematic (Apollo Tremolo's) are no table.
+        return PDFPageExtraction(tables=[], text="", words=[])
+    table = _with_trailing_rows(lines, table, columns)
+    listed = {lines[lst.line][0]["top"] for lst in listings}
+    table = replace(table, tops=_rows_above(lines, table.tops, table.pitch, listed))
+    return _block(data.words, lines, _with_header(lines, table))
+
+
+def _main_rows(
+    lines: list[list[PDFWord]], aligned: list[Listing], columns: list[list[float]]
+) -> _TableRows | None:
+    """The rows of the largest evenly spaced block of aligned listings.
+
+    Args:
+        lines: The page's lines of words.
+        aligned: The listings that start in a designator column.
+        columns: The designator columns, as clusters of left edges.
+
+    Returns:
+        The table's rows, or None when the block's rows aren't evenly spaced.
+    """
     tops = sorted({lines[lst.line][0]["top"] for lst in aligned})
     pitch = median(b - a for a, b in pairwise(tops)) if len(tops) > 1 else 0.0
     # A row that read as no listing leaves a gap of one more pitch.
@@ -599,8 +634,7 @@ def table_block(data: PDFPageExtraction) -> PDFPageExtraction:
     rows = max(blocks, key=len)
     row_pitch = _pitch(rows) or _column_pitch(aligned, lines, rows, columns)
     if row_pitch is None:
-        # Aligned labels on a schematic (Apollo Tremolo's) are no table.
-        return PDFPageExtraction(tables=[], text="", words=[])
+        return None
     pitch = min(pitch, row_pitch)
     # Rows that read as no listing can split one table in two ('LED | LED'
     # rows, Tone Monarch's daughterboard): a later block in the same
@@ -623,43 +657,72 @@ def table_block(data: PDFPageExtraction) -> PDFPageExtraction:
             )
         ):
             rows = sorted(rows + block)
-    # A row that read as no listing ('SUBS | SDPT Toggle', WoollyTron) still
-    # belongs to the table when it continues the table's rows from one of
-    # its designator columns, so the reading can say it was not read.
-    # Only below the table and at its pitch: above it lies the board drawing,
-    # whose labels can line up with the columns.
     left = min(lst.x0 for lst in aligned if lines[lst.line][0]["top"] in rows)
+    return _TableRows(rows, pitch, left)
+
+
+def _with_trailing_rows(
+    lines: list[list[PDFWord]], table: _TableRows, columns: list[list[float]]
+) -> _TableRows:
+    """The table with the rows below it that read as no listing.
+
+    A row that read as no listing ('SUBS | SDPT Toggle', WoollyTron) still
+    belongs to the table when it continues the table's rows from one of its
+    designator columns, so the reading can say it was not read. Only below
+    the table and at its pitch: above it lies the board drawing, whose labels
+    can line up with the columns.
+    """
+    rows, left = table.tops, table.left
     starts = sorted(
         (line[0]["top"], line[0]["x0"])
         for line in lines
         if any(c[0] - _ALIGN_PT <= line[0]["x0"] <= c[-1] + _ALIGN_PT for c in columns)
     )
     for top, x0 in starts:
-        if 0 < top - rows[-1] <= _TRAILING_ROW * pitch:
+        if 0 < top - rows[-1] <= _TRAILING_ROW * table.pitch:
             rows.append(top)
             left = min(left, x0)
-    listed = {lines[lst.line][0]["top"] for lst in listings}
-    rows = _rows_above(lines, rows, pitch, listed)
-    # The table's own typed header row, just above it (Rat King's first build).
-    # An untyped grid's ('Part | Value', GuitarPCB) reads better without it.
+    return _TableRows(rows, table.pitch, left)
+
+
+def _with_header(lines: list[list[PDFWord]], table: _TableRows) -> _TableRows:
+    """The table with its own typed header row, just above it (Rat King's first build).
+
+    An untyped grid's ('Part | Value', GuitarPCB) reads better without it.
+    """
+    rows, left = table.tops, table.left
     header = [
         line
         for line in lines
-        if 0 < rows[0] - line[0]["top"] <= _TRAILING_ROW * pitch
+        if 0 < rows[0] - line[0]["top"] <= _TRAILING_ROW * table.pitch
         and heads_typed_table(line)
     ][-1:]
     for line in header:
         rows = [line[0]["top"], *rows]
         # The whole header: 'Part' can start a little left of 'R1' (GuitarPCB).
         left = min(left, line[0]["x0"])
-    margin = pitch / 2
+    return _TableRows(rows, table.pitch, left)
+
+
+def _block(
+    words: list[PDFWord], lines: list[list[PDFWord]], table: _TableRows
+) -> PDFPageExtraction:
+    """The page's words on the table's rows: its cells, and the labels left of it.
+
+    Args:
+        words: The page's words.
+        lines: The page's lines of words.
+        table: Where the table lies.
+    """
+    rows, left = table.tops, table.left
+    margin = table.pitch / 2
     kept = [
         w
         for w in words
         if rows[0] - margin <= w["top"] <= rows[-1] + margin and w["x0"] >= left - 1
     ]
     text = "\n".join(" ".join(w["text"] for w in line) for line in group_lines(kept))
-    grid = _build_grid(lines, rows, pitch)
+    grid = _build_grid(lines, rows, table.pitch)
     # Words left of the table on its rows name parts of it ('Standard RAT'
     # beside one build's rows, Five Cats Rat King).
     labels = [
@@ -692,7 +755,7 @@ class _LabelCell:
     right: float
 
 
-def _label_cells(words: list[PDFWord]) -> list[_LabelCell]:
+def _label_cells(table: PDFPageExtraction) -> list[_LabelCell]:
     """The table's designator cells that read as no designator.
 
     A cell in a designator column that starts no listing ('60 | 10uF', 'ε3 |
@@ -700,13 +763,12 @@ def _label_cells(words: list[PDFWord]) -> list[_LabelCell]:
     its designator column (the label went undetected).
 
     Args:
-        words: The words of the page's parts table (`table_block`).
+        table: The page's parts table (`table_block`).
 
     Returns:
         The cells, top to bottom within each column.
     """
-    lines = page_lines(words)
-    listings = find_listings(words)
+    lines, listings = table.lines, table.listings
     starts = {(lst.line, round(lst.x0)) for lst in listings}
     cells: list[_LabelCell] = []
     for column in _clusters([lst.x0 for lst in listings], _ALIGN_PT):
@@ -769,7 +831,11 @@ def _reread(
 
 
 def _reread_labels(
-    data: PDFPageExtraction, image: Image, scale: float, recognizer: Recognizer
+    data: PDFPageExtraction,
+    table: PDFPageExtraction,
+    image: Image,
+    scale: float,
+    recognizer: Recognizer,
 ) -> PDFPageExtraction:
     """Reads the table's misread designator cells again, one cell at a time.
 
@@ -780,20 +846,21 @@ def _reread_labels(
 
     Args:
         data: One OCR'd page.
+        table: Its parts table (`table_block`).
         image: The page's rendering.
         scale: Points per pixel of the rendering.
         recognizer: The OCR engine.
 
     Returns:
-        The page, with the labels read again.
+        The page, with the labels read again; the same page when no cell
+        needed it.
     """
-    table = table_block(data).words
     cells = _label_cells(table)[:_MAX_REREADS]
     if not cells:
         return data
     words = list(data.words)
     # The table's own listings: the board drawing beside it names parts too.
-    listed = {lst.ref.upper() for lst in find_listings(table)}
+    listed = {lst.ref.upper() for lst in table.listings}
     for cell in cells:
         word, row = cell.word, cell.row
         height = row["size"] / _GLYPH_SHARE
@@ -1056,7 +1123,7 @@ def _unlisted(pages_data: list[PDFPageExtraction], listed: set[str]) -> set[str]
     """
     unlisted = set()
     for data in pages_data:
-        listings = find_listings(data.words)
+        listings = data.listings
         # A short column of controls counts ('Trim1 | Trim2 | VOL', above
         # Samurai Boost's unread 'Boost | Toggle | DPDT').
         columns = [
@@ -1064,7 +1131,7 @@ def _unlisted(pages_data: list[PDFPageExtraction], listed: set[str]) -> set[str]
             for c in _clusters([lst.x0 for lst in listings], _ALIGN_PT)
             if len(c) >= _LABEL_COLUMN
         ]
-        for cells in page_lines(data.words):
+        for cells in data.lines:
             for cell in cells:
                 label = cell.text.split()[0]
                 refs = expand_refs(label) if REF_RANGE.fullmatch(label) else [label]
@@ -1198,6 +1265,65 @@ def _ocr_warning(ref: str, key: ComponentKey, plausible: bool) -> ParseWarning:
     return ParseWarning(ParseWarningKind.OCR_READ, ref, message)
 
 
+@dataclass(frozen=True)
+class _ImagePages:
+    """What OCR read from a document's image pages.
+
+    Attributes:
+        tables: Each page's parts table (`table_block`).
+        whole: Every word OCR read on each page, to find each part in: the
+            rows of a table its block left out can still be read from it.
+        mentioned: The text of every word OCR read.
+        read: The pages read (0-based).
+    """
+
+    tables: list[PDFPageExtraction]
+    whole: list[PDFPageExtraction]
+    mentioned: set[str]
+    read: list[int]
+
+
+def _read_images(filepath: str, recognizer: Recognizer) -> _ImagePages:
+    """Renders a document's candidate pages and reads them by OCR.
+
+    Args:
+        filepath: Path to the PDF.
+        recognizer: The OCR engine.
+
+    Returns:
+        The pages' words and parts tables.
+
+    Raises:
+        OcrRefusedError: The guard (`ocr_guard`) declined to run OCR.
+    """
+    import pdfplumber
+
+    pages = _ImagePages([], [], set(), [])
+    with ocr_guard.get()(), pdfplumber.open(filepath) as pdf:
+        for number, page in enumerate(pdf.pages):
+            if len(pages.read) == _MAX_PAGES:
+                break
+            if not _candidate(page):
+                continue
+            dpi = render_resolution(
+                page.width,
+                page.height,
+                max(_DPI, 72 * _MIN_RENDER_SIDE / max(page.width, page.height)),
+            )
+            image = page.to_image(resolution=dpi).original.convert("RGB")
+            words = page_words(recognizer(image, 72 / dpi))
+            table = table_block(words)
+            reread = _reread_labels(words, table, image, 72 / dpi, recognizer)
+            if reread is not words:
+                words, table = reread, table_block(reread)
+            pages.mentioned.update(w["text"] for w in words.words)
+            pages.whole.append(words)
+            pages.tables.append(table)
+            pages.read.append(number)
+            page.close()
+    return pages
+
+
 def attempt_ocr(
     filepath: str,
     result: ParseResult,
@@ -1222,46 +1348,9 @@ def attempt_ocr(
     """
     if not _RUN_OCR.get() or not needs_ocr(result):
         return None
-    import pdfplumber
-
-    pages_data: list[PDFPageExtraction] = []
-    # Every word OCR read, to find each part in: the rows of a table its
-    # block left out (see `table_block`) can still be read from it.
-    whole: list[PDFPageExtraction] = []
-    mentioned: set[str] = set()
-    read: list[int] = []
-    with ocr_guard.get()(), pdfplumber.open(filepath) as pdf:
-        for number, page in enumerate(pdf.pages):
-            if len(read) == _MAX_PAGES:
-                break
-            if not _candidate(page):
-                continue
-            dpi = render_resolution(
-                page.width,
-                page.height,
-                max(_DPI, 72 * _MIN_RENDER_SIDE / max(page.width, page.height)),
-            )
-            image = page.to_image(resolution=dpi).original.convert("RGB")
-            words = page_words(recognizer(image, 72 / dpi))
-            words = _reread_labels(words, image, 72 / dpi, recognizer)
-            mentioned |= {w["text"] for w in words.words}
-            whole.append(words)
-            pages_data.append(table_block(words))
-            read.append(number)
-            page.close()
-
-    stats: ReadingStats = ReadingStats()
-    inventory = Inventory()
-    variants: tuple[BuildVariant, ...] = ()
-    if pages_data:
-        inventory, variants, _ = read_pages(
-            pages_data, source_name, stats, tables_only=True
-        )
-    if variants:
-        # Several builds (Five Cats Octavia's 'To build the vintage Octavia'
-        # table, OKS Fuzz's version columns): every part of every build.
-        inventory = _union(variants)
-
+    pages = _read_images(filepath, recognizer)
+    stats = ReadingStats()
+    inventory, variants = _read_tables(pages, source_name, stats)
     known = _refs(result.inventory)
     # A sentence beside a designator is prose OCR read near the table, not a
     # value: 'V4  2020 version seen above (W x H) ...' (DVF).
@@ -1278,46 +1367,14 @@ def attempt_ocr(
             v.name,
             kept,
             sum(d.qty for d in kept.values()),
-            locate(whole, kept, read),
+            locate(pages.whole, kept, pages.read),
         )
         for v in variants
         if (kept := _only_refs(v.inventory, found))
     )
 
-    missing = {
-        w.ref
-        for w in result.stats.warnings
-        if w.kind == ParseWarningKind.UNEXTRACTED_REF
-    }
-    coverage = len(missing & found) / len(missing) if missing else None
-    warnings = []
-    suspect = 0
-    for key, data in parts.items():
-        plausible = _plausible(key)
-        for ref in data.refs:
-            if ref.endswith(INJECTED_SUFFIX):
-                continue
-            suspect += not plausible
-            warnings.append(_ocr_warning(ref, key, plausible))
-    warnings += [
-        ParseWarning(
-            ParseWarningKind.UNEXTRACTED_REF,
-            ref,
-            f"{ref} may be missing: OCR did not read it from the parts list. Check "
-            "the document.",
-        )
-        for ref in sorted(
-            # A part that looks misread ('C60 | MM', an enclosure badge) does
-            # not extend a series.
-            _unread(
-                _listed(result.inventory)
-                | {r: k for r, k in _listed(parts).items() if _plausible(k)},
-                mentioned,
-            )
-            # A row read but dropped (its value too long to be one) is named.
-            | _unlisted(pages_data, {r.upper() for r in {*_listed(parts), *known}})
-        )
-    ]
+    warnings, suspect = _part_warnings(parts)
+    warnings += _missing_warnings(result, parts, known, pages)
     # The OCR reading's own self-checks: a designator read twice with two
     # values means the image holds several builds side by side (Big Muff X6)
     # or a misread, and either way the reading cannot be trusted as one list.
@@ -1329,25 +1386,16 @@ def attempt_ocr(
     seen = {(w.kind, w.ref) for w in warnings}
     warnings += [w for w in own if (w.kind, w.ref) not in seen]
     conflicts = {w.ref for w in own if w.kind == ParseWarningKind.CONFLICTING_DUPLICATE}
-    side_by_side = sorted(
-        ref
-        for key, data in parts.items()
-        if _several_values(key.value)
-        for ref in data.refs
-    )
-    if len(side_by_side) >= _SIDE_BY_SIDE:
-        # Build columns the reading did not recognize ('R11 | 68K | 43K |
-        # 47K'): read as one list, the builds run together.
+    side_by_side = _side_by_side_warning(parts)
+    if side_by_side is not None:
         conflicts.add("")
-        warnings.append(
-            ParseWarning(
-                ParseWarningKind.CONFLICTING_DUPLICATE,
-                "",
-                f"Some rows list several values side by side ({', '.join(side_by_side[:3])}"
-                f"{'...' if len(side_by_side) > 3 else ''}): the parts list may "
-                "describe several builds. Check the document.",
-            )
-        )
+        warnings.append(side_by_side)
+    missing = {
+        w.ref
+        for w in result.stats.warnings
+        if w.kind == ParseWarningKind.UNEXTRACTED_REF
+    }
+    coverage = len(missing & found) / len(missing) if missing else None
     unread = sum(w.kind == ParseWarningKind.UNEXTRACTED_REF for w in warnings)
     verdict = _verdict(
         len(found), suspect, coverage, _gap_share(found | known), bool(conflicts)
@@ -1365,9 +1413,108 @@ def attempt_ocr(
         inventory=Inventory() if builds else parts,
         warnings=tuple(warnings),
         variants=builds,
-        pages=tuple(read),
+        pages=tuple(pages.read),
         parts_read=len(found),
         suspect=suspect,
         supplements=bool(known),
-        locations={} if builds else locate(whole, parts, read),
+        locations={} if builds else locate(pages.whole, parts, pages.read),
+    )
+
+
+def _read_tables(
+    pages: _ImagePages, source_name: str, stats: ReadingStats
+) -> tuple[Inventory, tuple[BuildVariant, ...]]:
+    """Reads the parts tables OCR found, as the text layer's readers would.
+
+    Args:
+        pages: What OCR read.
+        source_name: Label for the source.
+        stats: The reading's statistics and warnings, updated in place.
+
+    Returns:
+        Every part read, and the builds when the tables describe several.
+    """
+    if not pages.tables:
+        return Inventory(), ()
+    built = read_pages(pages.tables, source_name, stats, tables_only=True)
+    if built.variants:
+        # Several builds (Five Cats Octavia's 'To build the vintage Octavia'
+        # table, OKS Fuzz's version columns): every part of every build.
+        return _union(built.variants), built.variants
+    return built.inventory, ()
+
+
+def _part_warnings(parts: Inventory) -> tuple[list[ParseWarning], int]:
+    """A 'read by OCR' warning for each designator OCR read.
+
+    Returns:
+        The warnings, and how many of the designators have implausible values.
+    """
+    warnings = []
+    suspect = 0
+    for key, data in parts.items():
+        plausible = _plausible(key)
+        for ref in data.refs:
+            if ref.endswith(INJECTED_SUFFIX):
+                continue
+            suspect += not plausible
+            warnings.append(_ocr_warning(ref, key, plausible))
+    return warnings, suspect
+
+
+def _missing_warnings(
+    result: ParseResult, parts: Inventory, known: set[str], pages: _ImagePages
+) -> list[ParseWarning]:
+    """Warnings for designators the reading seems to have missed.
+
+    Args:
+        result: The text-layer parse of the document.
+        parts: The parts OCR read that the text layer did not.
+        known: The designators the text layer read.
+        pages: What OCR read.
+
+    Returns:
+        One warning per designator, in order.
+    """
+    return [
+        ParseWarning(
+            ParseWarningKind.UNEXTRACTED_REF,
+            ref,
+            f"{ref} may be missing: OCR did not read it from the parts list. Check "
+            "the document.",
+        )
+        for ref in sorted(
+            # A part that looks misread ('C60 | MM', an enclosure badge) does
+            # not extend a series.
+            _unread(
+                _listed(result.inventory)
+                | {r: k for r, k in _listed(parts).items() if _plausible(k)},
+                pages.mentioned,
+            )
+            # A row read but dropped (its value too long to be one) is named.
+            | _unlisted(pages.tables, {r.upper() for r in {*_listed(parts), *known}})
+        )
+    ]
+
+
+def _side_by_side_warning(parts: Inventory) -> ParseWarning | None:
+    """A warning that rows list several values side by side, if enough do.
+
+    Build columns the reading did not recognize ('R11 | 68K | 43K | 47K'):
+    read as one list, the builds run together.
+    """
+    side_by_side = sorted(
+        ref
+        for key, data in parts.items()
+        if _several_values(key.value)
+        for ref in data.refs
+    )
+    if len(side_by_side) < _SIDE_BY_SIDE:
+        return None
+    return ParseWarning(
+        ParseWarningKind.CONFLICTING_DUPLICATE,
+        "",
+        f"Some rows list several values side by side ({', '.join(side_by_side[:3])}"
+        f"{'...' if len(side_by_side) > 3 else ''}): the parts list may "
+        "describe several builds. Check the document.",
     )

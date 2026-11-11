@@ -21,11 +21,11 @@ from star_ground.api import read_document
 from star_ground.bom_lib import (
     BOMParserContext,
     ComponentCategory,
+    ComponentKey,
     FeedbackKind,
     FileUpload,
     InputMethod,
     ParseResult,
-    make_component_key,
 )
 from star_ground.bom_lib.errors import (
     BUG_MESSAGE,
@@ -230,13 +230,9 @@ def test_parts_counted_by_value_are_listed_and_ordered(
 ) -> None:
     # Tonepad's Rat: 'IC1 LM308', then counted rows such as '2 - 47'.
     inventory = Inventory()
-    inventory.add_part("doc", make_component_key(ComponentCategory.ICS, "LM308"), "IC1")
-    inventory.add_counted(
-        "doc", make_component_key(ComponentCategory.RESISTORS, "47"), 2
-    )
-    inventory.add_counted(
-        "doc", make_component_key(ComponentCategory.CAPACITORS, "100n"), 3
-    )
+    inventory.add_part("doc", ComponentKey(ComponentCategory.ICS, "LM308"), "IC1")
+    inventory.add_counted("doc", ComponentKey(ComponentCategory.RESISTORS, "47"), 2)
+    inventory.add_counted("doc", ComponentKey(ComponentCategory.CAPACITORS, "100n"), 3)
     reading = ParseResult(inventory=inventory, stats=ReadingStats())
     mocker.patch.object(BOMParserContext, "process", return_value=reading)
 
@@ -1032,7 +1028,7 @@ def test_a_bug_in_a_reading_gives_the_builder_only_its_code(
     client: TestClient, mocker: MockerFixture, caplog: pytest.LogCaptureFixture
 ) -> None:
     mocker.patch(
-        "star_ground.bom_lib.strategies.pdf.parse_pedalpcb_pdf",
+        "star_ground.bom_lib.strategies.pdf.parse_pdf",
         side_effect=KeyError("oops"),
     )
 

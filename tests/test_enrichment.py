@@ -12,8 +12,9 @@ from star_ground.bom_lib.enrichment import (
     category_from_type,
     enrich_value_from_type,
 )
+from star_ground.bom_lib.pdf.page import PDFPageExtraction
 from star_ground.bom_lib.pdf.ruled import table_entries
-from star_ground.bom_lib.types import PDFPageExtraction, ReadingStats
+from star_ground.bom_lib.types import ReadingStats
 from star_ground.bom_lib.units import farads, ohms
 from star_ground.bom_lib.utils import value_to_search_string
 

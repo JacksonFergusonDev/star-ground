@@ -35,10 +35,10 @@ from star_ground.bom_lib import (
 )
 from star_ground.bom_lib.classifier import normalize_value_to_quantity
 from star_ground.bom_lib.enums import ComponentCategory, ComponentSpec
+from star_ground.bom_lib.pdf.page import PDFPageExtraction
 from star_ground.bom_lib.types import (
     ComponentKey,
     Inventory,
-    PDFPageExtraction,
     ReadingStats,
 )
 from star_ground.bom_lib.units import farads, ohms
@@ -1005,7 +1005,7 @@ def test_listings_beside_a_ruled_row_are_read() -> None:
         [["R1 1M", None, "C1 47n", None], ["R2", "1M", "C2", "220n"]],
         [("R1", "1M", "C1", "47n"), ("R2", "1M", "C2", "220n")],
     )
-    inventory, _, _ = read_pages([page], "Shaded", ReadingStats())
+    inventory = read_pages([page], "Shaded", ReadingStats()).inventory
     refs = {ref for data in inventory.values() for ref in data.refs}
     assert refs == {"R1", "R2", "C1", "C2"}
 
@@ -1015,7 +1015,7 @@ def test_a_ruled_rows_value_is_not_read_as_a_listing() -> None:
     from star_ground.bom_lib.pdf.reading import read_pages
 
     page = _ruled_page([["D1", "LED", "3mm Red LED"]], [("D1", "LED", "3mm Red LED")])
-    inventory, _, _ = read_pages([page], "Ruled", ReadingStats())
+    inventory = read_pages([page], "Ruled", ReadingStats()).inventory
     refs = {ref for data in inventory.values() for ref in data.refs}
     assert refs == {"D1"}
 
@@ -1043,7 +1043,7 @@ def test_pages_of_tables_are_all_read() -> None:
     board = PDFPageExtraction(tables=[], text="", words=words)
 
     def refs(**kwargs: bool) -> set[str]:
-        inventory, _, _ = read_pages([main, board], "x", ReadingStats(), **kwargs)
+        inventory = read_pages([main, board], "x", ReadingStats(), **kwargs).inventory
         return {r for data in inventory.values() for r in data.refs}
 
     assert "R23" not in refs()
@@ -1353,6 +1353,19 @@ def test_a_named_label_used_twice_is_two_parts() -> None:
     assert stats.warnings == []
 
 
+def test_a_forgotten_label_frees_its_number() -> None:
+    from star_ground.bom_lib.types import SeenRefs
+
+    seen = SeenRefs()
+    for ref in ("COMP", "Comp (2)", "comp (3)"):
+        seen.record(ref, "SPDT")
+    assert seen.free_number("COMP") == 4
+    seen.forget("Comp (2)")
+    assert seen.free_number("COMP") == 2
+    seen.record("cOMP (2)", "SPDT")
+    assert seen.free_number("COMP") == 4
+
+
 def test_a_dashed_parts_list_drops_the_drawings_labels() -> None:
     # Tonepad: 'R1 - 10k' listings, and the schematic's 'AC  ADAPTOR' and
     # 'D1  47uF' labels on another page.
@@ -1369,7 +1382,7 @@ def test_a_dashed_parts_list_drops_the_drawings_labels() -> None:
             (("R4 - 4k7", 50.0), ("Q1 - 2N5088", 200.0)),
         ]
     )
-    inventory, _, _ = read_pages([drawing, parts], "Tonepad", ReadingStats())
+    inventory = read_pages([drawing, parts], "Tonepad", ReadingStats()).inventory
     refs = {ref for data in inventory.values() for ref in data.refs}
     assert refs == {"R1", "R2", "R3", "R4", "C1", "C2", "C3", "Q1"}
 
@@ -1389,7 +1402,7 @@ def test_a_counted_list_is_read_without_designators() -> None:
         text="D1 and D2 clip the signal.\n2 - 1k\n1 - 10k\n3 - 100k",
     )
     stats = ReadingStats()
-    inventory, _, _ = read_pages([page], "Tonepad", stats)
+    inventory = read_pages([page], "Tonepad", stats).inventory
     counted = {
         (key.category, key.value): data.counted["Tonepad"]
         for key, data in inventory.items()
@@ -1422,7 +1435,7 @@ def test_a_counted_row_of_unknown_kind_is_warned_not_guessed() -> None:
         text="1 - 4k7 1 - Off Axis\n1 - LED 2 - Center",
     )
     stats = ReadingStats()
-    inventory, _, _ = read_pages([page], "Tonepad", stats)
+    inventory = read_pages([page], "Tonepad", stats).inventory
     assert {key.value for key, data in inventory.items() if data.counted} == {"LED"}
     [warning] = [w for w in stats.warnings if w.kind == ParseWarningKind.QUANTITY_LIST]
     # A switch position ('1 - Off Axis') is no part to warn about.
@@ -1457,7 +1470,7 @@ def test_a_part_included_with_the_pcb_is_listed_and_counted() -> None:
         ],
         text="IC1 TL072\nIC3 24LC32A *Included",
     )
-    inventory, _, _ = read_pages([page], "Deflector", ReadingStats())
+    inventory = read_pages([page], "Deflector", ReadingStats()).inventory
     included = {k.value: d.included for k, d in inventory.items() if d.refs}
     assert included["24LC32A"] == 1
     assert included["TL072"] == 0
@@ -1472,7 +1485,7 @@ def test_a_box_around_board_artwork_is_no_parts_table() -> None:
         text="",
         words=[],
     )
-    inventory, _, _ = read_pages([page], "Tonepad", ReadingStats())
+    inventory = read_pages([page], "Tonepad", ReadingStats()).inventory
     assert not any(data.refs for data in inventory.values())
 
 
@@ -1501,7 +1514,7 @@ def test_a_second_versions_value_in_its_own_column() -> None:
         text="Parts (Ross / Dyna values)",
         words=[],
     )
-    _, variants, _ = read_pages([page], "Aurora", ReadingStats())
+    variants = read_pages([page], "Aurora", ReadingStats()).variants
     builds = {
         v.name: {r: k.value for k, d in v.inventory.items() for r in d.refs}
         for v in variants

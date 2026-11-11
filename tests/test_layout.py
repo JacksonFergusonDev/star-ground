@@ -6,15 +6,41 @@ import pytest
 
 from star_ground.bom_lib import PDFWord
 from star_ground.bom_lib.enrichment import enrich_value_from_type
-from star_ground.bom_lib.pdf.bom_table import BomRow, bom_note_cells, find_bom_rows
+from star_ground.bom_lib.pdf.bom_table import BomReading, BomRow, read_bom
 from star_ground.bom_lib.pdf.cells import clean_value
-from star_ground.bom_lib.pdf.geometry import Listing, group_lines, split_cells
+from star_ground.bom_lib.pdf.geometry import (
+    Listing,
+    group_lines,
+    page_lines,
+    split_cells,
+)
+from star_ground.bom_lib.pdf.page import PDFPageExtraction
 from star_ground.bom_lib.pdf.page_checks import footnote_marks, valueless_refs
 from star_ground.bom_lib.pdf.scan import find_listings
 
 SIZE = 12.0
 SPACE = 2.7  # ordinary word space at 12pt (~0.23em)
 COLUMN = 20.0  # column gap
+
+
+def _listings(words: list[PDFWord]) -> list[Listing]:
+    """The listings on a page of words."""
+    return find_listings(page_lines(words))
+
+
+def _page(words: list[PDFWord]) -> PDFPageExtraction:
+    """A page of nothing but words."""
+    return PDFPageExtraction(tables=[], text="", words=words)
+
+
+def _bom(words: list[PDFWord]) -> BomReading:
+    """The typed text tables on a page of words."""
+    return read_bom(page_lines(words))
+
+
+def _bom_rows(words: list[PDFWord]) -> list[BomRow]:
+    """The rows of the typed text tables on a page of words."""
+    return _bom(words).rows
 
 
 def _line(*cells: str, top: float = 100.0) -> list[PDFWord]:
@@ -46,7 +72,7 @@ def test_value_wrapped_around_its_designator() -> None:
         + [PDFWord(text="D5", x0=190.0, x1=202.0, top=120, size=SIZE)]
         + [PDFWord(text="LED", x0=220.0, x1=238.0, top=130, size=SIZE)]
     )
-    assert Listing("D5", "CA Bi-colour LED") in find_listings(words)
+    assert Listing("D5", "CA Bi-colour LED") in _listings(words)
 
 
 class TestGrouping:
@@ -78,7 +104,7 @@ class TestFindListings:
         words = _line(
             "R1", "1M", "R20", "3K3", "C1", "100nF", "IC1", "TL072", "INTENSITY", "B25K"
         )
-        assert find_listings(words) == [
+        assert _listings(words) == [
             Listing("R1", "1M"),
             Listing("R20", "3K3"),
             Listing("C1", "100nF"),
@@ -88,7 +114,7 @@ class TestFindListings:
 
     def test_multi_word_values_are_kept_whole(self) -> None:
         words = _line("C6", "1u MLCC", "D1", "3mm Red LED", "SW1", "SPDT (On/Off/On)")
-        assert [listing.value for listing in find_listings(words)] == [
+        assert [listing.value for listing in _listings(words)] == [
             "1u MLCC",
             "3mm Red LED",
             "SPDT (On/Off/On)",
@@ -96,49 +122,49 @@ class TestFindListings:
 
     def test_annotation_cells_join_the_value(self) -> None:
         words = _line("C102", "10u", "(25V or higher)", "D2", "1N4148*")
-        assert find_listings(words) == [
+        assert _listings(words) == [
             Listing("C102", "10u (25V or higher)"),
             Listing("D2", "1N4148"),
         ]
 
     def test_column_headers_are_not_annotations(self) -> None:
         words = _line("C6", "1u MLCC", "DIODES")
-        assert find_listings(words) == [Listing("C6", "1u MLCC")]
+        assert _listings(words) == [Listing("C6", "1u MLCC")]
 
     @pytest.mark.parametrize("part", ["TL072", "BS170", "MPSA18", "J201", "FV1"])
     def test_part_numbers_shaped_like_designators_are_values(self, part: str) -> None:
-        assert find_listings(_line("Q1", part)) == [Listing("Q1", part)]
+        assert _listings(_line("Q1", part)) == [Listing("Q1", part)]
 
     def test_unknown_control_names_found_by_value_shape(self) -> None:
         words = _line("SHIFT", "B25K") + _line("SUBS", "SPDT (On - Off - On)", top=120)
-        assert {listing.ref for listing in find_listings(words)} == {"SHIFT", "SUBS"}
+        assert {listing.ref for listing in _listings(words)} == {"SHIFT", "SUBS"}
 
     def test_bare_designators(self) -> None:
-        assert find_listings(_line("LED", "3mm Red LED", "RLED", "4K7")) == [
+        assert _listings(_line("LED", "3mm Red LED", "RLED", "4K7")) == [
             Listing("LED", "3mm Red LED"),
             Listing("RLED", "4K7"),
         ]
         # 'LED' as a value, not a designator.
-        assert find_listings(_line("D3", "LED")) == [Listing("D3", "LED")]
+        assert _listings(_line("D3", "LED")) == [Listing("D3", "LED")]
 
     def test_bare_led_after_a_value_starts_a_new_listing(self) -> None:
         # Pitch Witch: a bare 'LED' row shares a line with a capacitor.
-        assert find_listings(_line("C12", "1nF", "LED", "Indicator LED")) == [
+        assert _listings(_line("C12", "1nF", "LED", "Indicator LED")) == [
             Listing("C12", "1nF"),
             Listing("LED", "Indicator LED"),
         ]
 
     def test_bare_led_directly_after_a_designator_is_its_value(self) -> None:
         # Expresso: 'LED' is LED_A's value and 'Indicator LED' its TYPE.
-        refs = [x.ref for x in find_listings(_line("LED_A", "LED", "Indicator LED"))]
+        refs = [x.ref for x in _listings(_line("LED_A", "LED", "Indicator LED"))]
         assert refs == ["LED_A"]
 
     def test_prose_is_one_cell_and_never_a_listing(self) -> None:
         words = _line("D8 and D9 are only needed when using Rotary clipping switch.")
-        assert find_listings(words) == []
+        assert _listings(words) == []
 
     def test_silkscreen_runs_are_not_listings(self) -> None:
-        assert find_listings(_line("R13", "C4", "R12")) == []
+        assert _listings(_line("R13", "C4", "R12")) == []
 
 
 @pytest.mark.parametrize(
@@ -202,18 +228,18 @@ class TestCellRepairs:
     def test_name_merged_with_its_value_is_split(self) -> None:
         # Tab-aligned columns: 'BLEND' ends within a word space of 'B10K'.
         words = _line("R22", "10K", "BLEND B10K")
-        assert find_listings(words) == [Listing("R22", "10K"), Listing("BLEND", "B10K")]
+        assert _listings(words) == [Listing("R22", "10K"), Listing("BLEND", "B10K")]
 
     def test_function_label_is_skipped(self) -> None:
-        assert find_listings(_line("SW1 (Power) SPDT Toggle")) == [
+        assert _listings(_line("SW1 (Power) SPDT Toggle")) == [
             Listing("SW1", "SPDT Toggle")
         ]
-        assert find_listings(_line("SW1", "(Voltage) SPDT Toggle (On/On)")) == [
+        assert _listings(_line("SW1", "(Voltage) SPDT Toggle (On/On)")) == [
             Listing("SW1", "SPDT Toggle (On/On)")
         ]
 
     def test_long_switch_spec_merged_cell(self) -> None:
-        assert find_listings(_line("SW1 DPDT (On / Off / On)")) == [
+        assert _listings(_line("SW1 DPDT (On / Off / On)")) == [
             Listing("SW1", "DPDT (On / Off / On)")
         ]
 
@@ -226,89 +252,81 @@ class TestCellRepairs:
             PDFWord(text="R21", x0=300, x1=318, top=114, size=SIZE),
             PDFWord(text="33K", x0=340, x1=358, top=114, size=SIZE),
         ]
-        assert find_listings([*above, *below]) == [
+        assert _listings([*above, *below]) == [
             Listing("VOICE", "SPDT Toggle (On/On)"),
             Listing("R21", "33K"),
         ]
 
     def test_prose_is_not_appended_to_a_value(self) -> None:
         words = _line("C7", "2u2", "Choose between Through-Hole or SMD")
-        assert find_listings(words) == [Listing("C7", "2u2")]
+        assert _listings(words) == [Listing("C7", "2u2")]
 
     def test_section_headers_are_not_appended(self) -> None:
-        assert find_listings(_line("R25", "4K7", "TRIM POTS")) == [
-            Listing("R25", "4K7")
-        ]
-        assert find_listings(_line("R31", "100K", "DIP SWITCHES")) == [
+        assert _listings(_line("R25", "4K7", "TRIM POTS")) == [Listing("R25", "4K7")]
+        assert _listings(_line("R31", "100K", "DIP SWITCHES")) == [
             Listing("R31", "100K")
         ]
-        assert find_listings(_line("C12", "120p", "LEDs")) == [Listing("C12", "120p")]
-        assert find_listings(_line("R43", "10K", "FOOTSWITCHES")) == [
-            Listing("R43", "10K")
-        ]
-        assert find_listings(_line("R22", "1M", "TUBES")) == [Listing("R22", "1M")]
-        assert find_listings(_line("R25", "33K", "PIN HEADERS")) == [
-            Listing("R25", "33K")
-        ]
+        assert _listings(_line("C12", "120p", "LEDs")) == [Listing("C12", "120p")]
+        assert _listings(_line("R43", "10K", "FOOTSWITCHES")) == [Listing("R43", "10K")]
+        assert _listings(_line("R22", "1M", "TUBES")) == [Listing("R22", "1M")]
+        assert _listings(_line("R25", "33K", "PIN HEADERS")) == [Listing("R25", "33K")]
 
     def test_control_values_with_a_leading_qualifier(self) -> None:
         # Arkaim, Pro-Filter, Super Heterodyne Receiver.
-        assert find_listings(_line("HEAVY", "Latching 3PDT Footswitch")) == [
+        assert _listings(_line("HEAVY", "Latching 3PDT Footswitch")) == [
             Listing("HEAVY", "Latching 3PDT Footswitch")
         ]
-        assert find_listings(_line("SHIFT", "On/OFF/On DPDT Toggle")) == [
+        assert _listings(_line("SHIFT", "On/OFF/On DPDT Toggle")) == [
             Listing("SHIFT", "On/OFF/On DPDT Toggle")
         ]
-        assert find_listings(_line("OSC-ROOT", "*DPDT On/On/On")) == [
+        assert _listings(_line("OSC-ROOT", "*DPDT On/On/On")) == [
             Listing("OSC-ROOT", "DPDT On/On/On")
         ]
-        assert find_listings(
-            _line("SW1", "SPDT Toggle (On/On)", "FREQ", "Dual B10K")
-        ) == [
+        assert _listings(_line("SW1", "SPDT Toggle (On/On)", "FREQ", "Dual B10K")) == [
             Listing("SW1", "SPDT Toggle (On/On)"),
             Listing("FREQ", "Dual B10K"),
         ]
         # A name merged with its qualified value.
-        assert find_listings(_line("BYPASS Latching 3PDT Footswitch")) == [
+        assert _listings(_line("BYPASS Latching 3PDT Footswitch")) == [
             Listing("BYPASS", "Latching 3PDT Footswitch")
         ]
 
     def test_optional_part_marker_is_not_part_of_the_name(self) -> None:
         # Fuchsia: 'TREBLE*' marks a control installed only in one build.
-        assert find_listings(_line("C100", "100u", "TREBLE*", "A25K")) == [
+        assert _listings(_line("C100", "100u", "TREBLE*", "A25K")) == [
             Listing("C100", "100u"),
             Listing("TREBLE", "A25K"),
         ]
 
     def test_dash_separates_a_name_from_its_value(self) -> None:
         # HAARP: 'DIRECTION - SPDT On/Off/On'.
-        assert find_listings(_line("MODE - 1P8T Mini Rotary")) == [
+        assert _listings(_line("MODE - 1P8T Mini Rotary")) == [
             Listing("MODE", "1P8T Mini Rotary")
         ]
 
     def test_designator_in_parentheses_is_the_ref(self) -> None:
         # Muzzle: 'RANGE (SW1) - Mini Slide SPDT' and a labeled jack.
-        assert find_listings(_line("RANGE (SW1) - Mini Slide SPDT")) == [
+        assert _listings(_line("RANGE (SW1) - Mini Slide SPDT")) == [
             Listing("SW1", "Mini Slide SPDT")
         ]
-        assert find_listings(_line("SIDECHAIN (Key) - 1/4in Switching TRS")) == [
+        assert _listings(_line("SIDECHAIN (Key) - 1/4in Switching TRS")) == [
             Listing("SIDECHAIN", "1/4in Switching TRS")
         ]
 
     def test_short_and_slashed_control_names(self) -> None:
         # Blue Waffle's 'V  B500K'; Provocateur's 'BASS/MIDS  B100K'.
-        assert find_listings(_line("R13", "1K5", "V", "B500K")) == [
+        assert _listings(_line("R13", "1K5", "V", "B500K")) == [
             Listing("R13", "1K5"),
             Listing("V", "B500K"),
         ]
-        assert find_listings(_line("R17", "1K", "BASS/MIDS", "B100K")) == [
+        assert _listings(_line("R17", "1K", "BASS/MIDS", "B100K")) == [
             Listing("R17", "1K"),
             Listing("BASS/MIDS", "B100K"),
         ]
 
     def test_designator_without_a_value_at_the_end_of_a_listing_line(self) -> None:
         # SuperNuva: 'R16  10K  C12  100u  D1' lists D1 with no value.
-        assert find_listings(_line("R16", "10K", "C12", "100u", "D1")) == [
+        assert _listings(_line("R16", "10K", "C12", "100u", "D1")) == [
             Listing("R16", "10K"),
             Listing("C12", "100u"),
             Listing("D1", ""),
@@ -316,17 +334,17 @@ class TestCellRepairs:
 
     def test_dashed_ranges_are_not_name_and_value(self) -> None:
         # Q-Tune's quantity column: a range is never valued by a bare count.
-        assert find_listings(_line("D21 - D28", "8")) == []
+        assert _listings(_line("D21 - D28", "8")) == []
         # The range lists all six pots (6 Band EQ), not 'POT1' valued '- 6 B50K'.
-        assert find_listings(_line("POT1 - 6", "B50K")) == [Listing("POT1 - 6", "B50K")]
+        assert _listings(_line("POT1 - 6", "B50K")) == [Listing("POT1 - 6", "B50K")]
 
     def test_a_range_cell_is_not_split(self) -> None:
         # Dr Phybes: 'Q1 -Q4' is one range, not 'Q1' valued '-Q4 2N5952'.
-        assert find_listings(_line("Q1 -Q4", "2N5952")) == [Listing("Q1 -Q4", "2N5952")]
+        assert _listings(_line("Q1 -Q4", "2N5952")) == [Listing("Q1 -Q4", "2N5952")]
 
     def test_a_spaced_designator_ends_a_value(self) -> None:
         # EA Tremolo: 'C5  470n  63V  SW 1  3PDT' does not run C5 into the switch.
-        assert find_listings(_line("C5", "470n", "63V", "SW 1", "3PDT"))[0] == Listing(
+        assert _listings(_line("C5", "470n", "63V", "SW 1", "3PDT"))[0] == Listing(
             "C5", "470n 63V"
         )
 
@@ -355,7 +373,7 @@ class TestCellRepairs:
                     )
                     for i, t in enumerate([text])
                 ]
-        assert [(lst.ref, lst.value) for lst in find_listings(words)] == [
+        assert [(lst.ref, lst.value) for lst in _listings(words)] == [
             ("R1", "33k"),
             ("R2", "2M2"),
             ("C1", "220uF"),
@@ -393,7 +411,7 @@ class TestCellRepairs:
             ("C1", "220uF", "Electrolytic Cap"),
             ("TRIM1", "5K", "6mm", "Trim", "Pot"),
         )
-        assert [(lst.ref, lst.value) for lst in find_listings(words)] == [
+        assert [(lst.ref, lst.value) for lst in _listings(words)] == [
             ("R1", "33k"),
             ("R2", "2M2"),
             ("C1", "220uF"),
@@ -409,7 +427,7 @@ class TestCellRepairs:
             ("C1", "220uF", "Electrolytic Cap"),
             ("D5", "LED", "3MM", "LED", "POT1", "B100K"),
         )
-        assert [(lst.ref, lst.value) for lst in find_listings(words)][-2:] == [
+        assert [(lst.ref, lst.value) for lst in _listings(words)][-2:] == [
             ("D5", "LED"),
             ("POT1", "B100K"),
         ]
@@ -422,18 +440,18 @@ class TestCellRepairs:
             ("C1", "1nF", "Box/MLCC Capacitor"),
             ("T1", "42TM002", "6 Pin Audio Transformer 10K / 2K"),
         )
-        assert [(lst.ref, lst.value) for lst in find_listings(words)][-1] == (
+        assert [(lst.ref, lst.value) for lst in _listings(words)][-1] == (
             "T1",
             "42TM002",
         )
 
     def test_a_switch_symbol_is_a_value(self) -> None:
         # Five Cats Five Zero: 'CLIP1 | SW_SPDT | Toggle - ON/ON'.
-        assert find_listings(_line("CLIP1", "SW_SPDT")) == [Listing("CLIP1", "SW_SPDT")]
+        assert _listings(_line("CLIP1", "SW_SPDT")) == [Listing("CLIP1", "SW_SPDT")]
 
     def test_range_in_a_listing_grid(self) -> None:
         # GuitarPCB SWAH: 'C9  1u  16V  D1-D2  1N4148' is two listings.
-        assert find_listings(_line("C9", "1u", "16V", "D1-D2", "1N4148")) == [
+        assert _listings(_line("C9", "1u", "16V", "D1-D2", "1N4148")) == [
             Listing("C9", "1u 16V"),
             Listing("D1-D2", "1N4148"),
         ]
@@ -449,24 +467,24 @@ class TestCellRepairs:
         ],
     )
     def test_dashed_listings(self, cell: str, ref: str, value: str) -> None:
-        assert find_listings(_line(cell)) == [Listing(ref, value)]
+        assert _listings(_line(cell)) == [Listing(ref, value)]
 
     def test_a_listing_set_against_the_next(self) -> None:
         # Tonepad MAS Distortion: 'R7 - 500k pot. C7 - 0.001 µF' in one cell.
-        assert find_listings(_line("R7 - 500k pot. C7 - 0.001 µF")) == [
+        assert _listings(_line("R7 - 500k pot. C7 - 0.001 µF")) == [
             Listing("R7", "500k pot."),
             Listing("C7", "0.001 µF"),
         ]
 
     def test_pad_letters_end_a_value(self) -> None:
         # Tonepad Real McTube: 'C7 - 100µF / 16v | A | B | E' (the layout's pads).
-        assert find_listings(_line("C7 - 100µF / 16v", "A", "B", "E")) == [
+        assert _listings(_line("C7 - 100µF / 16v", "A", "B", "E")) == [
             Listing("C7", "100µF / 16v")
         ]
 
     def test_a_counted_row_ends_a_value(self) -> None:
         # Tonepad Rebote 2.5: 'IC1 - PT2399 | 1 - 25k lin.' under two headings.
-        assert find_listings(_line("IC1 - PT2399", "1 - 25k lin.")) == [
+        assert _listings(_line("IC1 - PT2399", "1 - 25k lin.")) == [
             Listing("IC1", "PT2399")
         ]
 
@@ -477,39 +495,39 @@ class TestCellRepairs:
             *_line("R2 - 1M", "C2 - 10n", top=120),
             *_line("Q1", "2N5088", top=300),
         ]
-        assert [x.ref for x in find_listings(words)] == ["R1", "C1", "R2", "C2"]
+        assert [x.ref for x in _listings(words)] == ["R1", "C1", "R2", "C2"]
 
     def test_range_of_numbered_labels(self) -> None:
         # GuitarPCB NostalgiTone, read by OCR: 'EFL1-3  Status LED'.
-        assert find_listings(_line("EFL1-3", "Status LED")) == [
+        assert _listings(_line("EFL1-3", "Status LED")) == [
             Listing("EFL1-3", "Status LED")
         ]
 
     def test_title_case_control_beside_a_tapered_pot(self) -> None:
         # GuitarPCB Tone TwEQ: 'R11  10k  Volume  A100k'.
-        assert find_listings(_line("R11", "10k", "Volume", "A100k")) == [
+        assert _listings(_line("R11", "10k", "Volume", "A100k")) == [
             Listing("R11", "10k"),
             Listing("VOLUME", "A100k"),
         ]
 
     def test_leading_see_text_markers(self) -> None:
-        assert find_listings(_line("*R13", "1k8", "**D3", "1n4001")) == [
+        assert _listings(_line("*R13", "1k8", "**D3", "1n4001")) == [
             Listing("R13", "1k8"),
             Listing("D3", "1n4001"),
         ]
 
     def test_lower_case_kilohms_name_a_control(self) -> None:
-        assert find_listings(_line("VOL", "A100k")) == [Listing("VOL", "A100k")]
+        assert _listings(_line("VOL", "A100k")) == [Listing("VOL", "A100k")]
 
     def test_multiword_control_name(self) -> None:
-        assert find_listings(_line("TONE BYPASS SWITCH", "DPDT ON/ON")) == [
+        assert _listings(_line("TONE BYPASS SWITCH", "DPDT ON/ON")) == [
             Listing("TONE BYPASS SWITCH", "DPDT ON/ON")
         ]
 
     def test_bare_toggle_positions_are_a_control_value(self) -> None:
         # Trojan Horse: 'SLA  ON/OFF/ON'; Minidrive: 'DPDT On-On-On' stays one value.
-        assert find_listings(_line("SLA", "ON/OFF/ON")) == [Listing("SLA", "ON/OFF/ON")]
-        assert find_listings(_line("SW1", "DPDT On-On-On")) == [
+        assert _listings(_line("SLA", "ON/OFF/ON")) == [Listing("SLA", "ON/OFF/ON")]
+        assert _listings(_line("SW1", "DPDT On-On-On")) == [
             Listing("SW1", "DPDT On-On-On")
         ]
 
@@ -521,7 +539,7 @@ class TestCellRepairs:
             *_line("R3", "1M", "IC3", "TL072", top=140),
             *_line("R4", "1n", "Pinheader", top=160),  # note starts at the IC column
         ]
-        assert Listing("R4", "1n") in find_listings(words)
+        assert Listing("R4", "1n") in _listings(words)
 
     def test_listings_under_a_trim_pots_heading_are_trimmers(self) -> None:
         # CDXL Reissue: R23 and R20 sit in the column under 'TRIM POTS (3362P Type)'.
@@ -529,14 +547,14 @@ class TestCellRepairs:
             *_line("R16", "15K", "TRIM POTS (3362P Type)", top=100),
             *_line("R17", "470K", "R23", "10K", top=120),
         ]
-        assert find_listings(words) == [
+        assert _listings(words) == [
             Listing("R16", "15K"),
             Listing("R17", "470K"),
             Listing("R23", "10K TRIM"),
         ]
 
     def test_c_taper_value_is_not_a_designator(self) -> None:
-        assert find_listings(_line("RATE", "C1M", "RES", "C1M")) == [
+        assert _listings(_line("RATE", "C1M", "RES", "C1M")) == [
             Listing("RATE", "C1M"),
             Listing("RES", "C1M"),
         ]
@@ -574,7 +592,7 @@ class TestTextBillOfMaterials:
             )
             + self._row(160, ("Copyright: Sheepylove.com 2026-03-18", cols[0]))
         )
-        rows = find_bom_rows(words)
+        rows = _bom_rows(words)
         assert [(r.refs, r.value, r.quantity) for r in rows] == [
             ("R10-R12,R18", "47k", 4),
             ("D3,D4", "Ge", 2),
@@ -602,7 +620,7 @@ class TestTextBillOfMaterials:
             ("R11, R13", 450),
             ("2", 556),
         )
-        rows = find_bom_rows(header + row)
+        rows = _bom_rows(header + row)
         assert [(r.refs, r.value, r.quantity, r.marking) for r in rows] == [
             ("C12,15,16", "100n", 3, "104"),
             ("R11,R13", "47R", 2, ""),
@@ -612,7 +630,7 @@ class TestTextBillOfMaterials:
         # GuitarPCB Blues Buster: 'R1 - 1M' centred under a 'Part Value' header.
         header = self._row(100, ("Part", 50), ("Value", 100))
         row = self._row(112, ("R1 - 1M", 60))
-        rows = find_bom_rows(header + row)
+        rows = _bom_rows(header + row)
         assert [(r.refs, r.value) for r in rows] == [("R1", "1M")]
 
     def test_value_set_half_a_line_off_its_label(self) -> None:
@@ -630,7 +648,7 @@ class TestTextBillOfMaterials:
             + self._row(143, ("NE5532", 260))
             + self._row(161, ("R3", 50), ("10k", 100), ("D4", 200), ("3mm", 260))
         )
-        rows = find_bom_rows(words)
+        rows = _bom_rows(words)
         assert [(r.refs, r.value) for r in rows] == [
             ("R1", "1M"),
             ("LEVEL", "A100k"),
@@ -652,7 +670,7 @@ class TestTextBillOfMaterials:
                 [("R1", "10k", "2¹"), ("R2", "22k", "²"), ("R3", "47k", "3")]
             )
         ]
-        found = find_bom_rows(header + [w for row in rows for w in row])
+        found = _bom_rows(header + [w for row in rows for w in row])
         assert [(r.refs, r.quantity) for r in found] == [
             ("R1", 2),
             ("R2", None),
@@ -671,7 +689,7 @@ class TestTextBillOfMaterials:
             + self._row(140, ("Part", 50), ("Value", 100))
             + self._row(160, ("R2", 50), ("1k", 100), ("R2", 250), ("2k2", 300))
         )
-        rows = find_bom_rows(words)
+        rows = _bom_rows(words)
         assert [(r.refs, r.value, r.table) for r in rows] == [
             ("R1", "10k", 0),
             ("R1", "22k", 1),
@@ -681,17 +699,15 @@ class TestTextBillOfMaterials:
 
     def test_designator_with_an_empty_value_cell_is_reported(self) -> None:
         # GuitarPCB The Burner prints 'D2' with nothing beside it.
-        from star_ground.bom_lib.pdf.bom_table import bom_valueless_refs
-
         words = (
             self._row(100, ("Part", 50), ("Value", 100), ("Part", 200), ("Value", 260))
             + self._row(120, ("D1", 50), ("1N5817", 100), ("HEAT", 200), ("B50K", 260))
             + self._row(140, ("D2", 50), ("FUEL", 200), ("A10K", 260))
         )
-        assert bom_valueless_refs(words) == ["D2"]
+        assert _bom(words).valueless == ["D2"]
 
     def test_no_header_no_rows(self) -> None:
-        assert find_bom_rows(_line("R1", "10K", "C1", "100n")) == []
+        assert _bom_rows(_line("R1", "10K", "C1", "100n")) == []
 
     def test_typed_part_table(self) -> None:
         # Aion FX: 'PART | VALUE | TYPE | NOTES'. Every row with a TYPE is a part,
@@ -721,14 +737,14 @@ class TestTextBillOfMaterials:
                 200, ("ACHILLES AMP", cols[0]), ("OVERDRIVE", cols[1]), ("4", cols[3])
             )
         )
-        rows = find_bom_rows(words)
+        rows = _bom_rows(words)
         assert [(r.refs, r.value, r.type_text) for r in rows] == [
             ("R1", "1M", "Metal film resistor"),
             ("VOL.", "100kA", "16mm right-angle PCB mount pot"),
             ("FSW", "3PDT", "Stomp switch, 3PDT"),
         ]
         assert rows[1].notes == "Original uses 50kA, but 100k gives more range."
-        assert [c.text for c in bom_note_cells(words)] == [
+        assert [c.text for c in _bom(words).note_cells] == [
             "Original uses 50kA,",
             "but 100k gives more range.",
             "4",
@@ -745,7 +761,7 @@ class TestTextBillOfMaterials:
             ("20kB", cols[1]),
             ("16mm right-angle PCB mount pot", cols[2]),
         )
-        assert [(r.refs, r.value) for r in find_bom_rows(words)] == [("100HZ", "20kB")]
+        assert [(r.refs, r.value) for r in _bom_rows(words)] == [("100HZ", "20kB")]
 
     def test_grid_labels_markers_and_counts(self) -> None:
         # GuitarPCB 'Part | Value' grids: named controls, '*' markers on refs and
@@ -768,7 +784,7 @@ class TestTextBillOfMaterials:
                 ("1k8 - 4k7", cols[3]),
             )
         )
-        rows = find_bom_rows(words)
+        rows = _bom_rows(words)
         assert [(r.refs, r.value, r.quantity) for r in rows] == [
             ("C5", "100p", None),
             ("VOL", "A500K", None),
@@ -802,13 +818,13 @@ class TestTextBillOfMaterials:
                 160, *zip(("R3", "1k", "1/4 Watt Resistor"), cols, strict=False)
             )
         )
-        rows = find_bom_rows(words)
+        rows = _bom_rows(words)
         assert [(r.refs, r.value, r.type_text, r.end) for r in rows] == [
             ("R1", "33k", "1/4 Watt Resistor", 330.0),
             ("R2", "1M", "1/4 Watt Resistor", 330.0),
             ("R3", "1k", "1/4 Watt Resistor", math.inf),
         ]
-        assert [(lst.ref, lst.value) for lst in find_listings(words)][2:4] == [
+        assert [(lst.ref, lst.value) for lst in _listings(words)][2:4] == [
             ("R2", "1M"),
             ("BASS1", "B50K"),
         ]
@@ -821,7 +837,7 @@ class TestTextBillOfMaterials:
             + self._row(200, ("Part", cols[0]), ("Value", cols[1]))
             + self._row(220, ("R1", cols[0]), ("1k", cols[1]))
         )
-        assert [(r.refs, r.value, r.table) for r in find_bom_rows(words)] == [
+        assert [(r.refs, r.value, r.table) for r in _bom_rows(words)] == [
             ("R1", "1M", 0),
             ("R1", "1k", 1),
         ]
@@ -859,15 +875,13 @@ def test_valueless_refs() -> None:
         for k, (ref, value) in enumerate(rows)
         for w in _line(*(c for c in (ref, value) if c), top=100.0 + 20 * k)
     ]
-    assert valueless_refs(words) == ["D6", "D7", "D8", "D9"]
+    assert valueless_refs(_page(words)) == ["D6", "D7", "D8", "D9"]
 
 
 def test_a_control_name_labels_a_board_designator() -> None:
     # GuitarPCB PURP 'TR1 - BIAS | 100k'; XX Double Shot 'P1 | VOL 1 | 100k Log'.
-    assert find_listings(_line("TR1 - BIAS", "100k")) == [Listing("TR1", "100k")]
-    assert find_listings(_line("P1", "VOL 1", "100k Log")) == [
-        Listing("P1", "100k Log")
-    ]
+    assert _listings(_line("TR1 - BIAS", "100k")) == [Listing("TR1", "100k")]
+    assert _listings(_line("P1", "VOL 1", "100k Log")) == [Listing("P1", "100k Log")]
 
 
 def test_trim_before_a_value_is_no_control_name() -> None:
@@ -880,8 +894,6 @@ def test_trim_before_a_value_is_no_control_name() -> None:
 
 def test_side_by_side_boards_are_two_tables() -> None:
     # GuitarPCB DumbleTone: 'FrontStage' and 'DumbleTone' head one header line.
-    from star_ground.bom_lib.pdf.bom_table import find_bom_rows
-
     words = [
         *_line("FrontStage", top=80.0),
         *[
@@ -899,24 +911,24 @@ def test_side_by_side_boards_are_two_tables() -> None:
             for w in _line("R1", "2M2", top=120.0)
         ],
     ]
-    rows = find_bom_rows(words)
+    rows = _bom_rows(words)
     assert [(r.refs, r.value) for r in rows] == [("R1", "1M5"), ("R1", "2M2")]
     assert rows[0].table != rows[1].table
 
 
 def test_designator_groups_with_spaces() -> None:
     # GuitarPCB Funk 49 'D1 D2 | 1N4148'; Band of Gypsys 'LDR 1 - 4 | PDV-P9023'.
-    assert find_listings(_line("R3", "1M", "D1 D2", "1N4148"))[-1] == Listing(
+    assert _listings(_line("R3", "1M", "D1 D2", "1N4148"))[-1] == Listing(
         "D1,D2", "1N4148"
     )
-    assert find_listings(_line("LDR 1 - 4", "PDV-P9023")) == [
+    assert _listings(_line("LDR 1 - 4", "PDV-P9023")) == [
         Listing("LDR1-LDR4", "PDV-P9023")
     ]
 
 
 def test_title_case_pot_with_worded_taper_starts_a_listing() -> None:
     # GuitarPCB Funk 49: 'R10 | 1k5 | Volume | 100k Log'.
-    assert find_listings(_line("R10", "1k5", "Volume", "100k Log")) == [
+    assert _listings(_line("R10", "1k5", "Volume", "100k Log")) == [
         Listing("R10", "1k5"),
         Listing("VOLUME", "100k Log"),
     ]
@@ -941,9 +953,7 @@ def test_pole_type_in_label_joins_the_value() -> None:
         *_line("Part", "Value", top=100.0),
         *_line("SW - SPDT", "On-Off_On", top=120.0),
     ]
-    assert [(r.refs, r.value) for r in find_bom_rows(words)] == [
-        ("SW", "SPDT On-Off_On")
-    ]
+    assert [(r.refs, r.value) for r in _bom_rows(words)] == [("SW", "SPDT On-Off_On")]
 
 
 def test_a_footnote_marker_is_no_value() -> None:
@@ -957,7 +967,7 @@ def test_a_footnote_marker_is_no_value() -> None:
         + _line("D4-5", top=142)
         + [PDFWord(text="2", x0=82.0, x1=86.0, top=142, size=6.4)]
     )
-    assert valueless_refs(words) == ["D4", "D5"]
+    assert valueless_refs(_page(words)) == ["D4", "D5"]
 
 
 @pytest.mark.parametrize(
@@ -987,7 +997,7 @@ def test_an_unreadable_designator_beside_a_value() -> None:
         + _line("Q3", "J201", top=128)
         + _line("60", "MPF102", top=142)
     )
-    assert unreadable_rows(words) == ["60  MPF102"]
+    assert unreadable_rows(_page(words)) == ["60  MPF102"]
 
 
 def test_a_slash_pair_of_designators() -> None:
@@ -1005,10 +1015,9 @@ def test_a_slash_pair_of_designators() -> None:
     ],
 )
 def test_a_designator_with_its_kind_or_role(cell: str, value: str) -> None:
-    from star_ground.bom_lib.pdf.scan import find_listings
 
     words = _line("R1", "10k", top=100) + _line(cell, value, top=114)
-    refs = [lst.ref for lst in find_listings(words)]
+    refs = [lst.ref for lst in _listings(words)]
     assert refs[0] == "R1"
     assert len(refs) == 2
 

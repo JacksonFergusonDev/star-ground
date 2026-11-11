@@ -9,7 +9,7 @@ import math
 import re
 from bisect import bisect_left, bisect_right
 from collections import Counter
-from dataclasses import replace
+from dataclasses import dataclass, replace
 from itertools import accumulate
 
 from star_ground.bom_lib import constants
@@ -40,9 +40,6 @@ from star_ground.bom_lib.pdf.geometry import (
     LINE_TOLERANCE_EM,
     Cell,
     Listing,
-    group_lines,
-    page_lines,
-    split_cells,
 )
 from star_ground.bom_lib.types import PDFWord
 
@@ -353,23 +350,86 @@ _WRAP_GAP_EM = 1.6
 _WRAP_REACH_EM = 8
 
 
-def find_listings(words: list[PDFWord]) -> list[Listing]:
+@dataclass(frozen=True, slots=True)
+class _ScanLine:
+    """One visual line of a page, its cells ready to scan.
+
+    Attributes:
+        cells: The line's cells, with merged cells split (`_split_merged`)
+            and numbered control names rejoined (`_join_numbered_names`).
+        words: The line's words, left to right.
+    """
+
+    cells: list[Cell]
+    words: list[PDFWord]
+
+
+@dataclass(frozen=True, slots=True)
+class _ScanColumns:
+    """The columns a scan pass keeps values out of.
+
+    Attributes:
+        designators: Where designator columns start, rounded to a point.
+        types: Where columns of part descriptions start (`_type_columns`).
+    """
+
+    designators: frozenset[int]
+    types: frozenset[int] = frozenset()
+
+    @property
+    def all(self) -> frozenset[int]:
+        """Every column, of designators or descriptions."""
+        return self.designators | self.types
+
+    @property
+    def only_types(self) -> frozenset[int]:
+        """Description columns where no designators start too."""
+        return self.types - self.designators
+
+
+@dataclass(frozen=True, slots=True)
+class _ValueStart:
+    """Where a value on a line starts, so a parenthetical below can continue it.
+
+    Attributes:
+        x0: Left edge, in points.
+        size: Font size, in points.
+        index: The listing it is the value of, by index into the listings.
+    """
+
+    x0: float
+    size: float
+    index: int
+
+
+def find_listings(lines: list[list[Cell]]) -> list[Listing]:
     """Finds every designator/value pair on a page.
 
     Args:
-        words: Words extracted from one page.
+        lines: The cells of every line on one page (`page_lines`).
 
     Returns:
         Listings in reading order (top to bottom, left to right).
     """
+    scan_lines = [
+        _ScanLine(
+            _join_numbered_names(
+                [part for cell in cells for part in _split_merged(cell)]
+            ),
+            [w for cell in cells for w in cell.words],
+        )
+        for cells in lines
+    ]
     # A first pass finds where designator columns start, so a value does not
     # absorb text that sits in the next column ('C24  10n | 6 x 5-pin Male
     # Pinheader' under a PIN HEADERS heading, Emu Amp Simulator).
-    lines = page_lines(words)
-    starts = Counter(round(listing.x0) for listing in _scan(words, frozenset()))
-    columns = frozenset(x for x, n in starts.items() if n >= _MIN_COLUMN_REFS)
+    starts = Counter(
+        round(listing.x0) for listing in _scan(scan_lines, _ScanColumns(frozenset()))
+    )
+    designators = frozenset(x for x, n in starts.items() if n >= _MIN_COLUMN_REFS)
     listings = _undashed_dropped(
-        _scan(words, columns, _type_columns(lines)), counted_rows(lines)
+        _scan(scan_lines, _ScanColumns(designators, _type_columns(lines))),
+        counted_rows(lines),
     )
     return _mark_trimmers(_wrapped_values(listings, lines), lines)
 
@@ -549,137 +609,172 @@ def _in_column(x0: float, size: float, columns: frozenset[int]) -> bool:
     return any(abs(x0 - x) <= _COLUMN_TOLERANCE_EM * size for x in columns)
 
 
-def _scan(
-    words: list[PDFWord],
-    designators: frozenset[int],
-    types: frozenset[int] = frozenset(),
-) -> list[Listing]:
+def _scan(lines: list[_ScanLine], columns: _ScanColumns) -> list[Listing]:
     """One listing pass; annotations never extend into another column.
 
     On a page with type columns, a part description ('6mm Trim Pot') ends a
     value and names no part itself, so it starts no listing up to the next
     designator.
     """
-    columns = designators | types
-    # A column where both designators and descriptions start is not skipped.
-    only_types = types - designators
     listings: list[Listing] = []
-    # (value x-position, font size, index into listings) for the previous line.
-    above: list[tuple[float, float, int]] = []
+    # Where the values of the previous line of listings start.
+    above: list[_ValueStart] = []
     above_top = 0.0
-    for line_no, line in enumerate(group_lines(words)):
-        cells = _join_numbered_names(
-            [part for cell in split_cells(line) for part in _split_merged(cell)]
-        )
-        top = line[0]["top"]
-        if above and top - above_top > _WRAP_GAP_EM * line[0]["size"]:
+    for line_no, line in enumerate(lines):
+        top = line.words[0]["top"]
+        if above and top - above_top > _WRAP_GAP_EM * line.words[0]["size"]:
             above = []
-        cells = _absorb_continuations(cells, above, listings)
-        texts = [c.text for c in cells]
-        current: list[tuple[float, float, int]] = []
-        dashes: _LineDashes | None = None  # Indexed once a listing needs it.
-        i = 0
-        while i < len(texts):
-            if _in_column(cells[i].x0, cells[i].size, only_types):
-                i = _description_end(cells, i, designators)
-                continue
-            nxt = texts[i + 1] if i + 1 < len(texts) else None
-            after = texts[i + 2] if i + 2 < len(texts) else None
-            if nxt is None and current and BOARD_REF.fullmatch(texts[i]):
-                # SuperNuva lists 'D1' and 'D2' with no value at the end of a
-                # line of listings: a part the builder cannot buy as printed.
-                listings.append(
-                    Listing(ref=texts[i], value="", line=line_no, x0=cells[i].x0)
-                )
-                i += 1
-                continue
-            if (
-                nxt is None
-                or not is_ref_cell(texts[i], nxt)
-                or _starts_listing(nxt, after)
-            ):
-                i += 1
-                continue
-            parts = [nxt]
-            j = i + 2
-            while j < len(texts):
-                following = texts[j + 1] if j + 1 < len(texts) else None
-                # Only a value that already has its part stops at the next
-                # column: 'SW1  (FM/CC/Vintage)  DPDT On-On-On' (Minidrive) runs
-                # its value under the pots column.
-                complete = not LABEL.fullmatch(" ".join(parts))
-                if types and (
-                    (parts == ["LED"] and _LED_SIZE.match(texts[j]))
-                    or (
-                        VALUE_SHAPE.fullmatch(parts[0]) is not None
-                        and describes(texts[j], following)
-                    )
-                ):
-                    # The value's description: 'D5 | LED | 3MM LED',
-                    # 'U2 | TL072 | 8 Pin Dual Op-Amp'.
-                    break
-                if (
-                    is_ref_cell(texts[j], following)
-                    or _SPACED_REF.fullmatch(texts[j])
-                    # A counted part starts: 'IC1 - PT2399 | 1 - 25k lin.' (Tonepad).
-                    or COUNTED_ROW.match(texts[j])
-                    # A drawing's pad letters: 'C7 - 100µF / 16v | A | B | E'.
-                    or (
-                        _PAD_LETTER.fullmatch(texts[j]) is not None
-                        and following is not None
-                        and _PAD_LETTER.fullmatch(following) is not None
-                    )
-                    or not is_annotation(texts[j])
-                    or (complete and _in_column(cells[j].x0, cells[j].size, columns))
-                ):
-                    break
-                parts.append(texts[j])
-                j += 1
-            if (
-                len(parts) > 1
-                and is_designator(texts[i])
-                and names_control(parts[0])
-                and VALUE_SHAPE.match(parts[1])
-            ):
-                # 'P1 | VOL 1 | 100k Log' (GuitarPCB XX Double Shot): the
-                # control's name labels the board designator.
-                parts = parts[1:]
-            value = clean_value(" ".join(parts))
-            if value:
-                current.append((cells[i + 1].x0, cells[i + 1].size, len(listings)))
-                if dashes is None:
-                    dashes = _LineDashes(line)
-                dashed = dashes.after(cells[i])
-                if dashed:
-                    # A dashed cell wraps under its start: 'IC3 - 5v positive
-                    # Regulator' / '(78L05)' (Tonepad Rebote 2.5).
-                    current.append((cells[i].x0, cells[i].size, len(listings)))
-                listings.append(
-                    Listing(
-                        ref=_ref_name(texts[i]),
-                        value=value,
-                        line=line_no,
-                        x0=cells[i].x0,
-                        dashed=dashed,
-                    )
-                )
-            following = _text_at(texts, j + 1)
-            if (
-                types
-                and j < len(texts)
-                # 'D1 | 5v1 Zener' after a value is the next listing (GuitarPCB
-                # Dr-Phybes).
-                and not is_ref_cell(texts[j], following)
-                and describes(texts[j], following)
-            ):
-                # Its description names no part: '5K | 6mm Trim Pot'.
-                j = _description_end(cells, j, designators)
-            i = j
+        cells = _absorb_continuations(line.cells, above, listings)
+        current = _scan_cells(cells, line.words, line_no, columns, listings)
         # A line of another column between the rows (Tonepad's notes beside
         # its parts list) does not part a value from its continuation.
         if current:
             above, above_top = current, top
     return listings
+
+
+def _scan_cells(
+    cells: list[Cell],
+    words: list[PDFWord],
+    line_no: int,
+    columns: _ScanColumns,
+    listings: list[Listing],
+) -> list[_ValueStart]:
+    """Reads one line's listings, left to right.
+
+    Args:
+        cells: The line's cells, continuations of the line above absorbed.
+        words: The line's words.
+        line_no: The line's index.
+        columns: The columns values stay out of.
+        listings: The listings read so far; the line's are appended.
+
+    Returns:
+        Where each of the line's values starts.
+    """
+    texts = [c.text for c in cells]
+    current: list[_ValueStart] = []
+    dashes: _LineDashes | None = None  # Indexed once a listing needs it.
+    i = 0
+    while i < len(texts):
+        if _in_column(cells[i].x0, cells[i].size, columns.only_types):
+            i = _description_end(cells, i, columns.designators)
+            continue
+        nxt = texts[i + 1] if i + 1 < len(texts) else None
+        after = texts[i + 2] if i + 2 < len(texts) else None
+        if nxt is None and current and BOARD_REF.fullmatch(texts[i]):
+            # SuperNuva lists 'D1' and 'D2' with no value at the end of a
+            # line of listings: a part the builder cannot buy as printed.
+            listings.append(
+                Listing(ref=texts[i], value="", line=line_no, x0=cells[i].x0)
+            )
+            i += 1
+            continue
+        if nxt is None or not is_ref_cell(texts[i], nxt) or _starts_listing(nxt, after):
+            i += 1
+            continue
+        parts, j = _value_parts(cells, texts, i, columns)
+        value = clean_value(" ".join(_without_control_label(texts[i], parts)))
+        if value:
+            current.append(
+                _ValueStart(cells[i + 1].x0, cells[i + 1].size, len(listings))
+            )
+            if dashes is None:
+                dashes = _LineDashes(words)
+            dashed = dashes.after(cells[i])
+            if dashed:
+                # A dashed cell wraps under its start: 'IC3 - 5v positive
+                # Regulator' / '(78L05)' (Tonepad Rebote 2.5).
+                current.append(_ValueStart(cells[i].x0, cells[i].size, len(listings)))
+            listings.append(
+                Listing(
+                    ref=_ref_name(texts[i]),
+                    value=value,
+                    line=line_no,
+                    x0=cells[i].x0,
+                    dashed=dashed,
+                )
+            )
+        following = _text_at(texts, j + 1)
+        if (
+            columns.types
+            and j < len(texts)
+            # 'D1 | 5v1 Zener' after a value is the next listing (GuitarPCB
+            # Dr-Phybes).
+            and not is_ref_cell(texts[j], following)
+            and describes(texts[j], following)
+        ):
+            # Its description names no part: '5K | 6mm Trim Pot'.
+            j = _description_end(cells, j, columns.designators)
+        i = j
+    return current
+
+
+def _value_parts(
+    cells: list[Cell], texts: list[str], i: int, columns: _ScanColumns
+) -> tuple[list[str], int]:
+    """The cells of the value of the listing whose designator is cell i.
+
+    Args:
+        cells: The line's cells.
+        texts: Their texts.
+        i: The designator's cell.
+        columns: The columns values stay out of.
+
+    Returns:
+        The value's cells' texts, and the index of the first cell after it.
+    """
+    parts = [texts[i + 1]]
+    j = i + 2
+    while j < len(texts):
+        following = texts[j + 1] if j + 1 < len(texts) else None
+        # Only a value that already has its part stops at the next
+        # column: 'SW1  (FM/CC/Vintage)  DPDT On-On-On' (Minidrive) runs
+        # its value under the pots column.
+        complete = not LABEL.fullmatch(" ".join(parts))
+        if columns.types and (
+            (parts == ["LED"] and _LED_SIZE.match(texts[j]))
+            or (
+                VALUE_SHAPE.fullmatch(parts[0]) is not None
+                and describes(texts[j], following)
+            )
+        ):
+            # The value's description: 'D5 | LED | 3MM LED',
+            # 'U2 | TL072 | 8 Pin Dual Op-Amp'.
+            break
+        if (
+            is_ref_cell(texts[j], following)
+            or _SPACED_REF.fullmatch(texts[j])
+            # A counted part starts: 'IC1 - PT2399 | 1 - 25k lin.' (Tonepad).
+            or COUNTED_ROW.match(texts[j])
+            # A drawing's pad letters: 'C7 - 100µF / 16v | A | B | E'.
+            or (
+                _PAD_LETTER.fullmatch(texts[j]) is not None
+                and following is not None
+                and _PAD_LETTER.fullmatch(following) is not None
+            )
+            or not is_annotation(texts[j])
+            or (complete and _in_column(cells[j].x0, cells[j].size, columns.all))
+        ):
+            break
+        parts.append(texts[j])
+        j += 1
+    return parts, j
+
+
+def _without_control_label(ref: str, parts: list[str]) -> list[str]:
+    """A value's cells without the control name labelling its designator.
+
+    'P1 | VOL 1 | 100k Log' (GuitarPCB XX Double Shot).
+    """
+    if (
+        len(parts) > 1
+        and is_designator(ref)
+        and names_control(parts[0])
+        and VALUE_SHAPE.match(parts[1])
+    ):
+        return parts[1:]
+    return parts
 
 
 def _text_at(texts: list[str], k: int) -> str | None:
@@ -708,7 +803,7 @@ def _description_end(cells: list[Cell], start: int, designators: frozenset[int])
 
 def _absorb_continuations(
     cells: list[Cell],
-    above: list[tuple[float, float, int]],
+    above: list[_ValueStart],
     listings: list[Listing],
 ) -> list[Cell]:
     """Appends wrapped parentheticals to the value they continue.
@@ -724,9 +819,9 @@ def _absorb_continuations(
     for cell in cells:
         target = next(
             (
-                idx
-                for x0, size, idx in above
-                if abs(cell.x0 - x0) <= LINE_TOLERANCE_EM * size
+                start.index
+                for start in above
+                if abs(cell.x0 - start.x0) <= LINE_TOLERANCE_EM * start.size
             ),
             None,
         )

@@ -17,12 +17,12 @@ from star_ground.bom_lib.ingest import ingest_bom_line
 from star_ground.bom_lib.strategies.base import BOMParserStrategy
 from star_ground.bom_lib.types import (
     FORMULA_PREFIXES,
+    ComponentKey,
     Inventory,
     ParseResult,
     RawBOMData,
     ReadingStats,
     SupportsName,
-    make_component_key,
 )
 from star_ground.bom_lib.utils import expand_refs
 
@@ -217,7 +217,7 @@ def parse_user_inventory(content: bytes) -> Inventory:
             except ValueError:
                 continue
             clean_val = normalize_value_by_category(cat_enum, val)
-            key = make_component_key(cat_enum, clean_val)
+            key = ComponentKey(cat_enum, clean_val)
 
             stock.add_part("User Stock", key, ref="", qty=qty)
 

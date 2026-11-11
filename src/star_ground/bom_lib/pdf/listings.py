@@ -21,12 +21,10 @@ from star_ground.bom_lib.pdf.cells import (
     names_control,
 )
 from star_ground.bom_lib.pdf.counted import counted_parts, counted_rows
-from star_ground.bom_lib.pdf.geometry import Cell, Listing, page_lines
+from star_ground.bom_lib.pdf.geometry import Cell, Listing
+from star_ground.bom_lib.pdf.page import PDFPageExtraction
 from star_ground.bom_lib.pdf.rows import RATING_CELL, is_ignored
-from star_ground.bom_lib.pdf.scan import find_listings
 from star_ground.bom_lib.types import (
-    PDFPageExtraction,
-    PDFWord,
     ReadingStats,
 )
 from star_ground.bom_lib.utils import expand_refs
@@ -75,7 +73,7 @@ def layout_entries(
     """
     entries: list[Entry] = []
     found = {
-        page_no: find_listings(data.words)
+        page_no: data.listings
         for page_no, data in enumerate(pages_data)
         if only_pages is None or page_no in only_pages
     }
@@ -84,7 +82,7 @@ def layout_entries(
     # its layout or schematic drawing.
     dashed = sum(
         listing.dashed for listings in found.values() for listing in listings
-    ) + sum(counted_rows(page_lines(pages_data[k].words)) for k in found)
+    ) + sum(counted_rows(pages_data[k].lines) for k in found)
     if dashed >= _DASHED_DOCUMENT:
         found = {
             page_no: [lst for lst in listings if lst.dashed]
@@ -100,7 +98,7 @@ def layout_entries(
         # side on a line ('R2 | 1M | C2 | 220n' with its shaded rows merged
         # into 'R1 1M', NostalgiTone), so numbered designators other than the
         # row's own value are still read there.
-        lines = page_lines(data.words)
+        lines = data.lines
         # Labels compare in upper case: a grid reads 'Pot' as 'POT'.
         upper_values = {ref.upper(): value for ref, value in table_values.items()}
         table_lines = {
@@ -185,7 +183,7 @@ def layout_entries(
                     check_unclassified_row(stats, ref, value)
                     continue
                 entries.append(entry)
-        entries += _counted_entries(page_no, data.words, stats)
+        entries += _counted_entries(page_no, data.lines, stats)
     return entries
 
 
@@ -212,7 +210,7 @@ def _counted_value(printed: str) -> str:
 
 
 def _counted_entries(
-    page_no: int, words: list[PDFWord], stats: ReadingStats
+    page_no: int, lines: list[list[Cell]], stats: ReadingStats
 ) -> list[Entry]:
     """Reads the rows of a page that count parts by value ('4 - 10k', Tonepad).
 
@@ -222,7 +220,7 @@ def _counted_entries(
     `check_quantity_list`; elsewhere it is a switch position ('1 - Off Axis'
     under 'S1 = MIC', Tonepad SansAmp).
     """
-    rows = counted_parts(words)
+    rows = counted_parts(lines)
     values = [_counted_value(row.value) for row in rows]
     # Classified as printed: '2k2 (2.2k resistor)' under 'Millennium' says
     # what it is (Tonepad DOD 280 Comp).

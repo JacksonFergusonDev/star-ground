@@ -6,7 +6,8 @@ column per build ('MXR Value | DOD Value').
 
 import math
 import re
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
+from enum import StrEnum
 
 from star_ground.bom_lib.designators import is_designator
 from star_ground.bom_lib.pdf.cells import (
@@ -19,7 +20,7 @@ from star_ground.bom_lib.pdf.cells import (
     is_ref_cell,
     names_control,
 )
-from star_ground.bom_lib.pdf.geometry import LINE_TOLERANCE_EM, Cell, page_lines
+from star_ground.bom_lib.pdf.geometry import LINE_TOLERANCE_EM, Cell
 from star_ground.bom_lib.types import PDFWord
 from star_ground.bom_lib.utils import expand_refs
 
@@ -43,15 +44,29 @@ _BUILD_VALUE_HEADER = re.compile(
     r"VALUE \((?P<build>[^()]+)\)|(?P<before>(?!(?:PART|REF|OLD|NEW|STOCK|MOD|PARALLEL|COMBINED|NEAREST|ORIGINAL|ALT|ALTERNATE|SUGGESTED|DEFAULT|KIT)\b)[A-Z0-9+]{2,8}) VALUE",
     re.IGNORECASE,
 )
+
+
+class _Role(StrEnum):
+    """What a column of a typed table holds."""
+
+    REFS = "refs"
+    VALUE = "value"
+    QTY = "qty"
+    NOTES = "notes"
+    TYPE = "type"
+    # A later build's values, in a table with one VALUE column per build.
+    BUILD = "build"
+
+
 _BOM_COLUMNS = {
-    "VALUE": "value",
-    "QUANTITY": "qty",
-    "QTY": "qty",
-    "QT": "qty",  # 'Qt' / 'y' wrapped in a narrow column (Q-Tune)
-    "NOTES": "notes",
-    "COMMENTS": "notes",
-    "TYPE": "type",
-    "FOOTPRINT": "type",
+    "VALUE": _Role.VALUE,
+    "QUANTITY": _Role.QTY,
+    "QTY": _Role.QTY,
+    "QT": _Role.QTY,  # 'Qt' / 'y' wrapped in a narrow column (Q-Tune)
+    "NOTES": _Role.NOTES,
+    "COMMENTS": _Role.NOTES,
+    "TYPE": _Role.TYPE,
+    "FOOTPRINT": _Role.TYPE,
 }
 # A cell starting this many ems right of the last header is outside the table.
 _BEYOND_TABLE_EM = 4.0
@@ -100,15 +115,57 @@ class BomRow:
 
 
 @dataclass(frozen=True, slots=True)
+class _Field:
+    """Which column of a table section a cell is read into.
+
+    Attributes:
+        role: What the column holds.
+        build: The build whose values a `_Role.BUILD` column holds; empty
+            for the other roles.
+    """
+
+    role: _Role
+    build: str = ""
+
+
+_REFS = _Field(_Role.REFS)
+_VALUE = _Field(_Role.VALUE)
+_QTY = _Field(_Role.QTY)
+_NOTES = _Field(_Role.NOTES)
+_TYPE = _Field(_Role.TYPE)
+
+
+@dataclass(frozen=True, slots=True)
 class _Column:
-    field: str
+    """One column header of a typed table.
+
+    Attributes:
+        role: What the column holds.
+        x0: Left edge of the header, in points.
+        x1: Right edge of the header, in points.
+        build: The build a 'VALUE (name)' column holds, including the first,
+            which is the table's value column; empty for other columns.
+    """
+
+    role: _Role
     x0: float
     x1: float
-    build: str = ""  # the build a 'VALUE (name)' column holds
+    build: str = ""
+
+    @property
+    def field(self) -> _Field:
+        """The field the column's cells are read into."""
+        return _Field(self.role, self.build if self.role is _Role.BUILD else "")
 
     @property
     def center(self) -> float:
+        """The header's horizontal middle, in points."""
         return (self.x0 + self.x1) / 2
+
+
+def _typed(section: list[_Column]) -> bool:
+    """Whether a table section has a TYPE column."""
+    return any(col.role is _Role.TYPE for col in section)
 
 
 def _without_unclosed_aside(text: str) -> str:
@@ -126,7 +183,7 @@ def _without_unclosed_aside(text: str) -> str:
 def heads_typed_table(words: list[PDFWord]) -> bool:
     """Whether a line of words heads a typed table ('Ref | Value | Footprint')."""
     names = {w["text"].upper() for w in words}
-    types = {name for name, field in _BOM_COLUMNS.items() if field == "type"}
+    types = {name for name, role in _BOM_COLUMNS.items() if role is _Role.TYPE}
     return bool(names & _REF_HEADERS) and "VALUE" in names and bool(names & types)
 
 
@@ -136,7 +193,7 @@ def _header_sections(cells: list[Cell]) -> list[list[_Column]]:
     A line can carry several tables side by side (Q-Tune: 'Value Name Qty
     Value Name Qty'); a repeated field starts the next group. 'VALUE (D+) |
     VALUE (250)' are one table's build columns (Aion FX Aphelion): the first
-    is the table's value column, the others are fields named 'build:<name>'.
+    is the table's value column, the others are `_Role.BUILD` columns.
     """
     has_value = any(
         c.text.upper() == "VALUE" or _BUILD_VALUE_HEADER.fullmatch(c.text)
@@ -150,20 +207,23 @@ def _header_sections(cells: list[Cell]) -> list[list[_Column]]:
         label = ""
         if build:
             label = (build.group("build") or build.group("before")).strip()
-            first = not any(col.field == "value" for col in current)
-            field_name = "value" if first else f"build:{label}"
+            first = not any(col.role is _Role.VALUE for col in current)
+            role = _Role.VALUE if first else _Role.BUILD
         elif name in _REF_HEADERS or (name == _NAME_HEADER and has_value):
-            field_name = "refs"
+            role = _Role.REFS
         elif name in _BOM_COLUMNS:
-            field_name = _BOM_COLUMNS[name]
+            role = _BOM_COLUMNS[name]
         else:
             continue
-        if any(col.field == field_name for col in current):
+        column = _Column(role, cell.x0, cell.words[-1]["x1"], label)
+        if any(col.field == column.field for col in current):
             sections.append(current)
             current = []
-        current.append(_Column(field_name, cell.x0, cell.words[-1]["x1"], label))
+        current.append(column)
     sections.append(current)
-    return [sec for sec in sections if {"refs", "value"} <= {col.field for col in sec}]
+    return [
+        sec for sec in sections if {_Role.REFS, _Role.VALUE} <= {c.role for c in sec}
+    ]
 
 
 def _board_groups(sections: list[list[_Column]], above: list[Cell]) -> list[int]:
@@ -197,7 +257,7 @@ def _board_groups(sections: list[list[_Column]], above: list[Cell]) -> list[int]
     ]
 
 
-def _column_for(cell: Cell, sections: list[list[_Column]]) -> tuple[int, str]:
+def _column_for(cell: Cell, sections: list[list[_Column]]) -> tuple[int, _Field]:
     """The section and field a cell belongs to.
 
     A cell that starts at a header belongs to it (left-aligned tables); any
@@ -243,9 +303,9 @@ def _borrow_offset_values(
     empty = [
         k
         for (k, field), _ in placed
-        if field == "refs"
-        and not any(kf == (k, "value") for kf, _ in placed)
-        and not any(col.field == "type" for col in sections[k])
+        if field == _REFS
+        and not any(kf == (k, _VALUE) for kf, _ in placed)
+        and not _typed(sections[k])
     ]
     added: list[Cell] = []
     for k in empty:
@@ -260,214 +320,331 @@ def _borrow_offset_values(
                 for c in lines[nb]
                 if id(c) not in borrowed
             ]
-            if any(kf == (k, "refs") for kf, _ in near):
+            if any(kf == (k, _REFS) for kf, _ in near):
                 continue
-            found += [c for kf, c in near if kf == (k, "value")]
+            found += [c for kf, c in near if kf == (k, _VALUE)]
         for c in found:
             borrowed.add(id(c))
         added += found
     return sorted(cells + added, key=lambda c: c.x0) if added else cells
 
 
-def find_bom_rows(words: list[PDFWord]) -> list[BomRow]:
+@dataclass(frozen=True, slots=True)
+class BomReading:
+    """The typed text tables on a page ('Reference | Value | Quantity | Notes').
+
+    Attributes:
+        rows: The rows under every such header on the page, top to bottom.
+            Rows whose designator cell is not a list of designators (titles,
+            footers, hardware) are skipped.
+        note_cells: The NOTES cells of typed tables. Designators mentioned in
+            a note ('Mistakenly labeled C19 on initial release', Aion FX
+            Fusion) are not listings, so the self-check that looks for
+            unextracted designators must not read them.
+        valueless: Designators an untyped table lists with an empty value
+            cell, ranges expanded. GuitarPCB The Burner prints 'D2' with
+            nothing beside it; without a value it is no row, and the part
+            would vanish silently.
+    """
+
+    rows: list[BomRow]
+    note_cells: list[Cell]
+    valueless: list[str]
+
+
+@dataclass
+class _Tables:
+    """What reading a page's typed tables has found so far, line by line.
+
+    Attributes:
+        sections: The table sections the header lines so far put in force.
+        tables: How many tables the header lines so far have started.
+        table_of: The table each section belongs to, keyed by its first
+            column's x0.
+        last_row: Per table section, the index in `rows` of its latest row.
+        borrowed: Ids of value cells read into a neighbouring line's row
+            (`_borrow_offset_values`).
+        rows: The rows read.
+        note_cells: The NOTES cells of typed tables.
+        valueless: Designators listed with an empty value cell.
+    """
+
+    sections: list[list[_Column]] = field(default_factory=list)
+    tables: int = 0
+    table_of: dict[float, int] = field(default_factory=dict)
+    last_row: dict[int, int] = field(default_factory=dict)
+    borrowed: set[int] = field(default_factory=set)
+    rows: list[BomRow] = field(default_factory=list)
+    note_cells: list[Cell] = field(default_factory=list)
+    valueless: list[str] = field(default_factory=list)
+
+
+@dataclass(frozen=True, slots=True)
+class _LineFields:
+    """One line's cells, read into the table sections' fields.
+
+    Attributes:
+        texts: Each section's fields' text, keyed (section, field).
+        first_x0: Each section's leftmost designator or value cell.
+        end: Left edge of a table beside the line's rows, whose listings are
+            not part of them; infinite when there is none.
+    """
+
+    texts: dict[tuple[int, _Field], str]
+    first_x0: dict[int, float]
+    end: float
+
+    def text(self, k: int, field: _Field) -> str:
+        """A section's field's text on the line; empty when it has none."""
+        return self.texts.get((k, field), "")
+
+
+def read_bom(lines: list[list[Cell]]) -> BomReading:
     """Reads text tables headed 'Reference | Value | Quantity | Notes'.
 
     Unlike a ruled table, nothing but alignment marks the columns, and one row
     lists several designators (Sheepylove: 'R10-R12,R18  47k  4'). Several
     tables may sit side by side under one header line, and a later header
-    line replaces only the tables it overlaps. Rows whose designator cell is
-    not a list of designators (titles, footers, hardware) are skipped.
+    line replaces only the tables it overlaps.
 
     Args:
-        words: Words extracted from one page.
+        lines: The cells of every line on one page (`page_lines`).
 
     Returns:
-        The rows under every such header on the page, top to bottom.
+        The tables' rows, NOTES cells, and designators without a value.
     """
-    return _read_bom(words)[0]
-
-
-def bom_note_cells(words: list[PDFWord]) -> list[Cell]:
-    """The NOTES cells of typed text tables on a page.
-
-    Designators mentioned in a note ('Mistakenly labeled C19 on initial
-    release', Aion FX Fusion) are not listings, so the self-check that looks
-    for unextracted designators must not read them.
-    """
-    return _read_bom(words)[1]
-
-
-def bom_valueless_refs(words: list[PDFWord]) -> list[str]:
-    """Designators a text table lists with an empty value cell.
-
-    GuitarPCB The Burner prints 'D2' with nothing beside it; without a value it
-    is no row, and the part would vanish silently.
-
-    Args:
-        words: Words extracted from one page.
-
-    Returns:
-        The designators, ranges expanded.
-    """
-    return _read_bom(words)[2]
-
-
-def _read_bom(words: list[PDFWord]) -> tuple[list[BomRow], list[Cell], list[str]]:
-    rows: list[BomRow] = []
-    note_cells: list[Cell] = []
-    valueless: list[str] = []
-    sections: list[list[_Column]] = []
-    # Per table section, the index in `rows` of its latest row.
-    last_row: dict[int, int] = {}
-    # The table each section belongs to, keyed by its first column's x0.
-    table_of: dict[float, int] = {}
-    # How many tables the header lines so far have started.
-    tables = 0
-    lines = page_lines(words)
-    # Value cells read into a neighbouring line's row (`_borrow_offset_values`).
-    borrowed: set[int] = set()
+    tables = _Tables()
     for line_no, cells in enumerate(lines):
         found = _header_sections(cells)
         if found:
-            lo = min(col.x0 for sec in found for col in sec)
-            hi = max(col.x1 for sec in found for col in sec)
-            kept = [
-                sec
-                for sec in sections
-                if max(c.x1 for c in sec) < lo or min(c.x0 for c in sec) > hi
-            ]
-            sections = sorted(kept + found, key=lambda sec: sec[0].x0)
-            last_row = {}
-            # A header line starts one table per board it heads, numbered
-            # after every table before it.
-            groups = _board_groups(found, lines[line_no - 1] if line_no else [])
-            for sec, group in zip(found, groups, strict=True):
-                table_of[sec[0].x0] = tables + group
-            tables += max(groups) + 1
-            # The rest of the line is a row of the tables beside the new header.
-            cells = [c for c in cells if c.x0 < lo or c.x0 > hi]
-        if not sections:
+            cells = _start_tables(tables, found, lines, line_no, cells)
+        if not tables.sections:
             continue
-        cells = [c for c in cells if id(c) not in borrowed]
-        cells = _borrow_offset_values(cells, lines, line_no, sections, borrowed)
-        fields: dict[tuple[int, str], str] = {}
-        first_x0: dict[int, float] = {}
-        end = math.inf
-        right = max(col.x1 for sec in sections for col in sec)
-        for n, cell in enumerate(cells):
-            if cell.x0 > right + _BEYOND_TABLE_EM * cell.size and is_prose(cell.text):
-                # Prose beside the table (K-Buffer's description) is no cell,
-                # and listings there are another table's.
-                end = cell.x0
-                break
-            target = _column_for(cell, sections)
-            next_text = cells[n + 1].text if n + 1 < len(cells) else None
-            first, _, rest = cell.text.partition(" ")
-            if (
-                target[1] == "type"
-                and target in fields
-                # OCR can read a listing as one box: 'FREQ B5K'.
-                and is_ref_cell(first, rest or next_text)
-            ):
-                # A listing after the TYPE cell starts a second table whose
-                # header was not read (Five Cats prints two 'Location | Value |
-                # Type' tables side by side; OCR keeps only one header).
-                end = cell.x0
-                break
-            fields[target] = f"{fields.get(target, '')} {cell.text}".strip()
-            if target[1] in ("refs", "value"):
-                # A row's x0 is its designator's; 'R1 - 1M' sits under Value.
-                first_x0.setdefault(target[0], cell.x0)
-            if target[1] == "notes" and any(
-                col.field == "type" for col in sections[target[0]]
-            ):
-                note_cells.append(cell)
-        for k, section in enumerate(sections):
-            typed = any(col.field == "type" for col in section)
-            refs = _LIST_SPACING.sub(r"\1", fields.get((k, "refs"), ""))
-            # GuitarPCB: '* CLR x1', 'CLR x 2', '*DRIVE', 'ORDER switch'.
-            refs = " ".join(refs.replace("*", " ").split())
-            count = _REF_COUNT.search(refs)
-            if count:
-                refs = refs[: count.start()]
-            refs = _LABEL_NOUN.sub("", refs)
-            whole = f"{fields.get((k, 'refs'), '')} {fields.get((k, 'value'), '')}"
-            dashed = _DASHED_LISTING.fullmatch(whole.strip())
-            if (
-                dashed
-                and is_designator(dashed.group(1))
-                and VALUE_SHAPE.fullmatch(dashed.group(2))
-            ):
-                # 'R1 - 1M' centred under a 'Part Value' header (GuitarPCB Blues
-                # Buster): the designator and its value in one cell.
-                refs = dashed.group(1)
-                fields[(k, "value")] = dashed.group(2)
-            # 'TR1 - BIAS' (GuitarPCB PURP): the control's name labels the
-            # board designator.
-            named = NAMED_DESIGNATOR.fullmatch(refs)
-            if named and is_designator(named.group(1)):
-                refs = named.group(1)
-            # 'SW1 Tap Tempo', 'S3 Tempo Scale' (GuitarPCB D'Lay): the part's
-            # role after its designator.
-            role = _DESIGNATOR_ROLE.fullmatch(refs)
-            if role:
-                refs = role.group(1)
-            value = drop_remarks(
-                _without_unclosed_aside(ASIDE.sub("", fields.get((k, "value"), "")))
-            )
-            # 'SW - SPDT | On-Off_On' (GuitarPCB Skyn-Tone): the pole type in
-            # the label belongs to the value.
-            poles = _POLES_LABEL.fullmatch(refs)
-            if poles:
-                refs, value = poles.group(1), f"{poles.group(2)} {value}".strip()
-            notes = fields.get((k, "notes"), "")
-            last = last_row.get(k)
-            if typed and not refs and notes and last is not None:
-                # A NOTES cell wrapped onto the next line, under its row.
-                rows[last] = replace(rows[last], notes=f"{rows[last].notes} {notes}")
-                continue
-            marking = _MARKING.search(value)
-            if marking:
-                value = value[: marking.start()]
-            for size in (2, 1):
-                head = " ".join(value.split()[:size])
-                tail = " ".join(value.split()[size:])
-                if tail and names_control(head) and VALUE_SHAPE.match(tail):
-                    # 'P1 | VOL 1 | 100k Log' (GuitarPCB XX Double Shot).
-                    value = tail
-                    break
-            # A typed table's TYPE explains any label; an untyped grid's label
-            # ('Part | Value' grids: 'VOL | A100k') is judged by its value later.
-            labeled = _is_label(refs) and (not typed or fields.get((k, "type")))
-            if not value and _is_ref_list(refs) and not typed:
-                valueless += [r for r in expand_refs(refs) if is_designator(r)]
-            if not value or not (_is_ref_list(refs) or labeled):
-                continue
-            # Optional-part markers are not part of the value ('*100p', '330k*').
-            value = " ".join(value.replace("*", " ").split()) or value
-            builds = _build_values(sections[k], fields, k, value)
-            qty = fields.get((k, "qty"), "") or (count.group(1) if count else "")
-            last_row[k] = len(rows)
-            rows.append(
-                BomRow(
-                    refs=refs,
-                    value=value,
-                    quantity=_quantity(qty),
-                    line=line_no,
-                    x0=first_x0[k],
-                    marking=marking.group(1) if marking else "",
-                    type_text=fields.get((k, "type"), ""),
-                    notes=notes,
-                    table=table_of[sections[k][0].x0],
-                    end=end,
-                    builds=builds,
-                )
-            )
-    return rows, note_cells, valueless
+        cells = [c for c in cells if id(c) not in tables.borrowed]
+        cells = _borrow_offset_values(
+            cells, lines, line_no, tables.sections, tables.borrowed
+        )
+        line = _line_fields(cells, tables)
+        for k, section in enumerate(tables.sections):
+            _read_row(tables, k, section, line, line_no)
+    return BomReading(tables.rows, tables.note_cells, tables.valueless)
+
+
+def _start_tables(
+    tables: _Tables,
+    found: list[list[_Column]],
+    lines: list[list[Cell]],
+    line_no: int,
+    cells: list[Cell],
+) -> list[Cell]:
+    """Puts a header line's table sections in force over those they overlap.
+
+    Args:
+        tables: The reading so far; updated.
+        found: The header line's sections (`_header_sections`).
+        lines: Every line of the page.
+        line_no: The header line's index.
+        cells: The header line's cells.
+
+    Returns:
+        The rest of the line, a row of the tables beside the new header.
+    """
+    lo = min(col.x0 for sec in found for col in sec)
+    hi = max(col.x1 for sec in found for col in sec)
+    kept = [
+        sec
+        for sec in tables.sections
+        if max(c.x1 for c in sec) < lo or min(c.x0 for c in sec) > hi
+    ]
+    tables.sections = sorted(kept + found, key=lambda sec: sec[0].x0)
+    tables.last_row = {}
+    # A header line starts one table per board it heads, numbered after
+    # every table before it.
+    groups = _board_groups(found, lines[line_no - 1] if line_no else [])
+    for sec, group in zip(found, groups, strict=True):
+        tables.table_of[sec[0].x0] = tables.tables + group
+    tables.tables += max(groups) + 1
+    return [c for c in cells if c.x0 < lo or c.x0 > hi]
+
+
+def _line_fields(cells: list[Cell], tables: _Tables) -> _LineFields:
+    """Reads a line's cells into the fields of the sections in force.
+
+    The NOTES cells of typed sections are recorded on `tables` as they are read.
+
+    Args:
+        cells: The line's cells, after borrowing offset values.
+        tables: The reading so far.
+
+    Returns:
+        The line's fields.
+    """
+    sections = tables.sections
+    texts: dict[tuple[int, _Field], str] = {}
+    first_x0: dict[int, float] = {}
+    end = math.inf
+    right = max(col.x1 for sec in sections for col in sec)
+    for n, cell in enumerate(cells):
+        if cell.x0 > right + _BEYOND_TABLE_EM * cell.size and is_prose(cell.text):
+            # Prose beside the table (K-Buffer's description) is no cell,
+            # and listings there are another table's.
+            end = cell.x0
+            break
+        target = _column_for(cell, sections)
+        next_text = cells[n + 1].text if n + 1 < len(cells) else None
+        first, _, rest = cell.text.partition(" ")
+        if (
+            target[1] == _TYPE
+            and target in texts
+            # OCR can read a listing as one box: 'FREQ B5K'.
+            and is_ref_cell(first, rest or next_text)
+        ):
+            # A listing after the TYPE cell starts a second table whose
+            # header was not read (Five Cats prints two 'Location | Value |
+            # Type' tables side by side; OCR keeps only one header).
+            end = cell.x0
+            break
+        texts[target] = f"{texts.get(target, '')} {cell.text}".strip()
+        if target[1] in (_REFS, _VALUE):
+            # A row's x0 is its designator's; 'R1 - 1M' sits under Value.
+            first_x0.setdefault(target[0], cell.x0)
+        if target[1] == _NOTES and _typed(sections[target[0]]):
+            tables.note_cells.append(cell)
+    return _LineFields(texts, first_x0, end)
+
+
+def _read_row(
+    tables: _Tables, k: int, section: list[_Column], line: _LineFields, line_no: int
+) -> None:
+    """Reads one table section's row on a line, if it holds one.
+
+    A typed row with only a NOTES cell continues the row above's notes; an
+    untyped row with designators and no value records them as valueless.
+
+    Args:
+        tables: The reading so far; updated.
+        k: The section's index among those in force.
+        section: The section's columns.
+        line: The line's fields.
+        line_no: The line's index.
+    """
+    typed = _typed(section)
+    refs, count = _designators(line.text(k, _REFS))
+    refs, value_cell = _dashed_listing(refs, line.text(k, _REFS), line.text(k, _VALUE))
+    refs = _designator_of(refs)
+    value = drop_remarks(_without_unclosed_aside(ASIDE.sub("", value_cell)))
+    # 'SW - SPDT | On-Off_On' (GuitarPCB Skyn-Tone): the pole type in the
+    # label belongs to the value.
+    poles = _POLES_LABEL.fullmatch(refs)
+    if poles:
+        refs, value = poles.group(1), f"{poles.group(2)} {value}".strip()
+    notes = line.text(k, _NOTES)
+    last = tables.last_row.get(k)
+    if typed and not refs and notes and last is not None:
+        # A NOTES cell wrapped onto the next line, under its row.
+        row = tables.rows[last]
+        tables.rows[last] = replace(row, notes=f"{row.notes} {notes}")
+        return
+    marking = _MARKING.search(value)
+    if marking:
+        value = value[: marking.start()]
+    value = _without_control_name(value)
+    # A typed table's TYPE explains any label; an untyped grid's label
+    # ('Part | Value' grids: 'VOL | A100k') is judged by its value later.
+    labeled = _is_label(refs) and (not typed or line.text(k, _TYPE))
+    if not value and _is_ref_list(refs) and not typed:
+        tables.valueless += [r for r in expand_refs(refs) if is_designator(r)]
+    if not value or not (_is_ref_list(refs) or labeled):
+        return
+    # Optional-part markers are not part of the value ('*100p', '330k*').
+    value = " ".join(value.replace("*", " ").split()) or value
+    qty = line.text(k, _QTY) or count
+    tables.last_row[k] = len(tables.rows)
+    tables.rows.append(
+        BomRow(
+            refs=refs,
+            value=value,
+            quantity=_quantity(qty),
+            line=line_no,
+            x0=line.first_x0[k],
+            marking=marking.group(1) if marking else "",
+            type_text=line.text(k, _TYPE),
+            notes=notes,
+            table=tables.table_of[section[0].x0],
+            end=line.end,
+            builds=_build_values(section, line, k, value),
+        )
+    )
+
+
+def _designators(cell: str) -> tuple[str, str]:
+    """A designator cell's designators, and the count printed after them.
+
+    GuitarPCB prints '* CLR x1', 'CLR x 2', '*DRIVE', 'ORDER switch'.
+
+    Returns:
+        The designators, separators unspaced ('C4,C5'), and the count ('1'
+        for 'CLR x1'), empty when none is printed.
+    """
+    refs = _LIST_SPACING.sub(r"\1", cell)
+    refs = " ".join(refs.replace("*", " ").split())
+    count = _REF_COUNT.search(refs)
+    if count:
+        refs = refs[: count.start()]
+    return _LABEL_NOUN.sub("", refs), count.group(1) if count else ""
+
+
+def _dashed_listing(refs: str, refs_cell: str, value_cell: str) -> tuple[str, str]:
+    """Splits 'R1 - 1M' centred under a 'Part Value' header (GuitarPCB Blues Buster).
+
+    The designator and its value land in one cell, or run across both.
+
+    Args:
+        refs: The designators read so far (`_designators`).
+        refs_cell: The designator cell as printed.
+        value_cell: The value cell as printed.
+
+    Returns:
+        The designators and the value cell.
+    """
+    dashed = _DASHED_LISTING.fullmatch(f"{refs_cell} {value_cell}".strip())
+    if (
+        dashed
+        and is_designator(dashed.group(1))
+        and VALUE_SHAPE.fullmatch(dashed.group(2))
+    ):
+        return dashed.group(1), dashed.group(2)
+    return refs, value_cell
+
+
+def _designator_of(refs: str) -> str:
+    """The board designator a labelled designator cell names.
+
+    'TR1 - BIAS' (GuitarPCB PURP) names the control; 'SW1 Tap Tempo', 'S3
+    Tempo Scale' (GuitarPCB D'Lay) give the part's role.
+    """
+    named = NAMED_DESIGNATOR.fullmatch(refs)
+    if named and is_designator(named.group(1)):
+        refs = named.group(1)
+    role = _DESIGNATOR_ROLE.fullmatch(refs)
+    return role.group(1) if role else refs
+
+
+def _without_control_name(value: str) -> str:
+    """A value without the control name printed before it.
+
+    'P1 | VOL 1 | 100k Log' (GuitarPCB XX Double Shot).
+    """
+    for size in (2, 1):
+        head = " ".join(value.split()[:size])
+        tail = " ".join(value.split()[size:])
+        if tail and names_control(head) and VALUE_SHAPE.match(tail):
+            return tail
+    return value
 
 
 def _build_values(
-    section: list[_Column], fields: dict[tuple[int, str], str], k: int, value: str
+    section: list[_Column], line: _LineFields, k: int, value: str
 ) -> tuple[tuple[str, str], ...]:
     """Each build's value in a table with one VALUE column per build.
 
@@ -481,8 +658,8 @@ def _build_values(
     out = []
     for col in named:
         cell = value
-        if col.field != "value":
-            raw = _without_unclosed_aside(ASIDE.sub("", fields.get((k, col.field), "")))
+        if col.role is not _Role.VALUE:
+            raw = _without_unclosed_aside(ASIDE.sub("", line.text(k, col.field)))
             marking = _MARKING.search(raw)
             if marking:
                 raw = raw[: marking.start()]

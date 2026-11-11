@@ -35,14 +35,17 @@ from star_ground.bom_lib import FileUpload, builds, classifier, locations, ocr
 from star_ground.bom_lib.boards import board_marks
 from star_ground.bom_lib.builds import PageContext, plan_builds
 from star_ground.bom_lib.choices import choose_value
-from star_ground.bom_lib.enums import ComponentCategory, InputMethod
+from star_ground.bom_lib.enums import ComponentCategory, InputMethod, ParseWarningKind
 from star_ground.bom_lib.errors import CrowdedPageError, ErrorKind, HeavyPageError
+from star_ground.bom_lib.ingest import ingest_bom_line
 from star_ground.bom_lib.ocr import OcrBox
-from star_ground.bom_lib.pdf import bom_table, page_checks, scan
+from star_ground.bom_lib.pdf import assemble as pdf_assemble
+from star_ground.bom_lib.pdf import bom_table, scan
 from star_ground.bom_lib.pdf import document as pdf_document
 from star_ground.bom_lib.pdf.cells import CONTROL_VALUE
 from star_ground.bom_lib.pdf.content import content_bytes
 from star_ground.bom_lib.pdf.geometry import Cell, Listing, page_lines
+from star_ground.bom_lib.pdf.page import PDFPageExtraction
 from star_ground.bom_lib.pdf.page_checks import (
     footnote_marks,
     marked_labels,
@@ -54,10 +57,9 @@ from star_ground.bom_lib.strategies.manual import parse_with_verification
 from star_ground.bom_lib.types import (
     ComponentKey,
     Inventory,
-    PDFPageExtraction,
+    ParseWarning,
     PDFWord,
     ReadingStats,
-    make_component_key,
 )
 from star_ground.bom_lib.verification import check_footnotes
 from tests.pdfs import assemble, stream, typeset
@@ -91,6 +93,11 @@ def _seconds(work: Callable[[], object]) -> float:
         return time.thread_time() - start
     finally:
         gc.enable()
+
+
+def _listings(words: list[PDFWord]) -> list[Listing]:
+    """The listings on a page of words."""
+    return find_listings(page_lines(words))
 
 
 def _scales_linearly(work: Callable[[int], Callable[[], object]], size: int) -> None:
@@ -274,7 +281,11 @@ def test_page_of_many_small_numbers() -> None:
 
 def test_page_of_many_footnote_marks() -> None:
     # 6.2 s before (`marked_labels`), and `footnote_marks` was quadratic too.
-    _scales_linearly(lambda n: partial(marked_labels, _footnoted_values(n)), 4000)
+    def label(count: int) -> Callable[[], object]:
+        words = _footnoted_values(count)
+        return lambda: marked_labels(words, footnote_marks(words))
+
+    _scales_linearly(label, 4000)
     words = _footnoted_values(8000)
     marks = footnote_marks(words)
     assert len(marks) == 8000
@@ -315,31 +326,35 @@ def _marked_values(count: int) -> str:
     return " ".join(text)
 
 
+def _without_marks(page: Page) -> Page:
+    """The page without the footnote marks found in its words."""
+    marks = footnote_marks(pdf_document._page_words(page))
+    return pdf_document._without_marks(page, marks)
+
+
 def test_dropping_many_footnote_marks_from_a_page() -> None:
     # 6.5 s for 5,000 before: every character was compared with every mark.
     def drop(count: int) -> Callable[[], object]:
         page = _parsed(_marked_values(count))
-        return lambda: pdf_document._without_marks(page).chars
+        return lambda: _without_marks(page).chars
 
     _scales_linearly(drop, 3000)
-    chars = pdf_document._without_marks(_parsed(_marked_values(5000))).chars
+    chars = _without_marks(_parsed(_marked_values(5000))).chars
     assert "".join(c["text"] for c in chars) == "10k" * 5000
 
 
 def _valueless_refs_alone(
-    page: Callable[[int], list[PDFWord]], monkeypatch: pytest.MonkeyPatch
+    words: Callable[[int], list[PDFWord]],
 ) -> Callable[[int], Callable[[], list[str]]]:
     """`valueless_refs` on a page of a size, its listings found beforehand.
 
     Finding listings isn't what these tests time, and it is most of the work.
     """
-    found: dict[int, list[Listing]] = {}
-    monkeypatch.setattr(page_checks, "find_listings", lambda words: found[id(words)])
 
     def work(size: int) -> Callable[[], list[str]]:
-        words = page(size)
-        found[id(words)] = find_listings(words)
-        return partial(valueless_refs, words)
+        page = PDFPageExtraction(tables=[], text="", words=words(size))
+        assert page.listings is not None  # Found once, and kept on the page.
+        return partial(valueless_refs, page)
 
     return work
 
@@ -352,10 +367,10 @@ def _two_columns(count: int) -> list[PDFWord]:
     return words
 
 
-def test_designator_column_of_a_long_page(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_designator_column_of_a_long_page() -> None:
     # 6.5 s for 8,000 before: each cell was compared with every listing and
     # every word.
-    work = _valueless_refs_alone(_two_columns, monkeypatch)
+    work = _valueless_refs_alone(_two_columns)
     _scales_linearly(work, 4000)
     assert work(8000)() == []
 
@@ -369,11 +384,9 @@ def _half_valueless(count: int) -> list[PDFWord]:
     return words
 
 
-def test_valueless_designators_of_a_long_column(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_valueless_designators_of_a_long_column() -> None:
     # 3.6 s for 8,000 before.
-    work = _valueless_refs_alone(_half_valueless, monkeypatch)
+    work = _valueless_refs_alone(_half_valueless)
     _scales_linearly(work, 4000)
     refs = work(8000)()
     assert len(refs) == 4000
@@ -400,7 +413,7 @@ def test_long_page_of_typed_listings() -> None:
     words = _typed_listings(4000)
     columns = scan._type_columns(page_lines(words))
     assert columns == {65 + 120 * k for k in range(10)}
-    listings = find_listings(words)
+    listings = _listings(words)
     assert len(listings) == 4000
     assert {lst.value for lst in listings} == {"10k"}
 
@@ -431,7 +444,7 @@ def _dashed_listings(count: int) -> list[PDFWord]:
 def test_many_dashed_listings_on_a_line() -> None:
     # 2.2 s for 800 before: each listing searched the whole line for the word
     # after it (`_dash_after`), and split the rest of its cell again.
-    _scales_linearly(lambda n: partial(find_listings, _dashed_listings(n)), 800)
+    _scales_linearly(lambda n: partial(_listings, _dashed_listings(n)), 800)
 
 
 def test_many_dashed_listings_in_one_cell() -> None:
@@ -441,7 +454,7 @@ def test_many_dashed_listings_in_one_cell() -> None:
     assert cells is not None
     assert [c.text for c in cells[:4]] == ["R1", "10k", "R2", "10k"]
     assert len(cells) == 6000
-    listings = find_listings(words)
+    listings = _listings(words)
     assert len(listings) == 3000
     assert all(lst.dashed and lst.value == "10k" for lst in listings)
 
@@ -489,9 +502,7 @@ def test_designator_printed_many_times_on_a_line() -> None:
     # 51 s for 8,000 before: each mention searched the rest of the line for
     # its value.
     inventory = Inventory()
-    inventory.add_part(
-        "s", make_component_key(ComponentCategory.RESISTORS, "10k"), "R1", 1
-    )
+    inventory.add_part("s", ComponentKey(ComponentCategory.RESISTORS, "10k"), "R1", 1)
     _scales_linearly(
         lambda n: partial(locations.locate, [_mentions(n)], inventory), 1600
     )
@@ -567,7 +578,7 @@ def test_page_of_many_ruled_lines_is_read_as_text(
     path = tmp_path / "grid.pdf"
     path.write_bytes(_pdf(f"{_grid(160)} {parts}", width=800))
     monkeypatch.setattr(pdfplumber.page.Page, "extract_tables", _never)
-    result = pdf_document.parse_pedalpcb_pdf(str(path), "G")
+    result = pdf_document.parse_pdf(str(path), "G")
     refs = {ref for part in result.inventory.values() for ref in part.refs}
     assert refs == {"R1", "R2"}
 
@@ -618,7 +629,7 @@ def _form(content: bytes) -> bytes:
 
 
 def _refs(path: Path) -> set[str]:
-    result = pdf_document.parse_pedalpcb_pdf(str(path), "P")
+    result = pdf_document.parse_pdf(str(path), "P")
     return {ref for part in result.inventory.values() for ref in part.refs}
 
 
@@ -631,7 +642,7 @@ def test_page_that_decompresses_to_gigabytes_is_refused(tmp_path: Path) -> None:
     tracemalloc.start()
     try:
         with pytest.raises(HeavyPageError, match="Page 1 of this PDF draws far more"):
-            pdf_document.parse_pedalpcb_pdf(str(path), "Bomb")
+            pdf_document.parse_pdf(str(path), "Bomb")
         _, peak = tracemalloc.get_traced_memory()
     finally:
         tracemalloc.stop()
@@ -689,7 +700,7 @@ def test_page_of_too_many_characters_is_refused(tmp_path: Path) -> None:
     path = tmp_path / "crowded.pdf"
     path.write_bytes(_pdf(_tiny_ones(pdf_document.MAX_PAGE_CHARS + 1)))
     with pytest.raises(CrowdedPageError, match="Page 1 of this PDF holds 20,001 "):
-        pdf_document.parse_pedalpcb_pdf(str(path), "Crowded")
+        pdf_document.parse_pdf(str(path), "Crowded")
 
     result = BOMParserContext().process(
         InputMethod.UPLOAD_FILE, FileUpload("crowded.pdf", path.read_bytes()), "X"
@@ -712,7 +723,7 @@ def test_huge_page_is_rendered_within_the_pixel_bound(tmp_path: Path) -> None:
     # million pixels, and one 200 inches square would take 1.6 billion (4.8 GB).
     path = tmp_path / "huge.pdf"
     path.write_bytes(_pdf("", width=3000, height=3000))
-    result = pdf_document.parse_pedalpcb_pdf(str(path), "Huge")
+    result = pdf_document.parse_pdf(str(path), "Huge")
     sizes: list[tuple[int, int]] = []
     assert ocr.needs_ocr(result)
     ocr.attempt_ocr(str(path), result, "Huge", _recorded(sizes))
@@ -730,7 +741,7 @@ def test_page_of_no_size_is_not_rendered(tmp_path: Path) -> None:
     # Its resolution divided by zero.
     path = tmp_path / "empty.pdf"
     path.write_bytes(_pdf("", width=0, height=0))
-    result = pdf_document.parse_pedalpcb_pdf(str(path), "Empty")
+    result = pdf_document.parse_pdf(str(path), "Empty")
     sizes: list[tuple[int, int]] = []
     assert ocr.needs_ocr(result)
     attempt = ocr.attempt_ocr(str(path), result, "Empty", _recorded(sizes))
@@ -751,3 +762,67 @@ def test_huge_board_is_rendered_within_the_pixel_bound() -> None:
     board_marks(content, ["R1"], (), _recorded(sizes))
     assert sizes
     assert all(width * height <= ocr._MAX_RENDER_PIXELS for width, height in sizes)
+
+
+def _ingested(rows: list[tuple[str, str]]) -> Callable[[], ReadingStats]:
+    """Reads parts-list rows into a fresh inventory, as one build is read."""
+
+    def read() -> ReadingStats:
+        stats = ReadingStats()
+        inventory = Inventory()
+        for ref, value in rows:
+            ingest_bom_line(inventory, "Hostile", ref, value, stats)
+        return stats
+
+    return read
+
+
+def test_many_parts_named_by_label() -> None:
+    # 3.2 s for a page of 4,000 'Rn 10k' listings before: each label that is
+    # no designator (R1000 has too many digits) gathered every label read so
+    # far in upper case, to see if it was a second 'COMP'.
+    def rows(count: int) -> list[tuple[str, str]]:
+        return [(f"R{1000 + n}", "10k") for n in range(count)]
+
+    _scales_linearly(lambda n: _ingested(rows(n)), 8000)
+    assert len(_ingested(rows(8000))().seen_refs.values) == 8000
+
+
+def _casings(word: str, count: int) -> list[str]:
+    """The first `count` ways of setting each of the word's letters in either case."""
+    return [
+        "".join(c.upper() if n >> k & 1 else c for k, c in enumerate(word))
+        for n in range(count)
+    ]
+
+
+def test_one_label_in_many_cases() -> None:
+    # 1.3 s for 4,000 before: each spelling searched for its number from 2.
+    def rows(count: int) -> list[tuple[str, str]]:
+        return [(label, "B10K") for label in _casings("blendcontrol", count)]
+
+    _scales_linearly(lambda n: _ingested(rows(n)), 4000)
+    seen = _ingested(rows(4000))().seen_refs
+    assert seen.get("blendcontrol") == "B10K"
+    assert seen.get("Blendcontrol (2)") == "B10K"
+    assert seen.get("BLENDCONTROL (4096)") is None
+    assert seen.get(f"{_casings('blendcontrol', 4000)[-1]} (4000)") == "B10K"
+
+
+def test_merging_many_warnings() -> None:
+    # Each of a build's warnings was looked for in a list of the reading's.
+    def merge(count: int) -> Callable[[], ReadingStats]:
+        warnings = [
+            ParseWarning(ParseWarningKind.UNREADABLE_ROW, f"R{n}", "Check it.")
+            for n in range(count)
+        ]
+
+        def run() -> ReadingStats:
+            stats = ReadingStats()
+            pdf_assemble._merge_warnings(stats, ReadingStats(warnings=warnings * 2))
+            return stats
+
+        return run
+
+    _scales_linearly(merge, 4000)
+    assert len(merge(4000)().warnings) == 4000

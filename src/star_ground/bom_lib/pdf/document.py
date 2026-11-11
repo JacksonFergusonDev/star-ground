@@ -24,6 +24,7 @@ from star_ground.bom_lib.errors import (
     UnreadablePdfError,
 )
 from star_ground.bom_lib.locations import locate
+from star_ground.bom_lib.pdf.page import PDFPageExtraction
 from star_ground.bom_lib.pdf.page_checks import (
     footnote_marks,
     marked_labels,
@@ -31,11 +32,7 @@ from star_ground.bom_lib.pdf.page_checks import (
 )
 from star_ground.bom_lib.pdf.reading import read_pages
 from star_ground.bom_lib.types import (
-    BuildVariant,
-    Inventory,
-    OptionNote,
     ParseResult,
-    PDFPageExtraction,
     PDFWord,
     Picture,
     ReadingStats,
@@ -197,13 +194,16 @@ def _straighten(page: Page) -> Page:
     return page
 
 
-def _without_marks(page: Page) -> Page:
-    """The page without superscript footnote markers (see `footnote_marks`).
+def _without_marks(page: Page, marks: list[PDFWord]) -> Page:
+    """The page without its superscript footnote markers.
 
     Characters are dropped, not words, so ruled tables and page text lose the
     markers too.
+
+    Args:
+        page: The page.
+        marks: Its footnote markers (`footnote_marks`).
     """
-    marks = footnote_marks(_page_words(page))
     if not marks:
         return page
     # Each character is compared only with the marks filed in its grid cell,
@@ -300,7 +300,7 @@ def _tables(page: Page, number: int) -> list[list[list[str | None]]]:
 _PICTURE_SHARE = 0.02
 
 
-def _pictures(page: Any) -> list[Picture]:
+def _pictures(page: Page) -> list[Picture]:
     """A pdfplumber page's large images."""
     area = page.width * page.height
     return [
@@ -384,7 +384,7 @@ _TITLE_IGNORE = frozenset(
 
 
 def _title(
-    pdf: Any, pages_data: list[PDFPageExtraction], misread: set[int]
+    pdf: PDF, pages_data: list[PDFPageExtraction], misread: set[int]
 ) -> str | None:
     """The document's title: the largest words on its title page, if any.
 
@@ -505,21 +505,67 @@ def _parse(page: Page, number: int, source_name: str) -> None:
         raise CrowdedPageError(number + 1, chars)
 
 
-def parse_pedalpcb_pdf(filepath: str, source_name: str) -> ParseResult:
-    """Parses a PedalPCB Build Document (PDF).
+def _extract(raw_page: Page, number: int, source_name: str) -> PDFPageExtraction | None:
+    """Parses one page, cleans it up, and extracts its tables, text and words.
 
-    Uses a multi-stage strategy:
-    1. Visual Table Extraction (via pdfplumber lines).
-    2. Layout analysis of word positions (column-aware text fallback).
-    3. Build planning: variants (the builder must choose) and options (the
-       document's first choice is used and the alternative noted).
+    Args:
+        raw_page: The page as pdfplumber lists it, not yet parsed.
+        number: The page, counting from 0.
+        source_name: The document, for the log.
+
+    Returns:
+        The page's extraction, or None when its text is another program's
+        misread OCR (`_misread`), to be read as an image instead.
+    """
+    _parse(raw_page, number, source_name)
+    straight = _straighten(_without_overprint(raw_page.filter(_readable)))
+    # Footnote marks are found once: which rows they mark is recorded, then
+    # their characters are dropped.
+    marked_words = _page_words(straight)
+    marks = footnote_marks(marked_words)
+    marked = marked_labels(marked_words, marks)
+    page = _without_marks(straight, marks)
+    page_words = _page_words(page)
+    if _misread(page_words):
+        return None
+    return PDFPageExtraction(
+        # Same word gap as the layout reader: kerned cells otherwise run
+        # together ('3mmRedLED,Diffused').
+        tables=_tables(page, number),
+        text=page.extract_text() or "",
+        words=page_words,
+        pictures=_pictures(raw_page),
+        marked=marked,
+    )
+
+
+def _close(pdf: PDF, pages: list[Page] | None) -> None:
+    """Closes the document, or only its file if its pages couldn't be listed.
+
+    Closing lists the pages again, which would fail the same way.
+    """
+    if pages is not None:
+        pdf.close()
+    else:
+        pdf.stream.close()
+
+
+def parse_pdf(filepath: str, source_name: str) -> ParseResult:
+    """Reads a build document's parts lists from its PDF's text layer.
+
+    Each page is cleaned up and extracted once (`_extract`); the readers
+    then read ruled tables, text tables and the layout of the words, and
+    plan the builds: variants (the builder must choose) and options (the
+    document's first choice is used and the alternative noted). Image pages
+    are left to OCR (`ocr.attempt_ocr`).
 
     Args:
         filepath: Path to the PDF file.
         source_name: Label for the source.
 
     Returns:
-        A ParseResult containing updated inventory, parsing statistics, and extracted title.
+        The parts, the reading's statistics and warnings, the title, the
+        builds and options, and where each part is listed.
 
     Raises:
         UnreadablePdfError: The file can't be opened as a PDF, or a page is
@@ -531,78 +577,47 @@ def parse_pedalpcb_pdf(filepath: str, source_name: str) -> ParseResult:
     # Lazy import to avoid loading heavy PDF libraries unless needed
     import pdfplumber
 
-    inventory = Inventory()
-    stats: ReadingStats = ReadingStats()
-    variants: tuple[BuildVariant, ...] = ()
-    options: tuple[OptionNote, ...] = ()
-
-    pdf = None
+    stats = ReadingStats()
+    try:
+        pdf = pdfplumber.open(filepath)
+    except Exception as e:
+        # Whatever pdfplumber raises here, the file is no PDF it can open.
+        logger.info("Couldn't open %s as a PDF: %s", source_name, e)
+        raise UnreadablePdfError from e
     pages: list[Page] | None = None
     try:
-        # Phase 1: File Access
-        # We isolate this to distinguish between "Bad File" and "Bad Code"
-        try:
-            pdf = pdfplumber.open(filepath)
-        except Exception as e:
-            logger.info("Couldn't open %s as a PDF: %s", source_name, e)
-            raise UnreadablePdfError from e
         pages = _pages(pdf, source_name)
         if len(pages) > MAX_PDF_PAGES:
             raise TooManyPagesError(len(pages), MAX_PDF_PAGES)
-
-        # Phase 2: Extraction. Once a page is parsed (`_parse`), a failure
-        # here is a bug in Star Ground: the reading's caller records it
+        # Once a page is parsed (`_parse`), a failure is a bug in Star
+        # Ground: the reading's caller records it
         # (`star_ground.bom_lib.errors.record_bug`).
-        # Iterate pages once to grab expensive text/table data
         pages_data: list[PDFPageExtraction] = []
         misread: set[int] = set()
         for number, raw_page in enumerate(pages):
-            _parse(raw_page, number, source_name)
-            straight = _straighten(_without_overprint(raw_page.filter(_readable)))
-            marked = marked_labels(_page_words(straight))
-            page = _without_marks(straight)
-            page_words = _page_words(page)
-            if _misread(page_words):
+            extraction = _extract(raw_page, number, source_name)
+            if extraction is None:
                 # Read as an image page instead (see `ocr.py`).
                 check_misread_text(stats, number)
                 misread.add(number)
-                pages_data.append(PDFPageExtraction(tables=[], text="", words=[]))
-                continue
-            pages_data.append(
-                PDFPageExtraction(
-                    # Same word gap as the layout reader: kerned cells
-                    # otherwise run together ('3mmRedLED,Diffused').
-                    tables=_tables(page, number),
-                    text=page.extract_text() or "",
-                    words=page_words,
-                    pictures=_pictures(raw_page),
-                    marked=marked,
-                )
-            )
-
-        # --- PHASE 2: TITLE EXTRACTION ---
+                extraction = PDFPageExtraction(tables=[], text="", words=[])
+            pages_data.append(extraction)
         # A heuristic: a page with no title-like words leaves it unset.
         stats.extracted_title = _title(pdf, pages_data, misread)
-
-        inventory, variants, options = read_pages(pages_data, source_name, stats)
-        locations = locate(pages_data, inventory)
+        built = read_pages(pages_data, source_name, stats)
+        locations = locate(pages_data, built.inventory)
         variants = tuple(
-            replace(v, locations=locate(pages_data, v.inventory)) for v in variants
+            replace(v, locations=locate(pages_data, v.inventory))
+            for v in built.variants
         )
-
     finally:
-        # Always close the file handle. Closing lists the pages again, so a
-        # PDF whose pages couldn't be listed only has its file closed.
-        if pdf is not None and pages is not None:
-            pdf.close()
-        elif pdf is not None:
-            pdf.stream.close()
+        _close(pdf, pages)
 
     return ParseResult(
-        inventory=inventory,
+        inventory=built.inventory,
         stats=stats,
         title=stats.extracted_title,
         variants=variants,
-        options=options,
+        options=built.options,
         locations=locations,
     )
