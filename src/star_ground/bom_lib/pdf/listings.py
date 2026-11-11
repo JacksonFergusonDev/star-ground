@@ -64,7 +64,7 @@ def layout_entries(
 
     Args:
         pages_data: Pre-extracted page data including word positions.
-        stats: The statistics dictionary for tracking progress.
+        stats: The reading's counts and warnings, updated in place.
         table_values: Designators already extracted from tables, with their values.
         only_pages: If given, the only pages to read.
         row_ends: Lines already read as text-table rows, keyed (page, line),

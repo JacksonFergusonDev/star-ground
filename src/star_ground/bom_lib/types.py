@@ -1,7 +1,9 @@
 """Type definitions and shared data structures for the BOM library.
 
-This module contains the TypedDicts and type aliases used throughout the
-parsing and sourcing pipeline to ensure consistent data passing.
+The parsing and sourcing pipeline passes these between its stages: the
+`Inventory` and its `ComponentKey` and `PartData`, a reading's `ParseResult`
+and `ReadingStats`, the shopping list's lines, and the shapes of the words
+pdfplumber gives.
 """
 
 import copy
@@ -567,24 +569,6 @@ class Inventory(UserDict[ComponentKey, PartData]):
     Encapsulates storage, mutation, and aggregation logic to prevent
     invalid state transitions (e.g., assigning string to quantity).
     """
-
-    def __init__(self, data: dict[ComponentKey, PartData] | None = None) -> None:
-        super().__init__(data)
-        # Ensure default factory behavior for new keys
-        if self.data is None:
-            self.data = {}
-
-    def __getitem__(self, key: ComponentKey) -> PartData:
-        """Retrieves part data by ComponentKey."""
-        return super().__getitem__(key)
-
-    def __setitem__(self, key: ComponentKey, item: PartData) -> None:
-        """Assigns part data by ComponentKey."""
-        super().__setitem__(key, item)
-
-    def __delitem__(self, key: ComponentKey) -> None:
-        """Deletes part data by ComponentKey."""
-        super().__delitem__(key)
 
     def __contains__(self, key: object) -> bool:
         """Checks whether a ComponentKey exists in inventory."""

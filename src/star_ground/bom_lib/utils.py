@@ -16,7 +16,6 @@ from star_ground.bom_lib.units import Unit, Value
 __all__ = [
     "deduplicate_refs",
     "expand_refs",
-    "float_to_display_string",
     "is_ref_range",
     "natural_sort_key",
     "parse_value_to_decimal",
@@ -181,31 +180,3 @@ def value_to_search_string(value: Value) -> str:
 def _digits(number: Decimal) -> str:
     """A number's significant digits, without exponent or trailing zeros."""
     return format(number.normalize(), "f")
-
-
-def float_to_display_string(value: Value) -> str:
-    """Converts a value to BS 1852 "Sandwich" format (e.g., '1k5').
-
-    This format is preferred for printed checklists and PCBs as it is
-    more compact and harder to misread (no decimal points).
-
-    Args:
-        value: The value with its unit (e.g., 1500 ohms).
-
-    Returns:
-        A string formatted as '1k5', '4u7', etc.
-    """
-    base = value_to_search_string(value)
-
-    # Transform 4.7k -> 4k7
-    if "." in base and any(c.isalpha() for c in base):
-        num, rest = base.split(".")
-        # rest contains something like '7k'
-        # Split digits from letters
-        match = re.search(r"(\d+)([a-zA-Z]+)", rest)
-        if match:
-            decimal_part = match.group(1)
-            suffix = match.group(2)
-            return f"{num}{suffix}{decimal_part}"
-
-    return base

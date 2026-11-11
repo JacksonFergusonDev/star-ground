@@ -19,7 +19,6 @@ class ComponentCategory(Enum):
     HARDWARE_MISC = "Hardware/Misc"
     ICS = "ICs"
     OPTOELECTRONICS = "Optoelectronics"
-    UNKNOWN = "Unknown"
     PCB = "PCB"
 
 

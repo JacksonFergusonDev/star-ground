@@ -131,7 +131,7 @@ export type BuildStep = {
  *
  * Categories of electronic components.
  */
-export type ComponentCategory = 'Resistors' | 'Capacitors' | 'Potentiometers' | 'Switches' | 'Diodes' | 'Transistors' | 'Crystals/Oscillators' | 'Inductors' | 'Transformers' | 'Relays' | 'Hardware/Misc' | 'ICs' | 'Optoelectronics' | 'Unknown' | 'PCB';
+export type ComponentCategory = 'Resistors' | 'Capacitors' | 'Potentiometers' | 'Switches' | 'Diodes' | 'Transistors' | 'Crystals/Oscillators' | 'Inductors' | 'Transformers' | 'Relays' | 'Hardware/Misc' | 'ICs' | 'Optoelectronics' | 'PCB';
 
 /**
  * ComponentOrigin

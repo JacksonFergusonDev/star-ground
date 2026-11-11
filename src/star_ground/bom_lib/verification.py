@@ -47,9 +47,8 @@ _LED_DESCRIPTOR = re.compile(
 # The title block of a schematic exported from an EDA tool.
 _SCHEMATIC_PAGE = re.compile(r"\bKiCad\b|\.kicad_sch\b|\bFile:\s*\S+\.sch\b", re.I)
 _IC_SECTION = re.compile(r"(?P<chip>(?:IC|U)\d+)[A-H]")
-# Aion FX heads its schematic pages 'SCHEMATIC'.
-_SCHEMATIC_HEADING = re.compile(r"\s*SCHEMATIC\b")
-_SCHEMATIC_TITLE = re.compile(r"\s*SCHEMATIC\b", re.IGNORECASE)
+# Aion FX heads its schematic pages 'SCHEMATIC'; other documents 'Schematic'.
+_SCHEMATIC_HEADING = re.compile(r"\s*SCHEMATIC\b", re.IGNORECASE)
 
 
 def is_schematic_page(text: str) -> bool:
@@ -59,7 +58,7 @@ def is_schematic_page(text: str) -> bool:
         text: The page's text.
 
     Returns:
-        True for a KiCad schematic or a page headed 'SCHEMATIC'.
+        True for a KiCad schematic or a page headed 'Schematic', in any case.
     """
     return bool(_SCHEMATIC_PAGE.search(text) or _SCHEMATIC_HEADING.match(text))
 
@@ -261,7 +260,7 @@ def check_unextracted_refs(
         ref.upper()
         for data in inventory.values()
         for ref in data.refs
-        if "(Inj)" not in ref
+        if not ref.endswith(constants.INJECTED_SUFFIX)
     } | {ref.upper() for ref in omitted}
     # The words of a two-word label are accounted for ('HI CUT' covers 'CUT').
     extracted |= {word for ref in extracted if " " in ref for word in ref.split()}
@@ -279,7 +278,7 @@ def check_unextracted_refs(
             for pattern in running:
                 text = pattern.sub(" ", text)
             found = find_listed_refs(text)
-            if _SCHEMATIC_TITLE.match(text):
+            if _SCHEMATIC_HEADING.match(text):
                 # A drawn schematic's net labels are no parts: Aion FX legacy
                 # Astra's 'IN' sits beside R1's '1M'. Its designators still count.
                 found = {ref for ref in found if any(ch.isdigit() for ch in ref)}

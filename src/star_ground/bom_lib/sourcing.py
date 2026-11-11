@@ -63,11 +63,11 @@ def _format_alts(alts: list[AlternativeSpec]) -> str:
 def get_residual_report(stats: ReadingStats) -> list[str]:
     """Identifies potential parts hidden in the parser's rejected lines.
 
-    Scans the 'residuals' (unparsed lines) for text that looks like a part
-    but was missed by the regex. Useful for debugging parsing errors.
+    Scans the reading's residuals (unparsed lines) for text that looks like a
+    part but was missed by the regex. Useful for debugging parsing errors.
 
     Args:
-        stats: The statistics dictionary containing residuals.
+        stats: The reading whose residuals are scanned.
 
     Returns:
         A list of suspicious lines that might require manual review.

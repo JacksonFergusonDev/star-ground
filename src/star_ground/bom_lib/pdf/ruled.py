@@ -6,7 +6,7 @@ and reads tables whose columns are the builds of a multi-circuit document.
 """
 
 import re
-from dataclasses import replace
+from dataclasses import dataclass, replace
 
 from star_ground.bom_lib.builds import Entry
 from star_ground.bom_lib.designators import is_designator
@@ -51,6 +51,14 @@ _REF_WORDS_MAX = 4
 _CHOOSE_ROW = re.compile(r"\s*choose between .+ or ", re.IGNORECASE)
 
 
+@dataclass(frozen=True, slots=True)
+class _TableTitle:
+    """The lone title cell above a table ('Dist +™'), and the page it is on."""
+
+    page: int
+    name: str
+
+
 def table_entries(
     pages_data: list[PDFPageExtraction],
     stats: ReadingStats,
@@ -60,7 +68,7 @@ def table_entries(
 
     Args:
         pages_data: Pre-extracted page data.
-        stats: The statistics dictionary for tracking progress.
+        stats: The reading's counts and warnings, updated in place.
         only_pages: If given, the only pages to read.
 
     Returns:
@@ -69,7 +77,7 @@ def table_entries(
     entries: list[Entry] = []
     seen_refs: set[str] = set()
     table_no = -1
-    titles: dict[int, tuple[int, str]] = {}
+    titles: dict[int, _TableTitle] = {}
     shaded_seen: set[tuple[int, str, str]] = set()
     for page_no, data in enumerate(pages_data):
         if only_pages is not None and page_no not in only_pages:
@@ -92,7 +100,7 @@ def table_entries(
             # 'Dist +™' over 'Part | Value' (GuitarPCB EMEXAR): the table's title.
             title = _table_title(table)
             if title is not None:
-                titles[table_no] = (page_no, title)
+                titles[table_no] = _TableTitle(page_no, title)
                 table = table[1:]
             # Header mapping. A blank header cell keeps its place, so each
             # header's index is its column's: '| Part | Value' has a blank
@@ -138,7 +146,7 @@ def table_entries(
                     ):
                         shaded_seen.add((page_no, ref, value))
                         entries.append(
-                            Entry(ref, value, page_no, line=SHADED_LINE, table=table_no)
+                            Entry(ref, value, page_no, table=table_no, shaded=True)
                         )
 
             follows_or = False
@@ -302,10 +310,6 @@ def continues_list(data: PDFPageExtraction) -> bool:
     return len(listed) >= _CONTINUED_ROWS and len(listed) * 2 >= len(rows)
 
 
-# Rows re-read from a shaded grid (`_shaded_pairs`) carry this line number.
-SHADED_LINE = -2
-
-
 def fill_in(entries: list[Entry], shaded: list[Entry]) -> list[Entry]:
     """Adds the re-read shaded-grid rows the other readers missed or ran on.
 
@@ -327,7 +331,7 @@ def fill_in(entries: list[Entry], shaded: list[Entry]) -> list[Entry]:
     ]
     kept_keys = {(e.page, e.ref.upper()) for e in kept}
     return kept + [
-        replace(e, line=-1)
+        replace(e, shaded=False)
         for e in shaded
         if (e.page, e.ref.upper()) not in kept_keys
         or (e.page, e.ref.upper()) not in read
@@ -382,9 +386,7 @@ def _table_title(table: list[list[str | None]]) -> str | None:
     return None
 
 
-def _titled_builds(
-    entries: list[Entry], titles: dict[int, tuple[int, str]]
-) -> list[Entry]:
+def _titled_builds(entries: list[Entry], titles: dict[int, _TableTitle]) -> list[Entry]:
     """Names each build of side-by-side titled tables that list the same parts.
 
     GuitarPCB EMEXAR 2 prints 'Dist +™', 'MicroAmp™' and 'DOD 250™' tables side
@@ -396,15 +398,15 @@ def _titled_builds(
     for e in entries:
         if e.table is not None:
             by_table.setdefault(e.table, []).append(e)
-    for page in sorted({p for p, _ in titles.values()}):
-        tables = sorted(t for t, (p, _) in titles.items() if p == page)
+    for page in sorted({title.page for title in titles.values()}):
+        tables = sorted(t for t, title in titles.items() if title.page == page)
         refs = [{e.ref for e in by_table.get(t, [])} for t in tables]
         if len(tables) < _MIN_TITLED_BUILDS or not all(refs):
             continue
         shared = set.intersection(*refs)
         if len(shared) < _VARIANT_SHARE * max(len(r) for r in refs):
             continue
-        names = {t: titles[t][1] for t in tables}
+        names = {t: titles[t].name for t in tables}
         after = sorted(
             t
             for t, es in by_table.items()

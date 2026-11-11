@@ -17,7 +17,6 @@ from star_ground.bom_lib.pdf.geometry import page_lines
 from star_ground.bom_lib.pdf.listings import layout_entries
 from star_ground.bom_lib.pdf.rows import REPEAT, same_value, wrapped
 from star_ground.bom_lib.pdf.ruled import (
-    SHADED_LINE,
     continues_list,
     fill_in,
     table_entries,
@@ -69,9 +68,9 @@ def read_pages(
         for data in pages_data
     ]
     plan = plan_builds(found.entries, pages)
-    inventory, variants, options, union = assemble_builds(plan, source_name, stats)
+    built = assemble_builds(plan, source_name, stats)
     supplied = included_refs([data.text for data in pages_data])
-    for parts in (inventory, *(v.inventory for v in variants)):
+    for parts in (built.inventory, *(v.inventory for v in built.variants)):
         mark_included(parts, supplied)
 
     check_reading(
@@ -79,13 +78,13 @@ def read_pages(
             pages_data,
             found.entries,
             found.bom_pages,
-            union,
-            variants,
+            built.union,
+            built.variants,
             tables_only=tables_only,
         ),
         stats,
     )
-    return inventory, variants, options
+    return built.inventory, built.variants, built.options
 
 
 @dataclass(frozen=True, slots=True)
@@ -142,8 +141,8 @@ def read_entries(
         (e.table for e in entries if e.table is not None), default=-1
     )
     # Re-paired shaded grids only fill in for the other readers (see `fill_in`).
-    shaded = [e for e in entries if e.line == SHADED_LINE]
-    entries = [e for e in entries if e.line != SHADED_LINE]
+    shaded = [e for e in entries if e.shaded]
+    entries = [e for e in entries if not e.shaded]
     # A boxed 'Part | Value' grid is both a ruled table and a text table
     # (GuitarPCB); read it once, or every part would be bought twice.
     # The ruled cell keeps a value wrapped over two lines ('Bi-Color CA

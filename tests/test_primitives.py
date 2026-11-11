@@ -397,7 +397,6 @@ def test_key_quantity() -> None:
         "1e-7"
     )
     assert key_quantity(ComponentKey(ComponentCategory.ICS, "TL072")) is None
-    assert key_quantity(ComponentKey(ComponentCategory.UNKNOWN, "10k")) is None
     assert key_quantity(ComponentKey(ComponentCategory.PCB, "1981 DRV")) is None
 
 

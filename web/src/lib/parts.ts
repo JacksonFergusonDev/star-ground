@@ -206,7 +206,6 @@ const BY_CATEGORY: Record<ComponentCategory, PartKind> = {
   'Hardware/Misc': 'hardware',
   ICs: 'chip',
   Optoelectronics: 'led',
-  Unknown: 'other',
   PCB: 'board',
 };
 
