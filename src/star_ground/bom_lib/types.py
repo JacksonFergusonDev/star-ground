@@ -9,7 +9,7 @@ pdfplumber gives.
 import copy
 import hashlib
 import re
-from collections import UserDict, defaultdict
+from collections import Counter, UserDict, defaultdict
 from collections.abc import Mapping
 from dataclasses import dataclass, field, replace
 from typing import (
@@ -227,6 +227,88 @@ class ParseWarning:
         return f"{self.kind.value}: {self.message}"
 
 
+# A label numbered as the second, third ... of its name: 'COMP (2)'.
+_NUMBERED_LABEL = re.compile(r"(.*) \((\d{1,9})\)", re.DOTALL)
+
+
+@dataclass(slots=True)
+class SeenRefs:
+    """The designators a reading has seen, each with the value first read for it.
+
+    Each is also counted under its upper case, so a label used twice in two
+    cases ('COMP', 'Comp') is found without comparing it with every
+    designator seen, and the next free number for such a label ('COMP (3)')
+    is remembered, so it isn't searched for from 2 every time.
+
+    Attributes:
+        values: The value first read for each designator.
+    """
+
+    values: dict[str, str] = field(default_factory=dict)
+    _upper: Counter[str] = field(
+        default_factory=Counter, init=False, repr=False, compare=False
+    )
+    # Per upper-case label, a number below which every 'LABEL (n)' from 2
+    # is taken.
+    _free_from: dict[str, int] = field(
+        default_factory=dict, init=False, repr=False, compare=False
+    )
+
+    def __post_init__(self) -> None:
+        """Counts the designators given at creation under their upper case."""
+        self._upper.update(ref.upper() for ref in self.values)
+
+    def __contains__(self, ref: object) -> bool:
+        """Whether the designator, exactly as written, was seen."""
+        return ref in self.values
+
+    def get(self, ref: str) -> str | None:
+        """The value first read for a designator, or None if it wasn't seen."""
+        return self.values.get(ref)
+
+    def record(self, ref: str, value: str) -> None:
+        """Records a designator as seen with a value, replacing any it had."""
+        if ref not in self.values:
+            self._upper[ref.upper()] += 1
+        self.values[ref] = value
+
+    def record_first(self, ref: str, value: str) -> None:
+        """Records a designator as seen with a value, unless it was seen already."""
+        if ref not in self.values:
+            self.record(ref, value)
+
+    def forget(self, ref: str) -> None:
+        """Forgets a designator seen before, as if it never was."""
+        del self.values[ref]
+        upper = ref.upper()
+        self._upper[upper] -= 1
+        numbered = _NUMBERED_LABEL.fullmatch(upper)
+        if numbered and not self._upper[upper]:
+            label, n = numbered.group(1), int(numbered.group(2))
+            if 2 <= n < self._free_from.get(label, 2):
+                self._free_from[label] = n
+
+    def free_number(self, label: str) -> int:
+        """The first number from 2 for which no 'LABEL (n)' was seen.
+
+        Args:
+            label: An upper-case label.
+        """
+        n = self._free_from.get(label, 2)
+        while self.has_upper(f"{label} ({n})"):
+            n += 1
+        self._free_from[label] = n
+        return n
+
+    def has_upper(self, label: str) -> bool:
+        """Whether a designator seen reads as the label in upper case.
+
+        Args:
+            label: An upper-case label.
+        """
+        return self._upper[label] > 0
+
+
 @dataclass(slots=True)
 class ReadingStats:
     """What reading one document found, built up as it is read.
@@ -249,7 +331,7 @@ class ReadingStats:
     parts_found: int = 0
     residuals: list[str] = field(default_factory=list)
     extracted_title: str | None = None
-    seen_refs: dict[str, str] = field(default_factory=dict)
+    seen_refs: SeenRefs = field(default_factory=SeenRefs)
     unread_counted: list[str] = field(default_factory=list)
     errors: list[ReadError] = field(default_factory=list)
     warnings: list[ParseWarning] = field(default_factory=list)

@@ -78,7 +78,7 @@ def _ingest_entries(
             if first != entry.table and any(
                 same_value(seen, v) for v in (entry.value, value)
             ):
-                del stats.seen_refs[entry.ref]
+                stats.seen_refs.forget(entry.ref)
             elif first != entry.table and seen is not None and not entry.follows_or:
                 # Another table lists the same designator with another value:
                 # another board (Tweed Fuzztone's Tweed and Fuzz boards both
@@ -108,8 +108,11 @@ def _next_board_ref(stats: ReadingStats, ref: str) -> str:
 
 
 def _merge_warnings(target: ReadingStats, source: ReadingStats) -> None:
+    """Adds a build's warnings to the reading's, each warning once."""
+    known = set(target.warnings)
     for warning in source.warnings:
-        if warning not in target.warnings:
+        if warning not in known:
+            known.add(warning)
             target.warnings.append(warning)
 
 

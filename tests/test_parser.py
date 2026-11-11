@@ -1353,6 +1353,19 @@ def test_a_named_label_used_twice_is_two_parts() -> None:
     assert stats.warnings == []
 
 
+def test_a_forgotten_label_frees_its_number() -> None:
+    from star_ground.bom_lib.types import SeenRefs
+
+    seen = SeenRefs()
+    for ref in ("COMP", "Comp (2)", "comp (3)"):
+        seen.record(ref, "SPDT")
+    assert seen.free_number("COMP") == 4
+    seen.forget("Comp (2)")
+    assert seen.free_number("COMP") == 2
+    seen.record("cOMP (2)", "SPDT")
+    assert seen.free_number("COMP") == 4
+
+
 def test_a_dashed_parts_list_drops_the_drawings_labels() -> None:
     # Tonepad: 'R1 - 10k' listings, and the schematic's 'AC  ADAPTOR' and
     # 'D1  47uF' labels on another page.

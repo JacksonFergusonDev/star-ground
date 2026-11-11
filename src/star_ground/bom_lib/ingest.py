@@ -141,17 +141,14 @@ def _claim(stats: ReadingStats, ref: str, value: str) -> str | None:
     Returns:
         The label to buy the part under, or None for a designator read before.
     """
-    if not is_designator(ref) and ref not in stats.seen_refs:
-        taken = {seen.upper() for seen in stats.seen_refs}
-        if ref.upper() in taken:
-            n = 2
-            while f"{ref.upper()} ({n})" in taken:
-                n += 1
-            ref = f"{ref} ({n})"
-    if ref in stats.seen_refs:
-        check_duplicate(stats, ref, stats.seen_refs[ref], value)
+    seen = stats.seen_refs
+    if not is_designator(ref) and ref not in seen and seen.has_upper(ref.upper()):
+        ref = f"{ref} ({seen.free_number(ref.upper())})"
+    first = seen.get(ref)
+    if first is not None:
+        check_duplicate(stats, ref, first, value)
         return None
-    stats.seen_refs[ref] = value
+    seen.record(ref, value)
     return ref
 
 

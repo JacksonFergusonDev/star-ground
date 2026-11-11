@@ -35,9 +35,11 @@ from star_ground.bom_lib import FileUpload, builds, classifier, locations, ocr
 from star_ground.bom_lib.boards import board_marks
 from star_ground.bom_lib.builds import PageContext, plan_builds
 from star_ground.bom_lib.choices import choose_value
-from star_ground.bom_lib.enums import ComponentCategory, InputMethod
+from star_ground.bom_lib.enums import ComponentCategory, InputMethod, ParseWarningKind
 from star_ground.bom_lib.errors import CrowdedPageError, ErrorKind, HeavyPageError
+from star_ground.bom_lib.ingest import ingest_bom_line
 from star_ground.bom_lib.ocr import OcrBox
+from star_ground.bom_lib.pdf import assemble as pdf_assemble
 from star_ground.bom_lib.pdf import bom_table, scan
 from star_ground.bom_lib.pdf import document as pdf_document
 from star_ground.bom_lib.pdf.cells import CONTROL_VALUE
@@ -55,6 +57,7 @@ from star_ground.bom_lib.strategies.manual import parse_with_verification
 from star_ground.bom_lib.types import (
     ComponentKey,
     Inventory,
+    ParseWarning,
     PDFWord,
     ReadingStats,
 )
@@ -759,3 +762,67 @@ def test_huge_board_is_rendered_within_the_pixel_bound() -> None:
     board_marks(content, ["R1"], (), _recorded(sizes))
     assert sizes
     assert all(width * height <= ocr._MAX_RENDER_PIXELS for width, height in sizes)
+
+
+def _ingested(rows: list[tuple[str, str]]) -> Callable[[], ReadingStats]:
+    """Reads parts-list rows into a fresh inventory, as one build is read."""
+
+    def read() -> ReadingStats:
+        stats = ReadingStats()
+        inventory = Inventory()
+        for ref, value in rows:
+            ingest_bom_line(inventory, "Hostile", ref, value, stats)
+        return stats
+
+    return read
+
+
+def test_many_parts_named_by_label() -> None:
+    # 3.2 s for a page of 4,000 'Rn 10k' listings before: each label that is
+    # no designator (R1000 has too many digits) gathered every label read so
+    # far in upper case, to see if it was a second 'COMP'.
+    def rows(count: int) -> list[tuple[str, str]]:
+        return [(f"R{1000 + n}", "10k") for n in range(count)]
+
+    _scales_linearly(lambda n: _ingested(rows(n)), 8000)
+    assert len(_ingested(rows(8000))().seen_refs.values) == 8000
+
+
+def _casings(word: str, count: int) -> list[str]:
+    """The first `count` ways of setting each of the word's letters in either case."""
+    return [
+        "".join(c.upper() if n >> k & 1 else c for k, c in enumerate(word))
+        for n in range(count)
+    ]
+
+
+def test_one_label_in_many_cases() -> None:
+    # 1.3 s for 4,000 before: each spelling searched for its number from 2.
+    def rows(count: int) -> list[tuple[str, str]]:
+        return [(label, "B10K") for label in _casings("blendcontrol", count)]
+
+    _scales_linearly(lambda n: _ingested(rows(n)), 4000)
+    seen = _ingested(rows(4000))().seen_refs
+    assert seen.get("blendcontrol") == "B10K"
+    assert seen.get("Blendcontrol (2)") == "B10K"
+    assert seen.get("BLENDCONTROL (4096)") is None
+    assert seen.get(f"{_casings('blendcontrol', 4000)[-1]} (4000)") == "B10K"
+
+
+def test_merging_many_warnings() -> None:
+    # Each of a build's warnings was looked for in a list of the reading's.
+    def merge(count: int) -> Callable[[], ReadingStats]:
+        warnings = [
+            ParseWarning(ParseWarningKind.UNREADABLE_ROW, f"R{n}", "Check it.")
+            for n in range(count)
+        ]
+
+        def run() -> ReadingStats:
+            stats = ReadingStats()
+            pdf_assemble._merge_warnings(stats, ReadingStats(warnings=warnings * 2))
+            return stats
+
+        return run
+
+    _scales_linearly(merge, 4000)
+    assert len(merge(4000)().warnings) == 4000

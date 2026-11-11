@@ -57,7 +57,7 @@ def record_not_populated(stats: ReadingStats, ref: str, value: str) -> None:
     rather than silently merged into this build.
     """
     for r in expand_refs(ref):
-        stats.seen_refs.setdefault(r, value)
+        stats.seen_refs.record_first(r, value)
 
 
 # Pin voltages beside a transistor: 'Q1  E-.39, B- .94, c- 1.62' (GuitarPCB
