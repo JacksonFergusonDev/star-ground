@@ -7,9 +7,9 @@
  "page": "https://tonepad.com/project.asp?id=43",
  "file_name": "tonepad_neoctavia.pdf",
  "sha256": "f807117f9ba2fbdbea044c11f28c53d8c9b92cd4ecc89d2864089c8a06acf61c",
- "checked": "2026-11-01T00:01:24+00:00",
+ "checked": "2026-11-11T16:55:27+00:00",
  "read_by_ocr": false,
- "verified": true,
+ "verified": false,
  "builds": [
   {
    "name": null,

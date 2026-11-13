@@ -7,9 +7,9 @@
  "page": "https://tonepad.com/project.asp?id=3",
  "file_name": "tonepad_bigmuff.pdf",
  "sha256": "cef3219cecd7d558db18cc4b0a2179f6676872cb3198a5ce062d000dd297d554",
- "checked": "2026-11-01T00:07:10+00:00",
+ "checked": "2026-11-11T17:01:18+00:00",
  "read_by_ocr": false,
- "verified": true,
+ "verified": false,
  "builds": [
   {
    "name": "Stock Big Muff",

@@ -7,9 +7,9 @@
  "page": "https://tonepad.com/project.asp?id=37",
  "file_name": "tonepad_distortion1.pdf",
  "sha256": "e2218785e30d4d6ce32d3ba7a48706f5f95d1e34a45eccb0c7b98e76d83dee3e",
- "checked": "2026-10-31T23:58:26+00:00",
+ "checked": "2026-11-11T16:52:35+00:00",
  "read_by_ocr": false,
- "verified": true,
+ "verified": false,
  "builds": [
   {
    "name": "TA7136P",

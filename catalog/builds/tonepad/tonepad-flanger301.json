@@ -7,9 +7,9 @@
  "page": "https://tonepad.com/project.asp?id=26",
  "file_name": "tonepad_flanger301.pdf",
  "sha256": "0e554dc547ab7a1e834bed2b098c615d5625c404fba591e4ab1ef350349c26b9",
- "checked": "2026-10-31T23:43:45+00:00",
+ "checked": "2026-11-11T16:37:58+00:00",
  "read_by_ocr": false,
- "verified": true,
+ "verified": false,
  "builds": [
   {
    "name": null,

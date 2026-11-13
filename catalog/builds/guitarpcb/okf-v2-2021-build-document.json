@@ -7,7 +7,7 @@
  "page": "https://guitarpcb.com/legacy-pcb-document-list/",
  "file_name": "OKF-v2-2021-Build-Document.pdf",
  "sha256": "f8fbcdec75b67e7df314e78b6ffc7a3e196e09af9abea914dc27920e1bcec56f",
- "checked": "2026-11-01T00:05:01+00:00",
+ "checked": "2026-11-12T16:51:12+00:00",
  "read_by_ocr": false,
  "verified": true,
  "builds": [
@@ -15,20 +15,20 @@
    "name": null,
    "parts": [
     {"ref": "R1", "count": 1, "category": "Resistors", "value": "10k", "location": {"page": 0, "x0": 172.15, "top": 432.02, "x1": 245.12, "bottom": 443.06}},
-    {"ref": "C3", "count": 1, "category": "Capacitors", "value": "220n", "location": {"page": 0, "x0": 345.72, "top": 432.02, "x1": 425.22, "bottom": 443.06}},
     {"ref": "R2", "count": 1, "category": "Resistors", "value": "820", "location": {"page": 0, "x0": 172.15, "top": 446.9, "x1": 248.25, "bottom": 457.94}},
-    {"ref": "C4", "count": 1, "category": "Capacitors", "value": "10u", "location": {"page": 0, "x0": 345.72, "top": 446.9, "x1": 422.34, "bottom": 457.94}},
     {"ref": "R3", "count": 1, "category": "Resistors", "value": "2.2k", "location": {"page": 0, "x0": 172.15, "top": 461.78, "x1": 245.2, "bottom": 472.82}},
-    {"ref": "C5", "count": 1, "category": "Capacitors", "value": "22u", "location": {"page": 0, "x0": 345.72, "top": 461.78, "x1": 422.34, "bottom": 472.82}},
     {"ref": "R4", "count": 1, "category": "Resistors", "value": "150k", "location": {"page": 0, "x0": 172.15, "top": 476.66, "x1": 247.76, "bottom": 487.7}},
-    {"ref": "D1", "count": 1, "category": "Diodes", "value": "Status LED", "location": {"page": 0, "x0": 345.48, "top": 476.66, "x1": 437.52, "bottom": 487.7}},
     {"ref": "R5", "count": 1, "category": "Resistors", "value": "1k", "location": {"page": 0, "x0": 172.15, "top": 491.54, "x1": 242.24, "bottom": 502.58}},
-    {"ref": "D2", "count": 1, "category": "Diodes", "value": "1N5817", "location": {"page": 0, "x0": 345.48, "top": 491.54, "x1": 431.48, "bottom": 502.58}},
     {"ref": "R6", "count": 1, "category": "Resistors", "value": "1.8k", "location": {"page": 0, "x0": 172.15, "top": 506.45, "x1": 245.2, "bottom": 517.49}},
-    {"ref": "VOL", "count": 1, "category": "Potentiometers", "value": "A500k", "location": {"page": 0, "x0": 342.36, "top": 506.45, "x1": 428.03, "bottom": 517.49}},
     {"ref": "C1", "count": 1, "category": "Capacitors", "value": "100n", "location": {"page": 0, "x0": 172.15, "top": 521.33, "x1": 248.06, "bottom": 532.37}},
-    {"ref": "Q1", "count": 1, "category": "Transistors", "value": "BC109", "location": {"page": 0, "x0": 345.0, "top": 521.33, "x1": 428.37, "bottom": 532.37}},
     {"ref": "C2", "count": 1, "category": "Capacitors", "value": "220p", "location": {"page": 0, "x0": 172.15, "top": 536.45, "x1": 248.06, "bottom": 547.49}},
+    {"ref": "C3", "count": 1, "category": "Capacitors", "value": "220n", "location": {"page": 0, "x0": 345.72, "top": 432.02, "x1": 425.22, "bottom": 443.06}},
+    {"ref": "C4", "count": 1, "category": "Capacitors", "value": "10u", "location": {"page": 0, "x0": 345.72, "top": 446.9, "x1": 422.34, "bottom": 457.94}},
+    {"ref": "C5", "count": 1, "category": "Capacitors", "value": "22u", "location": {"page": 0, "x0": 345.72, "top": 461.78, "x1": 422.34, "bottom": 472.82}},
+    {"ref": "D1", "count": 1, "category": "Diodes", "value": "Status LED", "location": {"page": 0, "x0": 345.48, "top": 476.66, "x1": 437.52, "bottom": 487.7}},
+    {"ref": "D2", "count": 1, "category": "Diodes", "value": "1N5817", "location": {"page": 0, "x0": 345.48, "top": 491.54, "x1": 431.48, "bottom": 502.58}},
+    {"ref": "VOL", "count": 1, "category": "Potentiometers", "value": "A500k", "location": {"page": 0, "x0": 342.36, "top": 506.45, "x1": 428.03, "bottom": 517.49}},
+    {"ref": "Q1", "count": 1, "category": "Transistors", "value": "BC109", "location": {"page": 0, "x0": 345.0, "top": 521.33, "x1": 428.37, "bottom": 532.37}},
     {"ref": "Q2", "count": 1, "category": "Transistors", "value": "BC108", "location": {"page": 0, "x0": 345.0, "top": 536.45, "x1": 428.37, "bottom": 547.49}}
    ]
   }

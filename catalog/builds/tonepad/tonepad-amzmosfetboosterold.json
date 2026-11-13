@@ -7,9 +7,9 @@
  "page": "https://tonepad.com/project.asp?id=30",
  "file_name": "tonepad_amzmosfetboosterOLD.pdf",
  "sha256": "1e04dd730f6433424c7530b9bac90f4e400b44856808a24c452c9f8ad1e0b922",
- "checked": "2026-10-31T23:54:17+00:00",
+ "checked": "2026-11-11T16:48:24+00:00",
  "read_by_ocr": false,
- "verified": true,
+ "verified": false,
  "builds": [
   {
    "name": null,

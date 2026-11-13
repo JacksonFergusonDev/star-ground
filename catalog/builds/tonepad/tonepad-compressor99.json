@@ -7,9 +7,9 @@
  "page": "https://tonepad.com/project.asp?id=67",
  "file_name": "tonepad_compressor99.pdf",
  "sha256": "5bb197b64cda2e4aa5a55e9589e824a1dea4c8dac55ead785d2ea469d17dd67f",
- "checked": "2026-10-31T23:17:17+00:00",
+ "checked": "2026-11-11T16:11:42+00:00",
  "read_by_ocr": false,
- "verified": true,
+ "verified": false,
  "builds": [
   {
    "name": null,

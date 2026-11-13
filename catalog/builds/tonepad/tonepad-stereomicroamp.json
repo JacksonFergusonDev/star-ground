@@ -7,9 +7,9 @@
  "page": "https://tonepad.com/project.asp?id=28",
  "file_name": "tonepad_stereomicroamp.pdf",
  "sha256": "782b96505efe9917d9ed05afc95ccacc6e1f7b562d1e54479b83704c29972397",
- "checked": "2026-10-31T23:44:55+00:00",
+ "checked": "2026-11-11T16:39:09+00:00",
  "read_by_ocr": false,
- "verified": true,
+ "verified": false,
  "builds": [
   {
    "name": null,

@@ -7,9 +7,9 @@
  "page": "https://tonepad.com/project.asp?id=66",
  "file_name": "tonepad_octaviarm.pdf",
  "sha256": "2f14d6d5ce3a88c6ab3f405794d36aeb94f40eade0a1dde9dcccfbb443ca4bfa",
- "checked": "2026-10-31T23:16:39+00:00",
+ "checked": "2026-11-11T16:11:02+00:00",
  "read_by_ocr": false,
- "verified": true,
+ "verified": false,
  "builds": [
   {
    "name": null,

@@ -7,9 +7,9 @@
  "page": "https://tonepad.com/project.asp?id=63",
  "file_name": "tonepad_tonebender3knob.pdf",
  "sha256": "da30c1ed7a6c3a2002d79cca8057363c9ee2dc10cd29c29bf25f301b6c7a4571",
- "checked": "2026-10-31T23:14:57+00:00",
+ "checked": "2026-11-11T16:09:14+00:00",
  "read_by_ocr": false,
- "verified": true,
+ "verified": false,
  "builds": [
   {
    "name": null,

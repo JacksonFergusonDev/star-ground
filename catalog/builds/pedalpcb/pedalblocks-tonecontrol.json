@@ -1,0 +1,92 @@
+{
+ "id": "pedalblocks-tonecontrol",
+ "publisher": "pedalpcb",
+ "title": "PedalBlocks Tone Control",
+ "effects": ["filter", "utility"],
+ "document": "https://docs.pedalpcb.com/project/PedalBlocks-ToneControl.pdf",
+ "page": "https://www.pedalpcb.com/product/6-10-5/",
+ "file_name": "PedalBlocks-ToneControl.pdf",
+ "sha256": "2683716df6b60102875a18a86355e54a9fa02fb195a660e97c84bb042395cf57",
+ "checked": "2026-11-12T16:02:52+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": "Triangle",
+   "parts": [
+    {"ref": "R1", "count": 1, "category": "Resistors", "value": "22k", "location": {"page": 0, "x0": 46.12, "top": 558.82, "x1": 141.64, "bottom": 570.82}},
+    {"ref": "R2", "count": 1, "category": "Resistors", "value": "22k", "location": {"page": 0, "x0": 46.12, "top": 573.22, "x1": 141.64, "bottom": 585.22}},
+    {"ref": "C1", "count": 1, "category": "Capacitors", "value": "4n", "location": {"page": 0, "x0": 46.12, "top": 587.62, "x1": 133.48, "bottom": 599.62}},
+    {"ref": "C2", "count": 1, "category": "Capacitors", "value": "10n", "location": {"page": 0, "x0": 46.12, "top": 602.02, "x1": 140.92, "bottom": 614.02}},
+    {"ref": "TONE", "count": 1, "category": "Potentiometers", "value": "B100K", "location": {"page": 0, "x0": 46.12, "top": 616.42, "x1": 157.96, "bottom": 628.42}}
+   ]
+  },
+  {
+   "name": "\u201873 Ram\u2019s Head",
+   "parts": [
+    {"ref": "R1", "count": 1, "category": "Resistors", "value": "33k", "location": {"page": 0, "x0": 177.12, "top": 558.82, "x1": 272.64, "bottom": 570.82}},
+    {"ref": "R2", "count": 1, "category": "Resistors", "value": "33k", "location": {"page": 0, "x0": 177.12, "top": 573.22, "x1": 272.64, "bottom": 585.22}},
+    {"ref": "C1", "count": 1, "category": "Capacitors", "value": "4n", "location": {"page": 0, "x0": 177.12, "top": 587.62, "x1": 264.48, "bottom": 599.62}},
+    {"ref": "C2", "count": 1, "category": "Capacitors", "value": "10n", "location": {"page": 0, "x0": 177.12, "top": 602.02, "x1": 271.92, "bottom": 614.02}},
+    {"ref": "TONE", "count": 1, "category": "Potentiometers", "value": "B100K", "location": {"page": 0, "x0": 177.12, "top": 616.42, "x1": 288.96, "bottom": 628.42}}
+   ]
+  },
+  {
+   "name": "\u201875 Ram\u2019s Head",
+   "parts": [
+    {"ref": "R1", "count": 1, "category": "Resistors", "value": "33k", "location": {"page": 0, "x0": 308.4, "top": 558.82, "x1": 403.92, "bottom": 570.82}},
+    {"ref": "R2", "count": 1, "category": "Resistors", "value": "22k", "location": {"page": 0, "x0": 308.4, "top": 573.22, "x1": 403.92, "bottom": 585.22}},
+    {"ref": "C1", "count": 1, "category": "Capacitors", "value": "4n", "location": {"page": 0, "x0": 308.4, "top": 587.62, "x1": 395.76, "bottom": 599.62}},
+    {"ref": "C2", "count": 1, "category": "Capacitors", "value": "10n", "location": {"page": 0, "x0": 308.4, "top": 602.02, "x1": 403.2, "bottom": 614.02}},
+    {"ref": "TONE", "count": 1, "category": "Potentiometers", "value": "B100K", "location": {"page": 0, "x0": 308.4, "top": 616.42, "x1": 420.24, "bottom": 628.42}}
+   ]
+  },
+  {
+   "name": "Civil War",
+   "parts": [
+    {"ref": "R1", "count": 1, "category": "Resistors", "value": "20k", "location": {"page": 0, "x0": 442.68, "top": 558.82, "x1": 538.2, "bottom": 570.82}},
+    {"ref": "R2", "count": 1, "category": "Resistors", "value": "22k", "location": {"page": 0, "x0": 46.12, "top": 573.22, "x1": 141.64, "bottom": 585.22}},
+    {"ref": "C1", "count": 1, "category": "Capacitors", "value": "3.9n", "location": {"page": 0, "x0": 442.68, "top": 587.62, "x1": 537.48, "bottom": 599.62}},
+    {"ref": "C2", "count": 1, "category": "Capacitors", "value": "10n", "location": {"page": 0, "x0": 46.12, "top": 602.02, "x1": 140.92, "bottom": 614.02}},
+    {"ref": "TONE", "count": 1, "category": "Potentiometers", "value": "B100K", "location": {"page": 0, "x0": 46.12, "top": 616.42, "x1": 157.96, "bottom": 628.42}}
+   ]
+  },
+  {
+   "name": "Russian",
+   "parts": [
+    {"ref": "R1", "count": 1, "category": "Resistors", "value": "20k", "location": {"page": 0, "x0": 442.68, "top": 558.82, "x1": 538.2, "bottom": 570.82}},
+    {"ref": "R2", "count": 1, "category": "Resistors", "value": "22k", "location": {"page": 0, "x0": 46.12, "top": 573.22, "x1": 141.64, "bottom": 585.22}},
+    {"ref": "C1", "count": 1, "category": "Capacitors", "value": "3.9n", "location": {"page": 0, "x0": 442.68, "top": 587.62, "x1": 537.48, "bottom": 599.62}},
+    {"ref": "C2", "count": 1, "category": "Capacitors", "value": "10n", "location": {"page": 0, "x0": 46.12, "top": 602.02, "x1": 140.92, "bottom": 614.02}},
+    {"ref": "TONE", "count": 1, "category": "Potentiometers", "value": "B100K", "location": {"page": 0, "x0": 46.12, "top": 616.42, "x1": 157.96, "bottom": 628.42}}
+   ]
+  },
+  {
+   "name": "Flat Mids",
+   "parts": [
+    {"ref": "R1", "count": 1, "category": "Resistors", "value": "39k", "location": {"page": 0, "x0": 244.4, "top": 657.42, "x1": 339.92, "bottom": 669.42}},
+    {"ref": "R2", "count": 1, "category": "Resistors", "value": "22k", "location": {"page": 0, "x0": 442.68, "top": 573.22, "x1": 538.2, "bottom": 585.22}},
+    {"ref": "C1", "count": 1, "category": "Capacitors", "value": "10n", "location": {"page": 0, "x0": 244.4, "top": 686.22, "x1": 339.2, "bottom": 698.22}},
+    {"ref": "C2", "count": 1, "category": "Capacitors", "value": "10n", "location": {"page": 0, "x0": 442.68, "top": 602.02, "x1": 537.48, "bottom": 614.02}},
+    {"ref": "TONE", "count": 1, "category": "Potentiometers", "value": "B100K", "location": {"page": 0, "x0": 442.68, "top": 616.42, "x1": 554.52, "bottom": 628.42}}
+   ]
+  },
+  {
+   "name": "Mid Hump",
+   "parts": [
+    {"ref": "R1", "count": 1, "category": "Resistors", "value": "39k", "location": {"page": 0, "x0": 442.68, "top": 657.42, "x1": 538.2, "bottom": 669.42}},
+    {"ref": "R2", "count": 1, "category": "Resistors", "value": "22k", "location": {"page": 0, "x0": 442.68, "top": 573.22, "x1": 538.2, "bottom": 585.22}},
+    {"ref": "C1", "count": 1, "category": "Capacitors", "value": "10n", "location": {"page": 0, "x0": 442.68, "top": 686.22, "x1": 537.48, "bottom": 698.22}},
+    {"ref": "C2", "count": 1, "category": "Capacitors", "value": "5.6n", "location": {"page": 0, "x0": 442.68, "top": 700.62, "x1": 537.48, "bottom": 712.62}},
+    {"ref": "TONE", "count": 1, "category": "Potentiometers", "value": "B100K", "location": {"page": 0, "x0": 442.68, "top": 616.42, "x1": 554.52, "bottom": 628.42}}
+   ]
+  }
+ ],
+ "boards": {
+  "R2": [{"page": 0, "x0": 414.45, "top": 207.23, "x1": 433.53, "bottom": 233.15}, {"page": 0, "x0": 46.12, "top": 671.82, "x1": 62.2, "bottom": 683.82}, {"page": 0, "x0": 244.4, "top": 671.82, "x1": 260.48, "bottom": 683.82}, {"page": 0, "x0": 442.68, "top": 671.82, "x1": 458.76, "bottom": 683.82}],
+  "C1": [{"page": 0, "x0": 387.06, "top": 230.63, "x1": 407.58, "bottom": 248.99}, {"page": 0, "x0": 46.12, "top": 686.22, "x1": 62.44, "bottom": 698.22}],
+  "TONE": [{"page": 0, "x0": 415.14, "top": 296.51, "x1": 439.62, "bottom": 343.31}],
+  "R1": [{"page": 0, "x0": 385.62, "top": 346.19, "x1": 407.94, "bottom": 363.47}, {"page": 0, "x0": 46.12, "top": 657.42, "x1": 62.2, "bottom": 669.42}],
+  "C2": [{"page": 0, "x0": 46.12, "top": 700.62, "x1": 62.44, "bottom": 712.62}, {"page": 0, "x0": 244.4, "top": 700.62, "x1": 260.72, "bottom": 712.62}]
+ }
+}

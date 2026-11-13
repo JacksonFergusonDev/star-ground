@@ -1,0 +1,62 @@
+{
+ "id": "4tapdcisolator-pedalpcb",
+ "publisher": "pedalpcb",
+ "title": "4-Tap DC Isolator",
+ "effects": ["utility"],
+ "document": "https://docs.pedalpcb.com/project/4TapDCIsolator-PedalPCB.pdf",
+ "page": "https://www.pedalpcb.com/product/pcb617/",
+ "file_name": "4TapDCIsolator-PedalPCB.pdf",
+ "sha256": "7f1caa2bc0dabf72f4bbc6f7d27fa3d0ba296aa835b29998bd89285c7f30f5f0",
+ "checked": "2026-11-11T15:29:41+00:00",
+ "read_by_ocr": false,
+ "verified": true,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {"ref": "C1", "count": 1, "category": "Capacitors", "value": "100u", "location": {"page": 1, "x0": 37.0, "top": 109.56, "x1": 145.22, "bottom": 121.56}},
+    {"ref": "C2", "count": 1, "category": "Capacitors", "value": "100u", "location": {"page": 1, "x0": 37.0, "top": 123.97, "x1": 145.22, "bottom": 135.97}},
+    {"ref": "C3", "count": 1, "category": "Capacitors", "value": "100u", "location": {"page": 1, "x0": 37.0, "top": 138.38, "x1": 145.22, "bottom": 150.38}},
+    {"ref": "C4", "count": 1, "category": "Capacitors", "value": "100u", "location": {"page": 1, "x0": 37.0, "top": 152.79, "x1": 145.22, "bottom": 164.79}},
+    {"ref": "C5", "count": 1, "category": "Capacitors", "value": "100u", "location": {"page": 1, "x0": 37.0, "top": 167.2, "x1": 145.22, "bottom": 179.2}},
+    {"ref": "C6", "count": 1, "category": "Capacitors", "value": "100u (50V minimum)", "location": {"page": 1, "x0": 37.0, "top": 181.61, "x1": 145.22, "bottom": 193.61}},
+    {"ref": "D1", "count": 1, "category": "Diodes", "value": "1N5819", "location": {"page": 1, "x0": 37.0, "top": 210.43, "x1": 160.56, "bottom": 222.43}},
+    {"ref": "D2", "count": 1, "category": "Diodes", "value": "1N5819", "location": {"page": 1, "x0": 37.0, "top": 224.84, "x1": 160.56, "bottom": 236.84}},
+    {"ref": "D3", "count": 1, "category": "Diodes", "value": "1N5819", "location": {"page": 1, "x0": 37.0, "top": 239.25, "x1": 160.56, "bottom": 251.25}},
+    {"ref": "D4", "count": 1, "category": "Diodes", "value": "1N5819", "location": {"page": 1, "x0": 37.0, "top": 253.66, "x1": 160.56, "bottom": 265.66}},
+    {"ref": "IC1", "count": 1, "category": "ICs", "value": "IEB0105S09", "location": {"page": 1, "x0": 37.0, "top": 282.48, "x1": 185.91, "bottom": 294.48}},
+    {"ref": "IC2", "count": 1, "category": "ICs", "value": "IEB0105S09", "location": {"page": 1, "x0": 37.0, "top": 296.89, "x1": 185.91, "bottom": 308.89}},
+    {"ref": "IC3", "count": 1, "category": "ICs", "value": "IEB0105S09", "location": {"page": 1, "x0": 37.0, "top": 311.3, "x1": 185.91, "bottom": 323.3}},
+    {"ref": "IC4", "count": 1, "category": "ICs", "value": "IEB0105S09", "location": {"page": 1, "x0": 37.0, "top": 325.71, "x1": 185.91, "bottom": 337.71}},
+    {"ref": "IC5", "count": 1, "category": "ICs", "value": "L7805CV", "location": {"page": 1, "x0": 37.0, "top": 340.12, "x1": 168.56, "bottom": 352.12}},
+    {"ref": "DC1", "count": 1, "category": "Hardware/Misc", "value": "DC JACK", "location": {"page": 1, "x0": 37.0, "top": 368.94, "x1": 169.86, "bottom": 380.94}},
+    {"ref": "DC2", "count": 1, "category": "Hardware/Misc", "value": "DC JACK", "location": {"page": 1, "x0": 37.0, "top": 383.35, "x1": 169.86, "bottom": 395.35}},
+    {"ref": "DC3", "count": 1, "category": "Hardware/Misc", "value": "DC JACK", "location": {"page": 1, "x0": 37.0, "top": 397.77, "x1": 169.86, "bottom": 409.77}},
+    {"ref": "DC4", "count": 1, "category": "Hardware/Misc", "value": "DC JACK", "location": {"page": 1, "x0": 37.0, "top": 412.18, "x1": 169.86, "bottom": 424.18}},
+    {"ref": "DC_IN", "count": 1, "category": "Hardware/Misc", "value": "DC JACK", "location": {"page": 1, "x0": 37.0, "top": 426.59, "x1": 169.86, "bottom": 438.59}}
+   ]
+  }
+ ],
+ "boards": {
+  "DC1": [{"page": 0, "x0": 366.67, "top": 210.63, "x1": 378.91, "bottom": 230.43}, {"page": 2, "x0": 716.04, "top": 129.82, "x1": 737.28, "bottom": 142.06}],
+  "C2": [{"page": 0, "x0": 272.71, "top": 214.95, "x1": 281.71, "bottom": 225.39}, {"page": 2, "x0": 645.84, "top": 155.02, "x1": 657.0, "bottom": 169.06}],
+  "IC1": [{"page": 0, "x0": 230.21, "top": 226.47, "x1": 239.21, "bottom": 237.99}, {"page": 2, "x0": 597.24, "top": 127.66, "x1": 614.88, "bottom": 138.82}],
+  "C6": [{"page": 0, "x0": 285.67, "top": 267.15, "x1": 294.31, "bottom": 277.59}],
+  "IC2": [{"page": 0, "x0": 229.85, "top": 302.43, "x1": 239.21, "bottom": 315.75}, {"page": 2, "x0": 597.24, "top": 232.06, "x1": 615.96, "bottom": 243.94}],
+  "D2": [{"page": 0, "x0": 365.95, "top": 313.23, "x1": 379.27, "bottom": 334.83}, {"page": 0, "x0": 317.71, "top": 365.07, "x1": 328.87, "bottom": 374.79}, {"page": 2, "x0": 140.76, "top": 167.62, "x1": 151.92, "bottom": 182.38}],
+  "DC2": [{"page": 0, "x0": 367.37, "top": 313.95, "x1": 379.25, "bottom": 334.83}, {"page": 2, "x0": 717.12, "top": 233.86, "x1": 737.28, "bottom": 247.18}],
+  "C3": [{"page": 0, "x0": 274.85, "top": 322.23, "x1": 283.49, "bottom": 333.03}, {"page": 2, "x0": 645.84, "top": 259.42, "x1": 657.72, "bottom": 273.46}],
+  "D1": [{"page": 0, "x0": 318.43, "top": 352.83, "x1": 328.51, "bottom": 362.55}, {"page": 2, "x0": 186.12, "top": 127.66, "x1": 200.88, "bottom": 138.82}],
+  "IC5": [{"page": 0, "x0": 352.97, "top": 370.83, "x1": 360.89, "bottom": 382.71}, {"page": 2, "x0": 313.92, "top": 137.02, "x1": 334.08, "bottom": 150.34}],
+  "D3": [{"page": 0, "x0": 316.99, "top": 377.31, "x1": 328.87, "bottom": 387.39}, {"page": 2, "x0": 186.12, "top": 245.74, "x1": 200.88, "bottom": 256.18}],
+  "D4": [{"page": 0, "x0": 317.35, "top": 389.91, "x1": 328.87, "bottom": 398.91}, {"page": 2, "x0": 140.76, "top": 219.82, "x1": 152.28, "bottom": 234.22}],
+  "DC3": [{"page": 0, "x0": 367.03, "top": 417.63, "x1": 378.55, "bottom": 439.23}, {"page": 2, "x0": 717.12, "top": 330.7, "x1": 738.0, "bottom": 344.02}],
+  "C4": [{"page": 0, "x0": 274.85, "top": 419.79, "x1": 283.49, "bottom": 430.59}, {"page": 2, "x0": 645.84, "top": 355.9, "x1": 657.0, "bottom": 370.3}],
+  "IC3": [{"page": 0, "x0": 229.85, "top": 437.43, "x1": 239.21, "bottom": 450.39}, {"page": 2, "x0": 597.96, "top": 329.62, "x1": 615.24, "bottom": 340.78}],
+  "C1": [{"page": 0, "x0": 286.37, "top": 475.59, "x1": 294.29, "bottom": 484.59}, {"page": 2, "x0": 363.24, "top": 183.46, "x1": 374.76, "bottom": 197.5}],
+  "IC4": [{"page": 0, "x0": 230.21, "top": 514.11, "x1": 238.85, "bottom": 526.71}, {"page": 2, "x0": 597.24, "top": 434.02, "x1": 615.96, "bottom": 445.9}],
+  "DC4": [{"page": 0, "x0": 367.37, "top": 521.67, "x1": 379.25, "bottom": 543.27}, {"page": 2, "x0": 717.12, "top": 435.1, "x1": 738.0, "bottom": 448.78}],
+  "C5": [{"page": 0, "x0": 275.21, "top": 527.43, "x1": 283.13, "bottom": 536.79}, {"page": 2, "x0": 645.84, "top": 460.3, "x1": 657.72, "bottom": 475.06}],
+  "DC_IN": [{"page": 2, "x0": 50.04, "top": 126.94, "x1": 81.0, "bottom": 140.26}]
+ }
+}

@@ -7,9 +7,9 @@
  "page": "https://tonepad.com/project.asp?id=5",
  "file_name": "tonepad_orangesqueezer2.pdf",
  "sha256": "ffdee505f8d12ff6dd57bfaeb94605736024f0163085d02dddc50dde42b33e62",
- "checked": "2026-11-01T00:03:07+00:00",
+ "checked": "2026-11-11T16:57:13+00:00",
  "read_by_ocr": false,
- "verified": true,
+ "verified": false,
  "builds": [
   {
    "name": null,

@@ -7,21 +7,23 @@
  "page": "https://guitarpcb.com/legacy-pcb-document-list/",
  "file_name": "Sunn-T-v3-2021.pdf",
  "sha256": "c42dfbc9308cb8e821d8cf2461bbbf0ac6658f6b68079cfa39f1f158b43d178c",
- "checked": "2026-11-01T00:10:40+00:00",
+ "checked": "2026-11-12T16:56:39+00:00",
  "read_by_ocr": false,
  "verified": true,
  "builds": [
   {
    "name": null,
    "parts": [
+    {"ref": "VOL", "count": 1, "category": "Potentiometers", "value": "A100K", "location": {"page": 0, "x0": 383.9, "top": 471.86, "x1": 473.25, "bottom": 482.9}},
+    {"ref": "GAIN.BRT", "count": 1, "category": "Potentiometers", "value": "A1M", "location": {"page": 0, "x0": 370.94, "top": 503.54, "x1": 469.66, "bottom": 514.58}},
+    {"ref": "GAIN", "count": 1, "category": "Potentiometers", "value": "A1M", "location": {"page": 0, "x0": 381.26, "top": 487.7, "x1": 469.66, "bottom": 498.74}},
+    {"ref": "MID", "count": 1, "category": "Potentiometers", "value": "B25K", "location": {"page": 0, "x0": 383.42, "top": 535.49, "x1": 470.36, "bottom": 546.53}},
+    {"ref": "D3", "count": 1, "category": "Diodes", "value": "1n5817", "location": {"page": 0, "x0": 387.02, "top": 662.71, "x1": 475.43, "bottom": 673.75}},
     {"ref": "R1", "count": 1, "category": "Resistors", "value": "68k", "location": {"page": 0, "x0": 123.65, "top": 471.86, "x1": 193.55, "bottom": 482.9}},
     {"ref": "R2", "count": 1, "category": "Resistors", "value": "68k", "location": {"page": 0, "x0": 123.65, "top": 487.7, "x1": 193.55, "bottom": 498.74}},
     {"ref": "C1", "count": 1, "category": "Capacitors", "value": "220p", "location": {"page": 0, "x0": 253.78, "top": 471.86, "x1": 326.21, "bottom": 482.9}},
     {"ref": "C6", "count": 1, "category": "Capacitors", "value": "220p", "location": {"page": 0, "x0": 253.78, "top": 551.33, "x1": 326.21, "bottom": 562.37}},
-    {"ref": "VOL", "count": 1, "category": "Potentiometers", "value": "A100K", "location": {"page": 0, "x0": 383.9, "top": 471.86, "x1": 473.25, "bottom": 482.9}},
     {"ref": "C2", "count": 1, "category": "Capacitors", "value": "470p", "location": {"page": 0, "x0": 253.78, "top": 487.7, "x1": 326.21, "bottom": 498.74}},
-    {"ref": "GAIN", "count": 1, "category": "Potentiometers", "value": "A1M", "location": {"page": 0, "x0": 381.26, "top": 487.7, "x1": 469.66, "bottom": 498.74}},
-    {"ref": "GAIN.BRT", "count": 1, "category": "Potentiometers", "value": "A1M", "location": {"page": 0, "x0": 370.94, "top": 503.54, "x1": 469.66, "bottom": 514.58}},
     {"ref": "R3", "count": 1, "category": "Resistors", "value": "1M", "location": {"page": 0, "x0": 123.65, "top": 503.54, "x1": 192.84, "bottom": 514.58}},
     {"ref": "R12", "count": 1, "category": "Resistors", "value": "1M", "location": {"page": 0, "x0": 120.77, "top": 646.87, "x1": 192.84, "bottom": 657.91}},
     {"ref": "C3", "count": 1, "category": "Capacitors", "value": "220u", "location": {"page": 0, "x0": 253.78, "top": 503.54, "x1": 326.21, "bottom": 514.58}},
@@ -35,7 +37,6 @@
     {"ref": "BASS", "count": 1, "category": "Potentiometers", "value": "B1M", "location": {"page": 0, "x0": 381.5, "top": 519.62, "x1": 469.41, "bottom": 530.66}},
     {"ref": "R5", "count": 1, "category": "Resistors", "value": "100k", "location": {"page": 0, "x0": 123.65, "top": 535.49, "x1": 196.43, "bottom": 546.53}},
     {"ref": "R10", "count": 1, "category": "Resistors", "value": "100k", "location": {"page": 0, "x0": 120.77, "top": 614.95, "x1": 196.43, "bottom": 625.99}},
-    {"ref": "MID", "count": 1, "category": "Potentiometers", "value": "B25K", "location": {"page": 0, "x0": 383.42, "top": 535.49, "x1": 470.36, "bottom": 546.53}},
     {"ref": "R6", "count": 1, "category": "Resistors", "value": "470k", "location": {"page": 0, "x0": 123.65, "top": 551.33, "x1": 196.43, "bottom": 562.37}},
     {"ref": "R7", "count": 1, "category": "Resistors", "value": "470k", "location": {"page": 0, "x0": 123.65, "top": 567.17, "x1": 196.43, "bottom": 578.21}},
     {"ref": "TREB", "count": 1, "category": "Potentiometers", "value": "B250K", "location": {"page": 0, "x0": 381.5, "top": 551.33, "x1": 473.24, "bottom": 562.37}},
@@ -53,8 +54,7 @@
     {"ref": "R11", "count": 1, "category": "Resistors", "value": "56k", "location": {"page": 0, "x0": 120.77, "top": 630.79, "x1": 193.55, "bottom": 641.83}},
     {"ref": "D1", "count": 1, "category": "Diodes", "value": "Status LED", "location": {"page": 0, "x0": 387.02, "top": 646.87, "x1": 482.76, "bottom": 657.91}},
     {"ref": "R13", "count": 1, "category": "Resistors", "value": "1.8k", "location": {"page": 0, "x0": 120.77, "top": 662.71, "x1": 138.12, "bottom": 673.75}},
-    {"ref": "C13", "count": 1, "category": "Capacitors", "value": "100u", "location": {"page": 0, "x0": 250.9, "top": 662.71, "x1": 326.21, "bottom": 673.75}},
-    {"ref": "D3", "count": 1, "category": "Diodes", "value": "1n5817", "location": {"page": 0, "x0": 387.02, "top": 662.71, "x1": 475.43, "bottom": 673.75}}
+    {"ref": "C13", "count": 1, "category": "Capacitors", "value": "100u", "location": {"page": 0, "x0": 250.9, "top": 662.71, "x1": 326.21, "bottom": 673.75}}
    ]
   }
  ],
