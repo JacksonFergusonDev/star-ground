@@ -7,9 +7,9 @@
  "page": "https://tonepad.com/project.asp?id=46",
  "file_name": "tonepad_greenringer.pdf",
  "sha256": "def0d39fd0ae713e75efbfa83243be831e9039a44781dbf63857123a2d72e033",
- "checked": "2026-11-01T00:04:47+00:00",
+ "checked": "2026-11-11T16:58:59+00:00",
  "read_by_ocr": false,
- "verified": true,
+ "verified": false,
  "builds": [
   {
    "name": null,

@@ -1,0 +1,24 @@
+{
+ "id": "125b-3channelmixer",
+ "publisher": "pedalpcb",
+ "title": "3-Channel Mixer",
+ "effects": ["utility"],
+ "document": "https://docs.pedalpcb.com/project/drill/125B-3ChannelMixer.pdf",
+ "page": "https://www.pedalpcb.com/product/pcb605/",
+ "file_name": "125B-3ChannelMixer.pdf",
+ "sha256": "1fb56995defb7bfc4623849f643dd171c2f1cfbcb0d04029d790c355a9ffa688",
+ "checked": "2026-11-06T18:12:37+00:00",
+ "read_by_ocr": false,
+ "verified": false,
+ "builds": [
+  {
+   "name": null,
+   "parts": [
+    {"ref": "LED", "count": 1, "category": "Diodes", "value": "NTIOM E E T T O E P R NTIOM E E T T O E P R", "location": null}
+   ]
+  }
+ ],
+ "boards": {
+  "LED": [{"page": 0, "x0": 255.11, "top": 262.21, "x1": 266.73, "bottom": 267.45}]
+ }
+}

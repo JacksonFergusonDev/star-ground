@@ -7,9 +7,9 @@
  "page": "https://tonepad.com/project.asp?id=10",
  "file_name": "tonepad_rossdynacomp.pdf",
  "sha256": "371ad440a6477f6fbef9c69d07f5db51b76ca8b78e91e71aa12d206042b2e965",
- "checked": "2026-11-01T00:04:14+00:00",
+ "checked": "2026-11-11T16:58:25+00:00",
  "read_by_ocr": false,
- "verified": true,
+ "verified": false,
  "builds": [
   {
    "name": "Dyna",

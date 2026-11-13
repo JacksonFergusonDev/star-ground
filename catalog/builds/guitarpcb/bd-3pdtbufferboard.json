@@ -7,7 +7,7 @@
  "page": "https://guitarpcb.com/community/topic/direct-build-document-link-list/",
  "file_name": "BD_3PDTBufferBoard.pdf",
  "sha256": "e69b6c8826e54e1efcde8c71c49b1598b1262080985d76b322fe238055307cb8",
- "checked": "2026-10-31T23:29:00+00:00",
+ "checked": "2026-11-12T16:17:10+00:00",
  "read_by_ocr": false,
  "verified": true,
  "builds": [
@@ -33,6 +33,6 @@
   "R2": [{"page": 0, "x0": 217.2, "top": 251.4, "x1": 240.6, "bottom": 269.76}, {"page": 0, "x0": 167.64, "top": 546.36, "x1": 187.08, "bottom": 562.2}, {"page": 2, "x0": 221.4, "top": 370.92, "x1": 238.32, "bottom": 384.24}],
   "R3": [{"page": 0, "x0": 357.6, "top": 261.84, "x1": 379.92, "bottom": 277.32}, {"page": 0, "x0": 329.28, "top": 542.04, "x1": 348.36, "bottom": 555.36}, {"page": 2, "x0": 339.48, "top": 378.84, "x1": 357.12, "bottom": 391.44}],
   "D1": [{"page": 0, "x0": 225.24, "top": 420.0, "x1": 243.6, "bottom": 433.32}],
-  "C2": [{"page": 0, "x0": 285.48, "top": 522.24, "x1": 302.76, "bottom": 537.0}, {"page": 2, "x0": 279.0, "top": 377.4, "x1": 300.6, "bottom": 390.72}]
+  "C2": [{"page": 0, "x0": 285.12, "top": 521.52, "x1": 303.12, "bottom": 537.36}, {"page": 2, "x0": 279.0, "top": 377.4, "x1": 300.6, "bottom": 390.72}]
  }
 }

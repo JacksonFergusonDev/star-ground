@@ -7,9 +7,9 @@
  "page": "https://tonepad.com/project.asp?id=58",
  "file_name": "tonepad_folkurbanoctup.pdf",
  "sha256": "c814597c1ee42c4e499324d94bb2404cc5fd9528138fdbe48458bbc703eef337",
- "checked": "2026-10-31T23:10:17+00:00",
+ "checked": "2026-11-11T16:04:33+00:00",
  "read_by_ocr": false,
- "verified": true,
+ "verified": false,
  "builds": [
   {
    "name": null,

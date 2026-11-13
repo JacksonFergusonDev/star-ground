@@ -7,9 +7,9 @@
  "page": "https://tonepad.com/project.asp?id=50",
  "file_name": "tonepad_maestrofiltersamplehold.pdf",
  "sha256": "4742e70dc2d58f438305b58371bf0035c4e068892fb7d05c80f3fb6c8f9706e4",
- "checked": "2026-11-01T00:07:48+00:00",
+ "checked": "2026-11-11T17:01:55+00:00",
  "read_by_ocr": false,
- "verified": true,
+ "verified": false,
  "builds": [
   {
    "name": null,

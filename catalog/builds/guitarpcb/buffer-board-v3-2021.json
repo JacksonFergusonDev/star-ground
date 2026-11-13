@@ -7,7 +7,7 @@
  "page": "https://guitarpcb.com/legacy-pcb-document-list/",
  "file_name": "Buffer-Board-v3-2021.pdf",
  "sha256": "0bb16cdfbf3df04cc98f4e9f81ae85b623f096f5a49cfdeff37cbabac0c80af0",
- "checked": "2026-10-31T23:30:11+00:00",
+ "checked": "2026-11-12T16:18:17+00:00",
  "read_by_ocr": false,
  "verified": true,
  "builds": [
@@ -16,14 +16,14 @@
    "parts": [
     {"ref": "R1", "count": 1, "category": "Resistors", "value": "1M", "location": {"page": 0, "x0": 193.27, "top": 450.24, "x1": 260.31, "bottom": 461.28}},
     {"ref": "R2", "count": 1, "category": "Resistors", "value": "1M", "location": {"page": 0, "x0": 193.27, "top": 465.14, "x1": 260.31, "bottom": 476.18}},
+    {"ref": "R3", "count": 1, "category": "Resistors", "value": "100k", "location": {"page": 0, "x0": 193.27, "top": 480.02, "x1": 263.4, "bottom": 491.06}},
+    {"ref": "CLR", "count": 1, "category": "Resistors", "value": "1.8k", "location": {"page": 0, "x0": 190.87, "top": 510.02, "x1": 260.84, "bottom": 521.06}},
+    {"ref": "SW1", "count": 1, "category": "Switches", "value": "3PDT FS", "location": {"page": 0, "x0": 188.71, "top": 539.78, "x1": 270.99, "bottom": 550.82}},
     {"ref": "C1", "count": 1, "category": "Capacitors", "value": "220n", "location": {"page": 0, "x0": 315.48, "top": 450.24, "x1": 386.71, "bottom": 461.28}},
     {"ref": "C2", "count": 1, "category": "Capacitors", "value": "220n", "location": {"page": 0, "x0": 315.48, "top": 465.14, "x1": 386.71, "bottom": 476.18}},
-    {"ref": "R3", "count": 1, "category": "Resistors", "value": "100k", "location": {"page": 0, "x0": 193.27, "top": 480.02, "x1": 263.4, "bottom": 491.06}},
-    {"ref": "D1", "count": 1, "category": "Diodes", "value": "Status LED", "location": {"page": 0, "x0": 314.76, "top": 495.14, "x1": 399.45, "bottom": 506.18}},
-    {"ref": "CLR", "count": 1, "category": "Resistors", "value": "1.8k", "location": {"page": 0, "x0": 190.87, "top": 510.02, "x1": 260.84, "bottom": 521.06}},
     {"ref": "D2", "count": 1, "category": "Diodes", "value": "1n5817", "location": {"page": 0, "x0": 314.76, "top": 510.02, "x1": 392.36, "bottom": 521.06}},
-    {"ref": "SW1", "count": 1, "category": "Switches", "value": "3PDT FS", "location": {"page": 0, "x0": 188.71, "top": 539.78, "x1": 270.99, "bottom": 550.82}},
-    {"ref": "IC1", "count": 1, "category": "ICs", "value": "TL071", "location": {"page": 0, "x0": 313.8, "top": 539.78, "x1": 388.78, "bottom": 550.82}}
+    {"ref": "IC1", "count": 1, "category": "ICs", "value": "TL071", "location": {"page": 0, "x0": 313.8, "top": 539.78, "x1": 388.78, "bottom": 550.82}},
+    {"ref": "D1", "count": 1, "category": "Diodes", "value": "Status LED", "location": {"page": 0, "x0": 314.76, "top": 495.14, "x1": 399.45, "bottom": 506.18}}
    ]
   }
  ],

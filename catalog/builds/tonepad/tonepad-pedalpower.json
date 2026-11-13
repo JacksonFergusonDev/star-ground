@@ -7,9 +7,9 @@
  "page": "https://tonepad.com/project.asp?id=59",
  "file_name": "tonepad_pedalpower.pdf",
  "sha256": "ad39bca156921e55d70a8c2deff18af926a2226b973f30d69605a0bfe1193dae",
- "checked": "2026-10-31T23:11:24+00:00",
+ "checked": "2026-11-11T16:05:43+00:00",
  "read_by_ocr": false,
- "verified": true,
+ "verified": false,
  "builds": [
   {
    "name": null,

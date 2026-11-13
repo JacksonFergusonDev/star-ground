@@ -7,9 +7,9 @@
  "page": "https://tonepad.com/project.asp?id=47",
  "file_name": "tonepad_redranger.pdf",
  "sha256": "43c306ca521715a87fc284f9c1fed6255d7fcb3097a0e51b9db060dced39bdb5",
- "checked": "2026-11-01T00:05:22+00:00",
+ "checked": "2026-11-11T16:59:34+00:00",
  "read_by_ocr": false,
- "verified": true,
+ "verified": false,
  "builds": [
   {
    "name": null,

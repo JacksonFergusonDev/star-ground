@@ -7,9 +7,9 @@
  "page": "https://tonepad.com/project.asp?id=62",
  "file_name": "tonepad_octavia.pdf",
  "sha256": "776e0e7cad30281074dd0539af3a53e45d47a286d0fe2d693fa411be072bae72",
- "checked": "2026-10-31T23:14:19+00:00",
+ "checked": "2026-11-11T16:08:41+00:00",
  "read_by_ocr": false,
- "verified": true,
+ "verified": false,
  "builds": [
   {
    "name": null,

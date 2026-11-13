@@ -7,9 +7,9 @@
  "page": "https://tonepad.com/project.asp?id=21",
  "file_name": "tonepad_dod280comp.pdf",
  "sha256": "a9034bf43528ef545af3ef3f516b8a6d103bcdcfe8a7aa89e099c56d44eb5c41",
- "checked": "2026-10-31T23:40:54+00:00",
+ "checked": "2026-11-11T16:34:59+00:00",
  "read_by_ocr": false,
- "verified": true,
+ "verified": false,
  "builds": [
   {
    "name": null,

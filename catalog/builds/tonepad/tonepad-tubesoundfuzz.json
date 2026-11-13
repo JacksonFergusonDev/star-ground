@@ -7,9 +7,9 @@
  "page": "https://tonepad.com/project.asp?id=65",
  "file_name": "tonepad_tubesoundfuzz.pdf",
  "sha256": "e5d0e88764dbe5db71df6c59655ab36d9173f82913ad1bda76ed42812d2d7ba2",
- "checked": "2026-10-31T23:16:04+00:00",
+ "checked": "2026-11-11T16:10:24+00:00",
  "read_by_ocr": false,
- "verified": true,
+ "verified": false,
  "builds": [
   {
    "name": "CA Tube Sound Fuzz",
