@@ -119,6 +119,10 @@ serve-api: _sync-python
 example-pack: _sync-python
     uv run python -m scripts.example_pack
 
+# Regenerate the shopping list the website's snapshot page shows (web/src/pages/embed/)
+snapshot: _sync-python
+    uv run python -m scripts.export_snapshot
+
 # Regenerate openapi.json and the website's API types after changing src/star_ground/server/
 openapi: sync
     uv run python -m scripts.export_openapi

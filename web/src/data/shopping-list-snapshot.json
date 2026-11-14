@@ -1,0 +1,773 @@
+{
+  "projects": [
+    {
+      "label": "Big Muff π",
+      "name": "Big Muff π",
+      "reviews": [],
+      "ocr_reads": [],
+      "options": [],
+      "errors": [],
+      "parts": [
+        {
+          "ref": "R1",
+          "category": "Resistors",
+          "value": "39k",
+          "location": null
+        },
+        {
+          "ref": "C1",
+          "category": "Capacitors",
+          "value": "1u",
+          "location": null
+        },
+        {
+          "ref": "C3",
+          "category": "Capacitors",
+          "value": "1u",
+          "location": null
+        },
+        {
+          "ref": "C4",
+          "category": "Capacitors",
+          "value": "1u",
+          "location": null
+        },
+        {
+          "ref": "C6",
+          "category": "Capacitors",
+          "value": "1u",
+          "location": null
+        },
+        {
+          "ref": "C7",
+          "category": "Capacitors",
+          "value": "1u",
+          "location": null
+        },
+        {
+          "ref": "C9",
+          "category": "Capacitors",
+          "value": "1u",
+          "location": null
+        },
+        {
+          "ref": "C12",
+          "category": "Capacitors",
+          "value": "1u",
+          "location": null
+        },
+        {
+          "ref": "C13",
+          "category": "Capacitors",
+          "value": "1u",
+          "location": null
+        },
+        {
+          "ref": "R2",
+          "category": "Resistors",
+          "value": "470k",
+          "location": null
+        },
+        {
+          "ref": "R7",
+          "category": "Resistors",
+          "value": "470k",
+          "location": null
+        },
+        {
+          "ref": "R12",
+          "category": "Resistors",
+          "value": "470k",
+          "location": null
+        },
+        {
+          "ref": "R18",
+          "category": "Resistors",
+          "value": "470k",
+          "location": null
+        },
+        {
+          "ref": "C2",
+          "category": "Capacitors",
+          "value": "470p",
+          "location": null
+        },
+        {
+          "ref": "C5",
+          "category": "Capacitors",
+          "value": "470p",
+          "location": null
+        },
+        {
+          "ref": "C8",
+          "category": "Capacitors",
+          "value": "470p",
+          "location": null
+        },
+        {
+          "ref": "R3",
+          "category": "Resistors",
+          "value": "100k",
+          "location": null
+        },
+        {
+          "ref": "R8",
+          "category": "Resistors",
+          "value": "100k",
+          "location": null
+        },
+        {
+          "ref": "R13",
+          "category": "Resistors",
+          "value": "100k",
+          "location": null
+        },
+        {
+          "ref": "R19",
+          "category": "Resistors",
+          "value": "100k",
+          "location": null
+        },
+        {
+          "ref": "R4",
+          "category": "Resistors",
+          "value": "47k",
+          "location": null
+        },
+        {
+          "ref": "R9",
+          "category": "Resistors",
+          "value": "47k",
+          "location": null
+        },
+        {
+          "ref": "R14",
+          "category": "Resistors",
+          "value": "47k",
+          "location": null
+        },
+        {
+          "ref": "R5",
+          "category": "Resistors",
+          "value": "100",
+          "location": null
+        },
+        {
+          "ref": "R10",
+          "category": "Resistors",
+          "value": "100",
+          "location": null
+        },
+        {
+          "ref": "R15",
+          "category": "Resistors",
+          "value": "100",
+          "location": null
+        },
+        {
+          "ref": "Q1",
+          "category": "Transistors",
+          "value": "BC549C",
+          "location": null
+        },
+        {
+          "ref": "Q2",
+          "category": "Transistors",
+          "value": "BC549C",
+          "location": null
+        },
+        {
+          "ref": "Q3",
+          "category": "Transistors",
+          "value": "BC549C",
+          "location": null
+        },
+        {
+          "ref": "Q4",
+          "category": "Transistors",
+          "value": "BC549C",
+          "location": null
+        },
+        {
+          "ref": "VR1",
+          "category": "Potentiometers",
+          "value": "100k",
+          "location": null
+        },
+        {
+          "ref": "VR2",
+          "category": "Potentiometers",
+          "value": "100k",
+          "location": null
+        },
+        {
+          "ref": "R6",
+          "category": "Resistors",
+          "value": "10k",
+          "location": null
+        },
+        {
+          "ref": "R11",
+          "category": "Resistors",
+          "value": "10k",
+          "location": null
+        },
+        {
+          "ref": "R20",
+          "category": "Resistors",
+          "value": "10k",
+          "location": null
+        },
+        {
+          "ref": "D1",
+          "category": "Diodes",
+          "value": "1N914",
+          "location": null
+        },
+        {
+          "ref": "D2",
+          "category": "Diodes",
+          "value": "1N914",
+          "location": null
+        },
+        {
+          "ref": "D3",
+          "category": "Diodes",
+          "value": "1N914",
+          "location": null
+        },
+        {
+          "ref": "D4",
+          "category": "Diodes",
+          "value": "1N914",
+          "location": null
+        },
+        {
+          "ref": "R16",
+          "category": "Resistors",
+          "value": "27k",
+          "location": null
+        },
+        {
+          "ref": "R17",
+          "category": "Resistors",
+          "value": "27k",
+          "location": null
+        },
+        {
+          "ref": "C10",
+          "category": "Capacitors",
+          "value": "10n",
+          "location": null
+        },
+        {
+          "ref": "C11",
+          "category": "Capacitors",
+          "value": "4.7n",
+          "location": null
+        },
+        {
+          "ref": "R21",
+          "category": "Resistors",
+          "value": "2.2k",
+          "location": null
+        },
+        {
+          "ref": "VR3",
+          "category": "Potentiometers",
+          "value": "500k",
+          "location": null
+        }
+      ],
+      "counted": [],
+      "build_order": [
+        {
+          "stage": "Resistors",
+          "refs": [
+            "R1",
+            "R2",
+            "R7",
+            "R12",
+            "R18",
+            "R3",
+            "R8",
+            "R13",
+            "R19",
+            "R4",
+            "R9",
+            "R14",
+            "R5",
+            "R10",
+            "R15",
+            "R6",
+            "R11",
+            "R20",
+            "R16",
+            "R17",
+            "R21"
+          ],
+          "counted": []
+        },
+        {
+          "stage": "Diodes",
+          "refs": [
+            "D1",
+            "D2",
+            "D3",
+            "D4"
+          ],
+          "counted": []
+        },
+        {
+          "stage": "Small capacitors",
+          "refs": [
+            "C1",
+            "C3",
+            "C4",
+            "C6",
+            "C7",
+            "C9",
+            "C12",
+            "C13",
+            "C2",
+            "C5",
+            "C8",
+            "C10",
+            "C11"
+          ],
+          "counted": []
+        },
+        {
+          "stage": "Transistors",
+          "refs": [
+            "Q1",
+            "Q2",
+            "Q3",
+            "Q4"
+          ],
+          "counted": []
+        },
+        {
+          "stage": "Potentiometers",
+          "refs": [
+            "VR1",
+            "VR2",
+            "VR3"
+          ],
+          "counted": []
+        }
+      ]
+    }
+  ],
+  "shopping_list": [
+    {
+      "origin": "Circuit Board",
+      "category": "Transistors",
+      "part": "BC549C",
+      "bom_qty": 4,
+      "included": 0,
+      "in_stock": 0,
+      "net_need": 4,
+      "buy_qty": 5,
+      "notes": "",
+      "search_term": "BC549C",
+      "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=BC549C"
+    },
+    {
+      "origin": "Circuit Board",
+      "category": "Diodes",
+      "part": "1N914",
+      "bom_qty": 4,
+      "included": 0,
+      "in_stock": 0,
+      "net_need": 4,
+      "buy_qty": 10,
+      "notes": "Swaps to try: 1N4001 (Smooth / Tube-like: Slow reverse recovery (30µs) smears highs).",
+      "search_term": "1N914",
+      "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=1N914"
+    },
+    {
+      "origin": "Hardware Kit",
+      "category": "Diodes",
+      "part": "LED",
+      "bom_qty": 1,
+      "included": 0,
+      "in_stock": 0,
+      "net_need": 1,
+      "buy_qty": 10,
+      "notes": "",
+      "search_term": "LED 3mm",
+      "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=LED+3mm"
+    },
+    {
+      "origin": "Circuit Board",
+      "category": "Potentiometers",
+      "part": "100k",
+      "bom_qty": 2,
+      "included": 0,
+      "in_stock": 0,
+      "net_need": 2,
+      "buy_qty": 2,
+      "notes": "",
+      "search_term": "100k ohm Linear potentiometer",
+      "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=100k+ohm+Linear+potentiometer"
+    },
+    {
+      "origin": "Circuit Board",
+      "category": "Potentiometers",
+      "part": "500k",
+      "bom_qty": 1,
+      "included": 0,
+      "in_stock": 0,
+      "net_need": 1,
+      "buy_qty": 1,
+      "notes": "",
+      "search_term": "500k ohm Linear potentiometer",
+      "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=500k+ohm+Linear+potentiometer"
+    },
+    {
+      "origin": "Circuit Board",
+      "category": "Capacitors",
+      "part": "470p",
+      "bom_qty": 3,
+      "included": 0,
+      "in_stock": 0,
+      "net_need": 3,
+      "buy_qty": 8,
+      "notes": "Class 1 ceramic (C0G/NP0).",
+      "search_term": "470pF multilayer",
+      "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=470pF+multilayer"
+    },
+    {
+      "origin": "Circuit Board",
+      "category": "Capacitors",
+      "part": "4.7n",
+      "bom_qty": 1,
+      "included": 0,
+      "in_stock": 0,
+      "net_need": 1,
+      "buy_qty": 6,
+      "notes": "Box Film.",
+      "search_term": "4.7nF Box Film",
+      "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=4.7nF+Box+Film"
+    },
+    {
+      "origin": "Circuit Board",
+      "category": "Capacitors",
+      "part": "10n",
+      "bom_qty": 1,
+      "included": 0,
+      "in_stock": 0,
+      "net_need": 1,
+      "buy_qty": 6,
+      "notes": "Box Film.",
+      "search_term": "10nF Box Film",
+      "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=10nF+Box+Film"
+    },
+    {
+      "origin": "Circuit Board",
+      "category": "Capacitors",
+      "part": "1u",
+      "bom_qty": 8,
+      "included": 0,
+      "in_stock": 0,
+      "net_need": 8,
+      "buy_qty": 9,
+      "notes": "Box Film. The document may mean an electrolytic: check it.",
+      "search_term": "1uF Box Film",
+      "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=1uF+Box+Film"
+    },
+    {
+      "origin": "Circuit Board",
+      "category": "Resistors",
+      "part": "100",
+      "bom_qty": 3,
+      "included": 0,
+      "in_stock": 0,
+      "net_need": 3,
+      "buy_qty": 10,
+      "notes": "1/4 W metal film, 1%.",
+      "search_term": "100 ohm 1/4w metal film",
+      "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=100+ohm+1%2F4w+metal+film"
+    },
+    {
+      "origin": "Circuit Board",
+      "category": "Resistors",
+      "part": "2.2k",
+      "bom_qty": 1,
+      "included": 0,
+      "in_stock": 0,
+      "net_need": 1,
+      "buy_qty": 10,
+      "notes": "1/4 W metal film, 1%.",
+      "search_term": "2.2k ohm 1/4w metal film",
+      "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=2.2k+ohm+1%2F4w+metal+film"
+    },
+    {
+      "origin": "Hardware Kit",
+      "category": "Resistors",
+      "part": "3.3k",
+      "bom_qty": 1,
+      "included": 0,
+      "in_stock": 0,
+      "net_need": 1,
+      "buy_qty": 10,
+      "notes": "1/4 W metal film, 1%.",
+      "search_term": "3.3k ohm 1/4w metal film",
+      "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=3.3k+ohm+1%2F4w+metal+film"
+    },
+    {
+      "origin": "Circuit Board",
+      "category": "Resistors",
+      "part": "10k",
+      "bom_qty": 3,
+      "included": 0,
+      "in_stock": 0,
+      "net_need": 3,
+      "buy_qty": 10,
+      "notes": "1/4 W metal film, 1%.",
+      "search_term": "10k ohm 1/4w metal film",
+      "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=10k+ohm+1%2F4w+metal+film"
+    },
+    {
+      "origin": "Circuit Board",
+      "category": "Resistors",
+      "part": "27k",
+      "bom_qty": 2,
+      "included": 0,
+      "in_stock": 0,
+      "net_need": 2,
+      "buy_qty": 10,
+      "notes": "1/4 W metal film, 1%.",
+      "search_term": "27k ohm 1/4w metal film",
+      "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=27k+ohm+1%2F4w+metal+film"
+    },
+    {
+      "origin": "Circuit Board",
+      "category": "Resistors",
+      "part": "39k",
+      "bom_qty": 1,
+      "included": 0,
+      "in_stock": 0,
+      "net_need": 1,
+      "buy_qty": 10,
+      "notes": "1/4 W metal film, 1%.",
+      "search_term": "39k ohm 1/4w metal film",
+      "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=39k+ohm+1%2F4w+metal+film"
+    },
+    {
+      "origin": "Circuit Board",
+      "category": "Resistors",
+      "part": "47k",
+      "bom_qty": 3,
+      "included": 0,
+      "in_stock": 0,
+      "net_need": 3,
+      "buy_qty": 10,
+      "notes": "1/4 W metal film, 1%.",
+      "search_term": "47k ohm 1/4w metal film",
+      "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=47k+ohm+1%2F4w+metal+film"
+    },
+    {
+      "origin": "Circuit Board",
+      "category": "Resistors",
+      "part": "100k",
+      "bom_qty": 4,
+      "included": 0,
+      "in_stock": 0,
+      "net_need": 4,
+      "buy_qty": 10,
+      "notes": "1/4 W metal film, 1%.",
+      "search_term": "100k ohm 1/4w metal film",
+      "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=100k+ohm+1%2F4w+metal+film"
+    },
+    {
+      "origin": "Circuit Board",
+      "category": "Resistors",
+      "part": "470k",
+      "bom_qty": 4,
+      "included": 0,
+      "in_stock": 0,
+      "net_need": 4,
+      "buy_qty": 10,
+      "notes": "1/4 W metal film, 1%.",
+      "search_term": "470k ohm 1/4w metal film",
+      "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=470k+ohm+1%2F4w+metal+film"
+    },
+    {
+      "origin": "Hardware Kit",
+      "category": "Hardware/Misc",
+      "part": "1590B Enclosure",
+      "bom_qty": 1,
+      "included": 0,
+      "in_stock": 0,
+      "net_need": 1,
+      "buy_qty": 1,
+      "notes": "",
+      "search_term": "1590B Enclosure",
+      "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=1590B+Enclosure"
+    },
+    {
+      "origin": "Hardware Kit",
+      "category": "Hardware/Misc",
+      "part": "3PDT FOOTSWITCH PCB",
+      "bom_qty": 1,
+      "included": 0,
+      "in_stock": 0,
+      "net_need": 1,
+      "buy_qty": 1,
+      "notes": "",
+      "search_term": "3PDT FOOTSWITCH PCB",
+      "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=3PDT+FOOTSWITCH+PCB"
+    },
+    {
+      "origin": "Hardware Kit",
+      "category": "Hardware/Misc",
+      "part": "3PDT STOMP SWITCH",
+      "bom_qty": 1,
+      "included": 0,
+      "in_stock": 0,
+      "net_need": 1,
+      "buy_qty": 1,
+      "notes": "",
+      "search_term": "3PDT STOMP SWITCH",
+      "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=3PDT+STOMP+SWITCH"
+    },
+    {
+      "origin": "Hardware Kit",
+      "category": "Hardware/Misc",
+      "part": "6.35MM JACK (MONO)",
+      "bom_qty": 1,
+      "included": 0,
+      "in_stock": 0,
+      "net_need": 1,
+      "buy_qty": 1,
+      "notes": "",
+      "search_term": "6.35MM JACK (MONO)",
+      "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=6.35MM+JACK+%28MONO%29"
+    },
+    {
+      "origin": "Hardware Kit",
+      "category": "Hardware/Misc",
+      "part": "6.35MM JACK (STEREO)",
+      "bom_qty": 1,
+      "included": 0,
+      "in_stock": 0,
+      "net_need": 1,
+      "buy_qty": 1,
+      "notes": "",
+      "search_term": "6.35MM JACK (STEREO)",
+      "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=6.35MM+JACK+%28STEREO%29"
+    },
+    {
+      "origin": "Hardware Kit",
+      "category": "Hardware/Misc",
+      "part": "AWG 24 Hook-Up Wire",
+      "bom_qty": 3,
+      "included": 0,
+      "in_stock": 0,
+      "net_need": 3,
+      "buy_qty": 3,
+      "notes": "",
+      "search_term": "AWG 24 Hook-Up Wire",
+      "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=AWG+24+Hook-Up+Wire"
+    },
+    {
+      "origin": "Hardware Kit",
+      "category": "Hardware/Misc",
+      "part": "Bezel LED Holder",
+      "bom_qty": 1,
+      "included": 0,
+      "in_stock": 0,
+      "net_need": 1,
+      "buy_qty": 1,
+      "notes": "",
+      "search_term": "Bezel LED Holder",
+      "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=Bezel+LED+Holder"
+    },
+    {
+      "origin": "Hardware Kit",
+      "category": "Hardware/Misc",
+      "part": "DC POWER JACK 2.1MM",
+      "bom_qty": 1,
+      "included": 0,
+      "in_stock": 0,
+      "net_need": 1,
+      "buy_qty": 1,
+      "notes": "",
+      "search_term": "DC POWER JACK 2.1MM",
+      "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=DC+POWER+JACK+2.1MM"
+    },
+    {
+      "origin": "Hardware Kit",
+      "category": "Hardware/Misc",
+      "part": "Dust Seal Cover",
+      "bom_qty": 3,
+      "included": 0,
+      "in_stock": 0,
+      "net_need": 3,
+      "buy_qty": 3,
+      "notes": "",
+      "search_term": "Dust Seal Cover",
+      "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=Dust+Seal+Cover"
+    },
+    {
+      "origin": "Hardware Kit",
+      "category": "Hardware/Misc",
+      "part": "Heat Shrink Tubing",
+      "bom_qty": 1,
+      "included": 0,
+      "in_stock": 0,
+      "net_need": 1,
+      "buy_qty": 1,
+      "notes": "",
+      "search_term": "Heat Shrink Tubing",
+      "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=Heat+Shrink+Tubing"
+    },
+    {
+      "origin": "Hardware Kit",
+      "category": "Hardware/Misc",
+      "part": "Knob",
+      "bom_qty": 3,
+      "included": 0,
+      "in_stock": 0,
+      "net_need": 3,
+      "buy_qty": 3,
+      "notes": "",
+      "search_term": "Knob",
+      "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=Knob"
+    },
+    {
+      "origin": "Hardware Kit",
+      "category": "Hardware/Misc",
+      "part": "Rubber Feet (Black)",
+      "bom_qty": 4,
+      "included": 0,
+      "in_stock": 0,
+      "net_need": 4,
+      "buy_qty": 4,
+      "notes": "",
+      "search_term": "Rubber Feet (Black)",
+      "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=Rubber+Feet+%28Black%29"
+    },
+    {
+      "origin": "Hardware Kit",
+      "category": "Hardware/Misc",
+      "part": "9V BATTERY CLIP",
+      "bom_qty": 1,
+      "included": 0,
+      "in_stock": 0,
+      "net_need": 1,
+      "buy_qty": 1,
+      "notes": "",
+      "search_term": "9V BATTERY CLIP",
+      "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=9V+BATTERY+CLIP"
+    }
+  ],
+  "stats": {
+    "lines_read": 45,
+    "parts_found": 45
+  },
+  "ignored_lines": [],
+  "has_stock": false
+}
