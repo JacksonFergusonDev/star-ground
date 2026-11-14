@@ -4,3 +4,5 @@ dist/
 test-results/
 pnpm-lock.yaml
 src/lib/api/
+# Written by scripts/export_snapshot.py, as tests/test_server.py checks it
+src/data/

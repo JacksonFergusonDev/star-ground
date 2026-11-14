@@ -17,6 +17,7 @@ from fastapi.testclient import TestClient
 from pytest_mock import MockerFixture
 
 from scripts.export_openapi import OPENAPI_FILE, schema_text
+from scripts.export_snapshot import SNAPSHOT_FILE, snapshot_text
 from star_ground.api import read_document
 from star_ground.bom_lib import (
     BOMParserContext,
@@ -700,6 +701,11 @@ def test_default_settings_from_an_empty_environment() -> None:
 def test_the_committed_openapi_schema_is_current() -> None:
     """The frontend's types come from `openapi.json`; run `just openapi`."""
     assert OPENAPI_FILE.read_text(encoding="utf-8") == schema_text()
+
+
+def test_the_committed_snapshot_is_current() -> None:
+    """The website's snapshot page shows this list; run `just snapshot`."""
+    assert SNAPSHOT_FILE.read_text(encoding="utf-8") == snapshot_text()
 
 
 def _imports(path: Path) -> set[str]:
