@@ -10,7 +10,7 @@ const pages = [
   { path: '/app/check/?project=gone', heading: "This project isn't here" },
   { path: '/catalog/', heading: 'Circuit catalog' },
   { path: '/catalog/pedalpcb/theclap/', heading: 'The Clap' },
-  { path: '/embed/shopping-list/', heading: 'Shopping list' },
+  { path: '/embed/projects/', heading: 'Projects' },
   { path: '/404.html', heading: 'No continuity.' },
 ];
 

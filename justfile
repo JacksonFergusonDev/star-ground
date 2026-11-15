@@ -119,7 +119,7 @@ serve-api: _sync-python
 example-pack: _sync-python
     uv run python -m scripts.example_pack
 
-# Regenerate the shopping list the website's snapshot page shows (web/src/pages/embed/)
+# Regenerate the projects the website's snapshot page shows (web/src/pages/embed/); reads them online
 snapshot: _sync-python
     uv run python -m scripts.export_snapshot
 

@@ -9,22 +9,33 @@
   import { flagged, listing, projectOf, reviewable, workspace } from '../../lib/workspace.svelte';
   import Icon from './Icon.svelte';
 
-  /** The page's path, for the sidebar drawn when the site is built. */
-  let { path: builtPath }: { path: string } = $props();
+  let {
+    path: builtPath,
+    shown = null,
+  }: {
+    /** The page's path, for the sidebar drawn when the site is built. */
+    path: string;
+    /** Fixed projects to list in place of the browser's, for the snapshot page. */
+    shown?: { cards: Card[]; toBuy: number } | null;
+  } = $props();
 
   // The workspace lives in browser storage, so the built sidebar has none.
   let ws = $state.raw<Workspace | null>(null);
-  onMount(() => (ws = workspace()));
+  onMount(() => {
+    if (!shown) ws = workspace();
+  });
 
   const path = $derived(router.url?.pathname ?? builtPath);
   const activeProject = $derived(
     router.view === 'check' || router.view === 'build' ? router.param('project') : null,
   );
-  const cards = $derived(ws?.cards ?? []);
-  const toBuy = $derived(listing.result?.shopping_list.filter((r) => r.buy_qty > 0).length ?? null);
+  const cards = $derived(shown?.cards ?? ws?.cards ?? []);
+  const toBuy = $derived(
+    shown?.toBuy ?? listing.result?.shopping_list.filter((r) => r.buy_qty > 0).length ?? null,
+  );
 
   const pages = $derived([
-    { ...views.projects, label: 'Projects', badge: ws ? String(cards.length) : '' },
+    { ...views.projects, label: 'Projects', badge: ws || shown ? String(cards.length) : '' },
     { ...views.list, label: 'Shopping list', badge: toBuy === null ? '' : String(toBuy) },
     { ...views.stock, label: 'Stock', badge: ws?.stock ? 'CSV' : '' },
     { ...views.export, label: 'Export', badge: '' },

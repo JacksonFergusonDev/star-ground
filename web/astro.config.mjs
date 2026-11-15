@@ -10,12 +10,26 @@ const proxy = { '/api': 'http://127.0.0.1:4501' };
 
 /**
  * Makes each built page under /embed/ one file another site can fetch and
- * show: its stylesheets go into the page, and their fonts into the styles.
- * Those pages run no scripts and load nothing, and a build that breaks either
- * fails here.
+ * show: its stylesheets go into the page, and the fonts and images they and
+ * the page name go in as data. Those pages run no scripts and load nothing,
+ * and a build that breaks either fails here.
  */
 async function selfContained(dist) {
   const read = (path) => readFile(new URL(`.${path}`, dist));
+  const types = { woff2: 'font/woff2', svg: 'image/svg+xml', png: 'image/png', webp: 'image/webp' };
+  // A file of the site, as a data: URI.
+  const data = async (path) => {
+    const type = types[path.split('.').pop()];
+    if (!type) throw new Error(`An embed page names ${path}, which can't be written into it`);
+    return `data:${type};base64,${(await read(path)).toString('base64')}`;
+  };
+  // Every `url(/…)` in a stylesheet, quoted or not.
+  const inlineUrls = async (css) => {
+    for (const [, path] of css.matchAll(/url\(\s*['"]?(\/[^)'"\s]+)['"]?\s*\)/g)) {
+      css = css.replaceAll(path, await data(path));
+    }
+    return css;
+  };
   const embeds = new URL('embed/', dist);
   const pages = (await readdir(embeds, { recursive: true })).filter((f) => f.endsWith('.html'));
   for (const name of pages) {
@@ -25,16 +39,16 @@ async function selfContained(dist) {
     // A frame never shows its page's icon.
     html = html.replace(/<link rel="icon"[^>]*>/, '');
     for (const [link, href] of html.matchAll(/<link rel="stylesheet" href="([^"]+)"[^>]*>/g)) {
-      let css = String(await read(href));
-      for (const font of new Set(css.match(/\/_astro\/[^)"']+\.woff2/g))) {
-        css = css.replaceAll(
-          font,
-          `data:font/woff2;base64,${(await read(font)).toString('base64')}`,
-        );
-      }
+      const css = await inlineUrls(String(await read(href)));
       html = html.replace(link, () => `<style>${css}</style>`);
     }
-    if (/<link\b|\/_astro\//.test(html)) throw new Error(`embed/${name} still loads a file`);
+    html = await inlineUrls(html);
+    for (const [, path] of html.matchAll(/<img\b[^>]*\ssrc="(\/[^"]+)"/g)) {
+      html = html.replaceAll(`src="${path}"`, `src="${await data(path)}"`);
+    }
+    if (/<link\b|\/_astro\/|\ssrc="\/|url\(\s*['"]?\//.test(html)) {
+      throw new Error(`embed/${name} still loads a file`);
+    }
     await writeFile(page, html);
   }
 }
