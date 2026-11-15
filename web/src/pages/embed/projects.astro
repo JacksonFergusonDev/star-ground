@@ -1,0 +1,76 @@
+---
+// A picture of the app, for other sites to show: the projects page, sidebar
+// and all, as plain HTML, with no scripts and no requests. Its projects are
+// two catalog builds, read and listed by the API (scripts/export_snapshot.py
+// writes them). When the site is built, the page's styles, fonts and images
+// are written into it (see astro.config.mjs), so another site can fetch this
+// one file and show it in a frame as a window of the app. jacksonferguson.me
+// does.
+import Head from '../../components/Head.astro';
+import Projects from '../../components/workspace/Projects.svelte';
+import Sidebar from '../../components/workspace/Sidebar.svelte';
+import snapshot from '../../data/projects-snapshot.json';
+import type { DocumentReading, MasterListResult } from '../../lib/api';
+import type { Paint } from '../../lib/enclosure';
+import { views } from '../../lib/router.svelte';
+import type { Card } from '../../lib/workspace.svelte';
+
+const result = snapshot.result as MasterListResult;
+// Each build in its own paint, as a builder would pick them.
+const paints: Paint[] = ['orange', 'yellow'];
+const cards: Card[] = snapshot.builds.map((build, i) => ({
+  id: build.catalog.replace('/', '-'),
+  name: build.title,
+  count: 1,
+  source: { kind: 'url', url: build.url, catalog: build.catalog },
+  variant: null,
+  useOcr: false,
+  reading: build.reading as DocumentReading,
+  read: { state: 'ready' },
+  checks: {},
+  placed: {},
+  paint: paints[i % paints.length] ?? null,
+}));
+const projectOf = (id: string) => result.projects[cards.findIndex((c) => c.id === id)] ?? null;
+const toBuy = result.shopping_list.filter((row) => row.buy_qty > 0).length;
+// Nothing on the page can be used: it has no scripts.
+const none = async () => {};
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <Head
+      title="Projects snapshot"
+      description="A picture of Star Ground's projects page, for other sites to show."
+      noindex
+    />
+  </head>
+  <body>
+    <div class="app">
+      <Sidebar path={views.projects.path} shown={{ cards, toBuy }} />
+      <div class="app-scroll snapshot">
+        <main class="app-main">
+          <Projects
+            {cards}
+            {projectOf}
+            {toBuy}
+            stock={null}
+            onAdd={none}
+            onCount={none}
+            onRemove={none}
+            onRead={none}
+          />
+        </main>
+      </div>
+    </div>
+  </body>
+</html>
+
+<style>
+  /* A window of the app at the frame's size: what doesn't fit is cut off, and
+     no scroll bar is drawn. */
+  .snapshot {
+    overflow: hidden;
+  }
+</style>

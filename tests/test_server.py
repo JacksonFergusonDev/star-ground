@@ -17,7 +17,7 @@ from fastapi.testclient import TestClient
 from pytest_mock import MockerFixture
 
 from scripts.export_openapi import OPENAPI_FILE, schema_text
-from scripts.export_snapshot import SNAPSHOT_FILE, snapshot_text
+from scripts.export_snapshot import BUILDS, SNAPSHOT_FILE, snapshot_text
 from star_ground.api import read_document
 from star_ground.bom_lib import (
     BOMParserContext,
@@ -703,8 +703,19 @@ def test_the_committed_openapi_schema_is_current() -> None:
     assert OPENAPI_FILE.read_text(encoding="utf-8") == schema_text()
 
 
+def test_the_snapshot_shows_the_catalog_builds_it_names() -> None:
+    """Offline, at least: its builds are still in the catalog, linked as it links them."""
+    snapshot = json.loads(SNAPSHOT_FILE.read_text(encoding="utf-8"))
+    assert [b["catalog"] for b in snapshot["builds"]] == list(BUILDS)
+    for build in snapshot["builds"]:
+        path = Path("catalog/builds") / f"{build['catalog']}.json"
+        entry = json.loads(path.read_text(encoding="utf-8"))
+        assert (build["title"], build["url"]) == (entry["title"], entry["document"])
+
+
+@pytest.mark.network
 def test_the_committed_snapshot_is_current() -> None:
-    """The website's snapshot page shows this list; run `just snapshot`."""
+    """The website's snapshot page shows these projects; run `just snapshot`."""
     assert SNAPSHOT_FILE.read_text(encoding="utf-8") == snapshot_text()
 
 
