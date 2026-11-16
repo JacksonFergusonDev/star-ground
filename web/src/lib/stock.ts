@@ -20,7 +20,7 @@ export interface StockRow {
 }
 
 /** The name a stock counted in the app goes by, until the builder downloads it. */
-export const COUNTED = 'Counted in Star Ground';
+const COUNTED = 'Counted in Star Ground';
 
 // Categories whose values are numbers the server normalizes ('4k7' is '4.7k').
 const NUMERIC = new Set<string>(['Resistors', 'Capacitors']);

@@ -1,7 +1,6 @@
-// Reading a part in the hand: a resistor's colour bands, and the codes printed
-// on capacitors and pots. Each gives the value as a parts list writes it
-// ('4.7k', '100n', 'B100k'), so a part identified here can go straight into
-// the stock.
+// Reading a part in the hand: a resistor's colour bands, and the code printed
+// on a capacitor. Each gives the value as a parts list writes it ('4.7k',
+// '100n'), so a part identified here can go straight into the stock.
 
 import type { Band } from './parts';
 import { DIGITS } from './parts';
@@ -54,7 +53,7 @@ const PREFIXES: [number, string][] = [
 const plain = (n: number): string => String(Number(n.toPrecision(6)));
 
 /** A resistance as a parts list writes it: 4700 is '4.7k', 220 is '220', 0.47 is '0.47'. */
-export function ohms(value: number): string {
+function ohms(value: number): string {
   for (const [size, prefix] of PREFIXES)
     if (value >= size || size === 1) return `${plain(value / size)}${prefix}`;
   return plain(value);
@@ -78,7 +77,7 @@ export function readBands(bands: Bands): { ohms: number; value: string; toleranc
 }
 
 /** A capacitance as a parts list writes it: 1e-7 is '100n', 4.7e-9 is '4.7n'. */
-export function farads(value: number): string {
+function farads(value: number): string {
   for (const [size, prefix] of [
     [1e-6, 'u'],
     [1e-9, 'n'],
@@ -200,13 +199,4 @@ export function capUnits(value: number): string {
   const uf = Number((value / 1e-6).toPrecision(6));
   const grouped = new Intl.NumberFormat('en-US', { maximumFractionDigits: 6 });
   return `${grouped.format(pf)} pF = ${grouped.format(nf)} nF = ${grouped.format(uf)} µF`;
-}
-
-/** What a pot's printed code says: 'B104' and 'B100K' are both a 100k linear pot. */
-export function readPotCode(text: string): { value: string; taper: 'A' | 'B' | 'C' | null } | null {
-  const match = /^([ABC])?\s?(\d)(\d)(\d)$/i.exec(text.trim());
-  if (!match) return null;
-  const [, taper, a = '', b = '', zeros = ''] = match;
-  const value = Number(`${a}${b}`) * 10 ** Number(zeros);
-  return { value: ohms(value), taper: (taper?.toUpperCase() as 'A' | 'B' | 'C') ?? null };
 }
