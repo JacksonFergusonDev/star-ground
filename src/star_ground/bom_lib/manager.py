@@ -3,6 +3,7 @@
 This module handles:
 - Sorting and organizing the inventory for display.
 - Calculating net purchasing needs (BOM vs. Stock).
+- Matching the builder's stock to the parts lists' values (`match_stock`).
 - Relabelling a project's parts (`rename_source`).
 """
 
@@ -41,6 +42,33 @@ def pot_resistance(value: str) -> Value | None:
     match = POT_RESISTANCE.search(value.upper())
     dec = parse_value_to_decimal(match.group(2)) if match else None
     return None if dec is None else ohms(dec)
+
+
+def match_stock(bom: Inventory, stock: Inventory) -> Inventory:
+    """The stock, with each part written as the parts lists write it.
+
+    A builder types values their own way: 'a100k' for a parts list's 'A100K',
+    'tl072' for 'TL072'. Resistors and capacitors are already normalized as
+    the stock is read; any other value that differs from a listed part only
+    in case is that part, so it's keyed like it. Parts no list names keep
+    their own keys.
+
+    Args:
+        bom: The parts to build.
+        stock: The builder's stock, as read.
+
+    Returns:
+        A new inventory holding the same quantities.
+    """
+    listed = {(k.category, k.value.casefold()): k for k in bom}
+    matched = Inventory()
+    for key, data in stock.items():
+        target = (
+            key if key in bom else listed.get((key.category, key.value.casefold()), key)
+        )
+        part = matched[target]
+        part.qty += data.qty
+    return matched
 
 
 def calculate_net_needs(bom: Inventory, stock: Inventory) -> Inventory:

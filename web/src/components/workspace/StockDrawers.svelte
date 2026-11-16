@@ -6,55 +6,27 @@
   import type { Notation } from '../../lib/parts';
   import { formatValue, kindOfCategory } from '../../lib/parts';
   import type { Stock } from '../../lib/server';
+  import { readStock } from '../../lib/stock';
   import PartSymbol from './PartSymbol.svelte';
 
   let { stock, notation }: { stock: Stock | null; notation: Notation } = $props();
 
-  type Drawer = { part: string; qty: string };
+  type Drawer = { part: string; qty: number };
 
   // Enough drawers to see what's in stock; the CSV can hold more.
   const MOST = 240;
 
-  /** Splits a CSV or TSV line, minding quoted fields. */
-  function cells(line: string, tab: boolean): string[] {
-    if (tab) return line.split('\t').map((c) => c.trim());
-    const out: string[] = [];
-    let cell = '';
-    let quoted = false;
-    for (const ch of line) {
-      if (ch === '"') quoted = !quoted;
-      else if (ch === ',' && !quoted) {
-        out.push(cell.trim());
-        cell = '';
-      } else cell += ch;
-    }
-    out.push(cell.trim());
-    return out;
-  }
-
   const cabinet = $derived.by(() => {
     if (!stock) return null;
-    const lines = stock.text.split(/\r?\n/).filter((l) => l.trim());
-    const tab = (lines[0] ?? '').includes('\t');
-    const head = cells(lines[0] ?? '', tab).map((h) => h.toLowerCase());
-    const col = (name: string) => head.indexOf(name);
-    const [category, part, qty] = [col('category'), col('part'), col('qty')];
-    if (part < 0) return null;
+    const rows = readStock(stock.text);
+    if (!rows.length) return null;
     // eslint-disable-next-line svelte/prefer-svelte-reactivity -- rebuilt by each run
     const groups = new Map<string, Drawer[]>();
-    let shown = 0;
-    let total = 0;
-    for (const line of lines.slice(1)) {
-      const row = cells(line, tab);
-      const name = row[part];
-      if (!name) continue;
-      total += 1;
-      if (shown >= MOST) continue;
-      const group = (category >= 0 ? row[category] : '') || 'Other parts';
-      groups.set(group, [...(groups.get(group) ?? []), { part: name, qty: row[qty] ?? '' }]);
-      shown += 1;
+    for (const row of rows.slice(0, MOST)) {
+      const group = row.category || 'Other parts';
+      groups.set(group, [...(groups.get(group) ?? []), { part: row.part, qty: row.qty }]);
     }
-    return { groups: [...groups], shown, total };
+    return { groups: [...groups], shown: Math.min(rows.length, MOST), total: rows.length };
   });
 </script>
 

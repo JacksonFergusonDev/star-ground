@@ -81,6 +81,19 @@ const TAPERS: Record<Taper, string> = {
 /** A taper in words, for its drawing's label. */
 export const taperName = (taper: Taper): string => TAPERS[taper];
 
+/**
+ * A value's size as a number, whichever way it's written: '4.7k', '4k7' and
+ * '4700' are all 4700, and '100n' is 1e-7. Null when it isn't a number with a
+ * prefix.
+ */
+export function magnitude(text: string): number | null {
+  const value = read(text);
+  if (!value) return null;
+  const power = POWER[value.prefix];
+  if (power === undefined) return null;
+  return Number(`${value.whole}.${value.fraction || '0'}`) * 10 ** power;
+}
+
 /** Writes a numeric value in the given notation; anything else comes back as given. */
 function write(text: string, notation: Notation, unitless: 'R' | ''): string {
   const value = read(text);
@@ -110,7 +123,7 @@ export function formatValue(value: string, category: string, notation: Notation)
 }
 
 /** A resistor band's colour, by the digit it stands for (-2 silver to 9 white). */
-type Band =
+export type Band =
   | 'black'
   | 'brown'
   | 'red'
@@ -124,7 +137,8 @@ type Band =
   | 'gold'
   | 'silver';
 
-const DIGITS: Band[] = [
+/** The digit colours, black (0) to white (9). */
+export const DIGITS: Band[] = [
   'black',
   'brown',
   'red',

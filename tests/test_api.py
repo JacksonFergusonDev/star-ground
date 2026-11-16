@@ -134,6 +134,28 @@ def test_stock_is_subtracted_from_what_to_buy() -> None:
     assert (row.bom_qty, row.in_stock, row.net_need) == (5, 2, 3)
 
 
+def test_stock_matches_a_part_written_in_another_case() -> None:
+    stock = read_stock(
+        FileUpload(
+            "stock.csv",
+            b"Category,Part,Qty\nICs,tl072,1\nPotentiometers,b100k,1\n"
+            b"Potentiometers,B100K,1\nDiodes,1N4148,9\n",
+        )
+    )
+    master = generate_master_list(
+        [Project(name="Drive", data="IC1 TL072\nGAIN B100K\nVOL B100K\nD1 1N5817")],
+        stock=stock,
+    )
+
+    rows = {r.part: r for r in master.shopping_list()}
+    assert (rows["TL072"].in_stock, rows["TL072"].net_need) == (1, 0)
+    # Both rows mean the parts list's pot, so their counts add up.
+    assert (rows["B100K"].in_stock, rows["B100K"].net_need) == (2, 0)
+    # A part no list names stays in the stock as written.
+    assert master.stock is not None
+    assert ComponentKey(ComponentCategory.DIODES, "1N4148") in master.stock
+
+
 def test_documents_are_named_by_label_and_keep_the_source() -> None:
     upload = _upload(SAMPLES / "clean" / "Kliche-PedalPCB.pdf")
     master = generate_master_list(

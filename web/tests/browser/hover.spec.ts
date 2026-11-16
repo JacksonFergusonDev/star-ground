@@ -140,7 +140,15 @@ test('every control in the app reacts to the pointer with a fade', async ({ page
   await page.getByText('Paint', { exact: true }).click();
   expect(await hoverProblems(page)).toEqual([]);
 
-  for (const path of ['/app/list/', '/app/stock/', '/app/export/', '/catalog/']) {
+  for (const path of [
+    '/app/list/',
+    '/app/list/have/',
+    '/app/stock/',
+    '/app/stock/count/',
+    '/app/identify/',
+    '/app/export/',
+    '/catalog/',
+  ]) {
     await page.goto(path);
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
     expect(await hoverProblems(page), path).toEqual([]);

@@ -1,5 +1,6 @@
 <script lang="ts">
   // The builder's stock: a CSV the master list subtracts from what to buy.
+  import { views } from '../../lib/router.svelte';
   import type { Stock } from '../../lib/server';
 
   let { stock, onChange }: { stock: Stock | null; onChange: (stock: Stock | null) => void } =
@@ -31,7 +32,8 @@
   {:else}
     <p>
       Upload a CSV of the parts you own, with columns Category, Part and Qty, to buy only what's
-      missing.
+      missing. No CSV yet? <a href={views.count.path}>Count your parts</a> to make one, or
+      <a href={views.have.path}>tick off what you have</a> of this order's parts.
     </p>
   {/if}
   <label for="stock-file">{stock ? 'Replace the stock CSV' : 'Stock CSV'}</label>
@@ -69,6 +71,10 @@
   strong {
     color: var(--text);
     font-weight: 500;
+  }
+  p a {
+    text-decoration: underline;
+    text-underline-offset: 3px;
   }
   .problem {
     color: var(--text);

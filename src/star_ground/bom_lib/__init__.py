@@ -21,6 +21,7 @@ from .enums import (
 )
 from .manager import (
     calculate_net_needs,
+    match_stock,
     rename_source,
     sort_inventory,
 )
@@ -142,6 +143,7 @@ __all__ = [
     "get_spec_type",
     "is_extra_part",
     "is_pure_hardware",
+    "match_stock",
     "normalize_value_by_category",
     "normalize_value_to_quantity",
     "parse_csv_bom",

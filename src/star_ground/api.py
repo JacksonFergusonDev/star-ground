@@ -33,6 +33,7 @@ from star_ground.bom_lib import (
     ShoppingLine,
     build_shopping_list,
     categorize_part,
+    match_stock,
     parse_user_inventory,
     provided_hardware,
     rename_source,
@@ -488,4 +489,5 @@ def generate_master_list(
     kit = with_standard_hardware(
         parts, [b.hardware for b in built if b.parts or b.counted]
     )
-    return MasterList(parts, kit, stats, tuple(built), stock)
+    matched = match_stock(kit, stock) if stock is not None else None
+    return MasterList(parts, kit, stats, tuple(built), matched)
