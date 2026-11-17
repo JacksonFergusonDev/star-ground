@@ -1,0 +1,99 @@
+# Checks that every external link the website points builders to still leads
+# somewhere, with lychee (lychee.toml). Not part of CI OK: another site being
+# down shouldn't block a merge.
+#
+# - On a pull request that changes the website's links, a dead link fails the run.
+# - Weekly, since sites go away on their own schedule, broken links are kept in
+#   one issue that's updated while they stay broken and closes itself once every
+#   link passes.
+
+name: Links
+
+on:
+  schedule:
+    # Mondays, 08:43 UTC, off the hour.
+    - cron: "43 8 * * 1"
+  workflow_dispatch:
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - "web/src/**"
+      - "lychee.toml"
+      - ".github/workflows/links.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: true
+
+jobs:
+  links:
+    name: External links
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Check the links
+        id: lychee
+        uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8 # v2.9.0
+        with:
+          args: --no-progress --config lychee.toml 'web/src/**/*.svelte' 'web/src/**/*.astro' 'web/src/**/*.ts'
+          fail: false
+          checkbox: false
+
+      - name: Fail on a dead link
+        if: github.event_name == 'pull_request'
+        env:
+          EXIT_CODE: ${{ steps.lychee.outputs.exit_code }}
+        run: |
+          if [ "$EXIT_CODE" != 0 ]; then
+            echo "::error::Some external links don't resolve; the run's summary lists them"
+            exit 1
+          fi
+
+      - name: Track broken links in an issue
+        if: github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          EXIT_CODE: ${{ steps.lychee.outputs.exit_code }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          label=broken-links
+          issue=$(gh issue list --state open --label "$label" --json number --jq '.[0].number // empty')
+          # Compare only broken URLs so working-link counts do not update the issue.
+          broken() { grep -oE '^\* \[[^]]+\] <[^>]+>' | sort; }
+          case "$EXIT_CODE" in
+            0)
+              if [ -n "$issue" ]; then
+                gh issue close "$issue" --comment "Every external link passes as of [this run]($RUN_URL)."
+              fi
+              ;;
+            2)
+              {
+                echo "The weekly link check found external links in the website's source that no longer resolve. This issue is updated each week while they stay broken and closes itself once every link passes."
+                echo
+                cat lychee/out.md
+              } > issue.md
+              if [ -z "$issue" ]; then
+                gh label create "$label" --color d73a4a --description "External links on the website that no longer resolve" --force
+                gh issue create --title "Broken external links" --label "$label" --body-file issue.md
+              elif [ "$(gh issue view "$issue" --json body --jq .body | broken)" != "$(broken < issue.md)" ]; then
+                gh issue edit "$issue" --body-file issue.md
+                # A comment notifies subscribers when the broken URLs change.
+                gh issue comment "$issue" --body "The set of broken links changed; see the updated list above ([run]($RUN_URL))."
+              fi
+              ;;
+            *)
+              echo "::error::lychee exited with code $EXIT_CODE, so the links could not be checked"
+              exit 1
+              ;;
+          esac

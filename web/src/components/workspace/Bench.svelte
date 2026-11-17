@@ -17,10 +17,12 @@
   import { formatValue, kindOfStage, readPot } from '../../lib/parts';
   import type { Card, Display } from '../../lib/workspace.svelte';
   import { count, placedOf } from '../../lib/workspace.svelte';
+  import { views } from '../../lib/router.svelte';
   import Choice from './Choice.svelte';
   import type { Box } from './DocumentViewer.svelte';
   import DocumentViewer from './DocumentViewer.svelte';
   import HeightProfile from './HeightProfile.svelte';
+  import Icon from './Icon.svelte';
   import OrientationHint from './OrientationHint.svelte';
   import PartSymbol from './PartSymbol.svelte';
   import ResistorBands from './ResistorBands.svelte';
@@ -177,6 +179,11 @@
       ></meter>
       {#if done}
         <button class="text-button" type="button" onclick={onStartOver}>Start over</button>
+      {/if}
+      {#if done === total && total}
+        <a class="text-button" href={views.troubleshoot.path}>
+          Doesn't work? What to check <Icon name="arrow-right" size={14} />
+        </a>
       {/if}
     </div>
     <div class="choices">

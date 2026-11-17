@@ -45,6 +45,7 @@
   import StockCount from './StockCount.svelte';
   import StockDrawers from './StockDrawers.svelte';
   import StockPanel from './StockPanel.svelte';
+  import Troubleshoot from './Troubleshoot.svelte';
 
   const workspace = pageWorkspace();
 
@@ -256,6 +257,12 @@
     lede="Read a resistor's colour bands, the code printed on a capacitor or pot, and where other parts print what they are."
   />
   <Identify bind:bands={workspace.display.bands} onAdd={addToStock} />
+{:else if view === 'troubleshoot'}
+  <PageHead
+    title="It doesn't work"
+    lede="What to check when a finished pedal is silent, weak or noisy: what each symptom points to, how to measure its voltages, and how to ask for help."
+  />
+  <Troubleshoot />
 {:else if view === 'stock'}
   <PageHead
     title="Stock"
