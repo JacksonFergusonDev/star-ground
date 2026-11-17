@@ -35,8 +35,9 @@ max_retries = 3
 retry_wait_time = 5
 timeout = 20
 
-# GitHub rate-limits unauthenticated checks (429); CI passes a token, and a rate limit that still
-# happens means the link could not be checked, not that it is broken.
-accept = ["200..=299", "429"]
+# A rate limit (429) or a host that's briefly unavailable (503) means the link could not be
+# checked, not that it is broken. GitHub answers 503 now and then to quick requests for its file
+# pages, and lychee doesn't retry it.
+accept = ["200..=299", "429", "503"]
 
 user_agent = "Mozilla/5.0 (compatible; Star Ground link check; +https://github.com/JacksonFergusonDev/star-ground)"
