@@ -1,12 +1,12 @@
 """How much a PDF page's drawing instructions run, and what a stream decodes to.
 
 A page is drawn by its content streams and the forms they draw. pdfminer
-decodes each stream whole before reading it, then keeps every character it
-draws, at about 1.8 KB each. Streams compress about a thousandfold, and a
-crafted one far more, so a small upload can ask for gigabytes before a
-page's characters can be counted. `decoded` decodes a stream a piece at a
-time and stops as soon as it passes a bound; `content_bytes` adds up what a
-page runs, a form once for every time it's drawn.
+decodes each stream whole before reading it. Streams compress about a
+thousandfold, and a crafted one far more, so a small upload can ask for
+gigabytes before a page's layout is bounded (`guard.GuardedPage`).
+`decoded` decodes a stream a piece at a time and stops as soon as it passes
+a bound; `content_bytes` adds up what a page runs, a form once for every
+time it's drawn.
 """
 
 import io

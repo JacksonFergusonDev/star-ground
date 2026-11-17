@@ -134,16 +134,18 @@ class TooManyPagesError(StarGroundError):
 class CrowdedPageError(StarGroundError):
     """A PDF page holding far more text than any build document's page.
 
+    It's refused as soon as it passes the bound, before the rest is read.
+
     Args:
         page: The page, counting from 1.
-        chars: How many characters it holds.
+        bound: The most characters a page may hold.
     """
 
     kind = ErrorKind.UNREADABLE_PDF
 
-    def __init__(self, page: int, chars: int) -> None:
+    def __init__(self, page: int, bound: int) -> None:
         super().__init__(
-            f"Page {page} of this PDF holds {chars:,} characters, far more than "
+            f"Page {page} of this PDF holds more than {bound:,} characters, far more than "
             "a build document's page, so the PDF wasn't read.",
             "Check it's the build document for the pedal.",
         )
@@ -152,8 +154,9 @@ class CrowdedPageError(StarGroundError):
 class HeavyPageError(StarGroundError):
     """A PDF page drawing far more than any build document's page.
 
-    Its drawing instructions are checked before the page is read, because
-    reading them all can take gigabytes of memory.
+    Its drawing instructions are checked before the page is read, and what
+    its layout keeps as it's read, because either can take gigabytes of
+    memory.
 
     Args:
         page: The page, counting from 1.
