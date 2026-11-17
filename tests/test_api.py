@@ -156,6 +156,46 @@ def test_stock_matches_a_part_written_in_another_case() -> None:
     assert ComponentKey(ComponentCategory.DIODES, "1N4148") in master.stock
 
 
+def test_a_value_written_in_two_cases_is_one_part() -> None:
+    master = generate_master_list(
+        [
+            Project(name="Drive", data="GAIN B100K\nVOL b100k\nIC1 TL072"),
+            Project(name="Fuzz", data="IC1 tl072"),
+        ]
+    )
+
+    rows = [(r.part, r.bom_qty) for r in master.shopping_list()]
+    assert ("B100K", 2) in rows
+    assert ("TL072", 2) in rows
+    assert not {"b100k", "tl072"} & {part for part, _ in rows}
+
+
+def test_a_stocked_capacitor_counts_for_a_listed_rating_it_meets() -> None:
+    stock = read_stock(
+        FileUpload(
+            "stock.csv",
+            b"Category,Part,Qty\nCapacitors,10u,3\nCapacitors,47u 10V,5\n",
+        )
+    )
+    master = generate_master_list(
+        [
+            Project(
+                name="Fuzz",
+                data="C1 10u\nC2 10u 25V\nC3 10u 25V\nC4 47u 25V\nC5 47u 6.3V",
+            )
+        ],
+        stock=stock,
+    )
+
+    rows = {r.part: r for r in master.shopping_list()}
+    # The plain 10u fills the list's own 10u first, then the rated ones.
+    assert (rows["10u"].in_stock, rows["10u"].net_need) == (1, 0)
+    assert (rows["10u 25V"].in_stock, rows["10u 25V"].net_need) == (2, 0)
+    # A written rating must meet the list's: 10 V is too little for 25 V.
+    assert (rows["47u 25V"].in_stock, rows["47u 25V"].net_need) == (0, 1)
+    assert (rows["47u 6.3V"].in_stock, rows["47u 6.3V"].net_need) == (5, 0)
+
+
 def test_documents_are_named_by_label_and_keep_the_source() -> None:
     upload = _upload(SAMPLES / "clean" / "Kliche-PedalPCB.pdf")
     master = generate_master_list(

@@ -630,6 +630,31 @@ class Inventory(UserDict[ComponentKey, PartData]):
         self.data[key] = value
         return value
 
+    def spelled(self, key: ComponentKey) -> ComponentKey:
+        """The key this inventory already holds the part under, if any.
+
+        A value written in another case is the same part: a list that writes
+        both 'B100K' and 'b100k', or two projects that write 'TL072' and
+        'tl072', need one row. The first spelling read is kept.
+
+        Args:
+            key: The part being added.
+
+        Returns:
+            The held key that differs from it only in case, or the key itself.
+        """
+        if key in self.data:
+            return key
+        folded = key.value.casefold()
+        return next(
+            (
+                k
+                for k in self.data
+                if k.category == key.category and k.value.casefold() == folded
+            ),
+            key,
+        )
+
     def add_part(self, source: str, key: ComponentKey, ref: str, qty: int = 1) -> None:
         """Records a part in the inventory.
 
@@ -639,7 +664,7 @@ class Inventory(UserDict[ComponentKey, PartData]):
             ref: The reference designator (e.g., "R1").
             qty: Quantity to add.
         """
-        part = self[key]
+        part = self[self.spelled(key)]
 
         part.qty += qty
 
@@ -657,6 +682,7 @@ class Inventory(UserDict[ComponentKey, PartData]):
             key: The unique component key.
             qty: How many to buy.
         """
+        key = self.spelled(key)
         self.add_part(source, key, "", qty)
         part = self[key]
         part.counted[source] = part.counted.get(source, 0) + qty
@@ -738,7 +764,8 @@ class Inventory(UserDict[ComponentKey, PartData]):
             other: The Inventory object to merge in.
             multiplier: Multiplication factor for the incoming inventory quantities.
         """
-        for key, data in other.items():
+        for spelling, data in other.items():
+            key = self.spelled(spelling)
             self[key].qty += data.qty * multiplier
             self[key].included += data.included * multiplier
             for src, n in data.counted.items():
@@ -977,11 +1004,7 @@ class ParseResult:
     def _with(self, parts: Inventory) -> Inventory:
         """This result's parts list with other parts added."""
         inventory = copy.deepcopy(self.inventory)
-        for key, data in parts.items():
-            if key in inventory:
-                inventory.merge(Inventory({key: data}))
-            else:
-                inventory[key] = copy.deepcopy(data)
+        inventory.merge(parts)
         return inventory
 
     def _ocr_stats(self, ocr: OcrAttempt) -> ReadingStats:

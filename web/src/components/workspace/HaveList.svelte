@@ -8,7 +8,7 @@
   import { formatValue, kindOfCategory } from '../../lib/parts';
   import { views } from '../../lib/router.svelte';
   import type { Stock } from '../../lib/server';
-  import { have, readStock, samePart, setHave, withRows } from '../../lib/stock';
+  import { have, readStock, setHave, withRows } from '../../lib/stock';
   import EmptyState from './EmptyState.svelte';
   import Icon from './Icon.svelte';
   import PartSymbol from './PartSymbol.svelte';
@@ -34,21 +34,13 @@
   const parts = $derived(
     (result?.shopping_list ?? [])
       .map((r) => ({ ...r, need: r.bom_qty - r.included }))
-      .filter((r) => r.need > 0 && r.category !== 'PCB')
-      .map((r, _, all) => ({
-        ...r,
-        // A value the list holds twice in different cases ('B100K', 'b100k')
-        // is two parts to the server, so each matches only its own rows.
-        exact: all.some(
-          (o) => o !== r && o.category === r.category && samePart(r.category, o.part, r.part),
-        ),
-      })),
+      .filter((r) => r.need > 0 && r.category !== 'PCB'),
   );
   const toBuy = $derived(result?.shopping_list.filter((r) => r.buy_qty > 0).length ?? 0);
 
   type Part = (typeof parts)[number];
   const set = (row: Part, qty: number): void =>
-    onChange(withRows(stock, setHave(rows, row.category, row.part, qty, row.exact)));
+    onChange(withRows(stock, setHave(rows, row.category, row.part, qty)));
 </script>
 
 {#if !parts.length}
@@ -74,7 +66,7 @@
     </p>
     <ul class="parts">
       {#each parts as row (row.category + row.part)}
-        {@const n = have(rows, row.category, row.part, row.exact)}
+        {@const n = have(rows, row.category, row.part)}
         {@const answer = n <= 0 ? 'none' : n >= row.need ? 'all' : 'some'}
         {@const key = `${row.category}-${row.part}`}
         <li class:answered={n > 0}>

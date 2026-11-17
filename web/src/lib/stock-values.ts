@@ -128,7 +128,7 @@ export const VALUE_GROUPS: ValueGroup[] = [
   {
     category: 'Capacitors',
     title: 'Electrolytic capacitors',
-    hint: 'The cans, 1 µF and up, with the value and voltage printed on the side.',
+    hint: 'The cans, 1 µF and up, with the value and voltage printed on the side. Star Ground counts a can toward any voltage a parts list asks for, so check yours: a 16 V can won’t do where the list says 25 V.',
     values: ['1u', '2.2u', '4.7u', '10u', '22u', '47u', '100u', '220u'],
   },
   {

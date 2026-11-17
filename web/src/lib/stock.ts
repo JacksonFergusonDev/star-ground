@@ -97,34 +97,22 @@ function unitless(head: string): string {
   return head.replace(/(?:f|ohms?|Ω)$/i, '');
 }
 
-/**
- * Whether a row is the part: the same value as `samePart` reads it, or
- * exactly the same text when `exact` (for a parts list holding the value
- * twice in different cases, which the server keeps apart).
- */
-function means(row: StockRow, category: string, part: string, exact: boolean): boolean {
-  if (row.category !== category) return false;
-  return exact ? row.part.trim() === part.trim() : samePart(category, row.part, part);
-}
+/** Whether a row is the part: the same value, as `samePart` reads it. */
+const means = (row: StockRow, category: string, part: string): boolean =>
+  row.category === category && samePart(category, row.part, part);
 
 /** How many of a part the rows hold, adding up every row that means it. */
-export function have(rows: StockRow[], category: string, part: string, exact = false): number {
-  return rows.filter((r) => means(r, category, part, exact)).reduce((sum, r) => sum + r.qty, 0);
+export function have(rows: StockRow[], category: string, part: string): number {
+  return rows.filter((r) => means(r, category, part)).reduce((sum, r) => sum + r.qty, 0);
 }
 
 /**
  * The rows with the builder's count of a part: every row that means it is
  * replaced by one row, written as given, or none when the count is 0.
  */
-export function setHave(
-  rows: StockRow[],
-  category: string,
-  part: string,
-  qty: number,
-  exact = false,
-): StockRow[] {
-  const others = rows.filter((r) => !means(r, category, part, exact));
-  const at = rows.findIndex((r) => means(r, category, part, exact));
+export function setHave(rows: StockRow[], category: string, part: string, qty: number): StockRow[] {
+  const others = rows.filter((r) => !means(r, category, part));
+  const at = rows.findIndex((r) => means(r, category, part));
   if (qty <= 0) return others;
   const row = { category, part, qty };
   // A part already listed keeps its place, so the file reads in the builder's order.
