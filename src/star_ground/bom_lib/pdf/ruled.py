@@ -363,8 +363,11 @@ def _ref_cell(cell: str, this_table: list[Entry]) -> str:
     # 'P2-Volume' (GuitarPCB Sho' Nuff), 'P1 - Attack' (GuitarPCB P.U.T.B.).
     ref_raw = control_designator(_SPACED_NAME.sub(r"\1-", ref_raw)) or ref_raw
     # 'SW1 Tap Tempo' (GuitarPCB D'Lay): the part's role after its designator,
-    # as the text reading takes it.
-    ref_raw = role_designator(ref_raw) or ref_raw
+    # as the text reading takes it. A control's name is no role: 'Q1 Bias' (Aion
+    # FX legacy Plasma) is the trimmer that biases Q1, not Q1.
+    role = role_designator(ref_raw)
+    if role and not names_control(ref_raw[len(role) :]):
+        ref_raw = role
     # 'RX2 (by IC1)', 'RX2 (by switch)' (Aion FX legacy Aurora): two
     # positions printed with one designator.
     position = _POSITION_ASIDE.fullmatch(ref_raw)

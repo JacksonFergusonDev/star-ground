@@ -148,7 +148,8 @@ def test_unexpandable_ranges_are_told_apart() -> None:
     for ref in ("R1-R60", "R1-C3", "R1A-R2B"):
         assert expand_refs(ref) == [ref]
         assert is_ref_range(ref)
-    for ref in ("R1", "VOLUME", "OSC-SW", "R1-", "1990-2000"):
+    # 'Q1-2B' (Aion FX Phobos) names a bias trimmer.
+    for ref in ("R1", "VOLUME", "OSC-SW", "R1-", "1990-2000", "Q1-2B"):
         assert not is_ref_range(ref)
 
 

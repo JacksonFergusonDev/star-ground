@@ -113,9 +113,11 @@ def is_ref_range(ref: str) -> bool:
 
     Returns:
         True for a range it could not expand: 'R1-R60' (over the limit),
-        'R1-C3' (two kinds of part).
+        'R1-C3' (two kinds of part). A channel letter on one end only is a
+        label, not a range: 'Q1-2B' (Aion FX Phobos) is a bias trimmer.
     """
-    return _RANGE.fullmatch(ref.strip()) is not None
+    m = _RANGE.fullmatch(ref.strip())
+    return m is not None and bool(m.group(3)) == bool(m.group(6))
 
 
 def _expand_range(ref_raw: str) -> list[str]:

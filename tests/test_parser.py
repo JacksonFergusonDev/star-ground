@@ -1703,6 +1703,8 @@ def test_a_ruled_table_with_a_blank_header_keeps_its_columns(
         ("R9 (CLR)", "R9"),
         # Aion FX Plexus: a capitalized word alone is the control's name.
         ("Q5 BIAS", "Q5 BIAS"),
+        # Aion FX legacy Plasma: the trimmer biasing Q1, named after it.
+        ("Q1 Bias", "Q1 Bias"),
     ],
 )
 def test_a_ruled_designator_cell_names_its_designator(cell: str, ref: str) -> None:
