@@ -122,11 +122,8 @@
       </ul>
     {:else}
       <EmptyState title="Nothing on the bench yet" level={3}>
-        Add a build document, a link to one or a parts list. Or find your pedal in the circuit
-        catalog, whose parts lists are already read.
-        {#snippet action()}
-          <a class="hs-button" href="/catalog/">Browse the catalog {@render arrow()}</a>
-        {/snippet}
+        Search the catalog for your pedal: its parts lists are already read. Or add a build
+        document, a link to one or a parts list.
       </EmptyState>
     {/if}
   </section>

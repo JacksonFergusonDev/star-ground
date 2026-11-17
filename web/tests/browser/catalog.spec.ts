@@ -115,6 +115,62 @@ test('Add to build adds the document to the workspace once', async ({ page }) =>
   await expect(page.getByRole('textbox', { name: 'Project name' })).toHaveCount(1);
 });
 
+test("the app's add box searches the catalog first, and adds a build in one click", async ({
+  page,
+}) => {
+  const reading: DocumentReading = {
+    document: null,
+    title: 'Gran Mango',
+    file_title: 'Gran Mango',
+    parts_found: 20,
+    builds: [],
+    ocr_builds: [],
+    ocr: null,
+    ocr_offered: false,
+    options: [],
+    errors: [],
+  };
+  const read: string[] = [];
+  await page.route('**/api/health', (route) => route.fulfill({ json: { status: 'ok' } }));
+  await page.route('**/api/master-list', (route) => route.abort('failed'));
+  await page.route('**/api/documents/read', (route) => {
+    read.push(route.request().postDataBuffer()?.toString() ?? '');
+    return route.fulfill({
+      contentType: 'text/event-stream',
+      body: `data: ${JSON.stringify({ event: 'result', reading })}\n\n`,
+    });
+  });
+
+  await page.goto('/app/');
+  // The catalog is the first way in, and already chosen.
+  await expect(page.getByRole('button', { name: 'Catalog' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  const search = page.getByRole('searchbox', { name: 'Search the catalog' });
+
+  // A word from its effects finds it, as well as its name.
+  await search.fill('fuzz');
+  const builds = page.getByRole('list', { name: 'Catalog builds' });
+  await expect(builds.getByRole('button')).toHaveCount(1);
+  await search.fill('mango');
+  await expect(builds.getByRole('button')).toHaveText(/Gran Mango 3\.1416.*Tonepad · Fuzz/);
+  await search.fill('no such pedal');
+  await expect(page.getByText('Nothing in the catalog matches "no such pedal".')).toBeVisible();
+
+  await search.fill('mango');
+  await builds.getByRole('button', { name: /Gran Mango/ }).click();
+  await expect(page.getByRole('textbox', { name: 'Project name' })).toHaveValue(
+    'Gran Mango 3.1416',
+  );
+  await expect(page.getByRole('link', { name: 'catalog', exact: true })).toHaveAttribute(
+    'href',
+    '/catalog/tonepad/tonepad-bigmuff/',
+  );
+  expect(read.join()).toContain('https://tonepad.com/getFile.asp?id=94');
+  await expect(search).toHaveValue('');
+});
+
 test('a build no longer in the catalog says so', async ({ page }) => {
   await page.route('**/api/**', (route) => route.abort('failed'));
   await page.goto('/app/?catalog=pedalpcb/gone');
