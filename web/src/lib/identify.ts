@@ -44,6 +44,7 @@ export const TOLERANCES: Partial<Record<Band, number>> = {
 export const COLOURS: Band[] = [...DIGITS, 'gold', 'silver'];
 
 const PREFIXES: [number, string][] = [
+  [1e9, 'G'],
   [1e6, 'M'],
   [1e3, 'k'],
   [1, ''],
@@ -52,7 +53,7 @@ const PREFIXES: [number, string][] = [
 /** A number without a float's trailing noise: 4.7000000000000002 is '4.7'. */
 const plain = (n: number): string => String(Number(n.toPrecision(6)));
 
-/** A resistance as a parts list writes it: 4700 is '4.7k', 220 is '220', 0.47 is '0.47'. */
+/** A resistance as a parts list writes it: 4700 is '4.7k', 1e9 is '1G', 220 is '220', 0.47 is '0.47'. */
 function ohms(value: number): string {
   for (const [size, prefix] of PREFIXES)
     if (value >= size || size === 1) return `${plain(value / size)}${prefix}`;
