@@ -159,6 +159,15 @@
             <span class="label">Circuit catalog</span>
           </a>
         </li>
+        <li>
+          <a
+            class="item"
+            href={views.identify.path}
+            aria-current={path === views.identify.path ? 'page' : undefined}
+          >
+            <span class="label">Identify a part</span>
+          </a>
+        </li>
       </ul>
     </nav>
 

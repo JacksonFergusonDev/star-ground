@@ -4,13 +4,17 @@
 // list stay as they are.
 
 /** One of the app's pages. */
-export type View = 'projects' | 'list' | 'stock' | 'export' | 'check' | 'build';
+export type View =
+  'projects' | 'list' | 'have' | 'stock' | 'count' | 'identify' | 'export' | 'check' | 'build';
 
 /** Each page's address and title. */
 export const views: Record<View, { path: string; title: string }> = {
   projects: { path: '/app/', title: 'Projects' },
   list: { path: '/app/list/', title: 'Shopping list' },
+  have: { path: '/app/list/have/', title: 'What you have' },
   stock: { path: '/app/stock/', title: 'Stock' },
+  count: { path: '/app/stock/count/', title: 'Count your parts' },
+  identify: { path: '/app/identify/', title: 'Identify a part' },
   export: { path: '/app/export/', title: 'Export' },
   check: { path: '/app/check/', title: 'Check parts' },
   build: { path: '/app/build/', title: 'Build' },

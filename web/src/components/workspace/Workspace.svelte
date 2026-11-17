@@ -19,7 +19,9 @@
   import type { View } from '../../lib/router.svelte';
   import { buildHref, checkHref, followAppLinks, router, views } from '../../lib/router.svelte';
   import type { Download } from '../../lib/server';
+  import type { Stock } from '../../lib/server';
   import { warmUp } from '../../lib/server';
+  import { addHave, readStock, withRows } from '../../lib/stock';
   import type { Added } from '../../lib/workspace.svelte';
   import {
     blocker,
@@ -32,12 +34,15 @@
   import Bench from './Bench.svelte';
   import EmptyState from './EmptyState.svelte';
   import Exports from './Exports.svelte';
+  import HaveList from './HaveList.svelte';
   import Icon from './Icon.svelte';
+  import Identify from './Identify.svelte';
   import MasterList from './MasterList.svelte';
   import PageHead from './PageHead.svelte';
   import Projects from './Projects.svelte';
   import Review from './Review.svelte';
   import ShareLink from './ShareLink.svelte';
+  import StockCount from './StockCount.svelte';
   import StockDrawers from './StockDrawers.svelte';
   import StockPanel from './StockPanel.svelte';
 
@@ -97,6 +102,14 @@
 
   const add = (added: Added): Promise<void> => addProject(workspace, added);
   const read = (id: string, ocr: boolean): Promise<void> => readProject(workspace, id, ocr);
+  const setStock = (stock: Stock | null): void => {
+    workspace.stock = stock;
+  };
+  // A part identified on the identifier page, added to what the stock holds.
+  const addToStock = (category: string, value: string, qty: number): void => {
+    const rows = workspace.stock ? readStock(workspace.stock.text) : [];
+    setStock(withRows(workspace.stock, addHave(rows, category, value, qty)));
+  };
   const exportList = (kind: ExportKind, excel: boolean): Promise<Download> =>
     exportFile(workspace, kind, excel);
 
@@ -186,6 +199,9 @@
     lede="Every project's parts in one list, less the stock you own. It updates as your projects change."
   >
     {#snippet actions()}
+      {#if listing.result}
+        <a class="hs-button" href={views.have.path}>Tick off what you have {@render arrow()}</a>
+      {/if}
       <a class="hs-button" href={views.export.path}>Export {@render arrow()}</a>
     {/snippet}
   </PageHead>
@@ -201,13 +217,56 @@
       return listed && reviewable(listed) ? checkHref(listed.id, ref) : null;
     }}
   />
+{:else if view === 'have'}
+  <PageHead
+    title="What you have"
+    lede="Say which of this order's parts you already have, without counting your whole stock. The shopping list buys only the rest."
+  >
+    {#snippet crumbs()}
+      <li><a href={views.list.path}>Shopping list</a></li>
+      <li>What you have</li>
+    {/snippet}
+  </PageHead>
+  <HaveList
+    result={listing.result}
+    updating={listing.updating}
+    stock={workspace.stock}
+    notation={workspace.display.notation}
+    onChange={setStock}
+  />
+{:else if view === 'count'}
+  <PageHead
+    title="Count your parts"
+    lede="Type how many you have of each part, and download the stock CSV when you're done. The shopping list subtracts your counts as you go."
+  >
+    {#snippet crumbs()}
+      <li><a href={views.stock.path}>Stock</a></li>
+      <li>Count your parts</li>
+    {/snippet}
+  </PageHead>
+  <StockCount
+    stock={workspace.stock}
+    notation={workspace.display.notation}
+    bind:bands={workspace.display.bands}
+    onChange={setStock}
+  />
+{:else if view === 'identify'}
+  <PageHead
+    title="Identify a part"
+    lede="Read a resistor's colour bands, the code printed on a capacitor or pot, and where other parts print what they are."
+  />
+  <Identify bind:bands={workspace.display.bands} onAdd={addToStock} />
 {:else if view === 'stock'}
   <PageHead
     title="Stock"
     lede="The shopping list subtracts the parts you already own, so you buy only what's missing."
-  />
+  >
+    {#snippet actions()}
+      <a class="hs-button" href={views.count.path}>Count your parts {@render arrow()}</a>
+    {/snippet}
+  </PageHead>
   <div class="stock">
-    <StockPanel stock={workspace.stock} onChange={(stock) => (workspace.stock = stock)} />
+    <StockPanel stock={workspace.stock} onChange={setStock} />
     <StockDrawers stock={workspace.stock} notation={workspace.display.notation} />
   </div>
 {:else if view === 'export'}

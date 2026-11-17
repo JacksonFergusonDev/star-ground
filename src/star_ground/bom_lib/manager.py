@@ -3,6 +3,7 @@
 This module handles:
 - Sorting and organizing the inventory for display.
 - Calculating net purchasing needs (BOM vs. Stock).
+- Matching the builder's stock to the parts lists' values (`match_stock`).
 - Relabelling a project's parts (`rename_source`).
 """
 
@@ -41,6 +42,76 @@ def pot_resistance(value: str) -> Value | None:
     match = POT_RESISTANCE.search(value.upper())
     dec = parse_value_to_decimal(match.group(2)) if match else None
     return None if dec is None else ohms(dec)
+
+
+# A capacitor's voltage rating, as a parts list or a builder writes it:
+# '25V', '(25V minimum)' (`capacitor_notes`), '6.3 V'.
+_RATING = re.compile(
+    r"\(\s*(\d+(?:\.\d+)?)\s*V minimum\s*\)|\b(\d+(?:\.\d+)?)\s*V\b", re.I
+)
+
+
+def _rated(value: str) -> tuple[str, Decimal | None]:
+    """A capacitor's value without its voltage rating, and the rating."""
+    match = _RATING.search(value)
+    if match is None:
+        return value.casefold(), None
+    rest = " ".join(f"{value[: match.start()]} {value[match.end() :]}".split())
+    return rest.casefold(), Decimal(match.group(1) or match.group(2))
+
+
+def _covers(stocked: ComponentKey, listed: ComponentKey) -> bool:
+    """Whether a stocked capacitor will do for a listed one of another rating.
+
+    The same capacitance and kind will: a builder who counted '10u' has the
+    '10u (25V minimum)' a list asks for. A stocked rating, when one is
+    written, must meet the listed one.
+    """
+    if not stocked.category == listed.category == ComponentCategory.CAPACITORS:
+        return False
+    have, have_volts = _rated(stocked.value)
+    need, need_volts = _rated(listed.value)
+    return have == need and (
+        have_volts is None or need_volts is None or have_volts >= need_volts
+    )
+
+
+def match_stock(bom: Inventory, stock: Inventory) -> Inventory:
+    """The stock, with each part written as the parts lists write it.
+
+    A builder types values their own way: 'a100k' for a parts list's 'A100K',
+    'tl072' for 'TL072', and '10u' for a list's '10u (25V minimum)'.
+    Resistors and capacitors are already normalized as the stock is read;
+    a value that differs from a listed part only in case is that part, and a
+    capacitor differing only in its rating counts for it when its own rating,
+    if written, is enough. A stocked part that will do for several listed
+    ones fills the one written like it first, then the others, as far as
+    each needs it; what's left stays with the first. Parts no list names
+    keep their own keys.
+
+    Args:
+        bom: The parts to build.
+        stock: The builder's stock, as read.
+
+    Returns:
+        A new inventory holding the same quantities.
+    """
+    wanted = {key: data.qty - data.included for key, data in bom.items()}
+    matched = Inventory()
+    for key, data in stock.items():
+        spelled = bom.spelled(key)
+        targets = ([spelled] if spelled in bom else []) + [
+            k for k in bom if k != spelled and _covers(key, k)
+        ]
+        left = data.qty
+        for target in targets:
+            given = min(left, max(0, wanted[target]))
+            wanted[target] -= given
+            matched[target].qty += given
+            left -= given
+        if left:
+            matched[targets[0] if targets else key].qty += left
+    return matched
 
 
 def calculate_net_needs(bom: Inventory, stock: Inventory) -> Inventory:
