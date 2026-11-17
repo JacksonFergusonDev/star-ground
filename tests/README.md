@@ -64,6 +64,8 @@ Standard unit tests often suffer from "tester bias"—we only test the inputs we
 uv run pytest -m network
 ```
 
+- **Links** (`test_links_live.py`, marker `network`): every external link in the website's source still leads somewhere, a YouTube video through its oEmbed answer. It fails on a 404 or 410, a server error or a host that's gone; a site that refuses non-browsers (403, LinkedIn's 999) only warns. `.github/workflows/links.yml` runs it weekly and on pull requests that change `web/src/`.
+
 ### 6. Package Integrity
 
 **File:** `tests/test_package.py`

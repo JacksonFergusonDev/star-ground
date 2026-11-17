@@ -1,0 +1,48 @@
+# Checks that every external link the website points builders to still leads
+# somewhere (tests/test_links_live.py). Weekly, since sites go away on their
+# own schedule, and on pull requests that change the website's links. Not part
+# of CI OK: another site being down shouldn't block a merge.
+
+name: Links
+
+on:
+  schedule:
+    # Mondays, 08:43 UTC, off the hour.
+    - cron: "43 8 * * 1"
+  workflow_dispatch:
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - "web/src/**"
+      - "tests/test_links_live.py"
+      - ".github/workflows/links.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: true
+
+env:
+  UV_LOCKED: "1"
+  UV_NO_SYNC: "1"
+
+jobs:
+  links:
+    name: External links
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+
+      - name: Install dependencies
+        run: uv sync --group ci --no-dev
+
+      - name: Check the links
+        run: uv run pytest -m network tests/test_links_live.py -rw

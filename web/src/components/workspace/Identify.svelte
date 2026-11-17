@@ -41,7 +41,7 @@
   <section class="part" aria-labelledby="capacitors">
     <h2 id="capacitors">Capacitors</h2>
     <CapacitorCode id="identify-cap" onAdd={(v, n) => add('Capacitors', v, n)} />
-    <ul class="facts">
+    <ul class="tips">
       <li>
         <strong>Three digits</strong> are the first two digits of the value in picofarads, then how many
         zeros follow: 104 is 10 and four zeros, 100,000 pF, which is 100 nF.
@@ -75,7 +75,7 @@
 
   <section class="part" aria-labelledby="pots">
     <h2 id="pots">Pots</h2>
-    <ul class="facts">
+    <ul class="tips">
       <li>
         <strong>The code</strong> is on the back or the side. The letter is the taper and the rest the
         value: B100K is a 100k linear pot.
@@ -93,7 +93,7 @@
 
   <section class="part" aria-labelledby="semis">
     <h2 id="semis">Diodes, LEDs, transistors and chips</h2>
-    <ul class="facts">
+    <ul class="tips">
       <li>
         <strong>Diodes</strong> print their number on the body, often without the 1N: a small glass diode
         reading 4148 is a 1N4148. The stripe marks the cathode, and goes on the board's band.
@@ -148,7 +148,7 @@
     font-size: var(--fs-ui);
     line-height: 1.6;
   }
-  .facts {
+  .tips {
     display: grid;
     gap: 8px;
     margin: 0;
@@ -157,7 +157,7 @@
     font-size: var(--fs-ui);
     line-height: 1.6;
   }
-  .facts strong {
+  .tips strong {
     color: var(--text);
     font-weight: 500;
   }
