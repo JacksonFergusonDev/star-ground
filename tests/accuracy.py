@@ -38,6 +38,7 @@ from star_ground.bom_lib import (
     ParseWarningKind,
     parse_pdf,
 )
+from star_ground.bom_lib.errors import StarGroundError
 from star_ground.bom_lib.ocr import attempt_ocr
 from star_ground.bom_lib.utils import parse_value_to_decimal
 
@@ -239,6 +240,9 @@ class DocScore:
     # Set when OCR read part of the document (`--ocr`).
     ocr_verdict: OcrVerdict | None = None
     ocr_refs: frozenset[str] = frozenset()
+    # Set when the document was refused as a builder's would be: every part
+    # is missed, and the builder is told why.
+    error: StarGroundError | None = None
 
     @property
     def expected_count(self) -> int:
@@ -606,11 +610,39 @@ def score_doc(doc: GoldenDoc, ocr: bool = False) -> DocScore:
     Returns:
         A DocScore covering every expected and every emitted designator.
     """
-    res = parse_sample(doc.pdf)
-    attempt = None
-    if ocr:
-        res, attempt = _with_ocr(doc.pdf, res)
+    try:
+        res = parse_sample(doc.pdf)
+        attempt = None
+        if ocr:
+            res, attempt = _with_ocr(doc.pdf, res)
+    except StarGroundError as e:
+        return _refused(doc, e)
     return score_result(doc, res, attempt)
+
+
+def _refused(doc: GoldenDoc, error: StarGroundError) -> DocScore:
+    """Grades a document the reader refused: every part missed, and warned of.
+
+    The app shows the builder the error instead of a parts list, so they know
+    nothing was read, as for a reading with errors in `score_result`.
+    """
+    labeled = len(doc.variants) > 1
+    results = [
+        replace(r, build=variant.name if labeled else "")
+        for variant in doc.variants
+        for r in _grade_variant(variant, {}, {_EVERYTHING})
+    ]
+    return DocScore(
+        name=doc.name,
+        results=tuple(results),
+        title_expected=doc.title,
+        title_actual=None,
+        warned_refs=frozenset(),
+        ambiguous_refs=doc.ambiguous_refs,
+        variant_count=len(doc.variants),
+        builds_found=0,
+        error=error,
+    )
 
 
 def score_result(
@@ -844,6 +876,8 @@ def compare_to_baseline(score: DocScore, baseline: Baseline) -> list[str]:
 
 def render_scorecard(scores: list[DocScore], verbose: bool) -> str:
     """Formats a plain-text scorecard for a list of document scores."""
+    if not scores:
+        return f"{'TOTAL':<38}no golden documents to score"
     lines: list[str] = []
     header = f"{'document':<38}{'correct':>12}{'recall':>9}{'precision':>11}{'silent':>8}{'false alarms':>14}  title"
     lines.append(header)
@@ -868,6 +902,11 @@ def render_scorecard(scores: list[DocScore], verbose: bool) -> str:
                 else ""
             )
             + (f"  [OCR: {s.ocr_verdict}]" if s.ocr_verdict else "")
+            + (
+                f"  [refused: {s.error.kind}, {type(s.error).__name__}]"
+                if s.error
+                else ""
+            )
         )
         if verbose:
             for r in s.failures:
@@ -876,10 +915,13 @@ def render_scorecard(scores: list[DocScore], verbose: bool) -> str:
             for ref in sorted(s.false_alarms):
                 lines.append(f"    [ false] {ref:<12} warned, but parsed correctly")
     lines.append("-" * len(header))
+    refused = sum(1 for s in scores if s.error)
     lines.append(
         f"{'TOTAL':<38}{f'{tot_correct}/{tot_expected}':>12}"
-        f"{tot_correct / tot_expected:>9.1%}{tot_correct / tot_predicted:>11.1%}"
+        f"{tot_correct / tot_expected if tot_expected else 1.0:>9.1%}"
+        f"{tot_correct / tot_predicted if tot_predicted else 1.0:>11.1%}"
         f"{tot_silent:>8}{tot_false:>14}"
+        + (f"  ({refused} refused)" if refused else "")
     )
     return "\n".join(lines)
 
@@ -935,7 +977,8 @@ def main(argv: list[str] | None = None) -> int:
         docs = [d for d in docs if any(s.lower() in d.name.lower() for s in args.docs)]
     scores = [score_doc(d, ocr=args.ocr) for d in docs]
     if args.ocr:
-        scores = [s for s in scores if s.ocr_verdict is not None]
+        # A refused document stays: OCR can't read it either.
+        scores = [s for s in scores if s.ocr_verdict is not None or s.error]
     print(render_scorecard(scores, verbose=args.verbose))
 
     if args.update_baseline:

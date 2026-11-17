@@ -4,13 +4,19 @@ import json
 from pathlib import Path
 from typing import Any
 
+import pytest
+
 from star_ground.bom_lib import ComponentCategory
+from star_ground.bom_lib.errors import HeavyPageError
+from tests import accuracy
 from tests.accuracy import (
     ActualPart,
     Outcome,
     _grade_variant,
     _pair_builds,
     load_golden,
+    render_scorecard,
+    score_doc,
     values_match,
 )
 
@@ -292,3 +298,42 @@ def test_counted_parts_are_paired_by_category_and_value(tmp_path: Path) -> None:
         "#DIODES 1N914": Outcome.WRONG_COUNT,
         "#Transistors 2N5088": Outcome.EXTRA,
     }
+
+
+class TestRefusedDocument:
+    """A document the reader refuses is scored, not the end of the run."""
+
+    def test_every_part_is_missed_and_warned(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        def refuse(pdf: Path) -> None:
+            raise HeavyPageError(5)
+
+        monkeypatch.setattr(accuracy, "parse_sample", refuse)
+        doc = load_golden(
+            _write(
+                tmp_path, {"parts": {"R1": _part(R, "10K"), "D1": _part(D, "1N4148")}}
+            ),
+            tmp_path,
+        )
+        score = score_doc(doc)
+        assert isinstance(score.error, HeavyPageError)
+        assert _outcomes(score.results) == {
+            "R1": Outcome.MISSING,
+            "D1": Outcome.MISSING,
+        }
+        assert score.silent_failures == ()
+        card = render_scorecard([score], verbose=False)
+        assert "[refused: unreadable_pdf, HeavyPageError]" in card
+        assert "(1 refused)" in card.splitlines()[-1]
+
+
+def test_scorecard_of_no_documents_says_so() -> None:
+    assert render_scorecard([], verbose=False).split() == [
+        "TOTAL",
+        "no",
+        "golden",
+        "documents",
+        "to",
+        "score",
+    ]

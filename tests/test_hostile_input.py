@@ -656,6 +656,15 @@ def test_page_that_decompresses_to_gigabytes_is_refused(tmp_path: Path) -> None:
     assert error.bug is None
 
 
+def test_page_drawing_as_much_as_a_real_schematic_is_read(tmp_path: Path) -> None:
+    # Tonepad's Rebote 3 Delay draws its schematic in 3,089,047 bytes of
+    # paths on one page: the most of any build document in the corpus, and
+    # refused as hostile when the bound was 1 MiB.
+    path = tmp_path / "schematic.pdf"
+    path.write_bytes(_drawing(b" " * 3_089_047))
+    assert _refs(path) == {"R1"}
+
+
 def test_form_the_page_draws_counts_toward_its_drawing(tmp_path: Path) -> None:
     big = _form(b" " * (guard.MAX_PAGE_CONTENT_BYTES + 1))
     path = tmp_path / "form.pdf"
