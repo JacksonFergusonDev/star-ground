@@ -68,7 +68,7 @@ function cell(text: string): string {
 }
 
 /** The rows as a stock CSV, header first. */
-export function writeStock(rows: StockRow[]): string {
+function writeStock(rows: StockRow[]): string {
   const lines = rows.map((r) => [r.category, r.part, String(r.qty)].map(cell).join(','));
   return ['Category,Part,Qty', ...lines].join('\n') + '\n';
 }
