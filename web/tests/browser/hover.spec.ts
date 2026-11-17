@@ -99,6 +99,7 @@ test('only the page scrolls, never the window, so the sidebar stays put', async 
 
 test('a field lights up under the pointer, not under its label', async ({ page }) => {
   await page.goto('/app/');
+  await page.getByRole('button', { name: 'Upload' }).click();
   const field = page.getByLabel('Build documents (PDF)');
   const border = () =>
     field.evaluate((el) => {
