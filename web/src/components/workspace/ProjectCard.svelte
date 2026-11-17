@@ -8,6 +8,7 @@
   import { blocker, builds, count, placedOf } from '../../lib/workspace.svelte';
   import BugNotice from './BugNotice.svelte';
   import Enclosure from './Enclosure.svelte';
+  import Explain from './Explain.svelte';
   import Icon from './Icon.svelte';
   import SignalPulse from './SignalPulse.svelte';
 
@@ -169,8 +170,8 @@
     {#if card.reading?.ocr_offered && card.read.state === 'ready'}
       <div class="offer">
         <p>
-          This parts list is an image. Star Ground can read it by OCR, which takes a few seconds a
-          page, and lists every part it read for you to check.
+          This parts list is an image. Star Ground can read it by OCR<Explain term="ocr" />, which
+          takes a few seconds a page, and lists every part it read for you to check.
         </p>
         <button class="hs-button" type="button" onclick={() => onRead(true)}>Read it by OCR</button>
       </div>
@@ -189,15 +190,16 @@
     {/if}
 
     {#if choices.length}
-      <label class="build">
-        <span>Build</span>
-        <select bind:value={card.variant}>
+      <div class="build">
+        <label for={`build-${card.id}`}>Build</label>
+        <Explain term="build" />
+        <select id={`build-${card.id}`} bind:value={card.variant}>
           <option value={null} disabled>Choose a build</option>
           {#each choices as name (name)}
             <option value={name}>{name}</option>
           {/each}
         </select>
-      </label>
+      </div>
     {/if}
 
     {#if waiting && card.read.state === 'ready'}

@@ -102,7 +102,7 @@ export function blocker(card: Card): string | null {
 export interface Options {
   /** The hardware kit: enclosure, jacks, footswitch, and so on. */
   hardware: boolean;
-  /** Sockets and adapters. */
+  /** A socket for each chip that takes one. */
   extras: boolean;
 }
 

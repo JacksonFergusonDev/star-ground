@@ -1,6 +1,7 @@
 <script lang="ts">
   // The builder's stock: a CSV the master list subtracts from what to buy.
   import { views } from '../../lib/router.svelte';
+  import Explain from './Explain.svelte';
   import type { Stock } from '../../lib/server';
 
   let { stock, onChange }: { stock: Stock | null; onChange: (stock: Stock | null) => void } =
@@ -36,7 +37,10 @@
       <a href={views.have.path}>tick off what you have</a> of this order's parts.
     </p>
   {/if}
-  <label for="stock-file">{stock ? 'Replace the stock CSV' : 'Stock CSV'}</label>
+  <span class="field-label">
+    <label for="stock-file">{stock ? 'Replace the stock CSV' : 'Stock CSV'}</label>
+    <Explain term="stock-csv" />
+  </span>
   <input id="stock-file" type="file" accept=".csv,.tsv,text/csv" onchange={pick} />
   {#if problem}
     <p class="problem" role="alert">{problem}</p>
@@ -78,6 +82,10 @@
   }
   .problem {
     color: var(--text);
+  }
+  .field-label {
+    display: flex;
+    align-items: center;
   }
   label {
     color: var(--muted);

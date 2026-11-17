@@ -412,7 +412,7 @@ test('a stock CSV goes with each request and adds stock columns', async ({ page 
   await page.goto('/app/');
   await paste(page, 'R1 10k');
   await page.getByRole('link', { name: /None yet/ }).click();
-  await page.getByLabel('Stock CSV').setInputFiles({
+  await page.getByLabel('Stock CSV', { exact: true }).setInputFiles({
     name: 'stock.csv',
     mimeType: 'text/csv',
     buffer: Buffer.from('Category,Part,Qty\nResistors,10k,40\n'),

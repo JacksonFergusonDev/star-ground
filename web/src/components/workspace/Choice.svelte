@@ -2,13 +2,19 @@
   // A small choice of how parts are shown, such as '4.7k' or '4k7' values, or
   // four or five resistor bands. Kept with the workspace, so every page
   // follows the builder's choice.
+  import type { Term } from '../../lib/glossary';
+  import Explain from './Explain.svelte';
+
   let {
     legend,
+    explain,
     name,
     options,
     value = $bindable(),
   }: {
     legend: string;
+    /** The glossary entry an (i) beside the legend opens, if any. */
+    explain?: Term;
     /** The radio group's name, unique on the page. */
     name: string;
     options: { value: T; label: string }[];
@@ -18,6 +24,7 @@
 
 <fieldset class="choice">
   <legend>{legend}</legend>
+  {#if explain}<Explain term={explain} />{/if}
   {#each options as option (option.value)}
     <label>
       <input type="radio" {name} value={option.value} bind:group={value} />

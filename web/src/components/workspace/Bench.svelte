@@ -173,6 +173,7 @@
     <div class="choices">
       <Choice
         legend="Values"
+        explain="notation"
         name="notation"
         options={[
           { value: 'decimal', label: '4.7k' },
@@ -182,6 +183,7 @@
       />
       <Choice
         legend="Bands"
+        explain="bands"
         name="bands"
         options={[
           { value: 4, label: '4' },
