@@ -19,6 +19,7 @@ from star_ground.bom_lib.pdf.cells import (
     is_prose,
     is_ref_cell,
     names_control,
+    role_designator,
 )
 from star_ground.bom_lib.pdf.geometry import LINE_TOLERANCE_EM, Cell
 from star_ground.bom_lib.types import PDFWord
@@ -626,8 +627,7 @@ def _designator_of(refs: str) -> str:
     named = NAMED_DESIGNATOR.fullmatch(refs)
     if named and is_designator(named.group(1)):
         refs = named.group(1)
-    role = _DESIGNATOR_ROLE.fullmatch(refs)
-    return role.group(1) if role else refs
+    return role_designator(refs) or refs
 
 
 def _without_control_name(value: str) -> str:
@@ -695,11 +695,6 @@ _LABEL_NOUN = re.compile(r"(?<=[A-Za-z0-9]) (?:switch|pot|trimmer)$")
 _POLES_LABEL = re.compile(r"([A-Z]{1,4}\d{0,3}) ?- ?([SD34]P[SDT]T)")
 
 
-# 'S2 PWM Speed Cycle': a role may start with an acronym. A capitalized word alone
-# ('Q5 BIAS', 'LFO1 RATE', Aion) is the control's name, not a role.
-_DESIGNATOR_ROLE = re.compile(
-    r"([A-Z]{1,3}\d{1,3}) (?:[A-Z][a-z]+|[A-Z]{2,4}(?= [A-Z][a-z]))(?: [A-Z][a-z]+)*"
-)
 # A part label in a typed table: 'VOL.', 'HI-MID FREQ', 'IC1-S', 'PRE-V. SEND',
 # '100HZ' (Aion FX Karkadann's 100 Hz EQ pot).
 _PART_LABEL = re.compile(

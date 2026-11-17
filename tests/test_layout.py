@@ -1024,10 +1024,8 @@ def test_a_designator_with_its_kind_or_role(cell: str, value: str) -> None:
 
 def test_a_designators_role_may_start_with_an_acronym() -> None:
     # GuitarPCB D'Lay: 'S2 PWM Speed Cycle | SPST' in a 'Part Value' table.
-    from star_ground.bom_lib.pdf.bom_table import _DESIGNATOR_ROLE
+    from star_ground.bom_lib.pdf.cells import role_designator
 
-    role = _DESIGNATOR_ROLE.fullmatch("S2 PWM Speed Cycle")
-    assert role is not None
-    assert role.group(1) == "S2"
+    assert role_designator("S2 PWM Speed Cycle") == "S2"
     # Aion Plexus: 'Q5 BIAS' is the trimmer's name.
-    assert _DESIGNATOR_ROLE.fullmatch("Q5 BIAS") is None
+    assert role_designator("Q5 BIAS") is None
