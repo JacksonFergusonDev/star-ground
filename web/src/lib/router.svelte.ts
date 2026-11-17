@@ -11,6 +11,7 @@ export type View =
   | 'stock'
   | 'count'
   | 'identify'
+  | 'tools'
   | 'troubleshoot'
   | 'export'
   | 'check'
@@ -24,6 +25,7 @@ export const views: Record<View, { path: string; title: string }> = {
   stock: { path: '/app/stock/', title: 'Stock' },
   count: { path: '/app/stock/count/', title: 'Count your parts' },
   identify: { path: '/app/stock/identify/', title: 'Identify a part' },
+  tools: { path: '/app/tools/', title: 'Before your first build' },
   troubleshoot: { path: '/app/troubleshoot/', title: "It doesn't work" },
   export: { path: '/app/export/', title: 'Export' },
   check: { path: '/app/check/', title: 'Check parts' },
