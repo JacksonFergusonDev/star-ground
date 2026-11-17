@@ -17,7 +17,6 @@ from io import BufferedReader, BytesIO
 from typing import Any, BinaryIO, NoReturn
 
 from pdfminer.layout import LTPage
-from pdfminer.pdfdocument import PDFDocument
 from pdfminer.pdfinterp import PDFGraphicState, PDFPageInterpreter, PDFResourceManager
 from pdfminer.pdfpage import PDFPage
 from pdfminer.pdfparser import PDFParser
@@ -38,6 +37,7 @@ from star_ground.bom_lib.errors import (
     UnreadablePdfError,
 )
 from star_ground.bom_lib.pdf.content import OpaqueStreamError, content_bytes, decoded
+from star_ground.bom_lib.pdf.crypt import CryptDocument
 
 logger = logging.getLogger(__name__)
 
@@ -107,15 +107,32 @@ class _GuardedStream(PDFStream):
     def decode(self) -> None:
         """Decodes the stream, after finding it within the budget.
 
+        What the budget was checked with is kept as the stream's data, so the
+        stream is decrypted and decoded once. A stream whose filters use a
+        predictor, which `decoded` leaves out, is decoded again by pdfminer
+        (they're the small cross-reference streams).
+
         Raises:
             HeavyStreamError: The stream decodes to more than the budget has
                 left, or is damaged after a first filter.
         """
         if self.data is None and self.rawdata is not None:
-            self._check()
+            data = self._check()
+            if data is not None and not any(
+                isinstance(params, dict) and "Predictor" in params
+                for _, params in self.get_filters()
+            ):
+                self.data, self.rawdata = data, None
+                return
         super().decode()
 
-    def _check(self) -> None:
+    def _check(self) -> bytes | None:
+        """What the stream decodes to, charged to the budget.
+
+        Returns:
+            The data, or None for a stream `decoded` can't bound.
+        """
+
         def mend(step: int, data: bytes) -> None:
             # pdfminer's way of reading damaged Flate data takes quadratic
             # time; whole data is read at once. Only a first filter's data
@@ -128,10 +145,11 @@ class _GuardedStream(PDFStream):
         try:
             data = decoded(self, self._budget.left, mend)
         except OpaqueStreamError:
-            return  # Images, which pdfminer never reads.
+            return None  # Images, which pdfminer never reads.
         if data is None:
             raise HeavyStreamError
         self._budget.left -= len(data)
+        return data
 
 
 class _GuardedParser(PDFParser):
@@ -331,7 +349,7 @@ class GuardedPDF(PDF):
         self.unicode_norm = None
         self.raise_unicode_errors = True
         try:
-            self.doc = PDFDocument(_GuardedParser(stream))
+            self.doc = CryptDocument(_GuardedParser(stream))
         except StarGroundError:
             raise
         except Exception as e:

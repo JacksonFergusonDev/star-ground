@@ -146,7 +146,9 @@ def decoded(
     """The stream's data as pdfminer decodes it, or None past `bound` bytes.
 
     Decoded the same way, filter by filter, but a piece at a time. Its
-    predictors, which never lengthen data, are left out.
+    predictors, which never lengthen data, are left out. An encrypted
+    stream is decrypted once: what it decrypts to is kept as its raw data,
+    so this and pdfminer read that afterwards, as pdfminer would read it.
 
     Args:
         stream: The stream.
@@ -169,6 +171,7 @@ def decoded(
             # An encrypted stream too short to hold its AES key's start: a
             # damaged file, which pdfminer can't read either.
             raise UnreadablePdfError from e
+        stream.rawdata, stream.decipher = data, None
     for step, (name, _) in enumerate(stream.get_filters()):
         if name in LITERALS_FLATE_DECODE:
             flate = inflate(data, bound)
