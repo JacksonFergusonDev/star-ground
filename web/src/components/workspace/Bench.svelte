@@ -120,18 +120,21 @@
     show(order[Math.min(order.length - 1, Math.max(0, at + by))] ?? null);
   }
 
-  // Places the current part (or takes it off), then moves to the next part
-  // still to place.
-  function toggle(): void {
-    if (!current) return;
-    const placing = !placed.has(current);
-    onPlace(current, placing);
+  // Places a part (or takes it off). Placing one moves on to the next part
+  // still to place, whether by Space, a click or a tap.
+  function place(ref: string, placing: boolean): void {
+    current = ref;
+    onPlace(ref, placing);
     if (!placing) return;
-    const at = order.indexOf(current);
+    const at = order.indexOf(ref);
     const next = [...order.slice(at + 1), ...order.slice(0, at)].find(
-      (ref) => ref !== current && !placed.has(ref),
+      (r) => r !== ref && !placed.has(r),
     );
     if (next) show(next);
+  }
+
+  function toggle(): void {
+    if (current) place(current, !placed.has(current));
   }
 
   function keydown(event: KeyboardEvent): void {
@@ -153,9 +156,15 @@
 
 <div class="bench">
   <div class="head">
-    <p class="note">
+    <!-- One of these shows: the keys for a keyboard, taps for a touch screen. -->
+    <p class="note keys">
       Lowest parts first, so the board sits flat as you go. Press <kbd>Space</kbd> to place the current
-      part and move to the next, and the arrow keys to move between parts.
+      part and move to the next, and the arrow keys to move between parts. Or click a part to tick it
+      off.
+    </p>
+    <p class="note touch">
+      Lowest parts first, so the board sits flat as you go. Tap a part once it's soldered in to tick
+      it off, and the next part to place is outlined. Tap it again to untick it.
     </p>
     <div class="progress">
       <p class="note count" role="status">
@@ -246,10 +255,7 @@
                   <input
                     type="checkbox"
                     checked={placed.has(ref)}
-                    onchange={(e) => {
-                      current = ref;
-                      onPlace(ref, e.currentTarget.checked);
-                    }}
+                    onchange={(e) => place(ref, e.currentTarget.checked)}
                   />
                   <span class="pad" aria-hidden="true"></span>
                   <span class="ref">{row?.label ?? ref}</span>
@@ -303,6 +309,17 @@
     color: var(--muted);
     font-size: var(--fs-ui);
     line-height: 1.7;
+  }
+  .touch {
+    display: none;
+  }
+  @media (hover: none) and (pointer: coarse) {
+    .keys {
+      display: none;
+    }
+    .touch {
+      display: block;
+    }
   }
   kbd {
     padding: 0.1em 0.4em;
