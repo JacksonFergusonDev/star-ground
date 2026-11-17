@@ -116,7 +116,7 @@ test('counting parts makes a stock the shopping list subtracts, and downloads it
 test('a counted value matches the drawer however it was written', async ({ page }) => {
   await stubMasterList(page);
   await page.goto('/app/stock/');
-  await page.getByLabel('Stock CSV').setInputFiles({
+  await page.getByLabel('Stock CSV', { exact: true }).setInputFiles({
     name: 'mine.csv',
     mimeType: 'text/csv',
     buffer: Buffer.from('Category,Part,Qty\nResistors,4K7,10\nResistors,4700,2\nICs,tl072,3\n'),

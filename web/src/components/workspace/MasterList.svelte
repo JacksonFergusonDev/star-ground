@@ -8,6 +8,7 @@
   import type { Display, Options } from '../../lib/workspace.svelte';
   import { count } from '../../lib/workspace.svelte';
   import BugNotice from './BugNotice.svelte';
+  import Explain from './Explain.svelte';
   import Icon from './Icon.svelte';
   import Choice from './Choice.svelte';
   import EmptyState from './EmptyState.svelte';
@@ -89,7 +90,7 @@
     {/each}
 
     {#if checks.length}
-      <h2 id="check">Check these parts</h2>
+      <h2 id="check">Check these parts<Explain term="checks" /></h2>
       <p class="note">
         Star Ground's self-checks found places where the list may not match the document. Compare
         these against it before ordering.
@@ -142,11 +143,18 @@
 
     <h2>Parts</h2>
     <div class="options">
-      <label><input type="checkbox" bind:checked={options.hardware} /> Hardware kit</label>
-      <label><input type="checkbox" bind:checked={options.extras} /> Sockets and adapters</label>
+      <span class="option">
+        <label><input type="checkbox" bind:checked={options.hardware} /> Hardware kit</label>
+        <Explain term="hardware-kit" />
+      </span>
+      <span class="option">
+        <label><input type="checkbox" bind:checked={options.extras} /> Chip sockets</label>
+        <Explain term="sockets" />
+      </span>
       <span class="spacer"></span>
       <Choice
         legend="Values"
+        explain="notation"
         name="notation"
         options={[
           { value: 'decimal', label: '4.7k' },
@@ -165,7 +173,7 @@
               <th scope="col" class="qty">Needed</th>
               <th scope="col" class="qty">In stock</th>
             {/if}
-            <th scope="col" class="qty">Buy</th>
+            <th scope="col" class="qty">Buy<Explain term="buy" /></th>
             <th scope="col">Notes</th>
             <th scope="col">Buy from</th>
           </tr>
@@ -286,6 +294,10 @@
     gap: 6px 20px;
     color: var(--muted);
     font-size: var(--fs-ui);
+  }
+  .option {
+    display: inline-flex;
+    align-items: center;
   }
   .spacer {
     flex: 1;

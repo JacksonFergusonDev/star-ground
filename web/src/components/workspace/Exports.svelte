@@ -3,6 +3,7 @@
   // supplier cart, the stock after this order, and the build pack of them all.
   import type { ExportKind } from '../../lib/api';
   import type { Download, Failure } from '../../lib/server';
+  import Explain from './Explain.svelte';
   import { bugOf } from '../../lib/server';
   import BugNotice from './BugNotice.svelte';
 
@@ -80,7 +81,11 @@
         >
           {busy === file.kind ? 'Preparing…' : file.label}
         </button>
-        <span class="detail">{file.detail}</span>
+        <span class="detail"
+          >{file.detail}{#if file.kind === 'supplier-cart'}<Explain
+              term="supplier-cart"
+            />{/if}</span
+        >
       </li>
     {/each}
   </ul>
