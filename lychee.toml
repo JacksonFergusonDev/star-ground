@@ -30,14 +30,15 @@ remap = [
   '^https://www\.youtube\.com/watch\?v=([A-Za-z0-9_-]+)$ https://www.youtube.com/oembed?format=json&url=https://www.youtube.com/watch?v=$1',
 ]
 
-# Several attempts ride out a slow or briefly unavailable host before a link counts as broken.
+# lychee 0.24 retries a timeout or a 429, never a server error (5xx), so these ride out a slow
+# host, not one that's briefly down; the 503 below covers that.
 max_retries = 3
 retry_wait_time = 5
 timeout = 20
 
 # A rate limit (429) or a host that's briefly unavailable (503) means the link could not be
 # checked, not that it is broken. GitHub answers 503 now and then to quick requests for its file
-# pages, and lychee doesn't retry it.
+# pages.
 accept = ["200..=299", "429", "503"]
 
 user_agent = "Mozilla/5.0 (compatible; Star Ground link check; +https://github.com/JacksonFergusonDev/star-ground)"
