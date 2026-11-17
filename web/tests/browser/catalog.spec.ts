@@ -1,6 +1,7 @@
 // The circuit catalog's pages, built from the fixed entries in
-// tests/fixtures/catalog (CATALOG_DIR): PedalPCB's The Clap, verified, and
-// Tonepad's Big Muff, unverified, with three builds.
+// tests/fixtures/catalog (CATALOG_DIR): PedalPCB's The Clap, verified;
+// Tonepad's Big Muff, unverified, with three builds; and PedalPCB's SiliSmile
+// Fuzz, verified and a good first build.
 
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
@@ -24,7 +25,7 @@ for (const path of [
 test('the catalog lists every build, with its mark', async ({ page }) => {
   await page.goto('/catalog/');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Circuit catalog');
-  await expect(page.getByText('2 builds, 1 verified')).toBeVisible();
+  await expect(page.getByText('3 builds, 2 verified')).toBeVisible();
   await expect(page.getByRole('link', { name: /The Clap.*Verified/ })).toBeVisible();
   await expect(page.getByRole('link', { name: /Gran Mango 3\.1416.*Unverified/ })).toBeVisible();
 });
@@ -37,20 +38,28 @@ test('searching and filtering hide what does not match', async ({ page }) => {
   await page.getByRole('searchbox', { name: 'Search' }).fill('russian muff');
   await expect(rows).toHaveCount(1);
   await expect(rows).toContainText('Gran Mango');
-  await expect(page.getByText('1 of 2 builds')).toBeVisible();
+  await expect(page.getByText('1 of 3 builds')).toBeVisible();
 
   await page.getByRole('searchbox', { name: 'Search' }).fill('');
   await page.getByRole('combobox', { name: 'Effect' }).selectOption('Fuzz');
-  await expect(rows).toHaveCount(1);
-  await expect(rows).toContainText('Gran Mango');
+  await expect(rows).toHaveCount(2);
+  await expect(rows.first()).toContainText('Gran Mango');
   await page.getByRole('combobox', { name: 'Effect' }).selectOption('Other');
   await expect(rows).toHaveCount(1);
   await expect(rows).toContainText('The Clap');
   await page.getByRole('combobox', { name: 'Effect' }).selectOption('All effects');
 
   await page.getByRole('checkbox', { name: 'Verified only' }).check();
+  await expect(rows).toHaveCount(2);
+  await expect(rows.first()).toContainText('SiliSmile Fuzz');
+
+  // A good first build is a small verified pedal whose name says what it is:
+  // The Clap is verified but neither.
+  await page.getByRole('checkbox', { name: 'Good first builds' }).check();
   await expect(rows).toHaveCount(1);
-  await expect(rows).toContainText('The Clap');
+  await expect(rows).toContainText('SiliSmile Fuzz');
+  await expect(rows).toContainText('Good first build');
+  await page.getByRole('checkbox', { name: 'Good first builds' }).uncheck();
 
   await page.getByRole('combobox', { name: 'Publisher' }).selectOption('Tonepad');
   await expect(rows).toHaveCount(0);
@@ -152,7 +161,10 @@ test("the app's add box searches the catalog first, and adds a build in one clic
   // A word from its effects finds it, as well as its name.
   await search.fill('fuzz');
   const builds = page.getByRole('list', { name: 'Catalog builds' });
-  await expect(builds.getByRole('button')).toHaveCount(1);
+  await expect(builds.getByRole('button')).toHaveCount(2);
+  await expect(builds.getByRole('button', { name: /SiliSmile Fuzz/ })).toContainText(
+    'Good first build',
+  );
   await search.fill('mango');
   await expect(builds.getByRole('button')).toHaveText(/Gran Mango 3\.1416.*Tonepad · Fuzz/);
   await search.fill('no such pedal');

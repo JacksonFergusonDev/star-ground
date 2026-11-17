@@ -7,7 +7,15 @@ import { getCollection } from 'astro:content';
 import Icon from 'house-style/astro/Icon.astro';
 import App from '../../layouts/App.astro';
 import type { Effect, Publisher } from '../../lib/catalog';
-import { buildPath, byTitle, effects, partCount, publishers } from '../../lib/catalog';
+import {
+  FIRST_BUILD,
+  buildPath,
+  byTitle,
+  effects,
+  isFirstBuild,
+  partCount,
+  publishers,
+} from '../../lib/catalog';
 import { links } from '../../lib/site';
 
 const entries = (await getCollection('catalog')).sort(byTitle);
@@ -19,6 +27,7 @@ const kinds = (Object.keys(effects) as Effect[]).filter((k) =>
 );
 const unplaced = entries.some((e) => !e.data.effects.length);
 const verified = entries.filter((e) => e.data.verified).length;
+const firsts = entries.filter(isFirstBuild).length;
 const named = (entry: (typeof entries)[number]): string[] =>
   entry.data.effects.map((k) => effects[k]);
 ---
@@ -71,7 +80,20 @@ const named = (entry: (typeof entries)[number]): string[] =>
             <input type="checkbox" name="verified" />
             <span>Verified only</span>
           </label>
+          {firsts > 0 && (
+            <label class="check">
+              <input type="checkbox" name="first" aria-describedby="first-note" />
+              <span>Good first builds</span>
+            </label>
+          )}
         </form>
+        {firsts > 0 && (
+          <p class="note first-note" id="first-note">
+            <strong>Good first builds</strong> are verified fuzz, overdrive, distortion and boost
+            pedals with {FIRST_BUILD.minParts} to {FIRST_BUILD.maxParts} parts, at most one chip,
+            and one version to build.
+          </p>
+        )}
 
         <p class="count" aria-live="polite" data-count>
           {entries.length} builds, {verified} verified
@@ -83,6 +105,7 @@ const named = (entry: (typeof entries)[number]): string[] =>
               data-publisher={entry.data.publisher}
               data-effects={entry.data.effects.join(' ') || 'other'}
               data-verified={entry.data.verified ? 'yes' : 'no'}
+              data-first={isFirstBuild(entry) ? 'yes' : 'no'}
               data-search={[
                 entry.data.title,
                 entry.data.file_name,
@@ -98,6 +121,7 @@ const named = (entry: (typeof entries)[number]): string[] =>
                   {[publishers[entry.data.publisher], ...named(entry)].join(' · ')} ·{' '}
                   {partCount(entry)} parts
                   {entry.data.builds.length > 1 && ` · ${entry.data.builds.length} builds`}
+                  {isFirstBuild(entry) && ' · Good first build'}
                 </span>
                 <span class:list={['mark', { verified: entry.data.verified }]}>
                   {entry.data.verified ? 'Verified' : 'Unverified'}
@@ -142,13 +166,15 @@ const named = (entry: (typeof entries)[number]): string[] =>
     const effect = String(fields.get('effect') ?? '');
     const publisher = String(fields.get('publisher') ?? '');
     const verifiedOnly = fields.has('verified');
+    const firstOnly = fields.has('first');
     let shown = 0;
     for (const row of rows) {
       const match =
         words.every((w) => row.dataset.search?.includes(w)) &&
         (!effect || (row.dataset.effects ?? '').split(' ').includes(effect)) &&
         (!publisher || row.dataset.publisher === publisher) &&
-        (!verifiedOnly || row.dataset.verified === 'yes');
+        (!verifiedOnly || row.dataset.verified === 'yes') &&
+        (!firstOnly || row.dataset.first === 'yes');
       row.hidden = !match;
       if (match) shown += 1;
     }
@@ -206,6 +232,9 @@ const named = (entry: (typeof entries)[number]): string[] =>
   .filters select:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
+  }
+  .first-note {
+    margin: 0 0 16px;
   }
   .count {
     margin: 0 0 12px;

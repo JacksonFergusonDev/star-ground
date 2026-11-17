@@ -14,6 +14,8 @@ export interface CatalogItem {
   parts: number;
   /** The build document's link, which adding it reads. */
   document: string;
+  /** Whether it's a good first build (`isFirstBuild`). */
+  first: boolean;
 }
 
 /** Letters and digits only, in lower case: 'Fuzz-Face' and 'fuzz face' read alike. */

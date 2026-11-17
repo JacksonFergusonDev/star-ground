@@ -66,3 +66,34 @@ export function byTitle(a: CatalogEntry, b: CatalogEntry): number {
     a.data.publisher.localeCompare(b.data.publisher)
   );
 }
+
+/** The kinds of effect a first build may be: simple circuits, a few transistors or one chip. */
+const FIRST_EFFECTS: readonly Effect[] = ['fuzz', 'overdrive', 'distortion', 'boost'];
+
+/**
+ * A pedal's name says what it is. Daughterboards, power boards and other
+ * add-ons have the fewest parts, so the part count alone would put them
+ * first; their names never say fuzz or drive.
+ */
+const PEDAL_NAME = /\b(?:fuzz|drive|overdrive|distortion|boost|booster)\b/i;
+
+/** A first build's size, in parts and chips. */
+export const FIRST_BUILD = { minParts: 10, maxParts: 30, maxChips: 1 } as const;
+
+/**
+ * Whether a build suits a first-time builder: checked by hand, read without
+ * OCR, a single build with no versions to choose between, a simple kind of
+ * effect that its name also says, and few parts and at most one chip.
+ */
+export function isFirstBuild(entry: CatalogEntry): boolean {
+  const { data } = entry;
+  const build = data.builds.length === 1 ? data.builds[0] : undefined;
+  if (!build || !data.verified || data.read_by_ocr) return false;
+  if (!data.effects.length || !data.effects.every((e) => FIRST_EFFECTS.includes(e))) return false;
+  if (!PEDAL_NAME.test(data.title)) return false;
+  const parts = partCount(entry);
+  const chips = build.parts.filter((p) => p.category === 'ICs').reduce((n, p) => n + p.count, 0);
+  return (
+    parts >= FIRST_BUILD.minParts && parts <= FIRST_BUILD.maxParts && chips <= FIRST_BUILD.maxChips
+  );
+}
