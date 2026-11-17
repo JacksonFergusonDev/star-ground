@@ -311,6 +311,27 @@ test('parts read down each column, as the document lists them', async ({ page })
   expect(order).toEqual(['R1', 'R2', 'R3', 'C1', 'C2', 'Q1', 'Q2', 'D1', 'R9']);
 });
 
+test('bench mode tells a touch screen to tap, and a tap moves on like Space', async ({
+  page,
+  hasTouch,
+}) => {
+  await stubMasterList(page);
+  await upload(page);
+  await page.getByRole('link', { name: 'Build it, part by part' }).click();
+
+  const keys = page.getByText('Press Space to place the current part');
+  const taps = page.getByText("Tap a part once it's soldered in to tick it off");
+  await expect(hasTouch ? taps : keys).toBeVisible();
+  await expect(hasTouch ? keys : taps).toBeHidden();
+
+  const r1 = row(page, 'R1').getByRole('checkbox');
+  if (hasTouch) await r1.tap();
+  else await r1.click();
+  await expect(r1).toBeChecked();
+  await expect(row(page, 'R2')).toHaveAttribute('aria-current', 'step');
+  await expect(page.getByText('1 of 2 parts placed.')).toBeVisible();
+});
+
 test('bench mode places parts in build order from the keyboard, and keeps them', async ({
   page,
 }) => {
