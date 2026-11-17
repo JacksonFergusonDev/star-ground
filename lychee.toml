@@ -1,0 +1,40 @@
+# External link check (https://lychee.cli.rs) over the website's source, run by
+# .github/workflows/links.yml weekly and on pull requests that change web/src/.
+# To run it here: lychee 'web/src/**/*.svelte' 'web/src/**/*.astro' 'web/src/**/*.ts'
+# Only links leaving the site: the app's own pages are checked by the browser
+# tests, and data files hold catalog and supplier URLs that the catalog job
+# checks as it reads them.
+
+scheme = ["https", "http"]
+
+exclude = [
+  # Star Ground itself.
+  '^https://star-ground\.jacksonferguson\.me',
+  # These answer automated requests with 403 (the forums, behind Cloudflare) or 999 (LinkedIn)
+  # whether or not the page exists, so a check can't tell anything about them.
+  '^https://(www\.)?diystompboxes\.com/',
+  '^https://(www\.)?freestompboxes\.org/',
+  '^https://(www\.)?linkedin\.com/',
+  # A URL that trails off ("https://docs.pedalpcb.com/…") is an example, not a link.
+  '%E2%80%A6$',
+  # Local addresses in examples and settings.
+  '^https?://(localhost|127\.0\.0\.1)',
+]
+
+exclude_path = ['web/src/data/']
+
+# A removed YouTube video's page still answers 200; its oEmbed answer is 404.
+remap = [
+  '^https://www\.youtube\.com/watch\?v=([A-Za-z0-9_-]+)$ https://www.youtube.com/oembed?format=json&url=https://www.youtube.com/watch?v=$1',
+]
+
+# Several attempts ride out a slow or briefly unavailable host before a link counts as broken.
+max_retries = 3
+retry_wait_time = 5
+timeout = 20
+
+# GitHub rate-limits unauthenticated checks (429); CI passes a token, and a rate limit that still
+# happens means the link could not be checked, not that it is broken.
+accept = ["200..=299", "429"]
+
+user_agent = "Mozilla/5.0 (compatible; Star Ground link check; +https://github.com/JacksonFergusonDev/star-ground)"
