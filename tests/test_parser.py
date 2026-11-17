@@ -1691,6 +1691,47 @@ def test_a_ruled_table_with_a_blank_header_keeps_its_columns(
     assert [(e.ref, e.value) for e in entries] == [("R1", "10k"), ("R2", "22k")]
 
 
+@pytest.mark.parametrize(
+    ("cell", "ref"),
+    [
+        # GuitarPCB D'Lay: the part's role after its designator.
+        ("SW1 Tap Tempo", "SW1"),
+        ("S2 PWM Speed Cycle", "S2"),
+        # GuitarPCB P.U.T.B.: the control's name after a spaced dash.
+        ("P1 - Attack", "P1"),
+        # GuitarPCB Emexar v4: the resistor's role in brackets.
+        ("R9 (CLR)", "R9"),
+        # Aion FX Plexus: a capitalized word alone is the control's name.
+        ("Q5 BIAS", "Q5 BIAS"),
+    ],
+)
+def test_a_ruled_designator_cell_names_its_designator(cell: str, ref: str) -> None:
+    # Once a blank header cell kept its column, GuitarPCB's boxed 'Part | Value'
+    # grids were read as ruled tables, which kept these cells whole: the text
+    # reading's 'SW1' and the ruled 'SW1 Tap Tempo' were both bought.
+    from star_ground.bom_lib.pdf.ruled import table_entries
+
+    table: list[list[str | None]] = [
+        ["", "Part", "", "Value"],
+        ["", "R1", "", "10k"],
+        ["", cell, "", "B1K"],
+    ]
+    page = PDFPageExtraction(tables=[table], text="", words=[])
+    entries = table_entries([page], ReadingStats())
+    assert [e.ref for e in entries] == ["R1", ref]
+
+
+def test_a_typed_range_is_checked_part_by_part() -> None:
+    # PedalPCB GoldenFalk: 'Q1-Q5 | J201 | JFET' in a ruled table. The range
+    # itself is no part, so it was warned as unrecognized.
+    from star_ground.bom_lib.pdf.text_tables import typed_row
+
+    stats = ReadingStats()
+    typed_row(stats, "Q1-Q5", "J201", "JFET", "")
+    typed_row(stats, "POT1 - 6", "B50K", "Potentiometer, 16mm", "")
+    assert stats.warnings == []
+
+
 def test_a_text_table_is_numbered_apart_from_every_ruled_table() -> None:
     # Text tables were numbered from the count of ruled rows, not ruled
     # tables: with a skipped ruled table first, the text table took the

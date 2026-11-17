@@ -179,6 +179,28 @@ def control_designator(cell: str) -> str | None:
     return None
 
 
+# 'S2 PWM Speed Cycle': a role may start with an acronym. A capitalized word alone
+# ('Q5 BIAS', 'LFO1 RATE', Aion) is the control's name, not a role.
+_DESIGNATOR_ROLE = re.compile(
+    r"([A-Z]{1,3}\d{1,3}) (?:[A-Z][a-z]+|[A-Z]{2,4}(?= [A-Z][a-z]))(?: [A-Z][a-z]+)*"
+)
+
+
+def role_designator(cell: str) -> str | None:
+    """The designator of a cell that gives the part's role after it.
+
+    'SW1 Tap Tempo', 'S3 Tempo Scale', 'S2 PWM Speed Cycle' (GuitarPCB D'Lay).
+
+    Args:
+        cell: A designator cell's text.
+
+    Returns:
+        The designator, or None if the cell is not one followed by a role.
+    """
+    role = _DESIGNATOR_ROLE.fullmatch(cell)
+    return role.group(1) if role else None
+
+
 # 'VOL1 - Trim  50k' (GuitarPCB NostalgiTone Space Modulator, read by OCR): the
 # part's kind after its designator.
 KIND_SUFFIX = re.compile(r"(\S+) [-\u2013] (?:Trim|Trimmer|Pot)", re.IGNORECASE)

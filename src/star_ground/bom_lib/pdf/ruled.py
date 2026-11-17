@@ -17,6 +17,7 @@ from star_ground.bom_lib.pdf.cells import (
     control_designator,
     drop_remarks,
     names_control,
+    role_designator,
     strip_asides,
 )
 from star_ground.bom_lib.pdf.page import PDFPageExtraction
@@ -359,8 +360,11 @@ def _ref_cell(cell: str, this_table: list[Entry]) -> str:
     named = _NAMED_REF.match(ref_raw)
     if named and "=" in ref_raw:
         ref_raw = named.group(1)  # 'P1=FUZZ' (GuitarPCB PUFF v4)
-    # 'P2-Volume' (GuitarPCB Sho' Nuff).
-    ref_raw = control_designator(ref_raw) or ref_raw
+    # 'P2-Volume' (GuitarPCB Sho' Nuff), 'P1 - Attack' (GuitarPCB P.U.T.B.).
+    ref_raw = control_designator(_SPACED_NAME.sub(r"\1-", ref_raw)) or ref_raw
+    # 'SW1 Tap Tempo' (GuitarPCB D'Lay): the part's role after its designator,
+    # as the text reading takes it.
+    ref_raw = role_designator(ref_raw) or ref_raw
     # 'RX2 (by IC1)', 'RX2 (by switch)' (Aion FX legacy Aurora): two
     # positions printed with one designator.
     position = _POSITION_ASIDE.fullmatch(ref_raw)
@@ -368,14 +372,18 @@ def _ref_cell(cell: str, this_table: list[Entry]) -> str:
         ref_raw = position.group(1)
         if any(e.ref == ref_raw for e in this_table):
             ref_raw = f"{ref_raw} (2)"
-    # 'TR1 (see text)', 'TR2 (Volume)' (GuitarPCB D'Lay): an aside on the
-    # designator.
+    # 'TR1 (see text)', 'TR2 (Volume)' (GuitarPCB D'Lay), 'R9 (CLR)' (GuitarPCB
+    # Emexar v4): an aside on the designator.
     aside = _REF_ASIDE.fullmatch(ref_raw)
     note = " ".join(ZERO_WIDTH.sub("", aside.group(2)).split()) if aside else ""
     if (
         aside
         and is_designator(aside.group(1))
-        and (note.lower().startswith("see ") or names_control(note))
+        and (
+            note.lower().startswith("see ")
+            or names_control(note)
+            or note.upper() in _ROLE_CELLS
+        )
     ):
         ref_raw = aside.group(1)
     return ref_raw
@@ -646,6 +654,8 @@ _ROLE_HEADERS = frozenset(
 )
 # 'P1-Sus/Fuzz': the designator, then the control's name.
 _NAMED_REF = re.compile(r"([A-Z]{1,3}\d{1,3})[-=](?![A-Z]{1,3}\d)[A-Za-z]")
+# The dash between a designator and its control's name, spaced: 'P1 - Attack'.
+_SPACED_NAME = re.compile(r"^([A-Z]{1,3}\d{1,3}) [-\u2013] (?=[A-Za-z])")
 # A note in a value column naming the row's role ('R12 | 1k8 | CLR', RATT).
 _ROLE_CELLS = frozenset({"CLR"})
 

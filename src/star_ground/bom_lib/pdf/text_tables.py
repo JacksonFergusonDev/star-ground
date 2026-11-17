@@ -31,7 +31,7 @@ from star_ground.bom_lib.pdf.rows import (
 from star_ground.bom_lib.types import (
     ReadingStats,
 )
-from star_ground.bom_lib.utils import expand_refs
+from star_ground.bom_lib.utils import expand_refs, is_ref_range
 from star_ground.bom_lib.verification import (
     check_build_note,
     check_marking_code,
@@ -95,7 +95,10 @@ def typed_row(
         # TO-92' repeats the row above's TYPE; a socket is hardware.
         hint = ComponentCategory.HARDWARE_MISC
     if check:
-        _check_typed_row(stats, ref, value, hint)
+        # A ruled cell holds the row's whole designator cell ('Q1-Q5', 'POT1 - 6'):
+        # each part is classified, never the range as one.
+        for one in expand_refs(ref):
+            _check_typed_row(stats, one, value, hint)
     return value, hint
 
 
@@ -109,6 +112,8 @@ def _check_typed_row(
         and value.upper() not in constants.NOT_POPULATED_VALUES
         # A repeated or garbled header row is not a part.
         and not {ref.upper(), value.upper()} & _TABLE_HEADERS
+        # A range too long or odd to expand is warned about when it is ingested.
+        and not is_ref_range(ref)
         and categorize_part(ref, value, hint) is None
     ):
         check_unclassified_row(stats, ref, value)
