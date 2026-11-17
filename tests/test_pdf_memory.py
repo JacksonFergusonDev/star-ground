@@ -324,3 +324,63 @@ def test_damaged_stream_is_not_read_a_byte_at_a_time(
     assert path.read_bytes() != pdf
     result = parse_pdf(str(path), "Damaged")
     assert {r for p in result.inventory.values() for r in p.refs} == {"R1"}
+
+
+def _filling(op: bytes) -> bytes:
+    """A page repeating `op` to just within `MAX_PAGE_CONTENT_BYTES`."""
+    return _drawing(op * ((guard.MAX_PAGE_CONTENT_BYTES - 100) // len(op)))
+
+
+def test_page_of_one_long_string_is_refused_as_it_grows(tmp_path: Path) -> None:
+    # Its characters were counted once the whole page had been kept: about
+    # 1.8 KB each, so 7 GB for a page at the bound on drawing instructions.
+    path = tmp_path / "string.pdf"
+    path.write_bytes(
+        _drawing(
+            b"BT /F1 6 Tf 10 10 Td ("
+            + b"a" * (guard.MAX_PAGE_CONTENT_BYTES - 200)
+            + b") Tj ET"
+        )
+    )
+    peak, error = _peak(lambda: _read(path))
+    assert isinstance(error, CrowdedPageError)
+    assert peak < 64 * MIB
+
+
+# Pages within the bound on drawing instructions whose layout would take
+# gigabytes: each tiny filled rectangle about 4 KB, each line 3 KB, and a path
+# gathered before it's painted about 100 bytes a segment.
+SHAPE_HOGS = {
+    "rectangles": _filling(b"0 0 1 1 re f "),
+    "rectangles painted at once": _drawing(
+        b"0 0 1 1 re " * ((guard.MAX_PAGE_CONTENT_BYTES - 100) // 11) + b"f"
+    ),
+    "rectangles never painted": _drawing(
+        b"0 0 1 1 re " * ((guard.MAX_PAGE_CONTENT_BYTES - 100) // 11) + b"n"
+    ),
+    "lines": _filling(b"0 0 m 1 1 l S "),
+    "curves": _filling(b"0 0 m 1 1 2 2 3 3 c S "),
+    "images": _drawing(
+        b"/Fm0 Do " * ((guard.MAX_PAGE_CONTENT_BYTES - 100) // 8),
+        stream(
+            b"\x00",
+            "/Subtype /Image /Width 1 /Height 1 /ColorSpace /DeviceGray "
+            "/BitsPerComponent 8 ",
+        ),
+    ),
+}
+
+
+@pytest.mark.parametrize("kind", SHAPE_HOGS)
+def test_page_whose_layout_takes_gigabytes_is_refused_as_it_grows(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, kind: str
+) -> None:
+    # Its shapes weren't counted at all: these took 1-4 GB each. A smaller
+    # budget is refused the same way, sooner.
+    budget = 16 * MIB
+    monkeypatch.setattr(guard, "MAX_PAGE_LAYOUT_BYTES", budget)
+    path = tmp_path / "hog.pdf"
+    path.write_bytes(SHAPE_HOGS[kind])
+    peak, error = _peak(lambda: _read(path))
+    assert isinstance(error, HeavyPageError)
+    assert peak < budget + 8 * MIB

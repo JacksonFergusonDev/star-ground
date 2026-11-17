@@ -709,7 +709,9 @@ def test_page_of_too_many_characters_is_refused(tmp_path: Path) -> None:
     # Reading time grows with a page's characters: 60,000 took 3.2 s.
     path = tmp_path / "crowded.pdf"
     path.write_bytes(_pdf(_tiny_ones(guard.MAX_PAGE_CHARS + 1)))
-    with pytest.raises(CrowdedPageError, match="Page 1 of this PDF holds 20,001 "):
+    with pytest.raises(
+        CrowdedPageError, match="Page 1 of this PDF holds more than 20,000 "
+    ):
         pdf_document.parse_pdf(str(path), "Crowded")
 
     result = BOMParserContext().process(
