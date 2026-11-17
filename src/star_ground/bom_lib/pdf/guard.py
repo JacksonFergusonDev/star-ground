@@ -51,12 +51,15 @@ MAX_PAGE_CHARS = 20_000
 # The most bytes of drawing instructions a page may run: its content streams
 # and the forms they draw, a form counted every time it's drawn (see
 # `content_bytes`). pdfminer decodes and reads them all before its characters
-# can be counted, at about 1.8 KB of memory for each one drawn, and they
-# compress a thousandfold or more. The sample documents' busiest page runs
-# 75,622 bytes (LowTide, page 7), and their busiest text page draws a
-# character for every 33 bytes, so a page at `MAX_PAGE_CHARS` written the
-# same way would take about 660,000.
-MAX_PAGE_CONTENT_BYTES = 1 << 20
+# can be counted, and they compress a thousandfold or more, so this is what
+# stops a small upload asking for gigabytes. Schematics and board art drawn
+# as vector paths run the most: of the 1,241 build documents in the local
+# corpus, 11 have a page past 1 MiB and the busiest runs 3,089,047 bytes
+# (Tonepad Rebote 3 Delay, page 1), which pdfminer reads in about 90 MiB.
+# Memory follows what a page draws rather than its bytes, though: a page at
+# this bound drawing only text or tiny filled rectangles would take several
+# GiB, so this bounds decoding, not the memory of a page's layout.
+MAX_PAGE_CONTENT_BYTES = 4 << 20
 # The most bytes all of a document's streams may decode to. pdfminer decodes
 # the streams holding a file's objects and cross-reference table as it opens
 # it, whole, and keeps what any stream decodes to. The sample documents'
