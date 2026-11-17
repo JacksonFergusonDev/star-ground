@@ -255,7 +255,12 @@
   <PageHead
     title="Identify a part"
     lede="Read a resistor's colour bands, the code printed on a capacitor or pot, and where other parts print what they are."
-  />
+  >
+    {#snippet crumbs()}
+      <li><a href={views.stock.path}>Stock</a></li>
+      <li>Identify a part</li>
+    {/snippet}
+  </PageHead>
   <Identify bind:bands={workspace.display.bands} onAdd={addToStock} />
 {:else if view === 'troubleshoot'}
   <PageHead

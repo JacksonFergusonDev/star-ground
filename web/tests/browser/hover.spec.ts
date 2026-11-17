@@ -146,7 +146,7 @@ test('every control in the app reacts to the pointer with a fade', async ({ page
     '/app/list/have/',
     '/app/stock/',
     '/app/stock/count/',
-    '/app/identify/',
+    '/app/stock/identify/',
     '/app/troubleshoot/',
     '/app/export/',
     '/catalog/',

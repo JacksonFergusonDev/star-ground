@@ -3,15 +3,19 @@
   // '4n7', '.1 63V'. Shows the value in the three units a builder meets, and
   // what the letters and numbers around it mean.
   import { capUnits, readCapCode } from '../../lib/identify';
+  import Icon from './Icon.svelte';
 
   let {
     id,
     onAdd,
+    stockHref,
   }: {
     /** The field's id, unique on the page. */
     id: string;
     /** Adds the capacitor read to the stock; none on a page without one. */
     onAdd?: (value: string, qty: number) => void;
+    /** Where the stock is, linked beside the add button. */
+    stockHref?: string;
   } = $props();
 
   let printed = $state('104');
@@ -55,9 +59,16 @@
         <span>How many</span>
         <input type="number" min="1" max="10000" bind:value={qty} required />
       </label>
-      <button class="hs-button" type="submit" disabled={!reading}>
-        Add {reading?.value ?? 'it'} to your stock
-      </button>
+      <span class="actions">
+        <button class="hs-button" type="submit" disabled={!reading}>
+          Add {reading?.value ?? 'it'} to your stock
+        </button>
+        {#if stockHref}
+          <a class="text-link" href={stockHref}
+            >See your stock <Icon name="arrow-right" size={14} /></a
+          >
+        {/if}
+      </span>
     </div>
   {/if}
 </form>
@@ -113,6 +124,13 @@
     gap: 10px;
     align-items: end;
     margin-top: 6px;
+  }
+  /* The link's text lines up with the button's. */
+  .actions {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 10px 16px;
+    align-items: center;
   }
   .add label {
     display: grid;

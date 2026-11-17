@@ -1,35 +1,53 @@
 <script lang="ts">
   // A resistor as it looks in the builder's hand: its body and colour bands,
-  // read from its value. A 1% metal film resistor (five bands) has a blue
-  // body and a 5% carbon film one (four bands) a beige one, as most are sold.
-  // The band colours are the part's data, not the site's palette; the value
-  // printed beside it carries the meaning, and the label names each band.
+  // read from its value. The body is one pale neutral, not the blue or beige
+  // real ones come in, since those hide the bands nearest their colour; each
+  // band has a dark edge so it shows on the body whatever its colour, and is
+  // clipped to the body's rounded outline. The band colours are the part's
+  // data, not the site's palette; the label names each band.
   import type { BandCount } from '../../lib/parts';
   import { bands } from '../../lib/parts';
 
-  let { value, count }: { value: string; count: BandCount } = $props();
+  let {
+    value,
+    count,
+    large = false,
+  }: {
+    value: string;
+    count: BandCount;
+    /** Drawn twice the size, as the calculator's answer. */
+    large?: boolean;
+  } = $props();
 
+  const id = $props.id();
   const found = $derived(bands(value, count));
   // Digits first, then a gap before the tolerance band, as printed.
-  const xs = $derived(count === 5 ? [13, 17, 21, 25, 32] : [14, 19, 24, 32]);
+  const xs = $derived(count === 5 ? [16, 21.5, 27, 32.5, 41] : [17, 23, 29, 40]);
 </script>
 
 {#if found}
   <svg
     class="resistor"
-    class:film={count === 5}
-    viewBox="0 0 44 12"
-    width="44"
-    height="12"
+    viewBox="0 0 60 16"
+    width={large ? 120 : 60}
+    height={large ? 32 : 16}
     role="img"
     aria-label={`Bands: ${found.join(', ')}`}
   >
     <title>{found.join(', ')}</title>
-    <path class="lead" d="M0 6h8M36 6h8" />
-    <rect class="body" x="8" y="1" width="28" height="10" rx="4" />
-    {#each found as band, i (i)}
-      <rect class={`band ${band}`} x={xs[i]} y="1" width="2.4" height="10" />
-    {/each}
+    <defs>
+      <clipPath id={`${id}-body`}>
+        <rect x="10" y="1" width="40" height="14" rx="5" />
+      </clipPath>
+    </defs>
+    <path class="lead" d="M0 8h10M50 8h10" />
+    <rect class="body" x="10" y="1" width="40" height="14" rx="5" />
+    <g clip-path={`url(#${id}-body)`}>
+      {#each found as band, i (i)}
+        <rect class={`band ${band}`} x={xs[i]} y="0" width="3.4" height="16" />
+      {/each}
+    </g>
+    <rect class="outline" x="10" y="1" width="40" height="14" rx="5" />
   </svg>
 {/if}
 
@@ -43,12 +61,19 @@
     stroke: var(--muted);
     stroke-width: 1.2;
   }
-  /* Real resistor bodies and band colours (IEC 60062), which no site token covers. */
+  /* A pale neutral every band colour stands out on, and the band colours of
+     IEC 60062, which no site token covers. */
   .body {
-    fill: #d9c29a;
+    fill: #d3cfc5;
   }
-  .film .body {
-    fill: #8fb3df;
+  .band {
+    stroke: rgb(0 0 0 / 0.55);
+    stroke-width: 0.5;
+  }
+  .outline {
+    fill: none;
+    stroke: rgb(0 0 0 / 0.35);
+    stroke-width: 0.6;
   }
   .black {
     fill: #1b1b1b;

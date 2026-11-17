@@ -2,6 +2,7 @@
   // What to do when a finished pedal doesn't work: what each symptom points
   // to, what to look at first, how to measure its voltages and trace its
   // signal, and how to ask for help. Plain text, for the Users audience.
+  import { views } from '../../lib/router.svelte';
   import Icon from './Icon.svelte';
 
   // Beginners' first stops, then the older forums for harder questions.
@@ -43,8 +44,8 @@
         <strong>Every value</strong>
         <p>
           Read each resistor's bands and each capacitor's code against the build document. Two
-          swapped values are easy to miss. The <a href="/app/identify/">part identifier</a> reads them
-          for you.
+          swapped values are easy to miss. The <a href={views.identify.path}>part identifier</a> reads
+          them for you.
         </p>
       </li>
       <li>

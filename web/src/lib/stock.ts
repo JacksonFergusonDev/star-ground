@@ -68,7 +68,7 @@ function cell(text: string): string {
 }
 
 /** The rows as a stock CSV, header first. */
-export function writeStock(rows: StockRow[]): string {
+function writeStock(rows: StockRow[]): string {
   const lines = rows.map((r) => [r.category, r.part, String(r.qty)].map(cell).join(','));
   return ['Category,Part,Qty', ...lines].join('\n') + '\n';
 }
@@ -125,6 +125,20 @@ export function setHave(rows: StockRow[], category: string, part: string, qty: n
 export function withRows(stock: Stock | null, rows: StockRow[]): Stock | null {
   if (!rows.length) return null;
   return { name: stock?.name ?? COUNTED, text: writeStock(rows) };
+}
+
+/**
+ * Saves the stock to the builder's computer as the CSV it is, under its own
+ * name, so counts typed into this browser survive it being cleared.
+ */
+export function downloadStock(stock: Stock): void {
+  const name = stock.name.toLowerCase().endsWith('.csv') ? stock.name : 'stock.csv';
+  const url = URL.createObjectURL(new Blob([stock.text], { type: 'text/csv' }));
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = name;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 /** The categories a builder can list a part under, as the parts lists use them. */
