@@ -226,10 +226,14 @@
     <div class="foot">
       <p>Your projects stay in this browser.</p>
       <a href="/"><span class="logo-icon" aria-hidden="true"></span> About Star Ground</a>
-      <a href="https://github.com/JacksonFergusonDev/star-ground">
+      <a
+        href="https://github.com/JacksonFergusonDev/star-ground"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
         <Icon name="brand-github" size={14} /> GitHub
       </a>
-      <a href="https://jacksonferguson.me/">
+      <a href="https://jacksonferguson.me/" target="_blank" rel="noopener noreferrer">
         <Icon name="jacksonferguson" size={16} /> jacksonferguson.me
       </a>
     </div>
