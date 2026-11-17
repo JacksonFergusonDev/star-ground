@@ -5,6 +5,7 @@
   import type { ComponentCategory } from '../../lib/api';
   import type { BandCount } from '../../lib/parts';
   import { CAP_TOLERANCES, VOLTAGE_CODES } from '../../lib/identify';
+  import { views } from '../../lib/router.svelte';
   import CapacitorCode from './CapacitorCode.svelte';
   import ResistorCalculator from './ResistorCalculator.svelte';
 
@@ -27,20 +28,29 @@
   {#if added}<p class="status" role="status">{added}</p>{/if}
 
   <section class="part" aria-labelledby="resistors">
-    <h2 id="resistors">Resistors</h2>
-    <p class="note">
-      Pick each band's colour, left to right. Each cell shows what the colour means in that band.
-    </p>
     <ResistorCalculator
       name="identify"
       bind:count={bands}
       onAdd={(v, n) => add('Resistors', v, n)}
-    />
+      stockHref={views.stock.path}
+    >
+      {#snippet intro()}
+        <h2 id="resistors">Resistors</h2>
+        <p class="note">
+          Pick each band's colour, left to right. Each cell shows what the colour means in that
+          band.
+        </p>
+      {/snippet}
+    </ResistorCalculator>
   </section>
 
   <section class="part" aria-labelledby="capacitors">
     <h2 id="capacitors">Capacitors</h2>
-    <CapacitorCode id="identify-cap" onAdd={(v, n) => add('Capacitors', v, n)} />
+    <CapacitorCode
+      id="identify-cap"
+      onAdd={(v, n) => add('Capacitors', v, n)}
+      stockHref={views.stock.path}
+    />
     <ul class="tips">
       <li>
         <strong>Three digits</strong> are the first two digits of the value in picofarads, then how many

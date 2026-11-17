@@ -106,6 +106,13 @@ test('counting parts makes a stock the shopping list subtracts, and downloads it
   for await (const chunk of stream) text += String(chunk);
   expect(text).toBe(csv);
 
+  // The stock page saves the same file, so counts typed in this browser can be kept.
+  await page.goto('/app/stock/');
+  const saving = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Download your stock CSV' }).click();
+  expect((await saving).suggestedFilename()).toBe('stock.csv');
+  await page.goto('/app/stock/count/');
+
   // A count set to nothing takes the part out of the stock.
   await page.getByRole('button', { name: 'Remove 3PDT footswitch' }).click();
   await page.getByLabel('Chips: TL072').fill('');
@@ -158,7 +165,7 @@ test("ticking off what you have of an order's parts writes only those to the sto
 test('the identifier reads bands and capacitor codes, and adds what it read', async ({ page }) => {
   await stubMasterList(page);
   await addPastedProject(page);
-  await page.goto('/app/identify/');
+  await page.goto('/app/stock/identify/');
 
   const resistors = page.getByRole('region', { name: 'Resistors' });
   // Each colour is a cell of the code table, picked by its label.
@@ -183,4 +190,7 @@ test('the identifier reads bands and capacitor codes, and adds what it read', as
   await expect
     .poll(() => saved(page))
     .toBe('Category,Part,Qty\nResistors,4.7k,10\nCapacitors,47n,1\n');
+  // Beside each add button, a way to see what was added.
+  await capacitors.getByRole('link', { name: 'See your stock' }).click();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Stock');
 });

@@ -1,6 +1,7 @@
 <script lang="ts">
   // The app's navigation, beside every app and catalog page: the workspace's
-  // pages, each project with its own pages, and the catalog. It reads the
+  // pages with their own pages, each project with its pages, and the catalog.
+  // Every page of the app is reachable from here (sidebar.spec.ts checks). It reads the
   // page's one workspace, so it follows every change the app makes. On phones
   // it folds into a bar with a menu.
   import { onMount } from 'svelte';
@@ -34,12 +35,34 @@
     shown?.toBuy ?? listing.result?.shopping_list.filter((r) => r.buy_qty > 0).length ?? null,
   );
 
+  // A page with pages of its own opens to show them while the reader is on any
+  // of them, as a project shows its check and build.
   const pages = $derived([
-    { ...views.projects, label: 'Projects', badge: ws || shown ? String(cards.length) : '' },
-    { ...views.list, label: 'Shopping list', badge: toBuy === null ? '' : String(toBuy) },
-    { ...views.stock, label: 'Stock', badge: ws?.stock ? 'CSV' : '' },
-    { ...views.export, label: 'Export', badge: '' },
+    {
+      ...views.projects,
+      label: 'Projects',
+      badge: ws || shown ? String(cards.length) : '',
+      children: [],
+    },
+    {
+      ...views.list,
+      label: 'Shopping list',
+      badge: toBuy === null ? '' : String(toBuy),
+      children: [{ ...views.have, label: 'What you have' }],
+    },
+    {
+      ...views.stock,
+      label: 'Stock',
+      badge: ws?.stock ? 'CSV' : '',
+      children: [
+        { ...views.count, label: 'Count your parts' },
+        { ...views.identify, label: 'Identify a part' },
+      ],
+    },
+    { ...views.export, label: 'Export', badge: '', children: [] },
   ]);
+  const within = (page: { path: string; children: { path: string }[] }): boolean =>
+    path === page.path || page.children.some((child) => child.path === path);
 
   // A project opens on its check when it has a document, on bench mode when it
   // has parts, and otherwise at its card.
@@ -86,11 +109,31 @@
       <p class="group">Workspace</p>
       <ul>
         {#each pages as page (page.path)}
+          {@const open = within(page)}
           <li>
-            <a class="item" href={page.path} aria-current={path === page.path ? 'page' : undefined}>
+            <a
+              class="item"
+              href={page.path}
+              aria-current={path === page.path ? 'page' : open ? 'true' : undefined}
+            >
               <span class="label">{page.label}</span>
               {#if page.badge}<span class="badge">{page.badge}</span>{/if}
             </a>
+            {#if open && page.children.length}
+              <ul class="sub">
+                {#each page.children as child (child.path)}
+                  <li>
+                    <a
+                      class="item"
+                      href={child.path}
+                      aria-current={path === child.path ? 'page' : undefined}
+                    >
+                      {child.label}
+                    </a>
+                  </li>
+                {/each}
+              </ul>
+            {/if}
           </li>
         {/each}
       </ul>
@@ -157,15 +200,6 @@
             aria-current={path.startsWith('/catalog/') ? 'page' : undefined}
           >
             <span class="label">Circuit catalog</span>
-          </a>
-        </li>
-        <li>
-          <a
-            class="item"
-            href={views.identify.path}
-            aria-current={path === views.identify.path ? 'page' : undefined}
-          >
-            <span class="label">Identify a part</span>
           </a>
         </li>
         <li>

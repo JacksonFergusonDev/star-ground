@@ -23,7 +23,7 @@ export const views: Record<View, { path: string; title: string }> = {
   have: { path: '/app/list/have/', title: 'What you have' },
   stock: { path: '/app/stock/', title: 'Stock' },
   count: { path: '/app/stock/count/', title: 'Count your parts' },
-  identify: { path: '/app/identify/', title: 'Identify a part' },
+  identify: { path: '/app/stock/identify/', title: 'Identify a part' },
   troubleshoot: { path: '/app/troubleshoot/', title: "It doesn't work" },
   export: { path: '/app/export/', title: 'Export' },
   check: { path: '/app/check/', title: 'Check parts' },

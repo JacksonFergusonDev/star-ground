@@ -341,6 +341,13 @@ test('bench mode places parts in build order from the keyboard, and keeps them',
   await page.getByRole('link', { name: 'Build it, part by part' }).click();
   await expect(page.getByRole('heading', { name: 'Build Fuzz' })).toBeVisible();
   await expect(page.getByText('0 of 2 parts placed.')).toBeVisible();
+  // A project's own pages sit under it in the sidebar (sidebar.spec.ts checks the rest).
+  const app = page.getByRole('navigation', { name: 'App' });
+  await expect(app.locator('a[href^="/app/build/?project="]')).toHaveAttribute(
+    'aria-current',
+    'page',
+  );
+  await expect(app.getByRole('link', { name: 'Check parts' })).toBeAttached();
   await expect(row(page, 'R1')).toHaveAttribute('aria-current', 'step');
   // The document shows the part at hand.
   await expect(page.getByRole('button', { name: 'Show R1 in the parts list' })).toHaveClass(

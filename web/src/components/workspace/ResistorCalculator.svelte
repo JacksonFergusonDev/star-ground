@@ -3,22 +3,30 @@
   // a row for each colour, and in each cell what that colour means in that
   // band. Picking a colour in each column reads the resistor, so the table is
   // both the calculator and the full code to look things up in.
+  import type { Snippet } from 'svelte';
   import type { Band, BandCount } from '../../lib/parts';
   import { DIGITS } from '../../lib/parts';
   import { COLOUR_NAMES, COLOURS, MULTIPLIERS, TOLERANCES, readBands } from '../../lib/identify';
   import Choice from './Choice.svelte';
+  import Icon from './Icon.svelte';
   import ResistorBands from './ResistorBands.svelte';
 
   let {
     name,
     count = $bindable(5),
     onAdd,
+    stockHref,
+    intro,
   }: {
     /** Names the radio groups, unique on the page. */
     name: string;
     count?: BandCount;
     /** Adds the resistor read to the stock; none on a page without one. */
     onAdd?: (value: string, qty: number) => void;
+    /** Where the stock is, linked beside the add button. */
+    stockHref?: string;
+    /** The heading and words above the bands, beside the reading when there's room. */
+    intro?: Snippet;
   } = $props();
 
   type Column = { key: string; title: string; colours: Band[] };
@@ -78,19 +86,23 @@
 
 <div class="calculator">
   <div class="top">
-    <Choice
-      legend="Bands"
-      name={`${name}-count`}
-      options={[
-        { value: 4, label: '4' },
-        { value: 5, label: '5' },
-      ]}
-      bind:value={() => count, recount}
-    />
+    <div class="lead">
+      {@render intro?.()}
+      <Choice
+        legend="Bands"
+        name={`${name}-count`}
+        options={[
+          { value: 4, label: '4' },
+          { value: 5, label: '5' },
+        ]}
+        bind:value={() => count, recount}
+      />
+    </div>
     <p class="read" aria-live="polite">
-      <ResistorBands value={reading.value} {count} />
-      <strong>{reading.value} Ω</strong>
-      <span>±{reading.tolerance}%</span>
+      <ResistorBands value={reading.value} {count} large />
+      <span class="value"
+        ><strong>{reading.value} Ω</strong> <span>±{reading.tolerance}%</span></span
+      >
     </p>
   </div>
 
@@ -151,7 +163,14 @@
         <span>How many</span>
         <input type="number" min="1" max="10000" bind:value={qty} required />
       </label>
-      <button class="hs-button" type="submit">Add {reading.value} to your stock</button>
+      <span class="actions">
+        <button class="hs-button" type="submit">Add {reading.value} to your stock</button>
+        {#if stockHref}
+          <a class="text-link" href={stockHref}
+            >See your stock <Icon name="arrow-right" size={14} /></a
+          >
+        {/if}
+      </span>
     </form>
   {/if}
 </div>
@@ -169,11 +188,21 @@
     align-items: center;
     justify-content: space-between;
   }
+  /* The heading, words and band count in one column, the reading in another,
+     each centred in the row; the reading moves below when there isn't room. */
+  .lead {
+    display: grid;
+    flex: 1 1 260px;
+    gap: 14px;
+    min-width: 0;
+  }
+  /* The resistor sits above its value, both held to the right edge, so a
+     longer value doesn't move the drawing. */
   .read {
-    display: inline-flex;
-    gap: 10px;
-    align-items: center;
-    margin: 0;
+    display: grid;
+    gap: 6px;
+    justify-items: end;
+    margin: 0 0 0 auto;
     font-family: var(--mono);
     font-size: var(--fs-ui);
   }
@@ -182,7 +211,12 @@
     font-size: var(--fs-h4);
     font-weight: 500;
   }
-  .read span {
+  .value {
+    display: inline-flex;
+    gap: 10px;
+    align-items: baseline;
+  }
+  .value span {
     color: var(--muted);
   }
   .table {
@@ -302,6 +336,13 @@
     flex-wrap: wrap;
     gap: 10px;
     align-items: end;
+  }
+  /* The link's text lines up with the button's. */
+  .actions {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 10px 16px;
+    align-items: center;
   }
   .add label {
     display: grid;

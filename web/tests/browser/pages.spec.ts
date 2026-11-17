@@ -8,7 +8,7 @@ const pages = [
   { path: '/app/list/have/', heading: 'What you have' },
   { path: '/app/stock/', heading: 'Stock' },
   { path: '/app/stock/count/', heading: 'Count your parts' },
-  { path: '/app/identify/', heading: 'Identify a part' },
+  { path: '/app/stock/identify/', heading: 'Identify a part' },
   { path: '/app/troubleshoot/', heading: "It doesn't work" },
   { path: '/app/export/', heading: 'Export' },
   { path: '/app/check/?project=gone', heading: "This project isn't here" },

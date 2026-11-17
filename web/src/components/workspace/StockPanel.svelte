@@ -1,6 +1,7 @@
 <script lang="ts">
   // The builder's stock: a CSV the master list subtracts from what to buy.
   import { views } from '../../lib/router.svelte';
+  import { downloadStock } from '../../lib/stock';
   import Explain from './Explain.svelte';
   import type { Stock } from '../../lib/server';
 
@@ -30,6 +31,13 @@
       Subtracting <strong>{stock.name}</strong> from what to buy.
       <button class="text-button" type="button" onclick={() => onChange(null)}>Remove</button>
     </p>
+    <p>
+      Your stock is kept only in this browser. Download it to keep a copy on your computer, and
+      upload it here if this browser ever loses it.
+    </p>
+    <button class="hs-button save" type="button" onclick={() => downloadStock(stock)}>
+      Download your stock CSV
+    </button>
   {:else}
     <p>
       Upload a CSV of the parts you own, with columns Category, Part and Qty, to buy only what's
@@ -71,6 +79,9 @@
     font-size: var(--fs-ui);
     line-height: 1.6;
     overflow-wrap: anywhere;
+  }
+  .save {
+    justify-self: start;
   }
   strong {
     color: var(--text);

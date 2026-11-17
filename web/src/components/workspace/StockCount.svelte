@@ -17,7 +17,7 @@
     samePart,
     setHave,
     withRows,
-    writeStock,
+    downloadStock,
   } from '../../lib/stock';
   import { ROUGH_COUNTS, VALUE_GROUPS } from '../../lib/stock-values';
   import { views } from '../../lib/router.svelte';
@@ -62,16 +62,6 @@
   const counted = (field: HTMLInputElement): number =>
     Math.max(0, Math.floor(field.valueAsNumber) || 0);
 
-  function download(): void {
-    const name = stock?.name.toLowerCase().endsWith('.csv') ? stock.name : 'stock.csv';
-    const url = URL.createObjectURL(new Blob([writeStock(rows)], { type: 'text/csv' }));
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = name;
-    link.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-  }
-
   // Adding a part the drawers don't list.
   let category = $state<ComponentCategory>('Hardware/Misc');
   let part = $state('');
@@ -88,7 +78,12 @@
         Nothing counted yet. Type how many you have under each value; leave the rest empty.
       {/if}
     </p>
-    <button class="hs-button" type="button" disabled={!rows.length} onclick={download}>
+    <button
+      class="hs-button"
+      type="button"
+      disabled={!stock}
+      onclick={() => stock && downloadStock(stock)}
+    >
       Download the stock CSV
     </button>
   </div>
