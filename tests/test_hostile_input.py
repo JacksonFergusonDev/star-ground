@@ -27,9 +27,11 @@ import pdfplumber
 import pdfplumber.page
 import pdfplumber.table
 import pytest
+from pdfminer.arcfour import Arcfour
 from pdfminer.pdftypes import PDFStream
 from pdfplumber.page import Page
 from PIL import Image
+from pytest_mock import MockerFixture
 
 from star_ground.bom_lib import FileUpload, builds, classifier, locations, ocr
 from star_ground.bom_lib.boards import board_marks
@@ -40,7 +42,7 @@ from star_ground.bom_lib.errors import CrowdedPageError, ErrorKind, HeavyPageErr
 from star_ground.bom_lib.ingest import ingest_bom_line
 from star_ground.bom_lib.ocr import OcrBox
 from star_ground.bom_lib.pdf import assemble as pdf_assemble
-from star_ground.bom_lib.pdf import bom_table, guard, scan
+from star_ground.bom_lib.pdf import bom_table, crypt, guard, scan
 from star_ground.bom_lib.pdf import document as pdf_document
 from star_ground.bom_lib.pdf.cells import CONTROL_VALUE
 from star_ground.bom_lib.pdf.content import content_bytes
@@ -62,7 +64,7 @@ from star_ground.bom_lib.types import (
     ReadingStats,
 )
 from star_ground.bom_lib.verification import check_footnotes
-from tests.pdfs import assemble, stream, typeset
+from tests.pdfs import assemble, encrypted, stream, typeset
 
 # A scaling check times the work on an input and on one `_GROWTH` times as
 # large. Linear work takes about 4 times as long, and n log n about 5; the
@@ -603,15 +605,16 @@ def test_too_many_ruled_lines_to_count_their_crossings(
         assert pdf_document._tables(pdf.pages[0], 0) == []
 
 
-def _drawing(content: bytes, *forms: bytes) -> bytes:
+def _drawing(content: bytes, *forms: bytes, encrypt: bool = False) -> bytes:
     """A one-page PDF listing 'R1 10k', then drawing the content.
 
     Args:
         content: More of the page's content stream ('/Fm0 Do').
         forms: Form XObjects, named /Fm0, /Fm1… in the page's resources.
+        encrypt: Whether its streams are RC4-encrypted.
     """
     names = " ".join(f"/Fm{n} {6 + n} 0 R" for n in range(len(forms)))
-    return assemble(
+    return (encrypted if encrypt else assemble)(
         b"<< /Type /Catalog /Pages 2 0 R >>",
         b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
         b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R "
@@ -692,6 +695,30 @@ def test_page_drawing_is_counted_as_pdfminer_runs_it(tmp_path: Path) -> None:
     assert counted == sum(map(len, decoded)) + 2 * len(drawn)
     assert content_bytes(page, counted) == counted
     assert content_bytes(page, counted - 1) is None
+
+
+def test_encrypted_stream_is_decrypted_once(
+    tmp_path: Path, mocker: MockerFixture
+) -> None:
+    # Each stream was decrypted three times, in pdfminer's Python RC4, whose
+    # time grows with the square of a stream's length: once to check the
+    # document's budget, once to count what the page runs, and once for
+    # pdfminer to lay it out. Rebote 3 Delay's page 1 took five minutes.
+    form = _form(b"BT /F1 10 Tf 50 600 Td (R2 22k) Tj ET")
+    path = tmp_path / "encrypted.pdf"
+    path.write_bytes(_drawing(b"/Fm0 Do", form, encrypt=True))
+    rc4 = mocker.spy(crypt, "rc4")
+    assert _refs(path) == {"R1", "R2"}
+    # The page's content stream and the form it draws.
+    assert rc4.call_count == 2
+
+
+@pytest.mark.parametrize("key_length", range(5, 17))
+def test_rc4_decrypts_as_pdfminer_does(key_length: int) -> None:
+    # OpenSSL takes keys of some lengths, and the rest are decrypted in Python.
+    key = bytes(range(7, 7 + key_length))
+    data = bytes(range(256)) * 20
+    assert crypt.rc4(key, data) == Arcfour(key).decrypt(data)
 
 
 def test_page_with_a_damaged_stream_is_still_read(tmp_path: Path) -> None:
