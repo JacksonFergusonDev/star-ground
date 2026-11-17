@@ -361,6 +361,11 @@ test('bench mode places parts in build order from the keyboard, and keeps them',
 
   await row(page, 'R2').getByRole('checkbox').check();
   await expect(page.getByText('All 2 parts placed. Ready to box.')).toBeVisible();
+  // A finished build points to what to check if it doesn't work.
+  await expect(page.getByRole('link', { name: "Doesn't work? What to check" })).toHaveAttribute(
+    'href',
+    '/app/troubleshoot/',
+  );
   await page.getByRole('button', { name: 'Start over' }).click();
   await expect(page.getByText('0 of 2 parts placed.')).toBeVisible();
 });

@@ -52,7 +52,7 @@ In software, dependency resolution is **deterministic**: `uv sync` gives the sam
 
 - **Build documents (PDF):** upload a file or paste a link. The parser reads the build documents of five PCB publishers: **PedalPCB, GuitarPCB, Aion FX, Five Cats and Tonepad**. Links must be public `http(s)` addresses; GitHub, Google Drive and Dropbox share links work too. Tonepad's file links open a download page, so download those PDFs and upload them.
 - **Pasted text, text files and spreadsheets:** any `REF VALUE` list (`R1 10k`, `C1-C3 100n`, `R1, R2, R5 10k`), pasted or uploaded as a `.txt` file, or a `.csv` or `.tsv` export with reference and value columns. A spreadsheet without a header row works too: the first column is read as the references and the second as the values.
-- **The circuit catalog:** hundreds of build documents from PedalPCB, GuitarPCB, Five Cats and Tonepad whose parts lists are already read, to search and filter by kind of effect.
+- **The circuit catalog:** hundreds of build documents from PedalPCB, GuitarPCB, Five Cats and Tonepad whose parts lists are already read, to search and filter by kind of effect. It's the first tab when adding a project, and a filter picks out good first builds: small, verified fuzz, overdrive, distortion and boost pedals.
 - **Your stock:** upload an inventory CSV, and only what you're missing is bought. No CSV? Count your parts into one, with a drawer for each common value, or just say which of an order's parts you already have. A part identifier reads resistor colour bands and the codes printed on capacitors and pots.
 
 ### Reading build documents
@@ -82,6 +82,7 @@ The parser's priority is **no silent errors**. Self-checks re-read each document
 - **Build book:** a printable PDF with the shopping list, then each project's checklist in build order (see below), with values written out (`4.7 kΩ`, `100 nF`), resistor colour bands, capacitor codes and which way round each part goes.
 - **Labels:** one per part, for Avery 5160 sheets, in the same order.
 - **Build pack:** one ZIP with all of the above and the source documents.
+- **Bench mode and help when it's done:** bench mode ticks off each part as you solder it, by keyboard or touch, and an "It doesn't work" page covers what to check, how to measure a pedal's voltages and how to trace its signal.
 
 ---
 

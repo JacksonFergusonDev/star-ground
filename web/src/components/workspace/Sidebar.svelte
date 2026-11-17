@@ -168,6 +168,15 @@
             <span class="label">Identify a part</span>
           </a>
         </li>
+        <li>
+          <a
+            class="item"
+            href={views.troubleshoot.path}
+            aria-current={path === views.troubleshoot.path ? 'page' : undefined}
+          >
+            <span class="label">It doesn't work</span>
+          </a>
+        </li>
       </ul>
     </nav>
 

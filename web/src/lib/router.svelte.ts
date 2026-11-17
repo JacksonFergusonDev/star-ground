@@ -5,7 +5,16 @@
 
 /** One of the app's pages. */
 export type View =
-  'projects' | 'list' | 'have' | 'stock' | 'count' | 'identify' | 'export' | 'check' | 'build';
+  | 'projects'
+  | 'list'
+  | 'have'
+  | 'stock'
+  | 'count'
+  | 'identify'
+  | 'troubleshoot'
+  | 'export'
+  | 'check'
+  | 'build';
 
 /** Each page's address and title. */
 export const views: Record<View, { path: string; title: string }> = {
@@ -15,6 +24,7 @@ export const views: Record<View, { path: string; title: string }> = {
   stock: { path: '/app/stock/', title: 'Stock' },
   count: { path: '/app/stock/count/', title: 'Count your parts' },
   identify: { path: '/app/identify/', title: 'Identify a part' },
+  troubleshoot: { path: '/app/troubleshoot/', title: "It doesn't work" },
   export: { path: '/app/export/', title: 'Export' },
   check: { path: '/app/check/', title: 'Check parts' },
   build: { path: '/app/build/', title: 'Build' },
