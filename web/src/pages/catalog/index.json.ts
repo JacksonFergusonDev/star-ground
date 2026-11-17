@@ -4,7 +4,7 @@
 
 import type { APIRoute } from 'astro';
 import { getCollection } from 'astro:content';
-import { byTitle, effects, partCount, publishers } from '../../lib/catalog';
+import { byTitle, effects, isFirstBuild, partCount, publishers } from '../../lib/catalog';
 import type { CatalogItem } from '../../lib/catalog-search';
 
 export const GET: APIRoute = async () => {
@@ -16,6 +16,7 @@ export const GET: APIRoute = async () => {
     effects: entry.data.effects.map((e) => effects[e]),
     parts: partCount(entry),
     document: entry.data.document,
+    first: isFirstBuild(entry),
   }));
   return Response.json(items);
 };

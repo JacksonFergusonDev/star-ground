@@ -102,7 +102,9 @@
                 <button class="hover-card" type="button" onclick={() => addBuild(item)}>
                   <span class="title">{item.title}</span>
                   <span class="meta"
-                    >{[item.publisher, ...item.effects].join(' · ')} · {item.parts} parts</span
+                    >{[item.publisher, ...item.effects].join(' · ')} · {item.parts} parts{item.first
+                      ? ' · Good first build'
+                      : ''}</span
                   >
                   <span class="hs-visually-hidden">: add it</span>
                 </button>
