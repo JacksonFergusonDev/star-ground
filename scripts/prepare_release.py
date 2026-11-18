@@ -18,7 +18,8 @@ from star_ground.cli_output import CliOutput
 
 REPO_ROOT: Path = Path(__file__).resolve().parent.parent
 VENV_BIN: Path = REPO_ROOT / ".venv" / ("Scripts" if sys.platform == "win32" else "bin")
-CI_WORKFLOW = "ci.yml"
+# Main's CI runs inside Deploy; reusable workflows have no separate run.
+CI_WORKFLOW = "deploy.yml"
 RUN_DISCOVERY_ATTEMPTS = 24
 RUN_DISCOVERY_INTERVAL = 5
 

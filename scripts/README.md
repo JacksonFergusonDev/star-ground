@@ -9,7 +9,7 @@
 `just bump <major|minor|patch>` runs `scripts/prepare_release.py` before invoking the shared release script:
 
 1. Verifies the checkout is on a clean `main` branch synced with `origin/main`.
-1. Requires a passing `ci.yml` run on `HEAD`, offering to watch an in-progress run to completion.
+1. Requires a passing `deploy.yml` run on `HEAD`, offering to watch an in-progress run to completion. Pushes to `main` run CI through this workflow; its call to `ci.yml` has no separate workflow run.
 1. Checks `uv lock --check` before handing off to the version bump.
 
 ## Container Release Gate

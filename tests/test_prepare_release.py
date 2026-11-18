@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import json
 import subprocess
 from collections.abc import Sequence
 
 import pytest
+from pytest_mock import MockerFixture
 
 from scripts import prepare_release
 from scripts.prepare_release import CheckoutState
@@ -85,16 +87,32 @@ def test_check_checkout_rejects_invalid_git_state(
 
 
 def test_check_ci_passes_when_completed_run_succeeded(
-    monkeypatch: pytest.MonkeyPatch,
+    mocker: MockerFixture,
 ) -> None:
     checkout = CheckoutState(repo="example/star-ground", sha="abc123456789")
-    monkeypatch.setattr(
-        prepare_release,
-        "read_json",
-        lambda _cmd: [_run_payload()],
+    run = mocker.patch(
+        "subprocess.run",
+        return_value=_completed(stdout=json.dumps([_run_payload()])),
     )
 
     prepare_release.check_ci(checkout)
+
+    assert run.call_args.args[0] == [
+        "gh",
+        "run",
+        "list",
+        "--repo",
+        "example/star-ground",
+        "--workflow",
+        "deploy.yml",
+        "--commit",
+        checkout.sha,
+        "--limit",
+        "1",
+        "--json",
+        "databaseId,headSha,status,conclusion,url",
+    ]
+    run.assert_called_once()
 
 
 def test_check_ci_watches_in_progress_run_to_success(
