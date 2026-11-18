@@ -17,6 +17,7 @@ const row = (category: string, part: string, bom_qty: number): ShoppingRow => ({
   notes: '',
   search_term: part,
   supplier_url: '',
+  tayda: null,
 });
 
 const result: MasterListResult = {

@@ -46,6 +46,8 @@ const result: MasterListResult = {
       notes: 'Use 1/4W metal film (1%). A long note folds to one line until it is opened.',
       search_term: '10k resistor',
       supplier_url: 'https://www.taydaelectronics.com/',
+      // In the Tayda cart, so its buttons are hovered too.
+      tayda: { sku: 'A-2203', qty: 10 },
     },
     // Enough rows to scroll, and a pot whose taper has a screen-reader label.
     ...Array.from({ length: 40 }, (_, i) => ({
@@ -60,6 +62,7 @@ const result: MasterListResult = {
       notes: '',
       search_term: 'pot',
       supplier_url: 'https://www.taydaelectronics.com/',
+      tayda: null,
     })),
   ],
   stats: { lines_read: 2, parts_found: 2 },

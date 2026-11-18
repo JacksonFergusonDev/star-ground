@@ -1,4 +1,4 @@
-"""The master list's CSV files: the shopping list, a supplier cart, and stock.
+"""The master list's CSV files: the shopping list, supplier carts, and stock.
 
 Column headers live here and nowhere else: the shopping list's lines are
 typed `ShoppingLine`s, named for a spreadsheet only as they're written.
@@ -12,6 +12,7 @@ from collections.abc import Sequence
 from star_ground.bom_lib.enums import ComponentCategory
 from star_ground.bom_lib.types import (
     FORMULA_PREFIXES,
+    CartItem,
     ComponentKey,
     Inventory,
     ShoppingLine,
@@ -28,12 +29,16 @@ SHOPPING_LIST_COLUMNS = (
     "Notes",
     "Search term",
     "Tayda link",
+    "Tayda SKU",
     "Group",
 )
 
 # Columns of the supplier cart file. Mouser's and Digi-Key's BOM upload pages
 # ask which column holds what, so the names only need to be self-explanatory.
 SUPPLIER_CART_COLUMNS = ("Quantity", "Manufacturer Part Number", "Description")
+
+# Columns of the Tayda cart, as Tayda's Quick Order page reads an upload.
+TAYDA_CART_COLUMNS = ("sku", "qty")
 
 # The stock file's columns, which `read_stock` reads back next time.
 STOCK_COLUMNS = ("Category", "Part", "Qty")
@@ -112,6 +117,7 @@ def shopping_list_csv(
                 _cell(line.notes),
                 _cell(line.search_term),
                 link,
+                line.tayda.sku if line.tayda else "",
                 line.origin.value,
             ]
         )
@@ -195,3 +201,38 @@ def supplier_cart_csv(lines: Sequence[ShoppingLine]) -> bytes:
         if line.buy_qty > 0
     ]
     return _write(SUPPLIER_CART_COLUMNS, rows).encode("utf-8")
+
+
+def tayda_cart(lines: Sequence[ShoppingLine]) -> list[CartItem]:
+    """The parts to buy that Star Ground knows Tayda's SKU for.
+
+    Parts that share a SKU are one line, their quantities added. Each
+    quantity is already a multiple of what Tayda sells the part in.
+
+    Args:
+        lines: The shopping list.
+
+    Returns:
+        One item per SKU, in the shopping list's order.
+    """
+    qty: dict[str, int] = {}
+    for line in lines:
+        if line.tayda and line.buy_qty > 0:
+            qty[line.tayda.sku] = qty.get(line.tayda.sku, 0) + line.tayda.qty
+    return [CartItem(sku, n) for sku, n in qty.items()]
+
+
+def tayda_cart_csv(lines: Sequence[ShoppingLine]) -> bytes:
+    """A cart file for Tayda's Quick Order page.
+
+    Parts with no known SKU are left out; the shopping list links each one to
+    a search on Tayda's site instead.
+
+    Args:
+        lines: The shopping list.
+
+    Returns:
+        The CSV, UTF-8 with no byte order mark.
+    """
+    rows = [[item.sku, item.qty] for item in tayda_cart(lines)]
+    return _write(TAYDA_CART_COLUMNS, rows).encode("utf-8")

@@ -59,6 +59,11 @@ Everything in `src/` except `server/` is the **backend**: it imports no web fram
     - *Inductors, transformers, relays:* Exact count.
   - **Parts included with the PCB** are subtracted from what to buy.
   - **Hardware Injection:** Adds a standard kit per pedal (enclosure, jacks, footswitch, status LED with one resistor per LED, knobs, wire), skipping whatever the document lists itself (`provided_hardware`).
+  - **Electrolytics:** 25 V, or 35 V when a project using one has a charge pump (TC1044, 7660, LT1054; `chips.is_charge_pump`), which runs it at 18 V or more.
+
+- **`bom_lib/tayda.py`**: Tayda's SKUs for the products the list recommends.
+  - **Table:** `bom_lib/data/tayda.csv` maps a line's search term to Tayda's SKU, the multiple Tayda sells it in, and its product page. Rows are checked by hand on Tayda's site, because Tayda answers no script.
+  - **Cart:** a line with a SKU carries its cart quantity, the buy quantity rounded up to Tayda's multiple (a quantity between multiples fails at Tayda's checkout). `exports/spreadsheets.tayda_cart_csv` writes the cart for Tayda's Quick Order page.
 
 ### 4. Output Layer (The Hands)
 
@@ -110,4 +115,4 @@ class PartData:
 
 A builder's correction gives the list a document printing the corrected value would give. The designator moves with every part it stands for (`multiples`), and the classifier decides again which parts it implies, so correcting `IC1` from a TL072 to a 78L05 drops its socket.
 
-Star Ground's own parts are told apart by identity, never by text a document or builder could write. The hardware kit records itself in `PartData.hardware`, which only `with_standard_hardware` fills, so a project named "Auto-Inject" stays a project. The socket added for each chip is the key `constants.IC_SOCKET`, so a document's own DC socket or tube socket is never mistaken for it. One rule, `classifier.is_chip_socket` (a socket that names a chip or its package, such as `DIP-8 socket`), decides that a parts list includes its own chip sockets. Its reading (PDF, pasted or CSV) then adds none, a correction adds none, and the build order solders them with the sockets. Otherwise a chip gets one socket for each part its designator stands for.
+Star Ground's own parts are told apart by identity, never by text a document or builder could write. The hardware kit records itself in `PartData.hardware`, which only `with_standard_hardware` fills, so a project named "Auto-Inject" stays a project. The socket added for each chip is the key `constants.IC_SOCKET`, so a document's own DC socket or tube socket is never mistaken for it. The shopping list alone sizes these sockets: `sourcing.sized_sockets` moves each chip's sockets to `constants.SIZED_SOCKETS` by the pin count its part number gives (`chips.chip_pins`), and leaves a chip of unknown size on `IC_SOCKET`, with a note naming it. One rule, `classifier.is_chip_socket` (a socket that names a chip or its package, such as `DIP-8 socket`), decides that a parts list includes its own chip sockets. Its reading (PDF, pasted or CSV) then adds none, a correction adds none, and the build order solders them with the sockets. Otherwise a chip gets one socket for each part its designator stands for.

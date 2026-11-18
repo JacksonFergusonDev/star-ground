@@ -736,6 +736,7 @@
         "enum": [
           "shopping-list",
           "supplier-cart",
+          "tayda-cart",
           "stock-update",
           "build-book",
           "labels",
@@ -1256,7 +1257,19 @@
           },
           "supplier_url": {
             "type": "string",
-            "title": "Supplier Url"
+            "title": "Supplier Url",
+            "description": "Tayda's product page for the part, or a search for it."
+          },
+          "tayda": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TaydaItem"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Its Tayda SKU and cart quantity; none when Star Ground doesn't know the SKU yet."
           }
         },
         "additionalProperties": false,
@@ -1272,7 +1285,8 @@
           "buy_qty",
           "notes",
           "search_term",
-          "supplier_url"
+          "supplier_url",
+          "tayda"
         ],
         "title": "ShoppingRow",
         "description": "One part to buy."
@@ -1332,6 +1346,28 @@
         ],
         "title": "Stats",
         "description": "Totals across projects."
+      },
+      "TaydaItem": {
+        "properties": {
+          "sku": {
+            "type": "string",
+            "title": "Sku",
+            "description": "Tayda's SKU, as its Quick Order page takes it."
+          },
+          "qty": {
+            "type": "integer",
+            "title": "Qty",
+            "description": "How many to add: the buy quantity, rounded up to the multiple Tayda sells the part in."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "sku",
+          "qty"
+        ],
+        "title": "TaydaItem",
+        "description": "A part's place in a Tayda cart."
       },
       "ValidationError": {
         "properties": {

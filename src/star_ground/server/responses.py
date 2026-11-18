@@ -41,6 +41,7 @@ from star_ground.server.models import (
     ShoppingRow,
     SourceLocation,
     Stats,
+    TaydaItem,
 )
 
 
@@ -155,6 +156,7 @@ def _row(row: ShoppingLine) -> ShoppingRow:
         notes=row.notes,
         search_term=row.search_term,
         supplier_url=row.supplier_url,
+        tayda=TaydaItem(sku=row.tayda.sku, qty=row.tayda.qty) if row.tayda else None,
     )
 
 

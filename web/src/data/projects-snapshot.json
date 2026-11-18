@@ -1305,7 +1305,8 @@
         "buy_qty": 1,
         "notes": "Fit it in a socket.",
         "search_term": "LM833",
-        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=LM833"
+        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=LM833",
+        "tayda": null
       },
       {
         "origin": "Circuit Board",
@@ -1318,7 +1319,8 @@
         "buy_qty": 1,
         "notes": "Fit it in a socket. Swaps to try: OPA2134 (Hi-Fi / Studio Clean: Low distortion (0.00008%), High Slew Rate (20V/us)), TLC2272 (High Headroom Clean: Rail-to-Rail output (+6Vpp headroom on 9V)).",
         "search_term": "TL072",
-        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=TL072"
+        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=TL072",
+        "tayda": null
       },
       {
         "origin": "Circuit Board",
@@ -1331,7 +1333,8 @@
         "buy_qty": 3,
         "notes": "",
         "search_term": "BC107B",
-        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=BC107B"
+        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=BC107B",
+        "tayda": null
       },
       {
         "origin": "Circuit Board",
@@ -1344,7 +1347,8 @@
         "buy_qty": 2,
         "notes": "",
         "search_term": "MP38A",
-        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=MP38A"
+        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=MP38A",
+        "tayda": null
       },
       {
         "origin": "Circuit Board",
@@ -1357,7 +1361,8 @@
         "buy_qty": 11,
         "notes": "Swaps to try: 1N4001 (Smooth / Tube-like: Slow reverse recovery (30µs) smears highs), IR LED (The 'Goldilocks' Drive: 1.2V drop: More crunch than LED, more headroom than Si), Red LED (Amp-like / Open: 1.8V drop: Huge headroom, loud output).",
         "search_term": "1N4148",
-        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=1N4148"
+        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=1N4148",
+        "tayda": null
       },
       {
         "origin": "Circuit Board",
@@ -1370,7 +1375,8 @@
         "buy_qty": 10,
         "notes": "",
         "search_term": "1N5817",
-        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=1N5817"
+        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=1N5817",
+        "tayda": null
       },
       {
         "origin": "Circuit Board",
@@ -1383,7 +1389,8 @@
         "buy_qty": 10,
         "notes": "",
         "search_term": "3mm Red LED",
-        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=3mm+Red+LED"
+        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=3mm+Red+LED",
+        "tayda": null
       },
       {
         "origin": "Hardware Kit",
@@ -1396,7 +1403,8 @@
         "buy_qty": 10,
         "notes": "",
         "search_term": "LED 3mm",
-        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=LED+3mm"
+        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=LED+3mm",
+        "tayda": null
       },
       {
         "origin": "Circuit Board",
@@ -1409,7 +1417,8 @@
         "buy_qty": 1,
         "notes": "",
         "search_term": "10k ohm Linear potentiometer",
-        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=10k+ohm+Linear+potentiometer"
+        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=10k+ohm+Linear+potentiometer",
+        "tayda": null
       },
       {
         "origin": "Circuit Board",
@@ -1422,7 +1431,8 @@
         "buy_qty": 1,
         "notes": "",
         "search_term": "10k ohm Logarithmic potentiometer",
-        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=10k+ohm+Logarithmic+potentiometer"
+        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=10k+ohm+Logarithmic+potentiometer",
+        "tayda": null
       },
       {
         "origin": "Circuit Board",
@@ -1435,7 +1445,8 @@
         "buy_qty": 2,
         "notes": "",
         "search_term": "25k ohm Linear potentiometer",
-        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=25k+ohm+Linear+potentiometer"
+        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=25k+ohm+Linear+potentiometer",
+        "tayda": null
       },
       {
         "origin": "Circuit Board",
@@ -1448,7 +1459,8 @@
         "buy_qty": 1,
         "notes": "",
         "search_term": "100k ohm Logarithmic potentiometer",
-        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=100k+ohm+Logarithmic+potentiometer"
+        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=100k+ohm+Logarithmic+potentiometer",
+        "tayda": null
       },
       {
         "origin": "Circuit Board",
@@ -1461,7 +1473,8 @@
         "buy_qty": 2,
         "notes": "",
         "search_term": "100k ohm Linear potentiometer",
-        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=100k+ohm+Linear+potentiometer"
+        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=100k+ohm+Linear+potentiometer",
+        "tayda": null
       },
       {
         "origin": "Circuit Board",
@@ -1474,7 +1487,8 @@
         "buy_qty": 1,
         "notes": "",
         "search_term": "100k ohm Reverse Log potentiometer",
-        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=100k+ohm+Reverse+Log+potentiometer"
+        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=100k+ohm+Reverse+Log+potentiometer",
+        "tayda": null
       },
       {
         "origin": "Circuit Board",
@@ -1487,7 +1501,8 @@
         "buy_qty": 1,
         "notes": "",
         "search_term": "500k ohm Reverse Log potentiometer",
-        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=500k+ohm+Reverse+Log+potentiometer"
+        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=500k+ohm+Reverse+Log+potentiometer",
+        "tayda": null
       },
       {
         "origin": "Circuit Board",
@@ -1500,7 +1515,8 @@
         "buy_qty": 6,
         "notes": "Class 1 ceramic (C0G/NP0).",
         "search_term": "10pF multilayer",
-        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=10pF+multilayer"
+        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=10pF+multilayer",
+        "tayda": null
       },
       {
         "origin": "Circuit Board",
@@ -1513,7 +1529,8 @@
         "buy_qty": 7,
         "notes": "Class 1 ceramic (C0G/NP0).",
         "search_term": "100pF multilayer",
-        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=100pF+multilayer"
+        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=100pF+multilayer",
+        "tayda": null
       },
       {
         "origin": "Circuit Board",
@@ -1526,7 +1543,8 @@
         "buy_qty": 7,
         "notes": "Class 1 ceramic (C0G/NP0).",
         "search_term": "150pF multilayer",
-        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=150pF+multilayer"
+        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=150pF+multilayer",
+        "tayda": null
       },
       {
         "origin": "Circuit Board",
@@ -1539,7 +1557,8 @@
         "buy_qty": 6,
         "notes": "Class 1 ceramic (C0G/NP0).",
         "search_term": "220pF multilayer",
-        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=220pF+multilayer"
+        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=220pF+multilayer",
+        "tayda": null
       },
       {
         "origin": "Circuit Board",
@@ -1552,7 +1571,8 @@
         "buy_qty": 6,
         "notes": "Box Film.",
         "search_term": "1nF Box Film",
-        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=1nF+Box+Film"
+        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=1nF+Box+Film",
+        "tayda": null
       },
       {
         "origin": "Circuit Board",
@@ -1565,7 +1585,8 @@
         "buy_qty": 6,
         "notes": "Box Film.",
         "search_term": "2.2nF Box Film",
-        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=2.2nF+Box+Film"
+        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=2.2nF+Box+Film",
+        "tayda": null
       },
       {
         "origin": "Circuit Board",
@@ -1578,7 +1599,8 @@
         "buy_qty": 7,
         "notes": "Box Film.",
         "search_term": "10nF Box Film",
-        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=10nF+Box+Film"
+        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=10nF+Box+Film",
+        "tayda": null
       },
       {
         "origin": "Circuit Board",
@@ -1591,7 +1613,8 @@
         "buy_qty": 6,
         "notes": "Box Film.",
         "search_term": "15nF Box Film",
-        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=15nF+Box+Film"
+        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=15nF+Box+Film",
+        "tayda": null
       },
       {
         "origin": "Circuit Board",
@@ -1604,7 +1627,8 @@
         "buy_qty": 8,
         "notes": "Box Film.",
         "search_term": "22nF Box Film",
-        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=22nF+Box+Film"
+        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=22nF+Box+Film",
+        "tayda": null
       },
       {
         "origin": "Circuit Board",
@@ -1617,7 +1641,8 @@
         "buy_qty": 6,
         "notes": "Box Film.",
         "search_term": "47nF Box Film",
-        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=47nF+Box+Film"
+        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=47nF+Box+Film",
+        "tayda": null
       },
       {
         "origin": "Circuit Board",
@@ -1630,7 +1655,8 @@
         "buy_qty": 14,
         "notes": "A common bypass value: worth buying in bulk. Box Film.",
         "search_term": "100nF Box Film",
-        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=100nF+Box+Film"
+        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=100nF+Box+Film",
+        "tayda": null
       },
       {
         "origin": "Circuit Board",
@@ -1643,7 +1669,8 @@
         "buy_qty": 6,
         "notes": "Box Film.",
         "search_term": "220nF Box Film",
-        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=220nF+Box+Film"
+        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=220nF+Box+Film",
+        "tayda": null
       },
       {
         "origin": "Circuit Board",
@@ -1656,7 +1683,8 @@
         "buy_qty": 3,
         "notes": "Box Film. The document may mean an electrolytic: check it.",
         "search_term": "1uF Box Film",
-        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=1uF+Box+Film"
+        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=1uF+Box+Film",
+        "tayda": null
       },
       {
         "origin": "Circuit Board",
@@ -1667,9 +1695,10 @@
         "in_stock": 0,
         "net_need": 3,
         "buy_qty": 4,
-        "notes": "Electrolytic.",
-        "search_term": "2.2uF Electrolytic",
-        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=2.2uF+Electrolytic"
+        "notes": "Electrolytic, 25 V.",
+        "search_term": "2.2uF 25V Electrolytic",
+        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=2.2uF+25V+Electrolytic",
+        "tayda": null
       },
       {
         "origin": "Circuit Board",
@@ -1680,9 +1709,10 @@
         "in_stock": 0,
         "net_need": 2,
         "buy_qty": 3,
-        "notes": "Electrolytic.",
-        "search_term": "22uF Electrolytic",
-        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=22uF+Electrolytic"
+        "notes": "Electrolytic, 25 V.",
+        "search_term": "22uF 25V Electrolytic",
+        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=22uF+25V+Electrolytic",
+        "tayda": null
       },
       {
         "origin": "Circuit Board",
@@ -1693,9 +1723,10 @@
         "in_stock": 0,
         "net_need": 3,
         "buy_qty": 4,
-        "notes": "Electrolytic.",
-        "search_term": "100uF Electrolytic",
-        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=100uF+Electrolytic"
+        "notes": "Electrolytic, 25 V.",
+        "search_term": "100uF 25V Electrolytic",
+        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=100uF+25V+Electrolytic",
+        "tayda": null
       },
       {
         "origin": "Circuit Board",
@@ -1708,7 +1739,8 @@
         "buy_qty": 10,
         "notes": "1/4 W metal film, 1%.",
         "search_term": "100 ohm 1/4w metal film",
-        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=100+ohm+1%2F4w+metal+film"
+        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=100+ohm+1%2F4w+metal+film",
+        "tayda": null
       },
       {
         "origin": "Circuit Board",
@@ -1721,7 +1753,8 @@
         "buy_qty": 10,
         "notes": "1/4 W metal film, 1%.",
         "search_term": "470 ohm 1/4w metal film",
-        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=470+ohm+1%2F4w+metal+film"
+        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=470+ohm+1%2F4w+metal+film",
+        "tayda": null
       },
       {
         "origin": "Circuit Board",
@@ -1734,7 +1767,8 @@
         "buy_qty": 10,
         "notes": "1/4 W metal film, 1%.",
         "search_term": "680 ohm 1/4w metal film",
-        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=680+ohm+1%2F4w+metal+film"
+        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=680+ohm+1%2F4w+metal+film",
+        "tayda": null
       },
       {
         "origin": "Circuit Board",
@@ -1747,7 +1781,8 @@
         "buy_qty": 10,
         "notes": "1/4 W metal film, 1%.",
         "search_term": "1k ohm 1/4w metal film",
-        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=1k+ohm+1%2F4w+metal+film"
+        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=1k+ohm+1%2F4w+metal+film",
+        "tayda": null
       },
       {
         "origin": "Circuit Board",
@@ -1760,7 +1795,8 @@
         "buy_qty": 10,
         "notes": "1/4 W metal film, 1%.",
         "search_term": "1.5k ohm 1/4w metal film",
-        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=1.5k+ohm+1%2F4w+metal+film"
+        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=1.5k+ohm+1%2F4w+metal+film",
+        "tayda": null
       },
       {
         "origin": "Circuit Board",
@@ -1773,7 +1809,8 @@
         "buy_qty": 10,
         "notes": "1/4 W metal film, 1%.",
         "search_term": "2.2k ohm 1/4w metal film",
-        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=2.2k+ohm+1%2F4w+metal+film"
+        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=2.2k+ohm+1%2F4w+metal+film",
+        "tayda": null
       },
       {
         "origin": "Hardware Kit",
@@ -1786,7 +1823,8 @@
         "buy_qty": 10,
         "notes": "1/4 W metal film, 1%.",
         "search_term": "3.3k ohm 1/4w metal film",
-        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=3.3k+ohm+1%2F4w+metal+film"
+        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=3.3k+ohm+1%2F4w+metal+film",
+        "tayda": null
       },
       {
         "origin": "Circuit Board",
@@ -1799,7 +1837,8 @@
         "buy_qty": 10,
         "notes": "1/4 W metal film, 1%.",
         "search_term": "4.7k ohm 1/4w metal film",
-        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=4.7k+ohm+1%2F4w+metal+film"
+        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=4.7k+ohm+1%2F4w+metal+film",
+        "tayda": null
       },
       {
         "origin": "Circuit Board",
@@ -1812,7 +1851,8 @@
         "buy_qty": 10,
         "notes": "1/4 W metal film, 1%.",
         "search_term": "6.8k ohm 1/4w metal film",
-        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=6.8k+ohm+1%2F4w+metal+film"
+        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=6.8k+ohm+1%2F4w+metal+film",
+        "tayda": null
       },
       {
         "origin": "Circuit Board",
@@ -1825,7 +1865,11 @@
         "buy_qty": 10,
         "notes": "1/4 W metal film, 1%.",
         "search_term": "10k ohm 1/4w metal film",
-        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=10k+ohm+1%2F4w+metal+film"
+        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=10k+ohm+1%2F4w+metal+film",
+        "tayda": {
+          "sku": "A-2203",
+          "qty": 10
+        }
       },
       {
         "origin": "Circuit Board",
@@ -1838,7 +1882,8 @@
         "buy_qty": 10,
         "notes": "1/4 W metal film, 1%.",
         "search_term": "15k ohm 1/4w metal film",
-        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=15k+ohm+1%2F4w+metal+film"
+        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=15k+ohm+1%2F4w+metal+film",
+        "tayda": null
       },
       {
         "origin": "Circuit Board",
@@ -1851,7 +1896,8 @@
         "buy_qty": 10,
         "notes": "1/4 W metal film, 1%.",
         "search_term": "22k ohm 1/4w metal film",
-        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=22k+ohm+1%2F4w+metal+film"
+        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=22k+ohm+1%2F4w+metal+film",
+        "tayda": null
       },
       {
         "origin": "Circuit Board",
@@ -1864,7 +1910,8 @@
         "buy_qty": 10,
         "notes": "1/4 W metal film, 1%.",
         "search_term": "68k ohm 1/4w metal film",
-        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=68k+ohm+1%2F4w+metal+film"
+        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=68k+ohm+1%2F4w+metal+film",
+        "tayda": null
       },
       {
         "origin": "Circuit Board",
@@ -1877,7 +1924,8 @@
         "buy_qty": 10,
         "notes": "1/4 W metal film, 1%.",
         "search_term": "220k ohm 1/4w metal film",
-        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=220k+ohm+1%2F4w+metal+film"
+        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=220k+ohm+1%2F4w+metal+film",
+        "tayda": null
       },
       {
         "origin": "Circuit Board",
@@ -1890,7 +1938,8 @@
         "buy_qty": 10,
         "notes": "1/4 W metal film, 1%.",
         "search_term": "470k ohm 1/4w metal film",
-        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=470k+ohm+1%2F4w+metal+film"
+        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=470k+ohm+1%2F4w+metal+film",
+        "tayda": null
       },
       {
         "origin": "Circuit Board",
@@ -1903,7 +1952,8 @@
         "buy_qty": 10,
         "notes": "1/4 W metal film, 1%.",
         "search_term": "1M ohm 1/4w metal film",
-        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=1M+ohm+1%2F4w+metal+film"
+        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=1M+ohm+1%2F4w+metal+film",
+        "tayda": null
       },
       {
         "origin": "Circuit Board",
@@ -1916,7 +1966,8 @@
         "buy_qty": 10,
         "notes": "1/4 W metal film, 1%.",
         "search_term": "2.2M ohm 1/4w metal film",
-        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=2.2M+ohm+1%2F4w+metal+film"
+        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=2.2M+ohm+1%2F4w+metal+film",
+        "tayda": null
       },
       {
         "origin": "Hardware Kit",
@@ -1929,7 +1980,8 @@
         "buy_qty": 2,
         "notes": "",
         "search_term": "1590B Enclosure",
-        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=1590B+Enclosure"
+        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=1590B+Enclosure",
+        "tayda": null
       },
       {
         "origin": "Hardware Kit",
@@ -1942,7 +1994,8 @@
         "buy_qty": 2,
         "notes": "",
         "search_term": "3PDT FOOTSWITCH PCB",
-        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=3PDT+FOOTSWITCH+PCB"
+        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=3PDT+FOOTSWITCH+PCB",
+        "tayda": null
       },
       {
         "origin": "Hardware Kit",
@@ -1955,7 +2008,8 @@
         "buy_qty": 2,
         "notes": "",
         "search_term": "3PDT STOMP SWITCH",
-        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=3PDT+STOMP+SWITCH"
+        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=3PDT+STOMP+SWITCH",
+        "tayda": null
       },
       {
         "origin": "Hardware Kit",
@@ -1968,7 +2022,8 @@
         "buy_qty": 2,
         "notes": "",
         "search_term": "6.35MM JACK (MONO)",
-        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=6.35MM+JACK+%28MONO%29"
+        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=6.35MM+JACK+%28MONO%29",
+        "tayda": null
       },
       {
         "origin": "Hardware Kit",
@@ -1981,7 +2036,8 @@
         "buy_qty": 2,
         "notes": "",
         "search_term": "6.35MM JACK (STEREO)",
-        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=6.35MM+JACK+%28STEREO%29"
+        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=6.35MM+JACK+%28STEREO%29",
+        "tayda": null
       },
       {
         "origin": "Hardware Kit",
@@ -1994,7 +2050,8 @@
         "buy_qty": 6,
         "notes": "",
         "search_term": "AWG 24 Hook-Up Wire",
-        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=AWG+24+Hook-Up+Wire"
+        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=AWG+24+Hook-Up+Wire",
+        "tayda": null
       },
       {
         "origin": "Hardware Kit",
@@ -2007,7 +2064,8 @@
         "buy_qty": 2,
         "notes": "",
         "search_term": "Bezel LED Holder",
-        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=Bezel+LED+Holder"
+        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=Bezel+LED+Holder",
+        "tayda": null
       },
       {
         "origin": "Hardware Kit",
@@ -2020,20 +2078,22 @@
         "buy_qty": 2,
         "notes": "",
         "search_term": "DC POWER JACK 2.1MM",
-        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=DC+POWER+JACK+2.1MM"
+        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=DC+POWER+JACK+2.1MM",
+        "tayda": null
       },
       {
         "origin": "Extras",
         "category": "Hardware/Misc",
-        "part": "DIP SOCKET (Check Size)",
+        "part": "DIP SOCKET (8 Pins)",
         "bom_qty": 2,
         "included": 0,
         "in_stock": 0,
         "net_need": 2,
         "buy_qty": 3,
         "notes": "Added by Star Ground: keeps soldering heat off the chip.",
-        "search_term": "DIP IC Socket Adaptor Solder Type",
-        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=DIP+IC+Socket+Adaptor+Solder+Type"
+        "search_term": "8 Pin DIP IC Socket Adaptor Solder Type",
+        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=8+Pin+DIP+IC+Socket+Adaptor+Solder+Type",
+        "tayda": null
       },
       {
         "origin": "Hardware Kit",
@@ -2046,7 +2106,8 @@
         "buy_qty": 9,
         "notes": "",
         "search_term": "Dust Seal Cover",
-        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=Dust+Seal+Cover"
+        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=Dust+Seal+Cover",
+        "tayda": null
       },
       {
         "origin": "Hardware Kit",
@@ -2059,7 +2120,8 @@
         "buy_qty": 2,
         "notes": "",
         "search_term": "Heat Shrink Tubing",
-        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=Heat+Shrink+Tubing"
+        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=Heat+Shrink+Tubing",
+        "tayda": null
       },
       {
         "origin": "Hardware Kit",
@@ -2072,7 +2134,8 @@
         "buy_qty": 9,
         "notes": "",
         "search_term": "Knob",
-        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=Knob"
+        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=Knob",
+        "tayda": null
       },
       {
         "origin": "Hardware Kit",
@@ -2085,7 +2148,8 @@
         "buy_qty": 8,
         "notes": "",
         "search_term": "Rubber Feet (Black)",
-        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=Rubber+Feet+%28Black%29"
+        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=Rubber+Feet+%28Black%29",
+        "tayda": null
       },
       {
         "origin": "Hardware Kit",
@@ -2098,7 +2162,8 @@
         "buy_qty": 2,
         "notes": "",
         "search_term": "9V BATTERY CLIP",
-        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=9V+BATTERY+CLIP"
+        "supplier_url": "https://www.taydaelectronics.com/catalogsearch/result/?q=9V+BATTERY+CLIP",
+        "tayda": null
       }
     ],
     "stats": {

@@ -3,7 +3,7 @@
 import pytest
 
 from star_ground.api import MasterList, Project, generate_master_list
-from star_ground.bom_lib.constants import IC_SOCKET
+from star_ground.bom_lib.constants import IC_SOCKET, SIZED_SOCKETS
 from star_ground.bom_lib.enums import ComponentCategory, ComponentOrigin
 from star_ground.bom_lib.manager import sort_inventory
 from star_ground.bom_lib.sourcing import (
@@ -54,6 +54,7 @@ def test_is_pure_hardware() -> None:
 def test_is_extra_part() -> None:
     """Only the socket Star Ground injects is an extra."""
     assert is_extra_part(IC_SOCKET) is True
+    assert is_extra_part(SIZED_SOCKETS[8]) is True
     assert is_extra_part(ComponentKey(ComponentCategory.RESISTORS, "10k")) is False
     assert is_extra_part(ComponentKey(HARDWARE, "1590B Enclosure")) is False
 
@@ -234,13 +235,13 @@ def test_a_documents_own_socket_is_no_extra(line: str, part: str) -> None:
     assert row.notes == ""
     assert build_stage(row.category, row.part) == BuildStage.HARDWARE
 
-    socket = _row(master, IC_SOCKET.value)
+    socket = _row(master, SIZED_SOCKETS[8].value)
     assert socket is not None
     assert socket.origin == ComponentOrigin.EXTRAS
     assert socket.buy_qty == 2
     assert socket.notes == "Added by Star Ground: keeps soldering heat off the chip."
-    assert socket.search_term == "DIP IC Socket Adaptor Solder Type"
-    assert _row(master, IC_SOCKET.value, show_extras=False) is None
+    assert socket.search_term == "8 Pin DIP IC Socket Adaptor Solder Type"
+    assert _row(master, SIZED_SOCKETS[8].value, show_extras=False) is None
 
 
 def test_chip_sockets_are_soldered_in_the_socket_stage() -> None:
@@ -360,3 +361,56 @@ def test_hardware_kit_is_noted_by_purpose() -> None:
     assert enclosure.hardware == ["Verify PCB fit"]
     assert not enclosure.sources
     assert not enclosure.refs
+
+
+def test_sockets_are_sized_by_their_chips_pins() -> None:
+    master = _master("IC1 TL072\nIC2 TL074\nIC3 PT2399\nIC4 TL072")
+    sizes = {r.part: r.bom_qty for r in master.shopping_list() if "SOCKET" in r.part}
+    assert sizes == {
+        "DIP SOCKET (8 Pins)": 2,
+        "DIP SOCKET (14 Pins)": 1,
+        "DIP SOCKET (16 Pins)": 1,
+    }
+
+
+def test_a_chip_of_unknown_size_keeps_a_socket_to_size_by_hand() -> None:
+    master = _master("IC1 TL072\nIC2 XYZ9000")
+    eight = _row(master, SIZED_SOCKETS[8].value)
+    assert eight is not None
+    assert eight.bom_qty == 1
+    unsized = _row(master, IC_SOCKET.value)
+    assert unsized is not None
+    assert unsized.bom_qty == 1
+    assert unsized.search_term == "DIP IC Socket Adaptor Solder Type"
+    assert unsized.notes.endswith("Match each to its chip's pin count: XYZ9000.")
+
+
+def test_electrolytics_are_rated_for_a_charge_pump() -> None:
+    master = generate_master_list(
+        [
+            Project(name="Plain", data="C1 100uF\nC2 10uF"),
+            Project(name="Pumped", data="C1 100uF\nIC1 TC1044SCPA"),
+        ]
+    )
+    pumped = _row(master, "100u")
+    plain = _row(master, "10u")
+    assert pumped is not None
+    assert plain is not None
+    assert pumped.search_term == "100uF 35V Electrolytic"
+    assert "35 V: a project's charge pump" in pumped.notes
+    assert plain.search_term == "10uF 25V Electrolytic"
+    assert "Electrolytic, 25 V." in plain.notes
+
+
+def test_a_part_with_a_tayda_sku_goes_in_the_cart_in_tayda_multiples() -> None:
+    master = _master("R1 10k\nR2 22k")
+    ten = _row(master, "10k")
+    assert ten is not None
+    assert ten.tayda is not None
+    assert ten.tayda.sku == "A-2203"
+    assert ten.tayda.qty % 10 == 0
+    assert ten.tayda.qty >= ten.buy_qty
+    other = _row(master, "22k")
+    assert other is not None
+    assert other.tayda is None
+    assert "catalogsearch" in other.supplier_url

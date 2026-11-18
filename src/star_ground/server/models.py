@@ -287,6 +287,16 @@ class ProjectResult(_Model):
     )
 
 
+class TaydaItem(_Model):
+    """A part's place in a Tayda cart."""
+
+    sku: str = Field(description="Tayda's SKU, as its Quick Order page takes it.")
+    qty: int = Field(
+        description="How many to add: the buy quantity, rounded up to the "
+        "multiple Tayda sells the part in."
+    )
+
+
 class ShoppingRow(_Model):
     """One part to buy."""
 
@@ -300,7 +310,13 @@ class ShoppingRow(_Model):
     buy_qty: int
     notes: str
     search_term: str
-    supplier_url: str
+    supplier_url: str = Field(
+        description="Tayda's product page for the part, or a search for it."
+    )
+    tayda: TaydaItem | None = Field(
+        description="Its Tayda SKU and cart quantity; none when Star Ground "
+        "doesn't know the SKU yet."
+    )
 
 
 class Stats(_Model):

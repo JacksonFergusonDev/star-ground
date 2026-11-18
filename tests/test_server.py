@@ -365,6 +365,7 @@ def test_invalid_requests_are_refused(client: TestClient, request_body: str) -> 
     [
         ("shopping-list", "text/csv", "shopping-list.csv"),
         ("supplier-cart", "text/csv", "supplier-cart.csv"),
+        ("tayda-cart", "text/csv", "tayda-cart.csv"),
         ("stock-update", "text/csv", "stock-after-these-builds.csv"),
         ("build-book", "application/pdf", "build-book.pdf"),
         ("labels", "application/pdf", "labels-avery-5160.pdf"),
