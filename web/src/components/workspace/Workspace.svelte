@@ -266,7 +266,7 @@
 {:else if view === 'tools'}
   <PageHead
     title="Before your first build"
-    lede="The tools a first pedal needs, what makes building easier, and the supplies every build uses."
+    lede="The tools I'd recommend for a first pedal, from my own bench, with what I paid for each."
   />
   <Tools />
 {:else if view === 'troubleshoot'}
