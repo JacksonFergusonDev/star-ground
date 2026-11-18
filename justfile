@@ -153,5 +153,5 @@ release_script := 'https://raw.githubusercontent.com/JacksonFergusonDev/ci-cd-re
 
 # Offer to wait for CI and verify local state before bumping
 bump part:
-    uv run python -m scripts.prepare_release {{ quote(part) }}
-    uv run --refresh {{ release_script }} {{ quote(part) }}
+    uv run python -m scripts.prepare_release {{ quote(part) }} --release-script {{ quote(release_script) }}
+    uv run {{ release_script }} {{ quote(part) }}

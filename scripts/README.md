@@ -10,8 +10,9 @@
 
 1. Validates the bump argument before checking the checkout or CI. Pass a version component, such as `just bump major` to go from 2.7.0 to 3.0.0; explicit versions are not accepted.
 1. Verifies the checkout is on a clean `main` branch synced with `origin/main`.
+1. Checks `uv lock --check` and runs the pinned shared release script with `--dry-run`. Download or dependency failures, an invalid project version, and existing release tags stop the command before it waits for CI.
 1. Requires a passing `deploy.yml` run on `HEAD`, offering to watch an in-progress run to completion. Pushes to `main` run CI through this workflow; its call to `ci.yml` has no separate workflow run.
-1. Checks `uv lock --check` before handing off to the version bump.
+1. Checks the checkout and lockfile again before handing off to the version bump. The shared release script repeats its version, tag and checkout checks before creating the release.
 
 ## Container Release Gate
 

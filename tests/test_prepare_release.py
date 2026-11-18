@@ -10,7 +10,9 @@ import pytest
 from pytest_mock import MockerFixture
 
 from scripts import prepare_release
-from scripts.prepare_release import CheckoutState
+from scripts.prepare_release import CheckoutState, ReleasePart
+
+RELEASE_SCRIPT = "https://example.com/pinned/release.py"
 
 
 def _completed(
@@ -48,7 +50,7 @@ def test_main_rejects_invalid_arguments_before_preflight(
     confirm = mocker.patch.object(prepare_release, "confirm")
 
     with pytest.raises(SystemExit) as error:
-        prepare_release.main(argv)
+        prepare_release.main([*argv, "--release-script", RELEASE_SCRIPT])
 
     assert error.value.code == 2
     assert "usage:" in capsys.readouterr().err
@@ -61,13 +63,78 @@ def test_main_accepts_supported_bumps(part: str, mocker: MockerFixture) -> None:
     checkout = CheckoutState(repo="example/star-ground", sha="abc123456789")
     mocker.patch.object(prepare_release, "check_checkout", return_value=checkout)
     check_ci = mocker.patch.object(prepare_release, "check_ci")
-    mocker.patch.object(prepare_release, "require_source")
+    require_source = mocker.patch.object(prepare_release, "require_source")
     check_local = mocker.patch.object(prepare_release, "check_local_state")
+    check_release = mocker.patch.object(prepare_release, "check_release")
+    checks = mocker.Mock()
+    checks.attach_mock(check_local, "local")
+    checks.attach_mock(check_release, "release")
+    checks.attach_mock(require_source, "source")
+    checks.attach_mock(check_ci, "ci")
 
-    prepare_release.main([part])
+    prepare_release.main([part, "--release-script", RELEASE_SCRIPT])
 
-    check_ci.assert_called_once_with(checkout)
-    check_local.assert_called_once_with()
+    assert checks.mock_calls == [
+        mocker.call.local(),
+        mocker.call.release(ReleasePart(part), RELEASE_SCRIPT),
+        mocker.call.source(checkout),
+        mocker.call.ci(checkout),
+        mocker.call.source(checkout),
+        mocker.call.local(),
+        mocker.call.source(checkout),
+    ]
+
+
+@pytest.mark.parametrize("failure", ["check_local_state", "check_release"])
+def test_main_stops_before_ci_when_early_checks_fail(
+    failure: str, mocker: MockerFixture
+) -> None:
+    mocker.patch.object(prepare_release, "check_checkout")
+    mocker.patch.object(prepare_release, "check_local_state")
+    mocker.patch.object(prepare_release, "check_release")
+    mocker.patch.object(prepare_release, failure, side_effect=SystemExit(1))
+    check_ci = mocker.patch.object(prepare_release, "check_ci")
+    run = mocker.patch("subprocess.run")
+
+    with pytest.raises(SystemExit) as error:
+        prepare_release.main(["major", "--release-script", RELEASE_SCRIPT])
+
+    assert error.value.code == 1
+    check_ci.assert_not_called()
+    run.assert_not_called()
+
+
+def test_check_release_runs_only_a_dry_run(mocker: MockerFixture) -> None:
+    run = mocker.patch("subprocess.run", return_value=_completed())
+
+    prepare_release.check_release(ReleasePart.MAJOR, RELEASE_SCRIPT)
+
+    run.assert_called_once()
+    assert run.call_args.args[0] == [
+        "uv",
+        "run",
+        "--refresh",
+        RELEASE_SCRIPT,
+        "major",
+        "--dry-run",
+    ]
+    assert run.call_args.kwargs["cwd"] == prepare_release.REPO_ROOT
+
+
+@pytest.mark.parametrize("unavailable", [False, True])
+def test_check_release_stops_on_failure(
+    unavailable: bool, mocker: MockerFixture
+) -> None:
+    mocker.patch(
+        "subprocess.run",
+        return_value=_completed(returncode=1),
+        side_effect=OSError("unavailable") if unavailable else None,
+    )
+
+    with pytest.raises(SystemExit) as error:
+        prepare_release.check_release(ReleasePart.MAJOR, RELEASE_SCRIPT)
+
+    assert error.value.code == 1
 
 
 def test_check_checkout_succeeds_on_clean_synced_main(

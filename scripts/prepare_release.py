@@ -374,6 +374,22 @@ def check_local_state() -> None:
         stop(f"{' '.join(command)} failed.")
 
 
+def check_release(part: ReleasePart, script: str) -> None:
+    """Run the pinned release script's checks without creating a release.
+
+    Args:
+        part: Version component to bump.
+        script: Shared release script URL pinned by the justfile.
+    """
+    command = ["uv", "run", "--refresh", script, part, "--dry-run"]
+    try:
+        result = run_repo_cmd(command)
+    except OSError as error:
+        stop(f"could not preview the release: {error}")
+    if result.returncode:
+        stop("release preview failed. Fix the reported problem before retrying.")
+
+
 def main(argv: Sequence[str] | None = None) -> None:
     """Validate the bump argument before checking release readiness.
 
@@ -386,9 +402,15 @@ def main(argv: Sequence[str] | None = None) -> None:
         choices=list(ReleasePart),
         help="version component to bump (for example, major for 2.7.0 to 3.0.0)",
     )
-    parser.parse_args(argv)
+    parser.add_argument(
+        "--release-script", required=True, help="pinned shared release script URL"
+    )
+    args = parser.parse_args(argv)
     try:
         checkout = check_checkout()
+        check_local_state()
+        check_release(ReleasePart(args.part), args.release_script)
+        require_source(checkout)
         check_ci(checkout)
         require_source(checkout)
         check_local_state()
