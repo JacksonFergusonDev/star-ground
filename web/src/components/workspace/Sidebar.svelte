@@ -205,6 +205,15 @@
         <li>
           <a
             class="item"
+            href={views.tools.path}
+            aria-current={path === views.tools.path ? 'page' : undefined}
+          >
+            <span class="label">Before your first build</span>
+          </a>
+        </li>
+        <li>
+          <a
+            class="item"
             href={views.troubleshoot.path}
             aria-current={path === views.troubleshoot.path ? 'page' : undefined}
           >

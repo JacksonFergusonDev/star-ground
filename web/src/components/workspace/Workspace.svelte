@@ -45,6 +45,7 @@
   import StockCount from './StockCount.svelte';
   import StockDrawers from './StockDrawers.svelte';
   import StockPanel from './StockPanel.svelte';
+  import Tools from './Tools.svelte';
   import Troubleshoot from './Troubleshoot.svelte';
 
   const workspace = pageWorkspace();
@@ -262,6 +263,12 @@
     {/snippet}
   </PageHead>
   <Identify bind:bands={workspace.display.bands} onAdd={addToStock} />
+{:else if view === 'tools'}
+  <PageHead
+    title="Before your first build"
+    lede="The tools I'd recommend for a first pedal, from my own bench, with what I paid for each."
+  />
+  <Tools />
 {:else if view === 'troubleshoot'}
   <PageHead
     title="It doesn't work"
