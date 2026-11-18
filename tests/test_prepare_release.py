@@ -38,6 +38,38 @@ def _run_payload(**overrides: object) -> dict[str, object]:
     return payload
 
 
+@pytest.mark.parametrize("argv", [[], ["3.0.0"], ["minor", "extra"]])
+def test_main_rejects_invalid_arguments_before_preflight(
+    argv: list[str],
+    mocker: MockerFixture,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    run = mocker.patch("subprocess.run")
+    confirm = mocker.patch.object(prepare_release, "confirm")
+
+    with pytest.raises(SystemExit) as error:
+        prepare_release.main(argv)
+
+    assert error.value.code == 2
+    assert "usage:" in capsys.readouterr().err
+    run.assert_not_called()
+    confirm.assert_not_called()
+
+
+@pytest.mark.parametrize("part", ["major", "minor", "patch"])
+def test_main_accepts_supported_bumps(part: str, mocker: MockerFixture) -> None:
+    checkout = CheckoutState(repo="example/star-ground", sha="abc123456789")
+    mocker.patch.object(prepare_release, "check_checkout", return_value=checkout)
+    check_ci = mocker.patch.object(prepare_release, "check_ci")
+    mocker.patch.object(prepare_release, "require_source")
+    check_local = mocker.patch.object(prepare_release, "check_local_state")
+
+    prepare_release.main([part])
+
+    check_ci.assert_called_once_with(checkout)
+    check_local.assert_called_once_with()
+
+
 def test_check_checkout_succeeds_on_clean_synced_main(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

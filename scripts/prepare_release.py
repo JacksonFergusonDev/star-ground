@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import argparse
 import json
 import os
 import subprocess
@@ -9,6 +10,7 @@ import sys
 import time
 from collections.abc import Sequence
 from dataclasses import dataclass
+from enum import StrEnum
 from pathlib import Path
 from typing import NoReturn
 
@@ -22,6 +24,14 @@ VENV_BIN: Path = REPO_ROOT / ".venv" / ("Scripts" if sys.platform == "win32" els
 CI_WORKFLOW = "deploy.yml"
 RUN_DISCOVERY_ATTEMPTS = 24
 RUN_DISCOVERY_INTERVAL = 5
+
+
+class ReleasePart(StrEnum):
+    """Version components accepted by the shared release script."""
+
+    MAJOR = "major"
+    MINOR = "minor"
+    PATCH = "patch"
 
 
 @dataclass(frozen=True)
@@ -364,8 +374,19 @@ def check_local_state() -> None:
         stop(f"{' '.join(command)} failed.")
 
 
-def main() -> None:
-    """Gate the version bump on verified source, CI, and lockfile state."""
+def main(argv: Sequence[str] | None = None) -> None:
+    """Validate the bump argument before checking release readiness.
+
+    Args:
+        argv: Command-line arguments, or None to read them from sys.argv.
+    """
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "part",
+        choices=list(ReleasePart),
+        help="version component to bump (for example, major for 2.7.0 to 3.0.0)",
+    )
+    parser.parse_args(argv)
     try:
         checkout = check_checkout()
         check_ci(checkout)
