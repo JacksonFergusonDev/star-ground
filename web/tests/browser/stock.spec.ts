@@ -177,6 +177,15 @@ test('the identifier reads bands and capacitor codes, and adds what it read', as
   await pick('Tolerance: Gold,');
   // The reading is announced as it changes.
   await expect(resistors.locator('[aria-live]')).toHaveText(/4\.7k Ω\s*±5%/);
+  // A billion ohms reads as 1G, not 1000M.
+  await pick('1st digit: Brown,');
+  await pick('2nd digit: Black,');
+  await pick('Multiplier: Grey,');
+  await expect(resistors.locator('[aria-live]')).toHaveText(/^\s*1G Ω/);
+  await pick('1st digit: Yellow,');
+  await pick('2nd digit: Violet,');
+  await pick('Multiplier: Red,');
+  await expect(resistors.locator('[aria-live]')).toHaveText(/4\.7k Ω\s*±5%/);
   await resistors.getByLabel('How many').fill('10');
   await resistors.getByRole('button', { name: 'Add 4.7k to your stock' }).click();
   await expect(page.getByRole('status')).toHaveText('Added 10 × 4.7k to your stock.');
