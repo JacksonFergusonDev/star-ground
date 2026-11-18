@@ -38,7 +38,7 @@ const thousands = new Intl.NumberFormat('en-US');
       <a class="hs-button hs-button--primary" href={links.app}>
         Open the app <Icon name="arrow-right" size={16} />
       </a>
-      <a class="text-link" href={links.github}>
+      <a class="text-link" href={links.github} target="_blank" rel="noopener noreferrer">
         <Icon name="brand-github" size={16} /> View the source
       </a>
     </div>
@@ -159,7 +159,12 @@ const thousands = new Intl.NumberFormat('en-US');
       document itself) to help the parser get it right next time.
     </p>
     <p class="note">
-      <a class="text-link" href={`${links.github}#readme`}>
+      <a
+        class="text-link"
+        href={`${links.github}#readme`}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
         How it's measured <Icon name="arrow-up-right" size={16} />
       </a>
     </p>
@@ -213,7 +218,7 @@ const thousands = new Intl.NumberFormat('en-US');
       <a class="hs-button hs-button--primary" href={links.app}>
         Open the app <Icon name="arrow-right" size={16} />
       </a>
-      <a class="text-link" href={links.exampleBook}>
+      <a class="text-link" href={links.exampleBook} target="_blank" rel="noopener noreferrer">
         See an example build book <Icon name="arrow-up-right" size={16} />
       </a>
     </div>

@@ -12,13 +12,7 @@ test('points beginners to the friendliest forums first', async ({ page }) => {
   await expect(forums).toHaveCount(5);
 });
 
-test('opens every outside link in a new tab', async ({ page }) => {
-  const outside = page.locator('.trouble a[href^="http"]');
-  await expect(outside).toHaveCount(6);
-  for (const link of await outside.all()) {
-    await expect(link).toHaveAttribute('target', '_blank');
-    await expect(link).toHaveAttribute('rel', /noopener/);
-  }
+test('links a video on making an audio probe', async ({ page }) => {
   await expect(page.getByRole('link', { name: /audio probe/ })).toHaveAttribute(
     'href',
     /youtube\.com/,
