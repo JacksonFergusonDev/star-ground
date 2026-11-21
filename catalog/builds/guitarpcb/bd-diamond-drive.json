@@ -7,9 +7,9 @@
  "page": "https://guitarpcb.com/community/topic/direct-build-document-link-list/",
  "file_name": "BD_Diamond-Drive.pdf",
  "sha256": "03ffd9aab413e780a1264c2d2fdde90834c9a896a1c89ad15b15dbd4fffd8215",
- "checked": "2026-10-31T23:55:05+00:00",
+ "checked": "2026-11-19T17:20:05+00:00",
  "read_by_ocr": false,
- "verified": true,
+ "verified": false,
  "builds": [
   {
    "name": null,
@@ -33,6 +33,7 @@
     {"ref": "R19", "count": 1, "category": "Resistors", "value": "10k", "location": {"page": 0, "x0": 183.0, "top": 574.52, "x1": 264.67, "bottom": 586.53}},
     {"ref": "R20", "count": 1, "category": "Resistors", "value": "1.8k", "location": {"page": 0, "x0": 183.0, "top": 602.3, "x1": 264.67, "bottom": 614.31}},
     {"ref": "VOL", "count": 1, "category": "Potentiometers", "value": "A100k", "location": {"page": 0, "x0": 182.25, "top": 713.39, "x1": 271.85, "bottom": 725.4}},
+    {"ref": "DRIVE", "count": 1, "category": "Potentiometers", "value": "A100k", "location": {"page": 0, "x0": 240.64, "top": 22.35, "x1": 300.72, "bottom": 46.37}},
     {"ref": "BASS", "count": 1, "category": "Potentiometers", "value": "B1M", "location": {"page": 0, "x0": 178.5, "top": 768.94, "x1": 267.0, "bottom": 780.95}},
     {"ref": "TREB", "count": 1, "category": "Potentiometers", "value": "B1M", "location": {"page": 0, "x0": 178.5, "top": 685.62, "x1": 267.0, "bottom": 697.63}},
     {"ref": "C1", "count": 1, "category": "Capacitors", "value": "100n", "location": {"page": 0, "x0": 326.37, "top": 435.66, "x1": 409.39, "bottom": 447.67}},
@@ -65,7 +66,6 @@
     {"ref": "C21", "count": 1, "category": "Capacitors", "value": "22u", "location": {"page": 0, "x0": 465.24, "top": 630.07, "x1": 550.41, "bottom": 642.08}},
     {"ref": "TR1", "count": 1, "category": "Potentiometers", "value": "10k", "location": {"page": 0, "x0": 183.0, "top": 630.07, "x1": 264.67, "bottom": 642.08}},
     {"ref": "D1", "count": 1, "category": "Diodes", "value": "C.A.-LED", "location": {"page": 0, "x0": 468.99, "top": 685.62, "x1": 562.5, "bottom": 697.63}},
-    {"ref": "DRIVE", "count": 1, "category": "Potentiometers", "value": "A100K", "location": {"page": 0, "x0": 240.64, "top": 22.35, "x1": 300.72, "bottom": 46.37}},
     {"ref": "C12", "count": 1, "category": "Capacitors", "value": "15n", "location": {"page": 0, "x0": 323.37, "top": 741.16, "x1": 405.71, "bottom": 753.17}}
    ]
   }
