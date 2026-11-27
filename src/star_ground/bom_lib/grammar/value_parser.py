@@ -4,6 +4,7 @@ Converts engineering notation (e.g., '10k', '4.7u', '100n') and BS 1852
 sandwich notation (e.g., '1k5', '4n7', '4K7') into exact `Decimal` base units.
 """
 
+import functools
 import re
 from decimal import Decimal, InvalidOperation
 from typing import Final
@@ -126,6 +127,10 @@ def _farad_tail(m: re.Match[str]) -> str:
     return f"{prefix}{m.group(2)}"
 
 
+# Parsing a value takes about 45 us (pyparsing) and a document repeats a few
+# dozen values across its parts, so a reading's repeats are served from here. The
+# bound keeps builder-typed strings from growing it without limit.
+@functools.lru_cache(maxsize=4096)
 def parse_value_to_decimal(
     val_str: str | None, unit: Unit | None = None
 ) -> Decimal | None:
