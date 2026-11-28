@@ -127,10 +127,6 @@ def _farad_tail(m: re.Match[str]) -> str:
     return f"{prefix}{m.group(2)}"
 
 
-# Parsing a value takes about 45 us (pyparsing) and a document repeats a few
-# dozen values across its parts, so a reading's repeats are served from here. The
-# bound keeps builder-typed strings from growing it without limit.
-@functools.lru_cache(maxsize=4096)
 def parse_value_to_decimal(
     val_str: str | None, unit: Unit | None = None
 ) -> Decimal | None:
@@ -151,7 +147,14 @@ def parse_value_to_decimal(
     """
     if not val_str or not isinstance(val_str, str):
         return None
+    return _parse_value(val_str, unit)
 
+
+# Parsing a value takes about 45 us (pyparsing) and a document repeats a few
+# dozen values across its parts, so a reading's repeats are served from here. The
+# bound keeps builder-typed strings from growing it without limit.
+@functools.lru_cache(maxsize=4096)
+def _parse_value(val_str: str, unit: Unit | None) -> Decimal | None:
     # Fonts set the micro prefix as Greek mu too ('4μ7', Aion FX legacy).
     cleaned_str = val_str.strip().replace("\u03bc", "\u00b5")
     # 'R31  47 ohm' (GuitarPCB Mini-Me): a unit spelled out after a space.

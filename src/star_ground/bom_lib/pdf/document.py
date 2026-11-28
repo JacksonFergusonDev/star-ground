@@ -375,7 +375,8 @@ def _title(pages_data: list[PDFPageExtraction], misread: set[int]) -> str | None
     first = int(len(pages_data) > 1 and bool(_DISCLAIMER.match(pages_data[0].text)))
     if first >= len(pages_data) or first in misread:
         return None
-    # The words the page was read from: overprint, footnote marks and all.
+    # The words `_extract` read, with overprint and footnote marks already
+    # removed, at the layout reader's word gap.
     candidates = [
         w
         for w in pages_data[first].words
@@ -475,7 +476,7 @@ def parse_pdf(filepath: str, source_name: str) -> ParseResult:
         for number, raw_page in enumerate(pages):
             extraction = _extract(raw_page, number, source_name)
             # pdfplumber keeps a page's layout until the document closes,
-            # which is every page's at once; the title page is parsed again.
+            # which is every page's at once.
             raw_page.close()
             if extraction is None:
                 # Read as an image page instead (see `ocr.py`).
