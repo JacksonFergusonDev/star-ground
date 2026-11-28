@@ -74,7 +74,6 @@ class Source:
         product_path: Part of a product page's path ('/product/').
         document_pages: Pages listing documents directly.
         file_index: A project index, for a site without product sitemaps.
-        legacy_hosts: Other hosts the publisher's older documents are on.
         excluded: Link text or file names that mark something other than a
             build document.
         document_path: A pattern every build document's URL path matches,
@@ -99,7 +98,6 @@ class Source:
     product_path: str = "/product/"
     document_pages: tuple[DocumentPage, ...] = ()
     file_index: FileIndex | None = None
-    legacy_hosts: tuple[str, ...] = ()
     excluded: re.Pattern[str] | None = None
     document_path: re.Pattern[str] | None = None
     not_builds: Mapping[str, str] = field(default_factory=dict)
@@ -121,7 +119,7 @@ class Source:
         host = parts.hostname or ""
         domain = (urlsplit(self.site).hostname or "").removeprefix("www.")
         return parts.scheme in {"http", "https"} and (
-            host == domain or host.endswith("." + domain) or host in self.legacy_hosts
+            host == domain or host.endswith("." + domain)
         )
 
 
@@ -162,7 +160,6 @@ SOURCES: dict[Publisher, Source] = {
             ),
             DocumentPage("https://guitarpcb.com/bonus-build-documents/"),
         ),
-        legacy_hosts=("guitarpcb.webs.com", "www.guitarpcb.webs.com"),
         not_builds={
             "https://guitarpcb.com/wp-content/uploads/2023/12/The-Test-Rig.pdf": (
                 "a test jig for checking finished boards, not an effect"
