@@ -15,7 +15,6 @@ from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from pdfplumber.page import Page
-    from pdfplumber.pdf import PDF
 from star_ground.bom_lib.locations import locate
 from star_ground.bom_lib.pdf.guard import list_pages, open_pdf, parse_page
 from star_ground.bom_lib.pdf.page import PDFPageExtraction
@@ -361,14 +360,11 @@ _TITLE_IGNORE = frozenset(
 )
 
 
-def _title(
-    pdf: PDF, pages_data: list[PDFPageExtraction], misread: set[int]
-) -> str | None:
+def _title(pages_data: list[PDFPageExtraction], misread: set[int]) -> str | None:
     """The document's title: the largest words on its title page, if any.
 
     Args:
-        pdf: The open pdfplumber document.
-        pages_data: Each page's extracted text, in order.
+        pages_data: Each page's extraction, in order.
         misread: Pages whose text layer is misread, so it can't be trusted.
 
     Returns:
@@ -376,13 +372,15 @@ def _title(
     """
     # A cover page of warnings comes before the title page (Aion FX
     # legacy Blueshift: 'WARNING / DISCLAIMER').
-    first = int(len(pdf.pages) > 1 and bool(_DISCLAIMER.match(pages_data[0].text)))
-    if first >= len(pdf.pages) or first in misread:
+    first = int(len(pages_data) > 1 and bool(_DISCLAIMER.match(pages_data[0].text)))
+    if first >= len(pages_data) or first in misread:
         return None
-    with closing(_without_overprint(pdf.pages[first])) as page:
-        words = page.extract_words(extra_attrs=["size"])
+    # The words `_extract` read, with overprint and footnote marks already
+    # removed, at the layout reader's word gap.
     candidates = [
-        w for w in words if w["text"].upper() not in _TITLE_IGNORE and w["size"] > 10
+        w
+        for w in pages_data[first].words
+        if w["text"].upper() not in _TITLE_IGNORE and w["size"] > 10
     ]
     while candidates:
         max_size = max(c["size"] for c in candidates)
@@ -478,7 +476,7 @@ def parse_pdf(filepath: str, source_name: str) -> ParseResult:
         for number, raw_page in enumerate(pages):
             extraction = _extract(raw_page, number, source_name)
             # pdfplumber keeps a page's layout until the document closes,
-            # which is every page's at once; the title page is parsed again.
+            # which is every page's at once.
             raw_page.close()
             if extraction is None:
                 # Read as an image page instead (see `ocr.py`).
@@ -487,7 +485,7 @@ def parse_pdf(filepath: str, source_name: str) -> ParseResult:
                 extraction = PDFPageExtraction(tables=[], text="", words=[])
             pages_data.append(extraction)
         # A heuristic: a page with no title-like words leaves it unset.
-        stats.extracted_title = _title(pdf, pages_data, misread)
+        stats.extracted_title = _title(pages_data, misread)
     built = read_pages(pages_data, source_name, stats)
     locations = locate(pages_data, built.inventory)
     variants = tuple(

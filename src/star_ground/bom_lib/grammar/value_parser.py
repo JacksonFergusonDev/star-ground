@@ -4,6 +4,7 @@ Converts engineering notation (e.g., '10k', '4.7u', '100n') and BS 1852
 sandwich notation (e.g., '1k5', '4n7', '4K7') into exact `Decimal` base units.
 """
 
+import functools
 import re
 from decimal import Decimal, InvalidOperation
 from typing import Final
@@ -146,7 +147,14 @@ def parse_value_to_decimal(
     """
     if not val_str or not isinstance(val_str, str):
         return None
+    return _parse_value(val_str, unit)
 
+
+# Parsing a value takes about 45 us (pyparsing) and a document repeats a few
+# dozen values across its parts, so a reading's repeats are served from here. The
+# bound keeps builder-typed strings from growing it without limit.
+@functools.lru_cache(maxsize=4096)
+def _parse_value(val_str: str, unit: Unit | None) -> Decimal | None:
     # Fonts set the micro prefix as Greek mu too ('4μ7', Aion FX legacy).
     cleaned_str = val_str.strip().replace("\u03bc", "\u00b5")
     # 'R31  47 ohm' (GuitarPCB Mini-Me): a unit spelled out after a space.
