@@ -31,6 +31,7 @@ const result: MasterListResult = {
       notes: '',
       search_term: '10k resistor',
       supplier_url: '',
+      tayda: null,
     },
   ],
   stats: { lines_read: 1, parts_found: 1 },

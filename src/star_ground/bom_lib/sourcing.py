@@ -10,17 +10,20 @@ This module contains the "Nerd Economics" logic, which includes:
 import copy
 import math
 import re
+from collections import Counter
 from collections.abc import Sequence
+from dataclasses import replace
 from decimal import Decimal
 from urllib.parse import quote_plus
 
 from star_ground.bom_lib import constants
+from star_ground.bom_lib.chips import chip_pins, is_charge_pump
 from star_ground.bom_lib.classifier import (
     categorize_part,
     key_quantity,
     normalize_value_to_quantity,
 )
-from star_ground.bom_lib.constants import IC_SOCKET, INJECTED_SUFFIX
+from star_ground.bom_lib.constants import IC_SOCKET, INJECTED_SUFFIX, SIZED_SOCKETS
 from star_ground.bom_lib.designators import parse_designator
 from star_ground.bom_lib.enums import (
     ComponentCategory,
@@ -33,9 +36,11 @@ from star_ground.bom_lib.manager import (
     calculate_net_needs,
     sort_inventory,
 )
+from star_ground.bom_lib.tayda import cart_qty, tayda_product
 from star_ground.bom_lib.types import (
     AlternativeSpec,
     BuildHardware,
+    CartItem,
     ComponentKey,
     Inventory,
     PartData,
@@ -150,11 +155,20 @@ _POT_TAPER_WORDS = (
 )
 
 
+# An electrolytic's voltage rating: enough for a 9 V pedal, or for the 18 V
+# and more a charge pump (TC1044, LT1054) makes from it.
+ELECTROLYTIC_VOLTS = 25
+CHARGE_PUMP_VOLTS = 35
+
+_SOCKET_PINS = {key: pins for pins, key in SIZED_SOCKETS.items()}
+
+
 def generate_search_term(
     category: ComponentCategory,
     val: str,
     spec_type: ComponentSpec = ComponentSpec.NONE,
     trimmer: bool = False,
+    charge_pump: bool = False,
 ) -> str:
     """Generates a supplier-optimized search string.
 
@@ -166,6 +180,8 @@ def generate_search_term(
         spec_type: Optional material type (from get_spec_type).
         trimmer: Whether a potentiometer is a board-mounted trimmer (see
             `trimmer_count`), which has no taper or knob.
+        charge_pump: Whether a project using an electrolytic has a charge
+            pump, which needs a higher voltage rating.
 
     Returns:
         A search string (e.g., "100k ohm Linear potentiometer").
@@ -180,6 +196,9 @@ def generate_search_term(
 
         if spec_type == ComponentSpec.MLCC:
             return f"{val} multilayer"
+        if spec_type == ComponentSpec.ELECTROLYTIC:
+            volts = CHARGE_PUMP_VOLTS if charge_pump else ELECTROLYTIC_VOLTS
+            return f"{val} {volts}V {spec_type.value}"
         if spec_type and spec_type != ComponentSpec.NONE:
             return f"{val} {spec_type.value}"
         return val
@@ -210,8 +229,10 @@ def generate_search_term(
     if category == ComponentCategory.INDUCTORS and "INDUCTOR" not in val.upper():
         return f"{val} inductor"
 
-    # Overrides. The socket's size depends on its chip, so the search lists
-    # every size.
+    # Overrides. A sized socket names its pins; one whose chip's size isn't
+    # known lists every size.
+    if (pins := _SOCKET_PINS.get(ComponentKey(category, val))) is not None:
+        return f"{pins} Pin DIP IC Socket Adaptor Solder Type"
     if is_extra_part(ComponentKey(category, val)):
         return "DIP IC Socket Adaptor Solder Type"
     if "JRC4558" in val.upper():
@@ -234,6 +255,7 @@ def get_buy_details(
     count: int,
     val_qty: Value | Decimal | None = None,
     socketed: bool = False,
+    charge_pump: bool = False,
 ) -> PurchaseRecommendation:
     """Calculates the purchase quantity and notes based on 'Nerd Economics'.
 
@@ -247,6 +269,8 @@ def get_buy_details(
         val_qty: Pre-computed quantity or Decimal value of the component, if available.
         socketed: Whether Star Ground added a socket for a chip (see
             `takes_socket`); a regulator gets none.
+        charge_pump: Whether a project using an electrolytic has a charge
+            pump (see `generate_search_term`).
 
     Returns:
         PurchaseRecommendation containing buy_qty and notes.
@@ -301,6 +325,13 @@ def get_buy_details(
                 )
             elif spec_type == ComponentSpec.MLCC:
                 note_parts.append("Class 1 ceramic (C0G/NP0).")
+            elif spec_type == ComponentSpec.ELECTROLYTIC and charge_pump:
+                note_parts.append(
+                    f"{spec_type.value}, {CHARGE_PUMP_VOLTS} V: a project's charge"
+                    " pump raises its supply."
+                )
+            elif spec_type == ComponentSpec.ELECTROLYTIC:
+                note_parts.append(f"{spec_type.value}, {ELECTROLYTIC_VOLTS} V.")
             else:
                 note_parts.append(f"{spec_type.value}.")
         note = " ".join(note_parts)
@@ -588,7 +619,7 @@ def is_extra_part(key: ComponentKey) -> bool:
     Known by its key, never by the word 'socket': a document's DC socket or
     tube socket is one of its own parts.
     """
-    return key == IC_SOCKET
+    return key == IC_SOCKET or key in _SOCKET_PINS
 
 
 def determine_origin(key: ComponentKey, data: PartData) -> ComponentOrigin:
@@ -692,6 +723,7 @@ def resolve_part_sourcing(
     data: PartData,
     net_qty: int,
     socketed: bool = False,
+    charge_pump: bool = False,
 ) -> ResolvedPartSourcing:
     """Resolves the complete purchasing and supplier specification for a component.
 
@@ -704,15 +736,25 @@ def resolve_part_sourcing(
         net_qty: Quantity required after deducting stock (deficit).
         socketed: Whether Star Ground added a socket for a chip (see
             `takes_socket`).
+        charge_pump: Whether a project using the part has a charge pump
+            (see `charge_pump_projects`).
 
     Returns:
-        ResolvedPartSourcing with origin, buy_qty, notes, spec_type, search_term, supplier_url.
+        ResolvedPartSourcing with origin, buy_qty, notes, spec_type,
+        search_term, supplier_url and the Tayda cart item.
     """
     category, val = key.category, key.value
     val_qty = key_quantity(key)
     origin = determine_origin(key, data)
 
-    advice = get_buy_details(category, val, net_qty, val_qty=val_qty, socketed=socketed)
+    advice = get_buy_details(
+        category,
+        val,
+        net_qty,
+        val_qty=val_qty,
+        socketed=socketed,
+        charge_pump=charge_pump,
+    )
     buy_qty = advice.buy_qty
     note = advice.note
 
@@ -722,14 +764,19 @@ def resolve_part_sourcing(
     spec_type = get_spec_type(category, val, val_qty=val_qty)
     trimmers = trimmer_count(key, data)
     all_trimmers = 0 < trimmers == data.qty
-    search_term = generate_search_term(category, val, spec_type, trimmer=all_trimmers)
+    search_term = generate_search_term(
+        category, val, spec_type, trimmer=all_trimmers, charge_pump=charge_pump
+    )
     if trimmers and not all_trimmers:
         trimmer_term = generate_search_term(category, val, spec_type, trimmer=True)
         which = "is a trimmer" if trimmers == 1 else "are trimmers"
         note = f"{note} {trimmers} of these {which}: search for '{trimmer_term}'."
         note = note.strip()
 
-    url = generate_tayda_url(search_term)
+    # A pot that's partly trimmers is two products, so it gets no SKU.
+    product = None if trimmers and not all_trimmers else tayda_product(search_term)
+    url = product.url if product and product.url else generate_tayda_url(search_term)
+    tayda = CartItem(product.sku, cart_qty(buy_qty, product.step)) if product else None
 
     return ResolvedPartSourcing(
         origin=origin,
@@ -738,7 +785,65 @@ def resolve_part_sourcing(
         spec_type=spec_type,
         search_term=search_term,
         supplier_url=url,
+        tayda=tayda,
     )
+
+
+def charge_pump_projects(inventory: Inventory) -> frozenset[str]:
+    """The projects with a charge pump (TC1044, 7660, LT1054) among their chips.
+
+    Args:
+        inventory: Every project's parts.
+
+    Returns:
+        The projects' names.
+    """
+    return frozenset(
+        source
+        for key, data in inventory.items()
+        if key.category == ComponentCategory.ICS and is_charge_pump(key.value)
+        for source in (*data.sources, *data.counted)
+    )
+
+
+def sized_sockets(inventory: Inventory) -> tuple[Inventory, list[str]]:
+    """The inventory with its chip sockets sized by their chips' pins.
+
+    Star Ground adds one `IC_SOCKET` for each DIP chip. Each socketed chip
+    whose pin count its part number gives (`chips.chip_pins`) moves its
+    sockets to `SIZED_SOCKETS`; the rest stay `IC_SOCKET`, to be sized by
+    hand. When the chips account for more sockets than there are (a project
+    sockets only some of its copies of a chip), the sockets stay unsized.
+
+    Args:
+        inventory: Every project's parts.
+
+    Returns:
+        The inventory to list, and the chips whose sockets weren't sized.
+    """
+    socket = inventory.get(IC_SOCKET)
+    if socket is None:
+        return inventory, []
+    sized: Counter[int] = Counter()
+    socketed: list[str] = []
+    unsized: list[str] = []
+    for key, data in inventory.items():
+        if key.category != ComponentCategory.ICS or not takes_socket(key, data, socket):
+            continue
+        socketed.append(key.value)
+        if (pins := chip_pins(key.value)) is not None:
+            sized[pins] += data.qty
+        else:
+            unsized.append(key.value)
+    rest = socket.qty - sum(sized.values())
+    if not sized or rest < 0:
+        return inventory, socketed
+    listed = Inventory({k: v for k, v in inventory.items() if k != IC_SOCKET})
+    for pins, qty in sorted(sized.items()):
+        listed[SIZED_SOCKETS[pins]] = PartData(qty=qty)
+    if rest:
+        listed[IC_SOCKET] = replace(socket, qty=rest)
+    return listed, unsized
 
 
 def build_shopping_list(
@@ -761,11 +866,13 @@ def build_shopping_list(
     Returns:
         One line per part, in display order.
     """
-    net_inventory = calculate_net_needs(inventory, stock or Inventory())
+    listed, unsized = sized_sockets(inventory)
+    net_inventory = calculate_net_needs(listed, stock or Inventory())
 
-    sorted_parts = sort_inventory(inventory)
+    sorted_parts = sort_inventory(listed)
     shopping_list: list[ShoppingLine] = []
     socket = inventory.get(IC_SOCKET)
+    pumps = charge_pump_projects(inventory)
 
     for part_key, item in sorted_parts:
         category, value = part_key.category, part_key.value
@@ -791,10 +898,15 @@ def build_shopping_list(
             net_qty,
             socketed=category == ComponentCategory.ICS
             and takes_socket(part_key, item, socket),
+            charge_pump=category == ComponentCategory.CAPACITORS
+            and not pumps.isdisjoint((*item.sources, *item.counted)),
         )
         notes = resolved.notes
         if item.included:
             notes = f"{item.included} come with the PCB. {notes}".strip()
+        if part_key == IC_SOCKET and unsized:
+            chips = ", ".join(sorted(set(unsized)))
+            notes = f"{notes} Match each to its chip's pin count: {chips}.".strip()
 
         shopping_list.append(
             ShoppingLine(
@@ -809,6 +921,7 @@ def build_shopping_list(
                 notes=notes,
                 search_term=resolved.search_term,
                 supplier_url=resolved.supplier_url,
+                tayda=resolved.tayda,
             )
         )
 

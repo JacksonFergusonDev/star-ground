@@ -218,6 +218,7 @@
       const listed = id ? workspace.find(id) : undefined;
       return listed && reviewable(listed) ? checkHref(listed.id, ref) : null;
     }}
+    onExport={exportList}
   />
 {:else if view === 'have'}
   <PageHead

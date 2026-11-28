@@ -1,6 +1,7 @@
 <script lang="ts">
-  // The master list's files: the build book, labels, the shopping list, a
-  // supplier cart, the stock after this order, and the build pack of them all.
+  // The master list's files: the build book, labels, the shopping list, the
+  // supplier and Tayda carts, the stock after this order, and the build pack
+  // of them all.
   import type { ExportKind } from '../../lib/api';
   import type { Download, Failure } from '../../lib/server';
   import Explain from './Explain.svelte';
@@ -26,6 +27,11 @@
       kind: 'supplier-cart',
       label: 'Supplier cart',
       detail: "CSV for Mouser's or Digi-Key's BOM tool.",
+    },
+    {
+      kind: 'tayda-cart',
+      label: 'Tayda cart',
+      detail: "CSV for Tayda's Quick Order page, of the parts Star Ground knows Tayda's SKU for.",
     },
     {
       kind: 'stock-update',

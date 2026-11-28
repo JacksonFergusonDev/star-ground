@@ -6,6 +6,7 @@
 - **Labels (Avery 5160).pdf**: a label for each part's bag or drawer, 30 to a sheet.
 - **Shopping list.csv**: every part to buy, for a spreadsheet.
 - **Supplier cart.csv**: the same parts for Mouser's or Digi-Key's BOM upload page.
+- **Tayda cart.csv**: the parts Star Ground knows Tayda's SKU for, for Tayda's Quick Order page.
 - **Stock after these builds.csv**: the stock left once the order arrives and the pedal is built.
 
 A real pack also holds `Source documents/`, the documents you gave. To make this one again after changing the exports:

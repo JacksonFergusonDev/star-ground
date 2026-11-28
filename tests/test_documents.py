@@ -220,7 +220,7 @@ def test_the_pack_holds_everything_in_one_folder() -> None:
         names = zf.namelist()
         shopping = zf.read("Star Ground build pack 2026-11-07/Shopping list.csv")
     assert {n.split("/")[0] for n in names} == {"Star Ground build pack 2026-11-07"}
-    assert len(names) == 5  # no source documents for pasted text
+    assert len(names) == 6  # no source documents for pasted text
     assert b"=HYPERLINK(" in shopping
 
 

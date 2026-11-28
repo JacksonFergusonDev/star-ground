@@ -78,6 +78,7 @@ The parser's priority is **no silent errors**. Self-checks re-read each document
 
 - **Master shopping list**, merged across projects and quantities, with supplier search links and buying notes. It downloads as a CSV, with clickable Excel/Google Sheets links if you like.
 - **Supplier cart file**: the parts to buy as a CSV for Mouser's or Digi-Key's BOM upload page. Parts named by a part number (`TL072`, `2N5088`) match directly; generic parts (resistors, capacitors, pots) come with a description to pick a match from.
+- **Tayda cart**: the parts Star Ground knows Tayda's SKU for, to paste or upload on Tayda's [Quick Order](https://www.taydaelectronics.com/quick-order/) page, each in the multiples Tayda sells it in. The shopping list links every other part to a search on Tayda's site.
 - **Updated inventory CSV**: your stock after this build.
 - **Build book:** a printable PDF with the shopping list, then each project's checklist in build order (see below), with values written out (`4.7 kΩ`, `100 nF`), resistor colour bands, capacitor codes and which way round each part goes.
 - **Labels:** one per part, for Avery 5160 sheets, in the same order.

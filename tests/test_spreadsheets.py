@@ -11,6 +11,7 @@ from star_ground.bom_lib.enums import ComponentCategory, ComponentOrigin
 from star_ground.bom_lib.strategies.csv import parse_user_inventory
 from star_ground.bom_lib.types import (
     FORMULA_PREFIXES,
+    CartItem,
     ComponentKey,
     FileUpload,
     Inventory,
@@ -22,6 +23,7 @@ from star_ground.exports.spreadsheets import (
     shopping_list_csv,
     stock_after_csv,
     supplier_cart_csv,
+    tayda_cart_csv,
 )
 
 
@@ -53,6 +55,7 @@ def test_generate_shopping_list_csv_standard() -> None:
             notes="1/4W Metal Film",
             search_term="10k ohm 1/4w metal film",
             supplier_url="https://www.taydaelectronics.com/catalogsearch/result/?q=10k",
+            tayda=CartItem("A-2203", 10),
         )
     ]
 
@@ -60,7 +63,7 @@ def test_generate_shopping_list_csv_standard() -> None:
 
     assert decoded.splitlines() == [
         ",".join(SHOPPING_LIST_COLUMNS),
-        "Resistors,10k,4,0,0,4,10,1/4W Metal Film,10k ohm 1/4w metal film,https://www.taydaelectronics.com/catalogsearch/result/?q=10k,Circuit Board",
+        "Resistors,10k,4,0,0,4,10,1/4W Metal Film,10k ohm 1/4w metal film,https://www.taydaelectronics.com/catalogsearch/result/?q=10k,A-2203,Circuit Board",
     ]
 
 
@@ -258,3 +261,18 @@ def test_stock_of_a_hidden_part_is_used_by_the_builds() -> None:
     after = _read_back(stock_after_csv(lines, master.kit, stock))
 
     assert after[(hidden.category.value, hidden.part)] == 2
+
+
+def test_the_tayda_cart_holds_each_known_sku_once() -> None:
+    lines = [
+        _line("10k", buy_qty=12, tayda=CartItem("A-2203", 20)),
+        _line("TL072", buy_qty=1, tayda=CartItem("A-037", 1)),
+        _line("TL072CP", buy_qty=2, tayda=CartItem("A-037", 2)),
+        _line("22k", buy_qty=10),
+        _line("1M", buy_qty=0, tayda=CartItem("A-2260", 0)),
+    ]
+    assert tayda_cart_csv(lines).decode("utf-8").splitlines() == [
+        "sku,qty",
+        "A-2203,20",
+        "A-037,3",
+    ]

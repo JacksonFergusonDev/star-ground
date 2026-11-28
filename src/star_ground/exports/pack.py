@@ -23,6 +23,7 @@ from star_ground.exports.spreadsheets import (
     shopping_list_csv,
     stock_after_csv,
     supplier_cart_csv,
+    tayda_cart_csv,
 )
 from star_ground.exports.typeset import build_book_pdf, label_sheet_pdf
 
@@ -30,6 +31,7 @@ BUILD_BOOK = "Build book.pdf"
 LABELS = "Labels (Avery 5160).pdf"
 SHOPPING_LIST = "Shopping list.csv"
 SUPPLIER_CART = "Supplier cart.csv"
+TAYDA_CART = "Tayda cart.csv"
 STOCK_AFTER = "Stock after these builds.csv"
 SOURCES = "Source documents"
 
@@ -119,6 +121,11 @@ def build_pack(contents: PackContents) -> bytes:
         PackFile(SHOPPING_LIST, "Every part to buy, for a spreadsheet."),
         PackFile(SUPPLIER_CART, "For Mouser's or Digi-Key's BOM upload page."),
         PackFile(
+            TAYDA_CART,
+            "For Tayda's Quick Order page: the parts Star Ground knows Tayda's"
+            " SKU for. Find the rest with the shopping list's Tayda links.",
+        ),
+        PackFile(
             STOCK_AFTER,
             "Your stock once this order arrives and these pedals are built. "
             "Give it to Star Ground as your stock next time.",
@@ -147,6 +154,7 @@ def build_pack(contents: PackContents) -> bytes:
             shopping_list_csv(contents.lines, contents.excel_links),
         )
         zf.writestr(f"{folder}/{SUPPLIER_CART}", supplier_cart_csv(contents.lines))
+        zf.writestr(f"{folder}/{TAYDA_CART}", tayda_cart_csv(contents.lines))
         zf.writestr(
             f"{folder}/{STOCK_AFTER}",
             stock_after_csv(contents.lines, contents.kit, contents.stock),

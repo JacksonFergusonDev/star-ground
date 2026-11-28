@@ -438,6 +438,13 @@ IGNORE_VALUES = [
 # key, never by the word 'socket' in a value: a document's own DC socket or
 # tube socket is a part the builder needs, not an extra.
 IC_SOCKET = ComponentKey(ComponentCategory.HARDWARE_MISC, "DIP SOCKET (Check Size)")
+# The same sockets on the shopping list, sized by their chips' pin counts
+# (`chips.chip_pins`). Only the shopping list splits `IC_SOCKET` into these;
+# a socket whose chip's size isn't known stays `IC_SOCKET`.
+SIZED_SOCKETS = {
+    pins: ComponentKey(ComponentCategory.HARDWARE_MISC, f"DIP SOCKET ({pins} Pins)")
+    for pins in (8, 14, 16)
+}
 # Marks the designator of a part Star Ground adds for one the document lists
 # (an IC's socket: 'IC1 (Inj)'), so it's never printed in the document.
 INJECTED_SUFFIX = " (Inj)"

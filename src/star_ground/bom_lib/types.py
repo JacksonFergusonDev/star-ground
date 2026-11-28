@@ -538,6 +538,7 @@ class ResolvedPartSourcing(NamedTuple):
         spec_type: Physical material/dielectric specification.
         search_term: Optimized search string for supplier catalog lookup.
         supplier_url: Direct link to supplier product page or catalog search.
+        tayda: Tayda's SKU and cart quantity, when the SKU is known.
     """
 
     origin: ComponentOrigin
@@ -546,6 +547,7 @@ class ResolvedPartSourcing(NamedTuple):
     spec_type: ComponentSpec
     search_term: str
     supplier_url: str
+    tayda: CartItem | None
 
 
 class PDFWord(TypedDict):
@@ -577,6 +579,20 @@ class Picture:
 
 
 @dataclass(frozen=True, slots=True)
+class CartItem:
+    """A part in a supplier's cart.
+
+    Attributes:
+        sku: The supplier's SKU ('A-2203').
+        qty: How many to add: the buy quantity, rounded up to the multiple the
+            supplier sells it in.
+    """
+
+    sku: str
+    qty: int
+
+
+@dataclass(frozen=True, slots=True)
 class ShoppingLine:
     """One part on the shopping list: what the builds use and what to buy.
 
@@ -591,7 +607,8 @@ class ShoppingLine:
         buy_qty: How many to buy, with spares.
         notes: Buying notes for the builder.
         search_term: What to search a supplier for.
-        supplier_url: A supplier search link.
+        supplier_url: Tayda's product page for it, or a search for it.
+        tayda: Its Tayda SKU and cart quantity, when Star Ground knows them.
     """
 
     origin: ComponentOrigin
@@ -605,6 +622,7 @@ class ShoppingLine:
     notes: str
     search_term: str
     supplier_url: str
+    tayda: CartItem | None = None
 
 
 class Inventory(UserDict[ComponentKey, PartData]):

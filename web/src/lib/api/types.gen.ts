@@ -216,7 +216,7 @@ export type ErrorKind = 'fetch' | 'unreadable_pdf' | 'too_many_pages' | 'build_n
  *
  * The files a master list exports.
  */
-export type ExportKind = 'shopping-list' | 'supplier-cart' | 'stock-update' | 'build-book' | 'labels' | 'build-pack';
+export type ExportKind = 'shopping-list' | 'supplier-cart' | 'tayda-cart' | 'stock-update' | 'build-book' | 'labels' | 'build-pack';
 
 /**
  * HTTPValidationError
@@ -565,8 +565,14 @@ export type ShoppingRow = {
     search_term: string;
     /**
      * Supplier Url
+     *
+     * Tayda's product page for the part, or a search for it.
      */
     supplier_url: string;
+    /**
+     * Its Tayda SKU and cart quantity; none when Star Ground doesn't know the SKU yet.
+     */
+    tayda: TaydaItem | null;
 };
 
 /**
@@ -613,6 +619,26 @@ export type Stats = {
      * Parts Found
      */
     parts_found: number;
+};
+
+/**
+ * TaydaItem
+ *
+ * A part's place in a Tayda cart.
+ */
+export type TaydaItem = {
+    /**
+     * Sku
+     *
+     * Tayda's SKU, as its Quick Order page takes it.
+     */
+    sku: string;
+    /**
+     * Qty
+     *
+     * How many to add: the buy quantity, rounded up to the multiple Tayda sells the part in.
+     */
+    qty: number;
 };
 
 /**

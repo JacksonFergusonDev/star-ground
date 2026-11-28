@@ -41,6 +41,7 @@ const result: MasterListResult = {
       notes: '1/4 W metal film, 1%.',
       search_term: '10k resistor',
       supplier_url: 'https://www.taydaelectronics.com/',
+      tayda: null,
     },
   ],
   stats: { lines_read: 2, parts_found: 2 },
@@ -464,6 +465,60 @@ test('a download saves the file the API exports', async ({ page }) => {
 
   expect((await download).suggestedFilename()).toBe('shopping-list.csv');
   expect(url).toContain('/api/exports/shopping-list?links=excel');
+});
+
+test('the Tayda cart copies each known SKU and downloads its CSV', async ({ page }) => {
+  const row = result.shopping_list[0] as MasterListResult['shopping_list'][number];
+  await stubMasterList(page, {
+    ...result,
+    shopping_list: [
+      { ...row, tayda: { sku: 'A-2203', qty: 20 } },
+      { ...row, part: 'TL072', tayda: { sku: 'A-037', qty: 1 } },
+      { ...row, part: 'TL072CP', tayda: { sku: 'A-037', qty: 2 } },
+      { ...row, part: '22k' },
+      { ...row, part: '1M', buy_qty: 0, tayda: { sku: 'A-2260', qty: 0 } },
+    ],
+  });
+  let url = '';
+  await page.route('**/api/exports/**', (route) => {
+    url = route.request().url();
+    return route.fulfill({
+      body: 'sku,qty\nA-2203,20\n',
+      contentType: 'text/csv',
+      headers: { 'content-disposition': 'attachment; filename="tayda-cart.csv"' },
+    });
+  });
+  // The clipboard, kept where the test can read it in every browser.
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, 'clipboard', {
+      value: {
+        writeText: (text: string) => {
+          (window as unknown as { copied: string }).copied = text;
+          return Promise.resolve();
+        },
+      },
+    });
+  });
+  await page.goto('/app/');
+  await paste(page, 'R1 10k');
+  await openList(page);
+
+  const cart = page.getByRole('region', { name: 'Order from Tayda' });
+  await expect(cart).toContainText('for 3 of the 4 parts to buy');
+  await expect(cart).toContainText('Add the other 1 with their Tayda links');
+  await expect(page.getByRole('row', { name: /22k/ })).not.toContainText('In the cart');
+  await expect(page.getByRole('row', { name: /^10k/ })).toContainText('In the cart');
+
+  await cart.getByRole('button', { name: 'Copy for Quick Order' }).click();
+  await expect(cart.getByRole('button', { name: 'Copied!' })).toBeVisible();
+  expect(await page.evaluate(() => (window as unknown as { copied: string }).copied)).toBe(
+    'A-2203,20\nA-037,3',
+  );
+
+  const download = page.waitForEvent('download');
+  await cart.getByRole('button', { name: 'Download CSV' }).click();
+  expect((await download).suggestedFilename()).toBe('tayda-cart.csv');
+  expect(url).toContain('/api/exports/tayda-cart');
 });
 
 const BUG_MESSAGE = "Star Ground hit a bug while reading this, so its parts aren't on the list.";

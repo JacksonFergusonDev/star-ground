@@ -9,6 +9,7 @@ from star_ground.exports.spreadsheets import (
     shopping_list_csv,
     stock_after_csv,
     supplier_cart_csv,
+    tayda_cart_csv,
 )
 from star_ground.exports.typeset import build_book_pdf, label_sheet_pdf
 
@@ -18,6 +19,7 @@ class ExportKind(StrEnum):
 
     SHOPPING_LIST = "shopping-list"
     SUPPLIER_CART = "supplier-cart"
+    TAYDA_CART = "tayda-cart"
     STOCK_UPDATE = "stock-update"
     BUILD_BOOK = "build-book"
     LABELS = "labels"
@@ -56,6 +58,9 @@ def render_export(kind: ExportKind, contents: PackContents) -> ExportFile:
         case ExportKind.SUPPLIER_CART:
             csv = supplier_cart_csv(contents.lines)
             return ExportFile(csv, "text/csv", "supplier-cart.csv")
+        case ExportKind.TAYDA_CART:
+            csv = tayda_cart_csv(contents.lines)
+            return ExportFile(csv, "text/csv", "tayda-cart.csv")
         case ExportKind.STOCK_UPDATE:
             csv = stock_after_csv(contents.lines, contents.kit, contents.stock)
             return ExportFile(csv, "text/csv", "stock-after-these-builds.csv")

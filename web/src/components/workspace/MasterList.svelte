@@ -1,8 +1,8 @@
 <script lang="ts">
   // The master list: what to check, then what to buy across every project,
   // and the files to download.
-  import type { MasterListResult } from '../../lib/api';
-  import type { Failure } from '../../lib/server';
+  import type { ExportKind, MasterListResult } from '../../lib/api';
+  import type { Download, Failure } from '../../lib/server';
   import { explain } from '../../lib/server';
   import { formatValue, kindOfCategory, readPot } from '../../lib/parts';
   import type { Display, Options } from '../../lib/workspace.svelte';
@@ -15,6 +15,7 @@
   import PartSymbol from './PartSymbol.svelte';
   import SignalPulse from './SignalPulse.svelte';
   import TaperCurve from './TaperCurve.svelte';
+  import TaydaCart from './TaydaCart.svelte';
 
   let {
     result,
@@ -23,6 +24,7 @@
     options,
     display,
     showHref,
+    onExport,
   }: {
     result: MasterListResult | null;
     updating: boolean;
@@ -31,6 +33,8 @@
     display: Display;
     /** Where a project's part (by its place on the list) shows in its document, if it has one. */
     showHref: (project: number, ref: string) => string | null;
+    /** Downloads one of the master list's files. */
+    onExport: (kind: ExportKind, excel: boolean) => Promise<Download>;
   } = $props();
 
   const checks = $derived(
@@ -141,6 +145,8 @@
       </details>
     {/if}
 
+    <TaydaCart {rows} {onExport} />
+
     <h2>Parts</h2>
     <div class="options">
       <span class="option">
@@ -212,6 +218,7 @@
                   <a href={row.supplier_url} target="_blank" rel="noopener noreferrer">
                     Tayda <Icon name="arrow-up-right" size={14} />
                   </a>
+                  {#if row.tayda}<span class="in-cart">In the cart</span>{/if}
                 {/if}
               </td>
             </tr>
@@ -398,5 +405,11 @@
   }
   .link a:hover {
     color: var(--accent);
+  }
+  .in-cart {
+    display: block;
+    color: var(--muted);
+    font-size: var(--fs-label);
+    white-space: nowrap;
   }
 </style>

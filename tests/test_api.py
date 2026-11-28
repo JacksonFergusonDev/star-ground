@@ -74,7 +74,9 @@ def test_a_parts_list_s_chips_get_sockets() -> None:
 
     socket = ComponentKey(ComponentCategory.HARDWARE_MISC, "DIP SOCKET (Check Size)")
     assert master.parts[socket].qty == 2
-    assert any(r.part == "DIP SOCKET (Check Size)" for r in master.shopping_list())
+    # The shopping list sizes them: both chips have 8 pins.
+    (row,) = (r for r in master.shopping_list() if "SOCKET" in r.part)
+    assert (row.part, row.bom_qty) == ("DIP SOCKET (8 Pins)", 2)
 
 
 def test_a_multi_circuit_document_has_no_default_build() -> None:
@@ -222,6 +224,7 @@ def test_documents_are_named_by_label_and_keep_the_source() -> None:
             f"{folder}/Labels (Avery 5160).pdf",
             f"{folder}/Shopping list.csv",
             f"{folder}/Supplier cart.csv",
+            f"{folder}/Tayda cart.csv",
             f"{folder}/Stock after these builds.csv",
         } <= set(zf.namelist())
 

@@ -10,10 +10,11 @@ scheme = ["https", "http"]
 exclude = [
   # Star Ground itself.
   '^https://star-ground\.jacksonferguson\.me',
-  # These answer automated requests with 403 (the forums behind Cloudflare, and Reddit to
-  # datacenter addresses like CI's) or 999 (LinkedIn) whether or not the page exists, so a
-  # check can't tell anything about them.
+  # These answer automated requests with 403 (the forums and Tayda behind Cloudflare, and
+  # Reddit to datacenter addresses like CI's) or 999 (LinkedIn) whether or not the page
+  # exists, so a check can't tell anything about them.
   '^https://(www\.)?reddit\.com/',
+  '^https://(www\.)?taydaelectronics\.com/',
   '^https://(www\.)?diystompboxes\.com/',
   '^https://(www\.)?freestompboxes\.org/',
   '^https://(www\.)?linkedin\.com/',
