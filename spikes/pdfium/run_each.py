@@ -14,7 +14,7 @@ def run(i):
                 "-m",
                 "pytest",
                 "-p",
-                "spike_plugin",
+                "pytest_plugin",
                 i,
                 "-n",
                 "0",

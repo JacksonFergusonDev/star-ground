@@ -27,12 +27,12 @@ t = time.perf_counter()
 for p in pdfs:
     base[p.name] = sig(d.parse_pdf(str(p), "S"))
 tb = time.perf_counter() - t
-orig, new = pdfium_page.install()
+pdfium_page.install()
 res = {}
 t = time.perf_counter()
 for p in pdfs:
     try:
-        res[p.name] = sig(new(str(p), "S"))
+        res[p.name] = sig(d.parse_pdf(str(p), "S"))
     except Exception as e:
         res[p.name] = f"ERR {type(e).__name__}: {e}"
         traceback.print_exc(limit=3)

@@ -22,8 +22,6 @@ _g = ctypes.c_uint()
 _b = ctypes.c_uint()
 _a = ctypes.c_uint()
 _lw = ctypes.c_float()
-DOCS = {}  # filepath -> PdfDocument (set by the harness)
-CURRENT = {"path": None}
 
 
 def _color(getter, obj):
@@ -204,12 +202,13 @@ def _images(pg, H, mb_top, number, doctop0):
 
 
 def parse_objects(self):
-    key = id(self.pdf)
-    if key not in DOCS:
+    # Held by the pdfplumber PDF, so it is released with it.
+    doc = getattr(self.pdf, "_pdfium_doc", None)
+    if doc is None:
         st = self.pdf.stream
         st.seek(0)
-        DOCS[key] = (pdfium.PdfDocument(st.read()), self.pdf)
-    doc = DOCS[key][0]
+        doc = pdfium.PdfDocument(st.read())
+        self.pdf._pdfium_doc = doc
     pg = doc[self.page_number - 1]
     H = self.height
     mb_top = self.mediabox[1]
@@ -232,6 +231,3 @@ def install():
     import star_ground.bom_lib.pdf.document as d
 
     d.parse_page = lambda *a, **k: None
-    import star_ground.bom_lib as b
-
-    return d.parse_pdf, d.parse_pdf
